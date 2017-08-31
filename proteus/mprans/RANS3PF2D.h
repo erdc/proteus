@@ -8,6 +8,7 @@
 #include "SedClosure.h"
 
 #define POWER_SMOOTHNESS_INDICATOR 2
+
 namespace proteus
 {
   class cppRANS3PF2D_base
@@ -242,7 +243,11 @@ namespace proteus
 				   double* quantDOFs, 
 				   int numDOFsPerEqn,
 				   int* csrRowIndeces_DofLoops,
-				   int* csrColumnOffsets_DofLoops
+				   int* csrColumnOffsets_DofLoops, 
+				   double* ML, 
+				   double* Cx, 
+				   double* Cy, 
+				   double* Cz
 				   )=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
@@ -422,7 +427,8 @@ namespace proteus
 				   double* particle_centroids,
 				   double particle_nitsche, 
 				   int KILL_PRESSURE_TERM)=0;
-    virtual void calculateResidual_entropy_viscosity(double* mesh_trial_ref,
+    virtual void calculateResidual_entropy_viscosity(
+				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
 				   double* mesh_velocity_dof,
@@ -635,7 +641,11 @@ namespace proteus
 				   double* quantDOFs,
 				   int numDOFsPerEqn,
 				   int* csrRowIndeces_DofLoops,
-				   int* csrColumnOffsets_DofLoops)=0;
+				   int* csrColumnOffsets_DofLoops, 
+				   double* ML, 
+				   double* Cx, 
+				   double* Cy, 
+				   double* Cz)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -1097,111 +1107,111 @@ namespace proteus
       //u momentum accumulation
       mom_u_acc=u;//trick for non-conservative form
       dmom_u_acc_u=porosity;
-  
+      
       //v momentum accumulation
       mom_v_acc=v;
       dmom_v_acc_v=porosity;
-  
+      
       /* //w momentum accumulation */
       /* mom_w_acc=w; */
       /* dmom_w_acc_w=porosity; */
-
+      
       //mass advective flux
       mass_adv[0]=porosity*u;
       mass_adv[1]=porosity*v;
       /* mass_adv[2]=porosity*w; */
-  
+      
       dmass_adv_u[0]=porosity;
       dmass_adv_u[1]=0.0;
       /* dmass_adv_u[2]=0.0; */
-
+      
       dmass_adv_v[0]=0.0;
       dmass_adv_v[1]=porosity;
       /* dmass_adv_v[2]=0.0; */
-
+      
       /* dmass_adv_w[0]=0.0; */
       /* dmass_adv_w[1]=0.0; */
       /* dmass_adv_w[2]=porosity; */
-
+      
       //advection switched to non-conservative form but could be used for mesh motion...
       //u momentum advective flux
       mom_u_adv[0]=0.0;
       mom_u_adv[1]=0.0;
       /* mom_u_adv[2]=0.0; */
-  
+      
       dmom_u_adv_u[0]=0.0;
       dmom_u_adv_u[1]=0.0;
       /* dmom_u_adv_u[2]=0.0; */
-  
+      
       dmom_u_adv_v[0]=0.0;
       dmom_u_adv_v[1]=0.0;
       /* dmom_u_adv_v[2]=0.0; */
-  
+      
       /* dmom_u_adv_w[0]=0.0; */
       /* dmom_u_adv_w[1]=0.0; */
       /* dmom_u_adv_w[2]=0.0; */
-  
+      
       //v momentum advective_flux
       mom_v_adv[0]=0.0;
       mom_v_adv[1]=0.0;
       /* mom_v_adv[2]=0.0; */
-  
+      
       dmom_v_adv_u[0]=0.0;
       dmom_v_adv_u[1]=0.0;
       /* dmom_v_adv_u[2]=0.0; */
-  
+      
       /* dmom_v_adv_w[0]=0.0; */
       /* dmom_v_adv_w[1]=0.0; */
       /* dmom_v_adv_w[2]=0.0; */
-  
+      
       dmom_v_adv_v[0]=0.0;
       dmom_v_adv_v[1]=0.0;
       /* dmom_v_adv_v[2]=0.0; */
-  
+      
       /* //w momentum advective_flux */
       /* mom_w_adv[0]=0.0; */
       /* mom_w_adv[1]=0.0; */
       /* mom_w_adv[2]=0.0; */
-  
+      
       /* dmom_w_adv_u[0]=0.0; */
       /* dmom_w_adv_u[1]=0.0; */
       /* dmom_w_adv_u[2]=0.0; */
-  
+      
       /* dmom_w_adv_v[0]=0.0; */
       /* dmom_w_adv_v[1]=0.0; */
       /* dmom_w_adv_v[2]=0.0; */
-  
+      
       /* dmom_w_adv_w[0]=0.0; */
       /* dmom_w_adv_w[1]=0.0; */
       /* dmom_w_adv_w[2]=0.0; */
-
+      
       //u momentum diffusion tensor
       mom_uu_diff_ten[0] = porosity*2.0*nu;
       mom_uu_diff_ten[1] = porosity*nu;
       /* mom_uu_diff_ten[2] = porosity*nu; */
-  
+      
       mom_uv_diff_ten[0]=porosity*nu;
-  
+      
       /* mom_uw_diff_ten[0]=porosity*nu; */
-  
+      
       //v momentum diffusion tensor
       mom_vv_diff_ten[0] = porosity*nu;
       mom_vv_diff_ten[1] = porosity*2.0*nu;
       /* mom_vv_diff_ten[2] = porosity*nu; */
-  
+      
       mom_vu_diff_ten[0]=porosity*nu;
   
       /* mom_vw_diff_ten[0]=porosity*nu; */
-  
+	  
       /* //w momentum diffusion tensor */
       /* mom_ww_diff_ten[0] = porosity*nu; */
       /* mom_ww_diff_ten[1] = porosity*nu; */
       /* mom_ww_diff_ten[2] = porosity*2.0*nu; */
   
       /* mom_wu_diff_ten[0]=porosity*nu; */
-  
+      
       /* mom_wv_diff_ten[0]=porosity*nu; */
-  
+      
       //momentum sources
       norm_n = sqrt(n[0]*n[0]+n[1]*n[1]);//+n[2]*n[2]);
       mom_u_source = -porosity*g[0];// - porosity*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
@@ -1211,27 +1221,27 @@ namespace proteus
       // mql: add general force term
       mom_u_source -= forcex;
       mom_v_source -= forcey;
-      /* mom_w_source += forcez; */
+      /* mom_w_source -= forcez; */
             
       //u momentum Hamiltonian (pressure)
       mom_u_ham = porosity*grad_p[0]/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       dmom_u_ham_grad_p[0]=porosity/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       dmom_u_ham_grad_p[1]=0.0;
       /* dmom_u_ham_grad_p[2]=0.0; */
-  
+	  
       //v momentum Hamiltonian (pressure)
       mom_v_ham = porosity*grad_p[1]/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       dmom_v_ham_grad_p[0]=0.0;
       dmom_v_ham_grad_p[1]=porosity/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       /* dmom_v_ham_grad_p[2]=0.0; */
-  
+      
       /* //w momentum Hamiltonian (pressure) */
       /* mom_w_ham = porosity*grad_p[2]/rho; */
       /* dmom_w_ham_grad_p[0]=0.0; */
       /* dmom_w_ham_grad_p[1]=0.0; */
       /* dmom_w_ham_grad_p[2]=porosity/rho; */
 
-      //u momentum Hamiltonian (advection)
+	  //u momentum Hamiltonian (advection)
       mom_u_ham += porosity*(uStar*grad_u[0]+vStar*grad_u[1]);
       dmom_u_ham_grad_u[0]=porosity*uStar;
       dmom_u_ham_grad_u[1]=porosity*vStar;
@@ -1242,13 +1252,14 @@ namespace proteus
       dmom_v_ham_grad_v[0]=porosity*uStar;
       dmom_v_ham_grad_v[1]=porosity*vStar;
       /* dmom_v_ham_grad_v[2]=porosity*wStar; */
-     
+      
       /* //w momentum Hamiltonian (advection) */
       /* mom_w_ham += porosity*(uStar*grad_w[0]+vStar*grad_w[1]+wStar*grad_w[2]); */
       /* dmom_w_ham_grad_w[0]=porosity*uStar; */
       /* dmom_w_ham_grad_w[1]=porosity*vStar; */
       /* dmom_w_ham_grad_w[2]=porosity*wStar; */
     }
+
     //VRANS specific
     inline
       void updateDarcyForchheimerTerms_Ergun(/* const double linearDragFactor, */
@@ -1289,7 +1300,7 @@ namespace proteus
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-      viscosity = nu;
+      viscosity = nu; 
       uc = sqrt(u*u+v*v*+w*w); 
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
@@ -2242,7 +2253,11 @@ namespace proteus
 			   double* quantDOFs,
 			   int numDOFsPerEqn,
 			   int* csrRowIndeces_DofLoops,
-			   int* csrColumnOffsets_DofLoops)
+			   int* csrColumnOffsets_DofLoops,
+			   double* ML, 
+			   double* Cx, 
+			   double* Cy, 
+			   double* Cz)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -2718,6 +2733,7 @@ namespace proteus
 		     dmom_v_acc_v,
 		     mom_v_acc_t,
 		     dmom_v_acc_v_t);
+	
 	      /* ck.bdf(alphaBDF, */
 	      /* 	     q_mom_w_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV, */
 	      /* 	     mom_w_acc, */
@@ -2728,7 +2744,8 @@ namespace proteus
 	      //calculate subgrid error (strong residual and adjoint)
 	      //
 	      //calculate strong residual
-	      pdeResidual_p = ck.Mass_strong(-q_dvos_dt[eN_k]) +
+	      pdeResidual_p = 
+		ck.Mass_strong(-q_dvos_dt[eN_k]) +
                 ck.Advection_strong(dmass_adv_u,grad_u) +
                 ck.Advection_strong(dmass_adv_v,grad_v) +
 		/* ck.Advection_strong(dmass_adv_w,grad_w) + */
@@ -2741,7 +2758,8 @@ namespace proteus
               dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
               /* dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt); */
 
-	      pdeResidual_u = ck.Mass_strong(dmom_u_acc_u*mom_u_acc_t) +
+	      pdeResidual_u = 
+		ck.Mass_strong(dmom_u_acc_u*mom_u_acc_t) +
 		ck.Advection_strong(dmom_adv_sge,grad_u) + //note here and below: same in cons. and non-cons.
 		ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
 		ck.Reaction_strong(mom_u_source) -
@@ -4486,7 +4504,8 @@ namespace proteus
 	      //
 	      //calculate strong residual
 	      //
-	      pdeResidual_p = ck.Mass_strong(-q_dvos_dt[eN_k]) +
+	      pdeResidual_p = 
+		ck.Mass_strong(-q_dvos_dt[eN_k]) +
                 ck.Advection_strong(dmass_adv_u,grad_u) +
 		ck.Advection_strong(dmass_adv_v,grad_v) +
 		/* ck.Advection_strong(dmass_adv_w,grad_w) + */
@@ -5777,7 +5796,11 @@ namespace proteus
 			   double* quantDOFs,
 			   int numDOFsPerEqn,
 			   int* csrRowIndeces_DofLoops,
-			   int* csrColumnOffsets_DofLoops)
+			   int* csrColumnOffsets_DofLoops,
+			   double* ML, 
+			   double* Cx, 
+			   double* Cy, 
+			   double* Cz)
     {
       /*
       double dt = 1./alphaBDF;
@@ -5865,33 +5888,99 @@ namespace proteus
 	  vel2_max_in_omega = std::max(vel2_max_in_omega,cell_vel2_max);
 	}
       */
+      ////////////////////////////
+      // CALCULATE grad vectors // 
+      ////////////////////////////
+      /*
+      register double u_gx[numDOFsPerEqn], u_gy[numDOFsPerEqn], v_gx[numDOFsPerEqn], v_gy[numDOFsPerEqn];
+      int ij = 0.;
+      for (int i=0; i<numDOFsPerEqn; i++)
+	{
+	  // initialize vectors to zero
+	  u_gx[i] = 0.;
+	  u_gy[i] = 0.;
+	  v_gx[i] = 0.;
+	  v_gy[i] = 0.;
+	  
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double uj = u_dof_old[j];
+	      double vj = v_dof_old[j];
+
+	      u_gx[i] += Cx[ij]*uj;
+	      u_gy[i] += Cy[ij]*uj;
+	      v_gx[i] += Cx[ij]*vj;
+	      v_gy[i] += Cy[ij]*vj;
+	      
+	      //update ij
+	      ij+=1;	     
+	    }
+	  // sacale by mi^-1
+	  double mi = ML[i];
+	  u_gx[i] /= mi;
+	  u_gy[i] /= mi;
+	  v_gx[i] /= mi;
+	  v_gy[i] /= mi;
+
+	  quantDOFs[i] = u_gx[i];
+	}
+
       //////////////////////////////////
       // COMPUTE SMOOTHNESS INDICATOR // 
       //////////////////////////////////
       register double u_psi[numDOFsPerEqn], v_psi[numDOFsPerEqn], entropyResidual[numDOFsPerEqn];
+      register double ug_psi[numDOFsPerEqn], vg_psi[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
 	  // initialize entropyResidual
 	  entropyResidual[i] = 0.0;
 	  
 	  double u_alphai, v_alphai; // smoothness indicator of solution	      
+	  double ug_alphai, vg_alphai;
 	  double ui = u_dof_old[i]; // solution at time tn for the ith DOF
 	  double vi = v_dof_old[i];
-	      
+	  double ugxi = u_gx[i];
+	  double ugyi = u_gy[i];
+	  double vgxi = v_gx[i];
+	  double vgyi = v_gy[i];
+	  
+	  double Ui = std::sqrt(ui*ui+vi*vi);
+	  double ugi = std::sqrt(ugxi*ugxi + ugyi*ugyi);
+	  double vgi = std::sqrt(vgxi*vgxi + vgyi*vgyi);
+
 	  // FOR SMOOTHNESS INDICATOR //
 	  double u_alpha_numerator = 0, u_alpha_denominator = 0;
 	  double v_alpha_numerator = 0, v_alpha_denominator = 0;
-	  
+	  // SMOOTHNESS ON DERIVATIVES //
+	  double ug_alpha_numerator = 0, ug_alpha_denominator = 0;
+	  double vg_alpha_numerator = 0, vg_alpha_denominator = 0;
+	  	  
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    { //loop in j (sparsity pattern)
 	      int j = csrColumnOffsets_DofLoops[offset];
 	      double uj = u_dof_old[j];
 	      double vj = v_dof_old[j];
+	      double ugxj = u_gx[i];
+	      double ugyj = u_gy[j];
+	      double vgxj = v_gx[j];
+	      double vgyj = v_gy[j];
+
+	      double Uj = std::sqrt(uj*uj+vj*vj);
+	      double ugj = std::sqrt(ugxj*ugxj + ugyj*ugyj);
+	      double vgj = std::sqrt(vgxj*vgxj + vgyj*vgyj);
+
 	      // FOR SMOOTHNESS INDICATOR //
-	      u_alpha_numerator += uj - ui;
-	      u_alpha_denominator += fabs(uj - ui);	      
+	      u_alpha_numerator += Uj - Ui;
+	      u_alpha_denominator += fabs(Uj - Ui);	      
 	      v_alpha_numerator += vj - vi;
 	      v_alpha_denominator += fabs(vj - vi);	 
+
+	      // SMOOTHNESS INDICATOR ON DERIVATIVES //
+	      ug_alpha_numerator += ugj - ugi;
+	      ug_alpha_denominator += fabs(ugj - ugi);	      
+	      vg_alpha_numerator += vgj - vgi;
+	      vg_alpha_denominator += fabs(vgj - vgi);	 	      
 	    }
 	  //////////////////////////////////
 	  // COMPUTE SMOOTHNESS INDICATOR //
@@ -5899,36 +5988,59 @@ namespace proteus
 	  u_alphai = fabs(u_alpha_numerator)/(u_alpha_denominator+1E-15);
 	  v_alphai = fabs(v_alpha_numerator)/(v_alpha_denominator+1E-15);
 
+	  // ON DERIVATIVES //
+	  ug_alphai = fabs(ug_alpha_numerator)/(ug_alpha_denominator+1E-15);
+	  vg_alphai = fabs(vg_alpha_numerator)/(vg_alpha_denominator+1E-15);
+
 	  if (POWER_SMOOTHNESS_INDICATOR==0)
 	    {
 	      u_psi[i] = 1.0;
 	      v_psi[i] = 1.0;
+	      ug_psi[i] = 1.0;
+	      vg_psi[i] = 1.0;
 	    }
 	  else
 	    {
 	      u_psi[i] = std::pow(u_alphai,POWER_SMOOTHNESS_INDICATOR);
 	      v_psi[i] = std::pow(v_alphai,POWER_SMOOTHNESS_INDICATOR);
+	      ug_psi[i] = std::pow(ug_alphai,POWER_SMOOTHNESS_INDICATOR);
+	      vg_psi[i] = std::pow(vg_alphai,POWER_SMOOTHNESS_INDICATOR);
 	    }
-	  quantDOFs[i] = u_psi[i];
 	}
-      // ********** END OF COMPUTING SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
       // compute linear artificial viscosity scaling factor per cell //
       register double u_smoothnessIndicatorAtCell[nElements_global], v_smoothnessIndicatorAtCell[nElements_global];
+      register double ug_smoothnessIndicatorAtCell[nElements_global], vg_smoothnessIndicatorAtCell[nElements_global];
       for(int eN=0;eN<nElements_global;eN++)
 	{
 	  double u_smoothnessIndicatorAtCurrentCell = 0.;
 	  double v_smoothnessIndicatorAtCurrentCell = 0.;
+	  double ug_smoothnessIndicatorAtCurrentCell = 0.;
+	  double vg_smoothnessIndicatorAtCurrentCell = 0.;
 	  // loop on quad points
 	  for (int i=0;i<nDOF_test_element;i++)	
 	    {
 	      int eN_i = eN*nDOF_test_element+i;
 	      int gi = vel_l2g[eN_i];
-	      u_smoothnessIndicatorAtCurrentCell = fmax(u_smoothnessIndicatorAtCurrentCell, u_psi[gi]);
-	      v_smoothnessIndicatorAtCurrentCell = fmax(v_smoothnessIndicatorAtCurrentCell, v_psi[gi]);
+	      u_smoothnessIndicatorAtCurrentCell += u_psi[gi];
+	      v_smoothnessIndicatorAtCurrentCell += v_psi[gi];
+	      ug_smoothnessIndicatorAtCurrentCell += ug_psi[gi];
+	      vg_smoothnessIndicatorAtCurrentCell += vg_psi[gi];
+
+	      //u_smoothnessIndicatorAtCurrentCell  = fmax(u_smoothnessIndicatorAtCurrentCell, u_psi[gi]);
+	      //v_smoothnessIndicatorAtCurrentCell  = fmax(v_smoothnessIndicatorAtCurrentCell, v_psi[gi]);
+	      //ug_smoothnessIndicatorAtCurrentCell = fmax(ug_smoothnessIndicatorAtCurrentCell, ug_psi[gi]);
+	      //vg_smoothnessIndicatorAtCurrentCell = fmax(vg_smoothnessIndicatorAtCurrentCell, vg_psi[gi]);
 	    }  
-	  u_smoothnessIndicatorAtCell[eN] = u_smoothnessIndicatorAtCurrentCell;
-	  v_smoothnessIndicatorAtCell[eN] = v_smoothnessIndicatorAtCurrentCell;
+	  u_smoothnessIndicatorAtCell[eN] = u_smoothnessIndicatorAtCurrentCell/nDOF_test_element;
+	  v_smoothnessIndicatorAtCell[eN] = v_smoothnessIndicatorAtCurrentCell/nDOF_test_element;
+	  ug_smoothnessIndicatorAtCell[eN] = ug_smoothnessIndicatorAtCurrentCell/nDOF_test_element;
+	  vg_smoothnessIndicatorAtCell[eN] = vg_smoothnessIndicatorAtCurrentCell/nDOF_test_element;
 	}
+      */
+      // ********** END OF COMPUTING SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
+      register double entropyResidual[numDOFsPerEqn];
+      for (int i=0; i<numDOFsPerEqn; i++)
+	entropyResidual[i] = 0.0;
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -6535,22 +6647,22 @@ namespace proteus
 	      //q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
 	      //q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
 
+	      ///////////////////////////////////////////////
 	      // NUMERICAL DIFUSSION VIA ENTROPY VISCOSITY //
+	      ///////////////////////////////////////////////
 	      double hK=elementDiameter[eN];
 	      double linear_viscosity = cMax*hK*std::sqrt(maxSpeed2AtCell[eN]);
 	      //double entropy_viscosity = cE*entropyResidualAtCell[eN]/(maxSpeed2AtOmega+1E-10);
 	      double entropy_viscosity = cE*entropyResidualAtCell[eN]/(maxSpeed2AtCell[eN]+1E-10);	      
-	      //q_numDiff_u[eN_k] = fmin(linear_viscosity,entropy_viscosity);
+	      q_numDiff_u[eN_k] = fmin(linear_viscosity,entropy_viscosity);
 	      //q_numDiff_u[eN_k] = linear_viscosity;
-	      //q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
-	      //q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+	      q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
+	      q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
 
-
-	      q_numDiff_u[eN_k] = linear_viscosity*u_smoothnessIndicatorAtCell[eN];
-	      q_numDiff_v[eN_k] = linear_viscosity*v_smoothnessIndicatorAtCell[eN];
+	      //q_numDiff_u[eN_k] = linear_viscosity*u_smoothnessIndicatorAtCell[eN];//*ug_smoothnessIndicatorAtCell[eN];
+	      //q_numDiff_v[eN_k] = linear_viscosity*u_smoothnessIndicatorAtCell[eN];//*vg_smoothnessIndicatorAtCell[eN];
 	      /* q_numDiff_w[eN_k] = linear_viscosity*w_smoothnessIndicatorAtCell[eN]; */
 	      // END OF COMPUTING NUMERICAL DISSIPATION //
-
 	      // 
 	      //update element residual 
 	      //

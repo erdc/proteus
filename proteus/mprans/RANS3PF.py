@@ -1191,6 +1191,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u_dof_old = numpy.zeros(self.u[0].dof.shape,'d')
         self.v_dof_old = numpy.zeros(self.u[0].dof.shape,'d')
         self.w_dof_old = numpy.zeros(self.u[0].dof.shape,'d')
+        self.ML=None #lumped mass matrix
+        self.MC_global=None #consistent mass matrix
         self.cterm_global=None
         # mesh
         self.ebqe['x'] = numpy.zeros(
@@ -2001,6 +2003,40 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                           self.q['abs(det(J))'],
                                                           self.q[('grad(w)',0)],
                                                           self.q[('grad(w)*dV_f',0)])
+            # LUMPED MASS MATRIX #
+            #assume a linear mass term
+            dm = np.ones(self.q[('u',0)].shape,'d')
+            elementMassMatrix = np.zeros((self.mesh.nElements_global,
+                                          self.nDOF_test_element[0],
+                                          self.nDOF_trial_element[0]),'d')
+            cfemIntegrals.updateMassJacobian_weak_lowmem(dm,
+                                                         self.q[('w',0)],
+                                                         self.q[('w*dV_m',0)],
+                                                         elementMassMatrix)
+            self.MC_a = nzval_cMatrix.copy()
+            self.MC_global = SparseMat(self.nFreeDOF_global[0],
+                                       self.nFreeDOF_global[0],
+                                       nnz_cMatrix,
+                                       self.MC_a,
+                                       colind_cMatrix,
+                                       rowptr_cMatrix)
+            cfemIntegrals.zeroJacobian_CSR(nnz_cMatrix, self.MC_global)
+            cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                      self.l2g[0]['freeLocal'],
+                                                                      self.l2g[0]['nFreeDOF'],
+                                                                      self.l2g[0]['freeLocal'],
+                                                                      self.csrRowIndeces[(0,0)]/self.nc/self.nc,
+                                                                      self.csrColumnOffsets[(0,0)]/self.nc,
+                                                                      elementMassMatrix,
+                                                                      self.MC_global)
+            diamD2 = numpy.sum(self.q['abs(det(J))'][:]*self.elementQuadratureWeights[('u',0)])  
+            self.ML = np.zeros((self.nFreeDOF_global[0],),'d')
+            for i in range(self.nFreeDOF_global[0]):
+                self.ML[i] = self.MC_a[rowptr_cMatrix[i]:rowptr_cMatrix[i+1]].sum()
+            np.testing.assert_almost_equal(self.ML.sum(), diamD2, 
+                                           err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
+
+            # COMPUTE C-MATRICES #
             for d in range(self.nSpace_global): #spatial dimensions
                 #C matrices
                 self.cterm[d] = numpy.zeros((self.mesh.nElements_global,
@@ -2031,6 +2067,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
         rowptr_cMatrix, colind_cMatrix, Cx = self.cterm_global[0].getCSRrepresentation()
+        rowptr_cMatrix, colind_cMatrix, Cy = self.cterm_global[1].getCSRrepresentation()
+        if (self.nSpace_global == 3):
+            rowptr_cMatrix, colind_cMatrix, Cz = self.cterm_global[2].getCSRrepresentation()
+        else:
+            Cz = numpy.zeros(Cx.shape,'d')
+
         # mql: select appropiate functions to compute residual and jacobian
         if (self.use_entropy_viscosity == True):
             self.calculateResidual = self.rans3pf.calculateResidual_entropy_viscosity
@@ -2259,7 +2301,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.quantDOFs, 
             self.nFreeDOF_global[0],
             rowptr_cMatrix,
-            colind_cMatrix)            
+            colind_cMatrix, 
+            self.ML, 
+            Cx, 
+            Cy, 
+            Cz)  
 
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):
