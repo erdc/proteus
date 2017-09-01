@@ -944,7 +944,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 for j in range(self.mesh.nodeArray.shape[0]):
                     vel = self.granular_vel_Calc(self.mesh.nodeArray[j,:],i)
                     sdf,sdNormals = self.granular_sdf_Calc(self.mesh.nodeArray[j,:],i)
-                    sdf+=vel* self.model.dt_last
+                    sdf -= self.model.dt_last*np.dot(np.array(vel),np.array(sdNormals))
                     if ( abs(sdf) < abs(self.phi_s[j]) ):
                         self.phi_s[j]=sdf
                 for eN in range(self.model.q['x'].shape[0]):
