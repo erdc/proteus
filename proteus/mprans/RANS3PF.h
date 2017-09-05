@@ -108,6 +108,9 @@ namespace proteus
 				   double* u_dof_old, 
 				   double* v_dof_old, 
 				   double* w_dof_old,
+				   double* u_dof_old_old, 
+				   double* v_dof_old_old, 
+				   double* w_dof_old_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -229,6 +232,8 @@ namespace proteus
 				   double* particle_netForces,
 				   double* particle_netMoments,
 				   double particle_nitsche, 
+				   int STABILIZATION_TYPE,
+				   double areaRefElement, 
 				   double cMax, 
 				   double cE, 
 				   double* forcex, 
@@ -246,7 +251,12 @@ namespace proteus
 				   double* ML, 
 				   double* Cx, 
 				   double* Cy, 
-				   double* Cz)=0;
+				   double* Cz,
+				   int MATERIAL_PARAMETERS_AS_FUNCTION,
+				   double* density_as_function,
+				   double* kinematic_viscosity_as_function,
+				   double* ebqe_density_as_function, 
+				   double* ebqe_kinematic_viscosity_as_function)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -424,7 +434,12 @@ namespace proteus
 				   double* particle_velocities,
 				   double* particle_centroids,
 				   double particle_nitsche, 
-				   int KILL_PRESSURE_TERM)=0;
+				   int KILL_PRESSURE_TERM, 
+				   int MATERIAL_PARAMETERS_AS_FUNCTION,
+				   double* density_as_function,
+				   double* kinematic_viscosity_as_function,
+				   double* ebqe_density_as_function, 
+				   double* ebqe_kinematic_viscosity_as_function)=0;
     virtual void calculateResidual_entropy_viscosity(
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -503,6 +518,9 @@ namespace proteus
 				   double* u_dof_old, 
 				   double* v_dof_old, 
 				   double* w_dof_old,
+				   double* u_dof_old_old, 
+				   double* v_dof_old_old, 
+				   double* w_dof_old_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -624,6 +642,8 @@ namespace proteus
 				   double* particle_netForces,
 				   double* particle_netMoments,
 				   double particle_nitsche, 
+				   int STABILIZATION_TYPE,
+				   double areaRefElement, 
 				   double cMax, 
 				   double cE, 
 				   double* forcex, 
@@ -641,7 +661,12 @@ namespace proteus
 				   double* ML, 
 				   double* Cx, 
 				   double* Cy, 
-				   double* Cz)=0;
+				   double* Cz,
+				   int MATERIAL_PARAMETERS_AS_FUNCTION,
+				   double* density_as_function,
+				   double* kinematic_viscosity_as_function,
+				   double* ebqe_density_as_function, 
+				   double* ebqe_kinematic_viscosity_as_function)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -819,7 +844,12 @@ namespace proteus
 				   double* particle_velocities,
 				   double* particle_centroids,
 				   double particle_nitsche, 
-				   int KILL_PRESSURE_TERM)=0;
+				   int KILL_PRESSURE_TERM, 
+				   int MATERIAL_PARAMETERS_AS_FUNCTION,
+				   double* density_as_function,
+				   double* kinematic_viscosity_as_function,
+				   double* ebqe_density_as_function, 
+				   double* ebqe_kinematic_viscosity_as_function)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
     					  int* exteriorElementBoundariesArray,
     					  int nInteriorElementBoundaries_global,
@@ -2122,6 +2152,9 @@ namespace proteus
 			   double* u_dof_old, 
 			   double* v_dof_old, 
 			   double* w_dof_old,
+			   double* u_dof_old_old, 
+			   double* v_dof_old_old, 
+			   double* w_dof_old_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -2225,6 +2258,8 @@ namespace proteus
 			   double* particle_netMoments,
 			   double particle_nitsche, 
 			   // PARAMETERS FOR ENTROPY VISCOSITY 
+			   int STABILIZATION_TYPE,
+			   double areaRefElement, 
 			   double cMax, 
 			   double cE, 
 			   double* forcex, 
@@ -2242,7 +2277,12 @@ namespace proteus
 			   double* ML, 
 			   double* Cx, 
 			   double* Cy, 
-			   double* Cz)
+			   double* Cz,
+			   int MATERIAL_PARAMETERS_AS_FUNCTION,
+			   double* density_as_function,
+			   double* kinematic_viscosity_as_function,
+			   double* ebqe_density_as_function, 
+			   double* ebqe_kinematic_viscosity_as_function)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -3980,7 +4020,12 @@ namespace proteus
 			   double* particle_velocities,
 			   double* particle_centroids,
 			   double particle_nitsche, 
-			   int KILL_PRESSURE_TERM)
+			   int KILL_PRESSURE_TERM, 
+			   int MATERIAL_PARAMETERS_AS_FUNCTION,
+			   double* density_as_function,
+			   double* kinematic_viscosity_as_function,
+			   double* ebqe_density_as_function, 
+			   double* ebqe_kinematic_viscosity_as_function)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -5651,6 +5696,9 @@ namespace proteus
 			   double* u_dof_old, 
 			   double* v_dof_old, 
 			   double* w_dof_old,
+			   double* u_dof_old_old, 
+			   double* v_dof_old_old, 
+			   double* w_dof_old_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -5753,6 +5801,8 @@ namespace proteus
 			   double* particle_netForces,
 			   double* particle_netMoments,
 			   double particle_nitsche, 
+			   int STABILIZATION_TYPE,
+			   double areaRefElement, 
 			   double cMax, 
 			   double cE, 
 			   double* forcex, 
@@ -5770,7 +5820,12 @@ namespace proteus
 			   double* ML, 
 			   double* Cx, 
 			   double* Cy, 
-			   double* Cz)
+			   double* Cz,
+			   int MATERIAL_PARAMETERS_AS_FUNCTION,
+			   double* density_as_function,
+			   double* kinematic_viscosity_as_function,
+			   double* ebqe_density_as_function, 
+			   double* ebqe_kinematic_viscosity_as_function)
     {
       /*
       double cell_vel_max, cell_vel2_max, cell_entropy_residual_max, vel_max_in_omega=0.0, vel2_max_in_omega=0.0;
@@ -7616,7 +7671,12 @@ namespace proteus
 			   double* particle_velocities,
 			   double* particle_centroids,
 			   double particle_nitsche, 
-			   int KILL_PRESSURE_TERM)
+			   int KILL_PRESSURE_TERM, 
+			   int MATERIAL_PARAMETERS_AS_FUNCTION,
+			   double* density_as_function,
+			   double* kinematic_viscosity_as_function,
+			   double* ebqe_density_as_function, 
+			   double* ebqe_kinematic_viscosity_as_function)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
