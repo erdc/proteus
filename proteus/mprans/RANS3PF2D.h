@@ -7,7 +7,9 @@
 #include "ModelFactory.h"
 #include "SedClosure.h"
 
-#define POWER_SMOOTHNESS_INDICATOR 2
+//#define POWER_SMOOTHNESS_INDICATOR 2
+#define u_alpha_min 0.25
+#define v_alpha_min 0.25
 
 namespace proteus
 {
@@ -108,6 +110,9 @@ namespace proteus
 				   double* u_dof_old, 
 				   double* v_dof_old, 
 				   double* w_dof_old,
+				   double* u_dof_old_old, 
+				   double* v_dof_old_old, 
+				   double* w_dof_old_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -230,6 +235,8 @@ namespace proteus
 				   double* particle_netMoments,
 				   double* particle_surfaceArea,
 				   double particle_nitsche, 
+				   int STABILIZATION_TYPE,
+				   double areaRefElement, 
 				   double cMax, 
 				   double cE, 
 				   double* forcex, 
@@ -247,7 +254,12 @@ namespace proteus
 				   double* ML, 
 				   double* Cx, 
 				   double* Cy, 
-				   double* Cz
+				   double* Cz, 
+				   int MATERIAL_PARAMETERS_AS_FUNCTION,
+				   double* density_as_function,
+				   double* kinematic_viscosity_as_function,
+				   double* ebqe_density_as_function, 
+				   double* ebqe_kinematic_viscosity_as_function
 				   )=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
@@ -426,7 +438,12 @@ namespace proteus
 				   double* particle_velocities,
 				   double* particle_centroids,
 				   double particle_nitsche, 
-				   int KILL_PRESSURE_TERM)=0;
+				   int KILL_PRESSURE_TERM, 
+				   int MATERIAL_PARAMETERS_AS_FUNCTION,
+				   double* density_as_function,
+				   double* kinematic_viscosity_as_function,
+				   double* ebqe_density_as_function, 
+				   double* ebqe_kinematic_viscosity_as_function)=0;
     virtual void calculateResidual_entropy_viscosity(
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -506,6 +523,9 @@ namespace proteus
 				   double* u_dof_old, 
 				   double* v_dof_old, 
 				   double* w_dof_old,
+				   double* u_dof_old_old, 
+				   double* v_dof_old_old, 
+				   double* w_dof_old_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -628,6 +648,8 @@ namespace proteus
 				   double* particle_netMoments,
 				   double* particle_surfaceArea,
 				   double particle_nitsche, 
+				   int STABILIZATION_TYPE,
+				   double areaRefElement, 
 				   double cMax, 
 				   double cE, 
 				   double* forcex, 
@@ -645,7 +667,12 @@ namespace proteus
 				   double* ML, 
 				   double* Cx, 
 				   double* Cy, 
-				   double* Cz)=0;
+				   double* Cz,
+				   int MATERIAL_PARAMETERS_AS_FUNCTION,
+				   double* density_as_function,
+				   double* kinematic_viscosity_as_function,
+				   double* ebqe_density_as_function, 
+				   double* ebqe_kinematic_viscosity_as_function)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -823,7 +850,12 @@ namespace proteus
 				   double* particle_velocities,
 				   double* particle_centroids,
 				   double particle_nitsche, 
-				   int KILL_PRESSURE_TERM)=0;
+				   int KILL_PRESSURE_TERM,
+				   int MATERIAL_PARAMETERS_AS_FUNCTION,
+				   double* density_as_function,
+				   double* kinematic_viscosity_as_function,
+				   double* ebqe_density_as_function, 
+				   double* ebqe_kinematic_viscosity_as_function)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
     					  int* exteriorElementBoundariesArray,
     					  int nInteriorElementBoundaries_global,
@@ -1053,7 +1085,10 @@ namespace proteus
 			      int KILL_PRESSURE_TERM, 
 			      double forcex, 
 			      double forcey,
-			      double forcez)
+			      double forcez, 
+			      int MATERIAL_PARAMETERS_AS_FUNCTION, 
+			      double density_as_function, 
+			      double kinematic_viscosity_as_function)
     {
       double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
       H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -1091,12 +1126,23 @@ namespace proteus
 	    nu_t1 = cs_1*h_e*h_e*norm_S;
 	  }
 	}
-      
-      rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
-      nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
-      nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
-      nu += nu_t;
-      mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+
+      if (MATERIAL_PARAMETERS_AS_FUNCTION==0)
+	{
+	  rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
+	  nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
+	  nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+	  nu += nu_t;
+	  mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+	}
+      else // set the material parameters by a function. To check convergence
+	{
+	  rho = density_as_function;
+	  nu_t= 0;
+	  nu  = kinematic_viscosity_as_function;
+	  mu  = rho*nu;
+	}
+
       rhoSave = rho;
       nuSave = nu;
       eddy_viscosity = nu_t;
@@ -2137,6 +2183,9 @@ namespace proteus
 			   double* u_dof_old, 
 			   double* v_dof_old, 
 			   double* w_dof_old,
+			   double* u_dof_old_old, 
+			   double* v_dof_old_old, 
+			   double* w_dof_old_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -2240,6 +2289,8 @@ namespace proteus
 			   double* particle_netMoments,
 			   double* particle_surfaceArea,
 			   double particle_nitsche, 
+			   int STABILIZATION_TYPE,
+			   double areaRefElement, 
 			   double cMax, 
 			   double cE, 
 			   double* forcex, 
@@ -2257,7 +2308,12 @@ namespace proteus
 			   double* ML, 
 			   double* Cx, 
 			   double* Cy, 
-			   double* Cz)
+			   double* Cz,
+			   int MATERIAL_PARAMETERS_AS_FUNCTION,
+			   double* density_as_function,
+			   double* kinematic_viscosity_as_function,
+			   double* ebqe_density_as_function, 
+			   double* ebqe_kinematic_viscosity_as_function)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -2553,7 +2609,10 @@ namespace proteus
 				   KILL_PRESSURE_TERM, 
 				   forcex[eN_k],
 				   forcey[eN_k],
-				   forcez[eN_k]);          
+				   forcez[eN_k], 
+				   MATERIAL_PARAMETERS_AS_FUNCTION, 
+				   density_as_function[eN_k], 
+				   kinematic_viscosity_as_function[eN_k]);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not?
@@ -3267,7 +3326,10 @@ namespace proteus
 				   KILL_PRESSURE_TERM, 
 				   0., // mql: zero force term at boundary  
 				   0., 
-				   0.);          
+				   0., 
+				   MATERIAL_PARAMETERS_AS_FUNCTION, 
+				   ebqe_density_as_function[ebNE_kb], 
+				   ebqe_kinematic_viscosity_as_function[ebNE_kb]);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -3347,7 +3409,10 @@ namespace proteus
 				   KILL_PRESSURE_TERM, 
 				   0., // mql: zero force term at boundary  
 				   0., 
-				   0.);          
+				   0.,
+				   MATERIAL_PARAMETERS_AS_FUNCTION, 
+				   ebqe_density_as_function[ebNE_kb], 
+				   ebqe_kinematic_viscosity_as_function[ebNE_kb]);                    
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
@@ -4003,7 +4068,12 @@ namespace proteus
 			   double* particle_velocities,
 			   double* particle_centroids,
 			   double particle_nitsche, 
-			   int KILL_PRESSURE_TERM)
+			   int KILL_PRESSURE_TERM, 
+			   int MATERIAL_PARAMETERS_AS_FUNCTION,
+			   double* density_as_function,
+			   double* kinematic_viscosity_as_function,
+			   double* ebqe_density_as_function, 
+			   double* ebqe_kinematic_viscosity_as_function)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -4321,7 +4391,10 @@ namespace proteus
 				   KILL_PRESSURE_TERM, 
 				   0., // mql: the force term doesn't play a role in the Jacobian
 				   0.,
-				   0.);          
+				   0.,
+				   MATERIAL_PARAMETERS_AS_FUNCTION, 
+				   density_as_function[eN_k], 
+				   kinematic_viscosity_as_function[eN_k]);  
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not
@@ -5109,7 +5182,10 @@ namespace proteus
 				   KILL_PRESSURE_TERM, 
 				   0., // mql: zero force term at boundary 
 				   0., 
-				   0.);          
+				   0.,
+				   MATERIAL_PARAMETERS_AS_FUNCTION, 
+				   ebqe_density_as_function[ebNE_kb], 
+				   ebqe_kinematic_viscosity_as_function[ebNE_kb]);                   
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -5189,7 +5265,10 @@ namespace proteus
 				   KILL_PRESSURE_TERM, 
 				   0., // mql: zero force term at boundary  
 				   0., 
-				   0.);          
+				   0.,
+				   MATERIAL_PARAMETERS_AS_FUNCTION, 
+				   ebqe_density_as_function[ebNE_kb], 
+				   ebqe_kinematic_viscosity_as_function[ebNE_kb]);                    
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{
@@ -5680,6 +5759,9 @@ namespace proteus
 			   double* u_dof_old, 
 			   double* v_dof_old, 
 			   double* w_dof_old,
+			   double* u_dof_old_old, 
+			   double* v_dof_old_old, 
+			   double* w_dof_old_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -5783,6 +5865,8 @@ namespace proteus
 			   double* particle_netMoments,
 			   double* particle_surfaceArea,
 			   double particle_nitsche, 
+			   int STABILIZATION_TYPE,
+			   double areaRefElement, 
 			   double cMax, 
 			   double cE, 
 			   double* forcex, 
@@ -5800,94 +5884,87 @@ namespace proteus
 			   double* ML, 
 			   double* Cx, 
 			   double* Cy, 
-			   double* Cz)
+			   double* Cz,
+			   int MATERIAL_PARAMETERS_AS_FUNCTION,
+			   double* density_as_function,
+			   double* kinematic_viscosity_as_function,
+			   double* ebqe_density_as_function, 
+			   double* ebqe_kinematic_viscosity_as_function)
     {
-      /*
-      double dt = 1./alphaBDF;
-      double cell_vel_max, cell_vel2_max, cell_entropy_residual_max, vel_max_in_omega=0.0, vel2_max_in_omega=0.0;
-      register double vel_max[nElements_global], vel2_max[nElements_global], entropy_residual[nElements_global];
-      
-      // ** COMPUTE QUANTITIES PER CELL FOR ENTROPY VISCOSIY (MQL) ** //
-      for(int eN=0;eN<nElements_global;eN++)
+      ////////////////////////////////////////////////
+      // ***** COMPUTE EV VIA STRONG RESIDUAL ***** //
+      ////////////////////////////////////////////////
+      if (STABILIZATION_TYPE==2)
 	{
-	  cell_vel_max = 0.;
-	  cell_vel2_max = 0.;
-	  cell_entropy_residual_max = 0.;
-	  // loop over quadrature points 
-	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	  for(int eN=0;eN<nElements_global;eN++)
 	    {
-	      register int eN_nDOF_trial_element = eN*nDOF_trial_element, eN_k = eN*nQuadraturePoints_element+k, eN_k_nSpace = eN_k*nSpace;
-	      register double un=0.0, vn=0.0, unm1=0.0, vnm1=0.0, grad_un[nSpace], grad_vn[nSpace], grad_pn[nSpace], hess_un[nSpace2],hess_vn[nSpace2];
-	      register double p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],vel_hess_trial[nDOF_trial_element*nSpace2];
-	      register double jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace], x,y,z,dV;
-
-	      //get jacobian, etc for mapping reference element
-	      ck.calculateMapping_element(eN,
-					  k,
-					  mesh_dof,
-					  mesh_l2g,
-					  mesh_trial_ref,
-					  mesh_grad_trial_ref,
-					  jac,
-					  jacDet,
-					  jacInv,
-					  x,y,z);
-	      // calculate integration weight
-	      dV = fabs(jacDet)*dV_ref[k];
-	      // get the trial function gradient and hessian 
-	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
-	      ck.hessTrialFromRef(&vel_hess_trial_ref[k*nDOF_trial_element*nSpace2],jacInv,vel_hess_trial);
-	      // get u_old, u_old_old, ... at quadrature points
-	      ck.valFromDOF(u_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],un);
-	      ck.valFromDOF(v_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],vn);
-	      ck.valFromDOF(u_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],unm1);
-	      ck.valFromDOF(v_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],vnm1);
-	      // get grad_un, ... at quadrature points
-	      ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_un);
-	      ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_vn);
-	      // get hessian(un) ... at quadrature points
-	      ck.hessFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_un);
-	      ck.hessFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_vn);
-	      // get grad_pn at quadrature point. This is given (at quad points) from a different model
-              for (int I=0;I<nSpace;I++)
-                grad_pn[I] = q_grad_p[eN_k_nSpace + I];	      
-	      ////////////////////////
-	      // COMPUTE RHO AND NU //
-	      ////////////////////////
-	      // compute rho 
-	      double eps_rho = epsFact_rho*elementDiameter[eN];
-	      double H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi[eN_k]) + useVF*fmin(1.0,fmax(0.0,vf[eN_k]));
-	      double rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
-	      // compute nu      
-	      double eps_mu = epsFact_rho*elementDiameter[eN];
-	      double H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi[eN_k]) + useVF*fmin(1.0,fmax(0.0,vf[eN_k]));
-	      double nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
-	      /////////////////////////////
-	      // COMPUTE MAX OF VELOCITY //
-	      /////////////////////////////
-	      cell_vel_max = std::max(cell_vel_max,std::max(std::abs(un), std::abs(vn)));
-	      cell_vel2_max = std::max(cell_vel2_max,un*un+vn*vn);
-	      /////////////////////////////
-	      // COMPUTE RESIDUAL OF PDE //
-	      /////////////////////////////
-	      // compute residual. NOTE: viscous part is missing
-	      double Res_in_x = (un-unm1)/dt + (un*grad_un[0]+vn*grad_un[1]) + grad_pn[0]/rho - g[0] 
-		- nu*(hess_un[0] + hess_un[3]) //  un_xx + un_yy 
-		- nu*(hess_un[0] + hess_vn[2]); // un_xx + vn_yx
-	      double Res_in_y = (vn-vnm1)/dt + (un*grad_vn[0]+vn*grad_vn[1]) + grad_pn[1]/rho - g[1] 
-		- nu*(hess_vn[0] + hess_vn[3])  // vn_xx + vn_yy
-		- nu*(hess_un[1] + hess_vn[3]); // un_xy + vn_yy
-	      // compute entropy_residual = Res(u).u
-	      double entropy_residual_at_quad = Res_in_x*un + Res_in_y*vn;
-	      cell_entropy_residual_max = std::max(cell_entropy_residual_max, std::abs(entropy_residual_at_quad));
+	      double maxSpeed2AtCurrentCell = 0.;
+	      double entropyResidualAtCurrentCell = 0.;
+	      // loop over quadrature points 
+	      for  (int k=0;k<nQuadraturePoints_element;k++)
+		{
+		  register int eN_nDOF_trial_element = eN*nDOF_trial_element, eN_k = eN*nQuadraturePoints_element+k, eN_k_nSpace = eN_k*nSpace;
+		  register double un=0.0, vn=0.0, unm1=0.0, vnm1=0.0, grad_un[nSpace], grad_vn[nSpace], grad_pn[nSpace], hess_un[nSpace2],hess_vn[nSpace2];
+		  register double p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],vel_hess_trial[nDOF_trial_element*nSpace2];
+		  register double jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace], x,y,z,dV;		  
+		  //get jacobian, etc for mapping reference element
+		  ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
+		  // calculate integration weight
+		  dV = fabs(jacDet)*dV_ref[k];
+		  // get the trial function gradient and hessian 
+		  ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
+		  ck.hessTrialFromRef(&vel_hess_trial_ref[k*nDOF_trial_element*nSpace2],jacInv,vel_hess_trial);
+		  // get u_old, u_old_old, ... at quadrature points
+		  ck.valFromDOF(u_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],un);
+		  ck.valFromDOF(v_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],vn);
+		  ck.valFromDOF(u_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],unm1);
+		  ck.valFromDOF(v_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],vnm1);
+		  // get grad_un, ... at quadrature points
+		  ck.gradFromDOF(u_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_un);
+		  ck.gradFromDOF(v_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_vn);
+		  // get hessian(un) ... at quadrature points
+		  ck.hessFromDOF(u_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_un);
+		  ck.hessFromDOF(v_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_vn);
+		  // get grad_pn at quadrature point. This is given (at quad points) from a different model
+		  for (int I=0;I<nSpace;I++)
+		    grad_pn[I] = q_grad_p[eN_k_nSpace + I];	      
+		  ////////////////////////
+		  // COMPUTE RHO AND NU //
+		  ////////////////////////
+		  // compute rho 
+		  double eps_rho = epsFact_rho*elementDiameter[eN];
+		  double H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi[eN_k]) + useVF*fmin(1.0,fmax(0.0,vf[eN_k]));
+		  double rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
+		  // compute nu      
+		  double eps_mu = epsFact_rho*elementDiameter[eN];
+		  double H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi[eN_k]) + useVF*fmin(1.0,fmax(0.0,vf[eN_k]));
+		  double nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+		  /////////////////////////////
+		  // COMPUTE MAX OF VELOCITY //
+		  /////////////////////////////
+		  maxSpeed2AtCurrentCell = fmax(maxSpeed2AtCurrentCell, un*un+vn*vn);
+		  /////////////////////////////
+		  // COMPUTE RESIDUAL OF PDE //
+		  /////////////////////////////
+		  // compute residual.
+		  double Res_in_x = 
+		    (un-unm1)/dt + (un*grad_un[0]+vn*grad_un[1]) + grad_pn[0]/rho - g[0] 
+		    - nu*(hess_un[0] + hess_un[3]) //  un_xx + un_yy 
+		    - nu*(hess_un[0] + hess_vn[2]); // un_xx + vn_yx
+		  double Res_in_y = 
+		    (vn-vnm1)/dt + (un*grad_vn[0]+vn*grad_vn[1]) + grad_pn[1]/rho - g[1] 
+		    - nu*(hess_vn[0] + hess_vn[3])  // vn_xx + vn_yy
+		    - nu*(hess_un[1] + hess_vn[3]); // un_xy + vn_yy
+		  // compute entropy_residual = Res(u).u
+		  entropyResidualAtCurrentCell = fmax(entropyResidualAtCurrentCell, fabs(Res_in_x*un + Res_in_y*vn));
+		}
+	      maxSpeed2AtCell[eN] = maxSpeed2AtCurrentCell;
+	      entropyResidualAtCell[eN] = entropyResidualAtCurrentCell;
+	      maxSpeed2AtOmega = fmax(maxSpeed2AtOmega, maxSpeed2AtCurrentCell);
 	    }
-	  vel_max[eN] = cell_vel_max;
-	  vel2_max[eN] = cell_vel2_max;
-	  entropy_residual[eN] = cell_entropy_residual_max;
-	  vel_max_in_omega = std::max(vel_max_in_omega,cell_vel_max);
-	  vel2_max_in_omega = std::max(vel2_max_in_omega,cell_vel2_max);
 	}
-      */
+      // END OF COMPUTING EV VIA STRONG RESIDUAL //
+
       ////////////////////////////
       // CALCULATE grad vectors // 
       ////////////////////////////
@@ -5925,122 +6002,78 @@ namespace proteus
 
 	  quantDOFs[i] = u_gx[i];
 	}
-
+      */
       //////////////////////////////////
       // COMPUTE SMOOTHNESS INDICATOR // 
       //////////////////////////////////
-      register double u_psi[numDOFsPerEqn], v_psi[numDOFsPerEqn], entropyResidual[numDOFsPerEqn];
-      register double ug_psi[numDOFsPerEqn], vg_psi[numDOFsPerEqn];
+      register double entropyResidualPerNode[numDOFsPerEqn];
+      for (int i=0; i<numDOFsPerEqn; i++)
+	entropyResidualPerNode[i] = 0.0;
+      /*
+      register double u_psi[numDOFsPerEqn], v_psi[numDOFsPerEqn], entropyResidualPerNode[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
 	  // initialize entropyResidual
-	  entropyResidual[i] = 0.0;
+	  entropyResidualPerNode[i] = 0.0;
 	  
 	  double u_alphai, v_alphai; // smoothness indicator of solution	      
-	  double ug_alphai, vg_alphai;
 	  double ui = u_dof_old[i]; // solution at time tn for the ith DOF
 	  double vi = v_dof_old[i];
-	  double ugxi = u_gx[i];
-	  double ugyi = u_gy[i];
-	  double vgxi = v_gx[i];
-	  double vgyi = v_gy[i];
-	  
-	  double Ui = std::sqrt(ui*ui+vi*vi);
-	  double ugi = std::sqrt(ugxi*ugxi + ugyi*ugyi);
-	  double vgi = std::sqrt(vgxi*vgxi + vgyi*vgyi);
 
 	  // FOR SMOOTHNESS INDICATOR //
 	  double u_alpha_numerator = 0, u_alpha_denominator = 0;
 	  double v_alpha_numerator = 0, v_alpha_denominator = 0;
-	  // SMOOTHNESS ON DERIVATIVES //
-	  double ug_alpha_numerator = 0, ug_alpha_denominator = 0;
-	  double vg_alpha_numerator = 0, vg_alpha_denominator = 0;
-	  	  
+
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    { //loop in j (sparsity pattern)
 	      int j = csrColumnOffsets_DofLoops[offset];
 	      double uj = u_dof_old[j];
 	      double vj = v_dof_old[j];
-	      double ugxj = u_gx[i];
-	      double ugyj = u_gy[j];
-	      double vgxj = v_gx[j];
-	      double vgyj = v_gy[j];
-
-	      double Uj = std::sqrt(uj*uj+vj*vj);
-	      double ugj = std::sqrt(ugxj*ugxj + ugyj*ugyj);
-	      double vgj = std::sqrt(vgxj*vgxj + vgyj*vgyj);
 
 	      // FOR SMOOTHNESS INDICATOR //
-	      u_alpha_numerator += Uj - Ui;
-	      u_alpha_denominator += fabs(Uj - Ui);	      
+	      u_alpha_numerator += uj - ui;
+	      u_alpha_denominator += fabs(uj - ui);	      
 	      v_alpha_numerator += vj - vi;
 	      v_alpha_denominator += fabs(vj - vi);	 
-
-	      // SMOOTHNESS INDICATOR ON DERIVATIVES //
-	      ug_alpha_numerator += ugj - ugi;
-	      ug_alpha_denominator += fabs(ugj - ugi);	      
-	      vg_alpha_numerator += vgj - vgi;
-	      vg_alpha_denominator += fabs(vgj - vgi);	 	      
 	    }
 	  //////////////////////////////////
 	  // COMPUTE SMOOTHNESS INDICATOR //
 	  //////////////////////////////////
-	  u_alphai = fabs(u_alpha_numerator)/(u_alpha_denominator+1E-15);
-	  v_alphai = fabs(v_alpha_numerator)/(v_alpha_denominator+1E-15);
-
-	  // ON DERIVATIVES //
-	  ug_alphai = fabs(ug_alpha_numerator)/(ug_alpha_denominator+1E-15);
-	  vg_alphai = fabs(vg_alpha_numerator)/(vg_alpha_denominator+1E-15);
+	  u_alphai = fmax(u_alpha_min,fabs(u_alpha_numerator)/(u_alpha_denominator+1E-15));
+	  v_alphai = fmax(v_alpha_min,fabs(v_alpha_numerator)/(v_alpha_denominator+1E-15));
 
 	  if (POWER_SMOOTHNESS_INDICATOR==0)
 	    {
 	      u_psi[i] = 1.0;
 	      v_psi[i] = 1.0;
-	      ug_psi[i] = 1.0;
-	      vg_psi[i] = 1.0;
 	    }
 	  else
 	    {
 	      u_psi[i] = std::pow(u_alphai,POWER_SMOOTHNESS_INDICATOR);
 	      v_psi[i] = std::pow(v_alphai,POWER_SMOOTHNESS_INDICATOR);
-	      ug_psi[i] = std::pow(ug_alphai,POWER_SMOOTHNESS_INDICATOR);
-	      vg_psi[i] = std::pow(vg_alphai,POWER_SMOOTHNESS_INDICATOR);
 	    }
 	}
       // compute linear artificial viscosity scaling factor per cell //
       register double u_smoothnessIndicatorAtCell[nElements_global], v_smoothnessIndicatorAtCell[nElements_global];
-      register double ug_smoothnessIndicatorAtCell[nElements_global], vg_smoothnessIndicatorAtCell[nElements_global];
       for(int eN=0;eN<nElements_global;eN++)
 	{
 	  double u_smoothnessIndicatorAtCurrentCell = 0.;
 	  double v_smoothnessIndicatorAtCurrentCell = 0.;
-	  double ug_smoothnessIndicatorAtCurrentCell = 0.;
-	  double vg_smoothnessIndicatorAtCurrentCell = 0.;
 	  // loop on quad points
 	  for (int i=0;i<nDOF_test_element;i++)	
 	    {
 	      int eN_i = eN*nDOF_test_element+i;
 	      int gi = vel_l2g[eN_i];
-	      u_smoothnessIndicatorAtCurrentCell += u_psi[gi];
-	      v_smoothnessIndicatorAtCurrentCell += v_psi[gi];
-	      ug_smoothnessIndicatorAtCurrentCell += ug_psi[gi];
-	      vg_smoothnessIndicatorAtCurrentCell += vg_psi[gi];
-
-	      //u_smoothnessIndicatorAtCurrentCell  = fmax(u_smoothnessIndicatorAtCurrentCell, u_psi[gi]);
-	      //v_smoothnessIndicatorAtCurrentCell  = fmax(v_smoothnessIndicatorAtCurrentCell, v_psi[gi]);
-	      //ug_smoothnessIndicatorAtCurrentCell = fmax(ug_smoothnessIndicatorAtCurrentCell, ug_psi[gi]);
-	      //vg_smoothnessIndicatorAtCurrentCell = fmax(vg_smoothnessIndicatorAtCurrentCell, vg_psi[gi]);
+	      u_smoothnessIndicatorAtCurrentCell  = fmax(u_smoothnessIndicatorAtCurrentCell, u_psi[gi]);
+	      v_smoothnessIndicatorAtCurrentCell  = fmax(v_smoothnessIndicatorAtCurrentCell, v_psi[gi]);
 	    }  
-	  u_smoothnessIndicatorAtCell[eN] = u_smoothnessIndicatorAtCurrentCell/nDOF_test_element;
-	  v_smoothnessIndicatorAtCell[eN] = v_smoothnessIndicatorAtCurrentCell/nDOF_test_element;
-	  ug_smoothnessIndicatorAtCell[eN] = ug_smoothnessIndicatorAtCurrentCell/nDOF_test_element;
-	  vg_smoothnessIndicatorAtCell[eN] = vg_smoothnessIndicatorAtCurrentCell/nDOF_test_element;
+	  u_smoothnessIndicatorAtCell[eN] = u_smoothnessIndicatorAtCurrentCell;
+	  v_smoothnessIndicatorAtCell[eN] = v_smoothnessIndicatorAtCurrentCell;
 	}
       */
       // ********** END OF COMPUTING SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
-      register double entropyResidual[numDOFsPerEqn];
-      for (int i=0; i<numDOFsPerEqn; i++)
-	entropyResidual[i] = 0.0;
+
+      for (int i=0; i<nDOF_test_element; i++)
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -6344,7 +6377,10 @@ namespace proteus
 				   KILL_PRESSURE_TERM, 
 				   forcex[eN_k], 
 				   forcey[eN_k], 
-				   forcez[eN_k]);          
+				   forcez[eN_k],
+				   MATERIAL_PARAMETERS_AS_FUNCTION, 
+				   density_as_function[eN_k], 
+				   kinematic_viscosity_as_function[eN_k]);          
 
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
@@ -6652,17 +6688,31 @@ namespace proteus
 	      ///////////////////////////////////////////////
 	      double hK=elementDiameter[eN];
 	      double linear_viscosity = cMax*hK*std::sqrt(maxSpeed2AtCell[eN]);
-	      //double entropy_viscosity = cE*entropyResidualAtCell[eN]/(maxSpeed2AtOmega+1E-10);
-	      double entropy_viscosity = cE*entropyResidualAtCell[eN]/(maxSpeed2AtCell[eN]+1E-10);	      
-	      q_numDiff_u[eN_k] = fmin(linear_viscosity,entropy_viscosity);
-	      //q_numDiff_u[eN_k] = linear_viscosity;
-	      q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
-	      q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+	      double areaK = fabs(jacDet)*areaRefElement; //This is true if jacDet is constant 
+	      double entropy_viscosity = cE*hK*hK*entropyResidualAtCell[eN]/(areaK*maxSpeed2AtCell[eN]+1E-10); // STABILIZATION_TYPE=1. Weak entropy residual	      
+	      if (STABILIZATION_TYPE == 2) // strong entropy residual 
+		entropy_viscosity = cE*hK*hK*entropyResidualAtCell[eN]/(maxSpeed2AtCell[eN]+1E-10);
 
+	      if (STABILIZATION_TYPE==1) // EV via weak residual
+		{
+		  q_numDiff_u[eN_k] = fmin(linear_viscosity, entropy_viscosity);
+		  q_numDiff_v[eN_k] = fmin(linear_viscosity, entropy_viscosity);
+		  /* q_numDiff_w[eN_k] = fmin(linear_viscosity, entropy_viscosity); */
+		}
+	      else // EV via strong residual
+		{
+		  q_numDiff_u[eN_k] = fmin(linear_viscosity, entropy_viscosity);
+		  q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
+		  /* q_numDiff_w[eN_k] = q_numDiff_u[eN_k]; */
+		}
+	      //////////////////////////////////////////////////
+	      // NUMERICAL DIFUSSION VIA SMOOTHNESS INDICATOR //
+	      //////////////////////////////////////////////////
 	      //q_numDiff_u[eN_k] = linear_viscosity*u_smoothnessIndicatorAtCell[eN];//*ug_smoothnessIndicatorAtCell[eN];
 	      //q_numDiff_v[eN_k] = linear_viscosity*u_smoothnessIndicatorAtCell[eN];//*vg_smoothnessIndicatorAtCell[eN];
 	      /* q_numDiff_w[eN_k] = linear_viscosity*w_smoothnessIndicatorAtCell[eN]; */
 	      // END OF COMPUTING NUMERICAL DISSIPATION //
+	      
 	      // 
 	      //update element residual 
 	      //
@@ -6774,7 +6824,7 @@ namespace proteus
 	      /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
 
 	      // DISTRIBUTE ENTROPY RESIDUAL //
-	      entropyResidual[vel_l2g[eN_i]] += elementEntropyResidual[i];
+	      entropyResidualPerNode[vel_l2g[eN_i]] += elementEntropyResidual[i];
 	    }//i
           /* mesh_volume_conservation += mesh_volume_conservation_element; */
           /* mesh_volume_conservation_weak += mesh_volume_conservation_element_weak; */
@@ -7109,7 +7159,10 @@ namespace proteus
 				   KILL_PRESSURE_TERM, 
 				   0., // mql: zero force term at boundary  
 				   0., 
-				   0.);          
+				   0.,
+				   MATERIAL_PARAMETERS_AS_FUNCTION, 
+				   ebqe_density_as_function[ebNE_kb], 
+				   ebqe_kinematic_viscosity_as_function[ebNE_kb]);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -7189,7 +7242,10 @@ namespace proteus
 				   KILL_PRESSURE_TERM, 
 				   0., // mql: zero force term at boundary  
 				   0., 
-				   0.);          
+				   0.,
+				   MATERIAL_PARAMETERS_AS_FUNCTION, 
+				   ebqe_density_as_function[ebNE_kb], 
+				   ebqe_kinematic_viscosity_as_function[ebNE_kb]);          
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
@@ -7672,7 +7728,7 @@ namespace proteus
 	      /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
 
 	      // ENTROPY RESIDUAL AT BOUNDARY //
-	      entropyResidual[vel_l2g[eN_i]] += elementEntropyResidual[i]; //TMP
+	      entropyResidualPerNode[vel_l2g[eN_i]] += elementEntropyResidual[i]; 
 	    }//i
 	}//ebNE
       /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
@@ -7690,7 +7746,7 @@ namespace proteus
 	    {
 	      int eN_i = eN*nDOF_test_element+i;
 	      int gi = vel_l2g[eN_i];
-	      entropyResidualAtCurrentCell = fmax(entropyResidualAtCurrentCell, fabs(entropyResidual[gi]));
+	      entropyResidualAtCurrentCell = fmax(entropyResidualAtCurrentCell, fabs(entropyResidualPerNode[gi]));
 	    }  
 	  entropyResidualAtCell[eN] = entropyResidualAtCurrentCell;
 	}
@@ -7874,7 +7930,12 @@ namespace proteus
 			   double* particle_velocities,
 			   double* particle_centroids,
 			   double particle_nitsche, 
-			   int KILL_PRESSURE_TERM)
+			   int KILL_PRESSURE_TERM,
+			   int MATERIAL_PARAMETERS_AS_FUNCTION,
+			   double* density_as_function,
+			   double* kinematic_viscosity_as_function,
+			   double* ebqe_density_as_function, 
+			   double* ebqe_kinematic_viscosity_as_function)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -8192,10 +8253,13 @@ namespace proteus
 				   KILL_PRESSURE_TERM, 
 				   0., // mql: the force term doesn't play a role in the Jacobian
 				   0.,	
-				   0.);          
+				   0.,
+				   MATERIAL_PARAMETERS_AS_FUNCTION, 
+				   density_as_function[eN_k], 
+				   kinematic_viscosity_as_function[eN_k]);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
-	      //todo: decide if these should be lagged or not
+	      //Todo: decide if these should be lagged or not
 	      updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
 						/* nonlinearDragFactor, */
 						/* porosity, */
@@ -8986,7 +9050,10 @@ namespace proteus
 				   KILL_PRESSURE_TERM, 
 				   0., // mql: zero force term at boundary  
 				   0., 
-				   0.);          
+				   0.,
+				   MATERIAL_PARAMETERS_AS_FUNCTION, 
+				   ebqe_density_as_function[ebNE_kb], 
+				   ebqe_kinematic_viscosity_as_function[ebNE_kb]);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -9066,7 +9133,10 @@ namespace proteus
 				   KILL_PRESSURE_TERM, 
 				   0., // mql: zero force term at boundary  
 				   0., 
-				   0.);          
+				   0.,
+				   MATERIAL_PARAMETERS_AS_FUNCTION, 
+				   ebqe_density_as_function[ebNE_kb], 
+				   ebqe_kinematic_viscosity_as_function[ebNE_kb]);          
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{

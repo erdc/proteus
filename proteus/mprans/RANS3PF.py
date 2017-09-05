@@ -889,6 +889,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def preStep(self, t, firstStep=False):
+        # Save old solutions
+        # solution at tnm1
+        self.model.u_dof_old_old[:] = self.model.u_dof_old[:]
+        self.model.v_dof_old_old[:] = self.model.v_dof_old[:]
+        if (self.model.nSpace_global == 3):
+            self.model.w_dof_old_old[:] = self.model.w_dof_old[:]
+        # solution at tn
         self.model.u_dof_old[:] = self.model.u[0].dof
         self.model.v_dof_old[:] = self.model.u[1].dof
         if (self.model.nSpace_global == 3):
@@ -902,6 +909,25 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.q[('velocityStar',0)][:] = ((dt+dt_old)/dt_old*self.model.q[('velocity',0)] 
                                                    - dt/dt_old*self.model.q[('velocityOld',0)])
         self.model.q[('velocityOld',0)][:] = self.model.q[('velocity',0)]  
+        # Check if the material parameters are given as a function
+        if self.model.hasMaterialParametersAsFunctions:
+            x = self.model.q[('x')][:,:,0]
+            y = self.model.q[('x')][:,:,1]
+            z = self.model.q[('x')][:,:,2]
+            X = {0:x,
+                 1:y,
+                 2:z}
+            t = self.model.timeIntegration.t
+            self.model.q['density'][:] = self.model.materialParameters['density'](X,t)
+            self.model.q['kinematic_viscosity'][:] = self.model.materialParameters['kinematic_viscosity'](X,t)
+            # BOUNDARY
+            ebqe_X = {0:self.model.ebqe['x'][:,:,0],
+                      1:self.model.ebqe['x'][:,:,1],
+                      2:self.model.ebqe['x'][:,:,2]}
+            self.model.ebqe['density'][:] = self.model.materialParameters['density'](ebqe_X,t)
+            self.model.ebqe['kinematic_viscosity'][:] = self.model.materialParameters['kinematic_viscosity'](ebqe_X,t)
+
+        # END OF COMPUTING MATERIAL PARAMETERS GIVEN AS FUNCTION 
         if hasattr(self.model,'forceTerms'):
             x = self.model.q[('x')][:,:,0]
             y = self.model.q[('x')][:,:,1]
@@ -986,9 +1012,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else: 
             self.KILL_PRESSURE_TERM = 0
         # mql: Use entropy viscosity?
-        self.use_entropy_viscosity = False
-        if ('use_entropy_viscosity') in dir(options):
-            self.use_entropy_viscosity = options.use_entropy_viscosity
+        self.STABILIZATION_TYPE = 0 #0: SUPG, 1: EV via weak residual, 2: EV via strong residual
+        if ('STABILIZATION_TYPE') in dir(options):
+            self.STABILIZATION_TYPE = options.STABILIZATION_TYPE 
+        # mql: Check if materialParameters are declared. This is for convergence tests
+        self.hasMaterialParametersAsFunctions = 0
+        if ('materialParameters') in dir(options):
+            self.materialParameters = options.materialParameters
+            self.hasMaterialParametersAsFunctions = 1
         # mql: Check if forceTerms are declared
         if ('forceTerms') in dir(options):
             self.forceTerms = options.forceTerms
@@ -1191,6 +1222,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u_dof_old = numpy.zeros(self.u[0].dof.shape,'d')
         self.v_dof_old = numpy.zeros(self.u[0].dof.shape,'d')
         self.w_dof_old = numpy.zeros(self.u[0].dof.shape,'d')
+        self.u_dof_old_old = numpy.zeros(self.u[0].dof.shape,'d')
+        self.v_dof_old_old = numpy.zeros(self.u[0].dof.shape,'d')
+        self.w_dof_old_old = numpy.zeros(self.u[0].dof.shape,'d')
         self.ML=None #lumped mass matrix
         self.MC_global=None #consistent mass matrix
         self.cterm_global=None
@@ -1213,6 +1247,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
+        # mql: material parameters defined by a function at quad points
+        self.q['density'] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['kinematic_viscosity'] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.ebqe['density'] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe['kinematic_viscosity'] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+
         # mql: force terms
         self.q[('force', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
@@ -2074,14 +2118,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             Cz = numpy.zeros(Cx.shape,'d')
 
         # mql: select appropiate functions to compute residual and jacobian
-        if (self.use_entropy_viscosity == True):
+        if (self.STABILIZATION_TYPE == 1 or self.STABILIZATION_TYPE == 2):
             self.calculateResidual = self.rans3pf.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.rans3pf.calculateJacobian_entropy_viscosity
         else: 
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
         
-        self.quantDOFs.fill(0.0) #TMP
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2165,6 +2208,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u_dof_old,
             self.v_dof_old,
             self.w_dof_old,
+            self.u_dof_old_old,
+            self.v_dof_old_old,
+            self.w_dof_old_old,
             self.coefficients.g,
             self.coefficients.useVF,
             self.coefficients.q_vf,
@@ -2288,6 +2334,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_netMoments,
             self.coefficients.particle_surfaceArea,
             self.coefficients.particle_nitsche, 
+            self.STABILIZATION_TYPE,
+            self.elementQuadratureWeights[('u',0)].sum(),
             self.coefficients.cMax, 
             self.coefficients.cE, 
             self.q[('force', 0)],
@@ -2305,7 +2353,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ML, 
             Cx, 
             Cy, 
-            Cz)  
+            Cz, 
+            self.hasMaterialParametersAsFunctions, 
+            self.q['density'], 
+            self.q['kinematic_viscosity'], 
+            self.ebqe['density'],
+            self.ebqe['kinematic_viscosity'])
 
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):
@@ -2580,7 +2633,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	    self.coefficients.particle_velocities,
 	    self.coefficients.particle_centroids,
             self.coefficients.particle_nitsche, 
-            self.KILL_PRESSURE_TERM)
+            self.KILL_PRESSURE_TERM,
+            self.hasMaterialParametersAsFunctions, 
+            self.q['density'], 
+            self.q['kinematic_viscosity'], 
+            self.ebqe['density'],
+            self.ebqe['kinematic_viscosity'])
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(
