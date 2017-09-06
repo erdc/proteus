@@ -919,13 +919,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  2:z}
             t = self.model.timeIntegration.t
             self.model.q['density'][:] = self.model.materialParameters['density'](X,t)
-            self.model.q['kinematic_viscosity'][:] = self.model.materialParameters['kinematic_viscosity'](X,t)
+            self.model.q['dynamic_viscosity'][:] = self.model.materialParameters['dynamic_viscosity'](X,t)
             # BOUNDARY
             ebqe_X = {0:self.model.ebqe['x'][:,:,0],
                       1:self.model.ebqe['x'][:,:,1],
                       2:self.model.ebqe['x'][:,:,2]}
             self.model.ebqe['density'][:] = self.model.materialParameters['density'](ebqe_X,t)
-            self.model.ebqe['kinematic_viscosity'][:] = self.model.materialParameters['kinematic_viscosity'](ebqe_X,t)
+            self.model.ebqe['dynamic_viscosity'][:] = self.model.materialParameters['dynamic_viscosity'](ebqe_X,t)
 
         # END OF COMPUTING MATERIAL PARAMETERS GIVEN AS FUNCTION 
         if hasattr(self.model,'forceTerms'):
@@ -1250,11 +1250,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # mql: material parameters defined by a function at quad points
         self.q['density'] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q['kinematic_viscosity'] = numpy.zeros(
+        self.q['dynamic_viscosity'] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.ebqe['density'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe['kinematic_viscosity'] = numpy.zeros(
+        self.ebqe['dynamic_viscosity'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
 
         # mql: force terms
@@ -2356,9 +2356,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             Cz, 
             self.hasMaterialParametersAsFunctions, 
             self.q['density'], 
-            self.q['kinematic_viscosity'], 
+            self.q['dynamic_viscosity'], 
             self.ebqe['density'],
-            self.ebqe['kinematic_viscosity'])
+            self.ebqe['dynamic_viscosity'])
 
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):
@@ -2636,9 +2636,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.KILL_PRESSURE_TERM,
             self.hasMaterialParametersAsFunctions, 
             self.q['density'], 
-            self.q['kinematic_viscosity'], 
+            self.q['dynamic_viscosity'], 
             self.ebqe['density'],
-            self.ebqe['kinematic_viscosity'])
+            self.ebqe['dynamic_viscosity'])
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(
