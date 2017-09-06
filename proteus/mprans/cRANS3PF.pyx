@@ -230,9 +230,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* Cz,
 			       int MATERIAL_PARAMETERS_AS_FUNCTION,
 			       double* density_as_function,
-			       double* kinematic_viscosity_as_function,
+			       double* dynamic_viscosity_as_function,
 			       double* ebqe_density_as_function,
-			       double* ebqe_kinematic_viscosity_as_function)
+			       double* ebqe_dynamic_viscosity_as_function)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -412,9 +412,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       int KILL_PRESSURE_TERM, 
 			       int MATERIAL_PARAMETERS_AS_FUNCTION,
 			       double* density_as_function,
-			       double* kinematic_viscosity_as_function,
+			       double* dynamic_viscosity_as_function,
 			       double* ebqe_density_as_function, 
-			       double* ebqe_kinematic_viscosity_as_function)
+			       double* ebqe_dynamic_viscosity_as_function)
         void calculateResidual_entropy_viscosity(
 	     		       double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -643,9 +643,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* Cz,
 			       int MATERIAL_PARAMETERS_AS_FUNCTION,
 			       double* density_as_function,
-			       double* kinematic_viscosity_as_function,
+			       double* dynamic_viscosity_as_function,
 			       double* ebqe_density_as_function,
-			       double* ebqe_kinematic_viscosity_as_function)
+			       double* ebqe_dynamic_viscosity_as_function)
         void calculateJacobian_entropy_viscosity(
 	     		       double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -826,9 +826,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       int KILL_PRESSURE_TERM, 
 			       int MATERIAL_PARAMETERS_AS_FUNCTION,
 			       double* density_as_function,
-			       double* kinematic_viscosity_as_function,
+			       double* dynamic_viscosity_as_function,
 			       double* ebqe_density_as_function, 
-			       double* ebqe_kinematic_viscosity_as_function)
+			       double* ebqe_dynamic_viscosity_as_function)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -1133,9 +1133,9 @@ cdef class RANS3PF:
 			  numpy.ndarray Cz,
 			  int MATERIAL_PARAMETERS_AS_FUNCTION,
 			  numpy.ndarray density_as_function,
-			  numpy.ndarray kinematic_viscosity_as_function,
+			  numpy.ndarray dynamic_viscosity_as_function,
 			  numpy.ndarray ebqe_density_as_function,
-			  numpy.ndarray ebqe_kinematic_viscosity_as_function):
+			  numpy.ndarray ebqe_dynamic_viscosity_as_function):
         self.thisptr.calculateResidual(< double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1342,9 +1342,9 @@ cdef class RANS3PF:
 					< double * > Cz.data,
 					MATERIAL_PARAMETERS_AS_FUNCTION,
 					< double * > density_as_function.data,
-					< double * > kinematic_viscosity_as_function.data,
+					< double * > dynamic_viscosity_as_function.data,
 					< double * > ebqe_density_as_function.data,
-			  		< double * > ebqe_kinematic_viscosity_as_function.data)
+			  		< double * > ebqe_dynamic_viscosity_as_function.data)
     def calculateJacobian(self,
 			  numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -1524,9 +1524,9 @@ cdef class RANS3PF:
 			  int KILL_PRESSURE_TERM, 
 			  int MATERIAL_PARAMETERS_AS_FUNCTION,
 			  numpy.ndarray density_as_function,
-			  numpy.ndarray kinematic_viscosity_as_function,
+			  numpy.ndarray dynamic_viscosity_as_function,
 			  numpy.ndarray ebqe_density_as_function, 
-			  numpy.ndarray ebqe_kinematic_viscosity_as_function):
+			  numpy.ndarray ebqe_dynamic_viscosity_as_function):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double *> mesh_trial_ref.data,
@@ -1707,9 +1707,9 @@ cdef class RANS3PF:
 					KILL_PRESSURE_TERM, 
 					MATERIAL_PARAMETERS_AS_FUNCTION,
 					< double * > density_as_function.data,
-			  		< double * > kinematic_viscosity_as_function.data,
+			  		< double * > dynamic_viscosity_as_function.data,
 			  		< double * > ebqe_density_as_function.data, 
-					< double * > ebqe_kinematic_viscosity_as_function.data)
+					< double * > ebqe_dynamic_viscosity_as_function.data)
     def calculateResidual_entropy_viscosity(self,
 		          numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -1917,9 +1917,9 @@ cdef class RANS3PF:
 			  numpy.ndarray Cz,
 			  int MATERIAL_PARAMETERS_AS_FUNCTION,
 			  numpy.ndarray density_as_function,
-			  numpy.ndarray kinematic_viscosity_as_function,
+			  numpy.ndarray dynamic_viscosity_as_function,
 			  numpy.ndarray ebqe_density_as_function,
-			  numpy.ndarray ebqe_kinematic_viscosity_as_function):
+			  numpy.ndarray ebqe_dynamic_viscosity_as_function):
         self.thisptr.calculateResidual_entropy_viscosity(
 				       < double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
@@ -2127,9 +2127,9 @@ cdef class RANS3PF:
 					< double * > Cz.data,
 					MATERIAL_PARAMETERS_AS_FUNCTION,
 					< double * > density_as_function.data,
-					< double * > kinematic_viscosity_as_function.data,
+					< double * > dynamic_viscosity_as_function.data,
 					< double * > ebqe_density_as_function.data,
-			  		< double * > ebqe_kinematic_viscosity_as_function.data)
+			  		< double * > ebqe_dynamic_viscosity_as_function.data)
     def calculateJacobian_entropy_viscosity(self,
 			  numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -2309,9 +2309,9 @@ cdef class RANS3PF:
 			  int KILL_PRESSURE_TERM, 
 			  int MATERIAL_PARAMETERS_AS_FUNCTION,
 			  numpy.ndarray density_as_function,
-			  numpy.ndarray kinematic_viscosity_as_function,
+			  numpy.ndarray dynamic_viscosity_as_function,
 			  numpy.ndarray ebqe_density_as_function, 
-			  numpy.ndarray ebqe_kinematic_viscosity_as_function):
+			  numpy.ndarray ebqe_dynamic_viscosity_as_function):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian_entropy_viscosity(
@@ -2493,9 +2493,9 @@ cdef class RANS3PF:
 					KILL_PRESSURE_TERM, 
 					MATERIAL_PARAMETERS_AS_FUNCTION,
 					< double * > density_as_function.data,
-			  		< double * > kinematic_viscosity_as_function.data,
+			  		< double * > dynamic_viscosity_as_function.data,
 			  		< double * > ebqe_density_as_function.data, 
-					< double * > ebqe_kinematic_viscosity_as_function.data)
+					< double * > ebqe_dynamic_viscosity_as_function.data)
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
                                  numpy.ndarray exteriorElementBoundariesArray,
@@ -2753,9 +2753,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double* Cz,
 			       int MATERIAL_PARAMETERS_AS_FUNCTION,
 			       double* density_as_function,
-			       double* kinematic_viscosity_as_function,
+			       double* dynamic_viscosity_as_function,
 			       double* ebqe_density_as_function,
-			       double* ebqe_kinematic_viscosity_as_function)
+			       double* ebqe_dynamic_viscosity_as_function)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -2935,9 +2935,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       int KILL_PRESSURE_TERM, 
 			       int MATERIAL_PARAMETERS_AS_FUNCTION,
 			       double* density_as_function,
-			       double* kinematic_viscosity_as_function,
+			       double* dynamic_viscosity_as_function,
 			       double* ebqe_density_as_function, 
-			       double* ebqe_kinematic_viscosity_as_function)
+			       double* ebqe_dynamic_viscosity_as_function)
         void calculateResidual_entropy_viscosity(double * mesh_trial_ref,
 	     		       double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -3147,9 +3147,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double* Cz,
 			       int MATERIAL_PARAMETERS_AS_FUNCTION,
 			       double* density_as_function,
-			       double* kinematic_viscosity_as_function,
+			       double* dynamic_viscosity_as_function,
 			       double* ebqe_density_as_function,
-			       double* ebqe_kinematic_viscosity_as_function)
+			       double* ebqe_dynamic_viscosity_as_function)
         void calculateJacobian_entropy_viscosity(
 	                       double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -3330,9 +3330,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       int KILL_PRESSURE_TERM, 
 			       int MATERIAL_PARAMETERS_AS_FUNCTION,
 			       double* density_as_function,
-			       double* kinematic_viscosity_as_function,
+			       double* dynamic_viscosity_as_function,
 			       double* ebqe_density_as_function, 
-			       double* ebqe_kinematic_viscosity_as_function)
+			       double* ebqe_dynamic_viscosity_as_function)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -3639,9 +3639,9 @@ cdef class RANS3PF2D:
 			  numpy.ndarray Cz,
 			  int MATERIAL_PARAMETERS_AS_FUNCTION,
 			  numpy.ndarray density_as_function,
-			  numpy.ndarray kinematic_viscosity_as_function,
+			  numpy.ndarray dynamic_viscosity_as_function,
 			  numpy.ndarray ebqe_density_as_function,
-			  numpy.ndarray ebqe_kinematic_viscosity_as_function):
+			  numpy.ndarray ebqe_dynamic_viscosity_as_function):
         self.thisptr.calculateResidual(< double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -3850,9 +3850,9 @@ cdef class RANS3PF2D:
 					< double * > Cz.data,
 					MATERIAL_PARAMETERS_AS_FUNCTION,
 					< double * > density_as_function.data,
-					< double * > kinematic_viscosity_as_function.data,
+					< double * > dynamic_viscosity_as_function.data,
 					< double * > ebqe_density_as_function.data,
-			  		< double * > ebqe_kinematic_viscosity_as_function.data)	
+			  		< double * > ebqe_dynamic_viscosity_as_function.data)	
     def calculateJacobian(self,
 			  numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -4032,9 +4032,9 @@ cdef class RANS3PF2D:
 			  int KILL_PRESSURE_TERM, 
 			  int MATERIAL_PARAMETERS_AS_FUNCTION,
 			  numpy.ndarray density_as_function,
-			  numpy.ndarray kinematic_viscosity_as_function,
+			  numpy.ndarray dynamic_viscosity_as_function,
 			  numpy.ndarray ebqe_density_as_function, 
-			  numpy.ndarray ebqe_kinematic_viscosity_as_function):
+			  numpy.ndarray ebqe_dynamic_viscosity_as_function):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double *> mesh_trial_ref.data,
@@ -4215,9 +4215,9 @@ cdef class RANS3PF2D:
 				       KILL_PRESSURE_TERM, 
 				       MATERIAL_PARAMETERS_AS_FUNCTION,
 					< double * > density_as_function.data,
-			  		< double * > kinematic_viscosity_as_function.data,
+			  		< double * > dynamic_viscosity_as_function.data,
 			  		< double * > ebqe_density_as_function.data, 
-					< double * > ebqe_kinematic_viscosity_as_function.data)
+					< double * > ebqe_dynamic_viscosity_as_function.data)
     def calculateResidual_entropy_viscosity(self,
 		          numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -4427,9 +4427,9 @@ cdef class RANS3PF2D:
 			  numpy.ndarray Cz,
 			  int MATERIAL_PARAMETERS_AS_FUNCTION,
 			  numpy.ndarray density_as_function,
-			  numpy.ndarray kinematic_viscosity_as_function,
+			  numpy.ndarray dynamic_viscosity_as_function,
 			  numpy.ndarray ebqe_density_as_function,
-			  numpy.ndarray ebqe_kinematic_viscosity_as_function):
+			  numpy.ndarray ebqe_dynamic_viscosity_as_function):
         self.thisptr.calculateResidual_entropy_viscosity(
 	                               < double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
@@ -4639,9 +4639,9 @@ cdef class RANS3PF2D:
 					< double * > Cz.data,
 					MATERIAL_PARAMETERS_AS_FUNCTION,
 					< double * > density_as_function.data,
-					< double * > kinematic_viscosity_as_function.data,
+					< double * > dynamic_viscosity_as_function.data,
 					< double * > ebqe_density_as_function.data,
-			  		< double * > ebqe_kinematic_viscosity_as_function.data)
+			  		< double * > ebqe_dynamic_viscosity_as_function.data)
 
     def calculateJacobian_entropy_viscosity(self,
                           numpy.ndarray mesh_trial_ref,
@@ -4822,9 +4822,9 @@ cdef class RANS3PF2D:
 			  int KILL_PRESSURE_TERM, 
 			  int MATERIAL_PARAMETERS_AS_FUNCTION,
 			  numpy.ndarray density_as_function,
-			  numpy.ndarray kinematic_viscosity_as_function,
+			  numpy.ndarray dynamic_viscosity_as_function,
 			  numpy.ndarray ebqe_density_as_function, 
-			  numpy.ndarray ebqe_kinematic_viscosity_as_function):
+			  numpy.ndarray ebqe_dynamic_viscosity_as_function):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian_entropy_viscosity(
@@ -5006,9 +5006,9 @@ cdef class RANS3PF2D:
 				       KILL_PRESSURE_TERM, 
 				       MATERIAL_PARAMETERS_AS_FUNCTION,
 					< double * > density_as_function.data,
-			  		< double * > kinematic_viscosity_as_function.data,
+			  		< double * > dynamic_viscosity_as_function.data,
 			  		< double * > ebqe_density_as_function.data, 
-					< double * > ebqe_kinematic_viscosity_as_function.data)
+					< double * > ebqe_dynamic_viscosity_as_function.data)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
