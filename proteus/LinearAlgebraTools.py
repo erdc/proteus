@@ -1134,21 +1134,6 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         tmp2 = x.copy()
         tmp3 = x.copy()
 
-        # self.kspQp_visc = ChebyshevSemiIteration(self.Qp_visc,
-        #                                          x,
-        #                                          y,
-        #                                          10,
-        #                                          0.5,
-        #                                          2.0)
-        # self.kspQp_dens = ChebyshevSemiIteration(self.Qp_dens,
-        #                                          x,
-        #                                          y,
-        #                                          10,
-        #                                          0.5,
-        #                                          2.0)
-
-        # self.kspQp_visc.apply()
-        # self.kspQp_dens.apply()
         self.kspQp_visc.solve(x,y)
         self.kspQp_dens.solve(x,tmp1)
         
@@ -1159,8 +1144,8 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
 
         if self._options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
             self.const_null_space.remove(tmp2)
-        
-        self.kspAp_rho.solve(tmp2,tmp3)
+
+        self.kspAp_rho.solve(tmp2, tmp3)
         y.axpy(1.,tmp3)
 
 def l2Norm(x):
