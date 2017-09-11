@@ -372,7 +372,8 @@ class KSP_petsc4py(LinearSolver):
                  Preconditioner=None,
                  connectionList=None,
                  linearSolverLocalBlockSize=1,
-                 bdyNullSpace=False):
+                 bdyNullSpace=False,
+                 preconditionerOptions = None):
         """ Initialize a petsc4py KSP object.
         
         Parameters
@@ -390,6 +391,9 @@ class KSP_petsc4py(LinearSolver):
         Preconditioner : :class: `.LinearSolvers.KSP_Preconditioner`
         connectionList : 
         linearSolverLocalBlockSize : int
+        bdyNullSpace : bool
+        preconditionerOptions : tuple
+            A list of optional preconditioner settings.
         """
         LinearSolver.__init__(self,
                               L,
@@ -404,6 +408,7 @@ class KSP_petsc4py(LinearSolver):
         assert isinstance(par_L,ParMat_petsc4py)
         self.pccontext = None
         self.preconditioner = None
+        self.preconditionerOptions = preconditionerOptions
         self.pc = None
         self.solverName  = "PETSc"
         self.par_fullOverlap = True
@@ -712,7 +717,10 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokes_TwoPhasePCD:
                 logEvent("NAHeader Preconditioner TwoPhasePCD")
-                self.preconditioner = NavierStokes_TwoPhasePCD(par_L,prefix,self.bdyNullSpace)
+                self.preconditioner = NavierStokes_TwoPhasePCD(par_L,
+                                                               prefix,
+                                                               self.bdyNullSpace,
+                                                               density_scaling=self.preconditionerOptions[0])
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_LSC:
                 logEvent("NAHeader Preconditioner LSC")
@@ -1025,11 +1033,21 @@ class SchurOperatorConstructor:
         self.Q_csr_rep_local = self.Q.csr_rep_local
         return self.Q
 
-    def updateNp_rho(self,output_matrix=False):
+    def updateNp_rho(self,
+                     density_scaling = True,
+                     output_matrix = False):
+        """ 
+        Update the two-phase advection operator. 
+        
+        Parameters
+        ----------
+        density_scaling : bool
+            Indicates whether advection terms should be scaled with
+            the density (True) or 1 (False)
+        output_matrix : bool
+            Save updated advection operator.
         """
-
-        """
-        self.opBuilder.updateTPAdvectionOperator()
+        self.opBuilder.updateTPAdvectionOperator(density_scaling)
         self.two_phase_Cp_rho.zeroEntries()
         if self.two_phase_Cp_rho.proteus_jacobian != None:
             self.two_phase_Cp_rho_csr_rep[2][self.two_phase_Cp_rho.nzval_proteus2petsc] = self.two_phase_Cp_rho.proteus_csr_rep[2][:]
@@ -1056,8 +1074,10 @@ class SchurOperatorConstructor:
         if output_matrix is True:
             self._exportMatrix(self.two_phase_Ap_inv,'Cp_rho')
 
-    def updateTwoPhaseQp_rho(self, output_matrix=False):
-        self.opBuilder.updateTwoPhaseMassOperator_rho()
+    def updateTwoPhaseQp_rho(self,
+                             density_scaling = True,
+                             output_matrix=False):
+        self.opBuilder.updateTwoPhaseMassOperator_rho(density_scaling)
         self.two_phase_Qp_scaled.zeroEntries()
         if self.two_phase_Qp_scaled.proteus_jacobian != None:
             self.two_phase_Qp_scaled_csr_rep[2][self.two_phase_Qp_scaled.nzval_proteus2petsc] = self.two_phase_Qp_scaled.proteus_csr_rep[2][:]
@@ -1435,7 +1455,6 @@ class Schur_Qp(SchurPrecon) :
         self.matcontext_inv = MatrixInvShell(self.Qp)
         self.QpInv_shell.setPythonContext(self.matcontext_inv)
         self.QpInv_shell.setUp()
-#        import pdb ; pdb.set_trace()
         # Set PETSc Schur operator
         self._setSchurApproximation(global_ksp)
 
@@ -1457,14 +1476,59 @@ class NavierStokesSchur(SchurPrecon):
 
 
 class NavierStokes_TwoPhasePCD(NavierStokesSchur):
-    def __init__(self, L, prefix=None, bdyNullSpace=False):
+    r""" Two-phase PCD Schur complement approximation class.
+         Details of this operator are in the forthcoming paper
+         'Preconditioners for Two-Phase Incompressible Navier-Stokes 
+         Flow', Bootland et. al. 2017.
+
+         Since the two-phase Navier-Stokes problem used in the MPRANS 
+         module of Proteus
+         has some additional features not include in the above paper,
+         a few additional flags and options are avaliable.
+
+         * density scaling - This flag allows the user to specify 
+           whether the advection and mass terms in the second term
+           of the PCD operator should use the actual density or the
+           scale with the number one.
+
+         * numerical viscosity - This flag specifies whether the 
+           additional numerical viscosity introduced from the diffusion
+           stabilization should be included as part of the viscosity
+           coefficient.
+
+         * Ap form - This flag allows the user to change the form
+           of the density scaled Laplace operator.  The 'standard'
+           choice is the matrix that originates from the discrete
+           laplace operator.
+
+         * mass form - This flag allows the user to specify what form
+           the mass matrix takes.  The default option is 'lumped', but
+           users can also choose to use the 'full' mass matrix or a 
+           the 'diagonal' mass matrix.
+
+         * Chebyshev iteration - If a 'full' mass matrix is used, this
+           option allows the user can choose to apply a Chebyshev 
+           iteration.
+    """
+    def __init__(self,
+                 L,
+                 prefix=None,
+                 bdyNullSpace=False,
+                 density_scaling=True):
         """
         Initialize the two-phase PCD preconditioning class.
 
         Parameters
         ----------
-        L : 
-        prefix :
+        L : petsc4py Matrix
+            Defines the problem's operator.
+        prefix : str
+            String allowing PETSc4py options.
+        bdyNullSpace : bool
+            Indicates whether there is a global null space.
+        density_scaling : bool
+            Indicates whether mass and advection terms should be
+            scaled with the density (True) or 1 (False).
 
         """
         NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
@@ -1472,15 +1536,36 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.A_invScaledRho = self.operator_constructor.initializeTwoPhaseInvScaledAp()
         self.Q_rho = self.operator_constructor.initializeTwoPhaseQp_rho()
         self.Q_invScaledVis = self.operator_constructor.initializeTwoPhaseInvScaledQp()
+        self.density_scaling = density_scaling
 
     def setUp(self, global_ksp):
         import Comm
         comm = Comm.get()
-        self.operator_constructor.updateNp_rho()
+        self.operator_constructor.updateNp_rho(self.density_scaling)
         self.operator_constructor.updateInvScaledAp()
-        self.operator_constructor.updateTwoPhaseQp_rho()
+        self.operator_constructor.updateTwoPhaseQp_rho(self.density_scaling)
         self.operator_constructor.updateTwoPhaseInvScaledMassOperator()
 
+        # ****** Sp for Ap *******
+        # self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
+        #                                                      self.operator_constructor.linear_smoother.isv)
+        # self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
+        #                                                      self.operator_constructor.linear_smoother.isp)
+        # self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        #                                                      self.operator_constructor.linear_smoother.isv)
+        # self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        #                                                      self.operator_constructor.linear_smoother.isp)
+
+        # dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
+        # self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
+        # A00_invBt = self.A00_inv.matMult(self.A01)
+        # self.Sp = self.A10.matMult(A00_invBt)
+        # self.Sp.scale(- 1. )
+        # self.Sp.axpy( 1. , self.A11)
+
+        # End ******** Sp for Ap ***********
+
+        
         self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
                                               self.operator_constructor.linear_smoother.isp)
 
@@ -1497,6 +1582,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         #     self.Ap_invScaledRho.zeroRowsColumns(ParInfo_petsc4py.subdomain2global[0])
         # else:
         #     self.Ap_invScaledRho.zeroRowsColumns(0)
+        
         L_sizes = self.Qp_rho.size        
         L_range = self.Qp_rho.owner_range
         self.TP_PCDInv_shell = p4pyPETSc.Mat().create()
@@ -2364,7 +2450,8 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                   parallelUsesFullOverlap = True,
                                   par_duList=None,
                                   solver_options_prefix=None,
-                                  linearSolverLocalBlockSize=1):
+                                  linearSolverLocalBlockSize=1,
+                                  linearSmootherOptions=()):
     logEvent("multilevelLinearSolverChooser type= %s" % multilevelLinearSolverType)
     if (multilevelLinearSolverType == PETSc or
         multilevelLinearSolverType == KSP_petsc4py or
@@ -2495,7 +2582,8 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                       prefix=solver_options_prefix,
                                                       Preconditioner=smootherType,
                                                       connectionList = connectivityListList[l],
-                                                      linearSolverLocalBlockSize = linearSolverLocalBlockSize))
+                                                      linearSolverLocalBlockSize = linearSolverLocalBlockSize,
+                                                      preconditionerOptions = linearSmootherOptions))
             #if solverConvergenceTest == 'r-true' and par_duList is not None:
             #    levelLinearSolverList[-1].useTrueResidualTest(par_duList[l])
         levelLinearSolver = levelLinearSolverList
@@ -2797,8 +2885,22 @@ class OperatorConstructor_rans2p(OperatorConstructor):
     def __init__(self,levelModel):
         OperatorConstructor.__init__(self,levelModel)
 
-    def updateTPAdvectionOperator(self):
-        """ Create a discrete two-phase advection operator matrix. """
+    def updateTPAdvectionOperator(self,
+                                  density_scaling):
+        """ 
+        Update the discrete two-phase advection operator matrix. 
+        
+        Parameters
+        ----------
+        density_scaling : bool
+            Indicates whether advection terms should be scaled with
+            the density (True) or 1 (False)           
+        """
+        rho_0 = density_scaling*self.model.coefficients.rho_0 + (1-density_scaling)*1
+        nu_0 = density_scaling*self.model.coefficients.nu_0 + (1-density_scaling)*1
+        rho_1 = density_scaling*self.model.coefficients.rho_1 + (1-density_scaling)*1
+        nu_1 = density_scaling*self.model.coefficients.nu_1 + (1-density_scaling)*1        
+        
         self.TPScaledAdvectionOperator.getCSRrepresentation()[2].fill(0.)
         self.model.rans2p.getTwoPhaseAdvectionOperator(self.model.u[0].femSpace.elementMaps.psi,
                                                        self.model.u[0].femSpace.elementMaps.grad_psi,
@@ -2815,10 +2917,10 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                        self.model.coefficients.useMetrics,
                                                        self.model.coefficients.epsFact_density,
                                                        self.model.coefficients.epsFact,
-                                                       self.model.coefficients.rho_0,
-                                                       self.model.coefficients.nu_0,
-                                                       self.model.coefficients.rho_1,
-                                                       self.model.coefficients.nu_1,
+                                                       rho_0,
+                                                       nu_0,
+                                                       rho_1,
+                                                       nu_1,
                                                        self.model.u[1].femSpace.dofMap.l2g,
                                                        self.model.u[1].dof,
                                                        self.model.u[2].dof,
@@ -2866,8 +2968,23 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                               self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
                                                               self.TPInvScaledLaplaceOperator)
 
-    def updateTwoPhaseMassOperator_rho(self):
-        """ Create a discrete TwoPhase Mass operator matrix. """
+    def updateTwoPhaseMassOperator_rho(self,
+                                       density_scaling):
+        """ 
+        Create a discrete TwoPhase Mass operator matrix. 
+
+        Parameters
+        ----------
+        density_scaling : bool
+            Indicates whether advection terms should be scaled with
+            the density (True) or 1 (False)           
+
+        """
+        rho_0 = density_scaling*self.model.coefficients.rho_0 + (1-density_scaling)*1
+        nu_0 = density_scaling*self.model.coefficients.nu_0 + (1-density_scaling)*1
+        rho_1 = density_scaling*self.model.coefficients.rho_1 + (1-density_scaling)*1
+        nu_1 = density_scaling*self.model.coefficients.nu_1 + (1-density_scaling)*1        
+        
         self.TPScaledMassOperator.getCSRrepresentation()[2].fill(0.)
         self.model.rans2p.getTwoPhaseScaledMassOperator(1,
                                                         self.model.u[0].femSpace.elementMaps.psi,
@@ -2886,10 +3003,10 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                         self.model.coefficients.useMetrics,
                                                         self.model.coefficients.epsFact_density,
                                                         self.model.coefficients.epsFact,
-                                                        self.model.coefficients.rho_0,
-                                                        self.model.coefficients.nu_0,
-                                                        self.model.coefficients.rho_1,
-                                                        self.model.coefficients.nu_1,
+                                                        rho_0,
+                                                        nu_0,
+                                                        rho_1,
+                                                        nu_1,
                                                         self.model.u[0].femSpace.dofMap.l2g,
                                                         self.model.u[1].femSpace.dofMap.l2g,
                                                         self.model.u[0].dof,
