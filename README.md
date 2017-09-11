@@ -1,4 +1,4 @@
-# Proteus: Computational Methods and Simulation Toolkit [![Build Status](https://travis-ci.org/erdc-cm/proteus.svg?branch=master)](https://travis-ci.org/erdc-cm/proteus) [![Binder](http://mybinder.org/badge.svg)](https://beta.mybinder.org/v2/gh/erdc-cm/proteus/master)
+# Proteus: Computational Methods and Simulation Toolkit [![Build Status](https://travis-ci.org/erdc-cm/proteus.svg?branch=master)](https://travis-ci.org/erdc-cm/proteus) [![Binder](http://mybinder.org/badge.svg)](https://beta.mybinder.org/v2/gh/erdc/proteus/master)
 
 Proteus (http://proteustoolkit.org) is a Python package for
 rapidly developing computer models and numerical methods.
