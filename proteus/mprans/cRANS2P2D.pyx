@@ -400,6 +400,7 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                                  int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,     
                                                  double* laplace_matrix)
         void getTwoPhaseScaledMassOperator(int scale_type,
+	     				   int use_numerical_viscosity,
                                            double *mesh_trial_ref,
                                            double *mesh_grad_trial_ref,
                                            double *mesh_dof,
@@ -1259,6 +1260,7 @@ cdef class cRANS2P2D_base:
                                                          <double*> laplace_matrix_vals.data)
     def getTwoPhaseScaledMassOperator(self,
                                       int scale_type,
+				      int use_numerical_viscosity,
                                       numpy.ndarray mesh_trial_ref,
                                       numpy.ndarray mesh_grad_trial_ref,
                                       numpy.ndarray mesh_dof,
@@ -1292,6 +1294,7 @@ cdef class cRANS2P2D_base:
         cdef numpy.ndarray rowptr, colind, mass_matrix_vals
         (rowptr,colind,mass_matrix_vals) = mass_matrix.getCSRrepresentation()
         self.thisptr.getTwoPhaseScaledMassOperator(scale_type,
+					           use_numerical_viscosity,
                                                    <double*> mesh_trial_ref.data,
                                                    <double*> mesh_grad_trial_ref.data,
                                                    <double*> mesh_dof.data,
