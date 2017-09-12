@@ -390,6 +390,7 @@ namespace proteus
 						     int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
 						     double* laplace_matrix)=0;
     virtual void getTwoPhaseScaledMassOperator(int scale_type,
+					       int use_numerical_viscosity,
 					       double *mesh_trial_ref,
 					       double *mesh_grad_trial_ref,
 					       double *mesh_dof,
@@ -983,7 +984,8 @@ namespace proteus
 	dmom_v_adv_v[1] = rho*v;
       }					    
       inline
-	void evaluateTPInvViscosityMassCoefficients(const double numerical_viscosity,
+	void evaluateTPInvViscosityMassCoefficients(const int use_numerical_viscosity,
+						    const double numerical_viscosity,
 						    const double eps_rho,
 						    const double eps_mu,
 						    const double rho_0,
@@ -1011,7 +1013,8 @@ namespace proteus
 
 	rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
 	nu = nu_0*(1.0-H_mu) + nu_1*H_mu;
-	mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu + numerical_viscosity;
+	
+	mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu + use_numerical_viscosity*numerical_viscosity;
 	//mu = rho*nu;
 
 	mom_p_acc = p / mu;
@@ -5738,6 +5741,7 @@ namespace proteus
       }
 
       void getTwoPhaseScaledMassOperator(int scale_type,
+					 int use_numerical_viscosity,
 					 double *mesh_trial_ref,
 					 double *mesh_grad_trial_ref,
 					 double *mesh_dof,
@@ -5838,7 +5842,8 @@ namespace proteus
 
 	    // Step 1.2.2 Evaluate coefficients
 	    if (scale_type==0){
-	      evaluateTPInvViscosityMassCoefficients(numerical_viscosity[eN_k],
+	      evaluateTPInvViscosityMassCoefficients(use_numerical_viscosity,
+						     numerical_viscosity[eN_k],
 						     eps_rho,
 						     eps_mu,
 						     rho_0,
