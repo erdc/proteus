@@ -352,5 +352,5 @@ hashdist_package:
 	sed -i '/sources:/c\#sources:' stack/pkgs/proteus.yaml
 	sed -i '/- key:/c\# -key:' stack/pkgs/proteus.yaml
 	sed -i '/  url:/c\#  url:' stack/pkgs/proteus.yaml
-	./hashdist/bin/hit fetch https://github.com/erdc-cm/proteus/archive/${PROTEUS_VERSION}.zip >> stack/pkgs/proteus.yaml
+	./hashdist/bin/hit fetch https://github.com/erdc/proteus/archive/${PROTEUS_VERSION}.zip >> stack/pkgs/proteus.yaml
 	cd stack && ${PROTEUS}/hashdist/bin/hit build -v proteus_stack.yaml
