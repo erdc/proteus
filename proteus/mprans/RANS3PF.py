@@ -1,7 +1,6 @@
 import proteus
 from proteus import Profiling
 import numpy
-cimport numpy
 from proteus import *
 from proteus.Transport import *
 from proteus.Transport import OneLevelTransport
@@ -50,7 +49,7 @@ class SubgridError(proteus.SubgridError.SGE_base):
         self.nSteps += 1
         if self.lag:
             self.v_last[:] = self.cq[('velocity', 0)]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             log("RANS3PF.SubgridError: switched to lagged subgrid error")
             self.lag = True
             self.v_last = self.cq[('velocity', 0)].copy()
@@ -111,7 +110,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         if self.lag:
             for ci in range(0, 3):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             log("RANS3PF.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
             for ci in range(0, 3):
@@ -542,7 +541,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.netMoments = numpy.zeros((nBoundariesMax, 3), 'd')
         if self.barycenters is None:
             self.barycenters = numpy.zeros((nBoundariesMax, 3), 'd')
-        if self.comm.isMaster():
+        comm = Comm.get()
+        if comm.isMaster():
             self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,"wettedAreaHistory.txt"),"w")
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,"forceHistory_p.txt"),"w")
             self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,"forceHistory_v.txt"),"w")

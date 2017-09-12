@@ -95,7 +95,7 @@ class LinearSolver:
                 self.L.matvec(u,r)
             r-=b
     def solveInitialize(self,u,r,b,initialGuessIsZero=True):
-        if r == None:
+        if r is None:
             if self.r is None:
                 self.r = Vec(self.n)
             r=self.r
@@ -239,7 +239,7 @@ class LinearSolver:
     def setUp(self, pc):
         self.prepare()
     def apply(self,pc,x,y):
-        if self.xGhosted == None:
+        if self.xGhosted is None:
             self.xGhosted = self.par_b.duplicate()
             self.yGhosted = self.par_b.duplicate()
         self.xGhosted.setArray(x.getArray())
@@ -262,7 +262,7 @@ class LU(LinearSolver):
         elif type(L).__name__ == 'ndarray':#mwf was array
             self.denseFactor = lapackWrappers.DenseFactor(self.n)
         self.solverName = "LU"
-        self.computeEigenvalues = computeEigenvalues or (computeEigenvectors != None)
+        self.computeEigenvalues = computeEigenvalues or (computeEigenvectors is not None)
         if computeEigenvectors in ['left','both']:
             self.leftEigenvectors=numpy.zeros((self.n,self.n),'d')
             self.JOBVL='V'
@@ -273,7 +273,7 @@ class LU(LinearSolver):
             self.JOBVR='V'
         else:
             self.JOBVR='N'
-        if computeEigenvalues or computeEigenvectors != None:
+        if computeEigenvalues or computeEigenvectors is not None:
             self.Leig=copy.deepcopy(L)
             self.work=numpy.zeros((self.n*5,),'d')
             self.eigenvalues_r = numpy.zeros((self.n,),'d')
@@ -333,7 +333,7 @@ class PETSc(LinearSolver):
         LinearSolver.__init__(self,L)
         assert type(L).__name__ == 'SparseMatrix', "PETSc can only be called with a local sparse matrix"
         self.solverName  = "PETSc"
-        if prefix == None:
+        if prefix is None:
             self.ksp = flcbdfWrappers.KSP(par_L)
         else:
             assert isinstance(prefix,str)
@@ -349,7 +349,7 @@ class PETSc(LinearSolver):
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
         self.ksp.solve(par_u.cparVec,par_b.cparVec)
     def useTrueResidualTest(self,par_u):
-        if par_u != None:
+        if par_u is not None:
             self.ksp.useTrueResidualConvergence(par_u.cparVec)
     def printPerformance(self):
         self.ksp.info()
@@ -418,7 +418,7 @@ class KSP_petsc4py(LinearSolver):
         self._setMatOperators()
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
 
-        self.setResTol(rtol_r,atol_r,maxIts)
+        self.setResTol(rtol_r,atol_r)
 
         convergenceTest = 'r-true'
         if convergenceTest == 'r-true':
@@ -428,27 +428,26 @@ class KSP_petsc4py(LinearSolver):
         else:
             self.r_work = None
 
-        if prefix != None:
+        if prefix is not None:
             self.ksp.setOptionsPrefix(prefix)
-        if Preconditioner != None:
+        if Preconditioner is not None:
             self._setPreconditioner(Preconditioner,par_L,prefix)
             self.ksp.setPC(self.pc)
+        self.ksp.max_it = self.maxIts
         self.ksp.setFromOptions()
         
-    def setResTol(self,rtol,atol,maxIts):
+    def setResTol(self,rtol,atol):
         """ Set the ksp object's residual and maximum interations. """
         self.rtol_r = rtol
         self.atol_r = atol
-        self.maxIts = maxIts
         self.ksp.rtol = rtol
         self.ksp.atol = atol
-        self.ksp.max_it = maxIts
         logEvent("KSP atol %e rtol %e" % (self.ksp.atol,self.ksp.rtol))
 
     def prepare(self,b=None):
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
-        if self.petsc_L.proteus_jacobian != None:
+        if self.petsc_L.proteus_jacobian is not None:
             self.csr_rep[2][self.petsc_L.nzval_proteus2petsc] = self.petsc_L.proteus_csr_rep[2][:]
         if self.par_fullOverlap == True:
             self.petsc_L.setValuesLocalCSR(self.csr_rep_local[0],self.csr_rep_local[1],self.csr_rep_local[2],p4pyPETSc.InsertMode.INSERT_VALUES)
@@ -462,7 +461,7 @@ class KSP_petsc4py(LinearSolver):
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
-        if self.pc != None:
+        if self.pc is not None:
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
             if self.preconditioner:
@@ -484,15 +483,14 @@ class KSP_petsc4py(LinearSolver):
                                                                                                    self.ksp.converged,
                                                                                                    self.ksp.its,
                                                                                                    self.ksp.norm))
-        if self.pccontext != None:
+        if self.pccontext is not None:
             self.pccontext.par_b = par_b
             self.pccontext.par_u = par_u
-        if self.matcontext != None:
+        if self.matcontext is not None:
             self.matcontext.par_b = par_b
 
         if self.bdyNullSpace==True:
             self._setNullSpace(par_b)
-        
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
@@ -591,12 +589,19 @@ class KSP_petsc4py(LinearSolver):
         if its == 0:
             self.rnorm0 = truenorm
             logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
-            logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
-            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
-                                                                                              truenorm,
-                                                                                              (truenorm/ self.rnorm0),
-                                                                                              ksp.atol,
-                                                                                              ksp.rtol))
+            if self.rnorm0 == 0.:
+                logEvent("NumericalAnalytics KSPOuterResidual(relative): N/A (residual vector is zero)" )
+                logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = N/A (residual vector is zero) ; atol=%e rtol=%e " % (its,
+                                                                                                                             truenorm,
+                                                                                                                             ksp.atol,
+                                                                                                                             ksp.rtol))
+            else:
+                logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+                logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
+                                                                                                  truenorm,
+                                                                                                  (truenorm/ self.rnorm0),
+                                                                                                  ksp.atol,
+                                                                                                  ksp.rtol))
             return False
         else:
             logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
@@ -614,7 +619,7 @@ class KSP_petsc4py(LinearSolver):
 
     def _setPreconditioner(self,Preconditioner,par_L,prefix):
         """ Sets the preconditioner type used in the KSP object """
-        if Preconditioner != None:
+        if Preconditioner is not None:
             if Preconditioner == petsc_LU:
                 logEvent("NAHeader Precondtioner LU")
                 self.preconditioner = petsc_LU(par_L)
@@ -688,6 +693,10 @@ class KSP_petsc4py(LinearSolver):
                 logEvent("NAHeader Preconditioner Qp" )
                 self.preconditioner = Schur_Qp(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
+            elif Preconditioner == Schur_LSC:
+                logEvent("NAHeader Preconditioner LSC")
+                self.preconditioner = Schur_LSC(par_L,prefix,self.bdyNullSpace)
+                self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleDarcyFC:
                 self.preconditioner = SimpleDarcyFC(par_L)
                 self.pc = self.preconditioner.pc
@@ -722,6 +731,28 @@ class SchurOperatorConstructor:
         except:
             self.opBuilder = OperatorConstructor_oneLevel(self.L.pde)
 
+    def getQv(self, output_matrix=False, recalculate=False):
+        """ Return the pressure mass matrix Qp.
+
+        Parameters
+        ----------
+        output_matrix : bool 
+            Determines whether matrix should be exported.
+        recalculate : bool
+            Flag indicating whether matrix should be rebuilt every iteration
+
+        Returns
+        -------
+        Qp : matrix
+            The pressure mass matrix.
+        """
+        Qsys_petsc4py = self._massMatrix(recalculate = recalculate)
+        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+                                             self.linear_smoother.isv)
+        if output_matrix is True:
+            self._exportMatrix(self.Qv,"Qv")
+        return self.Qv
+        
     def getQp(self, output_matrix=False, recalculate=False):
         """ Return the pressure mass matrix Qp.
 
@@ -869,6 +900,19 @@ class SchurPrecon(KSP_Preconditioner):
         """ Helper function that attaches a residual log to the inner solve """
         global_ksp.pc.getFieldSplitSubKSP()[1].setConvergenceTest(self._converged_trueRes)
 
+    def _setSchurApproximation(self,global_ksp):
+        """ Set the Schur approximation to the Schur block.
+
+        Parameters
+        ----------
+        global_ksp : 
+        """
+        assert self.matcontext_inv is not None, "no matrix context has been set."
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        
+
     def _initializeIS(self,prefix):
         """ Sets the index set (IP) for the pressure and velocity 
         
@@ -989,7 +1033,6 @@ class Schur_Qp(SchurPrecon) :
         self.Qp = self.operator_constructor.getQp()
         self.Qp.scale(1./self.L.pde.coefficients.nu)
         L_sizes = self.Qp.size
-        L_range = self.Qp.owner_range
 
         # Setup a PETSc shell for the inverse Qp operator
         self.QpInv_shell = p4pyPETSc.Mat().create()
@@ -1000,14 +1043,38 @@ class Schur_Qp(SchurPrecon) :
         self.QpInv_shell.setUp()
 
         # Set PETSc Schur operator
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        self._setSchurApproximation(global_ksp)
 
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
-        
+
+class Schur_LSC(SchurPrecon):
+    """
+    The Least-Squares Communtator preconditioner for saddle
+    point problems.
+    """
+    def __init__(self,L,prefix=None, bdyNullSpace=False):
+        SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
+        self.operator_constructor = SchurOperatorConstructor(self)
+
+    def setUp(self,global_ksp):
+        self.Qv = self.operator_constructor.getQv()
+        self.Qv_hat = p4pyPETSc.Mat().create()
+        self.Qv_hat.setSizes(self.Qv.getSizes())
+        self.Qv_hat.setType('aij')
+        self.Qv_hat.setUp()
+        self.Qv_hat.setDiagonal(self.Qv.getDiagonal())
+
+        self.B = global_ksp.getOperators()[0].getSubMatrix(self.isp,self.isv)
+        self.F = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
+        self.Bt = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isp)
+
+        self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.Bt,self.F)
+
+        self._setSchurApproximation(global_ksp)
+        self._setSchurlog(global_ksp)
+            
 class NavierStokes3D:
     def __init__(self,L,prefix=None):
         self.L = L
@@ -1705,7 +1772,7 @@ class NI(MultilevelLinearSolver):
         self.printInfo=printInfo
         self.infoString=''
     def setResTol(self,rtol,atol):
-        if self.tolList != None:
+        if self.tolList is not None:
             for l in range(self.nLevels):
                 self.tolList[l] = rtol
             self.atol_r = atol
@@ -1728,46 +1795,46 @@ class NI(MultilevelLinearSolver):
             if initialGuessIsZero:
                 self.uList[0][:]=0.0
         for l in range(currentMesh):
-            if self.tolList != None:
+            if self.tolList is not None:
                 self.switchToResidualConvergence(self.levelSolverList[l],
                                                  self.tolList[l])
             self.levelSolverList[l].solve(u=self.uList[l],b=self.bList[l],initialGuessIsZero=initialGuessIsZero)
             initialGuessIsZero=False
-            if self.tolList != None:
+            if self.tolList is not None:
                 self.revertToFixedIteration(self.levelSolverList[l])
             if l < currentMesh -1:
                 self.prolongList[l+1].matvec(self.uList[l],self.uList[l+1])
             else:
                 self.prolongList[l+1].matvec(self.uList[l],u)
-        if self.tolList != None:
+        if self.tolList is not None:
             self.switchToResidualConvergence(self.levelSolverList[currentMesh],
                                              self.tolList[currentMesh])
         self.levelSolverList[currentMesh].solve(u,r,b,initialGuessIsZero)
         self.infoString += "**************Start Level %i Info********************\n" % currentMesh
         self.infoString+=self.levelSolverList[currentMesh].info()
         self.infoString += "**************End Level %i Info********************\n" % currentMesh
-        if self.tolList != None:
+        if self.tolList is not None:
             self.revertToFixedIteration(self.levelSolverList[currentMesh])
     def solveMultilevel(self,bList,uList,par_bList=None,par_uList=None,initialGuessIsZero=False):
         self.infoString="*************Start Multilevel Linear Solver Info*******************\n"
         for l in range(self.fineMesh):
-            if self.tolList != None:
+            if self.tolList is not None:
                 self.switchToResidualConvergence(self.levelSolverList[l],self.tolList[l])
             self.levelSolverList[l].solve(u=uList[l],b=bList[l],initialGuessIsZero=initialGuessIsZero)
             initialGuessIsZero=False
-            if self.tolList != None:
+            if self.tolList is not None:
                 self.revertToFixedIteration(self.levelSolverList[l])
             self.prolongList[l+1].matvec(uList[l],uList[l+1])
             self.infoString += "**************Start Level %i Info********************\n" % l
             self.infoString+=self.levelSolverList[l].info()
             self.infoString += "**************End Level %i Info********************\n" % l
-        if self.tolList != None:
+        if self.tolList is not None:
             self.switchToResidualConvergence(self.levelSolverList[self.fineMesh],self.tolList[self.fineMesh])
         self.levelSolverList[self.fineMesh].solve(u=uList[self.fineMesh],b=bList[self.fineMesh],initialGuessIsZero=initialGuessIsZero)
         self.infoString += "**************Start Level %i Info********************\n" % l
         self.infoString+=self.levelSolverList[self.fineMesh].info()
         self.infoString += "**************End Level %i Info********************\n" % l
-        if self.tolList != None:
+        if self.tolList is not None:
             self.revertToFixedIteration(self.levelSolverList[self.fineMesh])
         self.infoString+="********************End Multilevel Linear Solver Info*********************\n"
     def info(self):
@@ -1847,7 +1914,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
             mgItsList.append(cycles)
             if l > 0:
                 if smootherType == Jacobi:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 4.0/5.0
                     preSmootherList.append(Jacobi(L=linearOperatorList[l],
                                                   weight=relaxationFactor,
@@ -1862,7 +1929,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                    computeRates = computeSmootherRates,
                                                    printInfo = printSmootherInfo))
                 elif smootherType == GaussSeidel:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 0.33
                     preSmootherList.append(GaussSeidel(connectionList = connectivityListList[l],
                                                        L=linearOperatorList[l],
@@ -1879,7 +1946,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                         computeRates = computeSmootherRates,
                                                         printInfo = printSmootherInfo))
                 elif smootherType == StarILU:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 1.0
                     preSmootherList.append(StarILU(connectionList = connectivityListList[l],
                                                    L=linearOperatorList[l],
@@ -1896,7 +1963,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                     computeRates = computeSmootherRates,
                                                     printInfo = printSmootherInfo))
                 elif smootherType == StarBILU:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 1.0
                     preSmootherList.append(StarBILU(connectionList = connectivityListList[l],
                                                     L=linearOperatorList[l],
@@ -1938,7 +2005,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
         for l in range(nLevels):
             levelLinearSolverList.append(PETSc(linearOperatorList[l],par_linearOperatorList[l],
                                                prefix=solver_options_prefix))
-            if solverConvergenceTest == 'r-true' and par_duList != None:
+            if solverConvergenceTest == 'r-true' and par_duList is not None:
                 levelLinearSolverList[-1].useTrueResidualTest(par_duList[l])
         levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == KSP_petsc4py:
@@ -1954,11 +2021,11 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                       Preconditioner=smootherType,
                                                       connectionList = connectivityListList[l],
                                                       linearSolverLocalBlockSize = linearSolverLocalBlockSize))
-            #if solverConvergenceTest == 'r-true' and par_duList != None:
+            #if solverConvergenceTest == 'r-true' and par_duList is not None:
             #    levelLinearSolverList[-1].useTrueResidualTest(par_duList[l])
         levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == Jacobi:
-        if relaxationFactor == None:
+        if relaxationFactor is None:
             relaxationFactor = 4.0/5.0
         for l in range(nLevels):
             levelLinearSolverList.append(Jacobi(L=linearOperatorList[l],
@@ -1971,7 +2038,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                 printInfo = printLevelSolverInfo))
         levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == GaussSeidel:
-        if relaxationFactor == None:
+        if relaxationFactor is None:
             relaxationFactor=0.33
         for l in range(nLevels):
             levelLinearSolverList.append(GaussSeidel(connectionList = connectivityListList[l],
@@ -1985,7 +2052,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                      printInfo = printLevelSolverInfo))
         levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == StarILU:
-        if relaxationFactor == None:
+        if relaxationFactor is None:
             relaxationFactor=1.0
         for l in range(nLevels):
             levelLinearSolverList.append(StarILU(connectionList = connectivityListList[l],
@@ -1999,7 +2066,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                  printInfo = printLevelSolverInfo))
         levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == StarBILU:
-        if relaxationFactor == None:
+        if relaxationFactor is None:
             relaxationFactor=1.0
         for l in range(nLevels):
             levelLinearSolverList.append(StarBILU(connectionList = connectivityListList[l],
