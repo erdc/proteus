@@ -1122,7 +1122,6 @@ class NS_base:  # (HasTraits):
             A name for the calculated solution.
         """
         logEvent("Setting initial conditions",level=0)
-        logEvent('WARNING: The boundary fluxes at interpart boundaries are skipped if elementBoundaryMaterialType is 0 for RANS2P-based models. This means that DG methods are currently incompatible with RANS2P.')
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
                 logEvent("Setting initial conditions from hot start file for "+p.name)
