@@ -730,7 +730,7 @@ class Gauges(AV_base):
             globalLineIntegralGaugeBuf = []
 
         if self.gaugeComm.rank == 0:
-            self.file.write("%10.4e" % time)
+            self.file.write("%25.15e" % time)
             if self.isPointGauge or self.isLineGauge:
                 for id in self.globalQuantitiesMap:
                     self.file.write(", %43.18e" % (self.globalQuantitiesBuf[id],))
