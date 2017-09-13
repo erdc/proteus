@@ -756,7 +756,8 @@ int MeshAdaptPUMIDrvr::gradeMesh()
 //For simplicity, we do not bother with accounting for entities across partitions
 {
   //
-  std::cout<<"Starting grading\n";
+  if(comm_rank==0)
+    std::cout<<"Starting grading\n";
   apf::MeshIterator* it = m->begin(1);
   apf::MeshEntity* edge;
   apf::Adjacent edgAdjVert;
@@ -769,7 +770,6 @@ int MeshAdaptPUMIDrvr::gradeMesh()
   //marker structure for 0) not marked 1) marked 2)storage
   int marker[3] = {0,1,0}; 
 
-  std::cout<<"The queue size is before "<<markedEdges.size()<<std::endl;
   while((edge=m->iterate(it))){
     m->getAdjacent(edge, 0, edgAdjVert);
     for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
@@ -780,7 +780,6 @@ int MeshAdaptPUMIDrvr::gradeMesh()
       markedEdges.push(edge);
       //tag edge to indicate that it is part of queue 
       m->setIntTag(edge,isMarked,&marker[1]); 
-      std::cout<<localNumber(edge)<<" The sizes are "<<size[0]<<" "<<size[1]<<" "<<size[0]/size[1]<<" "<<size[1]/size[0]<<std::endl;
     }
     else{
       m->setIntTag(edge,isMarked,&marker[0]); 
@@ -830,6 +829,7 @@ int MeshAdaptPUMIDrvr::gradeMesh()
   m->end(it); 
   m->destroyTag(isMarked);
   apf::synchronize(size_iso);
-  std::cout<<"Completed grading\n";
+  if(comm_rank==0)
+    std::cout<<"Completed grading\n";
 }
 
