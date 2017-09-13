@@ -205,7 +205,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
                  particle_nitsche=1.0,
-                 particle_sdfList=[]):
+                 particle_sdfList=[]
+                 vos_function=None):
+        self.vos_function=vos_function
         self.nParticles=nParticles
         self.particle_nitsche=particle_nitsche
         self.particle_epsFact=particle_epsFact
@@ -423,6 +425,18 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
            self.q_vos = modelList[self.VOS_model].q[('u',0)]
            self.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
            self.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
+        elif self.vos_function is not None:
+            #example of setting "q" array
+            self.vos_dof = modelList[self.VOF_model].u[0].dof.copy()
+            self.q_vos = modelList[self.VOF_model].coefficients.q_vos
+            self.q_dvos_dt = self.q_vos.copy()
+            self.ebqe_vos = modelList[self.VOF_model].coefficients.ebqe_vos
+                for eN in range(self.model.q['x'].shape[0]):
+                    for k in range(self.model.q['x'].shape[1]):
+                        self.vos_dof[eN,k] = self.vos_function(self.model.q['x'][eN,k])
+                        self.q_vos[eN,k] = self.vos_function(self.model.q['x'][eN,k])
+                        self.q_dvos_dt[eN,k] = self.vos_function(self.model.q['x'][eN,k])
+                        self.ebqe_vos[eN,k] = self.vos_function(self.model.q['x'][eN,k])
         else:
            self.vos_dof = modelList[self.VOF_model].u[0].dof.copy()
            self.vos_dof[:] = 0.0
