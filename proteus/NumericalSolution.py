@@ -899,7 +899,7 @@ class NS_base:  # (HasTraits):
         if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
             import sys
             if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
-                sys.exit("The mesh must be partitioned by elements and NOT nodes. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
+                sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
             p0.domain.PUMIMesh=n0.MeshAdaptMesh
             p0.domain.hasModel = n0.useModel
             numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
@@ -1122,6 +1122,8 @@ class NS_base:  # (HasTraits):
             A name for the calculated solution.
         """
         logEvent("Setting initial conditions",level=0)
+        if(self.pList[0].domain.MeshOptions.parallelPartitioningType==MeshTools.MeshParallelPartitioningTypes.element):
+          logEvent('WARNING: With element partitioning, the boundary fluxes at interpart boundaries are skipped if elementBoundaryMaterialType is 0 for RANS2P-based models. This means that DG methods are currently incompatible with RANS2P.')
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
                 logEvent("Setting initial conditions from hot start file for "+p.name)

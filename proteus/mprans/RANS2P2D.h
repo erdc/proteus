@@ -3038,6 +3038,7 @@ namespace proteus
 	      //
 	      //update residuals
 	      //
+   if(boundaryFlags[ebN]!=0){ //ignore flux contributions on interpart boundaries
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
 		  elementResidual_mesh[i] -= ck.ExteriorElementBoundaryFlux(MOVING_DOMAIN*(xt_ext*normal[0]+yt_ext*normal[1]),p_test_dS[i]);
@@ -3149,6 +3150,7 @@ namespace proteus
 		  /* 					       mom_ww_diff_ten_ext, */
 		  /* 					       &vel_grad_test_dS[i*nSpace]);  */
 		}//i
+   } //ends condition on interpart boundary elements
 	    }//kb
 	  //
 	  //update the element and global residual storage
