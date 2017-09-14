@@ -1001,7 +1001,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
     class instance acting as a wall.
     """
 
-    def __init__(self, turbModel, kWall, b_or, Y, Yplus, U0, nu, Cmu, K, B):
+    def __init__(self, turbModel, kWall, b_or, Y, Yplus, U0, nu=1.004e-6, Cmu=0.09, K=0.41, B=5.57):
         """
         Sets turbulent boundaries for wall treatment.        
         Calculation made on nodes outside the viscous sublayer and based
