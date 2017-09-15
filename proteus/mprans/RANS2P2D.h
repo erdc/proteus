@@ -862,7 +862,7 @@ namespace proteus
       /* duc_du = u/(uc+1.0e-12); */
       /* duc_dv = v/(uc+1.0e-12); */
       //semi-implicit quadratic term
-      uc = sqrt(uStar*uStar+vStar*vStar*+wStar*wStar); 
+      uc = sqrt(uStar*uStar+vStar*vStar); 
       duc_du = 0.0;
       duc_dv = 0.0;
       /* duc_dw = w/(uc+1.0e-12); */
@@ -2007,7 +2007,7 @@ namespace proteus
 				   mom_v_ham,
 				   dmom_v_ham_grad_p,
 				   mom_w_ham,
-				   dmom_w_ham_grad_p);          
+				   dmom_w_ham_grad_p);
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not?
@@ -2031,7 +2031,7 @@ namespace proteus
 						w,
 						q_velocity_sge[eN_k_nSpace+0],
 						q_velocity_sge[eN_k_nSpace+1],
-						q_velocity_sge[eN_k_nSpace+2],
+						q_velocity_sge[eN_k_nSpace+1],//cek hack, should not be used
 						eps_solid[elementFlags[eN]],
 						phi_solid[eN_k],
 						q_velocity_solid[eN_k_nSpace+0],
@@ -2150,7 +2150,6 @@ namespace proteus
               dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
               dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
               /* dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt); */
-
 	      pdeResidual_u = ck.Mass_strong(mom_u_acc_t) +
 		ck.Advection_strong(dmom_adv_sge,grad_u) +
 		ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
@@ -3638,7 +3637,7 @@ namespace proteus
 						w,
 						q_velocity_sge[eN_k_nSpace+0],
 						q_velocity_sge[eN_k_nSpace+1],
-						q_velocity_sge[eN_k_nSpace+2],
+						q_velocity_sge[eN_k_nSpace+1],//cek hack, should not be used
 						eps_solid[elementFlags[eN]],
 						phi_solid[eN_k],
 						q_velocity_solid[eN_k_nSpace+0],
