@@ -13,7 +13,7 @@ namespace proteus
   {
   public:
     virtual ~RANS2P2D_base(){}
-    virtual void calculateResidual(double COMPRESSIBLE_FORM,
+    virtual void calculateResidual(double NONCONSERVATIVE_FORM,
 				   double MOMENTUM_SGE,
 				   double PRESSURE_SGE,
 				   double VELOCITY_SGE,
@@ -168,7 +168,7 @@ namespace proteus
 				   double* netForces_p,
 				   double* netForces_v,
 				   double* netMoments)=0;
-    virtual void calculateJacobian(double COMPRESSIBLE_FORM,
+    virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
 				   double MOMENTUM_SGE,
 				   double PRESSURE_SGE,
 				   double VELOCITY_SGE,
@@ -524,7 +524,7 @@ namespace proteus
       }
 
       inline
-	void evaluateCoefficients(const double COMPRESSIBLE_FORM,
+	void evaluateCoefficients(const double NONCONSERVATIVE_FORM,
 				  const double eps_rho,
 				  const double eps_mu,
 				  const double sigma,
@@ -650,7 +650,7 @@ namespace proteus
 	mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
 	//mu = rho*nu;
 	eddy_viscosity = nu_t;
-	if (COMPRESSIBLE_FORM > 0.0)
+	if (NONCONSERVATIVE_FORM > 0.0)
 	  {
 	    eddy_viscosity = nu_t*rho;
 
@@ -1086,7 +1086,7 @@ namespace proteus
 
       }
       inline
-	void updateDarcyForchheimerTerms_Ergun(const double COMPRESSIBLE_FORM,
+	void updateDarcyForchheimerTerms_Ergun(const double NONCONSERVATIVE_FORM,
 					       /* const double linearDragFactor, */
 					       /* const double nonlinearDragFactor, */
 					       /* const double porosity, */
@@ -1126,7 +1126,7 @@ namespace proteus
 	rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
 	mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
 	//mu = rho*nu;
-	if (COMPRESSIBLE_FORM > 0.0)
+	if (NONCONSERVATIVE_FORM > 0.0)
 	  {
 	    viscosity = mu;
 	  }
@@ -1173,7 +1173,7 @@ namespace proteus
       }
     
       inline
-	void updateTurbulenceClosure(const double COMPRESSIBLE_FORM,
+	void updateTurbulenceClosure(const double NONCONSERVATIVE_FORM,
 				     const int turbulenceClosureModel,
 				     const double eps_rho,
 				     const double eps_mu,
@@ -1239,7 +1239,7 @@ namespace proteus
 	nu_t = fmax(nu_t,1.0e-4*nu); //limit according to Lew, Buscaglia etal 01
 	//mwf hack
 	nu_t     = fmin(nu_t,1.0e6*nu);
-	if (COMPRESSIBLE_FORM > 0.0)
+	if (NONCONSERVATIVE_FORM > 0.0)
 	  {
 	    eddy_viscosity = nu_t*rho;
 	    //u momentum diffusion tensor
@@ -1412,7 +1412,7 @@ namespace proteus
       }
 
       inline
-	void exteriorNumericalAdvectiveFlux(const double COMPRESSIBLE_FORM,
+	void exteriorNumericalAdvectiveFlux(const double NONCONSERVATIVE_FORM,
 					    const int& isDOFBoundary_p,
 					    const int& isDOFBoundary_u,
 					    const int& isDOFBoundary_v,
@@ -1469,7 +1469,7 @@ namespace proteus
 	flux_umom = 0.0;
 	flux_vmom = 0.0;
 	/* flux_wmom = 0.0; */
-	if (COMPRESSIBLE_FORM > 0.0)
+	if (NONCONSERVATIVE_FORM > 0.0)
 	  {
 	    flowSpeedNormal=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for  moving and fixed domains
 	    flowSpeedNormal+=n[0]*dham_grad[0]+n[1]*dham_grad[1];
@@ -1562,7 +1562,7 @@ namespace proteus
 	/* 	} */
 	if (isDOFBoundary_p == 1)
 	  {
-	    if (COMPRESSIBLE_FORM > 0.0)
+	    if (NONCONSERVATIVE_FORM > 0.0)
 	      {
 		flux_umom+= n[0]*(bc_p - p);
 		flux_vmom+= n[1]*(bc_p - p);
@@ -1604,7 +1604,7 @@ namespace proteus
       }
 
       inline
-	void exteriorNumericalAdvectiveFluxDerivatives(const double COMPRESSIBLE_FORM,
+	void exteriorNumericalAdvectiveFluxDerivatives(const double NONCONSERVATIVE_FORM,
 						       const int& isDOFBoundary_p,
 						       const int& isDOFBoundary_u,
 						       const int& isDOFBoundary_v,
@@ -1681,7 +1681,7 @@ namespace proteus
 	dflux_wmom_dv = 0.0;
 	/* dflux_wmom_dw = 0.0; */
 	flowSpeedNormal=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for moving and fixed  domains
-	flowSpeedNormal+=COMPRESSIBLE_FORM*(n[0]*dham_grad[0]+n[1]*dham_grad[1]);//tricky, works for moving and fixed  domains
+	flowSpeedNormal+=NONCONSERVATIVE_FORM*(n[0]*dham_grad[0]+n[1]*dham_grad[1]);//tricky, works for moving and fixed  domains
 	if (isDOFBoundary_u != 1)
 	  {
 	    dflux_mass_du += n[0]*df_mass_du[0];
@@ -1780,7 +1780,7 @@ namespace proteus
 	/* } */
 	if (isDOFBoundary_p == 1)
 	  {
-	    if (COMPRESSIBLE_FORM > 0.0)
+	    if (NONCONSERVATIVE_FORM > 0.0)
 	      {
 		dflux_umom_dp= -n[0];
 		dflux_vmom_dp= -n[1];
@@ -1903,7 +1903,7 @@ namespace proteus
 	return tmp;
       }
     
-      void calculateResidual(double COMPRESSIBLE_FORM,
+      void calculateResidual(double NONCONSERVATIVE_FORM,
 			     double MOMENTUM_SGE,
 			     double PRESSURE_SGE,
 			     double VELOCITY_SGE,
@@ -2278,7 +2278,7 @@ namespace proteus
 		/* // */
 		//calculate pde coefficients at quadrature points
 		//
-		evaluateCoefficients(COMPRESSIBLE_FORM,
+		evaluateCoefficients(NONCONSERVATIVE_FORM,
 				     eps_rho,
 				     eps_mu,
 				     sigma,
@@ -2362,7 +2362,7 @@ namespace proteus
 		//VRANS
 		mass_source = q_mass_source[eN_k];
 		//todo: decide if these should be lagged or not?
-		updateDarcyForchheimerTerms_Ergun(COMPRESSIBLE_FORM,
+		updateDarcyForchheimerTerms_Ergun(NONCONSERVATIVE_FORM,
 						  /* linearDragFactor, */
 						  /* nonlinearDragFactor, */
 						  /* porosity, */
@@ -2400,7 +2400,7 @@ namespace proteus
 		if (turbulenceClosureModel >= 3)
 		  {
 		    const double c_mu = 0.09;//mwf hack 
-		    updateTurbulenceClosure(COMPRESSIBLE_FORM,
+		    updateTurbulenceClosure(NONCONSERVATIVE_FORM,
 					    turbulenceClosureModel,
 					    eps_rho,
 					    eps_mu,
@@ -2444,7 +2444,7 @@ namespace proteus
 		//
 		//moving mesh
 		//
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    mom_u_adv[0] -= MOVING_DOMAIN*dmom_u_acc_u*u*xt;
 		    mom_u_adv[1] -= MOVING_DOMAIN*dmom_u_acc_u*u*yt;
@@ -2459,7 +2459,7 @@ namespace proteus
 		dmom_u_adv_u[1] -= MOVING_DOMAIN*dmom_u_acc_u*yt;
 		/* dmom_u_adv_u[2] -= MOVING_DOMAIN*dmom_u_acc_u*zt; */
 
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    mom_v_adv[0] -= MOVING_DOMAIN*dmom_v_acc_v*v*xt;
 		    mom_v_adv[1] -= MOVING_DOMAIN*dmom_v_acc_v*v*yt;
@@ -2498,7 +2498,7 @@ namespace proteus
 		       dmom_v_acc_v,
 		       mom_v_acc_t,
 		       dmom_v_acc_v_t);
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    mom_u_acc_t *= dmom_u_acc_u;
 		    mom_v_acc_t *= dmom_v_acc_v;
@@ -2520,7 +2520,7 @@ namespace proteus
 		  //VRANS
 		  ck.Reaction_strong(mass_source);
 		//
-		if (COMPRESSIBLE_FORM > 0.0)
+		if (NONCONSERVATIVE_FORM > 0.0)
 		  {
 		    dmom_adv_sge[0] =  - dmom_u_acc_u*MOVING_DOMAIN*xt;
 		    dmom_adv_sge[1] =  - dmom_u_acc_u*MOVING_DOMAIN*yt;
@@ -2979,7 +2979,7 @@ namespace proteus
 		//calculate the pde coefficients using the solution and the boundary values for the solution 
 		// 
 		double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
-		evaluateCoefficients(COMPRESSIBLE_FORM,
+		evaluateCoefficients(NONCONSERVATIVE_FORM,
 				     eps_rho,
 				     eps_mu,
 				     sigma,
@@ -3060,7 +3060,7 @@ namespace proteus
 				     dmom_w_ham_u_ext,
 				     dmom_w_ham_v_ext,
 				     dmom_w_ham_w_ext);          
-		evaluateCoefficients(COMPRESSIBLE_FORM,
+		evaluateCoefficients(NONCONSERVATIVE_FORM,
 				     eps_rho,
 				     eps_mu,
 				     sigma,
@@ -3147,7 +3147,7 @@ namespace proteus
 		  {
 		    const double turb_var_grad_0_dummy[2] = {0.,0.};
 		    const double c_mu = 0.09;//mwf hack 
-		    updateTurbulenceClosure(COMPRESSIBLE_FORM,
+		    updateTurbulenceClosure(NONCONSERVATIVE_FORM,
 					    turbulenceClosureModel,
 					    eps_rho,
 					    eps_mu,
@@ -3177,7 +3177,7 @@ namespace proteus
 					    mom_v_source_ext,
 					    mom_w_source_ext);					  
 
-		    updateTurbulenceClosure(COMPRESSIBLE_FORM,
+		    updateTurbulenceClosure(NONCONSERVATIVE_FORM,
 					    turbulenceClosureModel,
 					    eps_rho,
 					    eps_mu,
@@ -3212,7 +3212,7 @@ namespace proteus
 		//
 		//moving domain
 		//
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*xt_ext;
 		    mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*yt_ext;
@@ -3227,7 +3227,7 @@ namespace proteus
 		dmom_u_adv_u_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*yt_ext;
 		/* dmom_u_adv_u_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*zt_ext; */
 
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*xt_ext;
 		    mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*yt_ext;
@@ -3250,7 +3250,7 @@ namespace proteus
 		/* dmom_w_adv_w_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*zt_ext; */
 
 		//bc's
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_u_ext*xt_ext;
 		    bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_u_ext*yt_ext;
@@ -3262,7 +3262,7 @@ namespace proteus
 		  }
 		/* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_mom_u_acc_ext*zt_ext; */
 
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_v_ext*xt_ext;
 		    bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_v_ext*yt_ext;
@@ -3282,7 +3282,7 @@ namespace proteus
 		// 
 		ck.calculateGScale(G,normal,h_penalty);
 		penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
-		exteriorNumericalAdvectiveFlux(COMPRESSIBLE_FORM,
+		exteriorNumericalAdvectiveFlux(NONCONSERVATIVE_FORM,
 					       isDOFBoundary_p[ebNE_kb],
 					       isDOFBoundary_u[ebNE_kb],
 					       isDOFBoundary_v[ebNE_kb],
@@ -3644,7 +3644,7 @@ namespace proteus
 	/* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
       }
 
-      void calculateJacobian(double COMPRESSIBLE_FORM,
+      void calculateJacobian(double NONCONSERVATIVE_FORM,
 			     double MOMENTUM_SGE,
 			     double PRESSURE_SGE,
 			     double VELOCITY_SGE,
@@ -4044,7 +4044,7 @@ namespace proteus
 		//calculate pde coefficients and derivatives at quadrature points
 		//
 		double eddy_viscosity(0.);//not really interested in saving eddy_viscosity in jacobian
-		evaluateCoefficients(COMPRESSIBLE_FORM,
+		evaluateCoefficients(NONCONSERVATIVE_FORM,
 				     eps_rho,
 				     eps_mu,
 				     sigma,
@@ -4128,7 +4128,7 @@ namespace proteus
 		//VRANS
 		mass_source = q_mass_source[eN_k];
 		//todo: decide if these should be lagged or not
-		updateDarcyForchheimerTerms_Ergun(COMPRESSIBLE_FORM,
+		updateDarcyForchheimerTerms_Ergun(NONCONSERVATIVE_FORM,
 						  /* linearDragFactor, */
 						  /* nonlinearDragFactor, */
 						  /* porosity, */
@@ -4165,7 +4165,7 @@ namespace proteus
 		if (turbulenceClosureModel >= 3)
 		  {
 		    const double c_mu = 0.09;//mwf hack 
-		    updateTurbulenceClosure(COMPRESSIBLE_FORM,
+		    updateTurbulenceClosure(NONCONSERVATIVE_FORM,
 					    turbulenceClosureModel,
 					    eps_rho,
 					    eps_mu,
@@ -4200,7 +4200,7 @@ namespace proteus
 		//
 		//moving mesh
 		//
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    mom_u_adv[0] -= MOVING_DOMAIN*dmom_u_acc_u*u*xt;
 		    mom_u_adv[1] -= MOVING_DOMAIN*dmom_u_acc_u*u*yt;
@@ -4215,7 +4215,7 @@ namespace proteus
 		dmom_u_adv_u[1] -= MOVING_DOMAIN*dmom_u_acc_u*yt;
 		/* dmom_u_adv_u[2] -= MOVING_DOMAIN*dmom_u_acc_u*zt; */
 
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    mom_v_adv[0] -= MOVING_DOMAIN*dmom_v_acc_v*v*xt;
 		    mom_v_adv[1] -= MOVING_DOMAIN*dmom_v_acc_v*v*yt;
@@ -4251,7 +4251,7 @@ namespace proteus
 		       dmom_v_acc_v,
 		       mom_v_acc_t,
 		       dmom_v_acc_v_t);
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    mom_u_acc_t *= dmom_u_acc_u;
 		    mom_v_acc_t *= dmom_v_acc_v;
@@ -4265,7 +4265,7 @@ namespace proteus
 		//
 		//calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
 		//
-		if (COMPRESSIBLE_FORM > 0.0)
+		if (NONCONSERVATIVE_FORM > 0.0)
 		  {
 		    dmom_adv_sge[0] =  - dmom_u_acc_u*MOVING_DOMAIN*xt;
 		    dmom_adv_sge[1] =  - dmom_u_acc_u*MOVING_DOMAIN*yt;
@@ -4825,7 +4825,7 @@ namespace proteus
 		//calculate the internal and external trace of the pde coefficients 
 		// 
 		double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.);//not interested in saving boundary eddy viscosity for now
-		evaluateCoefficients(COMPRESSIBLE_FORM,
+		evaluateCoefficients(NONCONSERVATIVE_FORM,
 				     eps_rho,
 				     eps_mu,
 				     sigma,
@@ -4906,7 +4906,7 @@ namespace proteus
 				     dmom_w_ham_u_ext,
 				     dmom_w_ham_v_ext,
 				     dmom_w_ham_w_ext);          
-		evaluateCoefficients(COMPRESSIBLE_FORM,
+		evaluateCoefficients(NONCONSERVATIVE_FORM,
 				     eps_rho,
 				     eps_mu,
 				     sigma,
@@ -4992,7 +4992,7 @@ namespace proteus
 		  {
 		    const double turb_var_grad_0_dummy[2] = {0.,0.};
 		    const double c_mu = 0.09;//mwf hack 
-		    updateTurbulenceClosure(COMPRESSIBLE_FORM,
+		    updateTurbulenceClosure(NONCONSERVATIVE_FORM,
 					    turbulenceClosureModel,
 					    eps_rho,
 					    eps_mu,
@@ -5022,7 +5022,7 @@ namespace proteus
 					    mom_v_source_ext,
 					    mom_w_source_ext);					  
 
-		    updateTurbulenceClosure(COMPRESSIBLE_FORM,
+		    updateTurbulenceClosure(NONCONSERVATIVE_FORM,
 					    turbulenceClosureModel,
 					    eps_rho,
 					    eps_mu,
@@ -5055,7 +5055,7 @@ namespace proteus
 		//
 		//moving domain
 		//
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*xt_ext;
 		    mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*yt_ext;
@@ -5070,7 +5070,7 @@ namespace proteus
 		dmom_u_adv_u_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*yt_ext;
 		/* dmom_u_adv_u_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*zt_ext; */
 
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*xt_ext;
 		    mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*yt_ext;
@@ -5093,7 +5093,7 @@ namespace proteus
 		/* dmom_w_adv_w_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*zt_ext; */
 	      
 		//moving domain bc's
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*u_ext*xt_ext;
 		    bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*u_ext*yt_ext;
@@ -5105,7 +5105,7 @@ namespace proteus
 		  }
 		/* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_mom_u_acc_ext*zt_ext; */
 
-		if (COMPRESSIBLE_FORM)
+		if (NONCONSERVATIVE_FORM)
 		  {
 		    bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*v_ext*xt_ext;
 		    bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*v_ext*yt_ext;
@@ -5123,7 +5123,7 @@ namespace proteus
 		// 
 		//calculate the numerical fluxes 
 		// 
-		exteriorNumericalAdvectiveFluxDerivatives(COMPRESSIBLE_FORM,
+		exteriorNumericalAdvectiveFluxDerivatives(NONCONSERVATIVE_FORM,
 							  isDOFBoundary_p[ebNE_kb],
 							  isDOFBoundary_u[ebNE_kb],
 							  isDOFBoundary_v[ebNE_kb],
