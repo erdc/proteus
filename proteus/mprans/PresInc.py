@@ -29,7 +29,7 @@ class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exter
 
 
 class Coefficients(TC_base):
-    r"""
+    """
     The coefficients for pressure increment solution
 
     Update is given by
@@ -45,13 +45,17 @@ class Coefficients(TC_base):
                  rho_s_min=998.0,
                  nd=2,
                  modelIndex = None,
-                 fluidModelIndex = None):
+                 fluidModelIndex = None, 
+                 fixNullSpace=False, 
+                 INTEGRATE_BY_PARTS_DIV_U=True):
         """Construct a coefficients object
 
         :param modelIndex: This model's index into the model list
         :param fluidModelIndex: The fluid momentum model's index
         """
-        assert(nd in [2,3])
+        self.fixNullSpace=fixNullSpace
+        self.INTEGRATE_BY_PARTS_DIV_U=INTEGRATE_BY_PARTS_DIV_U
+        assert(nd in [2,3])        
         self.nd = nd
         if self.nd == 2:
             sdInfo    = {(0,0):(np.array([0,1,2],dtype='i'),
@@ -115,15 +119,16 @@ class Coefficients(TC_base):
         """
         Update the fluid velocities
         """
-        alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
-        for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
-            self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
-            #cek hack, need to do scale this right for 3p flow
-            self.fluidModel.ebqe[('velocity',0)][...,i] = (self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
-            self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
-            self.fluidModel.coefficients.ebqe_velocity_solid[...,i] -= self.model.ebqe[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
-        self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
-        self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
+        if self.fluidModel.KILL_PRESSURE_TERM is False and self.fluidModel.coefficients.CORRECT_VELOCITY is True:
+            alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
+            for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
+                self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
+                #cek hack, need to do scale this right for 3p flow
+                self.fluidModel.ebqe[('velocity',0)][...,i] = (self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
+                self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
+                self.fluidModel.coefficients.ebqe_velocity_solid[...,i] -= self.model.ebqe[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
+            self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
+            self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):
@@ -146,6 +151,7 @@ class Coefficients(TC_base):
             vos = self.fluidModel.coefficients.ebqe_vos
             rho_s = self.fluidModel.coefficients.rho_s
             rho_f = self.fluidModel.coefficients.ebqe_rho
+        
         assert rho_s >= self.rho_s_min, "solid density out of bounds"
         assert (rho_f >= self.rho_f_min).all(), "fluid density out of bounds"
         for i in range(vs.shape[-1]):
@@ -703,18 +709,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # flux boundary conditions
         for t, g in self.fluxBoundaryConditionsObjectsDict[
                 0].advectiveFluxBoundaryConditionsDict.iteritems():
-            self.ebqe[
-                ('advectiveFlux_bc', 0)][
-                t[0], t[1]] = g(
-                self.ebqe[
-                    ('x')][
-                    t[0], t[1]], self.timeIntegration.t)
+            self.ebqe[('advectiveFlux_bc', 0)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
             self.ebqe[('advectiveFlux_bc_flag', 0)][t[0], t[1]] = 1
         for t,g in self.fluxBoundaryConditionsObjectsDict[
                 0].diffusiveFluxBoundaryConditionsDictDict[0].iteritems():
             self.ebqe[('diffusiveFlux_bc',0,0)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
             self.ebqe[('diffusiveFlux_bc_flag',0,0)][t[0],t[1]] = 1
-
+            
+        if self.coefficients.fixNullSpace:        
+            self.u[0].dof[0] = 0
         self.presinc.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -738,11 +741,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # physics
             self.mesh.nElements_global,
             self.numericalFlux.isDOFBoundary[0],
-            self.ebqe[('advectiveFlux_bc_flag', 0)],
+            self.ebqe[('diffusiveFlux_bc_flag', 0,0)],
             self.u[0].femSpace.dofMap.l2g,
             self.u[0].dof,
             self.coefficients.fluidModel.timeIntegration.alpha_bdf,
             self.coefficients.fluidModel.q[('velocity',0)],
+            self.coefficients.fluidModel.q['divU'],
             self.coefficients.fluidModel.coefficients.q_velocity_solid,
             self.coefficients.fluidModel.coefficients.q_vos,
             self.coefficients.fluidModel.coefficients.rho_s,
@@ -760,13 +764,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u',0)],
             self.ebqe[('advectiveFlux', 0)],
             self.ebqe[('diffusiveFlux', 0, 0)],
-            self.ebqe[('advectiveFlux_bc', 0)],
+            self.ebqe[('diffusiveFlux_bc', 0,0)],
             self.offset[0], self.stride[0],
             r,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray)
+            self.mesh.elementBoundaryLocalElementBoundariesArray, 
+            self.coefficients.INTEGRATE_BY_PARTS_DIV_U)
+
+        if self.coefficients.fixNullSpace:
+            r[0] = 0.
         log("Global residual", level=9, data=r)
         #turn this on to view the global conservation residual
         #it should be the same as the linear solver residual tolerance
@@ -800,7 +808,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             self.mesh.nElements_global,
             self.numericalFlux.isDOFBoundary[0],
-            self.ebqe[('advectiveFlux_bc_flag', 0)],
+            self.ebqe[('diffusiveFlux_bc_flag', 0,0)],
             self.u[0].femSpace.dofMap.l2g,
             self.u[0].dof,
             self.coefficients.fluidModel.timeIntegration.alpha_bdf,
@@ -822,6 +830,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.csrColumnOffsets_eb[(0, 0)])
+
+        if self.coefficients.fixNullSpace:
+            dofN = 0
+            global_dofN = self.offset[0] + self.stride[0] * dofN
+            for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                if (self.colind[i] == global_dofN):
+                    self.nzval[i] = 1.0
+                else:
+                    self.nzval[i] = 0.0
+
         log("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
