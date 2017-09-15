@@ -1181,28 +1181,20 @@ class SchurOperatorConstructor:
         ----------
         output_matrix : bool 
             Determines whether matrix should be exported.
+        recalculate : bool
+            Flag indicating whether matrix should be rebuilt every iteration
 
         Returns
         -------
         Qp : matrix
             The pressure mass matrix.
         """
-        import Comm
-        comm = Comm.get()
-        self.opBuilder.updateMassOperator()
-        self.Q.zeroEntries()
-        if self.Q.proteus_jacobian != None:
-            self.Q_csr_rep[2][self.Q.nzval_proteus2petsc] = self.Q.proteus_csr_rep[2][:]
-        self.Q.setValuesLocalCSR(self.Q_csr_rep_local[0],
-                                 self.Q_csr_rep_local[1],
-                                 self.Q_csr_rep_local[2],
-                                 p4pyPETSc.InsertMode.INSERT_VALUES)
-        self.Q.assemblyBegin()
-        self.Q.assemblyEnd()
+        Qsys_petsc4py = self._massMatrix(recalculate = recalculate)
+        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+                                             self.linear_smoother.isv)
         if output_matrix is True:
-            self._exportMatrix(self.Qp,"Qp")
-
-    
+            self._exportMatrix(self.Qv,"Qv")
+        return self.Qv
 
     def _massMatrix(self,recalculate=False):
         """ Generates a mass matrix.
@@ -1333,6 +1325,19 @@ class SchurPrecon(KSP_Preconditioner):
             logEvent('Unable to access Schur sub-blocks. Make sure petsc '\
                      'options are consistent with your preconditioner type.')
             exit(1)
+
+    def _setSchurApproximation(self,global_ksp):
+        """ Set the Schur approximation to the Schur block.
+
+        Parameters
+        ----------
+        global_ksp : 
+        """
+        assert self.matcontext_inv is not None, "no matrix context has been set."
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        
 
     def _setSchurApproximation(self,global_ksp):
         """ Set the Schur approximation to the Schur block.
@@ -1505,7 +1510,6 @@ class Schur_Qp(SchurPrecon) :
         self.QpInv_shell.setUp()
         # Set PETSc Schur operator
         self._setSchurApproximation(global_ksp)
-
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
@@ -1664,6 +1668,9 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
 #            self._setConstantPressureNullSpace(global_ksp)
+        self._setSchurlog(global_ksp)
+        if self.bdyNullSpace == True:
+            self._setConstantPressureNullSpace(global_ksp)
 
 class Schur_LSC(SchurPrecon):
     """
