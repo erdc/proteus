@@ -2,7 +2,6 @@ from proteus import *
 from proteus.default_n import *
 from pressureincrement_p import *
 
-
 triangleOptions = triangleOptions
 
 femSpaces = {0:pbasis}
@@ -23,6 +22,7 @@ else:
 
 linear_solver_options_prefix = 'phi_'
 
+#fullNewtonFlag = False
 multilevelNonlinearSolver = NonlinearSolvers.Newton
 levelNonlinearSolver = NonlinearSolvers.Newton
 
