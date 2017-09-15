@@ -184,11 +184,6 @@ def superlu_2_petsc4py(sparse_superlu):
                                                           A_nzval))
     return A_petsc4py
 
-def null(A, rtol=1e-16):
-    u, s, v = numpy.linalg.svd(A)
-    rank = (s > rtol*s[0]).sum()
-    return rank, v[rank:].T.copy()
-
 def petsc_create_diagonal_inv_matrix(sparse_petsc):
     """ Create an inverse diagonal petsc4py matrix from input matrix.
     
