@@ -10,6 +10,7 @@
 #include <sstream>
 #include <PCU.h>
 #include <samElementCount.h>
+#include <queue>
 
 static void SmoothField(apf::Field* f);
 
@@ -58,9 +59,11 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
     order to ensure the band uses hmin. Iterate on that process until
     changes in the smoothed size are less than 50% of hmin.
    */
+/*
   double err_h_max=hmax;
-  int its=0;
-  while (err_h_max > 0.5*hmin && its < 200)
+  //int its=0;
+  //while (err_h_max > 0.5*hmin && its < 200)
+  for(int its=0;its<200;its++)
     {
       its++;
       SmoothField(size_iso);
@@ -76,7 +79,10 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
 	apf::setScalar(size_iso, v, 0, size);
       }
       m->end(it);
-    }    
+    }
+  PCU_Barrier();    
+*/
+  gradeMesh();
   return 0;
 }
 
@@ -733,7 +739,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
 int MeshAdaptPUMIDrvr::testIsotropicSizeField()
 //Function that tests MeshAdapt by generating an isotropic sizefield based on hmin
-{
+{ 
+    freeField(size_iso);
     size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
     apf::MeshIterator* it = m->begin(0);
     apf::MeshEntity* v;
@@ -744,5 +751,85 @@ int MeshAdaptPUMIDrvr::testIsotropicSizeField()
     }
 }
 
+int MeshAdaptPUMIDrvr::gradeMesh()
+//Function to grade isotropic mesh through comparison of edge vertex size ratios
+//For simplicity, we do not bother with accounting for entities across partitions
+{
+  //
+  if(comm_rank==0)
+    std::cout<<"Starting grading\n";
+  apf::MeshIterator* it = m->begin(1);
+  apf::MeshEntity* edge;
+  apf::Adjacent edgAdjVert;
+  apf::Adjacent vertAdjEdg;
+  double gradingFactor = 1.5;
+  double size[2];
+  std::queue<apf::MeshEntity*> markedEdges;
+  apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
 
+  //marker structure for 0) not marked 1) marked 2)storage
+  int marker[3] = {0,1,0}; 
+
+  while((edge=m->iterate(it))){
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      size[i]=apf::getScalar(size_iso,edgAdjVert[i],0);
+    }
+    if( (size[0] > gradingFactor*size[1]) || (size[1] > gradingFactor*size[0]) ){
+      //add edge to a queue 
+      markedEdges.push(edge);
+      //tag edge to indicate that it is part of queue 
+      m->setIntTag(edge,isMarked,&marker[1]); 
+    }
+    else{
+      m->setIntTag(edge,isMarked,&marker[0]); 
+    }
+  }
+  m->end(it); 
+  while(!markedEdges.empty()){
+    edge = markedEdges.front();
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      size[i] = apf::getScalar(size_iso,edgAdjVert[i],0);
+    }
+    if(size[0]>gradingFactor*size[1]){
+      size[0] = gradingFactor*size[1];
+      apf::setScalar(size_iso,edgAdjVert[0],0,size[0]);
+      m->getAdjacent(edgAdjVert[0], 1, vertAdjEdg);
+      for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
+        m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+        //if edge is not already marked
+        if(!marker[2]){
+          m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
+          markedEdges.push(vertAdjEdg[i]);
+        }
+      }
+    }
+    if(size[1]>gradingFactor*size[0]){
+      size[1] = gradingFactor*size[0];
+      apf::setScalar(size_iso,edgAdjVert[1],0,size[1]);
+      m->getAdjacent(edgAdjVert[1], 1, vertAdjEdg);
+      for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
+        m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+        //if edge is not already marked
+        if(!marker[2]){
+          m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
+          markedEdges.push(vertAdjEdg[i]);
+        }
+      }
+    }
+    m->setIntTag(edge,isMarked,&marker[0]);
+    markedEdges.pop();
+  }
+
+  it = m->begin(1);
+  while((edge=m->iterate(it))){
+    m->removeTag(edge,isMarked);
+  }
+  m->end(it); 
+  m->destroyTag(isMarked);
+  apf::synchronize(size_iso);
+  if(comm_rank==0)
+    std::cout<<"Completed grading\n";
+}
 
