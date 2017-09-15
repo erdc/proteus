@@ -2206,6 +2206,143 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         self.assertTrue( aRF.u(x,t).all() == (aT_s.u(x,t)+aT.u(x,t)+aT_l.u(x,t) ).all())
 
 
+class VerifyRandomNLWavesVel(unittest.TestCase):
+    def testFunctions(self):
+        from proteus.WaveTools import RandomWaves,TimeSeries,RandomNLWaves,eta_mode
+        path =getpath()
+        fname = path+"randomSeries.txt"
+        # Assinging a random value at a field and getting the expected output
+        Tp = 1.
+        Hs = 10.
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 0.7
+        dir2 = 0.5
+        waveDir = np.array([dir1,dir2, 0])
+        N = 20
+        phi = np.linspace(0,N,N)
+        spectName = "JONSWAP"
+        bandFactor = 2.0
+        Lgen = 5 * waveDir
+        x0 =  np.array([2.,0.,0 ])
+        Tstart = 0.
+        Tend = 150.
+
+
+        aR = RandomWaves(
+            Tp,                      #wave period
+            Hs,                      #significant wave height
+            mwl,                     #mean water level
+            depth,                   #water depth
+            waveDir,                 #wave direction vector with three components
+            g,                       #gravitational accelaration vector with three components
+            N,                       #number of frequency bins
+            bandFactor,              #width factor for band around peak frequency fp
+            spectName,               #random words will result in error and return the available spectra
+            spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
+            phi=phi,#array of component phases
+            fast=False
+            )
+
+
+        aNL = RandomNLWaves(
+            Tstart,
+            Tend,
+            Tp,                      #wave period
+            Hs,                      #significant wave height
+            mwl,                     #mean water level
+            depth,                   #water depth
+            waveDir,                 #wave direction vector with three components
+            g,                       #gravitational accelaration vector with three components
+            N,                       #number of frequency bins
+            bandFactor,              #width factor for band around peak frequency fp
+            spectName,               #random words will result in error and return the available spectra
+            spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
+            phi = aR.phi,#array of component phases
+            fast=False
+            )
+        from proteus.WaveTools import fastcos_test as fcos
+        ww = aR.omega
+        ki = aR.ki
+        phi = aR.phi
+        depth = aR.depth
+        ai = aR.ai
+        kDir = aR.kDir
+
+        
+        x = 0.
+        y = 0.
+        z =  mwl 
+        t =  0.
+        xi = np.array([x, y, z])
+#        print aR.eta(xi,t),aNL.eta(xi,t)
+        etaT = 0.
+        for ii in range(N):
+            kh = ki[ii]*depth
+            ai_ =  (ki[ii])*(ai[ii]**2)*(3./8.) *sinh(2.*kh) / sinh(kh)**4
+            etaT += eta_mode(xi,t,2.*kDir[ii],2.*ww[ii],2.*phi[ii],ai_)
+        # 2nd order testing
+#        print etaT,aNL.eta_2ndOrder(xi,t)
+        self.assertAlmostEqual(etaT,aNL.eta_2ndOrder(xi,t,True))
+
+
+# Testing higher harmonics
+        etaT = 0.
+        N = aR.N
+        for ii in range(0,N-1):
+            for jj in range(ii+1,N):
+                w1p2 = ww[ii] + ww[jj]
+                w1p2_sq = ww[ii]**2 + ww[jj]**2
+                k1p2 = abs(ki[ii] + ki[jj])
+                w1b2 = ww[ii]* ww[jj]
+                kh12 = k1p2 * depth
+                k1h = ki[ii] * depth
+                k2h = ki[jj] * depth
+                Dp = (w1p2)**2  - aR.gAbs*k1p2*tanh(kh12)
+                Ap =  -ww[ii]*ww[jj]*w1p2/Dp
+                tantan = tanh(k1h)*tanh(k2h)
+                Ap =  Ap*(1. - 1./tantan)
+                Ap = Ap + 1./(2.*Dp)*( ww[ii]**3/sinh(k1h)**2 + ww[jj]**3/sinh(k2h)**2)
+
+                Phi0 = aR.ai[ii]*aR.ai[jj]*Ap/cosh(kh12)
+                ai_ = k1p2*Phi0*sinh(kh12)/w1p2
+                etaT += eta_mode(xi,t,kDir[ii] + aR.kDir[jj],w1p2,aR.phi[ii] + aR.phi[jj],ai_)
+#        print etaT,aNL.eta_short(xi,t)
+        self.assertAlmostEqual(etaT,aNL.eta_short(xi,t,True))
+        del Dp,Ap
+# Testing lower harmonics
+        etaT = 0.
+        N = aR.N    
+        for ii in range(0,N-1):
+            for jj in range(ii+1,N):
+                w1p2 = ww[ii] - ww[jj]
+                k1p2 = abs(ki[ii] - ki[jj])
+                w1b2 = ww[ii]* ww[jj]
+                kh12 = k1p2 * aR.depth
+                k1h = ki[ii] * aR.depth
+                k2h = ki[jj] * aR.depth
+                Dm = (w1p2)**2  - aR.gAbs*k1p2*tanh(kh12)
+                Am =  ww[ii]*ww[jj]*w1p2/Dm
+                tantan = tanh(k1h)*tanh(k2h)
+                Am = Am*(1. + 1./tantan)
+                Am = Am + 0.5/Dm*( ww[ii]**3/sinh(k1h)**2 - ww[jj]**3/sinh(k2h)**2)
+                Phi0 = aR.ai[ii]*aR.ai[jj]*Am/cosh(kh12)
+
+
+
+                ai_ = k1p2*Phi0*sinh(kh12)/w1p2
+                etaT += eta_mode(xi,t,aR.kDir[ii] - aR.kDir[jj],w1p2,aR.phi[ii] - aR.phi[jj],ai_)
+#        print etaT,aNL.eta_long(xi,t)
+        self.assertAlmostEqual(etaT/etaT,aNL.eta_long(xi,t,True)/etaT)
+
+
+
+
+
+        
+        
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 

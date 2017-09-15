@@ -98,41 +98,7 @@ namespace proteus
 
   }
 
- /*
- inline double* __cpp_vel_mode(double * x, double t, double *kDir,double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double *waveDir, double *vDir, double tanhkd)
-   {
 
-     double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
-      double Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl;
-       double* VV;
-      VV = new double[nDim];
-      double Uhype =0.;
-      double Vhype =0.;
-      double fcosh =0.;
-      double fsinh =0.;
-
-      
-      if(kAbs*Z > -2*PI_)
-      {
-	fcosh = fastcosh(kAbs, Z,  true); 
-	fsinh = fastcosh(kAbs, Z,  false); 
-	Uhype = fcosh / tanhkd + fsinh; 
-	Vhype = fsinh / tanhkd + fcosh; 
-      }
-      double fcos = fastcos(phase);
-      double fsin = fastcos(Pihalf_ - phase);
-	
-      double UH=amplitude*omega*Uhype*fcos;
-      double UV=amplitude*omega*Vhype*fsin;
-     //Setting wave direction
-     for(int ii=0; ii<nDim ; ii++)
-       {
-	 VV[ii] = UH*waveDir[ii] + UV*vDir[ii];
-       }
-     return VV;
-     delete [] VV;
-   }
- */
  inline void __cpp_vel_mode_p(double* U, double  x[nDim], double t, double kDir[nDim],double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double waveDir[nDim], double vDir[nDim], double tanhkd, double gAbs, bool fast)
    {
      double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
@@ -172,7 +138,46 @@ namespace proteus
        }
 
    }
- 
+
+ /* inline void __cpp_vel_bound(double* U, double  x[nDim], double t, double kDir[nDim],double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double waveDir[nDim], double vDir[nDim], double tanhkd, double gAbs, bool fast)
+   {
+     double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
+
+     double Uhype =0.;
+     double Vhype =0.;
+     double hype[2] = {0};
+      
+     if(fast)
+	{
+	if(kAbs*Z > -PI_)
+     	  {
+		 fastcosh(hype,kAbs, Z, fast); 
+
+		 Uhype = hype[0]*cosh(kAbs*depth)  + hype[1]*sinh(kAbs*depth); 
+		 Vhype = hype[0]*sinh(kAbs*depth)  + hype[1]*cosh(kAbs*depth); 
+      	 }	
+	}
+     else
+	{   fastcosh(hype,kAbs, Z, fast);
+
+	  Uhype = hype[0]*cosh(kAbs*depth)  + hype[1]*sinh(kAbs*depth); 
+	  Vhype = hype[0]*sinh(kAbs*depth)  + hype[1]*cosh(kAbs*depth); 
+
+	  }    
+     double fcos = fastcos(phase,fast);
+     double fsin = fastcos(Pihalf_ - phase,fast);
+     
+
+     double Udrift = 0.;//0.5*gAbs*amplitude*amplitude/(C*depth);
+     double UH=amplitude*fcos;//*cosh(kAbs*(depth+Z));
+     double UV=amplitude*fsin;//*sinh(kAbs*(depth+Z));
+     //Setting wave direction
+     for(int ii=0; ii<nDim ; ii++)
+       {
+	 U[ii] += (UH-Udrift)*waveDir[ii] + UV*vDir[ii];
+       }
+
+   }*/
 
 
  
@@ -436,7 +441,87 @@ namespace proteus
 
       
  }
+
+
+ inline double* __cpp_uWindow_setd(double* U, double x[nDim], double x0[nDim], double t, double* t0, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N,int Nw, double* waveDir, double* vDir, double* tanhF, double gAbs , bool fast)
+
+
+ {
+  int Is = Nw*N;
+  double xx[3];
+  xx[0] = x[0] - x0[0];
+  xx[1] = x[1] - x0[1];
+  xx[2] = x[2] - x0[2];
+  t = t-t0[Nw];
+
+  double kw[nDim] = {0.,0.,0.};
+  
+
+  int ii =0;
+
+  for (int nn=Is; nn<Is+N; nn++)
+    {
+      ii = 3*nn;
+      kw[0] = kDir[ii];
+      kw[1] = kDir[ii+1];
+      kw[2] = kDir[ii+2];
+      double phase = x[0]*kw[0]+x[1]*kw[1]+x[2]*kw[2] - omega[nn]*t  + phi[nn];
+      double Z =  depth + (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl;
+      //      double UH = 0.5*omega[nn]*kAbs[nn]*amplitude[nn]*cos(phase)*cosh(kAbs[nn]*(depth+Z))/pow(sinh(0.5*kAbs[nn]*depth),4);
+      double UH =amplitude[nn]*cos(phase);//*cosh(kAbs[nn]*Z);//*cosh(kAbs[nn]*(depth+Z))/pow(sinh(0.5*kAbs[nn]*depth),4);
+      double UV = amplitude[nn]*sin(phase);//*sinh(kAbs[nn]*(depth+Z));
+      for(int ss=0; ss<nDim ; ss++)
+       {
+	 U[ss] += (UH)*waveDir[ss] + UV*vDir[ss];
+       }
+					    
+      /*      double kww = kAbs[nn]*depth;
+      double kj = 0.5*kAbs[nn]*depth;
+      double sinh2k = sinh(kww);
+      double sinhkj2 = sinh(kj)*sinh(kj);
+      double lamb = 0.5*3*tanh(kj)*sinh2k/((2.*sinhkj2+3.)*sinhkj2);
+      double amp = amplitude[nn]*lamb;*/
+      //      __cpp_vel_mode_p(U, xx, t ,kw, kAbs[nn], omega[nn], phi[nn], amplitude[nn], mwl, depth, waveDir, vDir, tanhF[nn], gAbs, fast); 
+
+    }
+	
+
+
+      
+ }
+
+
  //=========================================2nd order correction==============================================
+  
+ inline double __cpp_u2nd(double x[nDim], double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, bool fast)
+
+
+ {
+
+	
+   
+	double HH = 0.;
+	
+	double kw[nDim] = {0.,0.,0.};
+	int ii =0;
+	double ai_2nd=0.;
+	double scale = 1.;
+
+        for (int nn=0; nn<N; nn++)
+	  {
+	    ii = 3*nn;
+	    kw[0] =2.* kDir[ii];
+	    kw[1] =2.* kDir[ii+1];
+	    kw[2] =2.* kDir[ii+2];
+	    double coshkd = sinhKd[nn]/tanhKd[nn];
+	    double sinh2kd = 2.*sinhKd[nn]*coshkd;
+	    double cosh2kd = 2.* sinhKd[nn]*sinhKd[nn]+1.;
+	    scale = 1.5*sinh2kd*tanhKd[nn]/(2.*pow(sinhKd[nn],4)+3.*pow(sinhKd[nn],2));
+            ai_2nd = scale * amplitude[nn]*amplitude[nn] * ki[nn]*(2+3./(sinhKd[nn]*sinhKd[nn]) )/(4.*tanhKd[nn] );	    	    
+	    HH= HH + __cpp_eta_mode(x,t,kw,2.*omega[nn],2.*phi[nn],ai_2nd, fast);
+	  }
+        return HH;      
+      }
 
  inline double __cpp_eta2nd(double x[nDim], double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, bool fast)
 
@@ -462,6 +547,9 @@ namespace proteus
 	  }
         return HH;      
       }
+
+
+
 
  inline double __cpp_eta_short(double x[nDim], double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs, bool fast)
 
@@ -507,7 +595,21 @@ namespace proteus
         return HH;      
       }
 
- inline double __cpp_eta_long(double x[nDim], double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs, bool fast)
+
+inline double __cpp_Ap(double om1, double om2, double k1,double k2, int imode,int jmode, double* sinhKd, double * tanhKd, double gAbs)
+{
+
+  double  tanhSum = (tanhKd[imode]+tanhKd[jmode])/(1.+tanhKd[imode]*tanhKd[jmode]);
+  double Dp = pow(om1+om2,2) - gAbs*(k1+k2)*tanhSum;
+  double Ap =  - om1*om2*(om1+om2)/Dp;
+  double tantan = tanhKd[jmode]*tanhKd[imode];
+  Ap = Ap*(1. - 1./tantan);
+  Ap = Ap + 0.5/Dp*(pow(om1,3)/pow(sinhKd[imode],2)+pow(om2,3)/pow(sinhKd[jmode],2));
+  return Ap;
+    
+  
+}
+ inline double __cpp_u_short(double x[nDim], double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs, bool fast)
 
 
  {
@@ -521,6 +623,58 @@ namespace proteus
 	int jj =0;
 	double Dp=0.;
 	double Bp=0.;
+	double tanhSum = 0.;
+	double ai =0.;
+	double scale = 1.;
+        for (int i=0; i<N-1; i++)
+	  {
+	    ii = 3*i;
+	    kw[0] = kDir[ii];
+	    kw[1] = kDir[ii+1];
+	    kw[2] = kDir[ii+2];
+
+	    for (int j=i+1; j<N; j++)
+	      {
+		jj = 3*j;
+		kw2[0] = kDir[jj]+kw[0];
+		kw2[1] = kDir[jj+1]+kw[1];
+		kw2[2] = kDir[jj+2]+kw[2];
+
+		
+		tanhSum = (tanhKd[i]+tanhKd[j])/(1.+tanhKd[i]*tanhKd[j]);
+		
+                Dp = pow(omega[i]+omega[j],2) - gAbs*(ki[i]+ki[j])*tanhSum;
+                Bp = (pow(omega[i],2)+pow(omega[j],2))/(2*gAbs);
+		Bp = Bp -((omega[i]*omega[j])/(2*gAbs))*(1-1./(tanhKd[i]*tanhKd[j]) )*((pow(omega[i]+omega[j],2) + gAbs*(ki[i]+ki[j])*tanhSum)/Dp);
+		Bp = Bp + ((omega[i]+omega[j])/(2*gAbs*Dp))*((pow(omega[i],3)/pow(sinhKd[i],2)) + (pow(omega[j],3)/pow(sinhKd[j],2)));
+	    
+		ai = amplitude[i]*amplitude[j]*Bp;
+		
+		scale = (ki[i]+ki[j])/(omega[i]+omega[j]);
+		scale = scale* __cpp_Ap(omega[i],  omega[j],  ki[i], ki[j], i, j, sinhKd,  tanhKd,  gAbs)/Bp;
+		scale = scale*tanhSum;
+		  
+		HH= HH + scale*__cpp_eta_mode(x,t,kw2,omega[i]+omega[j],phi[i]+phi[j],ai, fast);
+	      }
+	  }
+        return HH;      
+      }
+
+
+ inline double __cpp_eta_long(double x[nDim], double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs, bool fast)
+
+
+ {
+
+	
+
+	double HH = 0.;
+	double kw[nDim] = {0.,0.,0.};
+	double kw2[nDim] = {0.,0.,0.};
+	int ii =0;
+	int jj =0;
+	double Dm=0.;
+	double Bm=0.;
 	double tanhSum = 0.;
 	double ai =0.;
         for (int i=0; i<N-1; i++)
@@ -539,18 +693,85 @@ namespace proteus
 		
 		tanhSum = (tanhKd[i]-tanhKd[j])/(1.-tanhKd[i]*tanhKd[j]);
 
-                Dp = pow(omega[i]-omega[j],2) - gAbs*(ki[i]-ki[j])*tanhSum;
-                Bp = (pow(omega[i],2)+pow(omega[j],2))/(2*gAbs);
-		Bp = Bp + ((omega[i]*omega[j])/(2*gAbs))*(1+1./(tanhKd[i]*tanhKd[j]) )*((pow(omega[i]-omega[j],2) + gAbs*(ki[i]-ki[j])*tanhSum)/Dp);
-		Bp = Bp + ((omega[i]-omega[j])/(2*gAbs*Dp))*((pow(omega[i],3)/pow(sinhKd[i],2)) - (pow(omega[j],3)/pow(sinhKd[j],2)));
+                Dm = pow(omega[i]-omega[j],2) - gAbs*(ki[i]-ki[j])*tanhSum;
+                Bm = (pow(omega[i],2)+pow(omega[j],2))/(2*gAbs);
+		Bm = Bm + ((omega[i]*omega[j])/(2*gAbs))*(1+1./(tanhKd[i]*tanhKd[j]) )*((pow(omega[i]-omega[j],2) + gAbs*(ki[i]-ki[j])*tanhSum)/Dm);
+		Bm = Bm + ((omega[i]-omega[j])/(2*gAbs*Dm))*((pow(omega[i],3)/pow(sinhKd[i],2)) - (pow(omega[j],3)/pow(sinhKd[j],2)));
 	    
-		ai = amplitude[i]*amplitude[j]*Bp;
+		ai = amplitude[i]*amplitude[j]*Bm;
 		HH= HH + __cpp_eta_mode(x,t,kw2,omega[i]-omega[j],phi[i]-phi[j],ai, fast);
 	      }
 	  }
         return HH;      
       }
 
+
+inline double __cpp_Am(double om1, double om2,double k1, double k2, int imode,int jmode, double* sinhKd, double * tanhKd, double gAbs)
+{
+
+  double  tanhDiff = (tanhKd[imode]-tanhKd[jmode])/(1.-tanhKd[imode]*tanhKd[jmode]);
+  double Dm = pow(om1-om2,2) - gAbs*(k1-k2)*tanhDiff;
+  double Am =  om1*om2*(om1-om2)/Dm;
+  double tantan = tanhKd[jmode]*tanhKd[imode];
+  Am = Am*(1 + 1./tantan);
+  Am = Am + 0.5/Dm*(pow(om1,3)/pow(sinhKd[imode],2)-pow(om2,3)/pow(sinhKd[jmode],2));
+  return Am;
+    
+  
+}
+
+
+
+ inline double __cpp_u_long(double x[nDim], double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs, bool fast)
+
+
+ {
+
+	double HH = 0.;
+	double kw[nDim] = {0.,0.,0.};
+	double kw2[nDim] = {0.,0.,0.};
+	int ii =0;
+	int jj =0;
+	double Dm=0.;
+	double Bm=0.;
+	double tanhDiff = 0.;
+	double ai =0.;
+	double scale =1.;
+        for (int i=0; i<N-1; i++)
+	  {
+	    ii = 3*i;
+	    kw[0] = kDir[ii];
+	    kw[1] = kDir[ii+1];
+	    kw[2] = kDir[ii+2];
+
+	    for (int j=i+1; j<N; j++)
+	      {
+		jj = 3*j;
+		kw2[0] = -kDir[jj]+kw[0];
+		kw2[1] = -kDir[jj+1]+kw[1];
+		kw2[2] = -kDir[jj+2]+kw[2];
+		
+		tanhDiff = (tanhKd[i]-tanhKd[j])/(1.-tanhKd[i]*tanhKd[j]);
+
+                Dm = pow(omega[i]-omega[j],2) - gAbs*(ki[i]-ki[j])*tanhDiff;
+                Bm = (pow(omega[i],2)+pow(omega[j],2))/(2*gAbs);
+		Bm = Bm + ((omega[i]*omega[j])/(2*gAbs))*(1+1./(tanhKd[i]*tanhKd[j]) )*((pow(omega[i]-omega[j],2) + gAbs*(ki[i]-ki[j])*tanhDiff)/Dm);
+		Bm = Bm + ((omega[i]-omega[j])/(2*gAbs*Dm))*((pow(omega[i],3)/pow(sinhKd[i],2)) - (pow(omega[j],3)/pow(sinhKd[j],2)));
+	    
+		ai = amplitude[i]*amplitude[j]*Bm;
+
+		scale = (ki[i]-ki[j])/(omega[i]-omega[j]);
+		scale = scale* __cpp_Am(omega[i],  omega[j],  ki[i], ki[j], i, j, sinhKd,  tanhKd,  gAbs)/Bm;
+		scale = scale*0.5*tanhDiff;
+
+
+		HH= HH + scale*__cpp_eta_mode(x,t,kw2,omega[i]-omega[j],phi[i]-phi[j],ai, fast);
+	      }
+	  }
+        return HH;      
+	
+
+ }
 
 
 
