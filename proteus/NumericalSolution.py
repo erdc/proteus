@@ -294,9 +294,9 @@ class NS_base:  # (HasTraits):
                     fileprefix = p.domain.geofile
                 else:
                     fileprefix = p.domain.polyfile
-                if comm.rank() == 0 and (p.genMesh or not (os.path.exists(p.domain.polyfile+".ele") and
-                                                           os.path.exists(p.domain.polyfile+".node") and
-                                                           os.path.exists(p.domain.polyfile+".face"))):
+                if comm.rank() == 0 and (p.genMesh or not (os.path.exists(fileprefix+".ele") and
+                                                           os.path.exists(fileprefix+".node") and
+                                                           os.path.exists(fileprefix+".face"))):
                     if p.domain.use_gmsh is True:
                         logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
                         gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s} -format msh".format(fileprefix+'.geo', p.domain.geofile+'.msh')
@@ -307,7 +307,7 @@ class NS_base:  # (HasTraits):
                         check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
                     else:
                         logEvent("Running tetgen to generate 3D mesh for "+p.name, level=1)
-                        tetcmd = "tetgen -{0} {1}.poly".format(n.triangleOptions, p.domain.polyfile)
+                        tetcmd = "tetgen -{0} {1}.poly".format(n.triangleOptions, fileprefix)
                         logEvent("Calling tetgen on rank 0 with command %s" % (tetcmd,))
                         check_call(tetcmd, shell=True)
                         logEvent("Done running tetgen")
@@ -1239,7 +1239,7 @@ class NS_base:  # (HasTraits):
        #     print "Min / Max residual %s / %s" %(lr.min(),lr.max())
 
         self.nSequenceSteps = 0
-        self.nSolveSteps = 0
+        self.nSolveSteps=self.nList[0].adaptMesh_nSteps-1
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
@@ -1370,8 +1370,8 @@ class NS_base:  # (HasTraits):
                     logEvent("Step Taken, System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
                                                                                    self.systemStepController.dt_system))
                     self.systemStepController.choose_dt_system()
-                    logEvent("Potential System time step t=%12.5e, dt=%12.5e for next for next step" % (self.systemStepController.t_system,
-                                                                                                        self.systemStepController.dt_system))
+                    logEvent("Potential System time step t=%12.5e, dt=%12.5e for next step" % (self.systemStepController.t_system,
+                                                                                               self.systemStepController.dt_system))
                     if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                         self.systemStepController.stepExact_system(self.tn)
                 for model in self.modelList:
@@ -1381,6 +1381,10 @@ class NS_base:  # (HasTraits):
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
+                #can only handle PUMIDomain's for now
+                self.nSolveSteps += 1
+                if(self.PUMI_estimateError()):
+                    self.PUMI_adaptMesh()
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
                 self.tCount+=1
@@ -1397,7 +1401,6 @@ class NS_base:  # (HasTraits):
             self.nSolveSteps += 1
             if(self.PUMI_estimateError()):
               self.PUMI_adaptMesh()
-
         logEvent("Finished calculating solution",level=3)
 
         for index,model in enumerate(self.modelList):
