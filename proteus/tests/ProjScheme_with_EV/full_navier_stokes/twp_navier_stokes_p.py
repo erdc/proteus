@@ -37,16 +37,29 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     dragAlpha=dragAlpha,
                                     PSTAB=1.0, 
                                     cE=cE,
-                                    cMax=cMax)
+                                    cMax=cMax, 
+                                    CORRECT_VELOCITY=CORRECT_VELOCITY)
 
 #######################
 # BOUNDARY CONDITIONS #
 #######################
 def getDBC_u(x,flag):
-    return None
+    #None
+    pi = np.pi
+    if (flag==1 or flag==2 or flag==3 or flag==4):
+        if manufactured_solution == 1:
+            return lambda x,t: np.sin(x[0])*np.sin(x[1]+t)
+        else: 
+            return lambda x,t: np.sin(pi*x[0])*np.cos(pi*x[1])*np.sin(t)
 
 def getDBC_v(x,flag):
-    return None
+    #None
+    pi = np.pi
+    if (flag==1 or flag==2 or flag==3 or flag==4):
+        if manufactured_solution == 1:
+            return lambda x,t: np.cos(x[0])*np.cos(x[1]+t)
+        else:
+            return lambda x,t: -np.cos(pi*x[0])*np.sin(pi*x[1])*np.sin(t)
 
 def getAFBC_u(x,flag):
     return lambda x,t: 0.
@@ -55,11 +68,18 @@ def getAFBC_v(x,flag):
     return lambda x,t: 0.
 
 def getDFBC_u(x,flag):
-    # Set grad(u).n
+    # Set grad(u).n    
+    pi = np.pi
     if (flag==1): # left boundary 
-        return lambda x,t: -2*nu*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
+        if manufactured_solution == 1:
+            return lambda x,t: -2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
+        else:
+            return lambda x,t: -2*dynamic_viscosity(x,t)*pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)*(-1.)
     elif (flag==2): # right boundary 
-        return lambda x,t: -2*nu*np.cos(x[0])*np.sin(x[1]+t)*(1.)
+        if manufactured_solution == 1:
+            return lambda x,t: -2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(1.)
+        else: 
+            return lambda x,t: -2*dynamic_viscosity(x,t)*pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)*(1.)
     elif (flag==3): # bottom boundary 
         return lambda x,t: 0. 
     else: # top boundary 
@@ -71,9 +91,15 @@ def getDFBC_v(x,flag):
     elif (flag==2): # right boundary 
         return lambda x,t: 0.
     elif (flag==3): # bottom boundary 
-        return lambda x,t: 2*nu*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
+        if manufactured_solution == 1:
+            return lambda x,t: 2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
+        else: 
+            return lambda x,t: 2*dynamic_viscosity(x,t)*pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)*(-1.)
     else: # top boundary 
-        return lambda x,t: 2*nu*np.cos(x[0])*np.sin(x[1]+t)*(1.)
+        if manufactured_solution == 1:
+            return lambda x,t: 2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(1.)
+        else: 
+            return lambda x,t: 2*dynamic_viscosity(x,t)*pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)*(1.)
 
 dirichletConditions = {0:getDBC_u,
                        1:getDBC_v}
@@ -95,16 +121,39 @@ class velx_at_t0:
     def __init__(self):
         pass
     def uOfXT(self,x,t):
-        return np.sin(x[0])*np.sin(x[1])
+        if manufactured_solution == 1:
+            return np.sin(x[0])*np.sin(x[1])
+        else: 
+            return 0.
 
 class vely_at_t0:
     def __init__(self):
         pass
     def uOfXT(self,x,t):
-        return np.cos(x[0])*np.cos(x[1])
+        if manufactured_solution == 1:
+            return np.cos(x[0])*np.cos(x[1])
+        else: 
+            return 0.
 
 initialConditions = {0:velx_at_t0(),
                      1:vely_at_t0()}
+
+#############################
+# MATERIAL PARAMETER FIELDS #
+#############################
+def density(X,t):
+    x = X[0]
+    y = X[1]
+    return 1.0 #np.sin(x+y+t)**2+1
+
+mu_constant=True
+def dynamic_viscosity(X,t):
+    x = X[0]
+    y = X[1]
+    return mu #mu*(np.cos(x+y+t)**2+1)
+    
+materialParameters = {'density':density, 
+                      'dynamic_viscosity':dynamic_viscosity}
 
 ###############
 # FORCE TERMS #
@@ -112,16 +161,42 @@ initialConditions = {0:velx_at_t0(),
 def forcex(X,t):
     x = X[0]
     y = X[1]
-    return (np.sin(x)*np.cos(y+t) # Time derivative
-            + np.sin(x)*np.cos(x) # Non-linearity
-            + 2*nu*np.sin(x)*np.sin(y+t)) # Diffusion
+    rho = density(X,t)
+    #pi = np.pi
+    if manufactured_solution == 1: #u.n!=0
+        return (rho*np.sin(x)*np.cos(y+t) # Time derivative
+                + rho*np.sin(x)*np.cos(x) # Non-linearity
+                - (0. if KILL_PRESSURE_TERM==True else 1.)*np.sin(x)*np.sin(y+t) # Pressure
+                + (2*dynamic_viscosity(X,t)*np.sin(x)*np.sin(y+t) # Diffusion
+                   +(0. if mu_constant==True else 1.)*mu*2*np.cos(x+y+t)*np.sin(x+y+t)*(np.cos(x)*np.sin(y+t)+np.sin(x)*np.cos(y+t)) 
+                   +(0. if mu_constant==True else 1.)*mu*2*np.cos(x+y+t)*np.sin(x+y+t)*(np.cos(x)*np.sin(y+t)-np.sin(x)*np.cos(y+t)))
+            )
+    else: # u.n=0
+        return (rho*np.sin(pi*x)*np.cos(pi*y)*np.cos(t) # Time derivative                  
+                + rho*pi*np.sin(pi*x)*np.cos(pi*x)*np.sin(t)**2 # non-linearity
+                - (0. if KILL_PRESSURE_TERM==True else 1.)*np.sin(x)*np.sin(y+t) # Pressure
+                - dynamic_viscosity(X,t)*(-2*pi**2*np.sin(pi*x)*np.cos(pi*y)*np.sin(t)) # Diffusion
+            )
 
 def forcey(X,t):
     x = X[0]
     y = X[1]
-    return (-np.cos(x)*np.sin(y+t) # Time derivative
-            - np.sin(y+t)*np.cos(y+t) #Non-linearity
-            + 2*nu*np.cos(x)*np.cos(y+t)) # Diffusion
+    rho = density(X,t)
+    pi = np.pi
+    if manufactured_solution == 1: #u.n!=0
+        return (-rho*np.cos(x)*np.sin(y+t) # Time derivative
+                - rho*np.sin(y+t)*np.cos(y+t) #Non-linearity
+                + (0. if KILL_PRESSURE_TERM==True else 1.)*np.cos(x)*np.cos(y+t) #Pressure
+                + (2*dynamic_viscosity(X,t)*np.cos(x)*np.cos(y+t) # Diffusion
+                   +(0. if mu_constant==True else 1.)*mu*2*np.cos(x+y+t)*np.sin(x+y+t)*(-np.sin(x)*np.cos(y+t)-np.cos(x)*np.sin(y+t))
+                   +(0. if mu_constant==True else 1.)*mu*2*np.cos(x+y+t)*np.sin(x+y+t)*(np.sin(x)*np.cos(y+t)-np.cos(x)*np.sin(y+t)))
+            )
+    else:
+        return (-rho*np.cos(pi*x)*np.sin(pi*y)*np.cos(t) # Time derivative
+                + rho*pi*np.sin(pi*y)*np.cos(pi*y)*np.sin(t)**2 # non-linearity
+                + (0. if KILL_PRESSURE_TERM==True else 1.)*np.cos(x)*np.cos(y+t) #Pressure                
+                - dynamic_viscosity(X,t)*(2*pi**2*np.cos(pi*x)*np.sin(pi*y)*np.sin(t)) # Diffusion
+            )
 
 forceTerms = {0:forcex,
               1:forcey}
@@ -133,20 +208,43 @@ class velx:
     def __init__(self):
         pass
     def uOfXT(self,x,t):
-        return np.sin(x[0])*np.sin(x[1]+t)
+        pi = np.pi
+        if manufactured_solution == 1:
+            return np.sin(x[0])*np.sin(x[1]+t)
+        else: 
+            return np.sin(pi*x[0])*np.cos(pi*x[1])*np.sin(t)
     def duOfXT(self,x,t):
-        return [np.cos(x[0])*np.sin(x[1]+t),
-                np.sin(x[0])*np.cos(x[1]+t)]
-
+        if manufactured_solution == 1:
+            return [np.cos(x[0])*np.sin(x[1]+t),
+                    np.sin(x[0])*np.cos(x[1]+t)]
+        else: 
+            return [pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t),
+                    -pi*np.sin(pi*x[0])*np.sin(pi*x[1])*np.sin(t)]
+            
 class vely:
     def __init__(self):
         pass
     def uOfXT(self,x,t):
-        return np.cos(x[0])*np.cos(x[1]+t)
+        pi = np.pi
+        if manufactured_solution == 1:
+            return  np.cos(x[0])*np.cos(x[1]+t)
+        else:
+            return -np.cos(pi*x[0])*np.sin(pi*x[1])*np.sin(t)
     def duOfXT(self,x,t):
-        return [-np.sin(x[0])*np.cos(x[1]+t),
-                -np.cos(x[0])*np.sin(x[1]+t)]
+        if manufactured_solution == 1:
+            return [-np.sin(x[0])*np.cos(x[1]+t),
+                    -np.cos(x[0])*np.sin(x[1]+t)]
+        else:
+            return [pi*np.sin(pi*x[0])*np.sin(pi*x[1])*np.sin(t),
+                    -pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)]
 
 analyticalSolution = {0:velx(), 
                       1:vely()}
+
+class pressure:
+    def __init__(self):
+        pass
+    def uOfXT(self,x,t):
+        return np.cos(x[0])*np.sin(x[1]+t)
+analyticalPressureSolution={0:pressure()}
 

@@ -32,6 +32,7 @@ else:
     nonlinearSmoother = None
     linearSmoother    = None
 
+#fullNewtonFlag = False
 multilevelNonlinearSolver = NonlinearSolvers.Newton
 levelNonlinearSolver = NonlinearSolvers.Newton
 
