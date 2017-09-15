@@ -6,12 +6,13 @@ from proteus.Profiling import logEvent
 
 #  Discretization -- input options
 #Refinement = 20#45min on a single core for spaceOrder=1, useHex=False
-mu = 0.01 #Just to compute force terms for convergence test
-KILL_PRESSURE_TERM = 1
-use_entropy_viscosity = 1
-cE = 0.0
+mu = 1. #Just to compute force terms for convergence test
+KILL_PRESSURE_TERM = True
+STABILIZATION_TYPE = 1 #0: SUPG, 1: EV via weak residual, 2: EV via strong residual
+cE = 1.0
 cMax = 1.0
-Refinement = 2
+
+Refinement = 3
 sedimentDynamics=False
 genMesh = True
 movingDomain = False
@@ -251,13 +252,13 @@ if useRANS == 1:
     ns_closure = 3
 elif useRANS == 2:
     ns_closure == 4
-# Water
+# Water. Fake parameters for convergence test
 rho_0 = 1.0
-nu_0 = mu #Hack: This works for this single phase problem
+nu_0 = 1.0
 
 # Air
 rho_1 = 1.0
-nu_1 = mu 
+nu_1 = 1.0
 
 # Sediment
 rho_s = rho_0
