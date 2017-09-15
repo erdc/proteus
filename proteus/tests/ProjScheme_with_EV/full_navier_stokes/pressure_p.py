@@ -10,19 +10,20 @@ coefficients=Pres.Coefficients(modelIndex=PRESSURE_model,
                                fluidModelIndex=V_model,
                                pressureIncrementModelIndex=PINC_model,
                                useRotationalForm=False)
+LevelModelType = Pres.LevelModel
 
 def getDBC_p(x,flag):
-    return lambda x,t: 0.0
+    None
 
 def getFlux(x,flag):
-    return lambda x,t: 0.0
+    None
 
 class getIBC_p:
     def __init__(self):
         pass
     def uOfXT(self,x,t):
-        return 0.0
+        return np.cos(x[0])*np.sin(x[1])
 
 initialConditions = {0:getIBC_p()}
-dirichletConditions = {0:getDBC_p } # pressure bc are explicitly set
+dirichletConditions = {0:getDBC_p} # pressure bc are explicitly set
 advectiveFluxBoundaryConditions = {0:getFlux}

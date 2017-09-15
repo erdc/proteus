@@ -7,34 +7,26 @@ from NS_convergence import *
 #nd = ctx.nd
 name = "pressureincrement"
 
-#from ProjectionScheme import PressureIncrement
-#coefficients=PressureIncrement(rho_f_min = rho_1,
-#                               rho_s_min = rho_s,
-#                               nd = nd,
-#                               modelIndex=PINC_model,
-#                               fluidModelIndex=V_model)
 from proteus.mprans import PresInc
 coefficients=PresInc.Coefficients(rho_f_min = (1.0-1.0e-8)*rho_1,
-                                 rho_s_min = (1.0-1.0e-8)*rho_s,
-                                 nd = nd,
-                                 modelIndex=PINC_model,
-                                 fluidModelIndex=V_model)
+                                  rho_s_min = (1.0-1.0e-8)*rho_s,
+                                  nd = nd,
+                                  modelIndex=PINC_model,
+                                  fluidModelIndex=V_model,
+                                  fixNullSpace=fixNullSpace_PresInc, 
+                                  INTEGRATE_BY_PARTS_DIV_U=INTEGRATE_BY_PARTS_DIV_U_PresInc)
+LevelModelType = PresInc.LevelModel
 
-#LevelModelType = PresInc.LevelModel
-
-#pressure increment should be zero on any pressure dirichlet boundaries
-def getDBC_phi(x,flag):
-    if flag == boundaryTags['top'] and openTop:
-        return lambda x,t: 0.0
-
-#the advectiveFlux should be zero on any no-flow  boundaries
+#Always set to None for now
+def getDBC_phi(x,flag):    
+    None
+    
+#We should not add any advective flux. The quantity u.n should be determined by the momentum equation
 def getAdvectiveFlux_qt(x,flag):
-    if not (flag == boundaryTags['top'] and openTop):
-        return lambda x,t: 0.0
+    None
 
 def getDiffusiveFlux_phi(x,flag):
-    if not (flag == boundaryTags['top'] and openTop):
-        return lambda x,t: 0.0
+    return lambda x,t: 0.
 
 class getIBC_phi:
     def __init__(self):
@@ -43,7 +35,6 @@ class getIBC_phi:
         return 0.0
 
 initialConditions = {0:getIBC_phi()}
-
-dirichletConditions = {0:getDBC_phi }
+dirichletConditions = {0:getDBC_phi}
 advectiveFluxBoundaryConditions = {0:getAdvectiveFlux_qt}
 diffusiveFluxBoundaryConditions = {0:{0:getDiffusiveFlux_phi}}
