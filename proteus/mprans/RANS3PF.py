@@ -133,6 +133,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import calculateWaveFunction3d_ref
 
     def __init__(self,
+                 CORRECT_VELOCITY=True,
                  cMax=1.0, # For entropy viscosity (mql) 
                  cE=1.0, # For entropy viscosity (mql)
                  epsFact=1.5,
@@ -207,6 +208,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_penalty_constant=1000.0,
                  particle_nitsche=1.0,
                  particle_sdfList=[]):
+        self.CORRECT_VELOCITY=CORRECT_VELOCITY
         self.nParticles=nParticles
         self.particle_nitsche=particle_nitsche
         self.particle_epsFact=particle_epsFact
@@ -904,45 +906,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if (firstStep):
             self.model.q[('velocityStar',0)][:] = self.model.q[('velocity',0)]
         else:
-            dt_old = self.model.timeIntegration.dt_history[0] 
-            dt = self.model.timeIntegration.dt
-            self.model.q[('velocityStar',0)][:] = ((dt+dt_old)/dt_old*self.model.q[('velocity',0)] 
-                                                   - dt/dt_old*self.model.q[('velocityOld',0)])
+            r =  self.model.timeIntegration.dt/self.model.timeIntegration.dt_history[0] 
+            self.model.q[('velocityStar',0)][:] = (1+r)*self.model.q[('velocity',0)] - r*self.model.q[('velocityOld',0)]
         self.model.q[('velocityOld',0)][:] = self.model.q[('velocity',0)]  
-        # Check if the material parameters are given as a function
-        if self.model.hasMaterialParametersAsFunctions:
-            x = self.model.q[('x')][:,:,0]
-            y = self.model.q[('x')][:,:,1]
-            z = self.model.q[('x')][:,:,2]
-            X = {0:x,
-                 1:y,
-                 2:z}
-            t = self.model.timeIntegration.t
-            self.model.q['density'][:] = self.model.materialParameters['density'](X,t)
-            self.model.q['dynamic_viscosity'][:] = self.model.materialParameters['dynamic_viscosity'](X,t)
-            # BOUNDARY
-            ebqe_X = {0:self.model.ebqe['x'][:,:,0],
-                      1:self.model.ebqe['x'][:,:,1],
-                      2:self.model.ebqe['x'][:,:,2]}
-            self.model.ebqe['density'][:] = self.model.materialParameters['density'](ebqe_X,t)
-            self.model.ebqe['dynamic_viscosity'][:] = self.model.materialParameters['dynamic_viscosity'](ebqe_X,t)
 
-        # END OF COMPUTING MATERIAL PARAMETERS GIVEN AS FUNCTION 
-        if hasattr(self.model,'forceTerms'):
-            x = self.model.q[('x')][:,:,0]
-            y = self.model.q[('x')][:,:,1]
-            z = self.model.q[('x')][:,:,2]
-            X = {0:x,
-                 1:y,
-                 2:z}
-            t = self.model.timeIntegration.t
-            self.model.q[('force', 0)][:] = self.model.forceTerms[0](X,t)
-            self.model.q[('force', 1)][:] = self.model.forceTerms[1](X,t)
-            try: 
-                self.model.q[('force', 2)][:] = self.model.forceTerms[2](X,t)
-            except: 
-                pass
-        # END OF COMPUTING FORCES
+        # COMPUTE MATERIAL PARAMETERS AND FORCE TERMS AS FUNCTIONS (if provided)
+        if self.model.hasMaterialParametersAsFunctions:
+            self.model.updateMaterialParameters()
+        if self.model.hasForceTermsAsFunctions: 
+            self.model.updateForceTerms()
+
         self.model.dt_last = self.model.timeIntegration.dt
         pass
 
@@ -996,7 +969,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='RANS3PF',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False):
+                 movingDomain=False): 
         self.eb_adjoint_sigma = coefficients.eb_adjoint_sigma
         # this is a hack to test the effect of using a constant smoothing width
         useConstant_he = coefficients.useConstant_he
@@ -1010,19 +983,24 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if ('KILL_PRESSURE_TERM') in dir(options):
             self.KILL_PRESSURE_TERM = options.KILL_PRESSURE_TERM
         else: 
-            self.KILL_PRESSURE_TERM = 0
+            self.KILL_PRESSURE_TERM = False
         # mql: Use entropy viscosity?
         self.STABILIZATION_TYPE = 0 #0: SUPG, 1: EV via weak residual, 2: EV via strong residual
         if ('STABILIZATION_TYPE') in dir(options):
             self.STABILIZATION_TYPE = options.STABILIZATION_TYPE 
         # mql: Check if materialParameters are declared. This is for convergence tests
-        self.hasMaterialParametersAsFunctions = 0
+        self.hasMaterialParametersAsFunctions = False
         if ('materialParameters') in dir(options):
             self.materialParameters = options.materialParameters
-            self.hasMaterialParametersAsFunctions = 1
+            self.hasMaterialParametersAsFunctions = True
         # mql: Check if forceTerms are declared
+        self.hasForceTermsAsFunctions = False
         if ('forceTerms') in dir(options):
             self.forceTerms = options.forceTerms
+            self.hasForceTermsAsFunctions = True
+        # mql: Check if analytical pressure function is declared
+        if ('analyticalPressureSolution') in dir(options):
+            self.analyticalPressureSolution = options.analyticalPressureSolution
         # cek todo clean up these flags in the optimized version
         self.bcsTimeDependent = options.bcsTimeDependent
         self.bcsSet = False
@@ -1247,24 +1225,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
-        # mql: material parameters defined by a function at quad points
-        self.q['density'] = numpy.zeros(
-            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q['dynamic_viscosity'] = numpy.zeros(
-            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.ebqe['density'] = numpy.zeros(
-            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe['dynamic_viscosity'] = numpy.zeros(
-            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-
-        # mql: force terms
-        self.q[('force', 0)] = numpy.zeros(
-            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('force', 1)] = numpy.zeros(
-            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('force', 2)] = numpy.zeros(
-            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-
+        self.q['p'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 1)] = numpy.zeros(
@@ -1313,6 +1274,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nQuadraturePoints_element,
              self.nSpace_global),
             'd')
+        # mql: create vectors to compute div(U)
+        self.q['divU'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         # mql: create vectors to compute uStar = 2*un-unm1
         self.q[
             ('velocityOld',
@@ -1717,6 +1680,28 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
         self.entropyResidualAtCell = numpy.zeros(self.mesh.nElements_global,'d')
         self.maxSpeed2AtCell = numpy.zeros(self.mesh.nElements_global,'d')
+        self.rhoAtCell = numpy.zeros(self.mesh.nElements_global,'d')
+        self.muAtCell = numpy.zeros(self.mesh.nElements_global,'d')
+
+        # mql: material parameters defined by a function at quad points
+        self.q['density'] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['dynamic_viscosity'] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.ebqe['density'] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe['dynamic_viscosity'] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        # Initialize material parameters 
+        if self.hasMaterialParametersAsFunctions: 
+            self.updateMaterialParameters()
+        # mql: force terms
+        self.q[('force', 0)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('force', 1)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('force', 2)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
 
         comm = Comm.get()
         self.comm = comm
@@ -1900,6 +1885,38 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.coefficients.mContact,
                 self.coefficients.nContact,
                 self.coefficients.angFriction)
+
+    def updateMaterialParameters(self):
+        x = self.q[('x')][:,:,0]
+        y = self.q[('x')][:,:,1]
+        z = self.q[('x')][:,:,2]
+        X = {0:x,
+             1:y,
+             2:z}
+        t = self.timeIntegration.t
+        self.q['density'][:] = self.materialParameters['density'](X,t)
+        self.q['dynamic_viscosity'][:] = self.materialParameters['dynamic_viscosity'](X,t)
+        # BOUNDARY
+        ebqe_X = {0:self.ebqe['x'][:,:,0],
+                  1:self.ebqe['x'][:,:,1],
+                  2:self.ebqe['x'][:,:,2]}
+        self.ebqe['density'][:] = self.materialParameters['density'](ebqe_X,t)
+        self.ebqe['dynamic_viscosity'][:] = self.materialParameters['dynamic_viscosity'](ebqe_X,t)
+
+    def updateForceTerms(self): 
+        x = self.q[('x')][:,:,0]
+        y = self.q[('x')][:,:,1]
+        z = self.q[('x')][:,:,2]
+        X = {0:x,
+             1:y,
+             2:z}
+        t = self.timeIntegration.t
+        self.q[('force', 0)][:] = self.forceTerms[0](X,t)
+        self.q[('force', 1)][:] = self.forceTerms[1](X,t)
+        try: 
+            self.q[('force', 2)][:] = self.forceTerms[2](X,t)
+        except: 
+            pass
 
     def getResidual(self, u, r):
         """
@@ -2108,7 +2125,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                           self.csrColumnOffsets[(0,0)]/self.nc,
                                                                           self.cterm[d],
                                                                           self.cterm_global[d])
-
+                print "****************... ", self.nFreeDOF_global[0]
 
         rowptr_cMatrix, colind_cMatrix, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, Cy = self.cterm_global[1].getCSRrepresentation()
@@ -2124,7 +2141,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else: 
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
-        
+                
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2139,7 +2156,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
             self.pressureModel.q_p_sharp,
-            self.pressureModel.q_grad_p_sharp,
+            self.pressureModel.q_grad_p_sharp, 
             self.pressureModel.ebqe_p_sharp,
             self.pressureModel.ebqe_grad_p_sharp,
             #self.pressureModel.q[('u',0)],
@@ -2305,6 +2322,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('grad(u)',0)],
             self.q[('grad(u)',1)],
             self.q[('grad(u)',2)],
+            self.q['divU'],
             self.ebqe[('grad(u)',0)],
             self.ebqe[('grad(u)',1)],
             self.ebqe[('grad(u)',2)],
@@ -2346,6 +2364,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.entropyResidualAtCell,
             self.maxSpeed2AtCell,
             self.maxSpeed2AtCell.max(),
+            self.rhoAtCell, 
+            self.muAtCell, 
             self.quantDOFs, 
             self.nFreeDOF_global[0],
             rowptr_cMatrix,
@@ -2386,10 +2406,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             logEvent("particle i="+`i`+ " force "+`self.coefficients.particle_netForces[i]`)
             logEvent("particle i="+`i`+ " moment "+`self.coefficients.particle_netMoments[i]`)
             logEvent("particle i="+`i`+ " surfaceArea "+`self.coefficients.particle_surfaceArea[i]`)
+
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
-                for dofN, g in self.dirichletConditionsForceDOF[
-                        cj].DOFBoundaryConditionsDict.iteritems():
+                for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                         dofN], self.timeIntegration.t)# - self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
 
