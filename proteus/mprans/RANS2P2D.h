@@ -1159,6 +1159,82 @@ namespace proteus
 	mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s);
 	mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s);
 	/* mom_w_source += H_s*viscosity*(alpha + beta*uc)*(w-w_s); */
+
+      /* //w momentum Hamiltonian (pressure) */
+      /* mom_w_ham = porosity*grad_p[2]/rho; */
+      /* dmom_w_ham_grad_p[0]=0.0; */
+      /* dmom_w_ham_grad_p[1]=0.0; */
+      /* dmom_w_ham_grad_p[2]=porosity/rho; */
+    }
+    //VRANS specific
+    inline
+      void updateDarcyForchheimerTerms_Ergun(/* const double linearDragFactor, */
+					   /* const double nonlinearDragFactor, */
+					   /* const double porosity, */
+					   /* const double meanGrainSize, */
+					   const double alpha,
+					   const double beta,
+					   const double eps_rho,
+					   const double eps_mu,
+					   const double rho_0,
+					   const double nu_0,
+					   const double rho_1,
+					   const double nu_1,
+					   const double useVF,
+					   const double vf,
+					   const double phi,
+					   const double u,
+					   const double v,
+					   const double w,
+					   const double uStar,
+					   const double vStar,
+					   const double wStar,
+					   const double eps_s,
+					   const double phi_s,
+					   const double u_s,
+					   const double v_s,
+					   const double w_s,
+					   double& mom_u_source,
+					   double& mom_v_source,
+					   double& mom_w_source,
+					   double dmom_u_source[nSpace],
+					   double dmom_v_source[nSpace],
+					   double dmom_w_source[nSpace])
+    {
+      double mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,H_s1,H_s2,H_s3;
+      H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
+      nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+      mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+#ifdef COMPRESSIBLE_FORM
+      viscosity = mu;
+#else
+      viscosity = nu;
+#endif
+      double x = fmax(0.0, fmin( 1.0, 0.5+phi_s/(2.0*eps_s)));//0 at phi_s = -eps, 1 at phi_s=eps
+
+      //      H_s1 = 0.5*(1. - cos(M_PI*x));
+      // Relaxation function, Jacobsen et al. 2011, Mayer et al 1998
+      H_s3 = (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
+
+      //      x = 1. - x;
+      //      H_s2 = 1.- (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
+
+      H_s = H_s3; //(1.-H_s2)*H_s1 + H_s2*H_s2;
+
+      //implicit
+      /* uc = sqrt(u*u+v*v*+w*w);  */
+      /* duc_du = u/(uc+1.0e-12); */
+      /* duc_dv = v/(uc+1.0e-12); */
+      //semi-implicit quadratic term
+      uc = sqrt(uStar*uStar+vStar*vStar); 
+      duc_du = 0.0;
+      duc_dv = 0.0;
+      /* duc_dw = w/(uc+1.0e-12); */
+
+      mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s);
+      mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s);
+      /* mom_w_source += H_s*viscosity*(alpha + beta*uc)*(w-w_s); */
+>>>>>>> master
       
 	dmom_u_source[0] = H_s*viscosity*(alpha + beta*uc + beta*duc_du*(u-u_s));
 	dmom_u_source[1] = H_s*viscosity*beta*duc_dv*(u-u_s);
