@@ -94,6 +94,10 @@ class ShapeRANS(Shape):
                 self.auxiliaryVariables[key] = auxvar
                 if self.holes is None:
                     self.holes = np.array([self.barycenter[:self.nd]])
+            elif key == 'WallFunction':
+                self.auxiliaryVariables[key] = auxvar
+            elif key == 'kWallFunction':
+                self.auxiliaryVariables[key] = auxvar
             elif key == 'RelaxZones':
                 self.auxiliaryVariables[key] = self.zones
             elif str(key).startswith('Gauge_'):
@@ -167,6 +171,34 @@ class ShapeRANS(Shape):
         """
         for boundcond in self.BC_list:
             boundcond.setTank()
+
+
+    def setTurbulentWall(self, wall):
+        """
+        Sets a turbulent wall as an object to be attacched to auxiliaryVariable.
+        The objects has to be defined with WallFunction class.
+
+        Parameters
+        ----------
+        wall: list of WallFunction class object
+        """
+
+        auxvar = wall
+        self._attachAuxiliaryVariable('WallFunction', auxvar)
+
+
+    def setTurbulentKWall(self, kWall):
+        """
+        Sets a turbulent wall as an object to be attacched to auxiliaryVariable.
+        The objects has to be defined with WallFunction class.
+
+        Parameters
+        ----------
+        kWall: list of WallFunction class object for kappa
+        """
+
+        auxvar = kWall
+        self._attachAuxiliaryVariable('kWallFunction', auxvar)
 
 
     def setAbsorptionZones(self, flags, epsFact_solid, center, orientation,
@@ -1946,14 +1978,24 @@ def assembleAuxiliaryVariables(domain):
             # update the indice for force/moment calculations
             body.i_start = start_flag+1
             body.i_end = start_flag+1+len(shape.BC_list)
-        # ----------------------------
-        # ABSORPTION/GENERATION ZONES
         if 'ChRigidBody' in shape.auxiliaryVariables.keys():
             body = shape.auxiliaryVariables['ChRigidBody']
             for boundcond in shape.BC_list:
                 boundcond.setChMoveMesh(body)
             body.i_start = start_flag+1
             body.i_end = start_flag+1+len(shape.BC_list)
+        if 'WallFunction' in shape.auxiliaryVariables.keys():
+            wall = shape.auxiliaryVariables['WallFunction']
+            for ii in range(len(wall)):
+                aux['twp'] += [wall[ii]]
+                logEvent('WALL ATTACHED TO AUXVAR --> %s' % wall[ii])
+        if 'kWallFunction' in shape.auxiliaryVariables.keys():
+            kWall = shape.auxiliaryVariables['kWallFunction']
+            for ii in range(len(kWall)):
+                aux['kappa'] += [kWall[ii]]
+                logEvent('kWALL ATTACHED TO AUXVAR --> %s' % kWall[ii])
+        # ----------------------------
+        # ABSORPTION/GENERATION ZONES
 
         if 'RelaxZones' in shape.auxiliaryVariables.keys():
             if not zones_global:
