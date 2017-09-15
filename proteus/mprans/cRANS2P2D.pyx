@@ -6,7 +6,7 @@ from proteus.Transport import OneLevelTransport
 
 cdef extern from "RANS2P2D.h" namespace "proteus":
     cdef cppclass RANS2P2D_base:
-        void calculateResidual(double COMPRESSIBLE_FORM,
+        void calculateResidual(double NONCONSERVATIVE_FORM,
                                double MOMENTUM_SGE,
                                double PRESSURE_SGE,
                                double VELOCITY_SGE,
@@ -159,7 +159,7 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double* netForces_p,
                                double* netForces_v,
                                double* netMoments)
-        void calculateJacobian(double COMPRESSIBLE_FORM,
+        void calculateJacobian(double NONCONSERVATIVE_FORM,
                                double MOMENTUM_SGE,
                                double PRESSURE_SGE,
                                double VELOCITY_SGE,
@@ -462,7 +462,7 @@ cdef class cRANS2P2D_base:
     def __dealloc__(self):
         del self.thisptr
     def calculateResidual(self,
-                          double COMPRESSIBLE_FORM,
+                          double NONCONSERVATIVE_FORM,
                           double MOMENTUM_SGE,
                           double PRESSURE_SGE,
                           double VELOCITY_SGE,
@@ -615,7 +615,7 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray netForces_p,
                           numpy.ndarray netForces_v,
                           numpy.ndarray netMoments):
-        self.thisptr.calculateResidual(COMPRESSIBLE_FORM,
+        self.thisptr.calculateResidual(NONCONSERVATIVE_FORM,
                                        MOMENTUM_SGE,
                                        PRESSURE_SGE,
                                        VELOCITY_SGE,
@@ -769,7 +769,7 @@ cdef class cRANS2P2D_base:
                                        <double*> netForces_v.data,
                                        <double*> netMoments.data)
     def calculateJacobian(self,
-                          double COMPRESSIBLE_FORM,
+                          double NONCONSERVATIVE_FORM,
                           double MOMENTUM_SGE,
                           double PRESSURE_SGE,
                           double VELOCITY_SGE,
@@ -932,7 +932,7 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray elementFlags):
         cdef numpy.ndarray rowptr,colind,globalJacobian_a
         (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
-        self.thisptr.calculateJacobian(COMPRESSIBLE_FORM,
+        self.thisptr.calculateJacobian(NONCONSERVATIVE_FORM,
                                        MOMENTUM_SGE,
                                        PRESSURE_SGE,
                                        VELOCITY_SGE,

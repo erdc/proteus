@@ -161,11 +161,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  turbulenceClosureModel=0, #0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega
                  smagorinskyConstant=0.1,
                  barycenters=None,
-                 COMPRESSIBLE_FORM=0.0,
+                 NONCONSERVATIVE_FORM=0.0,
                  MOMENTUM_SGE=1.0,
                  PRESSURE_SGE=1.0,
                  VELOCITY_SGE=1.0):
-        self.COMPRESSIBLE_FORM=COMPRESSIBLE_FORM
+        self.NONCONSERVATIVE_FORM=NONCONSERVATIVE_FORM
         self.MOMENTUM_SGE=MOMENTUM_SGE
         self.PRESSURE_SGE=PRESSURE_SGE
         self.VELOCITY_SGE=VELOCITY_SGE
@@ -1382,7 +1382,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     else:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t) + self.MOVING_DOMAIN*self.mesh.nodeVelocityArray[dofN,cj-1]
         
-        self.rans2p.calculateResidual(self.coefficients.COMPRESSIBLE_FORM,
+        self.rans2p.calculateResidual(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
                                       self.coefficients.VELOCITY_SGE,
@@ -1593,7 +1593,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(3,2)] = self.csrColumnOffsets[(0,2)]
             self.csrColumnOffsets_eb[(3,3)] = self.csrColumnOffsets[(0,2)]
 
-        self.rans2p.calculateJacobian(self.coefficients.COMPRESSIBLE_FORM,
+        self.rans2p.calculateJacobian(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
                                       self.coefficients.VELOCITY_SGE,
