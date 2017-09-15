@@ -21,10 +21,10 @@
 //      * Turbulence: double check eddy_viscosity within evaluateCoefficients
 // ***** END OF TODO *****
 
-//#define POWER_SMOOTHNESS_INDICATOR 2
-//#define u_alpha_min 0.25
-//#define v_alpha_min 0.25
-
+#define POWER_SMOOTHNESS_INDICATOR 2
+#define u_alpha_min 0.25
+#define v_alpha_min 0.25
+#define gamma 0.5
 namespace proteus
 {
   class cppRANS3PF2D_base
@@ -220,6 +220,7 @@ namespace proteus
 				   double* q_grad_u, 
 				   double* q_grad_v, 
 				   double* q_grad_w,
+				   double* q_divU,
 				   double* ebqe_grad_u, 
 				   double* ebqe_grad_v, 
 				   double* ebqe_grad_w, 
@@ -261,6 +262,8 @@ namespace proteus
 				   double* entropyResidualAtCell,
 				   double* maxSpeed2AtCell,
 				   double maxSpeed2AtOmega,
+				   double* rhoAtCell,
+				   double* muAtCell,
 				   double* quantDOFs, 
 				   int numDOFsPerEqn,
 				   int* csrRowIndeces_DofLoops,
@@ -633,6 +636,7 @@ namespace proteus
 				   double* q_grad_u, 
 				   double* q_grad_v, 
 				   double* q_grad_w,
+				   double* q_divU,
 				   double* ebqe_grad_u, 
 				   double* ebqe_grad_v, 
 				   double* ebqe_grad_w, 
@@ -674,6 +678,8 @@ namespace proteus
 				   double* entropyResidualAtCell,
 				   double* maxSpeed2AtCell,
 				   double maxSpeed2AtOmega,
+				   double* rhoAtCell,
+				   double* muAtCell,
 				   double* quantDOFs,
 				   int numDOFsPerEqn,
 				   int* csrRowIndeces_DofLoops,
@@ -1295,7 +1301,7 @@ namespace proteus
       dmom_v_ham_grad_p[0]=0.0;
       dmom_v_ham_grad_p[1]=porosity*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       /* dmom_v_ham_grad_p[2]=0.0; */
-      
+
       /* //w momentum Hamiltonian (pressure) */
       /* mom_w_ham = porosity*grad_p[2]; */
       /* dmom_w_ham_grad_p[0]=0.0; */
@@ -2275,9 +2281,10 @@ namespace proteus
 			   double* q_grad_u, 
 			   double* q_grad_v, 
 			   double* q_grad_w,
+			   double* q_divU,
 			   double* ebqe_grad_u, 
 			   double* ebqe_grad_v, 
-			   double* ebqe_grad_w, 
+			   double* ebqe_grad_w,
 			   double* flux,
 			   double* elementResidual_p_save,
 			   int* elementFlags,
@@ -2316,6 +2323,8 @@ namespace proteus
 			   double* entropyResidualAtCell,
 			   double* maxSpeed2AtCell,
 			   double maxSpeed2AtOmega,
+			   double* rhoAtCell,
+			   double* muAtCell,
 			   double* quantDOFs,
 			   int numDOFsPerEqn,
 			   int* csrRowIndeces_DofLoops,
@@ -2945,7 +2954,9 @@ namespace proteus
 		  q_grad_v[eN_k_nSpace+I] = grad_v[I];
 		  /* q_grad_w[eN_k_nSpace+I] = grad_w[I]; */
 		}
-	      
+	      // save divergence of velocity
+	      q_divU[eN_k] = q_grad_u[eN_k_nSpace+0] + q_grad_v[eN_k_nSpace+1];
+
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  register int i_nSpace=i*nSpace;
@@ -5871,9 +5882,10 @@ namespace proteus
 			   double* q_grad_u, 
 			   double* q_grad_v, 
 			   double* q_grad_w,
+			   double* q_divU, 
 			   double* ebqe_grad_u, 
 			   double* ebqe_grad_v, 
-			   double* ebqe_grad_w, 
+			   double* ebqe_grad_w,
 			   double* flux,
 			   double* elementResidual_p_save,
 			   int* elementFlags,
@@ -5912,6 +5924,8 @@ namespace proteus
 			   double* entropyResidualAtCell,
 			   double* maxSpeed2AtCell,
 			   double maxSpeed2AtOmega,
+			   double* rhoAtCell,
+			   double* muAtCell,
 			   double* quantDOFs,
 			   int numDOFsPerEqn,
 			   int* csrRowIndeces_DofLoops,
@@ -5933,7 +5947,6 @@ namespace proteus
 	{
 	  for(int eN=0;eN<nElements_global;eN++)
 	    {
-	      double maxSpeed2AtCurrentCell = 0.;
 	      double entropyResidualAtCurrentCell = 0.;
 	      // loop over quadrature points 
 	      for  (int k=0;k<nQuadraturePoints_element;k++)
@@ -5967,35 +5980,34 @@ namespace proteus
 		  // COMPUTE RHO AND NU //
 		  ////////////////////////
 		  // compute rho 
-		  double eps_rho = epsFact_rho*elementDiameter[eN];
-		  double H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi[eN_k]) + useVF*fmin(1.0,fmax(0.0,vf[eN_k]));
-		  double rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
-		  // compute nu      
-		  double eps_mu = epsFact_rho*elementDiameter[eN];
-		  double H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi[eN_k]) + useVF*fmin(1.0,fmax(0.0,vf[eN_k]));
-		  double nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
-		  /////////////////////////////
-		  // COMPUTE MAX OF VELOCITY //
-		  /////////////////////////////
-		  maxSpeed2AtCurrentCell = fmax(maxSpeed2AtCurrentCell, un*un+vn*vn);
+		  double rho = density_as_function[eN_k];
+		  double mu = dynamic_viscosity_as_function[eN_k];
+		  if (MATERIAL_PARAMETERS_AS_FUNCTION==0)
+		    {
+		      double eps_rho=epsFact_rho*elementDiameter[eN];
+		      double H_rho=(1.0-useVF)*smoothedHeaviside(eps_rho,phi[eN_k]) + useVF*fmin(1.0,fmax(0.0,vf[eN_k]));
+		      rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
+		      // compute nu      
+		      double eps_mu = epsFact_rho*elementDiameter[eN];
+		      double H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi[eN_k]) + useVF*fmin(1.0,fmax(0.0,vf[eN_k]));
+		      mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+		    }
 		  /////////////////////////////
 		  // COMPUTE RESIDUAL OF PDE //
 		  /////////////////////////////
 		  // compute residual.
 		  double Res_in_x = 
-		    (un-unm1)/dt + (un*grad_un[0]+vn*grad_un[1]) + grad_pn[0]/rho - g[0] 
-		    - nu*(hess_un[0] + hess_un[3]) //  un_xx + un_yy 
-		    - nu*(hess_un[0] + hess_vn[2]); // un_xx + vn_yx
+		    rho*((un-unm1)/dt + (un*grad_un[0]+vn*grad_un[1]) - g[0]) + grad_pn[0] - forcex[eN_k]
+		    - mu*(hess_un[0] + hess_un[3]) //  un_xx + un_yy 
+		    - mu*(hess_un[0] + hess_vn[2]); // un_xx + vn_yx
 		  double Res_in_y = 
-		    (vn-vnm1)/dt + (un*grad_vn[0]+vn*grad_vn[1]) + grad_pn[1]/rho - g[1] 
-		    - nu*(hess_vn[0] + hess_vn[3])  // vn_xx + vn_yy
-		    - nu*(hess_un[1] + hess_vn[3]); // un_xy + vn_yy
+		    rho*((vn-vnm1)/dt + (un*grad_vn[0]+vn*grad_vn[1]) - g[1]) + grad_pn[1] - forcey[eN_k]
+		    - mu*(hess_vn[0] + hess_vn[3])  // vn_xx + vn_yy
+		    - mu*(hess_un[1] + hess_vn[3]); // un_xy + vn_yy
 		  // compute entropy_residual = Res(u).u
 		  entropyResidualAtCurrentCell = fmax(entropyResidualAtCurrentCell, fabs(Res_in_x*un + Res_in_y*vn));
 		}
-	      maxSpeed2AtCell[eN] = maxSpeed2AtCurrentCell;
 	      entropyResidualAtCell[eN] = entropyResidualAtCurrentCell;
-	      maxSpeed2AtOmega = fmax(maxSpeed2AtOmega, maxSpeed2AtCurrentCell);
 	    }
 	}
       // END OF COMPUTING EV VIA STRONG RESIDUAL //
@@ -6043,7 +6055,10 @@ namespace proteus
       //////////////////////////////////
       register double entropyResidualPerNode[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
-	entropyResidualPerNode[i] = 0.0;
+	{
+	  entropyResidualPerNode[i] = 0.0;
+	  quantDOFs[i] = 0.0;
+	}
       /*
       register double u_psi[numDOFsPerEqn], v_psi[numDOFsPerEqn], entropyResidualPerNode[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
@@ -6120,13 +6135,14 @@ namespace proteus
       const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
       for(int eN=0;eN<nElements_global;eN++)
 	{
-	  double maxSpeed2AtCurrentCell = 0.;
+	  double maxSpeed2AtCurrentCell = 0., rhoAtCurrentCell = 0., muAtCurrentCell = 0.;
 	  //declare local storage for element residual and initialize
 	  register double elementResidual_p[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
 	    elementResidual_u[nDOF_test_element],
 	    elementResidual_v[nDOF_test_element],
 	    //elementResidual_w[nDOF_test_element],
 	    elementEntropyResidual[nDOF_test_element],
+	    elementQuantDOFs[nDOF_test_element],
 	    eps_rho,eps_mu;
 	  const double* elementResidual_w(NULL);
           double mesh_volume_conservation_element=0.0,
@@ -6141,6 +6157,7 @@ namespace proteus
 	      elementResidual_v[i]=0.0;	      
 	      /* elementResidual_w[i]=0.0; */
 	      elementEntropyResidual[i]=0.0;
+	      elementQuantDOFs[i]=0.0;
 	    }//i
 	  //
 	  //loop over quadrature points and compute integrands
@@ -6728,12 +6745,14 @@ namespace proteus
 	      double hK=elementDiameter[eN];
 	      double areaK = fabs(jacDet)*areaRefElement; //This is true if jacDet is constant 
 	      double maxSpeedAtCell = std::sqrt(maxSpeed2AtCell[eN])+1E-10;
-	      double linear_viscosity = cMax*hK*maxSpeedAtCell;
+	      double linear_viscosity = cMax*hK*q_rho[eN_k]*maxSpeedAtCell;
 	      // STABILIZATION_TYPE=1. Weak entropy residual
-	      double entropy_viscosity = fmax(1., maxSpeedAtCell*hK/q_nu[eN_k])*
-		cE*hK*hK*entropyResidualAtCell[eN]/(q_rho[eN_k]*areaK*maxSpeed2AtCell[eN]+1E-10); 
+	      double entropy_viscosity = fmax(1.,maxSpeedAtCell*hK/(gamma*q_nu[eN_k] + (1.-gamma)*q_numDiff_u_last[eN]))*
+		cE*hK*hK*entropyResidualAtCell[eN]/(areaK*maxSpeed2AtOmega+1E-10); 
+		//cE*hK*hK*entropyResidualAtCell[eN]/(q_rho[eN_k]*areaK*maxSpeed2AtCell[eN]+1E-10); 
 	      if (STABILIZATION_TYPE == 2) // strong entropy residual 
-		entropy_viscosity = cE*hK*hK*entropyResidualAtCell[eN]/(q_rho[eN_k]*maxSpeed2AtCell[eN]+1E-10);
+		entropy_viscosity = 
+		  cE*hK*hK*entropyResidualAtCell[eN]/(maxSpeed2AtOmega+1E-10);
 
 	      q_numDiff_u[eN_k] = fmin(linear_viscosity, entropy_viscosity);
 	      q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
@@ -6763,6 +6782,8 @@ namespace proteus
 		  q_grad_v[eN_k_nSpace+I] = grad_v[I];
 		  /* q_grad_w[eN_k_nSpace+I] = grad_w[I]; */
 		}
+	      // save divergence of velocity
+	      q_divU[eN_k] = q_grad_u[eN_k_nSpace+0] + q_grad_v[eN_k_nSpace+1];
 
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
@@ -6824,7 +6845,7 @@ namespace proteus
 		  // ***** COMPUTE ENTROPY RESIDUAL ***** //
 		  //////////////////////////////////////////
 		  // mql. NOTE that the test functions are weighted by the velocity 
-		  elementEntropyResidual[i] +=
+		  elementEntropyResidual[i] += 
 		    // x-component
 		    ck.Mass_weak(mom_u_acc_t,u*vel_test_dV[i]) + // time derivative 
 		    ck.Advection_weak(mom_u_adv,&u_times_vel_grad_test_dV[i_nSpace]) + // due to moving mesh
@@ -6839,11 +6860,17 @@ namespace proteus
 		    ck.Diffusion_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,grad_v,&v_times_vel_grad_test_dV[i_nSpace])+
 		    ck.Reaction_weak(mom_v_source,v*vel_test_dV[i]) + // force term 
 		    ck.Hamiltonian_weak(mom_v_ham,v*vel_test_dV[i]); // Pres + Non-linearity
+		  elementQuantDOFs[i] += q_divU[eN_k]*vel_test_dV[i];
 		}//i
 	      // compute max speed2 for entropy viscosity // 
 	      maxSpeed2AtCurrentCell = fmax(maxSpeed2AtCurrentCell, u*u+v*v);
+	      rhoAtCurrentCell += q_rho[eN_k];
+	      muAtCurrentCell += q_rho[eN_k]*q_nu[eN_k];
 	    }
 	  maxSpeed2AtCell[eN] = maxSpeed2AtCurrentCell;
+	  maxSpeed2AtOmega = fmax(maxSpeed2AtOmega, maxSpeed2AtCurrentCell);
+	  rhoAtCell[eN] = rhoAtCurrentCell/nQuadraturePoints_element;
+	  muAtCell[eN] = muAtCurrentCell/nQuadraturePoints_element;
 	  //
 	  //load element into global residual and save element residual
 	  //
@@ -6860,6 +6887,7 @@ namespace proteus
 
 	      // DISTRIBUTE ENTROPY RESIDUAL //
 	      entropyResidualPerNode[vel_l2g[eN_i]] += elementEntropyResidual[i];
+	      quantDOFs[vel_l2g[eN_i]] += elementQuantDOFs[i];
 	    }//i
           /* mesh_volume_conservation += mesh_volume_conservation_element; */
           /* mesh_volume_conservation_weak += mesh_volume_conservation_element_weak; */
@@ -6884,6 +6912,7 @@ namespace proteus
 	    elementResidual_v[nDOF_test_element],
 	    //elementResidual_w[nDOF_test_element],
 	    elementEntropyResidual[nDOF_test_element], 
+	    elementQuantDOFs[nDOF_test_element], 
 	    eps_rho,eps_mu;
 	  const double* elementResidual_w(NULL);
 	  for (int i=0;i<nDOF_test_element;i++)
@@ -6894,6 +6923,7 @@ namespace proteus
 	      elementResidual_v[i]=0.0;
 	      /* elementResidual_w[i]=0.0; */
 	      elementEntropyResidual[i]=0.0; 
+	      elementQuantDOFs[i]=0.0; 
 	    }
 	  for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) 
 	    { 
@@ -7766,7 +7796,8 @@ namespace proteus
 	      /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
 
 	      // ENTROPY RESIDUAL AT BOUNDARY //
-	      entropyResidualPerNode[vel_l2g[eN_i]] += elementEntropyResidual[i]; 
+	      entropyResidualPerNode[vel_l2g[eN_i]] += elementEntropyResidual[i];
+	      quantDOFs[vel_l2g[eN_i]] += 0.;
 	    }//i
 	}//ebNE
       /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
