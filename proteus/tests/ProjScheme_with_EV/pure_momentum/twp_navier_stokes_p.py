@@ -55,11 +55,11 @@ def getAFBC_v(x,flag):
     return lambda x,t: 0.
 
 def getDFBC_u(x,flag):
-    # Set grad(u).n
+    # Set grad(u).n    
     if (flag==1): # left boundary 
-        return lambda x,t: -2*mu*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
+        return lambda x,t: -2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
     elif (flag==2): # right boundary 
-        return lambda x,t: -2*mu*np.cos(x[0])*np.sin(x[1]+t)*(1.)
+        return lambda x,t: -2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(1.)
     elif (flag==3): # bottom boundary 
         return lambda x,t: 0. 
     else: # top boundary 
@@ -71,9 +71,9 @@ def getDFBC_v(x,flag):
     elif (flag==2): # right boundary 
         return lambda x,t: 0.
     elif (flag==3): # bottom boundary 
-        return lambda x,t: 2*mu*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
+        return lambda x,t: 2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
     else: # top boundary 
-        return lambda x,t: 2*mu*np.cos(x[0])*np.sin(x[1]+t)*(1.)
+        return lambda x,t: 2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(1.)
 
 dirichletConditions = {0:getDBC_u,
                        1:getDBC_v}
@@ -106,22 +106,46 @@ class vely_at_t0:
 initialConditions = {0:velx_at_t0(),
                      1:vely_at_t0()}
 
+#############################
+# MATERIAL PARAMETER FIELDS #
+#############################
+def density(X,t):
+    x = X[0]
+    y = X[1]
+    return np.sin(x+y+t)**2+1
+
+def dynamic_viscosity(X,t):
+    x = X[0]
+    y = X[1]
+    return mu*(np.cos(x+y+t)**2+1)
+    
+materialParameters = {'density':density, 
+                      'dynamic_viscosity':dynamic_viscosity}
+
 ###############
 # FORCE TERMS #
 ###############
 def forcex(X,t):
     x = X[0]
     y = X[1]
-    return (np.sin(x)*np.cos(y+t) # Time derivative
-            + np.sin(x)*np.cos(x) # Non-linearity
-            + 2*mu*np.sin(x)*np.sin(y+t)) # Diffusion
+    rho = density(X,t)
+    return (rho*np.sin(x)*np.cos(y+t) # Time derivative
+            + rho*np.sin(x)*np.cos(x) # Non-linearity
+            + (2*dynamic_viscosity(X,t)*np.sin(x)*np.sin(y+t) # Diffusion
+               +mu*2*np.cos(x+y+t)*np.sin(x+y+t)*(np.cos(x)*np.sin(y+t)+np.sin(x)*np.cos(y+t)) 
+               +mu*2*np.cos(x+y+t)*np.sin(x+y+t)*(np.cos(x)*np.sin(y+t)-np.sin(x)*np.cos(y+t))
+           ))
 
 def forcey(X,t):
     x = X[0]
     y = X[1]
-    return (-np.cos(x)*np.sin(y+t) # Time derivative
-            - np.sin(y+t)*np.cos(y+t) #Non-linearity
-            + 2*mu*np.cos(x)*np.cos(y+t)) # Diffusion
+    rho = density(X,t)
+    return (-rho*np.cos(x)*np.sin(y+t) # Time derivative
+            - rho*np.sin(y+t)*np.cos(y+t) #Non-linearity
+            + (2*dynamic_viscosity(X,t)*np.cos(x)*np.cos(y+t) # Diffusion
+               +mu*2*np.cos(x+y+t)*np.sin(x+y+t)*(-np.sin(x)*np.cos(y+t)-np.cos(x)*np.sin(y+t))
+               +mu*2*np.cos(x+y+t)*np.sin(x+y+t)*(np.sin(x)*np.cos(y+t)-np.cos(x)*np.sin(y+t))
+           ))
 
 forceTerms = {0:forcex,
               1:forcey}
