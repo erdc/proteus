@@ -391,6 +391,7 @@ namespace proteus
 						     double* laplace_matrix)=0;
     virtual void getTwoPhaseScaledMassOperator(int scale_type,
 					       int use_numerical_viscosity,
+					       int lumped,
 					       double *mesh_trial_ref,
 					       double *mesh_grad_trial_ref,
 					       double *mesh_dof,
@@ -5742,6 +5743,7 @@ namespace proteus
 
       void getTwoPhaseScaledMassOperator(int scale_type,
 					 int use_numerical_viscosity,
+					 int lumped,
 					 double *mesh_trial_ref,
 					 double *mesh_grad_trial_ref,
 					 double *mesh_dof,
@@ -5904,11 +5906,6 @@ namespace proteus
 	  } // k
 
 	  // Step 1.3 - Write local matrix information into global system
-	  bool lump;
-	  if (scale_type == 0)
-	    lump=true;
-	  if (scale_type == 1)
-	    lump=true;
 	  for (int i=0 ; i<nDOF_test_element; ++i)
 	    {
 	      int eN_i = eN*nDOF_test_element+i;
@@ -5916,7 +5913,7 @@ namespace proteus
 	      for (int j=0 ; j < nDOF_trial_element; ++j)
 		{
 		  int eN_i_j = eN_i*nDOF_trial_element + j;
-		  if (lump)
+		  if (lumped)
 		    {
 		      mass_matrix[csrRowIndeces_p_p[eN_i] + csrColumnOffsets_p_p[eN_i_i]] += local_matrix_p_p[i][j] ;
 		      mass_matrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_i]] += local_matrix_u_u[i][j] ;
