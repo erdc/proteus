@@ -1278,6 +1278,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
                                        compKernelFlag)
         self.velocityErrorNodal=self.u[0].dof.copy()
+        logEvent('WARNING: The boundary fluxes at interpart boundaries are skipped if elementBoundaryMaterialType is 0 for RANS2P-based models. This means that DG methods are currently incompatible with RANS2P.')
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
