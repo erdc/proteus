@@ -1459,13 +1459,40 @@ class SchurPrecon(KSP_Preconditioner):
 
 class Schur_Sp(SchurPrecon):
     """ 
-    A saddle point schur preconditioner that uses petsc's built in
-    selfp as a Schur complement approximation.
+    This class implements the SIMPLE approximation to the Schur 
+    complement proposed in 2009 by Rehman, Vuik and Segal.
+
+    Parameters
+    ----------
+    L : petsc4py matrix
+    prefix : str
+    bdyNullSpace : bool
+        Indicates the models boundary conditions create a global
+        null space. (see notes)
+    constNullSpace : bool
+        Indicates the operator Sp has a constant null space. 
+        (see Notes)
+
+    Notes
+    -----
+    This Schur complement approximation is also avaliable in PETSc
+    by the name selfp.
+
+    The bdyNullSpace flag is used to indicate that the model has a 
+    global null space because it only uses Dirichlet boundary 
+    conditions.  In contrast, the constNullSpace flag refers to the 
+    Sp operator which typically has a constant null space because of 
+    its construction.  This flag will typically always be be set to 
+    True.  See the Sp_shell class for more details.
     """
-    def __init__(self,L,prefix,bdyNullSpace=False):
+    def __init__(self,
+                 L,
+                 prefix,
+                 bdyNullSpace=False,
+                 constNullSpace=True):
         SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
         self.operator_constructor = SchurOperatorConstructor(self)
-#        p4pyPETSc.Options().setValue('pc_fieldsplit_schur_precondition','selfp')
+        self.constNullSpace = constNullSpace
 
     def setUp(self,global_ksp):
         self._setSchurlog(global_ksp)
@@ -1486,7 +1513,8 @@ class Schur_Sp(SchurPrecon):
         self.matcontext_inv = Sp_shell(self.A00,
                                        self.A11,
                                        self.A01,
-                                       self.A10)
+                                       self.A10,
+                                       constNullSpace = self.constNullSpace)
         self.Sp_shell.setPythonContext(self.matcontext_inv)
         self.Sp_shell.setUp()
         # Set PETSc Schur operator
