@@ -417,11 +417,7 @@ class KSP_petsc4py(LinearSolver):
         self.petsc_L = par_L
         self.csr_rep_local = self.petsc_L.csr_rep_local
         self.csr_rep = self.petsc_L.csr_rep
-        # HACK FOR CLOSED BDY PROBLEM - NEED TO CHANGE
-        try:
-            self.bdyNullSpace = self.petsc_L.pde.coefficients.forceStrongDirichlet
-        except:
-            self.bdyNullSpace = False
+        self.bdyNullSpace = self.petsc_L.pde.bdyNullSpace
 
         # create petsc4py KSP object and attach operators
         self.ksp = p4pyPETSc.KSP().create()
@@ -528,47 +524,31 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.view()
 
     def _defineNullSpaceVec(self,par_b):
-        """ A initial attempt to set up the null space vector
-        in parallel.
+        """ Setup a global null space vector.
+
+        TODO
+        ------
+        There are a few changes that need to be made to make this
+        compatible with a parallel implementation.  Notably, the
+        ghost nodes need to be handled correctly.
         """
-        #Global null space constructor
-        # Comm information
-        #### ARB TEMPORARY HACK FOR SERIAL STABILIZED ELEMETNS
+        stabilized = False
+        if self.par_L.pde.u[0].femSpace.dofMap.nDOF_all_processes==self.par_L.pde.u[1].femSpace.dofMap.nDOF_all_processes:
+            stabilized = True
+            
         rank = p4pyPETSc.COMM_WORLD.rank
         size = p4pyPETSc.COMM_WORLD.size
         null_space_vector = par_b.copy()
         null_space_vector.getArray().fill(0.)
         N_DOF_pressure = self.par_L.pde.u[0].femSpace.dofMap.nDOF_all_processes
-        tmp = null_space_vector.getArray()[::3]
-        tmp[:] = 1.0 / (sqrt(N_DOF_pressure))
-        # information for par_vec
-#         par_N = par_b.getSize()
-#         par_n = par_b.getLocalSize()
-#         par_nghosts = par_b.nghosts
-#         subdomain2global = par_b.subdomain2global
-#         proteus2petsc_subdomain = par_b.proteus2petsc_subdomain
-#         petsc2proteus_subdomain = par_b.petsc2proteus_subdomain
-#         # information for pressure uknowns
-#         pSpace = self.par_L.pde.u[0].femSpace
-#         pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
-#         n_DOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
-# #        assert par_n == n_DOF_pressure
-#         N_DOF_pressure = pressure_offsets[size]
-#         total_pressure_unknowns = pSpace.dofMap.nDOF_subdomain
-#         t = pSpace.dofMap.nDOF_all_processes
-#         assert t==N_DOF_pressure
-#         self.tmp_array = numpy.zeros((par_n+par_nghosts),'d')
-#         self.tmp_array[0:n_DOF_pressure] = 1.0/(sqrt(N_DOF_pressure))
-#         null_space_basis = ParVec_petsc4py(self.tmp_array,
-#                                            1,
-#                                            par_n,
-#                                            par_N,
-#                                            par_nghosts,
-#                                            subdomain2global,
-#                                            proteus2petsc_subdomain=proteus2petsc_subdomain,
-#                                            petsc2proteus_subdomain=petsc2proteus_subdomain)
-#         null_space_basis.scatter_forward_insert()
-#         self.tmp_array[:] = self.tmp_array[petsc2proteus_subdomain]
+
+        if stabilized:
+            tmp = null_space_vector.getArray()[::3]
+            tmp[:] = 1.0 / (sqrt(N_DOF_pressure))
+        else:
+            n_DOF_pressure = self.par_L.pde.u[0].femSpace.dofMap.nDOF
+            tmp = null_space_vector.getArray()[0:n_DOF_pressure]
+            tmp[:] = 1.0 / (sqrt(N_DOF_pressure))
         self.global_null_space = [null_space_vector]
 
 
@@ -3243,7 +3223,6 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
         self._advective_field = [self._u, self._v]
         self._advection_val = self.model.nzval.copy()
         self._advection_val.fill(0.)
-        import pdb ; pdb.set_trace()
         _nd = self.model.coefficients.nd
         
         _rho_0 = self.model.coefficients.rho_0

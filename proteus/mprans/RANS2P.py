@@ -786,7 +786,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='RANS2P',
                  reuse_trial_and_test_quadrature=True,
                  sd = True,
-                 movingDomain=False):
+                 movingDomain=False,
+                 bdyNullSpace=False):
         self.eb_adjoint_sigma = coefficients.eb_adjoint_sigma
         useConstant_he=coefficients.useConstant_he#this is a hack to test the effect of using a constant smoothing width
         self.postProcessing = True
@@ -824,6 +825,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
         self.dirichletNodeSetList=None #explicit Dirichlet  conditions for now, no Dirichlet BC constraints
+        self.bdyNullSpace=bdyNullSpace
         self.coefficients = coefficients
         self.coefficients.initializeMesh(self.mesh)
         self.nc = self.coefficients.nc
