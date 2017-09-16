@@ -1035,6 +1035,31 @@ class SchurOperatorConstructor:
         self.Q_csr_rep_local = self.Q.csr_rep_local
         return self.Q
 
+    def updateQ(self,
+                output_matrix = False):
+        """
+        Update the mass matrix operator.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Save updated mass operator.
+        """
+        self.opBuilder.updateMassOperator()
+        self.Q.zeroEntries()
+        if self.Q.proteus_jacobian != None:
+            self.Q_csr_rep[2][self.Q.nzval_proteus2petsc] = self.Q.proteus_csr_rep[2][:]
+        self.Q.setValuesLocalCSR(self.Q_csr_rep_local[0],
+                                 self.Q_csr_rep_local[1],
+                                 self.Q_csr_rep_local[2],
+                                 p4pyPETSc.InsertMode.INSERT_VALUES)
+        self.Q.assemblyBegin()
+        self.Q.assemblyEnd()
+        if output_matrix is True:
+            self._exportMatrix(self.Q,'Q')
+        
+        
+
     def updateNp_rho(self,
                      density_scaling = True,
                      output_matrix = False):
@@ -1213,8 +1238,8 @@ class SchurOperatorConstructor:
         Qsys : matrix
             The system's mass matrix.
         """
-        self.opBuilder.attachMassOperator(recalculate = True)
-
+        self.opBuilder.attachMassOperator()
+        
 class KSP_Preconditioner:
     """ Base class for PETSCc KSP precondtioners. """
     def __init__(self):
@@ -1680,9 +1705,12 @@ class Schur_LSC(SchurPrecon):
     def __init__(self,L,prefix=None, bdyNullSpace=False):
         SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
         self.operator_constructor = SchurOperatorConstructor(self)
+        self.Q = self.operator_constructor.initializeQ()
 
     def setUp(self,global_ksp):
-        self.Qv = self.operator_constructor.getQv()
+        self.operator_constructor.updateQ()
+        self.Qv = self.Q.getSubMatrix(self.operator_constructor.linear_smoother.isv,
+                                      self.operator_constructor.linear_smoother.isv)
         self.Qv_hat = p4pyPETSc.Mat().create()
         self.Qv_hat.setSizes(self.Qv.getSizes())
         self.Qv_hat.setType('aij')

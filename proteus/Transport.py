@@ -3200,7 +3200,6 @@ class OneLevelTransport(NonlinearEquation):
                         if self.q.has_key(('grad(u)Xgrad(w)*dV_'+I,cj,ci)):
                             self.u[cj].getGradientTensorValues(self.q[('grad(v)Xgrad(w)*dV_'+I,cj,cj,ci)],
                                                                self.q[('grad(u)Xgrad(w)*dV_'+I,cj,ci)])
-        import pdb ; pdb.set_trace()
         #
         #get functions of (t,x,u) at the quadrature points
         #
