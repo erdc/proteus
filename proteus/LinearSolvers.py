@@ -730,18 +730,16 @@ class SchurOperatorConstructor:
         pde_type :  str 
             Currently supports Stokes and navierStokes
         """
-        import proteus
-        # TODO - find away to get rid of this import statement
+        from proteus.mprans import RANS2P
         if linear_smoother.PCType!='schur':
             raise Exception, 'This function only works with the' \
                 'LinearSmoothers for Schur Complements.'
         self.linear_smoother=linear_smoother
         self.L = linear_smoother.L
         self.pde_type = pde_type
-        try :
-            if isinstance(self.L.pde,proteus.mprans.RANS2P.LevelModel):
-                self.opBuilder = OperatorConstructor_rans2p(self.L.pde)
-        except:
+        if isinstance(self.L.pde, RANS2P.LevelModel):
+            self.opBuilder = OperatorConstructor_rans2p(self.L.pde)
+        else:
             self.opBuilder = OperatorConstructor_oneLevel(self.L.pde)
             try:
                 self._phase_func = self.L.pde.coefficients.which_region
@@ -1700,7 +1698,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                                                constant = True)
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
-#            self._setConstantPressureNullSpace(global_ksp)
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
