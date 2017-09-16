@@ -1079,8 +1079,6 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
 
         self._options = p4pyPETSc.Options()
         self._create_constant_nullspace()
-        # TODO ARB - Need to implement the Chebyshev semi-iteration for
-        # mass matrix solves.
 
         # Initialize mass matrix inverses.
         self.kspQp_visc = p4pyPETSc.KSP().create()
