@@ -52,7 +52,6 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
                               atol=1e-2)
         expected.close()
         actual.close()
-
         relpath = 'comparison_files/drivenCavityNSE_LSC_expected.log'
         actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
         expected_log = TestTools.NumericResults.build_from_proteus_log(os.path.join(self._scriptdir,
