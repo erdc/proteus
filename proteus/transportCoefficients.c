@@ -2425,7 +2425,6 @@ void TwophaseNavierStokes_LS_SO_2D_Evaluate(const int nPoints,
   for (k=0;k<nPoints;k++)
     {
       /** \todo optimize coefficients */
-      printf("Here1\n");
       H = smoothedHeaviside(eps,phi[k]);
       rho = rho_0*(1.0-H)+rho_1*H;
       nu  = nu_0*(1.0-H)+nu_1*H;
@@ -2462,7 +2461,7 @@ void TwophaseNavierStokes_LS_SO_2D_Evaluate(const int nPoints,
       
       dmom_v_adv_v[k*2+0]=u[k];
       dmom_v_adv_v[k*2+1]=2.0*v[k];
-      printf("Here2\n");
+
       //u momentum diffusion tensor
       mom_u_diff_ten[k*4+0] = nu;
       mom_u_diff_ten[k*4+3] = nu;

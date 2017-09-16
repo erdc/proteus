@@ -928,9 +928,6 @@ class StokesASGS_velocity(SGE_base):
                                                                          q[('subgridError',3)],
                                                                          q[('dsubgridError',3,0)],
                                                                          q[('dsubgridError',3,3)])
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
     def updateSubgridErrorHistory(self,initializationPhase=False):
         pass
 
@@ -1783,9 +1780,6 @@ class AdvectionDiffusionReactionTransientSubscales_ASGS(AdvectionDiffusionReacti
                 tau=self.tau[ci]
                 #dm_subgrid = q[('dm',ci,ci)]
             dm_subgrid = self.cq[('dm_sge',ci,ci)]
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             if self.trackSubScales:
                 #mwf debug
                 logEvent("ADR_ASGS trackScales before transient modficication (tau_s) tau[ci].max= %s tau[ci].min=%s  " % (tau[ci].max(),tau[ci].min()),10)
@@ -1802,9 +1796,6 @@ class AdvectionDiffusionReactionTransientSubscales_ASGS(AdvectionDiffusionReacti
                 q[('pdeResidual',ci)] -= self.subgridTmp[ci]  #R_h --> \tilde{R}_h
 
                 if tau.max() > 0.0:
-                    #mwf debug
-                    #import pdb
-                    #pdb.set_trace()
                     self.subgridTmp[ci][:] = tau
                     self.subgridTmp[ci] *= dt
                     self.subgridTmp2[ci][:] = tau
@@ -1965,9 +1956,6 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS(SGE_base):
         computing gradient locally should be just the same as
         ignoring gradient terms altogether
         """
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         #now project to finite element space
         if self.usesGradientStabilization:
             #mwf hack!
@@ -2043,9 +2031,6 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS(SGE_base):
 
 
             for ci in range(self.nc):
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
                 #this is the general way but right now we're having a problem when we interpolate
                 #the actual residual because of the discontinuous gradient terms
                 self.strongResidualInterpolant[ci].getGradientValues(q[('grad(v)',ci)],
@@ -2163,9 +2148,6 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
                 self.subgridError_ip_last.append(None)
                 self.subgridErrorMassCoef_ip_last.append(None)
     def calculateSubgridErrorInterpolants(self,ci):
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         #now project to finite element space
         hack = False
         if self.usesGradientStabilization:
@@ -2257,9 +2239,6 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
             if self.tau_11_force is not None:
                 tau_gradient.fill(self.tau_11_force)
                 if self.trackSubScales: tau_gradient_ip.fill(self.tau_11_force)
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
 
             if self.trackSubScales:
                 #mwf debug
@@ -2311,9 +2290,6 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
                 self.calculateSubgridErrorInterpolants(ci)
 
 
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.strongResidualInterpolant[ci].getGradientValues(q[('grad(v)',ci)],
                                                                  q[('grad(pdeResidual)',ci)])
             for cj in range(self.nc):
@@ -2374,9 +2350,6 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
         \delta m^{n}/\delta t^{n+1}
         """
         if self.trackSubScales:
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             for ci in range(self.nc):
                 self.subgridTmp[ci][:] = self.subgridError_last[ci]
                 #would be nice to have dt^{n+1} alone
@@ -2571,9 +2544,6 @@ class NavierStokesTransientSubScalesASGS_velocity_pressure(NavierStokesASGS_velo
                 self.subgridTmp2[0] *= 0.25
                 #now modify tau0 --> tau_t0
                 if tau0.max() > 0.0:
-                    #mwf debug
-                    #import pdb
-                    #pdb.set_trace()
                     self.subgridTmp[1][:] = tau0
                     self.subgridTmp[1] *= dt
                     self.subgridTmp2[1][:] = tau0

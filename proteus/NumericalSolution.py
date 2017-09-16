@@ -268,10 +268,8 @@ class NS_base:  # (HasTraits):
                 else:
                     logEvent("Calling Triangle to generate 2D mesh for"+p.name)
                     tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
-                                                        nbase=1,
-                                                        verbose=10)
-                    # ARB Before merge figure out the best way to deal with problem (eg in parallel
-                    # this will cause problems for detailed problems.
+                                                           nbase=1,
+                                                           verbose=10)
                     if comm.isMaster() and p.genMesh:
                         tmesh.readFromPolyFile(p.domain.polyfile)
                         tmesh.writeToFile(p.domain.polyfile)
