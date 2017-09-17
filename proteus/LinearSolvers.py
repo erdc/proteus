@@ -697,12 +697,18 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokes_TwoPhasePCD:
                 logEvent("NAHeader Preconditioner TwoPhasePCD")
-                self.preconditioner = NavierStokes_TwoPhasePCD(par_L,
-                                                               prefix,
-                                                               self.bdyNullSpace,
-                                                               density_scaling=self.preconditionerOptions[0],
-                                                               numerical_viscosity=self.preconditionerOptions[1],
-                                                               lumped=self.preconditionerOptions[2])
+                try:
+                    self.preconditioner = NavierStokes_TwoPhasePCD(par_L,
+                                                                   prefix,
+                                                                   self.bdyNullSpace,
+                                                                   density_scaling=self.preconditionerOptions[0],
+                                                                   numerical_viscosity=self.preconditionerOptions[1],
+                                                                   lumped=self.preconditionerOptions[2])
+                except IndexError:
+                    logEvent("Preconditioner options not specified, using defaults")
+                    self.preconditioner = NavierStokes_TwoPhasePCD(par_L,
+                                                                   prefix,
+                                                                   self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_LSC:
                 logEvent("NAHeader Preconditioner LSC")

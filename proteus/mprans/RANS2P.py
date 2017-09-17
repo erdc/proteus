@@ -164,7 +164,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  NONCONSERVATIVE_FORM=0.0,
                  MOMENTUM_SGE=1.0,
                  PRESSURE_SGE=1.0,
-                 VELOCITY_SGE=1.0):
+                 VELOCITY_SGE=1.0,
+                 phaseFunction=None):
+        self.phaseFunction=phaseFunction
         self.NONCONSERVATIVE_FORM=NONCONSERVATIVE_FORM
         self.MOMENTUM_SGE=MOMENTUM_SGE
         self.PRESSURE_SGE=PRESSURE_SGE
@@ -400,56 +402,23 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.epsFact_solid is None:
             self.epsFact_solid = numpy.ones(self.model.mesh.elementMaterialTypes.max()+1)
         assert len(self.epsFact_solid) > self.model.mesh.elementMaterialTypes.max(), "epsFact_solid  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
-        arbTest = True
-        if arbTest is True:
+        if self.phaseFunction!=None:
             from proteus.ctransportCoefficients import smoothedHeaviside
-            epsFact_conserv_heaviside = 1.5
-#            he = 0.1
-            he = 2. / float(4 * 1 - 1)
-            def signedDistance(x):
-                if x[0] >= 0.5:
-                    if x[1] >= 0.5:
-                        sd = r_ne = sqrt((x[0]-0.5)**2 + (x[1]-0.5)**2)
-                    elif x[1] <= -0.5:
-                        sd = r_se = sqrt((x[0]-0.5)**2 + (x[1]+0.5)**2)
-                    else:
-                        sd = x[0] - 0.5
-                elif x[0] <= -0.5:
-                    if x[1] >= 0.5:
-                        sd = r_nw = sqrt((x[0]+0.5)**2 + (x[1]-0.5)**2)
-                    elif x[1] <= -0.5:
-                        sd = r_sw = sqrt((x[0]+0.5)**2 + (x[1]+0.5)**2)
-                    else:
-                        sd = -0.5 - x[0]
-                elif x[1] >= 0.5:
-                    if x[0] >= 0.5:
-                        sd = r_ne = sqrt((x[0]-0.5)**2 + (x[1]-0.5)**2)
-                    elif x[0] <= -0.5:
-                        sd = r_se = sqrt((x[0]+0.5)**2 + (x[1]-0.5)**2)
-                    else:
-                        sd = x[1] - 0.5
-                elif x[1] <= -0.5:
-                    if x[0] >= 0.5:
-                        sd = r_nw = sqrt((x[0]-0.5)**2 + (x[1]+0.5)**2)
-                    elif x[0] <= -0.5:
-                        sd = r_sw = sqrt((x[0]+0.5)**2 + (x[1]+0.5)**2)
-                    else:
-                        sd = -0.5 - x[1]
-                else:
-                    sd = max(x[0]-0.5,
-                             -0.5 - x[0],
-                             x[1]-0.5,
-                             -0.5 - x[1])
-                return sd
+            if self.useConstant_he:
+                self.elementDiameter = self.mesh.elementDiametersArray.copy()
+                self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
+            else:
+                self.elementDiameter = self.mesh.elementDiametersArray
             for i, quad_pts in enumerate(self.model.q['x']):
                 for j, pt in enumerate(quad_pts):
-#                    print smoothedHeaviside(epsFact_consrv_heaviside*he,signedDistance(pt))
-                    self.q_phi[i, j] = signedDistance(pt)
-                    self.q_vf[i, j] = smoothedHeaviside(epsFact_conserv_heaviside*he,signedDistance(pt))
+                    he = self.elementDiameter[i]
+                    self.q_phi[i, j] = self.phaseFunction(pt)
+                    self.q_vf[i, j] = smoothedHeaviside(self.epsFact*he,self.phaseFunction(pt))
             for i, quad_pts in enumerate(self.model.ebqe['x']):
                 for j, pt in enumerate(quad_pts):
-                    self.ebqe_phi[i, j] = signedDistance(pt)
-                    self.ebqe_vf[i, j] = smoothedHeaviside(epsFact_conserv_heaviside*he,signedDistance(pt))
+                    he = self.elementDiameter[i]    
+                    self.ebqe_phi[i, j] = self.phaseFunction(pt)
+                    self.ebqe_vf[i, j] = smoothedHeaviside(self.epsFact*he,self.phaseFunction(pt))
 
     def initializeMesh(self,mesh):
         #cek we eventually need to use the local element diameter
