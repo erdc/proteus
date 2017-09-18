@@ -277,7 +277,8 @@ namespace proteus
 				   double* dynamic_viscosity_as_function,
 				   double* ebqe_density_as_function, 
 				   double* ebqe_dynamic_viscosity_as_function,
-				   double order_polynomial)=0;
+				   double order_polynomial
+				   )=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -693,7 +694,8 @@ namespace proteus
 				   double* dynamic_viscosity_as_function,
 				   double* ebqe_density_as_function, 
 				   double* ebqe_dynamic_viscosity_as_function,
-				   double order_polynomial)=0;
+				   double order_polynomial
+						     )=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -6748,7 +6750,7 @@ namespace proteus
 	      double maxSpeedAtCell = std::sqrt(maxSpeed2AtCell[eN]);
 	      double linear_viscosity = cMax*hK*rhoAtCell[eN]*maxSpeedAtCell;
 	      // STABILIZATION_TYPE=1. Weak entropy residual
-	      double entropy_viscosity = //fmax(1.,rhoAtCell[eN]*maxSpeedAtCell*hK/(gamma*muAtCell[eN]+(1.-gamma)*q_numDiff_u_last[eN]))*
+	      double entropy_viscosity = fmax(1.,rhoAtCell[eN]*maxSpeedAtCell*hK/(gamma*muAtCell[eN]+(1.-gamma)*q_numDiff_u_last[eN]))*
 		cE*hK*hK*rhoAtCell[eN]*entropyResidualAtCell[eN]/(areaK*maxSpeed2AtOmega+1E-10); 
 	      if (STABILIZATION_TYPE == 2) // strong entropy residual 
 		entropy_viscosity = 
@@ -7810,9 +7812,11 @@ namespace proteus
 	    {
 	      int eN_i = eN*nDOF_test_element+i;
 	      int gi = vel_l2g[eN_i];
-	      entropyResidualAtCurrentCell = fmax(entropyResidualAtCurrentCell, fabs(entropyResidualPerNode[gi]));
+	      //entropyResidualAtCurrentCell = fmax(entropyResidualAtCurrentCell, fabs(entropyResidualPerNode[gi]));
+	      entropyResidualAtCurrentCell += fabs(entropyResidualPerNode[gi]);
 	    }  
-	  entropyResidualAtCell[eN] = entropyResidualAtCurrentCell;
+	  //entropyResidualAtCell[eN] = entropyResidualAtCurrentCell;
+	  entropyResidualAtCell[eN] = entropyResidualAtCurrentCell/nDOF_test_element;
 	}
     }
 
