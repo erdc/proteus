@@ -120,6 +120,7 @@ class Coefficients(TC_base):
         Update the fluid velocities
         """
         if self.fluidModel.KILL_PRESSURE_TERM is False and self.fluidModel.coefficients.CORRECT_VELOCITY is True:
+            assert self.INTEGRATE_BY_PARTS_DIV_U, "INTEGRATE_BY_PARTS the div(U) must be set to true to correct the velocity"
             alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
             for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
                 self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
