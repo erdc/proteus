@@ -103,7 +103,8 @@ class OneLevelTransport(NonlinearEquation):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=False,
                  sd = True,
-                 movingDomain=False):#,
+                 movingDomain=False,
+                 bdyNullSpace=False):#,
         r""" Allocate storage and initialize some variables.
 
         Parameters
@@ -139,6 +140,10 @@ class OneLevelTransport(NonlinearEquation):
         shockCapturing : bool
 
         numericalFlux : bool
+
+        bdyNullSpace : bool
+            Indicates whether the boundary conditions create a global
+            null space.
 
         Notes
         -----
@@ -230,6 +235,7 @@ class OneLevelTransport(NonlinearEquation):
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
         self.dirichletNodeSetList=None #explicit Dirichlet  conditions for now, no Dirichlet BC constraints
+        self.bdyNullSpace = bdyNullSpace
         self.coefficients = coefficients
         self.coefficients.initializeMesh(self.mesh)
         self.nc = self.coefficients.nc
@@ -3200,7 +3206,6 @@ class OneLevelTransport(NonlinearEquation):
                         if self.q.has_key(('grad(u)Xgrad(w)*dV_'+I,cj,ci)):
                             self.u[cj].getGradientTensorValues(self.q[('grad(v)Xgrad(w)*dV_'+I,cj,cj,ci)],
                                                                self.q[('grad(u)Xgrad(w)*dV_'+I,cj,ci)])
-        import pdb ; pdb.set_trace()
         #
         #get functions of (t,x,u) at the quadrature points
         #
@@ -6149,7 +6154,8 @@ class MultilevelTransport:
             numerics,
             problem.sd,
             problem.movingDomain,
-            PhiSpaceTypeDict=phiSpaces)
+            PhiSpaceTypeDict=phiSpaces,
+            bdyNullSpace=problem.boundaryCreatesNullSpace)
     def initialize(self,
                    nd,
                    mlMesh,
@@ -6175,12 +6181,12 @@ class MultilevelTransport:
                    options=None,
                    useSparseDiffusion=True,
                    movingDomain=False,
-                   PhiSpaceTypeDict=None):
+                   PhiSpaceTypeDict=None,
+                   bdyNullSpace=False):
         import copy
         """read in the multilevel mesh, mesh independent boundary
         conditions, and types for test and trial spaces and the
         jacobian. Pass through the rest to the models on each mesh"""
-
         if bool(TrialSpaceTypeDict) == False:
             raise Exception,  'Proteus is trying to create a' \
             ' Multilevel Transport object with no trial space.  Make' \
@@ -6346,6 +6352,7 @@ class MultilevelTransport:
             #
             logEvent(memory("boundary conditions","MultilevelTransport"),level=4)
             logEvent("Initializing OneLevelTransport",level=2)
+
             transport=self.OneLevelTransportType(uDict,
                                             phiDict,
                                             testSpaceDict,
@@ -6368,8 +6375,9 @@ class MultilevelTransport:
                                             reactionLumping,
                                             options,
                                             self.name + str(len(self.levelModelList)),
-                                            sd = useSparseDiffusion,
-                                            movingDomain=movingDomain)
+                                            sd=useSparseDiffusion,
+                                            movingDomain=movingDomain,
+                                            bdyNullSpace=bdyNullSpace)
             self.offsetListList.append(transport.offset)
             self.strideListList.append(transport.stride)
             memory()
@@ -6570,12 +6578,10 @@ class MultilevelTransport:
                         for i in range(transport.dim):
                             for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],range(rowptr_petsc[i],rowptr_petsc[i+1])):
                                 nzval_petsc[k] = petsc_a[i,j]
-                                # TODO - ARB: these asserts need to be changed to reflect new petsc_a and proteus_a structures
-#                        assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
-#                        assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
-#                        assert (proteus_a[petsc2proteus_subdomain,:][:,petsc2proteus_subdomain] == petsc_a).all()
-#                        assert((proteus_a == petsc_a[proteus2petsc_subdomain,:][:,proteus2petsc_subdomain]).all())
-#                        petsc_a = np.arange(transport.dim**2).reshape(transport.dim,transport.dim)
+                        assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
+                        assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
+                        assert (all(proteus_a[(petsc2proteus_subdomain[k[0]],petsc2proteus_subdomain[k[1]])] == v for k,v in petsc_a.items()))
+                        assert (all(petsc_a[(proteus2petsc_subdomain[k[0]],proteus2petsc_subdomain[k[1]])] == v for k,v in proteus_a.items()))
                         transport.nzval_petsc = nzval_petsc
                         transport.colind_petsc = colind_petsc
                         transport.rowptr_petsc = rowptr_petsc
