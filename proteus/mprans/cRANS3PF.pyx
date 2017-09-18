@@ -237,7 +237,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* density_as_function,
 			       double* dynamic_viscosity_as_function,
 			       double* ebqe_density_as_function,
-			       double* ebqe_dynamic_viscosity_as_function)
+			       double* ebqe_dynamic_viscosity_as_function, 
+			       double order_polynomial)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -655,7 +656,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* density_as_function,
 			       double* dynamic_viscosity_as_function,
 			       double* ebqe_density_as_function,
-			       double* ebqe_dynamic_viscosity_as_function)
+			       double* ebqe_dynamic_viscosity_as_function,
+			       double order_polynomial)
         void calculateJacobian_entropy_viscosity(
 	     		       double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -1150,7 +1152,8 @@ cdef class RANS3PF:
 			  numpy.ndarray density_as_function,
 			  numpy.ndarray dynamic_viscosity_as_function,
 			  numpy.ndarray ebqe_density_as_function,
-			  numpy.ndarray ebqe_dynamic_viscosity_as_function):
+			  numpy.ndarray ebqe_dynamic_viscosity_as_function,
+			  double order_polynomial):
         self.thisptr.calculateResidual(< double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1364,7 +1367,8 @@ cdef class RANS3PF:
 					< double * > density_as_function.data,
 					< double * > dynamic_viscosity_as_function.data,
 					< double * > ebqe_density_as_function.data,
-			  		< double * > ebqe_dynamic_viscosity_as_function.data)
+			  		< double * > ebqe_dynamic_viscosity_as_function.data,
+					order_polynomial)
     def calculateJacobian(self,
 			  numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -1944,7 +1948,8 @@ cdef class RANS3PF:
 			  numpy.ndarray density_as_function,
 			  numpy.ndarray dynamic_viscosity_as_function,
 			  numpy.ndarray ebqe_density_as_function,
-			  numpy.ndarray ebqe_dynamic_viscosity_as_function):
+			  numpy.ndarray ebqe_dynamic_viscosity_as_function,
+			  double order_polynomial):
         self.thisptr.calculateResidual_entropy_viscosity(
 				       < double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
@@ -2159,7 +2164,8 @@ cdef class RANS3PF:
 					< double * > density_as_function.data,
 					< double * > dynamic_viscosity_as_function.data,
 					< double * > ebqe_density_as_function.data,
-			  		< double * > ebqe_dynamic_viscosity_as_function.data)
+			  		< double * > ebqe_dynamic_viscosity_as_function.data,
+					order_polynomial)
     def calculateJacobian_entropy_viscosity(self,
 			  numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -2788,7 +2794,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double* density_as_function,
 			       double* dynamic_viscosity_as_function,
 			       double* ebqe_density_as_function,
-			       double* ebqe_dynamic_viscosity_as_function)
+			       double* ebqe_dynamic_viscosity_as_function,
+			       double order_polynomial)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -3185,7 +3192,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double* density_as_function,
 			       double* dynamic_viscosity_as_function,
 			       double* ebqe_density_as_function,
-			       double* ebqe_dynamic_viscosity_as_function)
+			       double* ebqe_dynamic_viscosity_as_function,
+			       double order_polynomial)
         void calculateJacobian_entropy_viscosity(
 	                       double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -3680,7 +3688,8 @@ cdef class RANS3PF2D:
 			  numpy.ndarray density_as_function,
 			  numpy.ndarray dynamic_viscosity_as_function,
 			  numpy.ndarray ebqe_density_as_function,
-			  numpy.ndarray ebqe_dynamic_viscosity_as_function):
+			  numpy.ndarray ebqe_dynamic_viscosity_as_function,
+			  double order_polynomial):
         self.thisptr.calculateResidual(< double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -3894,7 +3903,8 @@ cdef class RANS3PF2D:
 					< double * > density_as_function.data,
 					< double * > dynamic_viscosity_as_function.data,
 					< double * > ebqe_density_as_function.data,
-			  		< double * > ebqe_dynamic_viscosity_as_function.data)	
+			  		< double * > ebqe_dynamic_viscosity_as_function.data,
+					order_polynomial)	
     def calculateJacobian(self,
 			  numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -4474,7 +4484,8 @@ cdef class RANS3PF2D:
 			  numpy.ndarray density_as_function,
 			  numpy.ndarray dynamic_viscosity_as_function,
 			  numpy.ndarray ebqe_density_as_function,
-			  numpy.ndarray ebqe_dynamic_viscosity_as_function):
+			  numpy.ndarray ebqe_dynamic_viscosity_as_function, 
+			  double order_polynomial):
         self.thisptr.calculateResidual_entropy_viscosity(
 	                               < double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
@@ -4689,7 +4700,8 @@ cdef class RANS3PF2D:
 					< double * > density_as_function.data,
 					< double * > dynamic_viscosity_as_function.data,
 					< double * > ebqe_density_as_function.data,
-			  		< double * > ebqe_dynamic_viscosity_as_function.data)
+			  		< double * > ebqe_dynamic_viscosity_as_function.data,
+					order_polynomial)
 
     def calculateJacobian_entropy_viscosity(self,
                           numpy.ndarray mesh_trial_ref,
