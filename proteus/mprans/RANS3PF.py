@@ -892,7 +892,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         # Save old solutions
-        # solution at tnm1
+        # solution at tnm1        
         self.model.u_dof_old_old[:] = self.model.u_dof_old[:]
         self.model.v_dof_old_old[:] = self.model.v_dof_old[:]
         if (self.model.nSpace_global == 3):
@@ -920,6 +920,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def postStep(self, t, firstStep=False):
+        if firstStep==True:
+            self.model.firstStep=False
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
         for i,sdf in zip(range(self.nParticles),
@@ -970,6 +972,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
                  movingDomain=False): 
+        self.firstStep=True
         self.eb_adjoint_sigma = coefficients.eb_adjoint_sigma
         # this is a hack to test the effect of using a constant smoothing width
         useConstant_he = coefficients.useConstant_he
@@ -1976,7 +1979,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.particle_netMoments[:,:]=0.0
         self.coefficients.particle_surfaceArea[:]=0.0
 
-        if self.forceStrongConditions:
+        if self.forceStrongConditions and self.firstStep == False:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[
                         cj].DOFBoundaryConditionsDict.iteritems():
@@ -2141,7 +2144,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else: 
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
-                
+        
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,

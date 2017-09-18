@@ -7713,9 +7713,11 @@ namespace proteus
 	    {
 	      int eN_i = eN*nDOF_test_element+i;
 	      int gi = vel_l2g[eN_i];
-	      entropyResidualAtCurrentCell = fmax(entropyResidualAtCurrentCell, fabs(entropyResidualPerNode[gi]));
+	      //entropyResidualAtCurrentCell = fmax(entropyResidualAtCurrentCell, fabs(entropyResidualPerNode[gi]));
+	      entropyResidualAtCurrentCell += fabs(entropyResidualPerNode[gi]);
 	    }  
-	  entropyResidualAtCell[eN] = entropyResidualAtCurrentCell;
+	  //entropyResidualAtCell[eN] = entropyResidualAtCurrentCell;
+	  entropyResidualAtCell[eN] = entropyResidualAtCurrentCell/nDOF_test_element;
 	}
     }
 
