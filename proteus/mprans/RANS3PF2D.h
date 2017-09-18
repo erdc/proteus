@@ -6239,10 +6239,13 @@ namespace proteus
 		jac[nSpace*nSpace],
 		jacDet,
 		jacInv[nSpace*nSpace],
-		p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],
+		//p_grad_trial[nDOF_trial_element*nSpace],
+		vel_grad_trial[nDOF_trial_element*nSpace],
 		//vel_hess_trial[nDOF_trial_element*nSpace2],
-		p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
-		p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
+		//p_test_dV[nDOF_trial_element],
+		vel_test_dV[nDOF_trial_element],
+		//p_grad_test_dV[nDOF_test_element*nSpace],
+		vel_grad_test_dV[nDOF_test_element*nSpace],
 		u_times_vel_grad_test_dV[nDOF_test_element*nSpace], // For entropy residual
 		v_times_vel_grad_test_dV[nDOF_test_element*nSpace], // For entropy residual
 		dV,x,y,z,xt,yt,zt,
@@ -6739,12 +6742,11 @@ namespace proteus
 	      ///////////////////////////////////////////////
 	      double hK=elementDiameter[eN];
 	      double areaK = fabs(jacDet)*areaRefElement; //This is true if jacDet is constant 
-	      double maxSpeedAtCell = std::sqrt(maxSpeed2AtCell[eN])+1E-10;
-	      double linear_viscosity = cMax*hK*q_rho[eN_k]*maxSpeedAtCell;
+	      double maxSpeedAtCell = std::sqrt(maxSpeed2AtCell[eN]);
+	      double linear_viscosity = cMax*hK*rhoAtCell[eN]*maxSpeedAtCell;
 	      // STABILIZATION_TYPE=1. Weak entropy residual
-	      double entropy_viscosity = //fmax(1.,maxSpeedAtCell*hK/(gamma*q_nu[eN_k] + (1.-gamma)*q_numDiff_u_last[eN]))*
+	      double entropy_viscosity = //fmax(1.,rhoAtCell[eN]*maxSpeedAtCell*hK/(gamma*muAtCell[eN] + (1.-gamma)*q_numDiff_u_last[eN]))*
 		cE*hK*hK*rhoAtCell[eN]*entropyResidualAtCell[eN]/(areaK*maxSpeed2AtOmega+1E-10); 
-		//cE*hK*hK*entropyResidualAtCell[eN]/(q_rho[eN_k]*areaK*maxSpeed2AtCell[eN]+1E-10); 
 	      if (STABILIZATION_TYPE == 2) // strong entropy residual 
 		entropy_viscosity = 
 		  cE*hK*hK*rhoAtCell[eN_k]*entropyResidualAtCell[eN]/(maxSpeed2AtOmega+1E-10);
@@ -8005,41 +8007,42 @@ namespace proteus
 	{
 	  register double eps_rho,eps_mu;
 
-	  register double  elementJacobian_p_p[nDOF_test_element][nDOF_trial_element],
-	    elementJacobian_p_u[nDOF_test_element][nDOF_trial_element],
-	    elementJacobian_p_v[nDOF_test_element][nDOF_trial_element],
-	    elementJacobian_p_w[nDOF_test_element][nDOF_trial_element],
-	    elementJacobian_u_p[nDOF_test_element][nDOF_trial_element],
+	  register double  
+	    //elementJacobian_p_p[nDOF_test_element][nDOF_trial_element],
+	    //elementJacobian_p_u[nDOF_test_element][nDOF_trial_element],
+	    //elementJacobian_p_v[nDOF_test_element][nDOF_trial_element],
+	    //elementJacobian_p_w[nDOF_test_element][nDOF_trial_element],
+	    //elementJacobian_u_p[nDOF_test_element][nDOF_trial_element],
 	    elementJacobian_u_u[nDOF_test_element][nDOF_trial_element],
 	    elementJacobian_u_v[nDOF_test_element][nDOF_trial_element],
-	    elementJacobian_u_w[nDOF_test_element][nDOF_trial_element],
-	    elementJacobian_v_p[nDOF_test_element][nDOF_trial_element],
+	    //elementJacobian_u_w[nDOF_test_element][nDOF_trial_element],
+	    //elementJacobian_v_p[nDOF_test_element][nDOF_trial_element],
 	    elementJacobian_v_u[nDOF_test_element][nDOF_trial_element],
-	    elementJacobian_v_v[nDOF_test_element][nDOF_trial_element],
-	    elementJacobian_v_w[nDOF_test_element][nDOF_trial_element],
-	    elementJacobian_w_p[nDOF_test_element][nDOF_trial_element],
-	    elementJacobian_w_u[nDOF_test_element][nDOF_trial_element],
-	    elementJacobian_w_v[nDOF_test_element][nDOF_trial_element],
-	    elementJacobian_w_w[nDOF_test_element][nDOF_trial_element];
+	    elementJacobian_v_v[nDOF_test_element][nDOF_trial_element];
+	    //elementJacobian_v_w[nDOF_test_element][nDOF_trial_element],
+	    //elementJacobian_w_p[nDOF_test_element][nDOF_trial_element],
+	    //elementJacobian_w_u[nDOF_test_element][nDOF_trial_element],
+	    //elementJacobian_w_v[nDOF_test_element][nDOF_trial_element],
+	    //elementJacobian_w_w[nDOF_test_element][nDOF_trial_element];
 	  for (int i=0;i<nDOF_test_element;i++)
 	    for (int j=0;j<nDOF_trial_element;j++)
 	      {
-		elementJacobian_p_p[i][j]=0.0;
-		elementJacobian_p_u[i][j]=0.0;
-		elementJacobian_p_v[i][j]=0.0;
-		elementJacobian_p_w[i][j]=0.0;
-		elementJacobian_u_p[i][j]=0.0;
+		//elementJacobian_p_p[i][j]=0.0;
+		//elementJacobian_p_u[i][j]=0.0;
+		//elementJacobian_p_v[i][j]=0.0;
+		//elementJacobian_p_w[i][j]=0.0;
+		//elementJacobian_u_p[i][j]=0.0;
 		elementJacobian_u_u[i][j]=0.0;
 		elementJacobian_u_v[i][j]=0.0;
-		elementJacobian_u_w[i][j]=0.0;
-		elementJacobian_v_p[i][j]=0.0;
+		//elementJacobian_u_w[i][j]=0.0;
+		//elementJacobian_v_p[i][j]=0.0;
 		elementJacobian_v_u[i][j]=0.0;
 		elementJacobian_v_v[i][j]=0.0;
-		elementJacobian_v_w[i][j]=0.0;
-		elementJacobian_w_p[i][j]=0.0;
-		elementJacobian_w_u[i][j]=0.0;
-		elementJacobian_w_v[i][j]=0.0;
-		elementJacobian_w_w[i][j]=0.0;
+		//elementJacobian_v_w[i][j]=0.0;
+		//elementJacobian_w_p[i][j]=0.0;
+		//elementJacobian_w_u[i][j]=0.0;
+		//elementJacobian_w_v[i][j]=0.0;
+		//elementJacobian_w_w[i][j]=0.0;
 	      }
 	  for  (int k=0;k<nQuadraturePoints_element;k++)
 	    {
@@ -8135,11 +8138,14 @@ namespace proteus
 		jac[nSpace*nSpace],
 		jacDet,
 		jacInv[nSpace*nSpace],
-		p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],
+		//p_grad_trial[nDOF_trial_element*nSpace],
+		vel_grad_trial[nDOF_trial_element*nSpace],
 		//vel_hess_trial[nDOF_trial_element*nSpace2],
 		dV,
-		p_test_dV[nDOF_test_element],vel_test_dV[nDOF_test_element],
-		p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
+		//p_test_dV[nDOF_test_element],
+		vel_test_dV[nDOF_test_element],
+		//p_grad_test_dV[nDOF_test_element*nSpace],
+		vel_grad_test_dV[nDOF_test_element*nSpace],
 		x,y,z,xt,yt,zt,
 		//VRANS
 		porosity,
@@ -8924,22 +8930,22 @@ namespace proteus
 		bc_mom_w_ham_ext=0.0,
 		bc_dmom_w_ham_grad_p_ext[nSpace],
 		bc_dmom_w_ham_grad_w_ext[nSpace],
-		fluxJacobian_p_p[nDOF_trial_element],
-		fluxJacobian_p_u[nDOF_trial_element],
-		fluxJacobian_p_v[nDOF_trial_element],
-		fluxJacobian_p_w[nDOF_trial_element],
-		fluxJacobian_u_p[nDOF_trial_element],
+		//fluxJacobian_p_p[nDOF_trial_element],
+		//fluxJacobian_p_u[nDOF_trial_element],
+		//fluxJacobian_p_v[nDOF_trial_element],
+		//fluxJacobian_p_w[nDOF_trial_element],
+		//fluxJacobian_u_p[nDOF_trial_element],
 		fluxJacobian_u_u[nDOF_trial_element],
 		fluxJacobian_u_v[nDOF_trial_element],
-		fluxJacobian_u_w[nDOF_trial_element],
-		fluxJacobian_v_p[nDOF_trial_element],
+		//fluxJacobian_u_w[nDOF_trial_element],
+		//fluxJacobian_v_p[nDOF_trial_element],
 		fluxJacobian_v_u[nDOF_trial_element],
 		fluxJacobian_v_v[nDOF_trial_element],
-		fluxJacobian_v_w[nDOF_trial_element],
-		fluxJacobian_w_p[nDOF_trial_element],
-		fluxJacobian_w_u[nDOF_trial_element],
-		fluxJacobian_w_v[nDOF_trial_element],
-		fluxJacobian_w_w[nDOF_trial_element],
+		//fluxJacobian_v_w[nDOF_trial_element],
+		//fluxJacobian_w_p[nDOF_trial_element],
+		//fluxJacobian_w_u[nDOF_trial_element],
+		//fluxJacobian_w_v[nDOF_trial_element],
+		//fluxJacobian_w_w[nDOF_trial_element],
 		jac_ext[nSpace*nSpace],
 		jacDet_ext,
 		jacInv_ext[nSpace*nSpace],
