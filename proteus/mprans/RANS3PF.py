@@ -2378,7 +2378,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['density'], 
             self.q['dynamic_viscosity'], 
             self.ebqe['density'],
-            self.ebqe['dynamic_viscosity'])
+            self.ebqe['dynamic_viscosity'],             
+            self.u[0].femSpace.order)
 
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):
