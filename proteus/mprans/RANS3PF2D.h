@@ -276,8 +276,8 @@ namespace proteus
 				   double* density_as_function,
 				   double* dynamic_viscosity_as_function,
 				   double* ebqe_density_as_function, 
-				   double* ebqe_dynamic_viscosity_as_function
-				   )=0;
+				   double* ebqe_dynamic_viscosity_as_function,
+				   double order_polynomial)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -692,7 +692,8 @@ namespace proteus
 				   double* density_as_function,
 				   double* dynamic_viscosity_as_function,
 				   double* ebqe_density_as_function, 
-				   double* ebqe_dynamic_viscosity_as_function)=0;
+				   double* ebqe_dynamic_viscosity_as_function,
+				   double order_polynomial)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -2337,7 +2338,8 @@ namespace proteus
 			   double* density_as_function,
 			   double* dynamic_viscosity_as_function,
 			   double* ebqe_density_as_function, 
-			   double* ebqe_dynamic_viscosity_as_function)
+			   double* ebqe_dynamic_viscosity_as_function, 
+			   double order_polynomial)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -5939,7 +5941,8 @@ namespace proteus
 			   double* density_as_function,
 			   double* dynamic_viscosity_as_function,
 			   double* ebqe_density_as_function, 
-			   double* ebqe_dynamic_viscosity_as_function)
+			   double* ebqe_dynamic_viscosity_as_function, 
+			   double order_polynomial)
     {
       ////////////////////////////////////////////////
       // ***** COMPUTE EV VIA STRONG RESIDUAL ***** //
@@ -6740,12 +6743,12 @@ namespace proteus
 	      ///////////////////////////////////////////////
 	      // NUMERICAL DIFUSSION VIA ENTROPY VISCOSITY //
 	      ///////////////////////////////////////////////
-	      double hK=elementDiameter[eN];
+	      double hK=elementDiameter[eN]/order_polynomial;
 	      double areaK = fabs(jacDet)*areaRefElement; //This is true if jacDet is constant 
 	      double maxSpeedAtCell = std::sqrt(maxSpeed2AtCell[eN]);
 	      double linear_viscosity = cMax*hK*rhoAtCell[eN]*maxSpeedAtCell;
 	      // STABILIZATION_TYPE=1. Weak entropy residual
-	      double entropy_viscosity = //fmax(1.,rhoAtCell[eN]*maxSpeedAtCell*hK/(gamma*muAtCell[eN] + (1.-gamma)*q_numDiff_u_last[eN]))*
+	      double entropy_viscosity = //fmax(1.,rhoAtCell[eN]*maxSpeedAtCell*hK/(gamma*muAtCell[eN]+(1.-gamma)*q_numDiff_u_last[eN]))*
 		cE*hK*hK*rhoAtCell[eN]*entropyResidualAtCell[eN]/(areaK*maxSpeed2AtOmega+1E-10); 
 	      if (STABILIZATION_TYPE == 2) // strong entropy residual 
 		entropy_viscosity = 
