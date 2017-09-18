@@ -1234,19 +1234,18 @@ namespace proteus
       mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s);
       mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s);
       /* mom_w_source += H_s*viscosity*(alpha + beta*uc)*(w-w_s); */
->>>>>>> master
       
-	dmom_u_source[0] = H_s*viscosity*(alpha + beta*uc + beta*duc_du*(u-u_s));
-	dmom_u_source[1] = H_s*viscosity*beta*duc_dv*(u-u_s);
-	/* dmom_u_source[2] = H_s*viscosity*beta*u*duc_dw; */
-    
-	dmom_v_source[0] = H_s*viscosity*beta*duc_du*(v-v_s);
-	dmom_v_source[1] = H_s*viscosity*(alpha + beta*uc + beta*duc_dv*(v-v_s));
-	/* dmom_v_source[2] = H_s*viscosity*beta*w*duc_dw; */
+      dmom_u_source[0] = H_s*viscosity*(alpha + beta*uc + beta*duc_du*(u-u_s));
+      dmom_u_source[1] = H_s*viscosity*beta*duc_dv*(u-u_s);
+      /* dmom_u_source[2] = H_s*viscosity*beta*u*duc_dw; */
 
-	/* dmom_w_source[0] = H_s*viscosity*beta*w*duc_du; */
-	/* dmom_w_source[1] = H_s*viscosity*beta*w*duc_dv; */
-	/* dmom_w_source[2] = H_s*viscosity*(alpha + beta*(uc + w*duc_dw)); */
+      dmom_v_source[0] = H_s*viscosity*beta*duc_du*(v-v_s);
+      dmom_v_source[1] = H_s*viscosity*(alpha + beta*uc + beta*duc_dv*(v-v_s));
+      /* dmom_v_source[2] = H_s*viscosity*beta*w*duc_dw; */
+
+      /* dmom_w_source[0] = H_s*viscosity*beta*w*duc_du; */
+      /* dmom_w_source[1] = H_s*viscosity*beta*w*duc_dv; */
+      /* dmom_w_source[2] = H_s*viscosity*(alpha + beta*(uc + w*duc_dw)); */
       }
     
       inline
