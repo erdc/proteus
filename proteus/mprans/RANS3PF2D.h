@@ -22,8 +22,8 @@
 // ***** END OF TODO *****
 
 #define POWER_SMOOTHNESS_INDICATOR 2
-#define u_alpha_min 0.25
-#define v_alpha_min 0.25
+#define u_alpha_min 0.
+#define v_alpha_min 0.
 #define gamma 0.5
 namespace proteus
 {
@@ -6061,7 +6061,6 @@ namespace proteus
       register double entropyResidualPerNode[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
 	entropyResidualPerNode[i] = 0.0;
-
       /*
       register double u_psi[numDOFsPerEqn], v_psi[numDOFsPerEqn], entropyResidualPerNode[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
@@ -6117,11 +6116,11 @@ namespace proteus
 	    {
 	      int eN_i = eN*nDOF_test_element+i;
 	      int gi = vel_l2g[eN_i];
-	      u_smoothnessIndicatorAtCurrentCell  = fmax(u_smoothnessIndicatorAtCurrentCell, u_psi[gi]);
-	      v_smoothnessIndicatorAtCurrentCell  = fmax(v_smoothnessIndicatorAtCurrentCell, v_psi[gi]);
+	      u_smoothnessIndicatorAtCurrentCell  += u_psi[gi];
+	      v_smoothnessIndicatorAtCurrentCell  += v_psi[gi];
 	    }  
-	  u_smoothnessIndicatorAtCell[eN] = u_smoothnessIndicatorAtCurrentCell;
-	  v_smoothnessIndicatorAtCell[eN] = v_smoothnessIndicatorAtCurrentCell;
+	  u_smoothnessIndicatorAtCell[eN] = u_smoothnessIndicatorAtCurrentCell/nDOF_test_element;
+	  v_smoothnessIndicatorAtCell[eN] = v_smoothnessIndicatorAtCurrentCell/nDOF_test_element;
 	}
       */
       // ********** END OF COMPUTING SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
@@ -6750,7 +6749,7 @@ namespace proteus
 	      double maxSpeedAtCell = std::sqrt(maxSpeed2AtCell[eN]);
 	      double linear_viscosity = cMax*hK*rhoAtCell[eN]*maxSpeedAtCell;
 	      // STABILIZATION_TYPE=1. Weak entropy residual
-	      double entropy_viscosity = fmax(1.,rhoAtCell[eN]*maxSpeedAtCell*hK/(gamma*muAtCell[eN]+(1.-gamma)*q_numDiff_u_last[eN]))*
+	      double entropy_viscosity = //fmax(1.,rhoAtCell[eN]*maxSpeedAtCell*hK/(gamma*muAtCell[eN]+(1.-gamma)*q_numDiff_u_last[eN]))*
 		cE*hK*hK*rhoAtCell[eN]*entropyResidualAtCell[eN]/(areaK*maxSpeed2AtOmega+1E-10); 
 	      if (STABILIZATION_TYPE == 2) // strong entropy residual 
 		entropy_viscosity = 
