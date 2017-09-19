@@ -1,13 +1,13 @@
 from proteus import *
 from proteus.default_n import *
-from oneD_advection_p import *
+from ncls_p import *
 from oneD_advection import *
 nd = 2
 
 multilevelNonlinearSolver  = Newton
 #levelNonlinearSolver = ExplicitLumpedMassMatrix
-levelNonlinearSolver = Newton
-#levelNonlinearSolver = ExplicitConsistentMassMatrixWithRedistancing
+#levelNonlinearSolver = Newton
+levelNonlinearSolver = ExplicitConsistentMassMatrixWithRedistancing
 
 fullNewtonFlag = True
 updateJacobian = True

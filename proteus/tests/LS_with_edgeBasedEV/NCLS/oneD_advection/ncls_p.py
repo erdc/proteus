@@ -59,11 +59,12 @@ analyticalSolution = {0:exact_soln(L)}
 
 RD_model=None
 coefficients = MyCoefficients(
-    #epsCoupez=epsCoupez*he, 
+    epsCoupez=epsCoupez*he, 
     #epsFactRedistancing=epsFactRedistance,
     #redistancing_tolerance=redist_tolerance,
     #lambda_coupez=lambda_coupez,
-    epsFact=epsFactHeaviside,checkMass=checkMass,
+    epsFact=epsFactHeaviside,
+    checkMass=checkMass,
     RD_model=RD_model,
     useMetrics=useMetrics)
     #EDGE_VISCOSITY=EDGE_VISCOSITY, 
