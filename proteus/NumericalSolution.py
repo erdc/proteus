@@ -1254,7 +1254,6 @@ class NS_base:  # (HasTraits):
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
             while self.systemStepController.t_system_last < self.tn:
-
                 logEvent("System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
                                                               self.systemStepController.dt_system),level=3)
 
@@ -1282,7 +1281,6 @@ class NS_base:  # (HasTraits):
                         while (model.stepController.t_model_last < self.t_stepSequence and
                                not stepFailed and
                                not self.systemStepController.exitModelStep[model]):
-
                             logEvent("Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
                                                                                  model.stepController.dt_model,
                                                                                  model.name),level=3)
@@ -1317,11 +1315,11 @@ class NS_base:  # (HasTraits):
                                 stepFailed = not self.systemStepController.retryModelStep_errorFailure(model)
                             else:
                                 #set up next step
-                                self.systemStepController.modelStepTaken(model,self.t_stepSequence)
+                                self.systemStepController.modelStepTaken(model,self.t_stepSequence)                                
                                 logEvent("Step Taken, t_stepSequence= %s Model step t=%12.5e, dt=%12.5e for model %s" % (self.t_stepSequence,
-                                                                                                                    model.stepController.t_model,
-                                                                                                                    model.stepController.dt_model,
-                                                                                                                    model.name),level=3)
+                                                                                                                         model.stepController.t_model,
+                                                                                                                         model.stepController.dt_model,
+                                                                                                                         model.name),level=3)
                         #end model step
                         if stepFailed:
                             logEvent("Sequence step failed")
@@ -1365,18 +1363,18 @@ class NS_base:  # (HasTraits):
                     self.systemStepController.updateTimeHistory()
                     #you're dead if retrySequence didn't work
                     logEvent("Step Failed, Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
-                                                                                      model.stepController.dt_model,
-                                                                                      model.name))
+                                                                                           model.stepController.dt_model,
+                                                                                           model.name))
                     break
                 else:
                     self.systemStepController.updateTimeHistory()
                     logEvent("Step Taken, System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
                                                                                    self.systemStepController.dt_system))
                     self.systemStepController.choose_dt_system()
+                    logEvent("Potential System time step t=%12.5e, dt=%12.5e for next step" % (self.systemStepController.t_system,
+                                                                                               self.systemStepController.dt_system))
                     if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                         self.systemStepController.stepExact_system(self.tn)
-                    logEvent("Potential System time step t=%12.5e, dt=%12.5e for next time step" % (self.systemStepController.t_system,
-                                                                                                    self.systemStepController.dt_system))
                 for model in self.modelList:
                     for av in self.auxiliaryVariables[model.name]:
                         av.calculate()
@@ -1500,6 +1498,43 @@ class NS_base:  # (HasTraits):
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
 
+        try:
+            quantDOFs = {}
+            quantDOFs[0] = model.levelModelList[-1].quantDOFs
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   quantDOFs,
+                                                                   res_name_base='quantDOFs_for_'+model.name)
+            logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass   
+
+        #Write bathymetry for Shallow water equations (MQL)
+        try:
+            bathymetry = {}
+            bathymetry[0] = model.levelModelList[-1].coefficients.b.dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   bathymetry,
+                                                                   res_name_base='bathymetry')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass
+        #write eta=h+bathymetry for SWEs (MQL)
+        try:
+            eta = {}
+            eta[0] = model.levelModelList[-1].coefficients.b.dof+model.levelModelList[-1].u[0].dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   eta,
+                                                                   res_name_base='eta')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass
+
         #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}
@@ -1567,6 +1602,44 @@ class NS_base:  # (HasTraits):
             model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],t,self.tCount,
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=False,meshChanged=True)
+
+        try:
+            quantDOFs = {}
+            quantDOFs[0] = model.levelModelList[-1].quantDOFs
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   quantDOFs,
+                                                                   res_name_base='quantDOFs_for_'+model.name)
+            logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass  
+
+        #Write bathymetry for Shallow water equations (MQL)
+        try:
+            bathymetry = {}
+            bathymetry[0] = model.levelModelList[-1].coefficients.b.dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   bathymetry,
+                                                                   res_name_base='bathymetry')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass
+        #write eta=h+bathymetry for SWEs (MQL)
+        try:
+            eta = {}
+            eta[0] = model.levelModelList[-1].coefficients.b.dof+model.levelModelList[-1].u[0].dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   eta,
+                                                                   res_name_base='eta')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass
+        
         #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}
