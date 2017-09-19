@@ -332,7 +332,8 @@ namespace proteus
                                    int* csrColumnOffsets_eb_w_u,
                                    int* csrColumnOffsets_eb_w_v,
                                    int* csrColumnOffsets_eb_w_w,                                   
-                                   int* elementFlags)=0;
+                                   int* elementFlags,
+				   int* boundaryFlags)=0;
     virtual void getTwoPhaseAdvectionOperator(double* mesh_trial_ref,
                                               double* mesh_grad_trial_ref,
                                               double* mesh_dof,
@@ -3580,7 +3581,7 @@ namespace proteus
                 //
                 //update residuals
                 //
-                if(boundaryFlags[ebN]!=0)
+                if(boundaryFlags[ebN] > 0)
 		  { //ignore flux contributions on interpart boundaries
 		    for (int i=0;i<nDOF_test_element;i++)
 		      {
@@ -3879,7 +3880,8 @@ namespace proteus
                              int* csrColumnOffsets_eb_w_u,
                              int* csrColumnOffsets_eb_w_v,
                              int* csrColumnOffsets_eb_w_w,
-                             int* elementFlags)
+                             int* elementFlags,
+			     int* boundaryFlags)
       {
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -5312,128 +5314,131 @@ namespace proteus
                 //
                 ck.calculateGScale(G,normal,h_penalty);
                 penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
-                for (int j=0;j<nDOF_trial_element;j++)
-                  {
-                    register int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
-                    fluxJacobian_p_p[j]=0.0;
-                    fluxJacobian_p_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_u_ext,vel_trial_trace_ref[ebN_local_kb_j]);
-                    fluxJacobian_p_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_v_ext,vel_trial_trace_ref[ebN_local_kb_j]);
-                    fluxJacobian_p_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_w_ext,vel_trial_trace_ref[ebN_local_kb_j]);
+		if (boundaryFlags[ebN] > 0)
+		  {
+		    for (int j=0;j<nDOF_trial_element;j++)
+		      {
+			register int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
+			fluxJacobian_p_p[j]=0.0;
+			fluxJacobian_p_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_u_ext,vel_trial_trace_ref[ebN_local_kb_j]);
+			fluxJacobian_p_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_v_ext,vel_trial_trace_ref[ebN_local_kb_j]);
+			fluxJacobian_p_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_w_ext,vel_trial_trace_ref[ebN_local_kb_j]);
 
-                    fluxJacobian_u_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]);
-                    fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_u_u_rowptr,
-                                                             sdInfo_u_u_colind,
-                                                             isDOFBoundary_u[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_u[ebNE_kb],
-                                                             normal,
-                                                             mom_uu_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
-                    fluxJacobian_u_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_u_v_rowptr,
-                                                             sdInfo_u_v_colind,
-                                                             isDOFBoundary_v[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_v[ebNE_kb],
-                                                             normal,
-                                                             mom_uv_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
-                    fluxJacobian_u_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_u_w_rowptr,
-                                                             sdInfo_u_w_colind,
-                                                             isDOFBoundary_w[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_w[ebNE_kb],
-                                                             normal,
-                                                             mom_uw_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
+			fluxJacobian_u_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]);
+			fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+			  ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+								 ebqe_phi_ext[ebNE_kb],
+								 sdInfo_u_u_rowptr,
+								 sdInfo_u_u_colind,
+								 isDOFBoundary_u[ebNE_kb],
+								 isDiffusiveFluxBoundary_u[ebNE_kb],
+								 normal,
+								 mom_uu_diff_ten_ext,
+								 vel_trial_trace_ref[ebN_local_kb_j],
+								 &vel_grad_trial_trace[j_nSpace],
+								 penalty);//ebqe_penalty_ext[ebNE_kb]);
+			fluxJacobian_u_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+			  ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+								 ebqe_phi_ext[ebNE_kb],
+								 sdInfo_u_v_rowptr,
+								 sdInfo_u_v_colind,
+								 isDOFBoundary_v[ebNE_kb],
+								 isDiffusiveFluxBoundary_v[ebNE_kb],
+								 normal,
+								 mom_uv_diff_ten_ext,
+								 vel_trial_trace_ref[ebN_local_kb_j],
+								 &vel_grad_trial_trace[j_nSpace],
+								 penalty);//ebqe_penalty_ext[ebNE_kb]);
+			fluxJacobian_u_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+			  ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+								 ebqe_phi_ext[ebNE_kb],
+								 sdInfo_u_w_rowptr,
+								 sdInfo_u_w_colind,
+								 isDOFBoundary_w[ebNE_kb],
+								 isDiffusiveFluxBoundary_w[ebNE_kb],
+								 normal,
+								 mom_uw_diff_ten_ext,
+								 vel_trial_trace_ref[ebN_local_kb_j],
+								 &vel_grad_trial_trace[j_nSpace],
+								 penalty);//ebqe_penalty_ext[ebNE_kb]);
 
-                    fluxJacobian_v_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]);
-                    fluxJacobian_v_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_v_u_rowptr,
-                                                             sdInfo_v_u_colind,
-                                                             isDOFBoundary_u[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_u[ebNE_kb],
-                                                             normal,
-                                                             mom_vu_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
-                    fluxJacobian_v_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_v_v_rowptr,
-                                                             sdInfo_v_v_colind,
-                                                             isDOFBoundary_v[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_v[ebNE_kb],
-                                                             normal,
-                                                             mom_vv_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
-                    fluxJacobian_v_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_v_w_rowptr,
-                                                             sdInfo_v_w_colind,
-                                                             isDOFBoundary_w[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_w[ebNE_kb],
-                                                             normal,
-                                                             mom_vw_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
+			fluxJacobian_v_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]);
+			fluxJacobian_v_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+			  ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+								 ebqe_phi_ext[ebNE_kb],
+								 sdInfo_v_u_rowptr,
+								 sdInfo_v_u_colind,
+								 isDOFBoundary_u[ebNE_kb],
+								 isDiffusiveFluxBoundary_u[ebNE_kb],
+								 normal,
+								 mom_vu_diff_ten_ext,
+								 vel_trial_trace_ref[ebN_local_kb_j],
+								 &vel_grad_trial_trace[j_nSpace],
+								 penalty);//ebqe_penalty_ext[ebNE_kb]);
+			fluxJacobian_v_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+			  ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+								 ebqe_phi_ext[ebNE_kb],
+								 sdInfo_v_v_rowptr,
+								 sdInfo_v_v_colind,
+								 isDOFBoundary_v[ebNE_kb],
+								 isDiffusiveFluxBoundary_v[ebNE_kb],
+								 normal,
+								 mom_vv_diff_ten_ext,
+								 vel_trial_trace_ref[ebN_local_kb_j],
+								 &vel_grad_trial_trace[j_nSpace],
+								 penalty);//ebqe_penalty_ext[ebNE_kb]);
+			fluxJacobian_v_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+			  ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+								 ebqe_phi_ext[ebNE_kb],
+								 sdInfo_v_w_rowptr,
+								 sdInfo_v_w_colind,
+								 isDOFBoundary_w[ebNE_kb],
+								 isDiffusiveFluxBoundary_w[ebNE_kb],
+								 normal,
+								 mom_vw_diff_ten_ext,
+								 vel_trial_trace_ref[ebN_local_kb_j],
+								 &vel_grad_trial_trace[j_nSpace],
+								 penalty);//ebqe_penalty_ext[ebNE_kb]);
 
-                    fluxJacobian_w_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]);
-                    fluxJacobian_w_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_w_u_rowptr,
-                                                             sdInfo_w_u_colind,
-                                                             isDOFBoundary_u[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_u[ebNE_kb],
-                                                             normal,
-                                                             mom_wu_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
-                    fluxJacobian_w_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_w_v_rowptr,
-                                                             sdInfo_w_v_colind,
-                                                             isDOFBoundary_v[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_v[ebNE_kb],
-                                                             normal,
-                                                             mom_wv_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
-                    fluxJacobian_w_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_w_w_rowptr,
-                                                             sdInfo_w_w_colind,
-                                                             isDOFBoundary_w[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_w[ebNE_kb],
-                                                             normal,
-                                                             mom_ww_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
-                  }//j
+			fluxJacobian_w_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]);
+			fluxJacobian_w_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+			  ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+								 ebqe_phi_ext[ebNE_kb],
+								 sdInfo_w_u_rowptr,
+								 sdInfo_w_u_colind,
+								 isDOFBoundary_u[ebNE_kb],
+								 isDiffusiveFluxBoundary_u[ebNE_kb],
+								 normal,
+								 mom_wu_diff_ten_ext,
+								 vel_trial_trace_ref[ebN_local_kb_j],
+								 &vel_grad_trial_trace[j_nSpace],
+								 penalty);//ebqe_penalty_ext[ebNE_kb]);
+			fluxJacobian_w_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+			  ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+								 ebqe_phi_ext[ebNE_kb],
+								 sdInfo_w_v_rowptr,
+								 sdInfo_w_v_colind,
+								 isDOFBoundary_v[ebNE_kb],
+								 isDiffusiveFluxBoundary_v[ebNE_kb],
+								 normal,
+								 mom_wv_diff_ten_ext,
+								 vel_trial_trace_ref[ebN_local_kb_j],
+								 &vel_grad_trial_trace[j_nSpace],
+								 penalty);//ebqe_penalty_ext[ebNE_kb]);
+			fluxJacobian_w_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+			  ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+								 ebqe_phi_ext[ebNE_kb],
+								 sdInfo_w_w_rowptr,
+								 sdInfo_w_w_colind,
+								 isDOFBoundary_w[ebNE_kb],
+								 isDiffusiveFluxBoundary_w[ebNE_kb],
+								 normal,
+								 mom_ww_diff_ten_ext,
+								 vel_trial_trace_ref[ebN_local_kb_j],
+								 &vel_grad_trial_trace[j_nSpace],
+								 penalty);//ebqe_penalty_ext[ebNE_kb]);
+		      }//j
+		  }//if boundaryFlags[ebN] positive
                 //
                 //update the global Jacobian from the flux Jacobian
                 //

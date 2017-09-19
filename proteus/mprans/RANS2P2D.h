@@ -332,7 +332,8 @@ namespace proteus
                                    int* csrColumnOffsets_eb_w_u,
                                    int* csrColumnOffsets_eb_w_v,
                                    int* csrColumnOffsets_eb_w_w,                                   
-                                   int* elementFlags)=0;
+                                   int* elementFlags,
+				   int* boundaryFlags)=0;
     virtual void getTwoPhaseAdvectionOperator(double* mesh_trial_ref,
                                               double* mesh_grad_trial_ref,
                                               double* mesh_dof,
@@ -3054,7 +3055,7 @@ namespace proteus
                 //
                 //update residuals
                 //
-		if(boundaryFlags[ebN]!=0)
+		if(boundaryFlags[ebN] > 0)
 		  { //if boundary flag positive, then include flux contributions on interpart boundaries
 		    for (int i=0;i<nDOF_test_element;i++)
 		      {
@@ -3295,7 +3296,8 @@ namespace proteus
                              int* csrColumnOffsets_eb_w_u,
                              int* csrColumnOffsets_eb_w_v,
                              int* csrColumnOffsets_eb_w_w,
-                             int* elementFlags)
+                             int* elementFlags,
+			     int* boundaryFlags)
       {
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -4560,7 +4562,7 @@ namespace proteus
                 //
                 ck.calculateGScale(G,normal,h_penalty);
                 penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
-		if(boundaryFlags[ebN]!=0)
+		if(boundaryFlags[ebN] > 0)
 		  { //if boundary flag positive, then include flux contributions on interpart boundaries
 		    for (int j=0;j<nDOF_trial_element;j++)
 		      {

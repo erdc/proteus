@@ -321,7 +321,8 @@ cdef extern from "RANS2P.h" namespace "proteus":
                                int* csrColumnOffsets_eb_w_u,
                                int* csrColumnOffsets_eb_w_v,
                                int* csrColumnOffsets_eb_w_w,
-                               int* elementFlags)
+                               int* elementFlags,
+                               int* boundaryFlags)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int* exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -941,7 +942,8 @@ cdef class cRANS2P_base:
                           numpy.ndarray csrColumnOffsets_eb_w_u,
                           numpy.ndarray csrColumnOffsets_eb_w_v,
                           numpy.ndarray csrColumnOffsets_eb_w_w,
-                          numpy.ndarray elementFlags):
+                          numpy.ndarray elementFlags,
+                          numpy.ndarray boundaryFlags):
         cdef numpy.ndarray rowptr,colind,globalJacobian_a
         (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(NONCONSERVATIVE_FORM,
@@ -1104,7 +1106,8 @@ cdef class cRANS2P_base:
                                        <int*> csrColumnOffsets_eb_w_u.data,
                                        <int*> csrColumnOffsets_eb_w_v.data,
                                        <int*> csrColumnOffsets_eb_w_w.data,
-                                       <int*> elementFlags.data)
+                                       <int*> elementFlags.data,
+                                       <int*> boundaryFlags.data)
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
                                  numpy.ndarray exteriorElementBoundariesArray,
