@@ -64,6 +64,7 @@ class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
         mm = self.mass_matrix_object.modelList[0].levelModelList[0]
         op_constructor = LinearSolvers.OperatorConstructor_oneLevel(mm)
         op_constructor.attachMassOperator()
+        op_constructor.updateMassOperator()
         mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(op_constructor.MassOperator)
         rel_path = "comparison_files/mass_reference_c0p1_2D.txt"
         comparison_mat = numpy.loadtxt(os.path.join(self.scriptdir,rel_path))
