@@ -904,9 +904,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.w_dof_old[:] = self.model.u[2].dof
         # Compute 2nd order extrapolation on velocity
         if (firstStep):
-            self.model.q[('velocityStar',0)][:] = self.model.q[('velocity',0)]
+            self.model.q[('velocityStar',0)][:] = self.model.q[('velocity',0)]        
         else:
-            r =  self.model.timeIntegration.dt/self.model.timeIntegration.dt_history[0] 
+            if self.model.timeIntegration.timeOrder == 1: 
+                r = 1.
+            else:
+                r = self.model.timeIntegration.dt/self.model.timeIntegration.dt_history[0] 
             self.model.q[('velocityStar',0)][:] = (1+r)*self.model.q[('velocity',0)] - r*self.model.q[('velocityOld',0)]
         self.model.q[('velocityOld',0)][:] = self.model.q[('velocity',0)]  
 
