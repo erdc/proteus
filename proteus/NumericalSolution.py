@@ -1498,6 +1498,7 @@ class NS_base:  # (HasTraits):
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
 
+        #For aux quantity of interest (MQL)        
         try:
             quantDOFs = {}
             quantDOFs[0] = model.levelModelList[-1].quantDOFs
@@ -1639,7 +1640,7 @@ class NS_base:  # (HasTraits):
             logEvent("Writing bathymetry for = "+model.name,level=3)
         except:
             pass
-        
+
         #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}

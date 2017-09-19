@@ -5572,12 +5572,12 @@ class OneLevelTransport(NonlinearEquation):
             """
             needed to satisfy api for writeFunctionXdmf
             """
-            def __init__(self,ci,r):
+            def __init__(self,ci,r,femSpace):
                 self.dof=r
                 self.name=res_name_base+'{0}'.format(ci)
+                self.femSpace=femSpace
         for ci in range(self.coefficients.nc):
-            self.u[ci].femSpace.writeFunctionXdmf(archive,dummy(ci,res_dict[ci]),tCount)
-
+            self.u[ci].femSpace.writeFunctionXdmf(archive,dummy(ci,res_dict[ci],self.u[ci].femSpace),tCount)
 
     def initializeMassJacobian(self):
         """
