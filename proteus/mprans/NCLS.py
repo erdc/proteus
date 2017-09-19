@@ -137,7 +137,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
                     #needs to be updated for non-scalar equations
                     #these match what is in the hand-coded NumericalSolution
-                    self.transport.coefficients.u_dof_old = numpy.copy(self.transport.u[ci].dof)
+                    self.transport.u_dof_old = numpy.copy(self.transport.u[ci].dof)
                     #this as used as last stage value in EV Transport model
                     self.m_last[ci] = numpy.copy(self.transport.q[('m',ci)])
 
@@ -157,7 +157,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                    
                     #needs to be updated for non-scalar equations
                     #these match what is in the hand-coded NumericalSolution
-                    self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_stage[ci][self.lstage])
+                    self.transport.u_dof_old = numpy.copy(self.u_dof_stage[ci][self.lstage])
                     self.m_last[ci] = numpy.copy(self.m_stage[ci][self.lstage])
             elif self.lstage == 3:
                 logEvent("Third stage of SSP33 method",level=4)
@@ -167,7 +167,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     self.u_dof_stage[ci][self.lstage][:] += 1.0/3.0*self.u_dof_last[ci]
                     #switch  time history back
                     #this needs to be updated for multiple components
-                    self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_last[ci])
+                    self.transport.u_dof_old = numpy.copy(self.u_dof_last[ci])
                     self.transport.u[ci].dof = numpy.copy(self.u_dof_stage[ci][self.lstage])
                     self.m_last[ci] = numpy.copy(self.m_last_save[ci])
                     #self.transport.getResidual(self.u_dof_stage[ci][self.lstage],
@@ -262,8 +262,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  RD_model=None,
                  ME_model=1,
                  EikonalSolverFlag=0,
-                 checkMass=True,epsFact=1.5,
-                 useMetrics=0.0,sc_uref=1.0,sc_beta=1.0,
+                 checkMass=True,
+                 epsFact=1.5,
+                 useMetrics=0.0,
+                 sc_uref=1.0,
+                 sc_beta=1.0,
                  waterline_interval=-1,
                  movingDomain=False, 
                  # FOR REDISTANCING AND COUPEZ METHOD
@@ -321,8 +324,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def attachModels(self,modelList):
         #the level set model
         self.model = modelList[self.modelIndex]
-        self.u_dof_old = numpy.copy(self.model.u[0].dof)
-        self.u_dof_old_old = numpy.copy(self.model.u[0].dof)
         #the velocity
         if self.flowModelIndex >= 0:
             self.flowModel = modelList[self.flowModelIndex]
@@ -380,8 +381,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.flowModelIndex == None:
             self.ebqe_v = numpy.zeros(cebqe[('grad(u)',0)].shape,'d')
     def preStep(self,t,firstStep=False):
-	self.u_dof_old_old = numpy.copy(self.u_dof_old)
-	self.u_dof_old = numpy.copy(self.model.u[0].dof)
+	self.model.u_dof_old_old[:] = self.model.u_dof_old
+	self.model.u_dof_old[:] = self.model.u[0].dof
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,
@@ -507,6 +508,10 @@ class LevelModel(OneLevelTransport):
         if self.reuse_test_trial_quadrature:
             for ci in range(1,coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
+        import pdb; pdb.set_trace()
+        self.u_dof_old = numpy.zeros(self.u[0].dof.shape,'d')
+        self.u_dof_old_old = numpy.zeros(self.u[0].dof.shape,'d')
+
         ## Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh #assume the same mesh for  all components for now
         self.testSpace = testSpaceDict
@@ -884,7 +889,7 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
-	    self.coefficients.u_dof_old,
+	    self.u_dof_old,
             self.uStar_dof,
             self.offset[0],self.stride[0],
             r,
@@ -945,7 +950,7 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
-	    self.coefficients.u_dof_old,
+	    self.u_dof_old,
             self.offset[0],self.stride[0],
             r)
 
@@ -1113,7 +1118,7 @@ class LevelModel(OneLevelTransport):
             pass
 
         #self.ncls.calculateResidual_development(#element #For SUPG
-        self.ncls.calculateResidual(#element
+        self.ncls.calculateResidual_entropy_viscosity(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -1148,8 +1153,8 @@ class LevelModel(OneLevelTransport):
             self.mesh.nodeDiametersArray,
             degree_polynomial,
             self.u[0].dof,
-	    self.coefficients.u_dof_old,
-	    self.coefficients.u_dof_old_old,
+	    self.u_dof_old,
+	    self.u_dof_old_old,
             self.uStar_dof,
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
@@ -1467,7 +1472,7 @@ class LevelModel(OneLevelTransport):
                    self.u[0].femSpace.dofMap.l2g,
                    self.mesh.elementDiametersArray,
                    self.u[0].dof,
-	           self.coefficients.u_dof_old,
+	           self.u_dof_old,
                    self.coefficients.q_v,
                    self.timeIntegration.m_tmp[0],
                    self.q[('u',0)],
