@@ -6649,7 +6649,7 @@ namespace proteus
 	      double maxSpeedAtCell = std::sqrt(maxSpeed2AtCell[eN]);
 	      double linear_viscosity = cMax*hK*rhoAtCell[eN]*maxSpeedAtCell;
 	      // STABILIZATION_TYPE=1. Weak entropy residual
-	      double entropy_viscosity = fmax(1.,rhoAtCell[eN]*maxSpeedAtCell*hK/(gamma*muAtCell[eN]+(1.-gamma)*q_numDiff_u_last[eN]))*
+	      double entropy_viscosity = //fmax(1.,rhoAtCell[eN]*maxSpeedAtCell*hK/(gamma*muAtCell[eN]+(1.-gamma)*q_numDiff_u_last[eN]))*
 		cE*hK*hK*entropyResidualAtCell[eN]/(areaK*maxSpeed2AtOmega+1E-10); 
 	      if (STABILIZATION_TYPE == 2) // strong entropy residual 
 		entropy_viscosity = 
