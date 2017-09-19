@@ -5,6 +5,25 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+#define FIX_BOUNDARY_KUZMINS 1
+#define QUANTITIES_OF_INTEREST 0
+#define POWER_SMOOTHNESS_INDICATOR 1
+#define SATURATED_LEVEL_SET 1
+#define COUPEZ 1
+#define BETAij 1
+
+/////////////////////
+//ENTROPY FUNCTION //
+/////////////////////
+// Power entropy //
+#define entropy_power 2. // phiL and phiR are dummy variables
+#define ENTROPY(phi) 1./entropy_power*std::pow(phi,entropy_power)
+#define DENTROPY(phi) std::pow(phi,entropy_power-1.)
+#define ENTROPY_GRAD(phi,phix) std::pow(phi,entropy_power-1.)*phix
+
+#define ENTROPY_LOG(phi,phiL,phiR) std::log(std::abs((phi-phiL)*(phiR-phi))+1E-14)
+#define DENTROPY_LOG(phi,phiL,phiR) (phiL+phiR-2*phi)*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(std::abs((phi-phiL)*(phiR-phi))+1E-14) 
+
 namespace proteus
 {
   class NCLS_base
@@ -12,6 +31,62 @@ namespace proteus
     //The base class defining the interface
   public:
     virtual ~NCLS_base(){}
+    virtual double calculateRedistancingResidual(
+					  double* mesh_trial_ref,
+					  double* mesh_grad_trial_ref,
+					  double* mesh_dof,
+					  int* mesh_l2g,
+					  double* dV_ref,
+					  double* u_trial_ref,
+					  double* u_grad_trial_ref,
+					  double* u_test_ref,
+					  //physics
+					  int nElements_global,
+					  int* u_l2g, 
+					  double* elementDiameter,
+					  double* nodeDiametersArray,
+					  double* u_dof,
+					  double* u_dof_old,	
+					  double* uStar_dof,
+					  int offset_u, int stride_u, 
+					  double* globalResidual,
+					  // PARAMETERS FOR EDGE BASED STABILIZATION
+					  int numDOFs,
+					  int NNZ,
+					  int* csrRowIndeces_DofLoops,
+					  int* csrColumnOffsets_DofLoops,
+					  int* csrRowIndeces_CellLoops,
+					  int* csrColumnOffsets_CellLoops,
+					  // COUPEZ
+					  double dt, 
+					  double lambda_coupez, 
+					  double epsCoupez,
+					  double epsFactRedistancing,
+					  double* edge_based_cfl,
+					  // C-Matrices				   
+					  double* Cx, 
+					  double* Cy, 
+					  double* ML 
+						 )=0;
+    virtual double calculateRhsSmoothing(
+					 double* mesh_trial_ref,
+					 double* mesh_grad_trial_ref,
+					 double* mesh_dof,
+					 int* mesh_l2g,
+					 double* dV_ref,
+					 double* u_trial_ref,
+					 double* u_grad_trial_ref,
+					 double* u_test_ref,
+					 //physics
+					 int nElements_global,
+					 int* u_l2g, 
+					 double* elementDiameter,
+					 double* nodeDiametersArray,
+					 double* u_dof,
+					 double* u_dof_old,	
+					 int offset_u, int stride_u, 
+					 double* globalResidual
+					 )=0;
     virtual void calculateResidual(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -43,7 +118,12 @@ namespace proteus
 		                   double sc_uref, double sc_alpha,
 				   int* u_l2g, 
 				   double* elementDiameter,
-				   double* u_dof,double* u_dof_old,	
+				   double* nodeDiametersArray,
+				   int degree_polynomial,
+				   double* u_dof,
+				   double* u_dof_old,	
+				   double* u_dof_old_old,	
+				   double* uStar_dof, 
 				   double* velocity,
 				   double* q_m,
 				   double* q_u,				   
@@ -53,6 +133,7 @@ namespace proteus
                                    double* q_dV,
                                    double* q_dV_last,
 				   double* cfl,
+				   double* edge_based_cfl, 
 				   double* q_numDiff_u, 
 				   double* q_numDiff_u_last, 
 				   int offset_u, int stride_u, 
@@ -65,7 +146,115 @@ namespace proteus
 				   int* isDOFBoundary_u,
 				   double* ebqe_rd_u_ext,				   
 				   double* ebqe_bc_u_ext,				   
-				   double* ebqe_u)=0;				   
+				   double* ebqe_u,
+				   // PARAMETERS FOR EDGE BASED STABILIZATION
+				   int EDGE_VISCOSITY, 
+				   int ENTROPY_VISCOSITY,
+				   // PARAMETERS FOR EDGE VISCOSITY
+				   int numDOFs,
+				   int NNZ,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops,
+				   int* csrRowIndeces_CellLoops,
+				   int* csrColumnOffsets_CellLoops,
+				   int* csrColumnOffsets_eb_CellLoops,
+				   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+				   int LUMPED_MASS_MATRIX, 				   
+				   // AUX QUANTITIES OF INTEREST
+				   double* quantDOFs, 
+				   // COUPEZ 
+				   double lambda_coupez, 
+				   double epsCoupez, 
+				   double epsFactRedistancing,
+				   // C-Matrices				   
+				   double* Cx, 
+				   double* Cy, 
+				   double* ML 
+				   )=0;				   
+    virtual void calculateResidual_entropy_viscosity(//element
+				   double* mesh_trial_ref,
+				   double* mesh_grad_trial_ref,
+				   double* mesh_dof,
+				   double* meshVelocity_dof,
+				   double MOVING_DOMAIN,
+				   int* mesh_l2g,
+				   double* dV_ref,
+				   double* u_trial_ref,
+				   double* u_grad_trial_ref,
+				   double* u_test_ref,
+				   double* u_grad_test_ref,
+				   //element boundary
+				   double* mesh_trial_trace_ref,
+				   double* mesh_grad_trial_trace_ref,
+				   double* dS_ref,
+				   double* u_trial_trace_ref,
+				   double* u_grad_trial_trace_ref,
+				   double* u_test_trace_ref,
+				   double* u_grad_test_trace_ref,
+				   double* normal_ref,
+				   double* boundaryJac_ref,
+				   //physics
+				   int nElements_global,
+			           double useMetrics, 
+				   double alphaBDF,
+				   int lag_shockCapturing, /*mwf not used yet*/
+				   double shockCapturingDiffusion,
+		                   double sc_uref, double sc_alpha,
+				   int* u_l2g, 
+				   double* elementDiameter,
+				   double* nodeDiametersArray,
+				   int degree_polynomial,
+				   double* u_dof,
+				   double* u_dof_old,	
+				   double* u_dof_old_old,	
+				   double* uStar_dof, 
+				   double* velocity,
+				   double* q_m,
+				   double* q_u,				   
+				   double* q_n,
+				   double* q_dH,
+				   double* q_m_betaBDF,
+                                   double* q_dV,
+                                   double* q_dV_last,
+				   double* cfl,
+				   double* edge_based_cfl, 
+				   double* q_numDiff_u, 
+				   double* q_numDiff_u_last, 
+				   int offset_u, int stride_u, 
+				   double* globalResidual,
+				   int nExteriorElementBoundaries_global,
+				   int* exteriorElementBoundariesArray,
+				   int* elementBoundaryElementsArray,
+				   int* elementBoundaryLocalElementBoundariesArray,
+				   double* ebqe_velocity_ext,
+				   int* isDOFBoundary_u,
+				   double* ebqe_rd_u_ext,				   
+				   double* ebqe_bc_u_ext,				   
+				   double* ebqe_u,
+				   // PARAMETERS FOR EDGE BASED STABILIZATION
+				   int EDGE_VISCOSITY, 
+				   int ENTROPY_VISCOSITY,
+				   // PARAMETERS FOR EDGE VISCOSITY
+				   int numDOFs,
+				   int NNZ,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops,
+				   int* csrRowIndeces_CellLoops,
+				   int* csrColumnOffsets_CellLoops,
+				   int* csrColumnOffsets_eb_CellLoops,
+				   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+				   int LUMPED_MASS_MATRIX, 
+				   // AUX QUANTITIES OF INTEREST
+				   double* quantDOFs, 
+				   // COUPEZ
+				   double lambda_coupez, 
+				   double epsCoupez, 
+				   double epsFactRedistancing, 
+				   // C-Matrices
+				   double* Cx, 
+				   double* Cy,
+				   double* ML 
+				   )=0;				   
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -96,6 +285,7 @@ namespace proteus
 				   double shockCapturingDiffusion,
 				   int* u_l2g,
 				   double* elementDiameter,
+				   int degree_polynomial,
 				   double* u_dof, 
 				   double* velocity,
 				   double* q_m_betaBDF, 
@@ -111,7 +301,109 @@ namespace proteus
 				   int* isDOFBoundary_u,
 				   double* ebqe_rd_u_ext,
 				   double* ebqe_bc_u_ext,
-				   int* csrColumnOffsets_eb_u_u)=0;
+				   int* csrColumnOffsets_eb_u_u, 
+				   int EDGE_VISCOSITY, 
+				   int LUMPED_MASS_MATRIX
+				   )=0;
+    virtual void calculateMassMatrix(//element
+				   double* mesh_trial_ref,
+				   double* mesh_grad_trial_ref,
+				   double* mesh_dof,
+				   double* mesh_velocity_dof,
+				   double MOVING_DOMAIN,
+				   int* mesh_l2g,
+				   double* dV_ref,
+				   double* u_trial_ref,
+				   double* u_grad_trial_ref,
+				   double* u_test_ref,
+				   double* u_grad_test_ref,
+				   //element boundary
+				   double* mesh_trial_trace_ref,
+				   double* mesh_grad_trial_trace_ref,
+				   double* dS_ref,
+				   double* u_trial_trace_ref,
+				   double* u_grad_trial_trace_ref,
+				   double* u_test_trace_ref,
+				   double* u_grad_test_trace_ref,
+				   double* normal_ref,
+				   double* boundaryJac_ref,
+				   //physics
+				   int nElements_global,
+			           double useMetrics, 
+				   double alphaBDF,
+				   int lag_shockCapturing,/*mwf not used yet*/
+				   double shockCapturingDiffusion,
+				   int* u_l2g,
+				   double* elementDiameter,
+				   int degree_polynomial,
+				   double* u_dof, 
+				   double* velocity,
+				   double* q_m_betaBDF, 
+				   double* cfl,
+				   double* q_numDiff_u_last, 
+				   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				   double* globalJacobian,
+				   int nExteriorElementBoundaries_global,
+				   int* exteriorElementBoundariesArray,
+				   int* elementBoundaryElementsArray,
+				   int* elementBoundaryLocalElementBoundariesArray,
+				   double* ebqe_velocity_ext,
+				   int* isDOFBoundary_u,
+				   double* ebqe_rd_u_ext,
+				   double* ebqe_bc_u_ext,
+				   int* csrColumnOffsets_eb_u_u, 
+				   int EDGE_VISCOSITY, 
+				   int LUMPED_MASS_MATRIX
+				   )=0;
+    virtual void calculateSmoothingMatrix(//element
+				   double* mesh_trial_ref,
+				   double* mesh_grad_trial_ref,
+				   double* mesh_dof,
+				   double* mesh_velocity_dof,
+				   double MOVING_DOMAIN,
+				   int* mesh_l2g,
+				   double* dV_ref,
+				   double* u_trial_ref,
+				   double* u_grad_trial_ref,
+				   double* u_test_ref,
+				   double* u_grad_test_ref,
+				   //element boundary
+				   double* mesh_trial_trace_ref,
+				   double* mesh_grad_trial_trace_ref,
+				   double* dS_ref,
+				   double* u_trial_trace_ref,
+				   double* u_grad_trial_trace_ref,
+				   double* u_test_trace_ref,
+				   double* u_grad_test_trace_ref,
+				   double* normal_ref,
+				   double* boundaryJac_ref,
+				   //physics
+				   int nElements_global,
+			           double useMetrics, 
+				   double alphaBDF,
+				   int lag_shockCapturing,/*mwf not used yet*/
+				   double shockCapturingDiffusion,
+				   int* u_l2g,
+				   double* elementDiameter,
+				   int degree_polynomial,
+				   double* u_dof, 
+				   double* velocity,
+				   double* q_m_betaBDF, 
+				   double* cfl,
+				   double* q_numDiff_u_last, 
+				   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				   double* globalJacobian,
+				   int nExteriorElementBoundaries_global,
+				   int* exteriorElementBoundariesArray,
+				   int* elementBoundaryElementsArray,
+				   int* elementBoundaryLocalElementBoundariesArray,
+				   double* ebqe_velocity_ext,
+				   int* isDOFBoundary_u,
+				   double* ebqe_rd_u_ext,
+				   double* ebqe_bc_u_ext,
+				   int* csrColumnOffsets_eb_u_u, 
+				   double he
+				   )=0;
     virtual void calculateWaterline(//element
                                    int* wlc,
 	                           double* waterline,
@@ -203,6 +495,20 @@ namespace proteus
     }
 
     inline
+    void calculateCFL(const double& elementDiameter,
+		      const double df[nSpace],
+		      double& cfl)
+    {
+      double h,nrm_v;
+      h = elementDiameter;
+      nrm_v=0.0;
+      for(int I=0;I<nSpace;I++)
+	nrm_v+=df[I]*df[I];
+      nrm_v = sqrt(nrm_v);
+      cfl = nrm_v/h;
+    }
+
+    inline
     void calculateSubgridError_tau(const double& elementDiameter,
 				   const double& dmt,
 				   const double dH[nSpace],
@@ -285,6 +591,342 @@ namespace proteus
 	}
     }
 
+    inline 
+      double sign(const double phi,
+		  const double eps) //eps=epsFactRedistancing=0.33*he (for instance)
+    {
+      double H;
+      if (phi > eps)
+	H = 1.0;
+      else if (phi < -eps)
+	H = 0.0;
+      else if (phi == 0.0)
+	H = 0.5;
+      else
+	H = 0.5*(1.0 + phi/eps + std::sin(M_PI*phi/eps)/M_PI);
+      return -1.0 + 2.0*H;
+      //return (u > 0 ? 1. : -1.)*(u ==0 ? 0. : 1.);
+      //double tol_sign 0.1;
+      //return (u > tol_sign*epsFactRedistancing ? 1. : -1.)*((u > -tol_sign*epsFactRedistancing && u < tol_sign*epsFactRedistancing) ? 0. : 1.);
+    }
+
+    double calculateRedistancingResidual(
+				  double* mesh_trial_ref,
+				  double* mesh_grad_trial_ref,
+				  double* mesh_dof,
+				  int* mesh_l2g,
+				  double* dV_ref,
+				  double* u_trial_ref,
+				  double* u_grad_trial_ref,
+				  double* u_test_ref,
+				  //physics
+				   int nElements_global,
+				  int* u_l2g, 
+				  double* elementDiameter,
+				  double* nodeDiametersArray,
+				  double* u_dof,
+				  double* u_dof_old,	
+				  double* uStar_dof,
+				  int offset_u, int stride_u, 
+				  double* globalResidual,
+				  // PARAMETERS FOR EDGE BASED STABILIZATION
+				  int numDOFs,
+				  int NNZ,
+				  int* csrRowIndeces_DofLoops,
+				  int* csrColumnOffsets_DofLoops,
+				  int* csrRowIndeces_CellLoops,
+				  int* csrColumnOffsets_CellLoops,
+				  // COUPEZ
+				  double dt, 
+				  double lambda_coupez, //
+				  double epsCoupez,
+				  double epsFactRedistancing,
+				  double* edge_based_cfl,
+				   // C-Matrices				   
+				   double* Cx, 
+				   double* Cy, 
+				   double* ML 
+					 )
+    {
+      register double L2_norm_per_node[numDOFs], lumped_mass_matrix[numDOFs];
+      double L2_norm=0.;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  L2_norm_per_node[i] = 0.;
+	  lumped_mass_matrix[i]=0.;
+	}      
+      // Allocate space for the transport matrices
+      register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
+      for (int i=0; i<NNZ; i++)
+	{
+	  TransportMatrix[i] = 0.;
+	  TransposeTransportMatrix[i] = 0.;
+	}
+      
+      //////////////////////////////////////////////
+      // ** LOOP IN CELLS FOR CELL BASED TERMS ** //
+      //////////////////////////////////////////////
+      // HERE WE COMPUTE: 
+      //    * Time derivative term 
+      //    * Transport matrices 
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  //declare local storage for local contributions and initialize
+	  register double 
+	    elementResidual_u[nDOF_test_element], element_L2_norm_per_node[nDOF_test_element],
+	    element_lumped_mass_matrix[nDOF_test_element];  
+	  register double  elementTransport[nDOF_test_element][nDOF_trial_element];
+	  register double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      elementResidual_u[i]=0.0;
+	      element_L2_norm_per_node[i]=0.;
+	      element_lumped_mass_matrix[i]=0.;
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  elementTransport[i][j]=0.0;
+		  elementTransposeTransport[i][j]=0.0;
+		}
+	    }
+	  //loop over quadrature points and compute integrands
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      //compute indeces and declare local storage
+	      register int eN_k = eN*nQuadraturePoints_element+k,
+		eN_k_nSpace = eN_k*nSpace,
+		eN_nDOF_trial_element = eN*nDOF_trial_element;
+	      register double 
+		hquad=0.0, u=0.0, u_test_dV[nDOF_trial_element], uStar=0.0,
+		//for entropy viscosity
+		un=0.0, grad_u[nSpace], grad_un[nSpace], vn[nSpace], 
+		u_grad_trial[nDOF_trial_element*nSpace],
+		//for general use
+		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		dV,x,y,z;
+	      //get the physical integration weight
+	      ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
+	      dV = fabs(jacDet)*dV_ref[k];
+	      // get h at quad points
+	      ck.valFromDOF(nodeDiametersArray,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],hquad);
+	      // get the star solution at quad points
+	      ck.valFromDOF(uStar_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],uStar);
+	      //get the solution at quad points
+	      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+	      //get the solution at quad point at tn 
+	      ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+	      // solution and grads at old times at quad points
+	      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+	      ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+	      ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
+	      //precalculate test function products with integration weights for mass matrix terms
+	      for (int j=0;j<nDOF_trial_element;j++)
+		u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+	      double norm_grad_un = std::sqrt(std::pow(grad_un[0],2) + std::pow(grad_un[1],2)) + 1E-10;
+	      double norm_grad_u = std::sqrt(std::pow(grad_u[0],2) + std::pow(grad_u[1],2));
+	      double dist_error = norm_grad_u - (1-SATURATED_LEVEL_SET*std::pow(u/epsCoupez,2));
+
+	      double sgn = sign(uStar,epsFactRedistancing);
+	      vn[0] = lambda_coupez*sgn*grad_un[0]/norm_grad_un;
+	      vn[1] = lambda_coupez*sgn*grad_un[1]/norm_grad_un;
+
+	      //////////////
+	      // ith-LOOP //
+	      //////////////
+	      double residual = (u-un) 
+		- dt*lambda_coupez*sgn*(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2));
+	      for(int i=0;i<nDOF_test_element;i++) 
+		{ 
+		  // lumped mass matrix
+		  element_lumped_mass_matrix[i] += u_test_dV[i];
+		  elementResidual_u[i] += residual*u_test_dV[i];
+		  element_L2_norm_per_node[i] += dist_error*u_test_dV[i];
+		  ///////////////
+		  // j-th LOOP // To construct transport matrices
+		  ///////////////
+		  for(int j=0;j<nDOF_trial_element;j++) 
+		    { 
+		      int j_nSpace = j*nSpace;
+		      int i_nSpace = i*nSpace;
+		      // COMPUTE ELEMENT TRANSPORT MATRIX (MQL)
+		      elementTransport[i][j] += // int[(vel.grad_wj)*wi*dx]
+			ck.HamiltonianJacobian_weak(vn,&u_grad_trial[j_nSpace],u_test_dV[i]);
+		      elementTransposeTransport[i][j] += // int[(vel.grad_wi)*wj*dx]
+			ck.HamiltonianJacobian_weak(vn,&u_grad_trial[i_nSpace],u_test_dV[j]);		      
+		    }
+		}//i
+	    }
+
+	  /////////////////
+	  // DISTRIBUTE // load cell based element into global residual
+	  ////////////////
+	  for(int i=0;i<nDOF_test_element;i++) 
+	    { 
+	      int eN_i=eN*nDOF_test_element+i;
+	      int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+
+	      // distribute lumped mass matrix
+	      lumped_mass_matrix[gi]  += element_lumped_mass_matrix[i];
+	      // distribute global residual for (lumped) mass matrix
+	      globalResidual[gi] += elementResidual_u[i];
+	      // distribute L2 norm per node
+	      L2_norm_per_node[gi] += element_L2_norm_per_node[i];
+	      // distribute transport matrices
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  int eN_i_j = eN_i*nDOF_trial_element+j;
+		  TransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]] 
+		    += elementTransport[i][j];
+		  TransposeTransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]] 
+		    += elementTransposeTransport[i][j];
+		}//j
+	    }//i
+	}//elements
+
+      //////////////////////////////////
+      // COMPUTE SMOOTHNESS INDICATOR //
+      //////////////////////////////////
+      // Smoothness indicator is based on the solution. 
+      // psi_i = psi_i(alpha_i); alpha_i = |sum(betaij*(uj-ui))|/sum(betaij*|uj-ui|)
+      register double psi[numDOFs];
+      for (int i=0; i<numDOFs; i++)
+	{
+	  double alphai;
+	  double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+	  // for smoothness indicator
+	  double alpha_numi=0;
+	  double alpha_deni=0;
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    { //loop in j (sparsity pattern)
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+	      alpha_numi += solnj-solni;
+	      alpha_deni += fabs(solnj-solni);
+	    }
+	  alphai = (fabs(alpha_numi) == alpha_deni ? 1. : fabs(alpha_numi)/(alpha_deni+1E-15));
+	  if (POWER_SMOOTHNESS_INDICATOR==0)
+	    psi[i] = 1.0;
+	  else
+	    psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+	  // compute L2 norm 
+	  L2_norm += std::pow(L2_norm_per_node[i],2);
+	}
+      L2_norm = std::sqrt(L2_norm);
+      // END OF COMPUTING SMOOTHNESS INDICATOR 
+      
+      /////////////////////////////////////////////
+      // ** LOOP IN DOFs FOR EDGE BASED TERMS ** //
+      /////////////////////////////////////////////
+      int ij=0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+	  double ith_dissipative_term = 0;
+	  double ith_flux_term = 0;
+	  double dLii = 0.;
+
+	  // loop over the sparsity pattern of the i-th DOF
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+	      double dLij=0.;
+
+	      ith_flux_term += TransportMatrix[ij]*solnj;
+	      if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term)
+		{
+		  // first-order dissipative operator
+		  //dLij = fmax(0.0,std::max(TransportMatrix[ij],TransposeTransportMatrix[ij]));
+		  dLij = fmax(fabs(TransportMatrix[ij]),fabs(TransposeTransportMatrix[ij]));
+		  dLij *= fmax(psi[i],psi[j]); 
+		  //dissipative terms
+		  ith_dissipative_term += dLij*(solnj-solni);		  
+		  dLii -= dLij;
+		}
+	      //update ij
+	      ij+=1;
+	    }
+	  // update residual
+	  double mi = lumped_mass_matrix[i];
+	  // compute edge_based_cfl
+	  edge_based_cfl[i] = 2.*fabs(dLii)/mi;	  
+	  globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term); 
+	}
+      return L2_norm;
+    }
+
+    double calculateRhsSmoothing(
+				 double* mesh_trial_ref,
+				 double* mesh_grad_trial_ref,
+				 double* mesh_dof,
+				 int* mesh_l2g,
+				 double* dV_ref,
+				 double* u_trial_ref,
+				 double* u_grad_trial_ref,
+				 double* u_test_ref,
+				 //physics
+				 int nElements_global,
+				 int* u_l2g, 
+				 double* elementDiameter,
+				 double* nodeDiametersArray,
+				 double* u_dof,
+				 double* u_dof_old,	
+				 int offset_u, int stride_u, 
+				 double* globalResidual)
+    {
+      //////////////////////////////////////////////
+      // ** LOOP IN CELLS FOR CELL BASED TERMS ** //
+      //////////////////////////////////////////////
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  //declare local storage for local contributions and initialize
+	  register double 
+	    elementResidual_u[nDOF_test_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    elementResidual_u[i]=0.0;
+	  
+	  //loop over quadrature points and compute integrands
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      //compute indeces and declare local storage
+	      register int eN_k = eN*nQuadraturePoints_element+k,
+		eN_k_nSpace = eN_k*nSpace,
+		eN_nDOF_trial_element = eN*nDOF_trial_element;
+	      register double 
+		un=0.0, u_test_dV[nDOF_trial_element], u_grad_trial[nDOF_trial_element*nSpace],
+		//for general use
+		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		dV,x,y,z;
+	      //get the physical integration weight
+	      ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
+	      dV = fabs(jacDet)*dV_ref[k];
+	      //get the solution at quad point at tn 
+	      ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+	      //precalculate test function products with integration weights for mass matrix terms
+	      for (int j=0;j<nDOF_trial_element;j++)
+		u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+	      //////////////
+	      // ith-LOOP //
+	      //////////////
+	      for(int i=0;i<nDOF_test_element;i++) 
+		elementResidual_u[i] += un*u_test_dV[i];
+	    }
+	  
+	  /////////////////
+	  // DISTRIBUTE // load cell based element into global residual
+	  ////////////////
+	  for(int i=0;i<nDOF_test_element;i++) 
+	    { 
+	      int eN_i=eN*nDOF_test_element+i;
+	      int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+	      
+	      // distribute global residual
+	      globalResidual[gi] += elementResidual_u[i];
+	    }//i
+	}//elements
+    }
+
     void calculateResidual(//element
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
@@ -316,7 +958,12 @@ namespace proteus
 			   double sc_uref, double sc_alpha,
 			   int* u_l2g, 
 			   double* elementDiameter,
-			   double* u_dof,double* u_dof_old,			   
+			   double* nodeDiametersArray,
+			   int degree_polynomial,
+			   double* u_dof,
+			   double* u_dof_old,			   
+			   double* u_dof_old_old,
+			   double* uStar_dof, 
 			   double* velocity,
 			   double* q_m,
 			   double* q_u,				   
@@ -326,6 +973,7 @@ namespace proteus
                            double* q_dV,
                            double* q_dV_last,
 			   double* cfl,
+			   double* edge_based_cfl, 
 			   double* q_numDiff_u, 
 			   double* q_numDiff_u_last, 
 			   int offset_u, int stride_u, 
@@ -338,11 +986,35 @@ namespace proteus
 			   int* isDOFBoundary_u,
 			   double* ebqe_rd_u_ext,
 			   double* ebqe_bc_u_ext,
-			   double* ebqe_u)
+			   double* ebqe_u, 
+			   // PARAMETERS FOR EDGE BASED STABILIZATION
+			   int EDGE_VISCOSITY, 
+			   int ENTROPY_VISCOSITY,
+			   // PARAMETERS FOR EDGE VISCOSITY
+			   int numDOFs,
+			   int NNZ,
+			   int* csrRowIndeces_DofLoops,
+			   int* csrColumnOffsets_DofLoops,
+			   int* csrRowIndeces_CellLoops,
+			   int* csrColumnOffsets_CellLoops,
+			   int* csrColumnOffsets_eb_CellLoops,
+			   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+			   int LUMPED_MASS_MATRIX, 
+			   // AUX QUANTITIES OF INTEREST
+			   double* quantDOFs,
+			   // COUPEZ
+			   double lambda_coupez, 
+			   double epsCoupez,
+			   double epsFactRedistancing,
+			   // C-Matrices
+			   double* Cx, 
+			   double* Cy,
+			   double* ML 
+			   )
     {
       //cek should this be read in?
       double Ct_sge = 4.0;
-
+      
       //loop over elements to compute volume integrals and load them into element and global residual
       //
       //eN is the element index
@@ -367,9 +1039,9 @@ namespace proteus
 	      register int eN_k = eN*nQuadraturePoints_element+k,
 		eN_k_nSpace = eN_k*nSpace,
 		eN_nDOF_trial_element = eN*nDOF_trial_element;
-	      register double u=0.0,grad_u[nSpace],grad_u_old[nSpace],
-		m=0.0,dm=0.0,
-		H=0.0,dH[nSpace],
+	      register double u=0.0, u_old=0.0, grad_u[nSpace], grad_u_old[nSpace],
+		m=0.0, dm=0.0,
+		H=0.0, dH[nSpace],
 		f[nSpace],df[nSpace],//for MOVING_DOMAIN
 		m_t=0.0,dm_t=0.0,
 		pdeResidual_u=0.0,
@@ -452,9 +1124,9 @@ namespace proteus
 	      //
 	      //calculate time derivative at quadrature points
 	      //
-              if (q_dV_last[eN_k] <= -100)
-                q_dV_last[eN_k] = dV;
-              q_dV[eN_k] = dV;
+	      if (q_dV_last[eN_k] <= -100)
+		q_dV_last[eN_k] = dV;
+	      q_dV[eN_k] = dV;
 	      ck.bdf(alphaBDF,
 		     q_m_betaBDF[eN_k],
 		     m,
@@ -465,7 +1137,8 @@ namespace proteus
 	      //calculate subgrid error (strong residual and adjoint)
 	      //
 	      //calculate strong residual
-	      pdeResidual_u = ck.Mass_strong(m_t) +
+	      pdeResidual_u = 
+		ck.Mass_strong(m_t) +
 		ck.Hamiltonian_strong(dH,grad_u)+
 		MOVING_DOMAIN*ck.Advection_strong(df,grad_u);//cek I don't think all mesh motion will be divergence free so we may need to go add the divergence
 	      
@@ -481,48 +1154,47 @@ namespace proteus
 	      double subgridErrorVelocity[nSpace];
 	      for (int I=0;I<nSpace;I++)
 		subgridErrorVelocity[I] = dH[I] - MOVING_DOMAIN*df[I];
-
+	      
 	      calculateSubgridError_tau(elementDiameter[eN],
 					dm_t,
 					subgridErrorVelocity,//dH,
 					cfl[eN_k],
 					tau0);
-
-              calculateSubgridError_tau(Ct_sge,
-                                        G,
+	      
+	      calculateSubgridError_tau(Ct_sge,
+					G,
 					dm_t,
 					subgridErrorVelocity,//dH,
 					tau1,
-				        cfl[eN_k]);
-					
-              tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
-
+					cfl[eN_k]);
+	      
+	      tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
+	      
 	      subgridError_u = -tau*pdeResidual_u;
 	      //
 	      //calculate shock capturing diffusion
-	      //
-
-	      
+	      //	      
 	      ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u,grad_u,numDiff0);	      
 	      //ck.calculateNumericalDiffusion(shockCapturingDiffusion,G,pdeResidual_u,grad_u_old,numDiff1);
 	      ck.calculateNumericalDiffusion(shockCapturingDiffusion,sc_uref, sc_alpha,G,G_dd_G,pdeResidual_u,grad_u,numDiff1);
 	      q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
-              //std::cout<<tau<<"   "<<q_numDiff_u[eN_k]<<std::endl;
+	      
 	      // 
 	      //update element residual 
 	      // 
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  //register int eN_k_i=eN_k*nDOF_test_element+i,
-		   // eN_k_i_nSpace = eN_k_i*nSpace;
+		  // eN_k_i_nSpace = eN_k_i*nSpace;
 		  register int  i_nSpace=i*nSpace;
-
-		  elementResidual_u[i] += ck.Mass_weak(m_t,u_test_dV[i]) + 
+		  
+		  elementResidual_u[i] += 
+		    ck.Mass_weak(m_t,u_test_dV[i]) + 
 		    ck.Hamiltonian_weak(H,u_test_dV[i]) + 
 		    MOVING_DOMAIN*ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])+
 		    ck.SubgridError(subgridError_u,Lstar_u[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&u_grad_test_dV[i_nSpace]); 
-	      
+		  
 		}//i
 	      //
 	      //cek/ido todo, get rid of m, since u=m
@@ -543,7 +1215,6 @@ namespace proteus
 	  for(int i=0;i<nDOF_test_element;i++) 
 	    { 
 	      register int eN_i=eN*nDOF_test_element+i;
-          
 	      globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
 	    }//i
 	}//elements
@@ -688,15 +1359,13 @@ namespace proteus
 				    flux_ext);
 	      ebqe_u[ebNE_kb] = u_ext;
 	      
-	      //std::cout<<u_ext<<ebqe_bc_u_ext
-	      
+	      //std::cout<<u_ext<<ebqe_bc_u_ext	      
 	      //
 	      //update residuals
 	      //
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
 		  //int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
-
 		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]);  		  
 		}//i
 	    }//kb
@@ -705,18 +1374,753 @@ namespace proteus
 	  //
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
-	      int eN_i = eN*nDOF_test_element+i;
-
+	      int eN_i = eN*nDOF_test_element+i;	      
 	      //globalResidual[offset_u+stride_u*u_l2g[eN_i]] += MOVING_DOMAIN*elementResidual_u[i];
-              globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];	  
+	      globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];	  
 	      
 	    }//i
 	}//ebNE
-
-
-
-
     }
+
+    void calculateResidual_entropy_viscosity(//element
+			   double* mesh_trial_ref,
+			   double* mesh_grad_trial_ref,
+			   double* mesh_dof,
+			   double* mesh_velocity_dof,
+			   double MOVING_DOMAIN,
+			   int* mesh_l2g,
+			   double* dV_ref,
+			   double* u_trial_ref,
+			   double* u_grad_trial_ref,
+			   double* u_test_ref,
+			   double* u_grad_test_ref,
+			   //element boundary
+			   double* mesh_trial_trace_ref,
+			   double* mesh_grad_trial_trace_ref,
+			   double* dS_ref,
+			   double* u_trial_trace_ref,
+			   double* u_grad_trial_trace_ref,
+			   double* u_test_trace_ref,
+			   double* u_grad_test_trace_ref,
+			   double* normal_ref,
+			   double* boundaryJac_ref,
+			   //physics
+			   int nElements_global,
+			   double useMetrics, 
+			   double alphaBDF,
+			   int lag_shockCapturing, 
+			   double shockCapturingDiffusion,
+			   double sc_uref, double sc_alpha,
+			   int* u_l2g, 
+			   double* elementDiameter,
+			   double* nodeDiametersArray,
+			   int degree_polynomial,
+			   double* u_dof,
+			   double* u_dof_old,			   
+			   double* u_dof_old_old,
+			   double* uStar_dof,
+			   double* velocity,
+			   double* q_m,
+			   double* q_u,				   
+			   double* q_n,
+			   double* q_dH,
+			   double* q_m_betaBDF,
+                           double* q_dV,
+                           double* q_dV_last,
+			   double* cfl,
+			   double* edge_based_cfl, 
+			   double* q_numDiff_u, 
+			   double* q_numDiff_u_last, 
+			   int offset_u, int stride_u, 
+			   double* globalResidual,
+			   int nExteriorElementBoundaries_global,
+			   int* exteriorElementBoundariesArray,
+			   int* elementBoundaryElementsArray,
+			   int* elementBoundaryLocalElementBoundariesArray,
+			   double* ebqe_velocity_ext,
+			   int* isDOFBoundary_u,
+			   double* ebqe_rd_u_ext,
+			   double* ebqe_bc_u_ext,
+			   double* ebqe_u, 
+			   // PARAMETERS FOR EDGE BASED STABILIZATION
+			   int EDGE_VISCOSITY, 
+			   int ENTROPY_VISCOSITY,
+			   // PARAMETERS FOR EDGE VISCOSITY
+			   int numDOFs,
+			   int NNZ,
+			   int* csrRowIndeces_DofLoops,
+			   int* csrColumnOffsets_DofLoops,
+			   int* csrRowIndeces_CellLoops,
+			   int* csrColumnOffsets_CellLoops,
+			   int* csrColumnOffsets_eb_CellLoops,
+			   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+			   int LUMPED_MASS_MATRIX, 
+			   // AUX QUANTITIES OF INTEREST
+			   double* quantDOFs,
+			   // COPUEZ 
+			   double lambda_coupez, 
+			   double epsCoupez,
+			   double epsFactRedistancing,
+			   // C-Matrices
+			   double* Cx, 
+			   double* Cy,
+			   double* ML 
+			   )
+    {
+      // inverse of mass matrix in reference element 
+      //double inverse_elMassMatrix_degree2 [9][9]= 
+      //{
+      //{81/4., 27/4., 9/4., 27/4., -81/4., -27/4., -27/4., -81/4., 81/4.},
+      //{27/4., 81/4., 27/4., 9/4., -81/4., -81/4., -27/4., -27/4., 81/4.},
+      //{9/4., 27/4., 81/4., 27/4., -27/4., -81/4., -81/4., -27/4., 81/4.},
+      //{27/4., 9/4., 27/4., 81/4., -27/4., -27/4., -81/4., -81/4., 81/4.},
+      //{-81/4., -81/4., -27/4., -27/4., 189/4., 81/4., 63/4., 81/4., -189/4.},
+      //{-27/4., -81/4., -81/4., -27/4., 81/4., 189/4., 81/4., 63/4., -189/4.},
+      //{-27/4., -27/4., -81/4., -81/4., 63/4., 81/4., 189/4., 81/4., -189/4.},
+      //{-81/4., -27/4., -27/4., -81/4., 81/4., 63/4., 81/4., 189/4., -189/4.},
+      //{81/4., 81/4., 81/4., 81/4., -189/4., -189/4., -189/4., -189/4., 441/4.}
+      //};
+      //double inverse_elMassMatrix_degree1 [4][4] = {{4, -2, 1, -2}, {-2, 4, -2, 1}, {1, -2, 4, -2}, {-2, 1, -2, 4}};
+      double JacDet = 0;      
+
+      double dt = 1./alphaBDF; // HACKED to work just for BDF1
+      // Allocate space for the transport matrices
+      // This is used for first order KUZMIN'S METHOD
+      register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
+      for (int i=0; i<NNZ; i++)
+	{
+	  TransportMatrix[i] = 0.;
+	  TransposeTransportMatrix[i] = 0.;
+	}
+      
+      // Allocate and init to zero the Entropy residual vector
+      register double global_entropy_residual[numDOFs], lumped_mass_matrix[numDOFs];
+      for (int i=0; i<numDOFs; i++)
+	{
+	  lumped_mass_matrix[i]=0.;
+	  global_entropy_residual[i]=0.;	    
+	}    
+      //////////////////////////////////////////////
+      // ** LOOP IN CELLS FOR CELL BASED TERMS ** //
+      //////////////////////////////////////////////
+      // HERE WE COMPUTE: 
+      //    * lumped mass matrix
+      //    * Time derivative term 
+      //    * Cell based CFL (for reference) 
+      //    * Entropy residual 
+      //    * Transport matrices 
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  //declare local storage for local contributions and initialize
+	  register double 
+	    elementResidual_u[nDOF_test_element], 
+	    elementEntResVector[nDOF_test_element], 
+	    element_lumped_mass_matrix[nDOF_test_element];  
+	  register double  elementTransport[nDOF_test_element][nDOF_trial_element];
+	  register double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element];
+	  //register double  preconditioned_elementTransport[nDOF_test_element][nDOF_trial_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      elementResidual_u[i]=0.0;
+	      elementEntResVector[i]=0.0;
+	      element_lumped_mass_matrix[i]=0.;
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  elementTransport[i][j]=0.0;
+		  elementTransposeTransport[i][j]=0.0;
+		  // preconditioned elementTransport
+		  //preconditioned_elementTransport[i][j]=0.0;
+		}
+	    }
+	  //loop over quadrature points and compute integrands
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      //compute indeces and declare local storage
+	      register int eN_k = eN*nQuadraturePoints_element+k,
+		eN_k_nSpace = eN_k*nSpace,
+		eN_nDOF_trial_element = eN*nDOF_trial_element;
+	      register double 
+		//for mass matrix contributions
+		u=0.0, uStar=0.0, hquad=0.0,
+		u_test_dV[nDOF_trial_element], 
+		//for entropy viscosity
+		un=0.0, unm1=0.0, grad_u[nSpace], grad_un[nSpace], vn[nSpace], 
+		u_grad_trial[nDOF_trial_element*nSpace],
+		//for general use
+		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		dV,x,y,z;
+	      //get the physical integration weight
+	      ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
+	      dV = fabs(jacDet)*dV_ref[k];
+	      JacDet = fabs(jacDet);
+	      // get h at quad points
+	      ck.valFromDOF(nodeDiametersArray,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],hquad);
+	      //get the solution (of Newton's solver). To compute time derivative term
+	      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+	      ck.valFromDOF(uStar_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],uStar);
+	      //get the solution at quad point at tn and tnm1 for entropy viscosity
+	      // solution and grads at old times at quad points
+	      ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+	      ck.valFromDOF(u_dof_old_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],unm1);
+	      //get the solution gradients at tn for entropy viscosity
+	      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+	      ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
+	      //precalculate test function products with integration weights for mass matrix terms
+	      for (int j=0;j<nDOF_trial_element;j++)
+		u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+	      //epsCoupez = 3*hquad;
+	      double norm_grad_un = std::sqrt(std::pow(grad_un[0],2) + std::pow(grad_un[1],2)) + 1E-10;
+	      double dist_error = fabs(norm_grad_un - (1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)));
+	      double sgn = sign(uStar,epsFactRedistancing);
+
+	      // get velocity
+	      vn[0] = velocity[eN_k_nSpace+0] + dist_error*COUPEZ*lambda_coupez*sgn*grad_un[0]/norm_grad_un;
+	      vn[1] = velocity[eN_k_nSpace+1] + dist_error*COUPEZ*lambda_coupez*sgn*grad_un[1]/norm_grad_un;
+	      
+	      //////////////////////////////
+	      // CALCULATE CELL BASED CFL //
+	      //////////////////////////////
+	      calculateCFL(elementDiameter[eN]/degree_polynomial,vn,cfl[eN_k]);
+
+	      //////////////////////////////////////////////
+	      // CALCULATE ENTROPY RESIDUAL AT QUAD POINT //
+	      //////////////////////////////////////////////
+	      //double entropy_residual = ((un - unm1)/dt + vn[0]*grad_un[0] + vn[1]*grad_un[1]
+	      //			 -dist_error*COUPEZ*lambda_coupez*sgn
+	      //			 *(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)))*DENTROPY(un);
+	      double entropy_residual = 
+		(vn[0]*grad_un[0] + vn[1]*grad_un[1]
+		 -dist_error*COUPEZ*lambda_coupez*sgn*(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)));
+	      double DENTROPY_un = DENTROPY_LOG(un,-epsCoupez,epsCoupez);
+	      //////////////
+	      // ith-LOOP //
+	      //////////////
+	      double residual = (u-un) 
+		- dt*dist_error*COUPEZ*lambda_coupez*sgn
+		*(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2));
+
+	      for(int i=0;i<nDOF_test_element;i++) 
+		{ 
+		  int eN_i=eN*nDOF_test_element+i;
+		  int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		  double uni = u_dof_old[gi];
+
+		  elementEntResVector[i] += (DENTROPY_un - DENTROPY_LOG(uni,-epsCoupez,epsCoupez))*entropy_residual*u_test_dV[i];
+		  //elementEntResVector[i] += entropy_residual*u_test_dV[i];
+	      
+		  // lumped mass matrix
+		  element_lumped_mass_matrix[i] += u_test_dV[i];
+		  elementResidual_u[i] += residual*u_test_dV[i];
+		  
+		  ///////////////
+		  // j-th LOOP // To construct transport matrices
+		  ///////////////
+		  for(int j=0;j<nDOF_trial_element;j++) 
+		    { 
+		      int j_nSpace = j*nSpace;
+		      int i_nSpace = i*nSpace;
+		      // COMPUTE ELEMENT TRANSPORT MATRIX (MQL)
+		      elementTransport[i][j] += // int[(vel.grad_wj)*wi*dx]
+			ck.HamiltonianJacobian_weak(vn,&u_grad_trial[j_nSpace],u_test_dV[i]);
+		      elementTransposeTransport[i][j] += // int[(vel.grad_wi)*wj*dx]
+			ck.HamiltonianJacobian_weak(vn,&u_grad_trial[i_nSpace],u_test_dV[j]);
+		    }
+		}//i
+	      //save solution for other models 
+	      q_u[eN_k] = u;
+	      q_m[eN_k] = u;
+	    }
+
+	  // MULTIPLY Transport Matrix times preconditioner//
+	  //if (false)
+	  //  {
+	  //    for (int i=0; i < nDOF_test_element; i++)
+	  //for (int j=0; j < nDOF_test_element; j++)
+	  //  for (int r=0; r < nDOF_test_element; r++)
+	  //    if (degree_polynomial == 1)
+	  //      preconditioned_elementTransport[i][j] += 
+	  //	element_lumped_mass_matrix[i]*1./JacDet*inverse_elMassMatrix_degree1[i][r]*elementTransport[r][j];
+	  //    else
+	  //      preconditioned_elementTransport[i][j] += 
+	  //	element_lumped_mass_matrix[i]*1./JacDet*inverse_elMassMatrix_degree2[i][r]*elementTransport[r][j];
+	  //for (int i=0; i < nDOF_test_element; i++)
+	  //for (int j=0; j < nDOF_test_element; j++)
+	  //{
+	  //  elementTransport[i][j] = preconditioned_elementTransport[i][j];
+	  //  elementTransposeTransport[i][j] = preconditioned_elementTransport[j][i];
+	  //}
+	  //}
+	  
+	  /////////////////
+	  // DISTRIBUTE // load cell based element into global residual
+	  ////////////////
+	  double h=elementDiameter[eN]/degree_polynomial;
+	  for(int i=0;i<nDOF_test_element;i++) 
+	    { 
+	      int eN_i=eN*nDOF_test_element+i;
+	      int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+	      
+	      // distribute lumped mass matrix
+	      lumped_mass_matrix[gi]  += element_lumped_mass_matrix[i];	      
+	      // distribute global residual for (lumped) mass matrix
+	      globalResidual[gi] += elementResidual_u[i];
+	      // distribute EntResVector 
+	      global_entropy_residual[gi] += elementEntResVector[i];
+	      // distribute transport matrices
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  int eN_i_j = eN_i*nDOF_trial_element+j;
+		  TransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]] 
+		    += elementTransport[i][j];
+		  TransposeTransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]] 
+		    += elementTransposeTransport[i][j];
+		}//j
+	    }//i
+	}//elements
+
+      //////////////////////////////////////////
+      // COMPUTE g vector and ENTROPY AT DOFs //
+      //////////////////////////////////////////
+      // gi=1/mi*sum_j(Cij*uj)
+      register double gx[numDOFs], gy[numDOFs], eta[numDOFs], 
+	alpha_numerator_pos[numDOFs], alpha_numerator_neg[numDOFs],
+	alpha_denominator_pos[numDOFs], alpha_denominator_neg[numDOFs];
+      //SumPos[numDOFs], SumNeg[numDOFs], betaPos[numDOFs], betaNeg[numDOFs], gNorm[numDOFs];
+      int ij = 0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  double solni = u_dof_old[i];
+	  gx[i]=0.;
+	  gy[i]=0.;
+	  // entropy // 
+	  eta[i] = ENTROPY_LOG(u_dof_old[i],-epsCoupez,epsCoupez);
+	  // for smoothness indicator // 
+	  alpha_numerator_pos[i] = 0.;
+	  alpha_numerator_neg[i] = 0.;
+	  alpha_denominator_pos[i] = 0.;
+	  alpha_denominator_neg[i] = 0.;
+
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double solnj = u_dof_old[j];
+
+	      // for gi vector
+	      gx[i] += Cx[ij]*solnj;
+	      gy[i] += Cy[ij]*solnj;
+
+	      double alpha_num = solnj - solni;
+	      alpha_numerator_pos[i] += alpha_num > 0. ? alpha_num : 0.;
+	      alpha_numerator_neg[i] += alpha_num < 0. ? alpha_num : 0.;
+	      alpha_denominator_pos[i] += alpha_num > 0. ? alpha_num : 0.;
+	      alpha_denominator_neg[i] += alpha_num < 0. ? fabs(alpha_num) : 0.;
+	      //update ij
+	      ij+=1;
+	    }
+	  gx[i] /= ML[i];
+	  gy[i] /= ML[i];
+	}
+
+      //////////////////////////////////////////////////////////
+      // COMPUTE SMOOTHNESS INDICATOR and ENTROPY MIN and MAX //
+      //////////////////////////////////////////////////////////
+      // Smoothness indicator is based on the solution. 
+      // psi_i = psi_i(alpha_i); alpha_i = |sum(betaij*(uj-ui))|/sum(betaij*|uj-ui|)
+      register double psi[numDOFs], etaMax[numDOFs], etaMin[numDOFs], 
+	SumPos[numDOFs], SumNeg[numDOFs];
+      for (int i=0; i<numDOFs; i++)
+	{
+	  double alphai;
+	  double xi = mesh_dof[i*3+0];
+	  double yi = mesh_dof[i*3+1];
+	  // For eta min and max
+	  etaMax[i] = fabs(eta[i]);
+	  etaMin[i] = fabs(eta[i]);	  
+
+	  SumPos[i] = 0.;
+	  SumNeg[i] = 0.;
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    { //loop in j (sparsity pattern)
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double xj = mesh_dof[j*3+0];
+	      double yj = mesh_dof[j*3+1];
+	      /////////////////////////////////
+	      // COMPUTE ETA MIN AND ETA MAX // 
+	      /////////////////////////////////
+	      etaMax[i] = fmax(etaMax[i],std::abs(eta[j]));
+	      etaMin[i] = fmin(etaMin[i],std::abs(eta[j]));
+	      //////////////////////////////
+	      // FOR SMOOTHNESS INDICATOR //
+	      //////////////////////////////
+	      double gj_times_x = gx[j]*(xj-xi) + gy[j]*(yj-yi);
+	      SumPos[i] += gj_times_x > 0 ? gj_times_x : 0;
+	      SumNeg[i] += gj_times_x < 0 ? gj_times_x : 0;
+	    }
+	  // Compute sigmaPos and sigmaNeg
+	  double Sum = SumPos[i] + SumNeg[i];
+	  double sigmaPosi = fmin(1.,(-SumNeg[i]+1E-15)/(SumPos[i]+1E-15));
+	  double sigmaNegi = fmin(1.,(SumPos[i]+1E-15)/(-SumNeg[i]+1E-15));
+
+	  double alpha_numi = fabs(sigmaPosi*alpha_numerator_pos[i] + sigmaNegi * alpha_numerator_neg[i]);
+	  double alpha_deni = sigmaPosi*alpha_denominator_pos[i] + sigmaNegi * alpha_denominator_neg[i];
+
+	  double alpha_num_threshold = 0.1;
+	  if (BETAij == 1)
+	    {
+	      alpha_numi = fabs(alpha_numerator_pos[i] + alpha_numerator_neg[i]);
+	      alpha_deni = alpha_denominator_pos[i] + alpha_denominator_neg[i];
+	    }
+	  double g = std::sqrt(std::pow(gx[i],2)+std::pow(gy[i],2));
+	  if (g <= alpha_num_threshold) // Extrema and const state
+	    alphai = 1.;
+	  else 
+	    alphai = alpha_numi/(alpha_deni+1E-15);
+	  quantDOFs[i] = alphai; 
+
+	  if (POWER_SMOOTHNESS_INDICATOR==0)
+	    psi[i] = 1.0;
+	  else
+	    psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+	}	  
+      // END OF COMPUTING SMOOTHNESS INDICATOR 
+
+      /////////////////////////////////////////////
+      // ** LOOP IN DOFs FOR EDGE BASED TERMS ** //
+      /////////////////////////////////////////////
+      double cE = 1.;
+      ij=0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+	  double ith_dissipative_term = 0;
+	  double ith_flux_term = 0;
+	  double dLii = 0.;
+
+	  //double one_over_entNormFactori = etaMax[i] == etaMin[i] ? 0. : 1./(etaMax[i]-etaMin[i]);
+	  double one_over_entNormFactori = 2./(etaMax[i]-etaMin[i]+1E-15);
+	  // loop over the sparsity pattern of the i-th DOF
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+	      double dLij=0.;
+
+	      ith_flux_term += TransportMatrix[ij]*solnj;
+	      if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term)
+		{
+		  // first-order dissipative operator
+		  dLij = std::max(fabs(TransportMatrix[ij]),fabs(TransposeTransportMatrix[ij]));
+		  // weight low-order dissipative matrix to make it higher order
+		  //dLij *= fmax(psi[i],psi[j]); 
+		  // high-order (entropy viscosity) dissipative operator 		  
+		  //double one_over_entNormFactorj = etaMax[j] == etaMin[j] ? 0. : 1./(etaMax[j]-etaMin[j]);
+		  double one_over_entNormFactorj = 2./(etaMax[j]-etaMin[j]+1E-15);
+		  double dEVij = fmax(std::abs(global_entropy_residual[i])*one_over_entNormFactori,
+				      std::abs(global_entropy_residual[j])*one_over_entNormFactorj);
+		  //dissipative terms
+		  //ith_dissipative_term += fmin(dLij,cE*dEVij)*(solnj-solni);
+		  ith_dissipative_term += dLij*(solnj-solni);
+		  //dLii -= fmin(dLij,cE*dEVij);
+		  dLii -= dLij;
+		}
+	      //update ij
+	      ij+=1;
+	    }
+	  // update residual
+	  double mi = lumped_mass_matrix[i];
+	  // compute edge_based_cfl
+	  edge_based_cfl[i] = 2.*fabs(dLii)/mi;
+
+	  if (LUMPED_MASS_MATRIX==1)
+	    //globalResidual[i] = mi*(u_dof[i] - u_dof_old[i]) + dt*(ith_flux_term - ith_dissipative_term);
+	    globalResidual[i] = u_dof_old[i] - dt/mi*(ith_flux_term - ith_dissipative_term);
+	  else
+	    globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term);
+	}
+
+      /////////////////////////
+      // BOUNDARY CONDITIONS //
+      /////////////////////////
+      if(true)
+      for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) 
+	{ 
+	  register int ebN = exteriorElementBoundariesArray[ebNE], 
+	    eN  = elementBoundaryElementsArray[ebN*2+0],
+	    ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+	    eN_nDOF_trial_element = eN*nDOF_trial_element;
+	  register double elementResidual_u[nDOF_test_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    elementResidual_u[i]=0.0;
+	  for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) 
+	    { 
+	      register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+		ebNE_kb_nSpace = ebNE_kb*nSpace,
+		ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+		ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+	      register double u_ext=0.0,
+		grad_u_ext[nSpace],
+		m_ext=0.0,
+		dm_ext=0.0,
+		H_ext=0.0,
+		dH_ext[nSpace],
+		bc_u_ext=0.0,
+		bc_grad_u_ext[nSpace],
+		bc_m_ext=0.0,
+		bc_dm_ext=0.0,
+		bc_H_ext=0.0,
+		bc_dH_ext[nSpace],
+		jac_ext[nSpace*nSpace],
+		jacDet_ext,
+		jacInv_ext[nSpace*nSpace],
+		boundaryJac[nSpace*(nSpace-1)],
+		metricTensor[(nSpace-1)*(nSpace-1)],
+		metricTensorDetSqrt,
+		dS,
+		u_test_dS[nDOF_test_element],
+		u_grad_trial_trace[nDOF_trial_element*nSpace],
+		normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
+		G[nSpace*nSpace],G_dd_G,tr_G,flux_ext;
+	      // 
+	      //calculate the solution and gradients at quadrature points 
+	      // 
+	      //compute information about mapping from reference element to physical element
+	      ck.calculateMapping_elementBoundary(eN,
+						  ebN_local,
+						  kb,
+						  ebN_local_kb,
+						  mesh_dof,
+						  mesh_l2g,
+						  mesh_trial_trace_ref,
+						  mesh_grad_trial_trace_ref,
+						  boundaryJac_ref,
+						  jac_ext,
+						  jacDet_ext,
+						  jacInv_ext,
+						  boundaryJac,
+						  metricTensor,
+						  metricTensorDetSqrt,
+						  normal_ref,
+						  normal,
+						  x_ext,y_ext,z_ext);
+	      ck.calculateMappingVelocity_elementBoundary(eN,
+							  ebN_local,
+							  kb,
+							  ebN_local_kb,
+							  mesh_velocity_dof,
+							  mesh_l2g,
+							  mesh_trial_trace_ref,
+							  xt_ext,yt_ext,zt_ext,
+							  normal,
+							  boundaryJac,
+							  metricTensor,
+							  integralScaling);
+	      dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
+	      //get the metric tensor
+	      //cek todo use symmetry
+	      ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+	      //compute shape and solution information
+	      //shape
+	      ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+	      //solution and gradients	
+	      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+	      ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+	      //precalculate test function products with integration weights
+	      for (int j=0;j<nDOF_trial_element;j++)
+		u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+	      //
+	      //load the boundary values
+	      //
+	      bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*ebqe_rd_u_ext[ebNE_kb];
+	      // 
+	      //calculate the pde coefficients using the solution and the boundary values for the solution 
+	      // 
+	      bc_u_ext = ebqe_bc_u_ext[ebNE_kb];
+	      evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+				   u_ext,
+				   grad_u_ext,
+				   m_ext,
+				   dm_ext,
+				   H_ext,
+				   dH_ext);
+	      evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+				   bc_u_ext,
+				   bc_grad_u_ext,
+				   bc_m_ext,
+				   bc_dm_ext,
+				   bc_H_ext,
+				   bc_dH_ext);
+	      //
+	      //moving mesh
+	      //
+	      double velocity_ext[nSpace];
+	      double mesh_velocity[3];
+	      mesh_velocity[0] = xt_ext;
+	      mesh_velocity[1] = yt_ext;
+	      mesh_velocity[2] = zt_ext;
+	      for (int I=0;I<nSpace;I++)
+		velocity_ext[I] = - MOVING_DOMAIN*mesh_velocity[I];
+	      // 
+	      //calculate the numerical fluxes 
+	      // 
+	      exteriorNumericalFlux(normal,
+				    bc_u_ext,
+				    u_ext,
+				    dH_ext,
+				    velocity_ext,
+				    flux_ext);
+	      ebqe_u[ebNE_kb] = u_ext;	      
+	      //
+	      //update residuals
+	      //
+	      for (int i=0;i<nDOF_test_element;i++)
+		{
+		  //int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
+		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]);
+		}//i
+	    }//kb
+	  //
+	  //update the element and global residual storage
+	  //
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      int eN_i = eN*nDOF_test_element+i;		    
+	      double mi = lumped_mass_matrix[offset_u+stride_u*u_l2g[eN_i]];
+	      if (LUMPED_MASS_MATRIX==1)
+		globalResidual[offset_u+stride_u*u_l2g[eN_i]] -= dt/mi*elementResidual_u[i];
+	      else
+		globalResidual[offset_u+stride_u*u_l2g[eN_i]] += dt*elementResidual_u[i];
+	    }//i
+	}//ebNE
+      
+      /////////////////////////
+    }
+
+    /*
+      // CODE TO COMPUTE LINEARITY PRESERVING SMOOTHNESS INDICATOR BASED ON KUZMINS // 
+      //////////////////////////////////////////
+      // COMPUTE g vector and ENTROPY AT DOFs //
+      //////////////////////////////////////////
+      // gi=1/mi*sum_j(Cij*uj)
+      register double gx[numDOFs], gy[numDOFs];
+      int ij = 0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  gx[i]=0.;
+	  gy[i]=0.;
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      gx[i] += Cx[ij]*u_dof_old[j];
+	      gy[i] += Cy[ij]*u_dof_old[j];
+	      //update ij
+	      ij+=1;
+	    }
+	  gx[i] /= ML[i];
+	  gy[i] /= ML[i];
+	}
+
+      // Allocate and init to zero the Entropy residual vector
+      register double 
+      alpha_numerator_pos[numDOFs], alpha_numerator_neg[numDOFs],
+	alpha_denominator_pos[numDOFs], alpha_denominator_neg[numDOFs],
+	SumPos[numDOFs], SumNeg[numDOFs];
+      for (int i=0; i<numDOFs; i++)
+	{
+	  alpha_numerator_pos[i]=0.;
+	  alpha_numerator_neg[i]=0.;
+	  alpha_denominator_pos[i]=0.;
+	  alpha_denominator_neg[i]=0.;
+	  SumPos[i]=0.;
+	  SumNeg[i]=0.;
+	}    
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  //declare local storage for local contributions and initialize
+	  register double 
+	    int_un_times_test[nDOF_test_element], // for smoothness indicator
+	    intX_times_test[nDOF_test_element], // for smoothness indicator
+	    intY_times_test[nDOF_test_element], // for smoothness indicator
+	  // for smoothness indicator 
+	  double average_of_u_in_K = 0.;
+	  double average_of_x_in_K = 0.;
+	  double average_of_y_in_K = 0.;
+	  double vol_of_K = 0.;
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      int_un_times_test[i]=0.0;
+	      intX_times_test[i]=0.0;
+	      intY_times_test[i]=0.0;
+	    }
+	  //loop over quadrature points and compute integrands
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      //...
+	      // compute auxiliary quantities for smoothness indicator 
+	      average_of_u_in_K += un*dV;
+	      vol_of_K += dV;
+	      average_of_x_in_K += x*dV;
+	      average_of_y_in_K += y*dV;
+	      for(int i=0;i<nDOF_test_element;i++) 
+		{ 
+		  int_un_times_test[i] += un*u_test_dV[i];
+		  // compute int(x*wi)
+		  intX_times_test[i] += x*u_test_dV[i];
+		  intY_times_test[i] += y*u_test_dV[i];
+		}//i
+	    }	  
+	  /////////////////
+	  // DISTRIBUTE // load cell based element into global residual
+	  ////////////////
+	  for(int i=0;i<nDOF_test_element;i++) 
+	    { 
+	      int eN_i=eN*nDOF_test_element+i;
+	      int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+	      // for smoothness indicator 
+	      double alpha_num = int_un_times_test[i] - average_of_u_in_K/vol_of_K * element_lumped_mass_matrix[i];
+	      alpha_numerator_pos[gi] += alpha_num > 0 ? alpha_num : 0.;
+	      alpha_numerator_neg[gi] += alpha_num < 0 ? alpha_num : 0.;
+	      alpha_denominator_pos[gi] += alpha_num > 0 ? alpha_num : 0.;
+	      alpha_denominator_neg[gi] += alpha_num < 0 ? fabs(alpha_num) : 0.;
+	      
+	      double aux = 
+		gx[gi]*(intX_times_test[i] - 
+			average_of_x_in_K/vol_of_K * element_lumped_mass_matrix[i]) 
+		+ gy[gi]*(intY_times_test[i] - 
+			  average_of_y_in_K/vol_of_K * element_lumped_mass_matrix[i]);
+	      
+	      SumPos[gi] += aux > 0 ? aux : 0;
+	      SumNeg[gi] += aux < 0 ? aux : 0;
+	    }//i
+	}//elements
+
+      //////////////////////////////////////////////////////////
+      // COMPUTE SMOOTHNESS INDICATOR and ENTROPY MIN and MAX //
+      //////////////////////////////////////////////////////////
+      // Smoothness indicator is based on the solution. 
+      // psi_i = psi_i(alpha_i); alpha_i = |sum(betaij*(uj-ui))|/sum(betaij*|uj-ui|)
+      register double psi[numDOFs], etaMax[numDOFs], etaMin[numDOFs];
+      for (int i=0; i<numDOFs; i++)
+	{
+	  double alphai;
+	  double Sum = SumPos[i] + SumNeg[i];
+	  double sigmaPosi = Sum < 0 ? 1. : (-SumNeg[i])/(SumPos[i]+1E-15);
+	  double sigmaNegi = Sum > 0 ? 1. : (SumPos[i])/(-SumNeg[i]+1E-15);
+
+	  double alpha_numi = fabs(sigmaPosi*alpha_numerator_pos[i] + sigmaNegi * alpha_numerator_neg[i]);
+	  double alpha_deni = sigmaPosi*alpha_denominator_pos[i] + sigmaNegi * alpha_denominator_neg[i];
+	  
+	  alphai = (alpha_numi == alpha_deni ? 1. : alpha_numi/alpha_deni);
+	  if (POWER_SMOOTHNESS_INDICATOR==0)
+	    psi[i] = 1.0;
+	  else
+	    psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+	}	  
+      // END OF COMPUTING SMOOTHNESS INDICATOR 
+
+      // ...
+    }
+    */
     
     void calculateJacobian(//element
 			   double* mesh_trial_ref,
@@ -748,6 +2152,7 @@ namespace proteus
 			   double shockCapturingDiffusion,
 			   int* u_l2g,
 			   double* elementDiameter,
+			   int degree_polynomial,
 			   double* u_dof, 
 			   double* velocity,
 			   double* q_m_betaBDF, 
@@ -763,8 +2168,11 @@ namespace proteus
 			   int* isDOFBoundary_u,
 			   double* ebqe_rd_u_ext,
 			   double* ebqe_bc_u_ext,
-			   int* csrColumnOffsets_eb_u_u)
+			   int* csrColumnOffsets_eb_u_u, 
+			   int EDGE_VISCOSITY, 
+			   int LUMPED_MASS_MATRIX)
     {
+      double dt = 1./alphaBDF; // HACKED to work just for BDF1
       double Ct_sge = 4.0;
     
       //
@@ -917,6 +2325,7 @@ namespace proteus
 
 	      for(int j=0;j<nDOF_trial_element;j++)
 		dsubgridError_u_u[j] = -tau*dpdeResidual_u_u[j];
+	      int IMPLICIT = (EDGE_VISCOSITY==1 ? 0. : 1.);
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
 		  //int eN_k_i=eN_k*nDOF_test_element+i;
@@ -927,11 +2336,20 @@ namespace proteus
 		      //int eN_k_j_nSpace = eN_k_j*nSpace;
 		      int j_nSpace = j*nSpace;
 		      int i_nSpace = i*nSpace;
-		      elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) + 
-			ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
-			MOVING_DOMAIN*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
-			ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) + 
-			ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); 
+		      if (LUMPED_MASS_MATRIX==1)
+			{
+			  if (i==j)
+			    elementJacobian_u_u[i][j] += u_test_dV[i];
+			}
+		      else
+			{
+			  elementJacobian_u_u[i][j] += 
+			    dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) + 
+			    dt*IMPLICIT*ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
+			    dt*IMPLICIT*MOVING_DOMAIN*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
+			    dt*IMPLICIT*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) + 
+			    dt*IMPLICIT*ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); 
+			}
 		    }//j
 		}//i
 	    }//k
@@ -1106,8 +2524,11 @@ namespace proteus
 		{
 		  //register int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
 		  register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
-	      
-		  fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
+		  if (EDGE_VISCOSITY==0)
+		    fluxJacobian_u_u[j]=dt*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
+		  else
+		    fluxJacobian_u_u[j]=
+		      (FIX_BOUNDARY_KUZMINS==0 ? 1. : 0.)*dt*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
 		}//j
 	      //
 	      //update the global Jacobian from the flux Jacobian
@@ -1126,6 +2547,483 @@ namespace proteus
 	    }//kb
 	}//ebNE
     }//computeJacobian
+
+    void calculateMassMatrix(//element
+			   double* mesh_trial_ref,
+			   double* mesh_grad_trial_ref,
+			   double* mesh_dof,
+			   double* mesh_velocity_dof,
+			   double MOVING_DOMAIN,
+			   int* mesh_l2g,
+			   double* dV_ref,
+			   double* u_trial_ref,
+			   double* u_grad_trial_ref,
+			   double* u_test_ref,
+			   double* u_grad_test_ref,
+			   //element boundary
+			   double* mesh_trial_trace_ref,
+			   double* mesh_grad_trial_trace_ref,
+			   double* dS_ref,
+			   double* u_trial_trace_ref,
+			   double* u_grad_trial_trace_ref,
+			   double* u_test_trace_ref,
+			   double* u_grad_test_trace_ref,
+			   double* normal_ref,
+			   double* boundaryJac_ref,
+			   //physics
+			   int nElements_global,
+			   double useMetrics, 
+			   double alphaBDF,
+			   int lag_shockCapturing,/*mwf not used yet*/
+			   double shockCapturingDiffusion,
+			   int* u_l2g,
+			   double* elementDiameter,
+			   int degree_polynomial,
+			   double* u_dof, 
+			   double* velocity,
+			   double* q_m_betaBDF, 
+			   double* cfl,
+			   double* q_numDiff_u_last, 
+			   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+			   double* globalJacobian,
+			   int nExteriorElementBoundaries_global,
+			   int* exteriorElementBoundariesArray,
+			   int* elementBoundaryElementsArray,
+			   int* elementBoundaryLocalElementBoundariesArray,
+			   double* ebqe_velocity_ext,
+			   int* isDOFBoundary_u,
+			   double* ebqe_rd_u_ext,
+			   double* ebqe_bc_u_ext,
+			   int* csrColumnOffsets_eb_u_u, 
+			   int EDGE_VISCOSITY, 
+			   int LUMPED_MASS_MATRIX)
+    {
+      double dt = 1./alphaBDF; // HACKED to work just for BDF1
+      double Ct_sge = 4.0;
+    
+      //
+      //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
+      //
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    for (int j=0;j<nDOF_trial_element;j++)
+	      {
+		elementJacobian_u_u[i][j]=0.0;
+	      }
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
+		eN_k_nSpace = eN_k*nSpace,
+		eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
+
+	      //declare local storage
+	      register double u=0.0,
+		grad_u[nSpace],
+		m=0.0,dm=0.0,
+		H=0.0,dH[nSpace],
+		f[nSpace],df[nSpace],//MOVING_MESH
+		m_t=0.0,dm_t=0.0,
+		dpdeResidual_u_u[nDOF_trial_element],
+		Lstar_u[nDOF_test_element],
+		dsubgridError_u_u[nDOF_trial_element],
+		tau=0.0,tau0=0.0,tau1=0.0,
+		jac[nSpace*nSpace],
+		jacDet,
+		jacInv[nSpace*nSpace],
+		u_grad_trial[nDOF_trial_element*nSpace],
+		dV,
+		u_test_dV[nDOF_test_element],
+		u_grad_test_dV[nDOF_test_element*nSpace],
+		x,y,z,xt,yt,zt,
+		G[nSpace*nSpace],G_dd_G,tr_G;
+	      //
+	      //calculate solution and gradients at quadrature points
+	      //
+	      //get jacobian, etc for mapping reference element
+	      ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,
+					  x,y,z);
+	      ck.calculateMappingVelocity_element(eN,
+						  k,
+						  mesh_velocity_dof,
+						  mesh_l2g,
+						  mesh_trial_ref,
+						  xt,yt,zt);
+	      //get the physical integration weight
+	      dV = fabs(jacDet)*dV_ref[k];
+	      ck.calculateG(jacInv,G,G_dd_G,tr_G);
+	      //get the trial function gradients
+	      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+	      //get the solution 	
+	      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+	      //get the solution gradients
+	      ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+	      //precalculate test function products with integration weights
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		  for (int I=0;I<nSpace;I++)
+		    {
+		      u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+		    }
+		}
+	      //
+	      //calculate pde coefficients and derivatives at quadrature points
+	      //
+	      evaluateCoefficients(&velocity[eN_k_nSpace],
+				   u,
+				   grad_u,
+				   m,
+				   dm,
+				   H,
+				   dH);
+	      //
+	      //moving mesh
+	      //
+	      double mesh_velocity[3];
+	      mesh_velocity[0] = xt;
+	      mesh_velocity[1] = yt;
+	      mesh_velocity[2] = zt;
+	      for (int I=0;I<nSpace;I++)
+		{
+		  f[I] = -MOVING_DOMAIN*m*mesh_velocity[I];
+		  df[I] = -MOVING_DOMAIN*dm*mesh_velocity[I];
+		}
+	      //
+	      //calculate time derivatives
+	      //
+	      ck.bdf(alphaBDF,
+		     q_m_betaBDF[eN_k],
+		     m,
+		     dm,
+		     m_t,
+		     dm_t);
+	      //
+	      //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
+	      //
+	      //calculate the adjoint times the test functions
+	      for (int i=0;i<nDOF_test_element;i++)
+		{
+		  //int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace;
+		  //Lstar_u[i]=ck.Hamiltonian_adjoint(dH,&u_grad_test_dV[eN_k_i_nSpace]);
+		  register int i_nSpace = i*nSpace;
+		  Lstar_u[i]=ck.Hamiltonian_adjoint(dH,&u_grad_test_dV[i_nSpace]) + MOVING_DOMAIN*ck.Advection_adjoint(df,&u_grad_test_dV[i_nSpace]);
+	      
+		}
+	      //calculate the Jacobian of strong residual
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  //int eN_k_j=eN_k*nDOF_trial_element+j;
+		  //int eN_k_j_nSpace = eN_k_j*nSpace;
+		  int j_nSpace = j*nSpace;
+		  dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref[k*nDOF_trial_element+j]) +
+		    ck.HamiltonianJacobian_strong(dH,&u_grad_trial[j_nSpace]) +
+		    MOVING_DOMAIN*ck.AdvectionJacobian_strong(df,&u_grad_trial[j_nSpace]);
+
+		}
+	      //tau and tau*Res
+	      double subgridErrorVelocity[nSpace];
+	      for (int I=0;I<nSpace;I++)
+		subgridErrorVelocity[I] = dH[I] - MOVING_DOMAIN*df[I];
+
+	      calculateSubgridError_tau(elementDiameter[eN],
+					dm_t,
+					subgridErrorVelocity,//dH,
+	   	         		cfl[eN_k],
+					tau0);
+  
+              calculateSubgridError_tau(Ct_sge,
+                                        G,
+					dm_t,
+					subgridErrorVelocity,//dH,
+					tau1,
+				        cfl[eN_k]);
+              tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
+
+	      for(int j=0;j<nDOF_trial_element;j++)
+		dsubgridError_u_u[j] = -tau*dpdeResidual_u_u[j];
+
+	      for(int i=0;i<nDOF_test_element;i++)
+		{
+		  //int eN_k_i=eN_k*nDOF_test_element+i;
+		  //int eN_k_i_nSpace=eN_k_i*nSpace;
+		  for(int j=0;j<nDOF_trial_element;j++) 
+		    { 
+		      //int eN_k_j=eN_k*nDOF_trial_element+j;
+		      //int eN_k_j_nSpace = eN_k_j*nSpace;
+		      int j_nSpace = j*nSpace;
+		      int i_nSpace = i*nSpace;
+		      if (LUMPED_MASS_MATRIX==1)
+			{
+			  if (i==j)
+			    elementJacobian_u_u[i][j] += u_test_dV[i];
+			}
+		      else
+			{
+			  elementJacobian_u_u[i][j] += 
+			    dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]);			    
+			}
+		    }//j
+		}//i
+	    }//k
+	  //
+	  //load into element Jacobian into global Jacobian
+	  //
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      int eN_i = eN*nDOF_test_element+i;
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  int eN_i_j = eN_i*nDOF_trial_element+j;
+		  globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+		}//j
+	    }//i
+	}//elements
+    }//computeMassMatrix
+
+    void calculateSmoothingMatrix(//element
+			     double* mesh_trial_ref,
+			   double* mesh_grad_trial_ref,
+			   double* mesh_dof,
+			   double* mesh_velocity_dof,
+			   double MOVING_DOMAIN,
+			   int* mesh_l2g,
+			   double* dV_ref,
+			   double* u_trial_ref,
+			   double* u_grad_trial_ref,
+			   double* u_test_ref,
+			   double* u_grad_test_ref,
+			   //element boundary
+			   double* mesh_trial_trace_ref,
+			   double* mesh_grad_trial_trace_ref,
+			   double* dS_ref,
+			   double* u_trial_trace_ref,
+			   double* u_grad_trial_trace_ref,
+			   double* u_test_trace_ref,
+			   double* u_grad_test_trace_ref,
+			   double* normal_ref,
+			   double* boundaryJac_ref,
+			   //physics
+			   int nElements_global,
+			   double useMetrics, 
+			   double alphaBDF,
+			   int lag_shockCapturing,/*mwf not used yet*/
+			   double shockCapturingDiffusion,
+			   int* u_l2g,
+			   double* elementDiameter,
+			   int degree_polynomial,
+			   double* u_dof, 
+			   double* velocity,
+			   double* q_m_betaBDF, 
+			   double* cfl,
+			   double* q_numDiff_u_last, 
+			   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+			   double* globalJacobian,
+			   int nExteriorElementBoundaries_global,
+			   int* exteriorElementBoundariesArray,
+			   int* elementBoundaryElementsArray,
+			   int* elementBoundaryLocalElementBoundariesArray,
+			   double* ebqe_velocity_ext,
+			   int* isDOFBoundary_u,
+			   double* ebqe_rd_u_ext,
+			     double* ebqe_bc_u_ext,
+			     int* csrColumnOffsets_eb_u_u, 
+			     double he)
+    {
+      double dt = 1./alphaBDF; // HACKED to work just for BDF1
+      double Ct_sge = 4.0;
+    
+      //
+      //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
+      //
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    for (int j=0;j<nDOF_trial_element;j++)
+	      {
+		elementJacobian_u_u[i][j]=0.0;
+	      }
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
+		eN_k_nSpace = eN_k*nSpace,
+		eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
+
+	      //declare local storage
+	      register double u=0.0,
+		grad_u[nSpace],
+		m=0.0,dm=0.0,
+		H=0.0,dH[nSpace],
+		f[nSpace],df[nSpace],//MOVING_MESH
+		m_t=0.0,dm_t=0.0,
+		dpdeResidual_u_u[nDOF_trial_element],
+		Lstar_u[nDOF_test_element],
+		dsubgridError_u_u[nDOF_trial_element],
+		tau=0.0,tau0=0.0,tau1=0.0,
+		jac[nSpace*nSpace],
+		jacDet,
+		jacInv[nSpace*nSpace],
+		u_grad_trial[nDOF_trial_element*nSpace],
+		dV,
+		u_test_dV[nDOF_test_element],
+		u_grad_test_dV[nDOF_test_element*nSpace],
+		x,y,z,xt,yt,zt,
+		G[nSpace*nSpace],G_dd_G,tr_G;
+	      //
+	      //calculate solution and gradients at quadrature points
+	      //
+	      //get jacobian, etc for mapping reference element
+	      ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,
+					  x,y,z);
+	      ck.calculateMappingVelocity_element(eN,
+						  k,
+						  mesh_velocity_dof,
+						  mesh_l2g,
+						  mesh_trial_ref,
+						  xt,yt,zt);
+	      //get the physical integration weight
+	      dV = fabs(jacDet)*dV_ref[k];
+	      ck.calculateG(jacInv,G,G_dd_G,tr_G);
+	      //get the trial function gradients
+	      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+	      //get the solution 	
+	      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+	      //get the solution gradients
+	      ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+	      //precalculate test function products with integration weights
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		  for (int I=0;I<nSpace;I++)
+		    {
+		      u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+		    }
+		}
+	      //
+	      //calculate pde coefficients and derivatives at quadrature points
+	      //
+	      evaluateCoefficients(&velocity[eN_k_nSpace],
+				   u,
+				   grad_u,
+				   m,
+				   dm,
+				   H,
+				   dH);
+	      //
+	      //moving mesh
+	      //
+	      double mesh_velocity[3];
+	      mesh_velocity[0] = xt;
+	      mesh_velocity[1] = yt;
+	      mesh_velocity[2] = zt;
+	      for (int I=0;I<nSpace;I++)
+		{
+		  f[I] = -MOVING_DOMAIN*m*mesh_velocity[I];
+		  df[I] = -MOVING_DOMAIN*dm*mesh_velocity[I];
+		}
+	      //
+	      //calculate time derivatives
+	      //
+	      ck.bdf(alphaBDF,
+		     q_m_betaBDF[eN_k],
+		     m,
+		     dm,
+		     m_t,
+		     dm_t);
+	      //
+	      //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
+	      //
+	      //calculate the adjoint times the test functions
+	      for (int i=0;i<nDOF_test_element;i++)
+		{
+		  //int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace;
+		  //Lstar_u[i]=ck.Hamiltonian_adjoint(dH,&u_grad_test_dV[eN_k_i_nSpace]);
+		  register int i_nSpace = i*nSpace;
+		  Lstar_u[i]=ck.Hamiltonian_adjoint(dH,&u_grad_test_dV[i_nSpace]) + MOVING_DOMAIN*ck.Advection_adjoint(df,&u_grad_test_dV[i_nSpace]);
+	      
+		}
+	      //calculate the Jacobian of strong residual
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  //int eN_k_j=eN_k*nDOF_trial_element+j;
+		  //int eN_k_j_nSpace = eN_k_j*nSpace;
+		  int j_nSpace = j*nSpace;
+		  dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref[k*nDOF_trial_element+j]) +
+		    ck.HamiltonianJacobian_strong(dH,&u_grad_trial[j_nSpace]) +
+		    MOVING_DOMAIN*ck.AdvectionJacobian_strong(df,&u_grad_trial[j_nSpace]);
+
+		}
+	      //tau and tau*Res
+	      double subgridErrorVelocity[nSpace];
+	      for (int I=0;I<nSpace;I++)
+		subgridErrorVelocity[I] = dH[I] - MOVING_DOMAIN*df[I];
+
+	      calculateSubgridError_tau(elementDiameter[eN],
+					dm_t,
+					subgridErrorVelocity,//dH,
+	   	         		cfl[eN_k],
+					tau0);
+  
+              calculateSubgridError_tau(Ct_sge,
+                                        G,
+					dm_t,
+					subgridErrorVelocity,//dH,
+					tau1,
+				        cfl[eN_k]);
+              tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
+
+	      for(int j=0;j<nDOF_trial_element;j++)
+		dsubgridError_u_u[j] = -tau*dpdeResidual_u_u[j];
+
+	      for(int i=0;i<nDOF_test_element;i++)
+		{
+		  //int eN_k_i=eN_k*nDOF_test_element+i;
+		  //int eN_k_i_nSpace=eN_k_i*nSpace;
+		  for(int j=0;j<nDOF_trial_element;j++) 
+		    { 
+		      //int eN_k_j=eN_k*nDOF_trial_element+j;
+		      //int eN_k_j_nSpace = eN_k_j*nSpace;
+		      int j_nSpace = j*nSpace;
+		      int i_nSpace = i*nSpace;
+		      elementJacobian_u_u[i][j] += 
+			dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i])
+			+ std::pow(he,2)*(u_grad_trial[i*nSpace+0]*u_grad_test_dV[j*nSpace+0] 
+					  +u_grad_trial[i*nSpace+1]*u_grad_test_dV[j*nSpace+1]);
+		    }//j
+		}//i
+	    }//k
+	  //
+	  //load into element Jacobian into global Jacobian
+	  //
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      int eN_i = eN*nDOF_test_element+i;
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  int eN_i_j = eN_i*nDOF_trial_element+j;
+		  globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+		}//j
+	    }//i
+	}//elements
+    }//computeMassMatrix
 
     void calculateWaterline(//element
                            int* wlc,
