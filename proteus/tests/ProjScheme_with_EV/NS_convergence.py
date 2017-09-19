@@ -6,13 +6,18 @@ from proteus.Profiling import logEvent
 
 #  Discretization -- input options
 #Refinement = 20#45min on a single core for spaceOrder=1, useHex=False
-mu = 1. #Just to compute force terms for convergence test
-KILL_PRESSURE_TERM = True
+mu = 1.0E-4 #Just to compute force terms for convergence test
+manufactured_solution = 1 #1: u.n!=0, 2: u.n=0
+KILL_PRESSURE_TERM = False
+fixNullSpace_PresInc = True
+INTEGRATE_BY_PARTS_DIV_U_PresInc = True
+CORRECT_VELOCITY = True
+ns_forceStrongDirichlet = True
 STABILIZATION_TYPE = 1 #0: SUPG, 1: EV via weak residual, 2: EV via strong residual
 cE = 1.0
 cMax = 1.0
 
-Refinement = 3
+Refinement = 2
 sedimentDynamics=False
 genMesh = True
 movingDomain = False
@@ -20,7 +25,7 @@ applyRedistancing = True
 useOldPETSc = False
 useSuperlu = True
 timeDiscretization = 'vbdf' # 'vbdf', 'be', 'flcbdf'
-spaceOrder = 1
+spaceOrder = 2
 pspaceOrder = 1
 useHex = False
 useRBLES = 0.0
@@ -86,7 +91,7 @@ L = (1.0, 1.0)
 he = L[0]/float(4*Refinement-1)
 he*=0.5
 he*=0.5
-he*=0.5
+#he*=0.5
 #he*=0.5
 #he*=0.5
 
@@ -164,11 +169,10 @@ else:
 T=1.0
 dt_fixed = 0.1#0.03
 dt_init = min(0.1*dt_fixed,0.001)
-runCFL=0.1
+runCFL=0.33
 nDTout = int(round(T/dt_fixed))
 
 # Numerical parameters
-ns_forceStrongDirichlet = False
 ns_sed_forceStrongDirichlet = False
 if useMetrics:
     ns_shockCapturingFactor  = 0.5
