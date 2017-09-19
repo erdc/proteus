@@ -268,15 +268,15 @@ class NS_base:  # (HasTraits):
                 else:
                     logEvent("Calling Triangle to generate 2D mesh for"+p.name)
                     tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
-                                                        nbase=1,
-                                                        verbose=10)
+                                                           nbase=1,
+                                                           verbose=10)
                     if comm.isMaster() and p.genMesh:
                         tmesh.readFromPolyFile(p.domain.polyfile)
                         tmesh.writeToFile(p.domain.polyfile)
                         logEvent("Converting to Proteus Mesh")
                         mesh=tmesh.convertToProteusMesh(verbose=1)
                     comm.barrier()
-                    if not comm.isMaster() or not p.genMesh:
+                    if p.genMesh:
                         mesh = MeshTools.TriangularMesh()
                         mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
                     mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
@@ -641,7 +641,8 @@ class NS_base:  # (HasTraits):
                 parallelUsesFullOverlap=(n.nLayersOfOverlapForParallel > 0 or n.parallelPartitioningType == MeshTools.MeshParallelPartitioningTypes.node),
                 par_duList=model.par_duList,
                 solver_options_prefix=linear_solver_options_prefix,
-                computeEigenvalues = n.computeEigenvalues)
+                computeEigenvalues = n.computeEigenvalues,
+                linearSmootherOptions = n.linearSmootherOptions)
             self.lsList.append(multilevelLinearSolver)
             Profiling.memory("MultilevelLinearSolver for "+p.name)
             logEvent("Setting up MultilevelNonLinearSolver for "+p.name)
@@ -1244,7 +1245,7 @@ class NS_base:  # (HasTraits):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
-            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
+#            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
             if self.opts.save_dof:
                 for m in self.modelList:
                     for lm in m.levelModelList:
@@ -1262,10 +1263,10 @@ class NS_base:  # (HasTraits):
                     logEvent("Split operator iteration %i" % (self.systemStepController.its,),level=3)
                     self.nSequenceSteps += 1
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
-
+                        logEvent("NumericalAnalytics Model %s " % (model.name), level=0)
                         logEvent("Model: %s" % (model.name),level=1)
+                        logEvent("NumericalAnalytics Time Step " + `self.t_stepSequence`, level=0)
                         logEvent("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name),level=3)
-
                         for m in model.levelModelList:
                             if m.movingDomain and m.tLast_mesh != self.systemStepController.t_system_last:
                                 m.t_mesh = self.systemStepController.t_system_last
