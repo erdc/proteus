@@ -149,7 +149,7 @@ class Coefficients(TC_base):
         else:
             # compute q_p_sharp to be use by RANS on next time step. 
             # At this time step: q_p_sharp = p^(n+2) ~ (1+r)*p^(n+1)-r*pn = pn + (1+r)*pressureIncrement 
-            if (firstStep):
+            if (firstStep or self.fluidModel.timeIntegration.timeOrder==1):
                 r=1
             else:
                 r = self.fluidModel.timeIntegration.dt/self.fluidModel.timeIntegration.dt_history[0]
