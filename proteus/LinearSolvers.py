@@ -17,8 +17,14 @@ from math import *
 import math
 from .Profiling import logEvent
 
-class LinearSolver:
-    """ The base class for linear solvers.  """
+class LinearSolver():
+    """ The base class for linear solvers.  
+
+    Arugments
+    ---------
+    L : :class:`proteus.superluWrappers.SparseMatrix`
+        This is the system matrix.
+    """
     def __init__(self,
                  L,
                  rtol_r  = 1.0e-4,
@@ -3659,3 +3665,167 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
                    'd')
 
            points_quadrature.allocate(Q)
+
+class ChebyshevSemiIteration(LinearSolver):
+    """ Class for implementing the ChebyshevSemiIteration. 
+    
+    Notes
+    -----
+    The Chebyshev semi-iteration was developed in the 1960s
+    by Golub and Varga.  It is an iterative technique for
+    solving linear systems Ax = b with the property of preserving
+    linearity with respect to the Krylov solves (see Wathen,
+    Rees 2009 - Chebyshev semi-iteration in preconditioning
+    for problems including the mass matrix).  This makes the method 
+    particularly well suited for solving sub-problems that arise in 
+    more complicated block preconditioners such as the Schur 
+    complement, provided one has an aprior bound on the systems 
+    eigenvalues (see Wathen 1987 - Realisitc eigenvalue bounds for 
+    Galerkin mass matrix).
+
+    When implementing this method it is important you first
+    have tight aprior bounds on the eigenvalues (denoted here as 
+    alpha and beta). This can be a challenge, but the references 
+    above do provide these results for many relevant mass matrices.
+    
+    Also, when implementing this method, the residual b - Ax0
+    will be preconditioned with the inverse of diag(A).  Your eigenvalue 
+    bounds should reflect the spectrum of this preconditioned system.
+
+    Arugments
+    ---------
+    A : :class: `p4pyPETSc.Mat`
+        The linear system matrix
+
+    b : :class: `p4pyPETSc.Vec`
+        The righthand side vector
+
+    x : :class: `p4pyPETSc.Vec`
+        An initial guess for the solution
+
+    k : int
+        The desired number of iterations
+
+    alpha : float
+        A's smallest eigenvalue
+
+    beta : float
+        A's largest eigenvalue
+
+    save_iterations : bool
+        A flag indicating whether to store each solution iteration
+
+    Notes
+    -----
+    The Chebyshev semi-iteration is often used to solve subproblems of
+    larger linear systems.  Thus, it is common that this class will
+    use petsc4py matrices and vectors.  Currently this is the
+    only case that is implemented, but an additional constructor 
+    has been included in the API for superlu matrices for future
+    implementations.
+    """
+
+    def __init__(self, A, b, x, k, alpha, beta, save_iterations = False):
+        # Save and initialize PETSc information
+        self.A_petsc = A
+        self.b_petsc = b
+        self.b_petsc_array = self.b_petsc.getArray()
+        self.x_petsc = x
+        self.x_petsc_array = self.x_petsc.getArray()
+
+        # Initialize Linear Solver with superlu matrix
+        num_rows = A.getSizes()[1][0]
+        num_cols = A.getSizes()[1][1]
+        (self.rowptr, self.colind, self.nzval) = A.getValuesCSR()
+        A_superlu = SparseMat(num_rows,
+                              num_cols,
+                              self.nzval.shape[0],
+                              self.nzval,
+                              self.colind,
+                              self.rowptr)
+        LinearSolver.__init__(self, A_superlu) 
+
+        self.r_petsc = self.b_petsc.copy()
+        self.r_petsc_array = self.r_petsc.getArray()
+        
+        # Store other input values
+        self.k = k
+        self.alpha = alpha
+        self.beta = beta
+        self.relax_parameter = (self.alpha + self.beta) / 2.
+        self.rho = (self.beta - self.alpha) / (self.alpha + self.beta)
+        self.diag = self.A_petsc.getDiagonal().copy()
+        self.diag.scale(self.relax_parameter)
+        self.z = self.A_petsc.getDiagonal().copy()
+
+        # Initialize iteration info
+        self.x_k = x.copy()
+        self.x_k_array = self.x_k.getArray()
+        self.x_km1 = x.copy()
+        self.x_km1.zeroEntries()
+
+        self.save_iterations = save_iterations
+        if self.save_iterations:
+            self.iteration_results = [self.x_k.getArray().copy()]
+
+    @classmethod
+    def chebyshev_superlu_constructor(cls):
+        """ 
+        Future home of a Chebyshev constructor for superlu matrices.
+        """
+        raise RuntimeError('This function is not implmented yet.')
+        
+    def apply(self):
+        """ This function applies the Chebyshev-semi iteration.
+
+        Returns
+        -------
+        x : :class:`p4pyPETSc.Vec`
+            The result of the Chebyshev semi-iteration.
+        """
+        for i in range(self.k):
+            w = 1./(1-(self.rho**2)/4.)
+            self.r_petsc_array.fill(0.)
+            self.computeResidual(self.x_k_array,
+                                 self.r_petsc_array,
+                                 self.b_petsc_array)
+            # x_kp1 = w*(z + x_k - x_km1) + x_km1
+            self.r_petsc.scale(-1)
+            self.z.pointwiseDivide(self.r_petsc, self.diag)
+            self.z.axpy(1., self.x_k)
+            self.z.axpy(-1., self.x_km1)
+            self.z.scale(w)
+            self.z.axpy(1., self.x_km1)
+            self.x_km1 = self.x_k.copy()
+            self.x_k = self.z.copy()
+            self.x_k_array = self.x_k.getArray()
+            if self.save_iterations:
+                self.iteration_results.append(self.x_k.getArray().copy())
+        return self.x_k
+        
+# The implementation that is commented out here was adopted from
+# the 1996 text Iterative Solution Methods by Owe Axelsson starting
+# on page 179.  As currently written, this algorithm requires
+# inputing the inverse diagonally preconditioned matrix A and b.  I'm
+# not sure this is the best approach, but I'd like to leave this code
+# in place for now in case it is useful in the future.
+
+    # def _calc_theta_ell(self, ell):
+    #     return ((2*ell + 1) / (2. * self.k) ) * math.pi
+
+    # def _calc_tau(self, ell):
+    #     theta = self._calc_theta_ell(ell)
+    #     one_over_tau = ( (self.beta - self.alpha) / 2. * math.cos(theta) +
+    #                      (self.beta + self.alpha) / 2.)
+    #     return 1. / one_over_tau
+
+    # def apply(self):
+    #     for i in range(self.k):
+    #         if i==0 and self.save_iterations:
+    #             self.iteration_results.append(self.x_k.getArray().reshape(self.n,1).copy())
+    #         elif i > 0:
+    #             tau = self._calc_tau(i-1)
+    #             resid = self._calc_residual(self.x_k)
+    #             self.x_k.axpy(-tau, resid)
+    #             if self.save_iterations:
+    #                 self.iteration_results.append(self.x_k.getArray().reshape(self.n,1).copy())
