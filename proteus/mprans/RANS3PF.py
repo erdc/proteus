@@ -1058,7 +1058,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='RANS3PF',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False): 
+                 movingDomain=False,
+                 bdyNullSpace=False):
+        self.bdyNullSpace=bdyNullSpace
         self.firstStep=True
         self.eb_adjoint_sigma = coefficients.eb_adjoint_sigma
         # this is a hack to test the effect of using a constant smoothing width
