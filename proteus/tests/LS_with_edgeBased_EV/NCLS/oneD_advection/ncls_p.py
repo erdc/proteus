@@ -10,6 +10,15 @@ name=soname+"_ls"
 
 nd=2
 
+def velx(X,t):
+    return 1.0
+
+def vely(X,t):
+    return 0.0
+
+velocityField={0:velx, 
+               1:vely}
+
 class init_cond:
     def __init__(self,L):
         self.radius = 0.15
@@ -26,8 +35,6 @@ class init_cond:
         #else:
         #    return -scaling*(x[0]-0.7)
 
-        #return scaling*(x[0]-0.5)
-        
         #return -beta*scaling*np.tanh((x[0]-0.7)/beta)*np.tanh((x[0]-0.3)/beta)
     
         if (x[0] >= 0.3 and x[0] <= 0.7):
@@ -66,10 +73,8 @@ coefficients = MyCoefficients(
     epsFact=epsFactHeaviside,
     checkMass=checkMass,
     RD_model=RD_model,
-    useMetrics=useMetrics)
-    #EDGE_VISCOSITY=EDGE_VISCOSITY, 
-    #ENTROPY_VISCOSITY=ENTROPY_VISCOSITY,
-    #LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX)
+    useMetrics=useMetrics, 
+    LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX)
 
 coefficients.variableNames=['u']
 initialConditions  = {0:init_cond(L)}
