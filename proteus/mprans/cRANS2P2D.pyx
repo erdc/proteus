@@ -158,7 +158,9 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double* wettedAreas,
                                double* netForces_p,
                                double* netForces_v,
-                               double* netMoments)
+                               double* netMoments,
+                               double* velocityError,
+                               double* velocityErrorNodal)
         void calculateJacobian(double NONCONSERVATIVE_FORM,
                                double MOMENTUM_SGE,
                                double PRESSURE_SGE,
@@ -319,7 +321,8 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                int* csrColumnOffsets_eb_w_u,
                                int* csrColumnOffsets_eb_w_v,
                                int* csrColumnOffsets_eb_w_w,
-                               int* elementFlags)
+                               int* elementFlags,
+                               int* boundaryFlags)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int* exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -400,8 +403,8 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                                  int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,     
                                                  double* laplace_matrix)
         void getTwoPhaseScaledMassOperator(int scale_type,
-	     				   int use_numerical_viscosity,
-					   int lumped,
+                                           int use_numerical_viscosity,
+                                           int lumped,
                                            double *mesh_trial_ref,
                                            double *mesh_grad_trial_ref,
                                            double *mesh_dof,
@@ -615,7 +618,9 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray wettedAreas,
                           numpy.ndarray netForces_p,
                           numpy.ndarray netForces_v,
-                          numpy.ndarray netMoments):
+                          numpy.ndarray netMoments,
+                          numpy.ndarray velocityError,
+                          numpy.ndarray velocityErrorNodal):
         self.thisptr.calculateResidual(NONCONSERVATIVE_FORM,
                                        MOMENTUM_SGE,
                                        PRESSURE_SGE,
@@ -768,7 +773,9 @@ cdef class cRANS2P2D_base:
                                        <double*> wettedAreas.data,
                                        <double*> netForces_p.data,
                                        <double*> netForces_v.data,
-                                       <double*> netMoments.data)
+                                       <double*> netMoments.data,
+                                       <double*> velocityError.data,
+                                       <double*> velocityErrorNodal.data)
     def calculateJacobian(self,
                           double NONCONSERVATIVE_FORM,
                           double MOMENTUM_SGE,
@@ -930,7 +937,8 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray csrColumnOffsets_eb_w_u,
                           numpy.ndarray csrColumnOffsets_eb_w_v,
                           numpy.ndarray csrColumnOffsets_eb_w_w,
-                          numpy.ndarray elementFlags):
+                          numpy.ndarray elementFlags,
+                          numpy.ndarray boundaryFlags):
         cdef numpy.ndarray rowptr,colind,globalJacobian_a
         (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(NONCONSERVATIVE_FORM,
@@ -1093,7 +1101,8 @@ cdef class cRANS2P2D_base:
                                        <int*> csrColumnOffsets_eb_w_u.data,
                                        <int*> csrColumnOffsets_eb_w_v.data,
                                        <int*> csrColumnOffsets_eb_w_w.data,
-                                       <int*> elementFlags.data)
+                                       <int*> elementFlags.data,
+                                       <int*> boundaryFlags.data)
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
                                  numpy.ndarray exteriorElementBoundariesArray,
@@ -1261,8 +1270,8 @@ cdef class cRANS2P2D_base:
                                                          <double*> laplace_matrix_vals.data)
     def getTwoPhaseScaledMassOperator(self,
                                       int scale_type,
-				      int use_numerical_viscosity,
-				      int lumped,
+                                      int use_numerical_viscosity,
+                                      int lumped,
                                       numpy.ndarray mesh_trial_ref,
                                       numpy.ndarray mesh_grad_trial_ref,
                                       numpy.ndarray mesh_dof,
@@ -1296,8 +1305,8 @@ cdef class cRANS2P2D_base:
         cdef numpy.ndarray rowptr, colind, mass_matrix_vals
         (rowptr,colind,mass_matrix_vals) = mass_matrix.getCSRrepresentation()
         self.thisptr.getTwoPhaseScaledMassOperator(scale_type,
-					           use_numerical_viscosity,
-						   lumped,
+                                                   use_numerical_viscosity,
+                                                   lumped,
                                                    <double*> mesh_trial_ref.data,
                                                    <double*> mesh_grad_trial_ref.data,
                                                    <double*> mesh_dof.data,
