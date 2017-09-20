@@ -4,7 +4,7 @@ Anybody is welcome to create a branch on this repository and make edits.  If you
 
 ### Code Style
 
-Try to follow pep8
+Use a real source code editor that ensures no tab characters in .py or .pyx files and 4 white spaces for indentation. Don't reformat or reorganize code unless you are actually making non-trivial modifications and make sure your editor is not automatically reformatting. Try to follow pep8 for Python code.
 
 ### Testing
 
