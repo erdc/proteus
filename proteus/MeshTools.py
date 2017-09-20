@@ -4837,6 +4837,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
         self.meshList.append(TriangularMesh())
         childrenDict = self.meshList[-1].refine(self.meshList[-2])
         self.elementChildren.append(childrenDict)
+        
     def computeGeometricInfo(self):
         for m in self.meshList:
             m.computeGeometricInfo()
