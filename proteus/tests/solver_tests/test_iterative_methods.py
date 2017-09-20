@@ -84,8 +84,6 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
                                            save_iterations=True)
         solver.apply()
         expected = np.load(os.path.join(self._scriptdir,'import_modules/sol_20_lst.npy'))
-#        x_true = np.linalg.solve(A,b1)
-#        err_lst = []
         for i,item in enumerate(expected):
             assert np.allclose(item,solver.iteration_results[i],1e-12)
         
