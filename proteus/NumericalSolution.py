@@ -590,9 +590,13 @@ class NS_base:  # (HasTraits):
         self.modelList=[]
         self.lsList=[]
         self.nlsList=[]
-        for p,n,s,mlMesh,index in zip(self.pList,self.nList,self.sList,self.mlMesh_nList,range(len(self.pList))):
+        
+        for p,n,s,mlMesh,index \
+            in zip(self.pList,self.nList,self.sList,self.mlMesh_nList,range(len(self.pList))):
+
             if self.so.needEBQ_GLOBAL:
                 n.needEBQ_GLOBAL = True
+
             if self.so.needEBQ:
                 n.needEBQ = True
             ## \todo clean up tolerances: use rtol_u,atol_u and rtol_res, atol_res; allow scaling by mesh diameter
@@ -609,13 +613,21 @@ class NS_base:  # (HasTraits):
                 linTolList.append(n.linTolFac*fac)
 
             logEvent("Setting up MultilevelTransport for "+p.name)
-            model = Transport.MultilevelTransport(p,n,mlMesh,OneLevelTransportType=p.LevelModelType)
+
+            model \
+                = Transport.MultilevelTransport(p,
+                                                n,
+                                                mlMesh,
+                                                OneLevelTransportType=p.LevelModelType)
             self.modelList.append(model)
+
             model.name = p.name
             logEvent("Setting "+model.name+" stepController to "+str(n.stepController))
             model.stepController = n.stepController(model,n)
+
             Profiling.memory("MultilevelTransport for "+p.name)
             logEvent("Setting up MultilevelLinearSolver for"+p.name)
+
             #allow options database to set model specific parameters?
             linear_solver_options_prefix = None
             if 'linear_solver_options_prefix' in dir(n):
@@ -837,10 +849,12 @@ class NS_base:  # (HasTraits):
             m.stepController.t_model = mOld.stepController.t_model
             m.stepController.t_model_last = mOld.stepController.t_model_last
             m.stepController.substeps = mOld.stepController.substeps
-        logEvent("Evaluating residuals and time integration")
+        # logEvent("Evaluating residuals and time integration")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             logEvent("Attaching models to model "+ptmp.name)
             m.attachModels(self.modelList)
+        logEvent("Evaluating residuals and time integration")
+        for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 lm.timeTerm=True
                 lm.getResidual(lu,lr)
@@ -848,9 +862,9 @@ class NS_base:  # (HasTraits):
                 lm.initializeTimeHistory()
                 lm.timeIntegration.initializeSpaceHistory()
                 lm.getResidual(lu,lr)
-                assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
-                assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
-                assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
+                # assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+                # assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+                # assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
                 #lm.coefficients.evaluate(self.t_stepSequence,lm.q)
                 #lm.coefficients.evaluate(self.t_stepSequence,lm.ebqe)
                 #lm.timeIntegration.calculateElementCoefficients(lm.q)
@@ -869,14 +883,14 @@ class NS_base:  # (HasTraits):
                 self.systemStepController.controllerList.append(model)
                 self.systemStepController.maxFailures = model.stepController.maxSolverFailures
         self.systemStepController.choose_dt_system()
-        for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
-            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-                assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
-                assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
-                assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
-            assert(m.stepController.dt_model == mOld.stepController.dt_model)
-            assert(m.stepController.t_model == mOld.stepController.t_model)
-            assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
+        # for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
+        #     for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+        #         assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+        #         assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+        #         assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
+        #     assert(m.stepController.dt_model == mOld.stepController.dt_model)
+        #     assert(m.stepController.t_model == mOld.stepController.t_model)
+        #     assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
         if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
             #hack for archiving initial solution on adapted mesh
             self.tCount+=1
@@ -1017,9 +1031,15 @@ class NS_base:  # (HasTraits):
                     del scalar
 
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-            scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal[:]
+            # scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal           
+            # p0.domain.PUMIMesh.transferFieldToPUMI(
+            #     'velocityError', scalar)
+
+            # This is hardcoded for the RANS3PF to be the 4th model
+            scalar[:,0] = self.modelList[4].levelModelList[0].coefficients.phi_s
             p0.domain.PUMIMesh.transferFieldToPUMI(
-                'velocityError', scalar)
+                'phi_s', scalar)
+
             del scalar
             #Get Physical Parameters
             #Can we do this in a problem-independent  way?
@@ -1566,6 +1586,17 @@ class NS_base:  # (HasTraits):
             model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],self.tnList[0],self.tCount,
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
+        try:
+            quantDOFs = {}
+            quantDOFs[0] = model.levelModelList[-1].coefficients.phi_s
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   quantDOFs,
+                                                                   res_name_base='phi_s')
+            logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass  
 
         #For aux quantity of interest (MQL)        
         try:
@@ -1675,13 +1706,26 @@ class NS_base:  # (HasTraits):
 
         try:
             quantDOFs = {}
-            quantDOFs[0] = model.levelModelList[-1].quantDOFs
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   quantDOFs,
-                                                                   res_name_base='quantDOFs_for_'+model.name)
-            logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+            try:
+                quantDOFs[0] = model.levelModelList[-1].coefficients.phi_s
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='quantDOFs_for_'+model.name)
+                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+            except:
+                pass
+            try:
+                quantDOFs[0] = model.levelModelList[-1].quantDOFs
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='phi_s')
+                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+            except:
+                pass
         except:
             pass  
 

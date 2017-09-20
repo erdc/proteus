@@ -278,6 +278,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * nodeDiametersArray,
                                double hFactor,
                                int nElements_global,
+                               int nElements_owned,
                                double useRBLES,
                                double useMetrics,
                                double alphaBDF,
@@ -698,6 +699,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * nodeDiametersArray,
                                double hFactor,
                                int nElements_global,
+                               int nElements_owned,
                                double useRBLES,
                                double useMetrics,
                                double alphaBDF,
@@ -863,6 +865,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                       double * vel_trial_trace_ref,
                                       double * ebqe_velocity,
                                       double * velocityAverage)
+
     cppRANS3PF_base * newRANS3PF(int nSpaceIn,
                                  int nQuadraturePoints_elementIn,
                                  int nDOF_mesh_trial_elementIn,
@@ -885,6 +888,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                  double mContact,
                                  double nContact,
                                  double angFriction)
+
 
 cdef class RANS3PF:
     cdef cppRANS3PF_base * thisptr
@@ -912,6 +916,7 @@ cdef class RANS3PF:
                   double mContact,
                   double nContact,
                   double angFriction):
+
         self.thisptr = newRANS3PF(nSpaceIn,
                                   nQuadraturePoints_elementIn,
                                   nDOF_mesh_trial_elementIn,
@@ -1409,6 +1414,7 @@ cdef class RANS3PF:
                           numpy.ndarray nodeDiametersArray,
                           double hFactor,
                           int nElements_global,
+                          int nElements_owned,
                           double useRBLES,
                           double useMetrics,
                           double alphaBDF,
@@ -1592,6 +1598,7 @@ cdef class RANS3PF:
                                        < double * > nodeDiametersArray.data,
                                        hFactor,
                                        nElements_global,
+                                       nElements_owned,
                                        useRBLES,
                                        useMetrics,
                                        alphaBDF,
@@ -2205,6 +2212,7 @@ cdef class RANS3PF:
                                             numpy.ndarray nodeDiametersArray,
                                             double hFactor,
                                             int nElements_global,
+                                            int nElements_owned,
                                             double useRBLES,
                                             double useMetrics,
                                             double alphaBDF,
@@ -2388,6 +2396,7 @@ cdef class RANS3PF:
                                                          < double * > nodeDiametersArray.data,
                                                          hFactor,
                                                          nElements_global,
+                                                         nElements_owned,
                                                          useRBLES,
                                                          useMetrics,
                                                          alphaBDF,
@@ -2553,6 +2562,7 @@ cdef class RANS3PF:
                                  numpy.ndarray vel_trial_trace_ref,
                                  numpy.ndarray ebqe_velocity,
                                  numpy.ndarray velocityAverage):
+
         self.thisptr.calculateVelocityAverage(nExteriorElementBoundaries_global,
                                               < int * > exteriorElementBoundariesArray.data,
                                               nInteriorElementBoundaries_global,
@@ -2833,6 +2843,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * nodeDiametersArray,
                                double hFactor,
                                int nElements_global,
+                               int nElements_owned,
                                double useRBLES,
                                double useMetrics,
                                double alphaBDF,
@@ -3231,6 +3242,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                                  double * nodeDiametersArray,
                                                  double hFactor,
                                                  int nElements_global,
+                                                 int nElements_owned,
                                                  double useRBLES,
                                                  double useMetrics,
                                                  double alphaBDF,
@@ -3248,7 +3260,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                                  double C_dg,
                                                  double C_b,
                                                  # VRANS start
-                               double * eps_solid,
+                                                 double * eps_solid,
                                                  double * phi_solid,
                                                  double * q_velocity_solid,
                                                  double * q_vos,
@@ -3467,6 +3479,7 @@ cdef class RANS3PF2D:
                                     mContact,
                                     nContact,
                                     angFriction)
+
 
     def __dealloc__(self):
         del self.thisptr
@@ -3942,6 +3955,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray nodeDiametersArray,
                           double hFactor,
                           int nElements_global,
+                          int nElements_owned,
                           double useRBLES,
                           double useMetrics,
                           double alphaBDF,
@@ -4125,6 +4139,7 @@ cdef class RANS3PF2D:
                                        < double * > nodeDiametersArray.data,
                                        hFactor,
                                        nElements_global,
+                                       nElements_owned,
                                        useRBLES,
                                        useMetrics,
                                        alphaBDF,
@@ -4739,6 +4754,7 @@ cdef class RANS3PF2D:
                                             numpy.ndarray nodeDiametersArray,
                                             double hFactor,
                                             int nElements_global,
+                                            int nElements_owned,
                                             double useRBLES,
                                             double useMetrics,
                                             double alphaBDF,
@@ -4922,6 +4938,7 @@ cdef class RANS3PF2D:
                                                          < double * > nodeDiametersArray.data,
                                                          hFactor,
                                                          nElements_global,
+                                                         nElements_owned,
                                                          useRBLES,
                                                          useMetrics,
                                                          alphaBDF,
