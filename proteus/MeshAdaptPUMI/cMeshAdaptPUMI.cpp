@@ -335,10 +335,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       removeBCData();
       double t1 = PCU_Time();
       getERMSizeField(total_error);
-      //MeshAdapt error will be thrown if region fields are not freed
-      freeField(err_reg); 
-      freeField(errRho_reg); 
-      freeField(errRel_reg); 
       double t2 = PCU_Time();
     if(comm_rank==0 && logging_config == "on"){
       std::ofstream myfile;
@@ -372,6 +368,12 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     apf::writeVtkFiles(namebuffer, m);
   }
 
+  if(size_field_config=="ERM"){
+      //MeshAdapt error will be thrown if region fields are not freed
+      freeField(err_reg); 
+      freeField(errRho_reg); 
+      freeField(errRel_reg); 
+  }
   // These are relics from an attempt to pass BCs from proteus into the error estimator.
   // They maybe useful in the future.
   //m->destroyTag(fluxtag[1]); m->destroyTag(fluxtag[2]); m->destroyTag(fluxtag[3]);
