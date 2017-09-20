@@ -8,18 +8,15 @@ import math
 #timeIntegration_ncls = "SSP33" 
 timeIntegration_ncls = "FE" 
 lRefinement=3
-T=0.5
+T=1.0
 nDTout = 10
 
 pure_redistancing=False
 redist_tolerance=0.1
-epsCoupez=2
+epsCoupez=3
 epsFactRedistance=0.33
-lambda_coupez = 1.0
-# ENTROPY VISCOSITY 
-EDGE_VISCOSITY=1
-ENTROPY_VISCOSITY=1
-LUMPED_MASS_MATRIX=0
+lambda_coupez = 0.0
+LUMPED_MASS_MATRIX=1
 # SHOCK CAPTURING PARAMETERS
 shockCapturingFactor_ncls=0.2
 # OTHER TIME PARAMETERS
@@ -99,32 +96,7 @@ else:
 class MyCoefficients(NCLS.Coefficients):
     def attachModels(self,modelList):
         self.model = modelList[0]
-	self.u_old_dof = np.copy(self.model.u[0].dof)
-	self.u_old_dof_old = np.copy(self.model.u[0].dof)
         self.q_v = np.zeros(self.model.q[('dH',0,0)].shape,'d')+1E10
         self.ebqe_v = np.zeros(self.model.ebqe[('dH',0,0)].shape,'d')
-        self.model.q[('velocity',0)]=self.q_v
-        self.model.ebqe[('velocity',0)]=self.ebqe_v
-        if self.RD_modelIndex != None:
-            #print self.RD_modelIndex,len(modelList)
-            self.rdModel = modelList[self.RD_modelIndex]
-        else:
-            self.rdModel = self.model
+        self.rdModel = self.model
 
-    def preStep(self,t,firstStep=False):
-        # SAVE OLD SOLUTIONS
-        self.u_old_dof_old = np.copy(self.u_old_dof)
-        self.u_old_dof = np.copy(self.model.u[0].dof)
-
-        self.q_v[...,0] = 1
-        self.q_v[...,1] = 0 
-        self.ebqe_v[...,0] = 1
-        self.ebqe_v[...,1] = 0
-
-        copyInstructions = {}
-        return copyInstructions
-    def postStep(self,t,firstStep=False):
-        copyInstructions = {}
-        return copyInstructions
-    def evaluate(self,t,c):
-        pass
