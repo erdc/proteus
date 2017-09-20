@@ -2978,12 +2978,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q['velocityError'][:]=self.q[('velocity',0)]                 
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
         self.q['velocityError']-=self.q[('velocity',0)]
-        if self.coefficients.granular_sdf_Calc is not None:
+        if self.q.has_key('phis') and self.coefficients.granular_sdf_Calc is not None:
             self.q['phisError']=self.q[('phis')]
         else:#this needs to be fixed for the case that multiple bodies are present
-            self.q['phisError'][:]=self.q[('phis',0)]
-
-
+            if self.q.has_key(('phis',0)):
+                self.q['phisError'][:]=self.q[('phis',0)]
 
     def updateAfterMeshMotion(self):
         pass
