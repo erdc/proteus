@@ -255,8 +255,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def __init__(self,
                  epsCoupez, #relative to he
-                 EDGE_VISCOSITY=0, 
-                 ENTROPY_VISCOSITY=0,
                  LUMPED_MASS_MATRIX=0,
                  V_model=0,
                  RD_model=None,
@@ -317,8 +315,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 	self.sc_beta=sc_beta
         self.waterline_interval = waterline_interval
         # mql added
-        self.EDGE_VISCOSITY=EDGE_VISCOSITY
-        self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
         self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
 
     def attachModels(self,modelList):
@@ -381,8 +377,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.flowModelIndex == None:
             self.ebqe_v = numpy.zeros(cebqe[('grad(u)',0)].shape,'d')
     def preStep(self,t,firstStep=False):
-	self.model.u_dof_old_old[:] = self.model.u_dof_old
+	# Save old solutions
+        self.model.u_dof_old_old[:] = self.model.u_dof_old
 	self.model.u_dof_old[:] = self.model.u[0].dof
+        # Compute new velocity 
+        if self.model.hasVelocityFieldAsFunction:
+            self.model.updateVelocityFieldAsFunction()
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,
@@ -507,10 +507,9 @@ class LevelModel(OneLevelTransport):
         self.reuse_test_trial_quadrature = reuse_trial_and_test_quadrature#True#False
         if self.reuse_test_trial_quadrature:
             for ci in range(1,coefficients.nc):
-                assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
-        import pdb; pdb.set_trace()
-        self.u_dof_old = numpy.zeros(self.u[0].dof.shape,'d')
-        self.u_dof_old_old = numpy.zeros(self.u[0].dof.shape,'d')
+                assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"            
+        self.u_dof_old = None
+        self.u_dof_old_old = None
 
         ## Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh #assume the same mesh for  all components for now
@@ -702,6 +701,11 @@ class LevelModel(OneLevelTransport):
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
         self.tensors_elementBoundaryQuadrature= set()
+        # mql. Allow the user to provide functions to define the velocity field
+        self.hasVelocityFieldAsFunction = False
+        if ('velocityField') in dir (options): 
+            self.velocityField = options.velocityField
+            self.hasVelocityFieldAsFunction = True
         #
         # allocate residual and Jacobian storage
         #
@@ -850,6 +854,23 @@ class LevelModel(OneLevelTransport):
     def calculateCoefficients(self):
         pass
 
+    def updateVelocityFieldAsFunction(self):
+        X = {0:self.q[('x')][:,:,0],
+             1:self.q[('x')][:,:,1],
+             2:self.q[('x')][:,:,2]}
+        t = self.timeIntegration.t
+        self.coefficients.q_v[...,0] = self.velocityField[0](X,t)
+        self.coefficients.q_v[...,1] = self.velocityField[1](X,t)
+        
+        # BOUNDARY
+        ebqe_X = {0:self.ebqe['x'][:,:,0],
+                  1:self.ebqe['x'][:,:,1],
+                  2:self.ebqe['x'][:,:,2]}
+        self.coefficients.ebqe_v[...,0] = self.velocityField[0](X,t)
+
+
+        #self.ebqe['dynamic_viscosity'][:] = self.materialParameters['dynamic_viscosity'](ebqe_X,t)
+
     ######################################
     ######## GET REDISTANCING RHS ########
     ######################################
@@ -874,6 +895,7 @@ class LevelModel(OneLevelTransport):
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
 
+        
         L2_norm = self.ncls.calculateRedistancingResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -967,6 +989,11 @@ class LevelModel(OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
+
+        if self.u_dof_old is None:
+            # Pass initial condition to u_dof_old
+            self.u_dof_old = numpy.copy(self.u[0].dof)
+            self.u_dof_old_old = numpy.copy(self.u[0].dof)
         ########################
         ### COMPUTE C MATRIX ###
         ########################
@@ -1179,9 +1206,6 @@ class LevelModel(OneLevelTransport):
             self.coefficients.rdModel.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',0)],
             self.ebqe[('u',0)], 
-            # PARAMETERS FOR EDGE BASED STABILIZATION 
-            self.coefficients.EDGE_VISCOSITY, 
-            self.coefficients.ENTROPY_VISCOSITY,
             # PARAMETERS FOR EDGE VISCOSITY 
             len(rowptr)-1,
             self.nnz,
@@ -1202,8 +1226,8 @@ class LevelModel(OneLevelTransport):
 
 	if self.forceStrongConditions:#
 	    for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
-                     r[dofN] = 0
-
+                r[dofN] = 0
+    
         if (self.auxiliaryCallCalculateResidual==False):
             edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
             cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
@@ -1359,7 +1383,6 @@ class LevelModel(OneLevelTransport):
             self.coefficients.rdModel.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',0)],
             self.csrColumnOffsets_eb[(0,0)], 
-            self.coefficients.EDGE_VISCOSITY, 
             self.coefficients.LUMPED_MASS_MATRIX)
 
         #Load the Dirichlet conditions directly into residual
