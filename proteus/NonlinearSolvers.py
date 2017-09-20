@@ -683,7 +683,7 @@ class ExplicitConsistentMassMatrixWithRedistancing(Newton):
             u[:]=self.du
             self.F.uStar_dof[:] = u
         else:
-            self.F.uStar_dof[:] = self.F.coefficients.u_dof_old[:]
+            self.F.uStar_dof[:] = self.F.u_dof_old[:]
 
         #############################
         ### COMPUTE MAIN SOLUTION ### 
@@ -2996,7 +2996,15 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                      maxLSits=100,
                                      parallelUsesFullOverlap = True,
                                      nonlinearSolverNorm = l2Norm):
-    if (multilevelNonlinearSolverType == Newton or
+    if (levelNonlinearSolverType == ExplicitLumpedMassMatrix):
+        levelNonlinearSolverType = ExplicitLumpedMassMatrix
+    elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixWithRedistancing):
+        levelNonlinearSolverType = ExplicitConsistentMassMatrixWithRedistancing
+    elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixForVOF):
+        levelNonlinearSolverType = ExplicitConsistentMassMatrixForVOF
+    elif (levelNonlinearSolverType == NewtonWithL2ProjectionForMassCorrection):
+        levelNonlinearSolverType = NewtonWithL2ProjectionForMassCorrection
+    elif (multilevelNonlinearSolverType == Newton or
         multilevelNonlinearSolverType == NLJacobi or
         multilevelNonlinearSolverType == NLGaussSeidel or
         multilevelNonlinearSolverType == NLStarILU):
