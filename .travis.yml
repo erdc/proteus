@@ -9,13 +9,13 @@ env:
 python:
 - 2.7
 
-#addons:
-#  apt:
-#    packages:
-#    - gfortran
-#    - libffi-dev
-#    - libssl-dev
-#    - python-lzma
+addons:
+  apt:
+    packages:
+    - gfortran
+    - libffi-dev
+    - libssl-dev
+    - python-lzma
 
 before_install:
 - pip install pyliblzma
