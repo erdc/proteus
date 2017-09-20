@@ -24,6 +24,9 @@ def VelocityPostProcessingChooser(transport):
     tryNew = True
     velocityPostProcessor = None
     if transport.conservativeFlux is not None:
+        if (transport.mesh.parallelPartitioningType == 0 and transport.mesh.nLayersOfOverlap==0): #element-based partition
+          logEvent("Cannot specify conservative flux if partitioned by element with no element overlaps")
+          exit()
         ppcomps = []
         pptypes = {}
         for ci in transport.conservativeFlux.keys():

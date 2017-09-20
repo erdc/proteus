@@ -633,6 +633,79 @@ class Newton(NonlinearSolver):
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
         logEvent(memory("Newton","Newton"),level=4)
 
+class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
+    """
+     This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        ######################
+        # CALCULATE SOLUTION #
+        ######################
+        self.F.secondCallCalculateResidual = 0
+        self.computeResidual(u,r,b)
+        u[:] = r
+        
+        ############################
+        # FCT STEP ON WATER HEIGHT #
+        ############################
+        logEvent("   FCT Step", level=1)
+        self.F.FCTStep()
+
+        #############################################
+        # UPDATE SOLUTION THROUGH calculateResidual #
+        #############################################
+        self.F.secondCallCalculateResidual = 1
+        self.computeResidual(u,r,b)
+
+        self.F.check_positivity_water_height=True
+
+        # Compute infinity norm of vel-x. This is for 1D well balancing test
+        #exact_hu = 2 + 0.*self.F.u[1].dof
+        #error = numpy.abs(exact_hu - self.F.u[1].dof).max()
+        #self.F.inf_norm_hu.append(error)
+
+class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
+    """
+     This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        ######################
+        # CALCULATE SOLUTION #
+        ######################
+        self.F.secondCallCalculateResidual = 0
+        logEvent("   Entropy viscosity solution with consistent mass matrix", level=1)
+        self.computeResidual(u,r,b)
+        if self.updateJacobian or self.fullNewton:
+            self.updateJacobian = False
+            self.F.getJacobian(self.J)
+            self.linearSolver.prepare(b=r)
+        self.du[:]=0.0
+        if not self.directSolver:
+            if self.EWtol:
+                self.setLinearSolverTolerance(r)
+        if not self.linearSolverFailed:
+            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+            self.linearSolverFailed = self.linearSolver.failed()
+        u-=self.du
+        logEvent("   End of entropy viscosity solution", level=4)
+
+        ############################
+        # FCT STEP ON WATER HEIGHT #
+        ############################
+        logEvent("   FCT Step", level=1)
+        self.F.FCTStep()
+
+        # DISTRIBUTE SOLUTION FROM u to u[ci].dof
+        self.F.secondCallCalculateResidual = 1
+        self.computeResidual(u,r,b)
+        self.F.check_positivity_water_height=True
+
 class ExplicitLumpedMassMatrix(Newton):
     """
      This is a fake solver meant to be used with optimized code
@@ -2996,7 +3069,11 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                      maxLSits=100,
                                      parallelUsesFullOverlap = True,
                                      nonlinearSolverNorm = l2Norm):
-    if (levelNonlinearSolverType == ExplicitLumpedMassMatrix):
+    if (levelNonlinearSolverType == ExplicitLumpedMassMatrixShallowWaterEquationsSolver):
+        levelNonlinearSolverType = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
+    elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixShallowWaterEquationsSolver):
+        levelNonlinearSolverType = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
+    elif (levelNonlinearSolverType == ExplicitLumpedMassMatrix):
         levelNonlinearSolverType = ExplicitLumpedMassMatrix
     elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixWithRedistancing):
         levelNonlinearSolverType = ExplicitConsistentMassMatrixWithRedistancing

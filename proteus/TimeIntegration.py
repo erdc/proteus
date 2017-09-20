@@ -366,7 +366,7 @@ class SSP33(BackwardEuler_cfl):
             if transport.q.has_key(('cfl',ci)):
                 self.cfl[ci] = transport.q[('cfl',ci)]
         self.isAdaptive=True
-    
+
 class FLCBDF(TI_base):
     import flcbdfWrappers
     def __init__(self,transport):
