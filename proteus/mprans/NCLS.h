@@ -640,13 +640,11 @@ namespace proteus
 				   double* ML 
 					 )
     {
-      register double L2_norm_per_node[numDOFs], lumped_mass_matrix[numDOFs];
+      register double L2_norm_per_node[numDOFs];
       double L2_norm=0.;
       for (int i=0; i<numDOFs; i++)
-	{
-	  L2_norm_per_node[i] = 0.;
-	  lumped_mass_matrix[i]=0.;
-	}      
+	L2_norm_per_node[i] = 0.;
+
       // Allocate space for the transport matrices
       register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
       for (int i=0; i<NNZ; i++)
@@ -665,15 +663,13 @@ namespace proteus
 	{
 	  //declare local storage for local contributions and initialize
 	  register double 
-	    elementResidual_u[nDOF_test_element], element_L2_norm_per_node[nDOF_test_element],
-	    element_lumped_mass_matrix[nDOF_test_element];  
+	    elementResidual_u[nDOF_test_element], element_L2_norm_per_node[nDOF_test_element];
 	  register double  elementTransport[nDOF_test_element][nDOF_trial_element];
 	  register double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element];
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
 	      elementResidual_u[i]=0.0;
 	      element_L2_norm_per_node[i]=0.;
-	      element_lumped_mass_matrix[i]=0.;
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
 		  elementTransport[i][j]=0.0;
@@ -730,7 +726,6 @@ namespace proteus
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  // lumped mass matrix
-		  element_lumped_mass_matrix[i] += u_test_dV[i];
 		  elementResidual_u[i] += residual*u_test_dV[i];
 		  element_L2_norm_per_node[i] += dist_error*u_test_dV[i];
 		  ///////////////
@@ -757,8 +752,6 @@ namespace proteus
 	      int eN_i=eN*nDOF_test_element+i;
 	      int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
 
-	      // distribute lumped mass matrix
-	      lumped_mass_matrix[gi]  += element_lumped_mass_matrix[i];
 	      // distribute global residual for (lumped) mass matrix
 	      globalResidual[gi] += elementResidual_u[i];
 	      // distribute L2 norm per node
@@ -839,7 +832,7 @@ namespace proteus
 	      ij+=1;
 	    }
 	  // update residual
-	  double mi = lumped_mass_matrix[i];
+	  double mi = ML[i];
 	  // compute edge_based_cfl
 	  edge_based_cfl[i] = 2.*fabs(dLii)/mi;	  
 	  globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term); 
@@ -1480,12 +1473,9 @@ namespace proteus
 	}
       
       // Allocate and init to zero the Entropy residual vector
-      register double global_entropy_residual[numDOFs], lumped_mass_matrix[numDOFs];
+      register double global_entropy_residual[numDOFs];
       for (int i=0; i<numDOFs; i++)
-	{
-	  lumped_mass_matrix[i]=0.;
-	  global_entropy_residual[i]=0.;	    
-	}    
+	global_entropy_residual[i]=0.;	    
       //////////////////////////////////////////////
       // ** LOOP IN CELLS FOR CELL BASED TERMS ** //
       //////////////////////////////////////////////
@@ -1500,8 +1490,7 @@ namespace proteus
 	  //declare local storage for local contributions and initialize
 	  register double 
 	    elementResidual_u[nDOF_test_element], 
-	    elementEntResVector[nDOF_test_element], 
-	    element_lumped_mass_matrix[nDOF_test_element];  
+	    elementEntResVector[nDOF_test_element];
 	  register double  elementTransport[nDOF_test_element][nDOF_trial_element];
 	  register double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element];
 	  //register double  preconditioned_elementTransport[nDOF_test_element][nDOF_trial_element];
@@ -1509,7 +1498,6 @@ namespace proteus
 	    {
 	      elementResidual_u[i]=0.0;
 	      elementEntResVector[i]=0.0;
-	      element_lumped_mass_matrix[i]=0.;
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
 		  elementTransport[i][j]=0.0;
@@ -1593,10 +1581,7 @@ namespace proteus
 		  double uni = u_dof_old[gi];
 
 		  elementEntResVector[i] += (DENTROPY_un - DENTROPY_LOG(uni,-epsCoupez,epsCoupez))*entropy_residual*u_test_dV[i];
-		  //elementEntResVector[i] += entropy_residual*u_test_dV[i];
-	      
-		  // lumped mass matrix
-		  element_lumped_mass_matrix[i] += u_test_dV[i];
+		  //elementEntResVector[i] += entropy_residual*u_test_dV[i];	      
 		  elementResidual_u[i] += residual*u_test_dV[i];
 		  
 		  ///////////////
@@ -1647,8 +1632,6 @@ namespace proteus
 	      int eN_i=eN*nDOF_test_element+i;
 	      int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
 	      
-	      // distribute lumped mass matrix
-	      lumped_mass_matrix[gi]  += element_lumped_mass_matrix[i];	      
 	      // distribute global residual for (lumped) mass matrix
 	      globalResidual[gi] += elementResidual_u[i];
 	      // distribute EntResVector 
@@ -1814,7 +1797,7 @@ namespace proteus
 	      ij+=1;
 	    }
 	  // update residual
-	  double mi = lumped_mass_matrix[i];
+	  double mi = ML[i];
 	  // compute edge_based_cfl
 	  edge_based_cfl[i] = 2.*fabs(dLii)/mi;
 
@@ -1973,7 +1956,7 @@ namespace proteus
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
 	      int eN_i = eN*nDOF_test_element+i;		    
-	      double mi = lumped_mass_matrix[offset_u+stride_u*u_l2g[eN_i]];
+	      double mi = ML[offset_u+stride_u*u_l2g[eN_i]];
 	      if (LUMPED_MASS_MATRIX==1)
 		globalResidual[offset_u+stride_u*u_l2g[eN_i]] -= dt/mi*elementResidual_u[i];
 	      else
