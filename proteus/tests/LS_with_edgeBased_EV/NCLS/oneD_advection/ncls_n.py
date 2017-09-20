@@ -5,15 +5,14 @@ from oneD_advection import *
 nd = 2
 
 multilevelNonlinearSolver  = Newton
-#levelNonlinearSolver = ExplicitLumpedMassMatrix
+levelNonlinearSolver = ExplicitLumpedMassMatrix
 #levelNonlinearSolver = Newton
-levelNonlinearSolver = ExplicitConsistentMassMatrixWithRedistancing
+#levelNonlinearSolver = ExplicitConsistentMassMatrixWithRedistancing
 
 fullNewtonFlag = True
 updateJacobian = True
 
-timeIntegration = BackwardEuler
-#timeIntegration = NCLS.RKEV # SSP33 #mwf right now need timeIntegration to be SSP33 to run
+timeIntegration = NCLS.RKEV # SSP33 #mwf right now need timeIntegration to be SSP33 to run
 stepController = Min_dt_controller
 
 if timeIntegration_ncls == "SSP33": #mwf hack
@@ -51,8 +50,8 @@ subgridError = None
 #subgridError = HamiltonJacobi_ASGS_opt(coefficients,nd,lag=True)
 
 #numericalFluxType = NCLS.NumericalFlux
-numericalFluxType = DoNothing
-#numericalFluxType = Advection_DiagonalUpwind_IIPG_exterior # PERIODIC
+#numericalFluxType = DoNothing
+numericalFluxType = Advection_DiagonalUpwind_IIPG_exterior # PERIODIC
 
 shockCapturing = NCLS.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_ncls,lag=lag_shockCapturing_ncls)
 
