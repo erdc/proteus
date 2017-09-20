@@ -36,9 +36,7 @@ cdef extern from "ChMoorings.h":
         ch.ChSystemSMC& system
         ch.ChMesh& mesh
         vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
-        vector[shared_ptr[ch.ChNodeFEAxyzDD]] nodesDD
         vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
-        vector[shared_ptr[ch.ChElementBeamANCF]] elems
         vector[ch.ChVector] forces_drag
         vector[ch.ChVector] forces_addedmass
         double L0
@@ -59,9 +57,7 @@ cdef extern from "ChMoorings.h":
         ch.ChMesh& mesh
         vector[shared_ptr[cppCable]] cables
         vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
-        vector[shared_ptr[ch.ChNodeFEAxyzDD]] nodesDD
         vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
-        vector[shared_ptr[ch.ChElementBeamANCF]] elems
         shared_ptr[ch.ChLinkPointFrame] constraint_back
         shared_ptr[ch.ChLinkPointFrame] constraint_front
         vector[ch.ChVector] forces_drag
@@ -1357,8 +1353,10 @@ cdef class ProtChSystem:
         for s in self.subcomponents:
             s.calculate_init()
         Profiling.logEvent("Setup initial"+str(self.next_sample))
+        print("Setup initial")
         self.thisptr.system.SetupInitial()
         Profiling.logEvent("Finished init"+str(self.next_sample))
+        print("Finished init")
         for s in self.subcomponents:
             s.poststep()
 
@@ -1942,10 +1940,6 @@ cdef class ProtChMoorings:
         assert self.nodes_built is True, 'call buildNodes() before calling this function'
         self.thisptr.attachFrontNodeToBody(body.thisptr.body)
 
-    def getElementMass(self, int i=0):
-        mass = deref(self.thisptr.elems[i]).GetMass()
-        return mass
-
     def getTensionElement(self, int i=0, eta=0.):
         cdef ch.ChVector[double] F
         F = self.thisptr.getTensionElement(i, eta)
@@ -1961,12 +1955,6 @@ cdef class ProtChMoorings:
             vec = self.thisptr.getTensionElement(i, eta)
             T[i] = [vec.x(), vec.y(), vec.z()]
         return T
-
-    def getLengthElems(self):
-        lengths = np.zeros(self.thisptr.elems.size())
-        for i in range(self.thisptr.elems.size()):
-            lengths[i] = deref(self.thisptr.elems[i]).GetLengthX()
-        return lengths
 
     def setDragCoefficients(self, double tangential, double normal, int segment_nb):
         """Sets drag coefficients of cable
@@ -2007,9 +1995,7 @@ cdef class ProtChMoorings:
             L0 = deref(self.thisptr.cables[i]).L0
             L = deref(self.thisptr.cables[i]).length
             nb_elems = deref(self.thisptr.cables[i]).nb_elems
-            if self.beam_type == "BeamANCF":
-                nb_nodes = nb_elems*2+1
-            elif self.beam_type == "CableANCF" or self.beam_type == "BeamEuler":
+            if self.beam_type == "CableANCF" or self.beam_type == "BeamEuler":
                 nb_nodes = nb_elems+1
             else:
                 print("set element type")
@@ -2026,7 +2012,7 @@ cdef class ProtChMoorings:
         self.nodes_built = True
         if self.beam_type == "BeamEuler":
             self.nodes_nb = self.thisptr.nodesRot.size()
-        elif self.beam_type == "CableANCF" or self.beam_type == "BeamANCF":
+        elif self.beam_type == "CableANCF":
             self.nodes_nb = self.thisptr.nodes.size()
         else:
             print("set element type")
@@ -2078,15 +2064,6 @@ cdef class ProtChMoorings:
             vec = deref(self.thisptr.nodes[i]).GetD()
             dire[i] = [vec.x(), vec.y(), vec.z()]
         return dire
-
-    def getNodesDD(self):
-        """(!) Only for BeamANCF
-        """
-        pos = np.zeros(( self.thisptr.nodesDD.size(),3 ))
-        for i in range(self.thisptr.nodesDD.size()):
-            vec = deref(self.thisptr.nodesDD[i]).GetDD()
-            pos[i] = [vec.x(), vec.y(), vec.z()]
-        return pos
 
     def setContactMaterial(self, pych.ChMaterialSurfaceSMC mat):
         """Sets contact material of the cable
