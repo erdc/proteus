@@ -147,9 +147,6 @@ namespace proteus
 				   double* ebqe_rd_u_ext,				   
 				   double* ebqe_bc_u_ext,				   
 				   double* ebqe_u,
-				   // PARAMETERS FOR EDGE BASED STABILIZATION
-				   int EDGE_VISCOSITY, 
-				   int ENTROPY_VISCOSITY,
 				   // PARAMETERS FOR EDGE VISCOSITY
 				   int numDOFs,
 				   int NNZ,
@@ -231,9 +228,6 @@ namespace proteus
 				   double* ebqe_rd_u_ext,				   
 				   double* ebqe_bc_u_ext,				   
 				   double* ebqe_u,
-				   // PARAMETERS FOR EDGE BASED STABILIZATION
-				   int EDGE_VISCOSITY, 
-				   int ENTROPY_VISCOSITY,
 				   // PARAMETERS FOR EDGE VISCOSITY
 				   int numDOFs,
 				   int NNZ,
@@ -302,7 +296,6 @@ namespace proteus
 				   double* ebqe_rd_u_ext,
 				   double* ebqe_bc_u_ext,
 				   int* csrColumnOffsets_eb_u_u, 
-				   int EDGE_VISCOSITY, 
 				   int LUMPED_MASS_MATRIX
 				   )=0;
     virtual void calculateMassMatrix(//element
@@ -352,7 +345,6 @@ namespace proteus
 				   double* ebqe_rd_u_ext,
 				   double* ebqe_bc_u_ext,
 				   int* csrColumnOffsets_eb_u_u, 
-				   int EDGE_VISCOSITY, 
 				   int LUMPED_MASS_MATRIX
 				   )=0;
     virtual void calculateSmoothingMatrix(//element
@@ -987,9 +979,6 @@ namespace proteus
 			   double* ebqe_rd_u_ext,
 			   double* ebqe_bc_u_ext,
 			   double* ebqe_u, 
-			   // PARAMETERS FOR EDGE BASED STABILIZATION
-			   int EDGE_VISCOSITY, 
-			   int ENTROPY_VISCOSITY,
 			   // PARAMETERS FOR EDGE VISCOSITY
 			   int numDOFs,
 			   int NNZ,
@@ -1442,9 +1431,6 @@ namespace proteus
 			   double* ebqe_rd_u_ext,
 			   double* ebqe_bc_u_ext,
 			   double* ebqe_u, 
-			   // PARAMETERS FOR EDGE BASED STABILIZATION
-			   int EDGE_VISCOSITY, 
-			   int ENTROPY_VISCOSITY,
 			   // PARAMETERS FOR EDGE VISCOSITY
 			   int numDOFs,
 			   int NNZ,
@@ -1573,11 +1559,11 @@ namespace proteus
 	      double norm_grad_un = std::sqrt(std::pow(grad_un[0],2) + std::pow(grad_un[1],2)) + 1E-10;
 	      double dist_error = fabs(norm_grad_un - (1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)));
 	      double sgn = sign(uStar,epsFactRedistancing);
-
+	      
 	      // get velocity
 	      vn[0] = velocity[eN_k_nSpace+0] + dist_error*COUPEZ*lambda_coupez*sgn*grad_un[0]/norm_grad_un;
 	      vn[1] = velocity[eN_k_nSpace+1] + dist_error*COUPEZ*lambda_coupez*sgn*grad_un[1]/norm_grad_un;
-	      
+
 	      //////////////////////////////
 	      // CALCULATE CELL BASED CFL //
 	      //////////////////////////////
@@ -1833,8 +1819,10 @@ namespace proteus
 	  edge_based_cfl[i] = 2.*fabs(dLii)/mi;
 
 	  if (LUMPED_MASS_MATRIX==1)
-	    //globalResidual[i] = mi*(u_dof[i] - u_dof_old[i]) + dt*(ith_flux_term - ith_dissipative_term);
-	    globalResidual[i] = u_dof_old[i] - dt/mi*(ith_flux_term - ith_dissipative_term);
+	    {
+	      //globalResidual[i] = mi*(u_dof[i] - u_dof_old[i]) + dt*(ith_flux_term - ith_dissipative_term);
+	      globalResidual[i] = u_dof_old[i] - dt/mi*(ith_flux_term - ith_dissipative_term);
+	    }
 	  else
 	    globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term);
 	}
@@ -2169,7 +2157,6 @@ namespace proteus
 			   double* ebqe_rd_u_ext,
 			   double* ebqe_bc_u_ext,
 			   int* csrColumnOffsets_eb_u_u, 
-			   int EDGE_VISCOSITY, 
 			   int LUMPED_MASS_MATRIX)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
@@ -2325,7 +2312,6 @@ namespace proteus
 
 	      for(int j=0;j<nDOF_trial_element;j++)
 		dsubgridError_u_u[j] = -tau*dpdeResidual_u_u[j];
-	      int IMPLICIT = (EDGE_VISCOSITY==1 ? 0. : 1.);
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
 		  //int eN_k_i=eN_k*nDOF_test_element+i;
@@ -2344,11 +2330,11 @@ namespace proteus
 		      else
 			{
 			  elementJacobian_u_u[i][j] += 
-			    dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) + 
-			    dt*IMPLICIT*ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
-			    dt*IMPLICIT*MOVING_DOMAIN*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
-			    dt*IMPLICIT*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) + 
-			    dt*IMPLICIT*ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); 
+			    ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) + 
+			    ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
+			    MOVING_DOMAIN*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
+			    ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) + 
+			    ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); 
 			}
 		    }//j
 		}//i
@@ -2524,11 +2510,7 @@ namespace proteus
 		{
 		  //register int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
 		  register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
-		  if (EDGE_VISCOSITY==0)
-		    fluxJacobian_u_u[j]=dt*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
-		  else
-		    fluxJacobian_u_u[j]=
-		      (FIX_BOUNDARY_KUZMINS==0 ? 1. : 0.)*dt*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
+		  fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
 		}//j
 	      //
 	      //update the global Jacobian from the flux Jacobian
@@ -2595,7 +2577,6 @@ namespace proteus
 			   double* ebqe_rd_u_ext,
 			   double* ebqe_bc_u_ext,
 			   int* csrColumnOffsets_eb_u_u, 
-			   int EDGE_VISCOSITY, 
 			   int LUMPED_MASS_MATRIX)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
