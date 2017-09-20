@@ -36,6 +36,7 @@ cdef extern from "NCLS.h" namespace "proteus":
 				      double* edge_based_cfl, 
 				      double* Cx, 
 				      double* Cy, 
+				      double* Cz, 
 				      double* ML)
         double calculateRhsSmoothing(double* mesh_trial_ref,
 				      double* mesh_grad_trial_ref,
@@ -124,6 +125,7 @@ cdef extern from "NCLS.h" namespace "proteus":
 			       double epsFactRedistancing,
 			       double* Cx,
 			       double* Cy,
+			       double* Cz,
 			       double* ML
 			       )
         void calculateResidual_entropy_viscosity(double* mesh_trial_ref,
@@ -197,6 +199,7 @@ cdef extern from "NCLS.h" namespace "proteus":
 			       double epsFactRedistancing,
 			       double* Cx,
 			       double* Cy,
+			       double* Cz,
 			       double* ML
 			       )
         void calculateJacobian(double* mesh_trial_ref,
@@ -445,6 +448,7 @@ cdef class cNCLS_base:
 			 numpy.ndarray edge_based_cfl,
 			 numpy.ndarray Cx,
 			 numpy.ndarray Cy,
+			 numpy.ndarray Cz,
 			 numpy.ndarray ML):	       
         return self.thisptr.calculateRedistancingResidual(
 				       <double*>mesh_trial_ref.data,
@@ -478,6 +482,7 @@ cdef class cNCLS_base:
 				       <double*>edge_based_cfl.data,
 				       <double*>Cx.data,
 				       <double*>Cy.data,
+				       <double*>Cz.data,
 				       <double*>ML.data)
    def calculateRhsSmoothing(self, 
                          numpy.ndarray mesh_trial_ref,
@@ -586,6 +591,7 @@ cdef class cNCLS_base:
 			 double epsFactRedistancing, 
 			 numpy.ndarray Cx, 
 			 numpy.ndarray Cy,
+			 numpy.ndarray Cz,
 			 numpy.ndarray ML):
        self.thisptr.calculateResidual(<double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
@@ -659,6 +665,7 @@ cdef class cNCLS_base:
 				       epsFactRedistancing,				       
 				       <double*> Cx.data, 
 				       <double*> Cy.data,
+				       <double*> Cz.data,				       
 				       <double*> ML.data)
    def calculateResidual_entropy_viscosity(self,
                          numpy.ndarray mesh_trial_ref,
@@ -732,6 +739,7 @@ cdef class cNCLS_base:
 			 double epsFactRedistancing, 
 			 numpy.ndarray Cx, 
 			 numpy.ndarray Cy,
+			 numpy.ndarray Cz,
 			 numpy.ndarray ML):
        self.thisptr.calculateResidual_entropy_viscosity(<double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
@@ -805,6 +813,7 @@ cdef class cNCLS_base:
 				       epsFactRedistancing, 
 				       <double*> Cx.data, 
 				       <double*> Cy.data,
+				       <double*> Cz.data,
 				       <double*> ML.data)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,

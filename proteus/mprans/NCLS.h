@@ -66,6 +66,7 @@ namespace proteus
 					  // C-Matrices				   
 					  double* Cx, 
 					  double* Cy, 
+					  double* Cz, 
 					  double* ML 
 						 )=0;
     virtual double calculateRhsSmoothing(
@@ -166,6 +167,7 @@ namespace proteus
 				   // C-Matrices				   
 				   double* Cx, 
 				   double* Cy, 
+				   double* Cz, 
 				   double* ML 
 				   )=0;				   
     virtual void calculateResidual_entropy_viscosity(//element
@@ -247,6 +249,7 @@ namespace proteus
 				   // C-Matrices
 				   double* Cx, 
 				   double* Cy,
+				   double* Cz,
 				   double* ML 
 				   )=0;				   
     virtual void calculateJacobian(//element
@@ -637,6 +640,7 @@ namespace proteus
 				   // C-Matrices				   
 				   double* Cx, 
 				   double* Cy, 
+				   double* Cz, 
 				   double* ML 
 					 )
     {
@@ -991,6 +995,7 @@ namespace proteus
 			   // C-Matrices
 			   double* Cx, 
 			   double* Cy,
+			   double* Cz,
 			   double* ML 
 			   )
     {
@@ -1443,6 +1448,7 @@ namespace proteus
 			   // C-Matrices
 			   double* Cx, 
 			   double* Cy,
+			   double* Cz,
 			   double* ML 
 			   )
     {
@@ -1476,11 +1482,11 @@ namespace proteus
       register double global_entropy_residual[numDOFs];
       for (int i=0; i<numDOFs; i++)
 	global_entropy_residual[i]=0.;	    
+
       //////////////////////////////////////////////
       // ** LOOP IN CELLS FOR CELL BASED TERMS ** //
       //////////////////////////////////////////////
       // HERE WE COMPUTE: 
-      //    * lumped mass matrix
       //    * Time derivative term 
       //    * Cell based CFL (for reference) 
       //    * Entropy residual 
@@ -1535,7 +1541,7 @@ namespace proteus
 	      //get the solution at quad point at tn and tnm1 for entropy viscosity
 	      // solution and grads at old times at quad points
 	      ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
-	      ck.valFromDOF(u_dof_old_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],unm1);
+	      //ck.valFromDOF(u_dof_old_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],unm1);
 	      //get the solution gradients at tn for entropy viscosity
 	      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 	      ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
@@ -1563,7 +1569,7 @@ namespace proteus
 	      //double entropy_residual = ((un - unm1)/dt + vn[0]*grad_un[0] + vn[1]*grad_un[1]
 	      //			 -dist_error*COUPEZ*lambda_coupez*sgn
 	      //			 *(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)))*DENTROPY(un);
-	      double entropy_residual = 
+	      double aux_entropy_residual = 
 		(vn[0]*grad_un[0] + vn[1]*grad_un[1]
 		 -dist_error*COUPEZ*lambda_coupez*sgn*(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)));
 	      double DENTROPY_un = DENTROPY_LOG(un,-epsCoupez,epsCoupez);
@@ -1580,8 +1586,7 @@ namespace proteus
 		  int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
 		  double uni = u_dof_old[gi];
 
-		  elementEntResVector[i] += (DENTROPY_un - DENTROPY_LOG(uni,-epsCoupez,epsCoupez))*entropy_residual*u_test_dV[i];
-		  //elementEntResVector[i] += entropy_residual*u_test_dV[i];	      
+		  elementEntResVector[i] += (DENTROPY_un - DENTROPY_LOG(uni,-epsCoupez,epsCoupez))*aux_entropy_residual*u_test_dV[i];
 		  elementResidual_u[i] += residual*u_test_dV[i];
 		  
 		  ///////////////

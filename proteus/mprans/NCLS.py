@@ -896,7 +896,10 @@ class LevelModel(OneLevelTransport):
         assert (self.cterm_global is not None), "C matrices have not been computed"
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
-
+        if (self.nSpace_global==3):
+            Cz = self.cterm_global[2].getCSRrepresentation()
+        else:
+            Cz = numpy.zeros(Cx.shape,'d')
         
         L2_norm = self.ncls.calculateRedistancingResidual(#element
             self.u[0].femSpace.elementMaps.psi,
@@ -930,7 +933,8 @@ class LevelModel(OneLevelTransport):
             self.coefficients.epsFactRedistancing*self.mesh.h,
             edge_based_cfl, 
             Cx, 
-            Cy, 
+            Cy,
+            Cz,
             self.ML)
 
         #Compute delta_tau (for next time step)
@@ -1120,6 +1124,10 @@ class LevelModel(OneLevelTransport):
                                                                           self.cterm_global[d])
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
+        if (self.nSpace_global==3):
+            Cz = self.cterm_global[2].getCSRrepresentation()
+        else:
+            Cz = numpy.zeros(Cx.shape,'d')
 
         # This is dummy. I just care about the csr structure of the sparse matrix
         self.quantDOFss = numpy.zeros(self.u[0].dof.shape,'d')
