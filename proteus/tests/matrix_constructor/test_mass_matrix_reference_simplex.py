@@ -88,7 +88,6 @@ class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.mass_matrix_object.modelList[0].levelModelList[0].getMassJacobian(self.Asys)
         mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-#        import pdb ; pdb.set_trace()
         rel_path = "comparison_files/mass_reference_TH_2D.npy"
         comparison_mat = numpy.load(os.path.join(self.scriptdir,rel_path))
         assert numpy.allclose(mass_mat,comparison_mat)
