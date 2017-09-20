@@ -3527,6 +3527,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
     a linear affine mapping. The nodal basis is used on the reference simplex.
     """
     def __init__(self,mesh,nd=3):
+        self.order = 1
         localFunctionSpace = LinearOnSimplexWithNodalBasis(nd)
         interpolationConditions = NodalInterpolationConditions(localFunctionSpace.referenceElement)
         ParametricFiniteElementSpace.__init__(self,
@@ -4597,6 +4598,7 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
     The nodal basis is used on the reference simplex.
     """
     def __init__(self,mesh,nd=3):
+        self.order = 2
         localFunctionSpace = QuadraticOnSimplexWithNodalBasis(nd)
         localGeometricSpace= LinearOnSimplexWithNodalBasis(nd)
         interpolationConditions = QuadraticLagrangeNodalInterpolationConditions(localFunctionSpace.referenceElement)

@@ -1270,7 +1270,7 @@ class Advection_DiagonalUpwind_IIPG_exterior(NF_base):
                  getPeriodicBoundaryConditions=None):
         NF_base.__init__(self,vt,getPointwiseBoundaryConditions,
                          getAdvectiveFluxBoundaryConditions,
-                         getDiffusiveFluxBoundaryConditions, 
+                         getDiffusiveFluxBoundaryConditions,
                          getPeriodicBoundaryConditions)
         self.hasInterior=False
     def setDirichletValues(self,ebqe):
