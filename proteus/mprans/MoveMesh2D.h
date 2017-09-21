@@ -199,10 +199,10 @@ namespace proteus
     
     inline void evaluateCoefficients(double det_J,
              double* J,
-				     const double* materialProperties,
-				     double* strain,
-				     double* stress,
-				     double* dstress,
+             const double* materialProperties,
+             double* strain,
+             double* stress,
+             double* dstress,
              double det_J0,
              double* E_in_array,
              double* dilation_last,
@@ -213,25 +213,6 @@ namespace proteus
     {
       double dist_last = distortion_last[0];
       double dil_last = dilation_last[0];
-      double dilation;
-      if (det_J0 != 0) {
-        /* dilation = 0.5*(det_J0/det_J+det_J/det_J0); */
-          if (det_J > det_J0) {
-              dilation = det_J/det_J0;
-          }
-          else {
-              dilation = det_J0/det_J;
-          }
-      }
-      else {
-        dilation = 1.;
-      }
-      if (dilation < dilation_last[0]) {
-        dilation =1.;
-      }
-      dilation = dilation-1;
-      dilation_last[0] = dilation;
-
 
       double JT [4] = {J[XX],J[YX],J[XY],J[YY]};
       double JTJ [4];
@@ -252,34 +233,40 @@ namespace proteus
         }
       }
       double trJTJ = JTJ[XX]+JTJ[YY]; // see compkernel.h calculateMapping_element
-      /* T = (1./n*(tr(JT*J))**(n/2)/det_J;  // n: number of dimensions */
-      double distortion = pow((1./nSpace)*fabs(trJTJ), nSpace/2.)/det_J;  // in 2D
-      double distortion_rel; // relative distortion
-      if (distortion0 != 0) {
-        if (distortion > distortion0) {
-          distortion_rel = distortion/distortion0;
+      double distortion = (1.-det_J/pow((1./nSpace)*fabs(trJTJ), nSpace/2.));  // in 2D
+      distortion_last[0] = distortion;
+
+      // dilation
+      double dilation;
+      if (det_J0 != 0) {
+        if (det_J > det_J0) {
+          dilation = det_J/det_J0;
         }
         else {
-          distortion_rel = 1.;//distortion0/distortion;
+          dilation = det_J0/det_J;
         }
-        distortion_rel = distortion_rel-1.;
       }
       else {
-        // this is the first time it does the loop, need to register distortion0
-        distortion_rel = distortion;
+        dilation = 1.;
       }
-      distortion_rel = distortion-1;  // delete this
-      distortion_last[0] = distortion_rel;
+      /* double side1 = sqrt(pow(J[XX],2)+pow(J[XY],2)); */
+      /* double side2 = sqrt(pow(J[XY],2)+pow(J[YY],2)); */
+      /* double side3 = sqrt(pow(J[XY]-J[XX],2)+pow(J[YY]-J[YX],2)); */
+      /* dilation = dilation*std::max(std::max(side1,side2),side3)/std::min(std::min(side1,side2),side3); */
+      /* dilation = dilation*std::max(JTJ[XX],JTJ[YY])/std::min(JTJ[XX],JTJ[YY]); */
+      dilation_last[0] = dilation;
 
+      // weighting of dilation/distortion
       double alpha = 0.5;
-      double Eweight = (1-alpha)*distortion_rel+alpha*dilation;
+      double Eweight = 1./((1-alpha)*distortion+alpha*dilation);
+      Eweight = distortion;
+      Eweight = (1-alpha)*distortion+alpha*(std::min(dilation,2.)-1.);
 
     if (det_J0 == 0) {det_J0 = det_J;};
       //cek hack/todo need to set E based on reference configuration
       const double strainTrace=(strain[sXX]+strain[sYY]/* +strain[sZZ] */),
-//E=pow(materialProperties[0]/det_J, Eweight),//for mesh motion penalize small elements
-        E=materialProperties[0]*Eweight/(det_J0*distance*distance)+0.000001, nu=materialProperties[1];
-      E_in_array[0] = E;
+      E=pow(materialProperties[0]/det_J, Eweight),//for mesh motion penalize small elements
+      nu=materialProperties[1];
       /* std::cout << "E " << E << "\n"; */
       /* std::cout << "Eweight " << Eweight << "\n"; */
       /* std::cout << "dilation " << dilation << "\n"; */
@@ -287,12 +274,11 @@ namespace proteus
       /* std::cout << "det_J0 " << det_J0 << "\n"; */
       /* std::cout << "trJTJ " << trJTJ << "\n"; */
 
+      E_in_array[0] = E;  // store E value
+
       const double shear = E/(1.0+nu);	
       const double bulk  = shear*(nu/(1.0-2.0*nu));	
       	
-
-
-
       for (int i=0;i<nSymTen;i++)
 	for (int j=0;j<nSymTen;j++)
 	  dstress[i*nSymTen+j] = 0.0;
