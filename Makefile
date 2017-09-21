@@ -1,6 +1,6 @@
 .PHONY: all check clean distclean doc install profile proteus update FORCE
 
-all: install
+all: develop
 
 #We use environment variables from the invoking process if they have been set,
 #otherwise we try our best to determine them automatically.
@@ -12,7 +12,12 @@ VER_CMD = git log -1 --pretty="%H"
 PROTEUS_INSTALL_CMD = python setup.py install -O2
 PROTEUS_DEVELOP_CMD = pip --disable-pip-version-check install -v -e .
 # shell hack for now to automatically detect Garnet front-end nodes
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python -c "import sys; print sys.platform")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = onyx* ]] && echo "onyx" || python -c "import sys; print sys.platform")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = copper* ]] && echo "copper" || python -c "import sys; print sys.platform")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = excalibur* ]] && echo "excalibur" || python -c "import sys; print sys.platform")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = lightning* ]] && echo "lightning" || python -c "import sys; print sys.platform")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = spirit* ]] && echo "spirit" || python -c "import sys; print sys.platform")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
@@ -153,11 +158,10 @@ matlab_setup.done: stack stack/default.yaml hashdist
 
 profile: ${PROTEUS_PREFIX}/artifact.json
 
-stack/default.yaml: stack stack/examples/proteus.${PROTEUS_ARCH}.yaml
-	# workaround since mac doesn't support '-b' and '-i' breaks travis
-	-cp ${PWD}/stack/default.yaml ${PWD}/stack/default.yaml.bak
-	ln -sf ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
+stack/default.yaml: ${PWD}/stack/default.yaml
 
+${PWD}/stack/default.yaml:
+	-ln -s ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
 # directory newer than the profile artifact file.
@@ -205,7 +209,7 @@ ${PROTEUS_PREFIX}/bin/proteus ${PROTEUS_PREFIX}/bin/proteus_env.sh: profile
 	@echo "************************"
 
 # Proteus install should be triggered by an out-of-date hashstack profile, source tree, or modified setup files.
-install: profile $(shell find proteus -type f) $(wildcard *.py) proteus
+install: profile $(wildcard *.py) proteus
 	@echo "************************"
 	@echo "Installing..."
 	@echo "************************"
