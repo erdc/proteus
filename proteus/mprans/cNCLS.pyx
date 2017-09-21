@@ -126,7 +126,8 @@ cdef extern from "NCLS.h" namespace "proteus":
 			       double* Cx,
 			       double* Cy,
 			       double* Cz,
-			       double* ML
+			       double* ML,
+			       int STABILIZATION_TYPE
 			       )
         void calculateResidual_entropy_viscosity(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -200,7 +201,8 @@ cdef extern from "NCLS.h" namespace "proteus":
 			       double* Cx,
 			       double* Cy,
 			       double* Cz,
-			       double* ML
+			       double* ML,
+			       int STABILIZATION_TYPE
 			       )
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -592,7 +594,8 @@ cdef class cNCLS_base:
 			 numpy.ndarray Cx, 
 			 numpy.ndarray Cy,
 			 numpy.ndarray Cz,
-			 numpy.ndarray ML):
+			 numpy.ndarray ML,
+			 int STABILIZATION_TYPE):
        self.thisptr.calculateResidual(<double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
                                        <double*>mesh_dof.data,
@@ -666,7 +669,8 @@ cdef class cNCLS_base:
 				       <double*> Cx.data, 
 				       <double*> Cy.data,
 				       <double*> Cz.data,				       
-				       <double*> ML.data)
+				       <double*> ML.data,
+				       STABILIZATION_TYPE)
    def calculateResidual_entropy_viscosity(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -740,7 +744,8 @@ cdef class cNCLS_base:
 			 numpy.ndarray Cx, 
 			 numpy.ndarray Cy,
 			 numpy.ndarray Cz,
-			 numpy.ndarray ML):
+			 numpy.ndarray ML,
+			 int STABILIZATION_TYPE):
        self.thisptr.calculateResidual_entropy_viscosity(<double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
                                        <double*>mesh_dof.data,
@@ -814,7 +819,8 @@ cdef class cNCLS_base:
 				       <double*> Cx.data, 
 				       <double*> Cy.data,
 				       <double*> Cz.data,
-				       <double*> ML.data)
+				       <double*> ML.data,
+				       STABILIZATION_TYPE)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
