@@ -767,7 +767,7 @@ class LevelModel(OneLevelTransport):
         self.cterm_global=None
 
         # Aux quantity at DOFs to be filled by optimized code (MQL)
-        self.quantDOFss = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
         comm = Comm.get()
         self.comm=comm
@@ -1130,7 +1130,7 @@ class LevelModel(OneLevelTransport):
             Cz = numpy.zeros(Cx.shape,'d')
 
         # This is dummy. I just care about the csr structure of the sparse matrix
-        self.quantDOFss = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
         # zero out residual
         r.fill(0.0)
@@ -1226,12 +1226,13 @@ class LevelModel(OneLevelTransport):
             self.csrColumnOffsets_eb[(0, 0)], #indices for boundary terms
             # PARAMETERS FOR 1st and 2nd ORDER MPP METHOD 
             self.coefficients.LUMPED_MASS_MATRIX,
-            self.quantDOFss, 
+            self.quantDOFs, 
             self.coefficients.lambda_coupez, 
             self.coefficients.epsCoupez,
             self.coefficients.epsFactRedistancing*self.mesh.h,
             Cx,
-            Cy, 
+            Cy,
+            Cz,
             self.ML)
 
 	if self.forceStrongConditions:#
