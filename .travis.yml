@@ -1,5 +1,5 @@
 dist: trusty
-sudo: true
+sudo: false
 
 language: python
 
@@ -33,8 +33,8 @@ install:
 - make stack
 - make stack/default.yaml
 - ./hashdist/bin/hit init-home
-- ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source"
-- ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_ubuntu_14_04 --objects="build"
+- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
+- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
 - cd stack
 - ../hashdist/bin/hit build -v default.yaml
 - cd ..
