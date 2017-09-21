@@ -273,8 +273,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  redistancing_tolerance=0.1,
                  maxIter_redistancing=3,
                  lambda_coupez=0.,
-                 cfl_redistancing=0.1):
+                 cfl_redistancing=0.1, 
+                 STABILIZATION_TYPE=0):
 
+        self.STABILIZATION_TYPE=STABILIZATION_TYPE
         self.epsFactRedistancing=epsFactRedistancing
         self.pure_redistancing=pure_redistancing
         self.maxIter_redistancing=maxIter_redistancing
@@ -1233,7 +1235,8 @@ class LevelModel(OneLevelTransport):
             Cx,
             Cy,
             Cz,
-            self.ML)
+            self.ML, 
+            self.coefficients.STABILIZATION_TYPE)
 
 	if self.forceStrongConditions:#
 	    for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
