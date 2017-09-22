@@ -709,7 +709,8 @@ class KSP_petsc4py(LinearSolver):
                                                                    self.bdyNullSpace,
                                                                    density_scaling=self.preconditionerOptions[0],
                                                                    numerical_viscosity=self.preconditionerOptions[1],
-                                                                   lumped=self.preconditionerOptions[2])
+                                                                   lumped=self.preconditionerOptions[2],
+                                                                   num_chebyshev_its=self.preconditionerOptions[3])
                 except IndexError:
                     logEvent("Preconditioner options not specified, using defaults")
                     self.preconditioner = NavierStokes_TwoPhasePCD(par_L,
@@ -1601,7 +1602,8 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                  bdyNullSpace = False,
                  density_scaling = True,
                  numerical_viscosity = True,
-                 lumped = True):
+                 lumped = True,
+                 num_chebyshev_its = 0):
         """
         Initialize the two-phase PCD preconditioning class.
 
@@ -1623,6 +1625,11 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         lumped : bool
             Indicates whether the viscosity and density mass matrices
             should be lumped (True) or full (False).
+        num_chebyshev_its : int
+            This flag allows the user to apply the mass matrices with
+            a chebyshev semi-iteration.  0  indicates the semi-
+            iteration should not be used, where as a number 1,2,...
+            indicates the number of iterations the method should take.
 
         """
         NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
@@ -1635,6 +1642,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.density_scaling = density_scaling
         self.numerical_viscosity = numerical_viscosity
         self.lumped = lumped
+        self.num_chebyshev_its = num_chebyshev_its
 
     def setUp(self, global_ksp):
         import Comm
@@ -1679,11 +1687,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
 
         self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(self.operator_constructor.linear_smoother.isp,
                                                                 self.operator_constructor.linear_smoother.isp)
-
-        # if comm.size() > 0 and comm.rank()==1:
-        #     self.Ap_invScaledRho.zeroRowsColumns(ParInfo_petsc4py.subdomain2global[0])
-        # else:
-        #     self.Ap_invScaledRho.zeroRowsColumns(0)
         
         L_sizes = self.Qp_rho.size        
         L_range = self.Qp_rho.owner_range
@@ -1696,7 +1699,8 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                                                     self.Ap_invScaledRho,
                                                     self.Np_rho,
                                                     True,
-                                                    dt)
+                                                    dt,
+                                                    num_chebyshev_its = self.num_chebyshev_its)
         self.TP_PCDInv_shell.setPythonContext(self.matcontext_inv)
         self.TP_PCDInv_shell.setUp()
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
@@ -3697,15 +3701,6 @@ class ChebyshevSemiIteration(LinearSolver):
     A : :class: `p4pyPETSc.Mat`
         The linear system matrix
 
-    b : :class: `p4pyPETSc.Vec`
-        The righthand side vector
-
-    x : :class: `p4pyPETSc.Vec`
-        An initial guess for the solution
-
-    k : int
-        The desired number of iterations
-
     alpha : float
         A's smallest eigenvalue
 
@@ -3725,13 +3720,12 @@ class ChebyshevSemiIteration(LinearSolver):
     implementations.
     """
 
-    def __init__(self, A, b, x, k, alpha, beta, save_iterations = False):
-        # Save and initialize PETSc information
+    def __init__(self,
+                 A,
+                 alpha,
+                 beta,
+                 save_iterations = False):
         self.A_petsc = A
-        self.b_petsc = b
-        self.b_petsc_array = self.b_petsc.getArray()
-        self.x_petsc = x
-        self.x_petsc_array = self.x_petsc.getArray()
 
         # Initialize Linear Solver with superlu matrix
         num_rows = A.getSizes()[1][0]
@@ -3745,28 +3739,22 @@ class ChebyshevSemiIteration(LinearSolver):
                               self.rowptr)
         LinearSolver.__init__(self, A_superlu) 
 
-        self.r_petsc = self.b_petsc.copy()
+        self.r_petsc = p4pyPETSc.Vec().createWithArray(numpy.zeros(num_cols))
+        self.r_petsc.setType('mpi')
         self.r_petsc_array = self.r_petsc.getArray()
         
-        # Store other input values
-        self.k = k
         self.alpha = alpha
         self.beta = beta
         self.relax_parameter = (self.alpha + self.beta) / 2.
         self.rho = (self.beta - self.alpha) / (self.alpha + self.beta)
+
         self.diag = self.A_petsc.getDiagonal().copy()
         self.diag.scale(self.relax_parameter)
         self.z = self.A_petsc.getDiagonal().copy()
 
-        # Initialize iteration info
-        self.x_k = x.copy()
-        self.x_k_array = self.x_k.getArray()
-        self.x_km1 = x.copy()
-        self.x_km1.zeroEntries()
-
         self.save_iterations = save_iterations
         if self.save_iterations:
-            self.iteration_results = [self.x_k.getArray().copy()]
+            self.iteration_results = []
 
     @classmethod
     def chebyshev_superlu_constructor(cls):
@@ -3775,20 +3763,42 @@ class ChebyshevSemiIteration(LinearSolver):
         """
         raise RuntimeError('This function is not implmented yet.')
         
-    def apply(self):
+    def apply(self, b, x, k=5):
         """ This function applies the Chebyshev-semi iteration.
+        
+        Parameters
+        ----------
+        b : :class: `p4pyPETSc.Vec`
+            The righthand side vector
+
+        x : :class: `p4pyPETSc.Vec`
+            An initial guess for the solution.  Note that the
+            solution will be returned in the vector too.
+
+        k : int
+            Number of iterations
 
         Returns
         -------
         x : :class:`p4pyPETSc.Vec`
             The result of the Chebyshev semi-iteration.
         """
-        for i in range(self.k):
+        self.x_k = x
+        self.x_k_array = self.x_k.getArray()
+        self.x_km1 = x.copy()
+        self.x_km1.zeroEntries()
+        if self.save_iterations:
+            self.iteration_results.append(self.x_k_array.copy())
+
+        # Since b maybe locked in some instances, we create a copy
+        b_copy = b.copy()
+        
+        for i in range(k):
             w = 1./(1-(self.rho**2)/4.)
             self.r_petsc_array.fill(0.)
             self.computeResidual(self.x_k_array,
                                  self.r_petsc_array,
-                                 self.b_petsc_array)
+                                 b_copy.getArray())
             # x_kp1 = w*(z + x_k - x_km1) + x_km1
             self.r_petsc.scale(-1)
             self.z.pointwiseDivide(self.r_petsc, self.diag)
@@ -3801,7 +3811,7 @@ class ChebyshevSemiIteration(LinearSolver):
             self.x_k_array = self.x_k.getArray()
             if self.save_iterations:
                 self.iteration_results.append(self.x_k.getArray().copy())
-        return self.x_k
+        x.setArray(self.x_k_array)
         
 # The implementation that is commented out here was adopted from
 # the 1996 text Iterative Solution Methods by Owe Axelsson starting
