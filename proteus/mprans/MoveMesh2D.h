@@ -254,7 +254,7 @@ namespace proteus
 
       //cek hack/todo need to set E based on reference configuration
       const double strainTrace=(strain[sXX]+strain[sYY]/* +strain[sZZ] */),
-      E=materialProperties[0]*Eweight/det_J0,//for mesh motion penalize small elements
+      E=materialProperties[0]*Eweight/det_J0+0.000000001,//for mesh motion penalize small elements
       nu=materialProperties[1];
       E_in_array[0] = E;  // store E value
 
