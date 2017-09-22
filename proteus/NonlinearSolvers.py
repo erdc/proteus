@@ -786,9 +786,9 @@ class ExplicitConsistentMassMatrixWithRedistancing(Newton):
             u-=self.du
         
             # DISTRIBUTE SOLUTION FROM u to u[ci].dof
-            # self.F.auxiliaryCallCalculateResidual = True
+            self.F.auxiliaryCallCalculateResidual = True
             self.computeResidual(u,r,b)
-            # self.F.auxiliaryCallCalculateResidual = False
+            self.F.auxiliaryCallCalculateResidual = False
             # self.F.setUnknowns(self.F.timeIntegration.u)
 
         ############################
