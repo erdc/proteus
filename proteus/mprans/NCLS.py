@@ -61,9 +61,11 @@ class RKEV(proteus.TimeIntegration.SSP33):
         self.dtRatioMax = 2.
         self.isAdaptive=True
         # About the cfl 
-        assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
-        self.edge_based_cfl = transport.edge_based_cfl
-        self.cell_based_cfl = transport.q[('cfl',0)]
+        if transport.coefficients.STABILIZATION_TYPE==0: # SUPG
+            self.cfl = transport.q[('cfl',0)]
+        else:
+            assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
+            self.cfl = transport.edge_based_cfl
         # Stuff particular for SSP33
         self.timeOrder = timeOrder  #order of approximation
         self.nStages = timeOrder  #number of stages total
@@ -91,9 +93,8 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
 
     def choose_dt(self):        
-        maxCFL = 1.0e-6
-        maxCFL = max(maxCFL,globalMax(self.edge_based_cfl.max()))
-        #maxCFL = max(maxCFL,globalMax(self.cell_based_cfl.max())) #FOR SUPG
+        maxCFL = 1.0e-6        
+        maxCFL = max(maxCFL,globalMax(self.cfl.max()))
         self.dt = self.runCFL/maxCFL
         if self.dtLast == None:
             self.dtLast = self.dt
@@ -107,8 +108,8 @@ class RKEV(proteus.TimeIntegration.SSP33):
         Modify self.dt
         """
         self.tLast=t0
-        self.dt = 1E-6
-        #self.choose_dt()
+        #self.dt=1E-6
+        self.choose_dt()
         self.t = t0+self.dt
  
     def setCoefficients(self):
@@ -255,7 +256,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def __init__(self,
                  epsCoupez, #relative to he
-                 LUMPED_MASS_MATRIX=0,
+                 LUMPED_MASS_MATRIX=False,
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
@@ -276,6 +277,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  cfl_redistancing=0.1, 
                  STABILIZATION_TYPE=0):
 
+        self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
         self.STABILIZATION_TYPE=STABILIZATION_TYPE
         self.epsFactRedistancing=epsFactRedistancing
         self.pure_redistancing=pure_redistancing
@@ -316,8 +318,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 	self.sc_uref=sc_uref
 	self.sc_beta=sc_beta
         self.waterline_interval = waterline_interval
-        # mql added
-        self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
 
     def attachModels(self,modelList):
         #the level set model
@@ -710,6 +710,10 @@ class LevelModel(OneLevelTransport):
         if ('velocityField') in dir (options): 
             self.velocityField = options.velocityField
             self.hasVelocityFieldAsFunction = True
+        # Check the solver when EV or smoothness based stab is used and the mass matrix is lumped
+        if self.coefficients.STABILIZATION_TYPE > 0 and self.coefficients.LUMPED_MASS_MATRIX==True: # EV or smoothness based indicator
+            condSolver = 'levelNonlinearSolver' in dir (options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix
+            assert condSolver,"Use levelNonlinearSolver=ExplicitLumpedMassMatrix when the mass matrix is lumped and STABILIZATION_TYPE>0"
         #
         # allocate residual and Jacobian storage
         #
@@ -904,6 +908,7 @@ class LevelModel(OneLevelTransport):
             Cz = numpy.zeros(Cx.shape,'d')
         
         L2_norm = self.ncls.calculateRedistancingResidual(#element
+            self.dt_redistancing,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -929,7 +934,6 @@ class LevelModel(OneLevelTransport):
             colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
             self.csrRowIndeces[(0,0)], #row indices (convenient for element loops)
             self.csrColumnOffsets[(0,0)], #column indices (convenient for element loops)
-            self.dt_redistancing,
             self.coefficients.lambda_coupez, 
             self.coefficients.epsCoupez,
             self.coefficients.epsFactRedistancing*self.mesh.h,
@@ -1156,8 +1160,15 @@ class LevelModel(OneLevelTransport):
         except:
             pass
 
-        #self.ncls.calculateResidual_development(#element #For SUPG
-        self.ncls.calculateResidual_entropy_viscosity(#element
+        if (self.coefficients.STABILIZATION_TYPE == 0): #SUPG
+            self.calculateResidual = self.ncls.calculateResidual
+            self.calculateJacobian = self.ncls.calculateJacobian 
+        else:
+            self.calculateResidual = self.ncls.calculateResidual_entropy_viscosity
+            self.calculateJacobian = self.ncls.calculateMassMatrix
+         
+        self.calculateResidual(#element
+            self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -1284,9 +1295,8 @@ class LevelModel(OneLevelTransport):
         except:
             pass
 
-        #mwf debug
-        #pdb.set_trace()
         self.ncls.calculateSmoothingMatrix(#element
+            self.timeIntegration.dt,
 	    self.u[0].femSpace.elementMaps.psi,
 	    self.u[0].femSpace.elementMaps.grad_psi,
 	    self.mesh.nodeArray,
@@ -1350,8 +1360,8 @@ class LevelModel(OneLevelTransport):
         #mwf debug
         #pdb.set_trace()
 
-        self.ncls.calculateMassMatrix(#element
-        #self.ncls.calculateJacobian(#element #FOR SUPG
+        self.calculateJacobian(#element #FOR SUPG
+            self.timeIntegration.dt,
 	    self.u[0].femSpace.elementMaps.psi,
 	    self.u[0].femSpace.elementMaps.grad_psi,
 	    self.mesh.nodeArray,

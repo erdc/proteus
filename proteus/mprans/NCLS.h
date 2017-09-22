@@ -30,42 +30,42 @@ namespace proteus
   public:
     virtual ~NCLS_base(){}
     virtual double calculateRedistancingResidual(
-					  double* mesh_trial_ref,
-					  double* mesh_grad_trial_ref,
-					  double* mesh_dof,
-					  int* mesh_l2g,
-					  double* dV_ref,
-					  double* u_trial_ref,
-					  double* u_grad_trial_ref,
-					  double* u_test_ref,
-					  //physics
-					  int nElements_global,
-					  int* u_l2g, 
-					  double* elementDiameter,
-					  double* nodeDiametersArray,
-					  double* u_dof,
-					  double* u_dof_old,	
-					  double* uStar_dof,
-					  int offset_u, int stride_u, 
-					  double* globalResidual,
-					  // PARAMETERS FOR EDGE BASED STABILIZATION
-					  int numDOFs,
-					  int NNZ,
-					  int* csrRowIndeces_DofLoops,
-					  int* csrColumnOffsets_DofLoops,
-					  int* csrRowIndeces_CellLoops,
-					  int* csrColumnOffsets_CellLoops,
-					  // COUPEZ
-					  double dt, 
-					  double lambda_coupez, 
-					  double epsCoupez,
-					  double epsFactRedistancing,
-					  double* edge_based_cfl,
-					  // C-Matrices				   
-					  double* Cx, 
-					  double* Cy, 
-					  double* Cz, 
-					  double* ML 
+						 double dt,
+						 double* mesh_trial_ref,
+						 double* mesh_grad_trial_ref,
+						 double* mesh_dof,
+						 int* mesh_l2g,
+						 double* dV_ref,
+						 double* u_trial_ref,
+						 double* u_grad_trial_ref,
+						 double* u_test_ref,
+						 //physics
+						 int nElements_global,
+						 int* u_l2g, 
+						 double* elementDiameter,
+						 double* nodeDiametersArray,
+						 double* u_dof,
+						 double* u_dof_old,	
+						 double* uStar_dof,
+						 int offset_u, int stride_u, 
+						 double* globalResidual,
+						 // PARAMETERS FOR EDGE BASED STABILIZATION
+						 int numDOFs,
+						 int NNZ,
+						 int* csrRowIndeces_DofLoops,
+						 int* csrColumnOffsets_DofLoops,
+						 int* csrRowIndeces_CellLoops,
+						 int* csrColumnOffsets_CellLoops,
+						 // COUPEZ
+						 double lambda_coupez, 
+						 double epsCoupez,
+						 double epsFactRedistancing,
+						 double* edge_based_cfl,
+						 // C-Matrices				   
+						 double* Cx, 
+						 double* Cy, 
+						 double* Cz, 
+						 double* ML 
 						 )=0;
     virtual double calculateRhsSmoothing(
 					 double* mesh_trial_ref,
@@ -87,6 +87,7 @@ namespace proteus
 					 double* globalResidual
 					 )=0;
     virtual void calculateResidual(//element
+				   double dt,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -170,89 +171,91 @@ namespace proteus
 				   int STABILIZATION_TYPE				   
 				   )=0;				   
     virtual void calculateResidual_entropy_viscosity(//element
-				   double* mesh_trial_ref,
-				   double* mesh_grad_trial_ref,
-				   double* mesh_dof,
-				   double* meshVelocity_dof,
-				   double MOVING_DOMAIN,
-				   int* mesh_l2g,
-				   double* dV_ref,
-				   double* u_trial_ref,
-				   double* u_grad_trial_ref,
-				   double* u_test_ref,
-				   double* u_grad_test_ref,
-				   //element boundary
-				   double* mesh_trial_trace_ref,
-				   double* mesh_grad_trial_trace_ref,
-				   double* dS_ref,
-				   double* u_trial_trace_ref,
-				   double* u_grad_trial_trace_ref,
-				   double* u_test_trace_ref,
-				   double* u_grad_test_trace_ref,
-				   double* normal_ref,
-				   double* boundaryJac_ref,
-				   //physics
-				   int nElements_global,
-			           double useMetrics, 
-				   double alphaBDF,
-				   int lag_shockCapturing, /*mwf not used yet*/
-				   double shockCapturingDiffusion,
-		                   double sc_uref, double sc_alpha,
-				   int* u_l2g, 
-				   double* elementDiameter,
-				   double* nodeDiametersArray,
-				   int degree_polynomial,
-				   double* u_dof,
-				   double* u_dof_old,	
-				   double* u_dof_old_old,	
-				   double* uStar_dof, 
-				   double* velocity,
-				   double* q_m,
-				   double* q_u,				   
-				   double* q_n,
-				   double* q_dH,
-				   double* q_m_betaBDF,
-                                   double* q_dV,
-                                   double* q_dV_last,
-				   double* cfl,
-				   double* edge_based_cfl, 
-				   double* q_numDiff_u, 
-				   double* q_numDiff_u_last, 
-				   int offset_u, int stride_u, 
-				   double* globalResidual,
-				   int nExteriorElementBoundaries_global,
-				   int* exteriorElementBoundariesArray,
-				   int* elementBoundaryElementsArray,
-				   int* elementBoundaryLocalElementBoundariesArray,
-				   double* ebqe_velocity_ext,
-				   int* isDOFBoundary_u,
-				   double* ebqe_rd_u_ext,				   
-				   double* ebqe_bc_u_ext,				   
-				   double* ebqe_u,
-				   // PARAMETERS FOR EDGE VISCOSITY
-				   int numDOFs,
-				   int NNZ,
-				   int* csrRowIndeces_DofLoops,
-				   int* csrColumnOffsets_DofLoops,
-				   int* csrRowIndeces_CellLoops,
-				   int* csrColumnOffsets_CellLoops,
-				   int* csrColumnOffsets_eb_CellLoops,
-				   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
-				   int LUMPED_MASS_MATRIX, 
-				   // AUX QUANTITIES OF INTEREST
-				   double* quantDOFs, 
-				   // COUPEZ
-				   double lambda_coupez, 
-				   double epsCoupez, 
-				   double epsFactRedistancing, 
-				   // C-Matrices
-				   double* Cx, 
-				   double* Cy,
-				   double* Cz,
-				   double* ML, 
-				   int STABILIZATION_TYPE
-				   )=0;				   
+						     double dt,
+						     double* mesh_trial_ref,
+						     double* mesh_grad_trial_ref,
+						     double* mesh_dof,
+						     double* meshVelocity_dof,
+						     double MOVING_DOMAIN,
+						     int* mesh_l2g,
+						     double* dV_ref,
+						     double* u_trial_ref,
+						     double* u_grad_trial_ref,
+						     double* u_test_ref,
+						     double* u_grad_test_ref,
+						     //element boundary
+						     double* mesh_trial_trace_ref,
+						     double* mesh_grad_trial_trace_ref,
+						     double* dS_ref,
+						     double* u_trial_trace_ref,
+						     double* u_grad_trial_trace_ref,
+						     double* u_test_trace_ref,
+						     double* u_grad_test_trace_ref,
+						     double* normal_ref,
+						     double* boundaryJac_ref,
+						     //physics
+						     int nElements_global,
+						     double useMetrics, 
+						     double alphaBDF,
+						     int lag_shockCapturing, /*mwf not used yet*/
+						     double shockCapturingDiffusion,
+						     double sc_uref, double sc_alpha,
+						     int* u_l2g, 
+						     double* elementDiameter,
+						     double* nodeDiametersArray,
+						     int degree_polynomial,
+						     double* u_dof,
+						     double* u_dof_old,	
+						     double* u_dof_old_old,	
+						     double* uStar_dof, 
+						     double* velocity,
+						     double* q_m,
+						     double* q_u,				   
+						     double* q_n,
+						     double* q_dH,
+						     double* q_m_betaBDF,
+						     double* q_dV,
+						     double* q_dV_last,
+						     double* cfl,
+						     double* edge_based_cfl, 
+						     double* q_numDiff_u, 
+						     double* q_numDiff_u_last, 
+						     int offset_u, int stride_u, 
+						     double* globalResidual,
+						     int nExteriorElementBoundaries_global,
+						     int* exteriorElementBoundariesArray,
+						     int* elementBoundaryElementsArray,
+						     int* elementBoundaryLocalElementBoundariesArray,
+						     double* ebqe_velocity_ext,
+						     int* isDOFBoundary_u,
+						     double* ebqe_rd_u_ext,				   
+						     double* ebqe_bc_u_ext,				   
+						     double* ebqe_u,
+						     // PARAMETERS FOR EDGE VISCOSITY
+						     int numDOFs,
+						     int NNZ,
+						     int* csrRowIndeces_DofLoops,
+						     int* csrColumnOffsets_DofLoops,
+						     int* csrRowIndeces_CellLoops,
+						     int* csrColumnOffsets_CellLoops,
+						     int* csrColumnOffsets_eb_CellLoops,
+						     // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+						     int LUMPED_MASS_MATRIX, 
+						     // AUX QUANTITIES OF INTEREST
+						     double* quantDOFs, 
+						     // COUPEZ
+						     double lambda_coupez, 
+						     double epsCoupez, 
+						     double epsFactRedistancing, 
+						     // C-Matrices
+						     double* Cx, 
+						     double* Cy,
+						     double* Cz,
+						     double* ML, 
+						     int STABILIZATION_TYPE
+						     )=0;
     virtual void calculateJacobian(//element
+				   double dt,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -302,103 +305,105 @@ namespace proteus
 				   int LUMPED_MASS_MATRIX
 				   )=0;
     virtual void calculateMassMatrix(//element
-				   double* mesh_trial_ref,
-				   double* mesh_grad_trial_ref,
-				   double* mesh_dof,
-				   double* mesh_velocity_dof,
-				   double MOVING_DOMAIN,
-				   int* mesh_l2g,
-				   double* dV_ref,
-				   double* u_trial_ref,
-				   double* u_grad_trial_ref,
-				   double* u_test_ref,
-				   double* u_grad_test_ref,
-				   //element boundary
-				   double* mesh_trial_trace_ref,
-				   double* mesh_grad_trial_trace_ref,
-				   double* dS_ref,
-				   double* u_trial_trace_ref,
-				   double* u_grad_trial_trace_ref,
-				   double* u_test_trace_ref,
-				   double* u_grad_test_trace_ref,
-				   double* normal_ref,
-				   double* boundaryJac_ref,
-				   //physics
-				   int nElements_global,
-			           double useMetrics, 
-				   double alphaBDF,
-				   int lag_shockCapturing,/*mwf not used yet*/
-				   double shockCapturingDiffusion,
-				   int* u_l2g,
-				   double* elementDiameter,
-				   int degree_polynomial,
-				   double* u_dof, 
-				   double* velocity,
-				   double* q_m_betaBDF, 
-				   double* cfl,
-				   double* q_numDiff_u_last, 
-				   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-				   double* globalJacobian,
-				   int nExteriorElementBoundaries_global,
-				   int* exteriorElementBoundariesArray,
-				   int* elementBoundaryElementsArray,
-				   int* elementBoundaryLocalElementBoundariesArray,
-				   double* ebqe_velocity_ext,
-				   int* isDOFBoundary_u,
-				   double* ebqe_rd_u_ext,
-				   double* ebqe_bc_u_ext,
-				   int* csrColumnOffsets_eb_u_u, 
-				   int LUMPED_MASS_MATRIX
-				   )=0;
+				     double dt,
+				     double* mesh_trial_ref,
+				     double* mesh_grad_trial_ref,
+				     double* mesh_dof,
+				     double* mesh_velocity_dof,
+				     double MOVING_DOMAIN,
+				     int* mesh_l2g,
+				     double* dV_ref,
+				     double* u_trial_ref,
+				     double* u_grad_trial_ref,
+				     double* u_test_ref,
+				     double* u_grad_test_ref,
+				     //element boundary
+				     double* mesh_trial_trace_ref,
+				     double* mesh_grad_trial_trace_ref,
+				     double* dS_ref,
+				     double* u_trial_trace_ref,
+				     double* u_grad_trial_trace_ref,
+				     double* u_test_trace_ref,
+				     double* u_grad_test_trace_ref,
+				     double* normal_ref,
+				     double* boundaryJac_ref,
+				     //physics
+				     int nElements_global,
+				     double useMetrics, 
+				     double alphaBDF,
+				     int lag_shockCapturing,/*mwf not used yet*/
+				     double shockCapturingDiffusion,
+				     int* u_l2g,
+				     double* elementDiameter,
+				     int degree_polynomial,
+				     double* u_dof, 
+				     double* velocity,
+				     double* q_m_betaBDF, 
+				     double* cfl,
+				     double* q_numDiff_u_last, 
+				     int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				     double* globalJacobian,
+				     int nExteriorElementBoundaries_global,
+				     int* exteriorElementBoundariesArray,
+				     int* elementBoundaryElementsArray,
+				     int* elementBoundaryLocalElementBoundariesArray,
+				     double* ebqe_velocity_ext,
+				     int* isDOFBoundary_u,
+				     double* ebqe_rd_u_ext,
+				     double* ebqe_bc_u_ext,
+				     int* csrColumnOffsets_eb_u_u, 
+				     int LUMPED_MASS_MATRIX
+				     )=0;
     virtual void calculateSmoothingMatrix(//element
-				   double* mesh_trial_ref,
-				   double* mesh_grad_trial_ref,
-				   double* mesh_dof,
-				   double* mesh_velocity_dof,
-				   double MOVING_DOMAIN,
-				   int* mesh_l2g,
-				   double* dV_ref,
-				   double* u_trial_ref,
-				   double* u_grad_trial_ref,
-				   double* u_test_ref,
-				   double* u_grad_test_ref,
-				   //element boundary
-				   double* mesh_trial_trace_ref,
-				   double* mesh_grad_trial_trace_ref,
-				   double* dS_ref,
-				   double* u_trial_trace_ref,
-				   double* u_grad_trial_trace_ref,
-				   double* u_test_trace_ref,
-				   double* u_grad_test_trace_ref,
-				   double* normal_ref,
-				   double* boundaryJac_ref,
-				   //physics
-				   int nElements_global,
-			           double useMetrics, 
-				   double alphaBDF,
-				   int lag_shockCapturing,/*mwf not used yet*/
-				   double shockCapturingDiffusion,
-				   int* u_l2g,
-				   double* elementDiameter,
-				   int degree_polynomial,
-				   double* u_dof, 
-				   double* velocity,
-				   double* q_m_betaBDF, 
-				   double* cfl,
-				   double* q_numDiff_u_last, 
-				   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-				   double* globalJacobian,
-				   int nExteriorElementBoundaries_global,
-				   int* exteriorElementBoundariesArray,
-				   int* elementBoundaryElementsArray,
-				   int* elementBoundaryLocalElementBoundariesArray,
-				   double* ebqe_velocity_ext,
-				   int* isDOFBoundary_u,
-				   double* ebqe_rd_u_ext,
-				   double* ebqe_bc_u_ext,
-				   int* csrColumnOffsets_eb_u_u, 
-				   double he
-				   )=0;
+					  double dt,					
+					  double* mesh_trial_ref,
+					  double* mesh_grad_trial_ref,
+					  double* mesh_dof,
+					  double* mesh_velocity_dof,
+					  double MOVING_DOMAIN,
+					  int* mesh_l2g,
+					  double* dV_ref,
+					  double* u_trial_ref,
+					  double* u_grad_trial_ref,
+					  double* u_test_ref,
+					  double* u_grad_test_ref,
+					  //element boundary
+					  double* mesh_trial_trace_ref,
+					  double* mesh_grad_trial_trace_ref,
+					  double* dS_ref,
+					  double* u_trial_trace_ref,
+					  double* u_grad_trial_trace_ref,
+					  double* u_test_trace_ref,
+					  double* u_grad_test_trace_ref,
+					  double* normal_ref,
+					  double* boundaryJac_ref,
+					  //physics
+					  int nElements_global,
+					  double useMetrics, 
+					  double alphaBDF,
+					  int lag_shockCapturing,/*mwf not used yet*/
+					  double shockCapturingDiffusion,
+					  int* u_l2g,
+					  double* elementDiameter,
+					  int degree_polynomial,
+					  double* u_dof, 
+					  double* velocity,
+					  double* q_m_betaBDF, 
+					  double* cfl,
+					  double* q_numDiff_u_last, 
+					  int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+					  double* globalJacobian,
+					  int nExteriorElementBoundaries_global,
+					  int* exteriorElementBoundariesArray,
+					  int* elementBoundaryElementsArray,
+					  int* elementBoundaryLocalElementBoundariesArray,
+					  double* ebqe_velocity_ext,
+					  int* isDOFBoundary_u,
+					  double* ebqe_rd_u_ext,
+					  double* ebqe_bc_u_ext,
+					  int* csrColumnOffsets_eb_u_u, 
+					  double he
+					  )=0;
     virtual void calculateWaterline(//element
                                    int* wlc,
 	                           double* waterline,
@@ -559,7 +564,6 @@ namespace proteus
       else
 	{
 	  flux = bc_u*flow_movingDomain - flow_fluid*(u-bc_u);
-	  //std::cout<<"bc_u "<<bc_u<<" flow_fluid "<<flow_fluid<<" u "<<u<<std::endl;
 	}
     }
     
@@ -606,42 +610,42 @@ namespace proteus
     }
 
     double calculateRedistancingResidual(
-				  double* mesh_trial_ref,
-				  double* mesh_grad_trial_ref,
-				  double* mesh_dof,
-				  int* mesh_l2g,
-				  double* dV_ref,
-				  double* u_trial_ref,
-				  double* u_grad_trial_ref,
-				  double* u_test_ref,
-				  //physics
-				   int nElements_global,
-				  int* u_l2g, 
-				  double* elementDiameter,
-				  double* nodeDiametersArray,
-				  double* u_dof,
-				  double* u_dof_old,	
-				  double* uStar_dof,
-				  int offset_u, int stride_u, 
-				  double* globalResidual,
-				  // PARAMETERS FOR EDGE BASED STABILIZATION
-				  int numDOFs,
-				  int NNZ,
-				  int* csrRowIndeces_DofLoops,
-				  int* csrColumnOffsets_DofLoops,
-				  int* csrRowIndeces_CellLoops,
-				  int* csrColumnOffsets_CellLoops,
-				  // COUPEZ
-				  double dt, 
-				  double lambda_coupez, //
-				  double epsCoupez,
-				  double epsFactRedistancing,
-				  double* edge_based_cfl,
-				   // C-Matrices				   
-				   double* Cx, 
-				   double* Cy, 
-				   double* Cz, 
-				   double* ML 
+					 double dt,
+					 double* mesh_trial_ref,
+					 double* mesh_grad_trial_ref,
+					 double* mesh_dof,
+					 int* mesh_l2g,
+					 double* dV_ref,
+					 double* u_trial_ref,
+					 double* u_grad_trial_ref,
+					 double* u_test_ref,
+					 //physics
+					 int nElements_global,
+					 int* u_l2g, 
+					 double* elementDiameter,
+					 double* nodeDiametersArray,
+					 double* u_dof,
+					 double* u_dof_old,	
+					 double* uStar_dof,
+					 int offset_u, int stride_u, 
+					 double* globalResidual,
+					 // PARAMETERS FOR EDGE BASED STABILIZATION
+					 int numDOFs,
+					 int NNZ,
+					 int* csrRowIndeces_DofLoops,
+					 int* csrColumnOffsets_DofLoops,
+					 int* csrRowIndeces_CellLoops,
+					 int* csrColumnOffsets_CellLoops,
+					 // COUPEZ
+					 double lambda_coupez, //
+					 double epsCoupez,
+					 double epsFactRedistancing,
+					 double* edge_based_cfl,
+					 // C-Matrices				   
+					 double* Cx, 
+					 double* Cy, 
+					 double* Cz, 
+					 double* ML 
 					 )
     {
       register double L2_norm_per_node[numDOFs];
@@ -917,6 +921,7 @@ namespace proteus
     }
 
     void calculateResidual(//element
+			   double dt,
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
 			   double* mesh_dof,
@@ -1170,6 +1175,7 @@ namespace proteus
 	      // 
 	      //update element residual 
 	      // 
+	      
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  //register int eN_k_i=eN_k*nDOF_test_element+i,
@@ -1181,8 +1187,7 @@ namespace proteus
 		    ck.Hamiltonian_weak(H,u_test_dV[i]) + 
 		    MOVING_DOMAIN*ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])+
 		    ck.SubgridError(subgridError_u,Lstar_u[i]) + 
-		    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&u_grad_test_dV[i_nSpace]); 
-		  
+		    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&u_grad_test_dV[i_nSpace]);
 		}//i
 	      //
 	      //cek/ido todo, get rid of m, since u=m
@@ -1312,6 +1317,7 @@ namespace proteus
 	      // 
 	      //calculate the pde coefficients using the solution and the boundary values for the solution 
 	      // 
+	      bc_u_ext = ebqe_bc_u_ext[ebNE_kb]; //mql. I did this to enforce periodic BCs. So, tmp? 
 	      evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
 				   u_ext,
 				   grad_u_ext,
@@ -1347,7 +1353,6 @@ namespace proteus
 				    flux_ext);
 	      ebqe_u[ebNE_kb] = u_ext;
 	      
-	      //std::cout<<u_ext<<ebqe_bc_u_ext	      
 	      //
 	      //update residuals
 	      //
@@ -1371,88 +1376,89 @@ namespace proteus
     }
 
     void calculateResidual_entropy_viscosity(//element
-			   double* mesh_trial_ref,
-			   double* mesh_grad_trial_ref,
-			   double* mesh_dof,
-			   double* mesh_velocity_dof,
-			   double MOVING_DOMAIN,
-			   int* mesh_l2g,
-			   double* dV_ref,
-			   double* u_trial_ref,
-			   double* u_grad_trial_ref,
-			   double* u_test_ref,
-			   double* u_grad_test_ref,
-			   //element boundary
-			   double* mesh_trial_trace_ref,
-			   double* mesh_grad_trial_trace_ref,
-			   double* dS_ref,
-			   double* u_trial_trace_ref,
-			   double* u_grad_trial_trace_ref,
-			   double* u_test_trace_ref,
-			   double* u_grad_test_trace_ref,
-			   double* normal_ref,
-			   double* boundaryJac_ref,
-			   //physics
-			   int nElements_global,
-			   double useMetrics, 
-			   double alphaBDF,
-			   int lag_shockCapturing, 
-			   double shockCapturingDiffusion,
-			   double sc_uref, double sc_alpha,
-			   int* u_l2g, 
-			   double* elementDiameter,
-			   double* nodeDiametersArray,
-			   int degree_polynomial,
-			   double* u_dof,
-			   double* u_dof_old,			   
-			   double* u_dof_old_old,
-			   double* uStar_dof,
-			   double* velocity,
-			   double* q_m,
-			   double* q_u,				   
-			   double* q_n,
-			   double* q_dH,
-			   double* q_m_betaBDF,
-                           double* q_dV,
-                           double* q_dV_last,
-			   double* cfl,
-			   double* edge_based_cfl, 
-			   double* q_numDiff_u, 
-			   double* q_numDiff_u_last, 
-			   int offset_u, int stride_u, 
-			   double* globalResidual,
-			   int nExteriorElementBoundaries_global,
-			   int* exteriorElementBoundariesArray,
-			   int* elementBoundaryElementsArray,
-			   int* elementBoundaryLocalElementBoundariesArray,
-			   double* ebqe_velocity_ext,
-			   int* isDOFBoundary_u,
-			   double* ebqe_rd_u_ext,
-			   double* ebqe_bc_u_ext,
-			   double* ebqe_u, 
-			   // PARAMETERS FOR EDGE VISCOSITY
-			   int numDOFs,
-			   int NNZ,
-			   int* csrRowIndeces_DofLoops,
-			   int* csrColumnOffsets_DofLoops,
-			   int* csrRowIndeces_CellLoops,
-			   int* csrColumnOffsets_CellLoops,
-			   int* csrColumnOffsets_eb_CellLoops,
-			   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
-			   int LUMPED_MASS_MATRIX, 
-			   // AUX QUANTITIES OF INTEREST
-			   double* quantDOFs,
-			   // COPUEZ 
-			   double lambda_coupez, 
-			   double epsCoupez,
-			   double epsFactRedistancing,
-			   // C-Matrices
-			   double* Cx, 
-			   double* Cy,
-			   double* Cz,
-			   double* ML,
-			   int STABILIZATION_TYPE
-			   )
+					     double dt,
+					     double* mesh_trial_ref,
+					     double* mesh_grad_trial_ref,
+					     double* mesh_dof,
+					     double* mesh_velocity_dof,
+					     double MOVING_DOMAIN,
+					     int* mesh_l2g,
+					     double* dV_ref,
+					     double* u_trial_ref,
+					     double* u_grad_trial_ref,
+					     double* u_test_ref,
+					     double* u_grad_test_ref,
+					     //element boundary
+					     double* mesh_trial_trace_ref,
+					     double* mesh_grad_trial_trace_ref,
+					     double* dS_ref,
+					     double* u_trial_trace_ref,
+					     double* u_grad_trial_trace_ref,
+					     double* u_test_trace_ref,
+					     double* u_grad_test_trace_ref,
+					     double* normal_ref,
+					     double* boundaryJac_ref,
+					     //physics
+					     int nElements_global,
+					     double useMetrics, 
+					     double alphaBDF,
+					     int lag_shockCapturing, 
+					     double shockCapturingDiffusion,
+					     double sc_uref, double sc_alpha,
+					     int* u_l2g, 
+					     double* elementDiameter,
+					     double* nodeDiametersArray,
+					     int degree_polynomial,
+					     double* u_dof,
+					     double* u_dof_old,			   
+					     double* u_dof_old_old,
+					     double* uStar_dof,
+					     double* velocity,
+					     double* q_m,
+					     double* q_u,				   
+					     double* q_n,
+					     double* q_dH,
+					     double* q_m_betaBDF,
+					     double* q_dV,
+					     double* q_dV_last,
+					     double* cfl,
+					     double* edge_based_cfl, 
+					     double* q_numDiff_u, 
+					     double* q_numDiff_u_last, 
+					     int offset_u, int stride_u, 
+					     double* globalResidual,
+					     int nExteriorElementBoundaries_global,
+					     int* exteriorElementBoundariesArray,
+					     int* elementBoundaryElementsArray,
+					     int* elementBoundaryLocalElementBoundariesArray,
+					     double* ebqe_velocity_ext,
+					     int* isDOFBoundary_u,
+					     double* ebqe_rd_u_ext,
+					     double* ebqe_bc_u_ext,
+					     double* ebqe_u, 
+					     // PARAMETERS FOR EDGE VISCOSITY
+					     int numDOFs,
+					     int NNZ,
+					     int* csrRowIndeces_DofLoops,
+					     int* csrColumnOffsets_DofLoops,
+					     int* csrRowIndeces_CellLoops,
+					     int* csrColumnOffsets_CellLoops,
+					     int* csrColumnOffsets_eb_CellLoops,
+					     // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+					     int LUMPED_MASS_MATRIX, 
+					     // AUX QUANTITIES OF INTEREST
+					     double* quantDOFs,
+					     // COPUEZ 
+					     double lambda_coupez, 
+					     double epsCoupez,
+					     double epsFactRedistancing,
+					     // C-Matrices
+					     double* Cx, 
+					     double* Cy,
+					     double* Cz,
+					     double* ML,
+					     int STABILIZATION_TYPE
+					     )
     {
       // inverse of mass matrix in reference element 
       //double inverse_elMassMatrix_degree2 [9][9]= 
@@ -1470,7 +1476,6 @@ namespace proteus
       //double inverse_elMassMatrix_degree1 [4][4] = {{4, -2, 1, -2}, {-2, 4, -2, 1}, {1, -2, 4, -2}, {-2, 1, -2, 4}};
       double JacDet = 0;      
 
-      double dt = 1./alphaBDF; // HACKED to work just for BDF1
       // Allocate space for the transport matrices
       // This is used for first order KUZMIN'S METHOD
       register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
@@ -1868,7 +1873,6 @@ namespace proteus
       /////////////////////////
       // BOUNDARY CONDITIONS //
       /////////////////////////
-      if(true)
       for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) 
 	{ 
 	  register int ebN = exteriorElementBoundariesArray[ebNE], 
@@ -1961,7 +1965,7 @@ namespace proteus
 	      // 
 	      //calculate the pde coefficients using the solution and the boundary values for the solution 
 	      // 
-	      bc_u_ext = ebqe_bc_u_ext[ebNE_kb];
+	      bc_u_ext = ebqe_bc_u_ext[ebNE_kb]; //mqp. I did this to enforce periodic BCs. So, tmp?
 	      evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
 				   u_ext,
 				   grad_u_ext,
@@ -2023,6 +2027,7 @@ namespace proteus
     }
 
     void calculateJacobian(//element
+			   double dt,
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
 			   double* mesh_dof,
@@ -2071,7 +2076,6 @@ namespace proteus
 			   int* csrColumnOffsets_eb_u_u, 
 			   int LUMPED_MASS_MATRIX)
     {
-      double dt = 1./alphaBDF; // HACKED to work just for BDF1
       double Ct_sge = 4.0;
     
       //
@@ -2234,20 +2238,12 @@ namespace proteus
 		      //int eN_k_j_nSpace = eN_k_j*nSpace;
 		      int j_nSpace = j*nSpace;
 		      int i_nSpace = i*nSpace;
-		      if (LUMPED_MASS_MATRIX==1)
-			{
-			  if (i==j)
-			    elementJacobian_u_u[i][j] += u_test_dV[i];
-			}
-		      else
-			{
-			  elementJacobian_u_u[i][j] += 
-			    ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) + 
-			    ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
-			    MOVING_DOMAIN*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
-			    ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) + 
-			    ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); 
-			}
+		      elementJacobian_u_u[i][j] += 
+			ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) + 
+			ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
+			MOVING_DOMAIN*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
+			ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) + 
+			ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
 		    }//j
 		}//i
 	    }//k
@@ -2443,55 +2439,55 @@ namespace proteus
     }//computeJacobian
 
     void calculateMassMatrix(//element
-			   double* mesh_trial_ref,
-			   double* mesh_grad_trial_ref,
-			   double* mesh_dof,
-			   double* mesh_velocity_dof,
-			   double MOVING_DOMAIN,
-			   int* mesh_l2g,
-			   double* dV_ref,
-			   double* u_trial_ref,
-			   double* u_grad_trial_ref,
-			   double* u_test_ref,
-			   double* u_grad_test_ref,
-			   //element boundary
-			   double* mesh_trial_trace_ref,
-			   double* mesh_grad_trial_trace_ref,
-			   double* dS_ref,
-			   double* u_trial_trace_ref,
-			   double* u_grad_trial_trace_ref,
-			   double* u_test_trace_ref,
-			   double* u_grad_test_trace_ref,
-			   double* normal_ref,
-			   double* boundaryJac_ref,
-			   //physics
-			   int nElements_global,
-			   double useMetrics, 
-			   double alphaBDF,
-			   int lag_shockCapturing,/*mwf not used yet*/
-			   double shockCapturingDiffusion,
-			   int* u_l2g,
-			   double* elementDiameter,
-			   int degree_polynomial,
-			   double* u_dof, 
-			   double* velocity,
-			   double* q_m_betaBDF, 
-			   double* cfl,
-			   double* q_numDiff_u_last, 
-			   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-			   double* globalJacobian,
-			   int nExteriorElementBoundaries_global,
-			   int* exteriorElementBoundariesArray,
-			   int* elementBoundaryElementsArray,
-			   int* elementBoundaryLocalElementBoundariesArray,
-			   double* ebqe_velocity_ext,
-			   int* isDOFBoundary_u,
-			   double* ebqe_rd_u_ext,
-			   double* ebqe_bc_u_ext,
-			   int* csrColumnOffsets_eb_u_u, 
-			   int LUMPED_MASS_MATRIX)
+			     double dt,
+			     double* mesh_trial_ref,
+			     double* mesh_grad_trial_ref,
+			     double* mesh_dof,
+			     double* mesh_velocity_dof,
+			     double MOVING_DOMAIN,
+			     int* mesh_l2g,
+			     double* dV_ref,
+			     double* u_trial_ref,
+			     double* u_grad_trial_ref,
+			     double* u_test_ref,
+			     double* u_grad_test_ref,
+			     //element boundary
+			     double* mesh_trial_trace_ref,
+			     double* mesh_grad_trial_trace_ref,
+			     double* dS_ref,
+			     double* u_trial_trace_ref,
+			     double* u_grad_trial_trace_ref,
+			     double* u_test_trace_ref,
+			     double* u_grad_test_trace_ref,
+			     double* normal_ref,
+			     double* boundaryJac_ref,
+			     //physics
+			     int nElements_global,
+			     double useMetrics, 
+			     double alphaBDF,
+			     int lag_shockCapturing,/*mwf not used yet*/
+			     double shockCapturingDiffusion,
+			     int* u_l2g,
+			     double* elementDiameter,
+			     int degree_polynomial,
+			     double* u_dof, 
+			     double* velocity,
+			     double* q_m_betaBDF, 
+			     double* cfl,
+			     double* q_numDiff_u_last, 
+			     int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+			     double* globalJacobian,
+			     int nExteriorElementBoundaries_global,
+			     int* exteriorElementBoundariesArray,
+			     int* elementBoundaryElementsArray,
+			     int* elementBoundaryLocalElementBoundariesArray,
+			     double* ebqe_velocity_ext,
+			     int* isDOFBoundary_u,
+			     double* ebqe_rd_u_ext,
+			     double* ebqe_bc_u_ext,
+			     int* csrColumnOffsets_eb_u_u, 
+			     int LUMPED_MASS_MATRIX)
     {
-      double dt = 1./alphaBDF; // HACKED to work just for BDF1
       double Ct_sge = 4.0;
     
       //
@@ -2684,55 +2680,55 @@ namespace proteus
     }//computeMassMatrix
 
     void calculateSmoothingMatrix(//element
-			     double* mesh_trial_ref,
-			   double* mesh_grad_trial_ref,
-			   double* mesh_dof,
-			   double* mesh_velocity_dof,
-			   double MOVING_DOMAIN,
-			   int* mesh_l2g,
-			   double* dV_ref,
-			   double* u_trial_ref,
-			   double* u_grad_trial_ref,
-			   double* u_test_ref,
-			   double* u_grad_test_ref,
-			   //element boundary
-			   double* mesh_trial_trace_ref,
-			   double* mesh_grad_trial_trace_ref,
-			   double* dS_ref,
-			   double* u_trial_trace_ref,
-			   double* u_grad_trial_trace_ref,
-			   double* u_test_trace_ref,
-			   double* u_grad_test_trace_ref,
-			   double* normal_ref,
-			   double* boundaryJac_ref,
-			   //physics
-			   int nElements_global,
-			   double useMetrics, 
-			   double alphaBDF,
-			   int lag_shockCapturing,/*mwf not used yet*/
-			   double shockCapturingDiffusion,
-			   int* u_l2g,
-			   double* elementDiameter,
-			   int degree_polynomial,
-			   double* u_dof, 
-			   double* velocity,
-			   double* q_m_betaBDF, 
-			   double* cfl,
-			   double* q_numDiff_u_last, 
-			   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-			   double* globalJacobian,
-			   int nExteriorElementBoundaries_global,
-			   int* exteriorElementBoundariesArray,
-			   int* elementBoundaryElementsArray,
-			   int* elementBoundaryLocalElementBoundariesArray,
-			   double* ebqe_velocity_ext,
-			   int* isDOFBoundary_u,
-			   double* ebqe_rd_u_ext,
-			     double* ebqe_bc_u_ext,
-			     int* csrColumnOffsets_eb_u_u, 
-			     double he)
+				  double dt,
+				  double* mesh_trial_ref,
+				  double* mesh_grad_trial_ref,
+				  double* mesh_dof,
+				  double* mesh_velocity_dof,
+				  double MOVING_DOMAIN,
+				  int* mesh_l2g,
+				  double* dV_ref,
+				  double* u_trial_ref,
+				  double* u_grad_trial_ref,
+				  double* u_test_ref,
+				  double* u_grad_test_ref,
+				  //element boundary
+				  double* mesh_trial_trace_ref,
+				  double* mesh_grad_trial_trace_ref,
+				  double* dS_ref,
+				  double* u_trial_trace_ref,
+				  double* u_grad_trial_trace_ref,
+				  double* u_test_trace_ref,
+				  double* u_grad_test_trace_ref,
+				  double* normal_ref,
+				  double* boundaryJac_ref,
+				  //physics
+				  int nElements_global,
+				  double useMetrics, 
+				  double alphaBDF,
+				  int lag_shockCapturing,/*mwf not used yet*/
+				  double shockCapturingDiffusion,
+				  int* u_l2g,
+				  double* elementDiameter,
+				  int degree_polynomial,
+				  double* u_dof, 
+				  double* velocity,
+				  double* q_m_betaBDF, 
+				  double* cfl,
+				  double* q_numDiff_u_last, 
+				  int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				  double* globalJacobian,
+				  int nExteriorElementBoundaries_global,
+				  int* exteriorElementBoundariesArray,
+				  int* elementBoundaryElementsArray,
+				  int* elementBoundaryLocalElementBoundariesArray,
+				  double* ebqe_velocity_ext,
+				  int* isDOFBoundary_u,
+				  double* ebqe_rd_u_ext,
+				  double* ebqe_bc_u_ext,
+				  int* csrColumnOffsets_eb_u_u, 
+				  double he)
     {
-      double dt = 1./alphaBDF; // HACKED to work just for BDF1
       double Ct_sge = 4.0;
     
       //

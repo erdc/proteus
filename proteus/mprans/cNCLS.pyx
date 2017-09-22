@@ -6,7 +6,8 @@ from proteus.Transport import OneLevelTransport
 
 cdef extern from "NCLS.h" namespace "proteus":
     cdef cppclass NCLS_base:
-        double calculateRedistancingResidual(double* mesh_trial_ref,
+        double calculateRedistancingResidual(double dt, 
+                                      double* mesh_trial_ref,
 				      double* mesh_grad_trial_ref,
 				      double* mesh_dof,
 				      int* mesh_l2g,
@@ -29,7 +30,6 @@ cdef extern from "NCLS.h" namespace "proteus":
 				      int* csrColumnOffsets_DofLoops,
 				      int* csrRowIndeces_CellLoops,
 				      int* csrColumnOffsets_CellLoops,
-				      double dt, 
 			              double lambda_coupez,
 			              double epsCoupez,
 				      double epsFactRedistancing,
@@ -54,7 +54,8 @@ cdef extern from "NCLS.h" namespace "proteus":
 				      double* u_dof_old,	
 				      int offset_u, int stride_u, 
 				      double* globalResidual)
-        void calculateResidual(double* mesh_trial_ref,
+        void calculateResidual(double dt,
+	     		       double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
                                double* mesh_velocity_dof,
@@ -129,7 +130,8 @@ cdef extern from "NCLS.h" namespace "proteus":
 			       double* ML,
 			       int STABILIZATION_TYPE
 			       )
-        void calculateResidual_entropy_viscosity(double* mesh_trial_ref,
+        void calculateResidual_entropy_viscosity(double dt,
+                               double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
                                double* mesh_velocity_dof,
@@ -204,7 +206,8 @@ cdef extern from "NCLS.h" namespace "proteus":
 			       double* ML,
 			       int STABILIZATION_TYPE
 			       )
-        void calculateJacobian(double* mesh_trial_ref,
+        void calculateJacobian(double dt,
+                               double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
                                double* mesh_velocity_dof,
@@ -249,7 +252,8 @@ cdef extern from "NCLS.h" namespace "proteus":
                                double* ebqe_bc_u_ext,
                                int* csrColumnOffsets_eb_u_u, 
 			       int LUMPED_MASS_MATRIX)
-        void calculateMassMatrix(double* mesh_trial_ref,
+        void calculateMassMatrix(double dt,
+                               double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
                                double* mesh_velocity_dof,
@@ -294,7 +298,8 @@ cdef extern from "NCLS.h" namespace "proteus":
                                double* ebqe_bc_u_ext,
                                int* csrColumnOffsets_eb_u_u, 
 			       int LUMPED_MASS_MATRIX)
-        void calculateSmoothingMatrix(double* mesh_trial_ref,
+        void calculateSmoothingMatrix(double dt,
+                               double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
                                double* mesh_velocity_dof,
@@ -420,6 +425,7 @@ cdef class cNCLS_base:
    def __dealloc__(self):
        del self.thisptr
    def calculateRedistancingResidual(self, 
+                         double dt,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
@@ -443,7 +449,6 @@ cdef class cNCLS_base:
 			 numpy.ndarray csrColumnOffsets_DofLoops,
 			 numpy.ndarray csrRowIndeces_CellLoops,
 			 numpy.ndarray csrColumnOffsets_CellLoops,
-			 double dt, 
 			 double lambda_coupez,
 			 double epsCoupez, 
 			 double epsFactRedistancing,
@@ -453,6 +458,7 @@ cdef class cNCLS_base:
 			 numpy.ndarray Cz,
 			 numpy.ndarray ML):	       
         return self.thisptr.calculateRedistancingResidual(
+                                       dt,
 				       <double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
                                        <double*>mesh_dof.data,
@@ -477,7 +483,6 @@ cdef class cNCLS_base:
                                        <int*>csrColumnOffsets_DofLoops.data,
                                        <int*>csrRowIndeces_CellLoops.data,
                                        <int*>csrColumnOffsets_CellLoops.data,
-				       dt, 
 				       lambda_coupez,
 				       epsCoupez, 
 				       epsFactRedistancing,
@@ -522,6 +527,7 @@ cdef class cNCLS_base:
                                        stride_u, 
                                        <double*>globalResidual.data)
    def calculateResidual(self,
+                         double dt,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
@@ -596,7 +602,8 @@ cdef class cNCLS_base:
 			 numpy.ndarray Cz,
 			 numpy.ndarray ML,
 			 int STABILIZATION_TYPE):
-       self.thisptr.calculateResidual(<double*>mesh_trial_ref.data,
+       self.thisptr.calculateResidual(dt,
+                                       <double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
                                        <double*>mesh_dof.data,
                                        <double*>mesh_velocity_dof.data,
@@ -672,6 +679,7 @@ cdef class cNCLS_base:
 				       <double*> ML.data,
 				       STABILIZATION_TYPE)
    def calculateResidual_entropy_viscosity(self,
+                         double dt,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
@@ -746,7 +754,8 @@ cdef class cNCLS_base:
 			 numpy.ndarray Cz,
 			 numpy.ndarray ML,
 			 int STABILIZATION_TYPE):
-       self.thisptr.calculateResidual_entropy_viscosity(<double*>mesh_trial_ref.data,
+       self.thisptr.calculateResidual_entropy_viscosity(dt,
+                                       <double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
                                        <double*>mesh_dof.data,
                                        <double*>mesh_velocity_dof.data,
@@ -822,6 +831,7 @@ cdef class cNCLS_base:
 				       <double*> ML.data,
 				       STABILIZATION_TYPE)
    def calculateJacobian(self,
+                         double dt,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
@@ -869,7 +879,8 @@ cdef class cNCLS_base:
 			 int LUMPED_MASS_MATRIX):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
-       self.thisptr.calculateJacobian(<double*>mesh_trial_ref.data,
+       self.thisptr.calculateJacobian(dt, 
+                                       <double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
                                        <double*>mesh_dof.data,
                                        <double*>mesh_velocity_dof.data,
@@ -915,6 +926,7 @@ cdef class cNCLS_base:
                                        <int*>csrColumnOffsets_eb_u_u.data, 
 				       LUMPED_MASS_MATRIX)
    def calculateMassMatrix(self,
+                         double dt,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
@@ -962,7 +974,8 @@ cdef class cNCLS_base:
 			 int LUMPED_MASS_MATRIX):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
-       self.thisptr.calculateMassMatrix(<double*>mesh_trial_ref.data,
+       self.thisptr.calculateMassMatrix(dt, 
+                                       <double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
                                        <double*>mesh_dof.data,
                                        <double*>mesh_velocity_dof.data,
@@ -1008,6 +1021,7 @@ cdef class cNCLS_base:
                                        <int*>csrColumnOffsets_eb_u_u.data, 
 				       LUMPED_MASS_MATRIX)
    def calculateSmoothingMatrix(self,
+                         double dt,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
@@ -1055,7 +1069,8 @@ cdef class cNCLS_base:
 			 double he):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
-       self.thisptr.calculateSmoothingMatrix(<double*>mesh_trial_ref.data,
+       self.thisptr.calculateSmoothingMatrix(dt,
+                                       <double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
                                        <double*>mesh_dof.data,
                                        <double*>mesh_velocity_dof.data,
