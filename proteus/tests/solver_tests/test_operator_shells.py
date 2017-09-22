@@ -25,6 +25,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
 
     def setup_method(self,method):
         self.petsc_options = p4pyPETSc.Options()
+        self._scriptdir = os.path.dirname(__file__)
 
     def teardown_method(self,method):
         # ARB TODO - There must be a better way to do this...
@@ -80,6 +81,35 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         LSC_shell.apply(A,x_PETSc_vec,y_PETSc_vec)
         true_solu = np.mat('[-0.01096996,0.00983216]')
         assert np.allclose(y_vec,true_solu)
+
+    def test_tppcd_shell(self):
+        ''' Test for the lsc operator shell '''
+        Qp_visc = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_visc'))
+        Qp_dens = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_dens'))
+        Ap_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Ap_rho'))
+        Np_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Np_rho'))
+        alpha = True
+        delta_t = 0.001
+        x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd'))
+
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type','hypre')
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type','boomeramg')                
+        TPPCD_shell = LAT.TwoPhase_PCDInv_shell(Qp_visc,
+                                                Qp_dens,
+                                                Ap_rho,
+                                                Np_rho,
+                                                alpha,
+                                                delta_t,
+                                                5)
+        y_vec = x_vec.copy()
+        y_vec.zeroEntries()
+        A = None
+        TPPCD_shell.apply(A,x_vec,y_vec)
+        true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir, 'import_modules/tp_pcd_y_output'))
+        assert np.allclose(y_vec.getArray(),true_solu.getArray())
+        
         
 if __name__ == '__main__':
     pass
