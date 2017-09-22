@@ -758,6 +758,22 @@ class InvOperatorShell(OperatorShell):
         tmp.setSizes(size)
         return tmp
 
+    def _create_copy_vec(self,vec):
+        """ Creates a copy of a petsc4py vector.
+        
+        Parameters
+        ----------
+        vec : :class:`petsc4py.Vec`
+
+        Returns
+        -------
+        tmp : :class:`petsc4py.Vec`
+        """
+        tmp = p4pyPETSc.Vec().create()
+        tmp.setType('mpi')
+        tmp = vec.copy()
+        return tmp
+
     def _create_constant_nullspace(self):
         """Initialize a constant null space. """
         self.const_null_space = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
@@ -1046,7 +1062,8 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
                  Ap_rho,
                  Np_rho,
                  alpha = False,
-                 delta_t = 0):
+                 delta_t = 0,
+                 num_chebyshev_its = 0):
         """ Initialize the two-phase PCD inverse operator.
         
         Parameters
@@ -1066,7 +1083,11 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
                 state.
         delta_t : float
                 Time step parameter.
+        num_chebyshev_its : int
+                Number of chebyshev iteration steps to take. (0 indicates
+                the chebyshev semi iteration is not used)
         """
+        import LinearSolvers as LS
         # ARB TODO : There should be an exception to ensure each of these
         # matrices has non-zero elements along the diagonal.  I cannot
         # think of a case where this would not be an error.
@@ -1077,6 +1098,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         self.alpha = alpha
         self.delta_t = delta_t
 
+        self.num_chebyshev_its = num_chebyshev_its
         self._options = p4pyPETSc.Options()
         self._create_constant_nullspace()
 
@@ -1102,8 +1124,18 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
             self.Ap_rho.setNullSpace(self.const_null_space)
         self.kspAp_rho.setUp()
 
+        if self.num_chebyshev_its:
+            self.Qp_visc = LS.ChebyshevSemiIteration(self.Qp_visc,
+                                                     0.5,
+                                                     2.0)
+            self.Qp_dens = LS.ChebyshevSemiIteration(self.Qp_dens,
+                                                     0.5,
+                                                     2.0)
+
     def apply(self,A,x,y):
-        """Apply the two-phase pressure-convection-diffusion preconditioner 
+        """
+        Applies the two-phase pressure-convection-diffusion 
+        preconditioner.
 
         Parameters
         ----------
@@ -1117,21 +1149,21 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         y : petsc4py vector
             Result of operator acting on x.
         """
-        # TODO ARB - write a subroutine in InvOperatorShell
-        # to create petsc4py vectors
-        tmp1 = p4pyPETSc.Vec().create()
-        tmp2 = p4pyPETSc.Vec().create()
-        tmp3 = p4pyPETSc.Vec().create()
-        tmp1.setType('mpi')
-        tmp2.setType('mpi')
-        tmp3.setType('mpi')
-        tmp1 = x.copy()
-        tmp2 = x.copy()
-        tmp3 = x.copy()
+        tmp1 = self._create_copy_vec(x)
+        tmp2 = self._create_copy_vec(x)
+        tmp3 = self._create_copy_vec(x)
 
-        self.kspQp_visc.solve(x,y)
-        self.kspQp_dens.solve(x,tmp1)
-        
+        if self.num_chebyshev_its:
+            self.Qp_visc.apply(x,
+                               y,
+                               self.num_chebyshev_its)
+            self.Qp_dens.apply(x,
+                               tmp1,
+                               self.num_chebyshev_its)
+        else:
+            self.kspQp_visc.solve(x,y)
+            self.kspQp_dens.solve(x,tmp1)
+
         self.Np_rho.mult(tmp1,tmp2)
 
         if self.alpha is True:
