@@ -239,41 +239,23 @@ namespace proteus
       // dilation
       double dilation;
       if (det_J0 != 0) {
-        if (det_J > det_J0) {
-          dilation = det_J/det_J0;
-        }
-        else {
-          dilation = det_J0/det_J;
-        }
+        dilation = std::max(det_J,det_J0)/std::min(det_J,det_J0);
       }
       else {
         dilation = 1.;
       }
-      /* double side1 = sqrt(pow(J[XX],2)+pow(J[XY],2)); */
-      /* double side2 = sqrt(pow(J[XY],2)+pow(J[YY],2)); */
-      /* double side3 = sqrt(pow(J[XY]-J[XX],2)+pow(J[YY]-J[YX],2)); */
-      /* dilation = dilation*std::max(std::max(side1,side2),side3)/std::min(std::min(side1,side2),side3); */
-      /* dilation = dilation*std::max(JTJ[XX],JTJ[YY])/std::min(JTJ[XX],JTJ[YY]); */
       dilation_last[0] = dilation;
 
       // weighting of dilation/distortion
       double alpha = 0.5;
-      double Eweight = 1./((1-alpha)*distortion+alpha*dilation);
-      Eweight = distortion;
-      Eweight = (1-alpha)*distortion+alpha*(std::min(dilation,2.)-1.);
+      double Eweight = (1-alpha)*distortion+alpha*(std::min(dilation,2.)-1.);
 
-    if (det_J0 == 0) {det_J0 = det_J;};
+      if (det_J0 == 0) {det_J0 = det_J;};
+
       //cek hack/todo need to set E based on reference configuration
       const double strainTrace=(strain[sXX]+strain[sYY]/* +strain[sZZ] */),
-      E=pow(materialProperties[0]/det_J, Eweight),//for mesh motion penalize small elements
+      E=materialProperties[0]*Eweight/det_J0,//for mesh motion penalize small elements
       nu=materialProperties[1];
-      /* std::cout << "E " << E << "\n"; */
-      /* std::cout << "Eweight " << Eweight << "\n"; */
-      /* std::cout << "dilation " << dilation << "\n"; */
-      /* std::cout << "distortion " << distortion << "\n"; */
-      /* std::cout << "det_J0 " << det_J0 << "\n"; */
-      /* std::cout << "trJTJ " << trJTJ << "\n"; */
-
       E_in_array[0] = E;  // store E value
 
       const double shear = E/(1.0+nu);	
@@ -601,14 +583,11 @@ namespace proteus
 	      //q_displacement[eN_k_nSpace+2]=w;
 
 	      calculateStrain(D,strain);
-          double detJ0 = detJ0_array[eN];
-          double dist;
-          if (checkDistance == 1) {
-            dist = sqrt(pow(body_pos[0]-x,2)+pow(body_pos[1]-y,2)+pow(body_pos[2]-z,2));
-          }
-          else {
-            dist = 1.;
-              }
+        double detJ0 = detJ0_array[eN];
+        double dist = 1.;
+        if (checkDistance == 1) {
+          dist = sqrt(pow(body_pos[0]-x,2)+pow(body_pos[1]-y,2)+pow(body_pos[2]-z,2));
+        }
 	      evaluateCoefficients(fabs(jacDet),
            jac,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
@@ -741,10 +720,9 @@ namespace proteus
 	      //calculate the pde coefficients using the solution and the boundary values for the solution 
 	      // 
 	      calculateStrain(D,strain);
-          double detJ0 = detJ0_array[eN];
-          double nn [1] = {0};
-          /* double dist = sqrt(pow(body_pos[0]-x,2)+pow(body_pos[1]-y,2)+pow(body_pos[2]-z,2)); */
-          double dist = 1;
+        double detJ0 = detJ0_array[eN];
+        double nn [1] = {0};
+        double dist = 1;
 	      evaluateCoefficients(fabs(jacDet_ext),
            jac_ext,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
@@ -963,14 +941,11 @@ namespace proteus
 		    }
 		}
 	      calculateStrain(D,strain);
-          double detJ0 = detJ0_array[eN];
-          double dist;
-          if (checkDistance == 1) {
-            dist = sqrt(pow(body_pos[0]-x,2)+pow(body_pos[1]-y,2)+pow(body_pos[2]-z,2));
-          }
-          else {
-            dist = 1.;
-          }
+        double detJ0 = detJ0_array[eN];
+        double dist = 1.;
+        if (checkDistance == 1) {
+          dist = sqrt(pow(body_pos[0]-x,2)+pow(body_pos[1]-y,2)+pow(body_pos[2]-z,2));
+        }
 	      evaluateCoefficients(fabs(jacDet),
            jac,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
@@ -1117,10 +1092,9 @@ namespace proteus
 	      //calculate the internal and external trace of the pde coefficients 
 	      // 
 	      calculateStrain(D_ext,strain);
-          double detJ0 = detJ0_array[eN];
-          double nn [1] = {0};
-          /* double dist = sqrt(pow(body_pos[0]-x,2)+pow(body_pos[1]-y,2)+pow(body_pos[2]-z,2); */
-          double dist = 1;
+        double detJ0 = detJ0_array[eN];
+        double nn [1] = {0};
+        double dist = 1;
 	      evaluateCoefficients(fabs(jacDet_ext),
            jac_ext,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
