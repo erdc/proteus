@@ -52,15 +52,13 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
         x0_petsc = p4pyPETSc.Vec().createWithArray(x0)
         b1_petsc = p4pyPETSc.Vec().createWithArray(b1)
         solver = LS.ChebyshevSemiIteration(A_petsc,
-                                           b1_petsc,
-                                           x0_petsc,
-                                           20,
                                            alpha,
-                                           beta)
-        solver.apply()
+                                           beta,
+                                           True)
+        solver.apply(b1_petsc, x0_petsc, 20)
         expected = np.load(os.path.join(self._scriptdir,'import_modules/sol_10.npy'))
-        actual = solver.x_k.getArray()
-        assert np.allclose(expected,actual)
+        actual = x0_petsc
+        assert np.allclose(expected,actual.getArray())
     
     def test_chebyshev_iteration_2(self):
         '''  Tests the pcd_shell operators produce correct output. '''
@@ -76,13 +74,10 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
         x0_petsc = p4pyPETSc.Vec().createWithArray(x0)
         b1_petsc = p4pyPETSc.Vec().createWithArray(b1)
         solver = LS.ChebyshevSemiIteration(A_petsc,
-                                           b1_petsc,
-                                           x0_petsc,
-                                           20,
                                            alpha,
                                            beta,
                                            save_iterations=True)
-        solver.apply()
+        solver.apply(b1_petsc, x0_petsc, 20)
         expected = np.load(os.path.join(self._scriptdir,'import_modules/sol_20_lst.npy'))
         for i,item in enumerate(expected):
             assert np.allclose(item,solver.iteration_results[i],1e-12)
