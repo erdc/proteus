@@ -3623,7 +3623,16 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 del array
             else:
                 if ar.has_h5py:
-                    u.dof[:]=ar.hdfFile["/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)]
+                    if ar.global_sync:
+                        #this is known to be slow but it scales with
+                        #respect to memory (as opposed to the faster
+                        #approach of pulling in the entire array)
+                        permute = np.argsort(self.mesh.globalMesh.nodeNumbering_subdomain2global)
+                        u.dof[permute] = ar.hdfFile["/"+u.name+"_t"+str(tCount)][self.mesh.globalMesh.nodeNumbering_subdomain2global[permute].tolist()]
+                        #faster way
+                        #u.dof[:] = ar.hdfFile["/"+u.name+"_t"+str(tCount)].value[self.mesh.globalMesh.nodeNumbering_subdomain2global]                        
+                    else:
+                        u.dof[:]=ar.hdfFile["/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)]
                 else:
                     u.dof[:]=ar.hdfFile.getNode("/",u.name+str(tCount))
         else:
