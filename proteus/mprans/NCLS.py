@@ -128,52 +128,50 @@ class RKEV(proteus.TimeIntegration.SSP33):
         #import pdb
         #pdb.set_trace()
         self.lstage += 1
-        assert self.timeOrder in [1,3]
+        assert self.timeOrder in [1,2,3]
         assert self.lstage > 0 and self.lstage <= self.timeOrder
         if self.timeOrder == 3:
             if self.lstage == 1:
                 logEvent("First stage of SSP33 method",level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) #no need for .copy?
-                    self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
-                    #needs to be updated for non-scalar equations
-                    #these match what is in the hand-coded NumericalSolution
-                    self.transport.u_dof_old = numpy.copy(self.transport.u[ci].dof)
-                    #this as used as last stage value in EV Transport model
-                    self.m_last[ci] = numpy.copy(self.transport.q[('m',ci)])
-
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
             elif self.lstage == 2:
                 logEvent("Second stage of SSP33 method",level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) 
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
                     self.u_dof_stage[ci][self.lstage] *= 1./4.
                     self.u_dof_stage[ci][self.lstage] += 3./4.*self.u_dof_last[ci]
-                    self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
-                    self.m_stage[ci][self.lstage] *= 1./4.
-                    #mwf this has to be fixed
-                    #previous stage updated m_last to the stage value
-                    #either have another temporary here or have the VOF code use m_stage
-                    #instead of m_last
-                    self.m_stage[ci][self.lstage] += 3./4.*self.m_last_save[ci] 
-                   
-                    #needs to be updated for non-scalar equations
-                    #these match what is in the hand-coded NumericalSolution
-                    self.transport.u_dof_old = numpy.copy(self.u_dof_stage[ci][self.lstage])
-                    self.m_last[ci] = numpy.copy(self.m_stage[ci][self.lstage])
+                    #Update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
             elif self.lstage == 3:
                 logEvent("Third stage of SSP33 method",level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof)
-                    self.u_dof_stage[ci][self.lstage][:] *= 2.0/3.0
-                    self.u_dof_stage[ci][self.lstage][:] += 1.0/3.0*self.u_dof_last[ci]
-                    #switch  time history back
-                    #this needs to be updated for multiple components
-                    self.transport.u_dof_old = numpy.copy(self.u_dof_last[ci])
-                    self.transport.u[ci].dof = numpy.copy(self.u_dof_stage[ci][self.lstage])
-                    self.m_last[ci] = numpy.copy(self.m_last_save[ci])
-                    #self.transport.getResidual(self.u_dof_stage[ci][self.lstage],
-                    #                           self.transport.globalResidualDummy)
-                    
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    self.u_dof_stage[ci][self.lstage] *= 2.0/3.0
+                    self.u_dof_stage[ci][self.lstage] += 1.0/3.0*self.u_dof_last[ci]
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_last[ci]
+                    # update solution to u[0].dof
+                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage]
+        elif self.timeOrder == 2:
+            if self.lstage == 1:
+                logEvent("First stage of SSP22 method",level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) #no need for .copy?
+                    # Update u_dof_old
+                    self.transport.u_dof_old = numpy.copy(self.transport.u[ci].dof)
+            elif self.lstage == 2:
+                logEvent("Second stage of SSP22 method",level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    self.u_dof_stage[ci][self.lstage][:] *= 1./2.
+                    self.u_dof_stage[ci][self.lstage][:] += 1./2.*self.u_dof_last[ci]
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_last[ci]
+                    # update solution to u[0].dof
+                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage]
         else:
             assert self.timeOrder == 1
             for ci in range(self.nc):
@@ -256,7 +254,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def __init__(self,
                  epsCoupez, #relative to he
-                 LUMPED_MASS_MATRIX=False,
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
@@ -269,14 +266,18 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  waterline_interval=-1,
                  movingDomain=False, 
                  # FOR REDISTANCING AND COUPEZ METHOD
+                 LUMPED_MASS_MATRIX=False,
                  pure_redistancing=False,
                  epsFactRedistancing=0.33,
                  redistancing_tolerance=0.1,
                  maxIter_redistancing=3,
                  lambda_coupez=0.,
                  cfl_redistancing=0.1, 
-                 STABILIZATION_TYPE=0):
-
+                 STABILIZATION_TYPE=0, 
+                 ENTROPY_TYPE=1,
+                 cE=1.0):
+        self.ENTROPY_TYPE=ENTROPY_TYPE
+        self.cE=cE
         self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
         self.STABILIZATION_TYPE=STABILIZATION_TYPE
         self.epsFactRedistancing=epsFactRedistancing
@@ -321,6 +322,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def attachModels(self,modelList):
         #the level set model
+        print self.modelIndex
         self.model = modelList[self.modelIndex]
         #the velocity
         if self.flowModelIndex >= 0:
@@ -379,12 +381,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.flowModelIndex == None:
             self.ebqe_v = numpy.zeros(cebqe[('grad(u)',0)].shape,'d')
     def preStep(self,t,firstStep=False):
-	# Save old solutions
-        self.model.u_dof_old_old[:] = self.model.u_dof_old
-	self.model.u_dof_old[:] = self.model.u[0].dof
-        # Compute new velocity 
+	# SAVE OLD SOLUTION #
+        self.model.u_dof_old[:] = self.model.u[0].dof
+
+        # COMPUTE NEW VELOCITY (if given by user) # 
         if self.model.hasVelocityFieldAsFunction:
             self.model.updateVelocityFieldAsFunction()
+
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,
@@ -512,7 +515,6 @@ class LevelModel(OneLevelTransport):
             for ci in range(1,coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"            
         self.u_dof_old = None
-        self.u_dof_old_old = None
 
         ## Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh #assume the same mesh for  all components for now
@@ -869,15 +871,17 @@ class LevelModel(OneLevelTransport):
         t = self.timeIntegration.t
         self.coefficients.q_v[...,0] = self.velocityField[0](X,t)
         self.coefficients.q_v[...,1] = self.velocityField[1](X,t)
-        
+        if (self.nSpace_global==3):
+            self.coefficients.q_v[...,2] = self.velocityField[1](X,t)
+
         # BOUNDARY
         ebqe_X = {0:self.ebqe['x'][:,:,0],
                   1:self.ebqe['x'][:,:,1],
                   2:self.ebqe['x'][:,:,2]}
-        self.coefficients.ebqe_v[...,0] = self.velocityField[0](X,t)
-
-
-        #self.ebqe['dynamic_viscosity'][:] = self.materialParameters['dynamic_viscosity'](ebqe_X,t)
+        self.coefficients.ebqe_v[...,0] = self.velocityField[0](ebqe_X,t)
+        self.coefficients.ebqe_v[...,1] = self.velocityField[1](ebqe_X,t)
+        if (self.nSpace_global==3):
+            self.coefficients.ebqe_v[...,2] = self.velocityField[1](ebqe_X,t)
 
     ######################################
     ######## GET REDISTANCING RHS ########
@@ -984,7 +988,8 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
-	    self.u_dof_old,
+            #self.u_dof_old,
+            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage], # DOFs at last stage. Used only when STABILIZATION_TYPE>0
             self.offset[0],self.stride[0],
             r)
 
@@ -1005,7 +1010,6 @@ class LevelModel(OneLevelTransport):
         if self.u_dof_old is None:
             # Pass initial condition to u_dof_old
             self.u_dof_old = numpy.copy(self.u[0].dof)
-            self.u_dof_old_old = numpy.copy(self.u[0].dof)
         ########################
         ### COMPUTE C MATRIX ###
         ########################
@@ -1135,9 +1139,6 @@ class LevelModel(OneLevelTransport):
         else:
             Cz = numpy.zeros(Cx.shape,'d')
 
-        # This is dummy. I just care about the csr structure of the sparse matrix
-        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
-
         # zero out residual
         r.fill(0.0)
 
@@ -1166,7 +1167,7 @@ class LevelModel(OneLevelTransport):
         else:
             self.calculateResidual = self.ncls.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.ncls.calculateMassMatrix
-         
+
         self.calculateResidual(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1203,15 +1204,14 @@ class LevelModel(OneLevelTransport):
             self.mesh.nodeDiametersArray,
             degree_polynomial,
             self.u[0].dof,
-	    self.u_dof_old,
-	    self.u_dof_old_old,
+            self.u_dof_old, #DOFs at lstage. Used only when STABILIZATION_TYPE>0; i.e., EV
             self.uStar_dof,
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u',0)],
 	    self.q[('grad(u)',0)],
             self.q[('dH_sge',0,0)],
-            self.timeIntegration.beta_bdf[0],#mwf was self.timeIntegration.m_last[0],
+            self.timeIntegration.beta_bdf[0],#betaBDF. Used only when STABILIZATION_TYPE=0
             self.q['dV'],
             self.q['dV_last'],
             self.q[('cfl',0)],
@@ -1247,7 +1247,9 @@ class LevelModel(OneLevelTransport):
             Cy,
             Cz,
             self.ML, 
-            self.coefficients.STABILIZATION_TYPE)
+            self.coefficients.STABILIZATION_TYPE, 
+            self.coefficients.ENTROPY_TYPE,
+            self.coefficients.cE)
 
 	if self.forceStrongConditions:#
 	    for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
