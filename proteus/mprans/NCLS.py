@@ -274,7 +274,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  lambda_coupez=0.,
                  cfl_redistancing=0.1, 
                  STABILIZATION_TYPE=0, 
-                 ENTROPY_TYPE=1,
+                 ENTROPY_TYPE=1, #polynomial, u=0.5*u^2
                  cE=1.0):
 
         self.ENTROPY_TYPE=ENTROPY_TYPE

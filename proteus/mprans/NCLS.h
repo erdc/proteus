@@ -1592,7 +1592,7 @@ namespace proteus
 					  +vn[2]*grad_un[2]
 #endif
 					  -dist_error*COUPEZ*lambda_coupez*sgn*(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)));
-		  DENTROPY_un = ENTROPY_TYPE==1 ? DENTROPY_LOG(un,-epsCoupez,epsCoupez) : DENTROPY(un,-epsCoupez,epsCoupez);
+		  DENTROPY_un = ENTROPY_TYPE==1 ? DENTROPY(un,-epsCoupez,epsCoupez) : DENTROPY_LOG(un,-epsCoupez,epsCoupez);
 		}
 	      //////////////
 	      // ith-LOOP //
@@ -1606,7 +1606,7 @@ namespace proteus
 		  // entropy residual
 		  if (STABILIZATION_TYPE==1) // EV Stab
 		    {
-		      DENTROPY_uni = ENTROPY_TYPE == 1 ? DENTROPY_LOG(u_dof_old[gi],-epsCoupez,epsCoupez) : DENTROPY(u_dof_old[gi],-epsCoupez,epsCoupez);
+		      DENTROPY_uni = ENTROPY_TYPE == 1 ? DENTROPY(u_dof_old[gi],-epsCoupez,epsCoupez) : DENTROPY_LOG(u_dof_old[gi],-epsCoupez,epsCoupez);
 		      element_entropy_residual[i] += (DENTROPY_un - DENTROPY_uni)*aux_entropy_residual*u_test_dV[i];
 		    }
 		  // element residual
@@ -1688,7 +1688,7 @@ namespace proteus
 	{
 	  double solni = u_dof_old[i];
 	  if (STABILIZATION_TYPE==1) //EV Stab
-	    eta[i] = ENTROPY_TYPE == 1 ? ENTROPY_LOG(solni,-epsCoupez,epsCoupez) : ENTROPY(solni,-epsCoupez,epsCoupez);
+	    eta[i] = ENTROPY_TYPE == 1 ? ENTROPY(solni,-epsCoupez,epsCoupez) : ENTROPY_LOG(solni,-epsCoupez,epsCoupez);
 	  else // smoothness based stab
 	    {
 	      gx[i]=0.;
