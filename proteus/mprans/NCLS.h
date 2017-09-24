@@ -16,11 +16,10 @@
 // Power entropy //
 #define entropy_power 2. // phiL and phiR are dummy variables
 #define ENTROPY(phi,dummyL,dummyR) 1./entropy_power*std::pow(fabs(phi),entropy_power)
-#define DENTROPY(phi,dummyL,dummyR) std::pow(fabs(phi),entropy_power-1.)*(phi >= 0. ? 1. : -1.)
+#define DENTROPY(phi,dummyL,dummyR) entropy_power == 1. ? 0. : std::pow(fabs(phi),entropy_power-1.)*(phi >= 0. ? 1. : -1.)
 
 #define ENTROPY_LOG(phi,phiL,phiR) std::log(fabs((phi-phiL)*(phiR-phi))+1E-14)
 #define DENTROPY_LOG(phi,phiL,phiR) (phiL+phiR-2*phi)*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(fabs((phi-phiL)*(phiR-phi))+1E-14) 
-#define cE 5.0
 
 namespace proteus
 {
@@ -122,7 +121,6 @@ namespace proteus
 				   int degree_polynomial,
 				   double* u_dof,
 				   double* u_dof_old,	
-				   double* u_dof_old_old,	
 				   double* uStar_dof, 
 				   double* velocity,
 				   double* q_m,
@@ -168,7 +166,9 @@ namespace proteus
 				   double* Cy, 
 				   double* Cz, 
 				   double* ML, 
-				   int STABILIZATION_TYPE				   
+				   int STABILIZATION_TYPE, 
+				   int ENTROPY_TYPE,
+				   double cE
 				   )=0;				   
     virtual void calculateResidual_entropy_viscosity(//element
 						     double dt,
@@ -206,7 +206,6 @@ namespace proteus
 						     int degree_polynomial,
 						     double* u_dof,
 						     double* u_dof_old,	
-						     double* u_dof_old_old,	
 						     double* uStar_dof, 
 						     double* velocity,
 						     double* q_m,
@@ -252,7 +251,9 @@ namespace proteus
 						     double* Cy,
 						     double* Cz,
 						     double* ML, 
-						     int STABILIZATION_TYPE
+						     int STABILIZATION_TYPE,
+						     int ENTROPY_TYPE,
+						     double cE
 						     )=0;
     virtual void calculateJacobian(//element
 				   double dt,
@@ -956,7 +957,6 @@ namespace proteus
 			   int degree_polynomial,
 			   double* u_dof,
 			   double* u_dof_old,			   
-			   double* u_dof_old_old,
 			   double* uStar_dof, 
 			   double* velocity,
 			   double* q_m,
@@ -1002,7 +1002,9 @@ namespace proteus
 			   double* Cy,
 			   double* Cz,
 			   double* ML,
-			   int STABILIZATION_TYPE
+			   int STABILIZATION_TYPE, 
+			   int ENTROPY_TYPE,
+			   double cE
 			   )
     {
       //cek should this be read in?
@@ -1078,7 +1080,6 @@ namespace proteus
 	      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
 	      //get the solution gradients
 	      ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
-	      ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u_old);
 	      //precalculate test function products with integration weights
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
@@ -1168,7 +1169,6 @@ namespace proteus
 	      //calculate shock capturing diffusion
 	      //	      
 	      ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u,grad_u,numDiff0);	      
-	      //ck.calculateNumericalDiffusion(shockCapturingDiffusion,G,pdeResidual_u,grad_u_old,numDiff1);
 	      ck.calculateNumericalDiffusion(shockCapturingDiffusion,sc_uref, sc_alpha,G,G_dd_G,pdeResidual_u,grad_u,numDiff1);
 	      q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
 	      
@@ -1317,7 +1317,6 @@ namespace proteus
 	      // 
 	      //calculate the pde coefficients using the solution and the boundary values for the solution 
 	      // 
-	      bc_u_ext = ebqe_bc_u_ext[ebNE_kb]; //mql. I did this to enforce periodic BCs. So, tmp? 
 	      evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
 				   u_ext,
 				   grad_u_ext,
@@ -1411,7 +1410,6 @@ namespace proteus
 					     int degree_polynomial,
 					     double* u_dof,
 					     double* u_dof_old,			   
-					     double* u_dof_old_old,
 					     double* uStar_dof,
 					     double* velocity,
 					     double* q_m,
@@ -1457,7 +1455,9 @@ namespace proteus
 					     double* Cy,
 					     double* Cz,
 					     double* ML,
-					     int STABILIZATION_TYPE
+					     int STABILIZATION_TYPE, 
+					     int ENTROPY_TYPE,
+					     double cE
 					     )
     {
       // inverse of mass matrix in reference element 
@@ -1551,7 +1551,6 @@ namespace proteus
 	      //get the solution at quad point at tn and tnm1 for entropy viscosity
 	      // solution and grads at old times at quad points
 	      ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
-	      //ck.valFromDOF(u_dof_old_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],unm1);
 	      //get the solution gradients at tn for entropy viscosity
 	      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 	      ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
@@ -1593,7 +1592,7 @@ namespace proteus
 					  +vn[2]*grad_un[2]
 #endif
 					  -dist_error*COUPEZ*lambda_coupez*sgn*(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)));
-		  DENTROPY_un = DENTROPY_LOG(un,-epsCoupez,epsCoupez);
+		  DENTROPY_un = ENTROPY_TYPE==1 ? DENTROPY_LOG(un,-epsCoupez,epsCoupez) : DENTROPY(un,-epsCoupez,epsCoupez);
 		}
 	      //////////////
 	      // ith-LOOP //
@@ -1607,7 +1606,7 @@ namespace proteus
 		  // entropy residual
 		  if (STABILIZATION_TYPE==1) // EV Stab
 		    {
-		      DENTROPY_uni = DENTROPY_LOG(u_dof_old[gi],-epsCoupez,epsCoupez);
+		      DENTROPY_uni = ENTROPY_TYPE == 1 ? DENTROPY_LOG(u_dof_old[gi],-epsCoupez,epsCoupez) : DENTROPY(u_dof_old[gi],-epsCoupez,epsCoupez);
 		      element_entropy_residual[i] += (DENTROPY_un - DENTROPY_uni)*aux_entropy_residual*u_test_dV[i];
 		    }
 		  // element residual
@@ -1689,7 +1688,7 @@ namespace proteus
 	{
 	  double solni = u_dof_old[i];
 	  if (STABILIZATION_TYPE==1) //EV Stab
-	    eta[i] = ENTROPY_LOG(solni,-epsCoupez,epsCoupez);
+	    eta[i] = ENTROPY_TYPE == 1 ? ENTROPY_LOG(solni,-epsCoupez,epsCoupez) : ENTROPY(solni,-epsCoupez,epsCoupez);
 	  else // smoothness based stab
 	    {
 	      gx[i]=0.;
@@ -1790,9 +1789,9 @@ namespace proteus
 		}
 	    }
 	  if (STABILIZATION_TYPE==1) //EV stab
-	    {
+	    {	      
 	      // Normalize entropy residual
-	      global_entropy_residual[i] *= etaMax[i] == etaMin[i] ? 0. : 2*cE/(etaMax[i]-etaMin[i]);
+	      global_entropy_residual[i] *= etaMin[i] == etaMax[i] ? 0. : 2*cE/(etaMax[i]-etaMin[i]);
 	      quantDOFs[i] = fabs(global_entropy_residual[i]); 
 	    }
 	  else // smoothness based stab
@@ -1965,7 +1964,6 @@ namespace proteus
 	      // 
 	      //calculate the pde coefficients using the solution and the boundary values for the solution 
 	      // 
-	      bc_u_ext = ebqe_bc_u_ext[ebNE_kb]; //mqp. I did this to enforce periodic BCs. So, tmp?
 	      evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
 				   u_ext,
 				   grad_u_ext,
