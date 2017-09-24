@@ -49,13 +49,13 @@ class NumericalFlux(proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart)
                                                                              getAdvectiveFluxBoundaryConditions,
                                                                              getDiffusiveFluxBoundaryConditions)
         
-class RKEV(proteus.TimeIntegration.SSP33):
+class RKEV(proteus.TimeIntegration.SSP):
     """
     Wrapper for SSPRK time integration using EV
     ... more to come ...
     """
     def __init__(self, transport, timeOrder=1, runCFL=0.1, integrateInterpolationPoints=False):
-        BackwardEuler.__init__(self, transport,integrateInterpolationPoints=integrateInterpolationPoints)
+        SSP.__init__(self, transport,integrateInterpolationPoints=integrateInterpolationPoints)
         self.runCFL=runCFL
         self.dtLast=None
         self.dtRatioMax = 2.
@@ -66,7 +66,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
         else:
             assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
             self.cfl = transport.edge_based_cfl
-        # Stuff particular for SSP33
+        # Stuff particular for SSP
         self.timeOrder = timeOrder  #order of approximation
         self.nStages = timeOrder  #number of stages total
         self.lstage = 0  #last stage completed
@@ -276,6 +276,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  STABILIZATION_TYPE=0, 
                  ENTROPY_TYPE=1,
                  cE=1.0):
+
         self.ENTROPY_TYPE=ENTROPY_TYPE
         self.cE=cE
         self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
@@ -712,10 +713,6 @@ class LevelModel(OneLevelTransport):
         if ('velocityField') in dir (options): 
             self.velocityField = options.velocityField
             self.hasVelocityFieldAsFunction = True
-        # Check the solver when EV or smoothness based stab is used and the mass matrix is lumped
-        if self.coefficients.STABILIZATION_TYPE > 0 and self.coefficients.LUMPED_MASS_MATRIX==True: # EV or smoothness based indicator
-            condSolver = 'levelNonlinearSolver' in dir (options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix
-            assert condSolver,"Use levelNonlinearSolver=ExplicitLumpedMassMatrix when the mass matrix is lumped and STABILIZATION_TYPE>0"
         #
         # allocate residual and Jacobian storage
         #
@@ -762,6 +759,12 @@ class LevelModel(OneLevelTransport):
 
         self.setupFieldStrides()
 
+        # Check the solver when EV or smoothness based stab is used and the mass matrix is lumped
+        if self.coefficients.STABILIZATION_TYPE > 0 and self.coefficients.LUMPED_MASS_MATRIX==True: # EV or smoothness based indicator
+            condSolver = 'levelNonlinearSolver' in dir (options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix
+            assert condSolver,"Use levelNonlinearSolver=ExplicitLumpedMassMatrix when the mass matrix is lumped and STABILIZATION_TYPE>0"
+        if self.coefficients.STABILIZATION_TYPE > 0:
+            assert self.timeIntegration.isSSP, "When STABILIZATION_TYPE>0, use RKEV timeIntegration within NCLS. timeOrder=2 is recommended"
         #Smoothing matrix
         self.SmoothingMatrix=None #Mass-epsilon^2*Laplacian 
         self.SmoothingMatrix_a = None
