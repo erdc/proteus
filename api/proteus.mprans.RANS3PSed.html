@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.mprans.RANS3PSed module &#8212; Proteus 1.3.3 documentation</title>
+    <title>proteus.mprans.RANS3PSed module &#8212; Proteus 1.4.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.3.3',
+        VERSION:     '1.4.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -56,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.3.3</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.4.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -138,6 +138,212 @@
       
   <div class="section" id="module-proteus.mprans.RANS3PSed">
 <span id="proteus-mprans-rans3psed-module"></span><h1>proteus.mprans.RANS3PSed module<a class="headerlink" href="#module-proteus.mprans.RANS3PSed" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="proteus.mprans.RANS3PSed.SubgridError">
+<em class="property">class </em><code class="descclassname">proteus.mprans.RANS3PSed.</code><code class="descname">SubgridError</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>lag=False</em>, <em>nStepsToDelay=0</em>, <em>hFactor=1.0</em>, <em>noPressureStabilization=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.SubgridError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.SubgridError.html#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.SubgridError.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.SubgridError.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.SubgridError.updateSubgridErrorHistory">
+<code class="descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em>initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.SubgridError.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.SubgridError.calculateSubgridError">
+<code class="descname">calculateSubgridError</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.SubgridError.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.RANS3PSed.NumericalFlux">
+<em class="property">class </em><code class="descclassname">proteus.mprans.RANS3PSed.</code><code class="descname">NumericalFlux</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.NumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.NumericalFlux.html#proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_SIPG_exterior" title="proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_SIPG_exterior"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_SIPG_exterior</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.mprans.RANS3PSed.NumericalFlux.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.NumericalFlux.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.RANS3PSed.ShockCapturing">
+<em class="property">class </em><code class="descclassname">proteus.mprans.RANS3PSed.</code><code class="descname">ShockCapturing</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=False</em>, <em>nStepsToDelay=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.ShockCapturing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.ShockCapturing.html#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.ShockCapturing.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.ShockCapturing.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.ShockCapturing.updateShockCapturingHistory">
+<code class="descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.ShockCapturing.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.RANS3PSed.Coefficients">
+<em class="property">class </em><code class="descclassname">proteus.mprans.RANS3PSed.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>epsFact=1.5, sigma=72.8, rho_0=998.2, nu_0=1.004e-06, rho_1=1.205, nu_1=1.5e-05, g=[0.0, 0.0, -9.8], nd=3, ME_model=5, PRESSURE_model=7, FLUID_model=6, VOS_model=0, LS_model=None, VOF_model=None, KN_model=None, Closure_0_model=None, Closure_1_model=None, epsFact_density=None, stokes=False, sd=True, movingDomain=False, useVF=0.0, useRBLES=0.0, useMetrics=0.0, useConstant_he=False, dragAlpha=0.0, dragBeta=0.0, setParamsFunc=None, dragAlphaTypes=None, dragBetaTypes=None, vosTypes=None, killNonlinearDrag=False, waveFlag=None, waveHeight=0.01, waveCelerity=1.0, waveFrequency=1.0, waveNumber=2.0, waterDepth=0.5, Omega_s=[[0.45, 0.55], [0.2, 0.4], [0.0, 1.0]], epsFact_source=1.0, epsFact_solid=None, eb_adjoint_sigma=1.0, eb_penalty_constant=10.0, forceStrongDirichlet=False, turbulenceClosureModel=0, smagorinskyConstant=0.1, barycenters=None, PSTAB=0.0, aDarcy=150.0, betaForch=0.0, grain=0.0102, packFraction=0.2, packMargin=0.01, maxFraction=0.635, frFraction=0.57, sigmaC=1.1, C3e=1.2, C4e=1.0, eR=0.8, fContact=0.02, mContact=2.0, nContact=5.0, angFriction=0.5235987755982988</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<p>The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function</p>
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.attachModels">
+<code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.initializeMesh">
+<code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.initializeElementBoundaryQuadrature">
+<code class="descname">initializeElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebq</em>, <em>cebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.initializeElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature">
+<code class="descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.updateToMovingDomain">
+<code class="descname">updateToMovingDomain</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.updateToMovingDomain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.evaluateForcingTerms">
+<code class="descname">evaluateForcingTerms</code><span class="sig-paren">(</span><em>t</em>, <em>c</em>, <em>mesh=None</em>, <em>mesh_trial_ref=None</em>, <em>mesh_l2g=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.evaluateForcingTerms" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.preStep">
+<code class="descname">preStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.preStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.postStep">
+<code class="descname">postStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.postStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate">
+<code class="descname">TwophaseNavierStokes_ST_LS_SO_2D_Evaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate the coefficients  of the 2D Navier-Stokes equations with surface  tension</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd">
+<code class="descname">TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate the coefficients  of the 2D Navier-Stokes equations with surface  tension</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.TwophaseNavierStokes_ST_LS_SO_3D_Evaluate">
+<code class="descname">TwophaseNavierStokes_ST_LS_SO_3D_Evaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.TwophaseNavierStokes_ST_LS_SO_3D_Evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate the coefficients  of the 3D Navier-Stokes equations with surface  tension</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd">
+<code class="descname">TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate the coefficients  of the 3D Navier-Stokes equations with surface  tension</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.Coefficients.calculateWaveFunction3d_ref">
+<code class="descname">calculateWaveFunction3d_ref</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.Coefficients.calculateWaveFunction3d_ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>generate continuity source term for driving waves following Liu etal</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.RANS3PSed.LevelModel">
+<em class="property">class </em><code class="descclassname">proteus.mprans.RANS3PSed.</code><code class="descname">LevelModel</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressTraceBoundaryConditionsSetterDictDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='RANS3PSed'</em>, <em>reuse_trial_and_test_quadrature=True</em>, <em>sd=True</em>, <em>movingDomain=False</em>, <em>bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.LevelModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.mprans.RANS3PSed.LevelModel.nCalls">
+<code class="descname">nCalls</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.LevelModel.nCalls" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.LevelModel.getResidual">
+<code class="descname">getResidual</code><span class="sig-paren">(</span><em>u</em>, <em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.LevelModel.getResidual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the element residuals and add in to the global residual</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.LevelModel.getJacobian">
+<code class="descname">getJacobian</code><span class="sig-paren">(</span><em>jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.LevelModel.getJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.LevelModel.calculateElementQuadrature">
+<code class="descname">calculateElementQuadrature</code><span class="sig-paren">(</span><em>domainMoved=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.LevelModel.calculateElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the physical location and weights of the quadrature rules
+and the shape information at the quadrature points.</p>
+<p>This function should be called only when the mesh changes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.LevelModel.calculateElementBoundaryQuadrature">
+<code class="descname">calculateElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>domainMoved=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.LevelModel.calculateElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the physical location and weights of the quadrature rules
+and the shape information at the quadrature points on element boundaries.</p>
+<p>This function should be called only when the mesh changes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.LevelModel.calculateExteriorElementBoundaryQuadrature">
+<code class="descname">calculateExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>domainMoved=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.LevelModel.calculateExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the physical location and weights of the quadrature rules
+and the shape information at the quadrature points on global element boundaries.</p>
+<p>This function should be called only when the mesh changes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.LevelModel.estimate_mt">
+<code class="descname">estimate_mt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.LevelModel.estimate_mt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.LevelModel.calculateSolutionAtQuadrature">
+<code class="descname">calculateSolutionAtQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.LevelModel.calculateSolutionAtQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.LevelModel.calculateAuxiliaryQuantitiesAfterStep">
+<code class="descname">calculateAuxiliaryQuantitiesAfterStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.LevelModel.calculateAuxiliaryQuantitiesAfterStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS3PSed.LevelModel.updateAfterMeshMotion">
+<code class="descname">updateAfterMeshMotion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.LevelModel.updateAfterMeshMotion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.mprans.RANS3PSed.getErgunDrag">
+<code class="descclassname">proteus.mprans.RANS3PSed.</code><code class="descname">getErgunDrag</code><span class="sig-paren">(</span><em>porosity</em>, <em>meanGrainSize</em>, <em>viscosity</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS3PSed.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS3PSed.getErgunDrag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 
 

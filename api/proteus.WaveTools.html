@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.WaveTools module &#8212; Proteus 1.3.3 documentation</title>
+    <title>proteus.WaveTools module &#8212; Proteus 1.4.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.3.3',
+        VERSION:     '1.4.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -56,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.3.3</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.4.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -143,6 +143,129 @@
 approximate) for the free surface deformation and subsurface velocity
 components of water waves. These can be used as boundary conditions, wave
 generation sources, and validation solutions for numerical wave codes.</p>
+<dl class="class">
+<dt id="proteus.WaveTools.SteadyCurrent">
+<em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">SteadyCurrent</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.SteadyCurrent" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class is used for generating a steady current</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>U</strong> (<em>numpy.ndarray</em>) &#8211; Current velocity in vector form</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Still water level</li>
+<li><strong>rampTime</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Ramp time for current</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="proteus.WaveTools.SteadyCurrent.eta">
+<code class="descname">eta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.SteadyCurrent.eta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates free surface elevation (SolitaryWave class)
+:param x: Position vector
+:type x: numpy.ndarray
+:param t: Time variable
+:type t: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Free-surface elevation as a float</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.WaveTools.SteadyCurrent.u">
+<code class="descname">u</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.SteadyCurrent.u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates wave velocity vector (SolitaryWave class).
+:param x: Position vector
+:type x: numpy.ndarray
+:param t: Time variable
+:type t: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Velocity vector as 1D array</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">numpy.ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.WaveTools.SolitaryWave">
+<em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">SolitaryWave</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.SolitaryWave" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>This class is used for generating 1st order solitary wave</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>waveHeight</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Regular wave height</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Still water level</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
+<li><strong>g</strong> (<em>numpy.ndarray</em>) &#8211; Gravitational acceleration vector</li>
+<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) &#8211; Wave direction in vector form</li>
+<li><strong>trans</strong> (<em>numpy.ndarray</em>) &#8211; Position vector of the peak</li>
+<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for optimised functions</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="proteus.WaveTools.SolitaryWave.eta">
+<code class="descname">eta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.SolitaryWave.eta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates free surface elevation (SolitaryWave class)
+:param x: Position vector
+:type x: numpy.ndarray
+:param t: Time variable
+:type t: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Free-surface elevation as a float</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.WaveTools.SolitaryWave.u">
+<code class="descname">u</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.SolitaryWave.u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates wave velocity vector (SolitaryWave class).
+:param x: Position vector
+:type x: numpy.ndarray
+:param t: Time variable
+:type t: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Velocity vector as 1D array</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">numpy.ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="proteus.WaveTools.MonochromaticWaves">
 <em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">MonochromaticWaves</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.MonochromaticWaves" title="Permalink to this definition">¶</a></dt>
@@ -409,7 +532,7 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <code class="descname">writeEtaSeries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.RandomWaves.writeEtaSeries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes a timeseries of the free-surface elevation</p>
 <p>It also returns the free surface elevation as a time-eta array.
-If Vgen !=[0.,0.,0.,] then Tstart is modified to account for the
+If Lgen !=[0.,0.,0.,] then Tstart is modified to account for the
 wave transformation at the most remote point of the relaxation zone.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -420,7 +543,7 @@ wave transformation at the most remote point of the relaxation zone.</p>
 <li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; End time</li>
 <li><strong>x0</strong> (<em>numpy.ndarray</em>) &#8211; Position vector of the time series</li>
 <li><strong>fname</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Filename for timeseries file</li>
-<li><strong>Vgen</strong> (<em>Optional</em><em>[</em><em>numpy.ndarray</em><em>]</em><em></em>) &#8211; Length vector of relaxation zone</li>
+<li><strong>Lgen</strong> (<em>Optional</em><em>[</em><em>numpy.ndarray</em><em>]</em><em></em>) &#8211; Length vector of relaxation zone</li>
 </ul>
 </td>
 </tr>
@@ -979,7 +1102,7 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <code class="descname">writeEtaSeries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.RandomNLWaves.writeEtaSeries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes a timeseries of the free-surface elevation</p>
 <p>It also returns the free surface elevation as a time-eta array.
-If Vgen !=[0.,0.,0.,] then Tstart is modified to account for the
+If Lgen !=[0.,0.,0.,] then Tstart is modified to account for the
 wave transformation at the most remote point of the relaxation zone.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -993,7 +1116,7 @@ wave transformation at the most remote point of the relaxation zone.</p>
 <li><strong>fname</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Filename for timeseries file</li>
 <li><strong>mode</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a><em>]</em><em></em>) &#8211; Mode of set up calculations (all, long, short, setup)</li>
 <li><strong>setUp</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em><em></em>) &#8211; Switch for activating setup calculation</li>
-<li><strong>Vgen</strong> (<em>Optional</em><em>[</em><em>numpy.ndarray</em><em>]</em><em></em>) &#8211; Length vector of relaxation zone</li>
+<li><strong>Lgen</strong> (<em>Optional</em><em>[</em><em>numpy.ndarray</em><em>]</em><em></em>) &#8211; Length vector of relaxation zone</li>
 </ul>
 </td>
 </tr>
@@ -1062,7 +1185,7 @@ using linear reconstruction of components from a wave spectrum</p>
 Example for JONSWAP = {&#8220;gamma&#8221;: 3.3, &#8220;TMA&#8221;:True,&#8221;depth&#8221;: depth}
 TMA=True activates the TMA modification, which in turn needs the depth as a parameter</li>
 <li><strong>phi</strong> (<em>numpy.ndarray</em>) &#8211; Component phases (if set to None, phases are picked at random)</li>
-<li><strong>Vgen</strong> (<em>numpy.ndarray</em>) &#8211; Length of the generation zone (np.array([0., 0., 0.]) by default</li>
+<li><strong>Lgen</strong> (<em>numpy.ndarray</em>) &#8211; Length of the generation zone (np.array([0., 0., 0.]) by default</li>
 <li><strong>Nwaves</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of waves per window</li>
 <li><strong>Nfreq</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of Fourier components per window</li>
 <li><strong>NLongw</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Estmated ratio of long wave period to Tp</li>
@@ -1128,7 +1251,7 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">cos(<a class="reference internal" href="proteus.StepControl.html#proteus.StepControl.GustafssonFullNewton_dt_controller.phi" title="proteus.StepControl.GustafssonFullNewton_dt_controller.phi">phi</a>) or sin(<a class="reference internal" href="proteus.StepControl.html#proteus.StepControl.GustafssonFullNewton_dt_controller.phi" title="proteus.StepControl.GustafssonFullNewton_dt_controller.phi">phi</a>)</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">cos(<a class="reference internal" href="#proteus.WaveTools.RandomWaves.phi" title="proteus.WaveTools.RandomWaves.phi">phi</a>) or sin(<a class="reference internal" href="#proteus.WaveTools.RandomWaves.phi" title="proteus.WaveTools.RandomWaves.phi">phi</a>)</td>
 </tr>
 </tbody>
 </table>

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.mprans.PresInc module &#8212; Proteus 1.3.3 documentation</title>
+    <title>proteus.mprans.PresInc module &#8212; Proteus 1.4.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.3.3',
+        VERSION:     '1.4.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -56,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.3.3</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.4.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -138,6 +138,175 @@
       
   <div class="section" id="module-proteus.mprans.PresInc">
 <span id="proteus-mprans-presinc-module"></span><h1>proteus.mprans.PresInc module<a class="headerlink" href="#module-proteus.mprans.PresInc" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="proteus.mprans.PresInc.NumericalFlux">
+<em class="property">class </em><code class="descclassname">proteus.mprans.PresInc.</code><code class="descname">NumericalFlux</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.NumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.NumericalFlux.html#proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exterior" title="proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exterior"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exterior</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.PresInc.Coefficients">
+<em class="property">class </em><code class="descclassname">proteus.mprans.PresInc.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>rho_f_min=998.0</em>, <em>rho_s_min=998.0</em>, <em>nd=2</em>, <em>modelIndex=None</em>, <em>fluidModelIndex=None</em>, <em>fixNullSpace=False</em>, <em>INTEGRATE_BY_PARTS_DIV_U=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.Coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<blockquote>
+<div><p>The coefficients for pressure increment solution</p>
+<p>Update is given by</p>
+<div class="math">
+\[\]</div>
+</div></blockquote>
+<p>ablacdot( -a
+abla phi^{k+1} - mathbf{q^t}^{k+1} ) = 0</p>
+<blockquote>
+<div>a =</div></blockquote>
+<p>rac{        au (1-  heta_s)}{
+ho_f} +
+rac{   au      heta_s}{
+ho_s}</p>
+<blockquote>
+<div>q^t = (1-        heta_s) v_f +   heta_s v_s</div></blockquote>
+<p>Construct a coefficients object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>modelIndex</strong> &#8211; This model&#8217;s index into the model list</li>
+<li><strong>fluidModelIndex</strong> &#8211; The fluid momentum model&#8217;s index</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="proteus.mprans.PresInc.Coefficients.attachModels">
+<code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach the model for velocity and density to PresureIncrement model</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.Coefficients.initializeMesh">
+<code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give the TC object access to the mesh for any mesh-dependent information.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.Coefficients.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.Coefficients.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give the TC object access to the element quadrature storage</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.Coefficients.initializeElementBoundaryQuadrature">
+<code class="descname">initializeElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebq</em>, <em>cebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.Coefficients.initializeElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give the TC object access to the element boundary quadrature storage</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature">
+<code class="descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give the TC object access to the exterior element boundary quadrature storage</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.Coefficients.initializeGeneralizedInterpolationPointQuadrature">
+<code class="descname">initializeGeneralizedInterpolationPointQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cip</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.Coefficients.initializeGeneralizedInterpolationPointQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give the TC object access to the generalized interpolation point storage. These points are used  to project nonlinear potentials (phi).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.Coefficients.preStep">
+<code class="descname">preStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.Coefficients.preStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move the current values to values_last to keep cached set of values for bdf1 algorithm</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.Coefficients.postStep">
+<code class="descname">postStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.Coefficients.postStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the fluid velocities</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.Coefficients.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.Coefficients.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.Coefficients.evaluatePresureIncrement">
+<code class="descname">evaluatePresureIncrement</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.Coefficients.evaluatePresureIncrement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the coefficients after getting the velocities and densities</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.PresInc.LevelModel">
+<em class="property">class </em><code class="descclassname">proteus.mprans.PresInc.</code><code class="descname">LevelModel</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressTraceBoundaryConditionsSetterDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='defaultName'</em>, <em>reuse_trial_and_test_quadrature=True</em>, <em>sd=True</em>, <em>movingDomain=False</em>, <em>bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.mprans.PresInc.LevelModel.nCalls">
+<code class="descname">nCalls</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel.nCalls" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.LevelModel.calculateCoefficients">
+<code class="descname">calculateCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel.calculateCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.LevelModel.calculateElementResidual">
+<code class="descname">calculateElementResidual</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel.calculateElementResidual" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.LevelModel.getResidual">
+<code class="descname">getResidual</code><span class="sig-paren">(</span><em>u</em>, <em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel.getResidual" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.LevelModel.getJacobian">
+<code class="descname">getJacobian</code><span class="sig-paren">(</span><em>jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel.getJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.LevelModel.calculateElementQuadrature">
+<code class="descname">calculateElementQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel.calculateElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the physical location and weights of the quadrature rules
+and the shape information at the quadrature points.</p>
+<p>This function should be called only when the mesh changes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.LevelModel.calculateElementBoundaryQuadrature">
+<code class="descname">calculateElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel.calculateElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.LevelModel.calculateExteriorElementBoundaryQuadrature">
+<code class="descname">calculateExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel.calculateExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.LevelModel.estimate_mt">
+<code class="descname">estimate_mt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel.estimate_mt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.LevelModel.calculateAuxiliaryQuantitiesAfterStep">
+<code class="descname">calculateAuxiliaryQuantitiesAfterStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel.calculateAuxiliaryQuantitiesAfterStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.LevelModel.calculateSolutionAtQuadrature">
+<code class="descname">calculateSolutionAtQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel.calculateSolutionAtQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.PresInc.LevelModel.updateAfterMeshMotion">
+<code class="descname">updateAfterMeshMotion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/PresInc.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.PresInc.LevelModel.updateAfterMeshMotion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 
 
