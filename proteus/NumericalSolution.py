@@ -273,12 +273,11 @@ class NS_base:  # (HasTraits):
                     if comm.isMaster() and p.genMesh:
                         tmesh.readFromPolyFile(p.domain.polyfile)
                         tmesh.writeToFile(p.domain.polyfile)
-                        logEvent("Converting to Proteus Mesh")
-                        mesh=tmesh.convertToProteusMesh(verbose=1)
                     comm.barrier()
-                    if p.genMesh:
-                        mesh = MeshTools.TriangularMesh()
-                        mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
+
+                    mesh = MeshTools.TriangularMesh()
+                    mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
+
                     mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
                                                                 nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                 parallelPartitioningType=n.parallelPartitioningType)
@@ -1147,7 +1146,7 @@ class NS_base:  # (HasTraits):
             if self.opts.hotStart:
                 logEvent("Setting initial conditions from hot start file for "+p.name)
                 tCount = int(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Name'])
-                self.ar[index].n_datasets = tCount+1
+                self.ar[index].n_datasets = tCount + 1
                 time = float(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Value'])
                 if len(self.ar[index].tree.getroot()[-1][-1]) > 1:
                     dt = time - float(self.ar[index].tree.getroot()[-1][-1][-2][0].attrib['Value'])
@@ -1162,7 +1161,7 @@ class NS_base:  # (HasTraits):
                         lm.timeIntegration.tLast = time
                         lm.timeIntegration.t = time
                         lm.timeIntegration.dt = dt
-                self.tCount = tCount+1
+                self.tCount = tCount
             elif p.initialConditions is not None:
                 logEvent("Setting initial conditions for "+p.name)
                 m.setInitialConditions(p.initialConditions,self.tnList[0])
