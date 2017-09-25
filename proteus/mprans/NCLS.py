@@ -325,8 +325,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.eikonalSolverFlag >= 1: #FMM
             assert self.RD_modelIndex==None, "no redistance with eikonal solver too"
         self.checkMass = checkMass
-	self.sc_uref=sc_uref
-	self.sc_beta=sc_beta
+        self.sc_uref=sc_uref
+        self.sc_beta=sc_beta
         self.waterline_interval = waterline_interval
 
     def attachModels(self,modelList):
@@ -390,7 +390,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.flowModelIndex == None:
             self.ebqe_v = numpy.zeros(cebqe[('grad(u)',0)].shape,'d')
     def preStep(self,t,firstStep=False):
-	# SAVE OLD SOLUTION #
+        # SAVE OLD SOLUTION #
         self.model.u_dof_old[:] = self.model.u[0].dof
 
         # COMPUTE NEW VELOCITY (if given by user) # 
@@ -577,7 +577,7 @@ class LevelModel(OneLevelTransport):
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
-	#
+        #
         #calculate some dimensions
         #
         self.nSpace_global    = self.u[0].femSpace.nSpace_global #assume same space dim for all variables
@@ -731,7 +731,7 @@ class LevelModel(OneLevelTransport):
             self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
             self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.internalNodes = set(range(self.mesh.nNodes_global))
-	#identify the internal nodes this is ought to be in mesh
+        #identify the internal nodes this is ought to be in mesh
         ##\todo move this to mesh
         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -785,7 +785,7 @@ class LevelModel(OneLevelTransport):
         self.SmoothingMatrix_sparseFactor=None
         self.Jacobian_sparseFactor=None
         self.uStar_dof = numpy.copy(self.u[0].dof)
-	# Mass matrices 
+        # Mass matrices 
         self.ML=None #lumped mass matrix
         self.MC_global=None #consistent mass matrix
         # C-Matrices
@@ -874,8 +874,8 @@ class LevelModel(OneLevelTransport):
         if self.mesh.nodeVelocityArray==None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
 
-	self.waterline_calls  = 0
-	self.waterline_prints = 0
+        self.waterline_calls  = 0
+        self.waterline_prints = 0
 
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
@@ -952,7 +952,7 @@ class LevelModel(OneLevelTransport):
             self.u[0].dof,
             u_dof_old,
             #self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage], # DOFs at last stage. Used only when STABILIZATION_TYPE>0
-	    #self.u_dof_old,
+            #self.u_dof_old,
             self.uStar_dof,
             self.offset[0],self.stride[0],
             r,
@@ -1215,12 +1215,12 @@ class LevelModel(OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             #physics
             self.mesh.nElements_global,
-	    self.coefficients.useMetrics,
+            self.coefficients.useMetrics,
             self.timeIntegration.alpha_bdf,#mwf was self.timeIntegration.dt,
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
-	    self.coefficients.sc_uref,
-	    self.coefficients.sc_beta,
+            self.coefficients.sc_uref,
+            self.coefficients.sc_beta,
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
@@ -1231,7 +1231,7 @@ class LevelModel(OneLevelTransport):
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u',0)],
-	    self.q[('grad(u)',0)],
+            self.q[('grad(u)',0)],
             self.q[('dH_sge',0,0)],
             self.timeIntegration.beta_bdf[0],#betaBDF. Used only when STABILIZATION_TYPE=0
             self.q['dV'],
@@ -1275,8 +1275,8 @@ class LevelModel(OneLevelTransport):
             self.coefficients.ENTROPY_TYPE,
             self.coefficients.cE)
 
-	if self.forceStrongConditions:#
-	    for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
+        if self.forceStrongConditions:#
+            for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
     
         if (self.auxiliaryCallCalculateResidual==False):
@@ -1314,7 +1314,7 @@ class LevelModel(OneLevelTransport):
                                                                  colind,
                                                                  rowptr)
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-				       self.SmoothingMatrix)
+                                       self.SmoothingMatrix)
         degree_polynomial = 1
         try:
             degree_polynomial = self.u[0].femSpace.order
@@ -1323,29 +1323,29 @@ class LevelModel(OneLevelTransport):
 
         self.ncls.calculateSmoothingMatrix(#element
             self.timeIntegration.dt,
-	    self.u[0].femSpace.elementMaps.psi,
-	    self.u[0].femSpace.elementMaps.grad_psi,
-	    self.mesh.nodeArray,
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
             self.mesh.nodeVelocityArray,
             self.MOVING_DOMAIN,
-	    self.mesh.elementNodesArray,
-	    self.elementQuadratureWeights[('u',0)],
-	    self.u[0].femSpace.psi,
-	    self.u[0].femSpace.grad_psi,
-	    self.u[0].femSpace.psi,
-	    self.u[0].femSpace.grad_psi,
-	    #element boundary
-	    self.u[0].femSpace.elementMaps.psi_trace,
-	    self.u[0].femSpace.elementMaps.grad_psi_trace,
-	    self.elementBoundaryQuadratureWeights[('u',0)],
-	    self.u[0].femSpace.psi_trace,
-	    self.u[0].femSpace.grad_psi_trace,
-	    self.u[0].femSpace.psi_trace,
-	    self.u[0].femSpace.grad_psi_trace,
-	    self.u[0].femSpace.elementMaps.boundaryNormals,
-	    self.u[0].femSpace.elementMaps.boundaryJacobians,
-	    self.mesh.nElements_global,
-	    self.coefficients.useMetrics,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            #element boundary
+            self.u[0].femSpace.elementMaps.psi_trace,
+            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.elementBoundaryQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
+            self.mesh.nElements_global,
+            self.coefficients.useMetrics,
             self.timeIntegration.alpha_bdf,#mwf was dt
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
@@ -1375,7 +1375,7 @@ class LevelModel(OneLevelTransport):
         #import numpy
         import pdb
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-				       jacobian)
+                                       jacobian)
 
         degree_polynomial = 1
         try:
@@ -1388,29 +1388,29 @@ class LevelModel(OneLevelTransport):
 
         self.calculateJacobian(#element #FOR SUPG
             self.timeIntegration.dt,
-	    self.u[0].femSpace.elementMaps.psi,
-	    self.u[0].femSpace.elementMaps.grad_psi,
-	    self.mesh.nodeArray,
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
             self.mesh.nodeVelocityArray,
             self.MOVING_DOMAIN,
-	    self.mesh.elementNodesArray,
-	    self.elementQuadratureWeights[('u',0)],
-	    self.u[0].femSpace.psi,
-	    self.u[0].femSpace.grad_psi,
-	    self.u[0].femSpace.psi,
-	    self.u[0].femSpace.grad_psi,
-	    #element boundary
-	    self.u[0].femSpace.elementMaps.psi_trace,
-	    self.u[0].femSpace.elementMaps.grad_psi_trace,
-	    self.elementBoundaryQuadratureWeights[('u',0)],
-	    self.u[0].femSpace.psi_trace,
-	    self.u[0].femSpace.grad_psi_trace,
-	    self.u[0].femSpace.psi_trace,
-	    self.u[0].femSpace.grad_psi_trace,
-	    self.u[0].femSpace.elementMaps.boundaryNormals,
-	    self.u[0].femSpace.elementMaps.boundaryJacobians,
-	    self.mesh.nElements_global,
-	    self.coefficients.useMetrics,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            #element boundary
+            self.u[0].femSpace.elementMaps.psi_trace,
+            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.elementBoundaryQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
+            self.mesh.nElements_global,
+            self.coefficients.useMetrics,
             self.timeIntegration.alpha_bdf,#mwf was dt
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
@@ -1484,7 +1484,7 @@ class LevelModel(OneLevelTransport):
         #
         #get physical locations of element boundary quadrature points
         #
-	#assume all components live on the same mesh
+        #assume all components live on the same mesh
         self.u[0].femSpace.elementMaps.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
@@ -1508,19 +1508,19 @@ class LevelModel(OneLevelTransport):
     def computeWaterline(self, t):
         self.waterline_calls += 1
         if self.coefficients.waterline_interval > 0 and self.waterline_calls%self.coefficients.waterline_interval == 0:
-		self.waterline_npoints = numpy.zeros((1,),'i')
-        	self.waterline_data    = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nSpace_global),'d')
-		self.ncls.calculateWaterline(#element
-	 	   self.waterline_npoints,
-		   self.waterline_data,
-       	   	   self.u[0].femSpace.elementMaps.psi,
-       	    	   self.u[0].femSpace.elementMaps.grad_psi,
-       	    	   self.mesh.nodeArray,
-            	   self.mesh.nodeVelocityArray,
-           	   self.MOVING_DOMAIN,
-            	   self.mesh.elementNodesArray,
-              	   self.elementQuadratureWeights[('u',0)],
-       	           self.u[0].femSpace.psi,
+                self.waterline_npoints = numpy.zeros((1,),'i')
+                self.waterline_data    = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nSpace_global),'d')
+                self.ncls.calculateWaterline(#element
+                   self.waterline_npoints,
+                   self.waterline_data,
+                   self.u[0].femSpace.elementMaps.psi,
+                   self.u[0].femSpace.elementMaps.grad_psi,
+                   self.mesh.nodeArray,
+                   self.mesh.nodeVelocityArray,
+                   self.MOVING_DOMAIN,
+                   self.mesh.elementNodesArray,
+                   self.elementQuadratureWeights[('u',0)],
+                   self.u[0].femSpace.psi,
                    self.u[0].femSpace.grad_psi,
                    self.u[0].femSpace.psi,
                    self.u[0].femSpace.grad_psi,
@@ -1536,20 +1536,20 @@ class LevelModel(OneLevelTransport):
                    self.u[0].femSpace.elementMaps.boundaryJacobians,
             #physics
                    self.mesh.nElements_global,
-	           self.coefficients.useMetrics,
+                   self.coefficients.useMetrics,
                    self.timeIntegration.alpha_bdf,#mwf was self.timeIntegration.dt,
                    self.shockCapturing.lag,
                    self.shockCapturing.shockCapturingFactor,
-	           self.coefficients.sc_uref,
-	           self.coefficients.sc_beta,
+                   self.coefficients.sc_uref,
+                   self.coefficients.sc_beta,
                    self.u[0].femSpace.dofMap.l2g,
                    self.mesh.elementDiametersArray,
                    self.u[0].dof,
-	           self.u_dof_old,
+                   self.u_dof_old,
                    self.coefficients.q_v,
                    self.timeIntegration.m_tmp[0],
                    self.q[('u',0)],
-	           self.q[('grad(u)',0)],
+                   self.q[('grad(u)',0)],
                    self.q[('dH_sge',0,0)],
                    self.timeIntegration.beta_bdf[0],#mwf was self.timeIntegration.m_last[0],
                    self.q[('cfl',0)],
@@ -1560,15 +1560,15 @@ class LevelModel(OneLevelTransport):
                    self.mesh.exteriorElementBoundariesArray,
                    self.mesh.elementBoundaryElementsArray,
                    self.mesh.elementBoundaryLocalElementBoundariesArray,
-       	           self.mesh.elementBoundaryMaterialTypes,
+                   self.mesh.elementBoundaryMaterialTypes,
                    self.coefficients.ebqe_v,
                    self.numericalFlux.isDOFBoundary[0],
                    self.numericalFlux.ebqe[('u',0)],
                    self.ebqe[('u',0)])
-		from proteus import Comm
-		comm = Comm.get()
-		filename = os.path.join(self.coefficients.opts.dataDir,  "waterline." + str(comm.rank()) + "." + str(self.waterline_prints))
-		numpy.save(filename, self.waterline_data[0:self.waterline_npoints[0]])
+                from proteus import Comm
+                comm = Comm.get()
+                filename = os.path.join(self.coefficients.opts.dataDir,  "waterline." + str(comm.rank()) + "." + str(self.waterline_prints))
+                numpy.save(filename, self.waterline_data[0:self.waterline_npoints[0]])
                 self.waterline_prints += 1
     def updateAfterMeshMotion(self):
         pass
