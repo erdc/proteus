@@ -635,7 +635,7 @@ class Newton(NonlinearSolver):
 
 class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
     """
-     This is a fake solver meant to be used with optimized code
+    This is a fake solver meant to be used with optimized code
     A simple iterative solver that is Newton's method
     if you give it the right Jacobian
     """
@@ -669,7 +669,7 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
 
 class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
     """
-     This is a fake solver meant to be used with optimized code
+    This is a fake solver meant to be used with optimized code
     A simple iterative solver that is Newton's method
     if you give it the right Jacobian
     """
@@ -2641,6 +2641,7 @@ class EikonalSolver:
 
        FMMEikonalSolver
        FSWEikonalSolver
+
 
     """
 #    TODO Feb 20

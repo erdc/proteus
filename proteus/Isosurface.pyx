@@ -2,9 +2,6 @@
 #cython: embedsignature=True
 """
 AuxiliaryVariables subclasses for extracting isosurfaces and contours
-
-.. inheritance-diagram:: proteus.Isosurface
-   :parts: 1
 """
 from collections import defaultdict, OrderedDict
 from itertools import product
