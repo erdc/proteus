@@ -5,22 +5,23 @@ from oneD_advection import *
 nd = 2
 
 multilevelNonlinearSolver  = Newton
-levelNonlinearSolver = ExplicitLumpedMassMatrix
-#levelNonlinearSolver = Newton
-#levelNonlinearSolver = ExplicitConsistentMassMatrixWithRedistancing
-
-fullNewtonFlag = True
-updateJacobian = True
-
-timeIntegration = NCLS.RKEV # SSP33 #mwf right now need timeIntegration to be SSP33 to run
-stepController = Min_dt_controller
-
-if timeIntegration_ncls == "SSP33": #mwf hack
-    timeOrder = 3
-    nStagesTime = 3
+if STABILIZATION_TYPE==0: #SUPG
+    levelNonlinearSolver = Newton
+    fullNewtonFlag = True
+    updateJacobian = True
+    timeIntegration = BackwardEuler_cfl
 else:
-    timeOrder = 1
-    nStagesTime = 1
+    fullNewtonFlag = False
+    updateJacobian = False
+    timeIntegration = NCLS.RKEV # SSP33 
+    if LUMPED_MASS_MATRIX==True: 
+        levelNonlinearSolver = ExplicitLumpedMassMatrix
+    else:
+        levelNonlinearSolver = ExplicitConsistentMassMatrixWithRedistancing
+
+stepController = Min_dt_controller
+timeOrder = SSPOrder
+nStagesTime = SSPOrder
 
 if useHex:
     quad=True
@@ -71,11 +72,11 @@ if parallel:
     linear_solver_options_prefix = 'ncls_'
     linearSolverConvergenceTest = 'r-true'
 else:
-    multilevelLinearSolver = LU
-    
+    multilevelLinearSolver = LU    
     levelLinearSolver = LU
 
 conservativeFlux = {}
 if checkMass:
     auxiliaryVariables = [MassOverRegion()]
 
+tnList=[0.,1E-6]+[float(n)*T/float(nDTout) for n in range(1,nDTout+1)]
