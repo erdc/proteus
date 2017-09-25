@@ -6261,7 +6261,7 @@ def genMeshWithTetgen(polyfile,
    nbase : int
 
    Returns
-    -------
+   --------
    mesh : :class:`proteus.MeshTools.TetrahedralMesh`
        Simplex mesh
    """
@@ -6276,10 +6276,6 @@ def genMeshWithTetgen(polyfile,
    mesh.generateFromTetgenFiles(polyfile,
                                 base=nbase)
    return mesh
-
-
-from proteus import default_n as dn
-from proteus import default_p as dp
 
 class MeshOptions:
     """
