@@ -727,10 +727,8 @@ class ExplicitConsistentMassMatrixWithRedistancing(Newton):
     if you give it the right Jacobian
     """
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        doSmoothing = False
-        doRedistancing = False
-
-        if (doSmoothing):
+        if (self.F.coefficients.DO_SMOOTHING and self.F.coefficients.pure_redistancing==False):
+            logEvent("***** Doing smoothing *****",2)
             self.F.getRhsSmoothing(u,r)
             if (self.F.SmoothingMatrix == None):
                 self.F.getSmoothingMatrix()
@@ -766,14 +764,14 @@ class ExplicitConsistentMassMatrixWithRedistancing(Newton):
             if self.updateJacobian or self.fullNewton:            
                 self.F.getJacobian(self.J)
                 # set linear solver to be the jacobian
-                if (doSmoothing):
+                if (self.F.coefficients.DO_SMOOTHING):
                     self.linearSolver.L = self.J
                     # set space factors to be the jacobian factor 
                     self.linearSolver.sparseFactor = self.F.Jacobian_sparseFactor
                 self.linearSolver.prepare(b=r)
                 self.updateJacobian = False
             self.du[:]=0.0
-            if (doSmoothing):
+            if (self.F.coefficients.DO_SMOOTHING):
                 # Set sparse factors 
                 self.linearSolver.L = self.J
                 self.linearSolver.sparseFactor = self.F.Jacobian_sparseFactor
@@ -784,7 +782,6 @@ class ExplicitConsistentMassMatrixWithRedistancing(Newton):
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
                 self.linearSolverFailed = self.linearSolver.failed()
             u-=self.du
-        
             # DISTRIBUTE SOLUTION FROM u to u[ci].dof
             self.F.auxiliaryCallCalculateResidual = True
             self.computeResidual(u,r,b)
@@ -797,9 +794,8 @@ class ExplicitConsistentMassMatrixWithRedistancing(Newton):
         logEvent("***** Starting re-distancing *****",2)
         numIter=0
         self.F.L2_norm_redistancing = self.F.getRedistancingResidual(u,r)
-        if(doRedistancing):
+        if(self.F.coefficients.DO_REDISTANCING):
             if (self.F.coefficients.pure_redistancing==True):
-                self.F.edge_based_cfl.fill(self.F.coefficients.cfl_redistancing/self.F.dt_redistancing)
                 self.F.coefficients.maxIter_redistancing=1
             while (self.F.L2_norm_redistancing > self.F.coefficients.redistancing_tolerance*self.F.mesh.h
                    and numIter < self.F.coefficients.maxIter_redistancing):
