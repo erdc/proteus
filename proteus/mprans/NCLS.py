@@ -100,7 +100,6 @@ class RKEV(proteus.TimeIntegration.SSP):
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax            
-
         self.t = self.tLast + self.dt
         self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now        
     def initialize_dt(self,t0,tOut,q):
@@ -265,18 +264,27 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  sc_beta=1.0,
                  waterline_interval=-1,
                  movingDomain=False, 
-                 # FOR REDISTANCING AND COUPEZ METHOD
+                 # PARAMETERS FOR EV
+                 STABILIZATION_TYPE=0, 
                  LUMPED_MASS_MATRIX=False,
+                 ENTROPY_TYPE=1, #polynomial, u=0.5*u^2
+                 cE=1.0, 
+                 # COUPEZ AND REDISTANCING PARAMETERS
+                 DO_SMOOTHING=False,
+                 DO_REDISTANCING=False,
                  pure_redistancing=False,
-                 epsFactRedistancing=0.33,
+                 COUPEZ=False,
+                 SATURATED_LEVEL_SET=False,
+                 epsFactRedistancing=0.33, #For the signed distance function
                  redistancing_tolerance=0.1,
                  maxIter_redistancing=3,
-                 lambda_coupez=0.,
-                 cfl_redistancing=0.1, 
-                 STABILIZATION_TYPE=0, 
-                 ENTROPY_TYPE=1, #polynomial, u=0.5*u^2
-                 cE=1.0):
+                 lambda_coupez=0.1,
+                 cfl_redistancing=1.0):
 
+        self.DO_SMOOTHING=DO_SMOOTHING
+        self.COUPEZ=COUPEZ
+        self.SATURATED_LEVEL_SET=SATURATED_LEVEL_SET
+        self.DO_REDISTANCING=DO_REDISTANCING
         self.ENTROPY_TYPE=ENTROPY_TYPE
         self.cE=cE
         self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
@@ -488,7 +496,6 @@ class LevelModel(OneLevelTransport):
                  bdyNullSpace=False):
 
         self.L2_norm_redistancing=0.
-        self.dt_redistancing = 1E-6
         self.redistancing_L2_norm_history=[]
         self.auxiliaryCallCalculateResidual=False
         #
@@ -761,10 +768,17 @@ class LevelModel(OneLevelTransport):
 
         # Check the solver when EV or smoothness based stab is used and the mass matrix is lumped
         if self.coefficients.STABILIZATION_TYPE > 0 and self.coefficients.LUMPED_MASS_MATRIX==True: # EV or smoothness based indicator
-            condSolver = 'levelNonlinearSolver' in dir (options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix
+            condSolver = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix
             assert condSolver,"Use levelNonlinearSolver=ExplicitLumpedMassMatrix when the mass matrix is lumped and STABILIZATION_TYPE>0"
         if self.coefficients.STABILIZATION_TYPE > 0:
-            assert self.timeIntegration.isSSP, "When STABILIZATION_TYPE>0, use RKEV timeIntegration within NCLS. timeOrder=2 is recommended"
+            assert self.timeIntegration.isSSP, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within NCLS. timeOrder=2 is recommended"
+        if self.coefficients.DO_REDISTANCING:
+            assert self.coefficients.STABILIZATION_TYPE > 0, "If DO_REDISTANCING=True, use: STABILIZATION_TYPE>0"
+            assert self.coefficients.LUMPED_MASS_MATRIX==False, "If DO_REDISTANCING=True, use: LUMPED_MASS_MATRIX=False"
+            cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitConsistentMassMatrixWithRedistancing
+            assert cond, "If DO_REDISTANCING=True, use: levelNonlinearSolver=ExplicitConsistentMassMatrixWithRedistancing"
+            assert self.timeIntegration.isSSP, "If DO_REDISTANCING=True, use RKEV timeIntegration within NCLS. timeOrder=2 is recommended"
+
         #Smoothing matrix
         self.SmoothingMatrix=None #Mass-epsilon^2*Laplacian 
         self.SmoothingMatrix_a = None
@@ -913,9 +927,15 @@ class LevelModel(OneLevelTransport):
             Cz = self.cterm_global[2].getCSRrepresentation()
         else:
             Cz = numpy.zeros(Cx.shape,'d')
-        
+
+
+        if (self.coefficients.pure_redistancing==True):
+            u_dof_old = numpy.copy(self.u_dof_old)
+        else:
+            u_dof_old = numpy.copy(self.u[0].dof)
+
         L2_norm = self.ncls.calculateRedistancingResidual(#element
-            self.dt_redistancing,
+            self.timeIntegration.dt*(self.coefficients.cfl_redistancing if self.coefficients.pure_redistancing==False else 1.),
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -930,7 +950,9 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
-	    self.u_dof_old,
+            u_dof_old,
+            #self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage], # DOFs at last stage. Used only when STABILIZATION_TYPE>0
+	    #self.u_dof_old,
             self.uStar_dof,
             self.offset[0],self.stride[0],
             r,
@@ -945,15 +967,14 @@ class LevelModel(OneLevelTransport):
             self.coefficients.epsCoupez,
             self.coefficients.epsFactRedistancing*self.mesh.h,
             edge_based_cfl, 
+            self.coefficients.SATURATED_LEVEL_SET,
             Cx, 
             Cy,
             Cz,
             self.ML)
 
-        #Compute delta_tau (for next time step)
-        maxCFL = 1.0e-6
-        maxCFL = max(maxCFL,globalMax(edge_based_cfl.max()))
-        self.dt_redistancing = self.coefficients.cfl_redistancing/maxCFL
+        if (self.coefficients.pure_redistancing==True):
+            self.edge_based_cfl[:] = edge_based_cfl
 
         return L2_norm
     ######################################
@@ -990,9 +1011,7 @@ class LevelModel(OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            #self.u_dof_old,
-            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage], # DOFs at last stage. Used only when STABILIZATION_TYPE>0
+            self.u_dof_old, # This is u_lstage due to update stages in RKEV
             self.offset[0],self.stride[0],
             r)
 
@@ -1246,6 +1265,8 @@ class LevelModel(OneLevelTransport):
             self.coefficients.lambda_coupez, 
             self.coefficients.epsCoupez,
             self.coefficients.epsFactRedistancing*self.mesh.h,
+            self.coefficients.COUPEZ,
+            self.coefficients.SATURATED_LEVEL_SET,
             Cx,
             Cy,
             Cz,
@@ -1348,7 +1369,7 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.ebqe[('u',0)],
             self.csrColumnOffsets_eb[(0,0)], 
             self.mesh.h)
-
+        
     def getJacobian(self,jacobian):
         #import superluWrappers
         #import numpy

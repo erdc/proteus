@@ -6,8 +6,6 @@
 #include "ModelFactory.h"
 
 #define POWER_SMOOTHNESS_INDICATOR 2
-#define SATURATED_LEVEL_SET 1
-#define COUPEZ 1
 #define BETAij 0
 
 /////////////////////
@@ -60,6 +58,7 @@ namespace proteus
 						 double epsCoupez,
 						 double epsFactRedistancing,
 						 double* edge_based_cfl,
+						 int SATURATED_LEVEL_SET,
 						 // C-Matrices				   
 						 double* Cx, 
 						 double* Cy, 
@@ -80,7 +79,6 @@ namespace proteus
 					 int* u_l2g, 
 					 double* elementDiameter,
 					 double* nodeDiametersArray,
-					 double* u_dof,
 					 double* u_dof_old,	
 					 int offset_u, int stride_u, 
 					 double* globalResidual
@@ -161,6 +159,8 @@ namespace proteus
 				   double lambda_coupez, 
 				   double epsCoupez, 
 				   double epsFactRedistancing,
+				   int COUPEZ, 
+				   int SATURATED_LEVEL_SET,
 				   // C-Matrices				   
 				   double* Cx, 
 				   double* Cy, 
@@ -246,6 +246,8 @@ namespace proteus
 						     double lambda_coupez, 
 						     double epsCoupez, 
 						     double epsFactRedistancing, 
+						     int COUPEZ, 
+						     int SATURATED_LEVEL_SET,
 						     // C-Matrices
 						     double* Cx, 
 						     double* Cy,
@@ -642,6 +644,7 @@ namespace proteus
 					 double epsCoupez,
 					 double epsFactRedistancing,
 					 double* edge_based_cfl,
+					 int SATURATED_LEVEL_SET,
 					 // C-Matrices				   
 					 double* Cx, 
 					 double* Cy, 
@@ -830,7 +833,6 @@ namespace proteus
 	      if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term)
 		{
 		  // first-order dissipative operator
-		  //dLij = fmax(0.0,fmax(TransportMatrix[ij],TransposeTransportMatrix[ij]));
 		  dLij = fmax(fabs(TransportMatrix[ij]),fabs(TransposeTransportMatrix[ij]));
 		  dLij *= fmax(psi[i],psi[j]); 
 		  //dissipative terms
@@ -843,7 +845,7 @@ namespace proteus
 	  // update residual
 	  double mi = ML[i];
 	  // compute edge_based_cfl
-	  edge_based_cfl[i] = 2.*fabs(dLii)/mi;	  
+	  edge_based_cfl[i] = 2*fabs(dLii)/mi;	  
 	  globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term); 
 	}
       return L2_norm;
@@ -863,7 +865,6 @@ namespace proteus
 				 int* u_l2g, 
 				 double* elementDiameter,
 				 double* nodeDiametersArray,
-				 double* u_dof,
 				 double* u_dof_old,	
 				 int offset_u, int stride_u, 
 				 double* globalResidual)
@@ -997,6 +998,8 @@ namespace proteus
 			   double lambda_coupez, 
 			   double epsCoupez,
 			   double epsFactRedistancing,
+			   int COUPEZ, 
+			   int SATURATED_LEVEL_SET,
 			   // C-Matrices
 			   double* Cx, 
 			   double* Cy,
@@ -1450,6 +1453,8 @@ namespace proteus
 					     double lambda_coupez, 
 					     double epsCoupez,
 					     double epsFactRedistancing,
+					     int COUPEZ, 
+					     int SATURATED_LEVEL_SET,
 					     // C-Matrices
 					     double* Cx, 
 					     double* Cy,
