@@ -1676,6 +1676,7 @@ cdef class ProtChMoorings:
       string beam_type
       int nodes_nb # number of nodes
       np.ndarray nb_elems
+      double[:] _record_etas
     def __cinit__(self,
                   ProtChSystem system,
                   Mesh mesh,
@@ -1718,6 +1719,7 @@ cdef class ProtChMoorings:
         self.name = 'record_moorings'
         self.external_forces_from_ns = False
         self.external_forces_manual = False
+        self._record_etas=np.array([0.])
 
     def setName(self, string name):
         """Sets name of cable, used for csv file
@@ -1728,6 +1730,9 @@ cdef class ProtChMoorings:
             Name of cable.
         """
         self.name = name
+
+    def recordStrainEta(self, double[:] eta):
+        self._record_etas = eta
 
     def _recordValues(self):
         """Records values in csv files
@@ -1752,10 +1757,36 @@ cdef class ProtChMoorings:
             with open(self.record_file, 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
-        row = [t, t_chrono, t_sim]
         positions = self.getNodesPosition()
-        for pos in positions:
-            row += [pos[0], pos[1], pos[2]]
+        row = [t, t_chrono, t_sim]+(positions.flatten('C')).tolist()
+        with open(self.record_file, 'a') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(row)
+        # Velocity
+        self.record_file = os.path.join(Profiling.logDir, self.name+'_posdt.csv')
+        if t == 0:
+            headers = ['t', 't_ch', 't_sim']
+            for i in range(self.thisptr.nodes.size()):
+                headers += ['x'+str(i), 'y'+str(i), 'z'+str(i)]
+            with open(self.record_file, 'w') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(headers)
+        velocities = self.getNodesVelocity()
+        row = [t, t_chrono, t_sim]+(velocities.flatten('C')).tolist()
+        with open(self.record_file, 'a') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(row)
+        # Acceleration
+        self.record_file = os.path.join(Profiling.logDir, self.name+'_posdtdt.csv')
+        if t == 0:
+            headers = ['t', 't_ch', 't_sim']
+            for i in range(self.thisptr.nodes.size()):
+                headers += ['x'+str(i), 'y'+str(i), 'z'+str(i)]
+            with open(self.record_file, 'w') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(headers)
+        accelerations = self.getNodesAcceleration()
+        row = [t, t_chrono, t_sim]+(accelerations.flatten('C')).tolist()
         with open(self.record_file, 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(row)
@@ -1777,8 +1808,8 @@ cdef class ProtChMoorings:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(row)
         # Tensions
-        etas = [-1.,0.,1.]
-        for eta in etas:
+        for i in range(len(self._record_etas)):
+            eta = self._record_etas[i]
             self.record_file = os.path.join(Profiling.logDir, self.name+'_TT'+str(eta)+'.csv')
             if t == 0:
                 headers = ['t', 't_ch', 't_sim']
@@ -1787,31 +1818,45 @@ cdef class ProtChMoorings:
                 with open(self.record_file, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(headers)
-            if t > 0:
-                row = [t, t_chrono, t_sim]
-                tensions = self.getNodesTension(eta=eta)
-                for T in tensions:
-                    row += [T[0], T[1], T[2]]
-                with open(self.record_file, 'a') as csvfile:
-                    writer = csv.writer(csvfile, delimiter=',')
-                    writer.writerow(row)
+            row = [t, t_chrono, t_sim]
+            tensions = self.getNodesTension(eta=eta)
+            for T in tensions:
+                row += [T[0], T[1], T[2]]
+            with open(self.record_file, 'a') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(row)
         # Drag
         self.record_file = os.path.join(Profiling.logDir, self.name+'_drag.csv')
         if t == 0:
             headers = ['t', 't_ch', 't_sim']
-            for i in range(self.thisptr.nodes.size()-1):
+            for i in range(self.thisptr.nodes.size()):
                 headers += ['Fx'+str(i), 'Fy'+str(i), 'Fz'+str(i)]
             with open(self.record_file, 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
-        if t > 0:
-            row = [t, t_chrono, t_sim]
-            forces = self.getDragForces()
-            for F in forces:
-                row += [F[0], F[1], F[2]]
-            with open(self.record_file, 'a') as csvfile:
+        row = [t, t_chrono, t_sim]
+        forces = self.getDragForces()
+        for F in forces:
+            row += [F[0], F[1], F[2]]
+        with open(self.record_file, 'a') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(row)
+        # Added mass
+        self.record_file = os.path.join(Profiling.logDir, self.name+'_AM.csv')
+        if t == 0:
+            headers = ['t', 't_ch', 't_sim']
+            for i in range(self.thisptr.nodes.size()):
+                headers += ['Fx'+str(i), 'Fy'+str(i), 'Fz'+str(i)]
+            with open(self.record_file, 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(row)
+                writer.writerow(headers)
+        row = [t, t_chrono, t_sim]
+        forces = self.getAddedMassForces()
+        for F in forces:
+            row += [F[0], F[1], F[2]]
+        with open(self.record_file, 'a') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(row)
 
     def getTensionBack(self):
         """
@@ -2039,11 +2084,61 @@ cdef class ProtChMoorings:
                 pos[i] = [vec.x(), vec.y(), vec.z()]
             return pos
 
+    def getNodesVelocity(self):
+        """Gives array of nodes velocity
+
+        Returns
+        -------
+        pos: np.ndarray
+            Array of nodes velocity.
+        """
+        if self.beam_type == 'BeamEuler':
+            pos = np.zeros(( self.thisptr.nodesRot.size(),3 ))
+            for i in range(self.thisptr.nodesRot.size()):
+                vec = deref(self.thisptr.nodesRot[i]).GetPos_dt()
+                pos[i] = [vec.x(), vec.y(), vec.z()]
+            return pos
+        else:
+            pos = np.zeros(( self.thisptr.nodes.size(),3 ))
+            for i in range(self.thisptr.nodes.size()):
+                vec = deref(self.thisptr.nodes[i]).GetPos_dt()
+                pos[i] = [vec.x(), vec.y(), vec.z()]
+            return pos
+
+    def getNodesAcceleration(self):
+        """Gives array of nodes acceleration
+
+        Returns
+        -------
+        pos: np.ndarray
+            Array of nodes acceleration.
+        """
+        if self.beam_type == 'BeamEuler':
+            pos = np.zeros(( self.thisptr.nodesRot.size(),3 ))
+            for i in range(self.thisptr.nodesRot.size()):
+                vec = deref(self.thisptr.nodesRot[i]).GetPos_dtdt()
+                pos[i] = [vec.x(), vec.y(), vec.z()]
+            return pos
+        else:
+            pos = np.zeros(( self.thisptr.nodes.size(),3 ))
+            for i in range(self.thisptr.nodes.size()):
+                vec = deref(self.thisptr.nodes[i]).GetPos_dtdt()
+                pos[i] = [vec.x(), vec.y(), vec.z()]
+            return pos
+
     def getDragForces(self):
         cdef ch.ChVector Fd
         drag = np.zeros(( self.thisptr.nodes.size(),3 ))
         for i in range(self.thisptr.forces_drag.size()):
             Fd = self.thisptr.forces_drag[i]
+            drag[i] = [Fd.x(), Fd.y(), Fd.z()]
+        return drag
+
+    def getAddedMassForces(self):
+        cdef ch.ChVector Fd
+        drag = np.zeros(( self.thisptr.nodes.size(),3 ))
+        for i in range(self.thisptr.forces_addedmass.size()):
+            Fd = self.thisptr.forces_addedmass[i]
             drag[i] = [Fd.x(), Fd.y(), Fd.z()]
         return drag
 
