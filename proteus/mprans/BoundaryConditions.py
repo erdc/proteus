@@ -54,7 +54,7 @@ class BC_RANS(BC_Base):
         self.u_stress.uOfXT = 0.
         self.v_stress.uOfXT = 0.
         self.w_stress.uOfXT = 0.
-        # sediment boundary conditions
+        # sediment solver
         self.us_dirichlet = BoundaryCondition()  # sediment velocity u
         self.vs_dirichlet = BoundaryCondition()  # sediment velocity v
         self.ws_dirichlet = BoundaryCondition()  # sediment velocity w

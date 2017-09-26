@@ -49,6 +49,19 @@ cdef class BC_RANS(BC_Base):
         cdef BoundaryCondition u_stress
         cdef BoundaryCondition v_stress
         cdef BoundaryCondition w_stress
+        # sediment solver
+        cdef BoundaryCondition us_dirichlet
+        cdef BoundaryCondition vs_dirichlet
+        cdef BoundaryCondition ws_dirichlet
+        cdef BoundaryCondition vos_dirichlet
+        cdef BoundaryCondition us_advective
+        cdef BoundaryCondition vs_advective
+        cdef BoundaryCondition ws_advective
+        cdef BoundaryCondition vos_advective
+        cdef BoundaryCondition us_diffusive
+        cdef BoundaryCondition vs_diffusive
+        cdef BoundaryCondition ws_diffusive
+
         # functions
         # cpdef void reset(self)
         # cpdef void setNonMaterial(self)
