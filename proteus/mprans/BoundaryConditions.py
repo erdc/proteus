@@ -54,6 +54,18 @@ class BC_RANS(BC_Base):
         self.u_stress.uOfXT = 0.
         self.v_stress.uOfXT = 0.
         self.w_stress.uOfXT = 0.
+        # sediment boundary conditions
+        self.us_dirichlet = BoundaryCondition()  # sediment velocity u
+        self.vs_dirichlet = BoundaryCondition()  # sediment velocity v
+        self.ws_dirichlet = BoundaryCondition()  # sediment velocity w
+        self.vos_dirichlet = BoundaryCondition()  # VOS
+        self.us_advective = BoundaryCondition()  
+        self.vs_advective = BoundaryCondition()  
+        self.ws_advective = BoundaryCondition()  
+        self.vos_advective = BoundaryCondition() 
+        self.us_diffusive = BoundaryCondition()   
+        self.vs_diffusive = BoundaryCondition()  
+        self.ws_diffusive = BoundaryCondition()  
 
     def reset(self):
         """
@@ -68,6 +80,10 @@ class BC_RANS(BC_Base):
         self.vof_dirichlet.resetBC()
         self.k_dirichlet.resetBC()
         self.dissipation_dirichlet.resetBC()
+        self.us_dirichlet.resetBC()
+        self.vs_dirichlet.resetBC()
+        self.ws_dirichlet.resetBC()
+        self.vos_dirichlet.resetBC()
         self.p_advective.resetBC()
         self.u_advective.resetBC()
         self.v_advective.resetBC()
@@ -75,11 +91,18 @@ class BC_RANS(BC_Base):
         self.vof_advective.resetBC()
         self.k_advective.resetBC()
         self.dissipation_advective.resetBC()
+        self.us_advective.resetBC()
+        self.vs_advective.resetBC()
+        self.ws_advective.resetBC()
+        self.vos_advective.resetBC()
         self.u_diffusive.resetBC()
         self.v_diffusive.resetBC()
         self.w_diffusive.resetBC()
         self.k_diffusive.resetBC()
         self.dissipation_diffusive.resetBC()
+        self.us_diffusive.resetBC()
+        self.vs_diffusive.resetBC()
+        self.ws_diffusive.resetBC()
 
     def setNonMaterial(self):
         """
