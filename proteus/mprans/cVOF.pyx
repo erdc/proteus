@@ -86,8 +86,6 @@ cdef extern from "VOF.h" namespace "proteus":
                                double* ebqe_phi,double epsFact,
                                double* ebqe_u,
                                double* ebqe_flux,
-			       int EDGE_VISCOSITY,
-			       int ENTROPY_VISCOSITY,
 			       double cE,
 			       double cMax, 
 			       double cK,
@@ -177,8 +175,6 @@ cdef extern from "VOF.h" namespace "proteus":
                                double* ebqe_phi,double epsFact,
                                double* ebqe_u,
                                double* ebqe_flux,
-			       int EDGE_VISCOSITY,
-			       int ENTROPY_VISCOSITY,
 			       double cE,
 			       double cMax, 
 			       double cK,
@@ -253,8 +249,6 @@ cdef extern from "VOF.h" namespace "proteus":
                                int* isFluxBoundary_u,
                                double* ebqe_bc_flux_u_ext,
                                int* csrColumnOffsets_eb_u_u,
-			       int EDGE_VISCOSITY,
-			       int ENTROPY_VISCOSITY,
 			       int LUMPED_MASS_MATRIX)
         void calculateMassMatrix(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -307,8 +301,6 @@ cdef extern from "VOF.h" namespace "proteus":
                                int* isFluxBoundary_u,
                                double* ebqe_bc_flux_u_ext,
                                int* csrColumnOffsets_eb_u_u,
-			       int EDGE_VISCOSITY,
-			       int ENTROPY_VISCOSITY,
 			       int LUMPED_MASS_MATRIX)
     VOF_base* newVOF(int nSpaceIn,
                        int nQuadraturePoints_elementIn,
@@ -433,8 +425,6 @@ cdef class cVOF_base:
                          numpy.ndarray ebqe_phi,double epsFact,
                          numpy.ndarray ebqe_u,
                          numpy.ndarray ebqe_flux,
-			 int EDGE_VISCOSITY,
-			 int ENTROPY_VISCOSITY,
 			 double cE,
 			 double cMax, 
 			 double cK,
@@ -524,8 +514,6 @@ cdef class cVOF_base:
                                        epsFact,
                                        <double*> ebqe_u.data,
                                        <double*> ebqe_flux.data,
-				       EDGE_VISCOSITY,
-				       ENTROPY_VISCOSITY,
 				       cE,
 				       cMax,
 				       cK,
@@ -615,8 +603,6 @@ cdef class cVOF_base:
                          numpy.ndarray ebqe_phi,double epsFact,
                          numpy.ndarray ebqe_u,
                          numpy.ndarray ebqe_flux,
-			 int EDGE_VISCOSITY,
-			 int ENTROPY_VISCOSITY,
 			 double cE,
 			 double cMax, 
 			 double cK,
@@ -706,8 +692,6 @@ cdef class cVOF_base:
                                        epsFact,
                                        <double*> ebqe_u.data,
                                        <double*> ebqe_flux.data,
-				       EDGE_VISCOSITY,
-				       ENTROPY_VISCOSITY,
 				       cE,
 				       cMax,
 				       cK,
@@ -782,8 +766,6 @@ cdef class cVOF_base:
                          numpy.ndarray isFluxBoundary_u,
                          numpy.ndarray ebqe_bc_flux_u_ext,
                          numpy.ndarray csrColumnOffsets_eb_u_u,
- 			 int EDGE_VISCOSITY,
-			 int ENTROPY_VISCOSITY,
 			 int LUMPED_MASS_MATRIX):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
@@ -838,8 +820,6 @@ cdef class cVOF_base:
                                        <int*> isFluxBoundary_u.data,
                                        <double*> ebqe_bc_flux_u_ext.data,
                                        <int*> csrColumnOffsets_eb_u_u.data, 
-				       EDGE_VISCOSITY,
-				       ENTROPY_VISCOSITY,
 				       LUMPED_MASS_MATRIX)
    def calculateMassMatrix(self,
                          numpy.ndarray mesh_trial_ref,
@@ -893,8 +873,6 @@ cdef class cVOF_base:
                          numpy.ndarray isFluxBoundary_u,
                          numpy.ndarray ebqe_bc_flux_u_ext,
                          numpy.ndarray csrColumnOffsets_eb_u_u,
- 			 int EDGE_VISCOSITY,
-			 int ENTROPY_VISCOSITY,
 			 int LUMPED_MASS_MATRIX):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
@@ -949,6 +927,4 @@ cdef class cVOF_base:
                                        <int*> isFluxBoundary_u.data,
                                        <double*> ebqe_bc_flux_u_ext.data,
                                        <int*> csrColumnOffsets_eb_u_u.data, 
-				       EDGE_VISCOSITY,
-				       ENTROPY_VISCOSITY,
 				       LUMPED_MASS_MATRIX)

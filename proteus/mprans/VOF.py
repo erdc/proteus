@@ -252,8 +252,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
     from proteus.cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
     def __init__(self,
-                 EDGE_VISCOSITY=0,
-                 ENTROPY_VISCOSITY=0,
                  LUMPED_MASS_MATRIX=0,
                  FCT=0,
                  # FOR LOG BASED ENTROPY FUNCTION
@@ -315,8 +313,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.flowCoefficients=None
         self.movingDomain=movingDomain
         # EDGE BASED (AND ENTROPY) VISCOSITY 
-        self.EDGE_VISCOSITY=EDGE_VISCOSITY
-        self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
         self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
         self.FCT=FCT
         self.uL=uL
@@ -1207,9 +1203,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_phi,self.coefficients.epsFact,
             self.ebqe[('u',0)],
             self.ebqe[('advectiveFlux',0)],
-            # PARAMETERS FOR EDGE_VISCOSITY
-            self.coefficients.EDGE_VISCOSITY,
-            self.coefficients.ENTROPY_VISCOSITY,
             #ENTROPY VISCOSITY and ARTIFICIAL COMRPESSION
             self.coefficients.cE,
             self.coefficients.cMax,
@@ -1320,8 +1313,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag',0)],
             self.ebqe[('advectiveFlux_bc',0)],
             self.csrColumnOffsets_eb[(0,0)], 
-            self.coefficients.EDGE_VISCOSITY,
-            self.coefficients.ENTROPY_VISCOSITY,
             self.coefficients.LUMPED_MASS_MATRIX)
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
