@@ -824,6 +824,277 @@ class Tank3D(ShapeRANS):
                                                      smoothing=smoothing)
 
 
+class Tank3DRaceTrack(ShapeRANS):
+    """
+    Class to create a 3D tank (race track shape).
+
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    dim: Optional[array_like]
+        Dimensions of the cuboid.
+    corridor_width: double
+        Width of track corridor
+    gen_length: double
+        Length of generation zone (if any)
+    nPoints: int
+        Number of points to discretize rounded parts of the race track
+    coords: Optional[array_like]
+        Coordinates of the centroid of the shape.
+    """
+    count = 0
+
+    def __init__(self, domain, dim=(0., 0., 0.), corridor_width=0.,
+                 gen_length=0., nPoints=10, coords=None):
+        super(Tank3DRaceTrack, self).__init__(domain, nd=3)
+        self.__class__.count += 1
+        self.name = "tank3d" + str(self.__class__.count)
+        self.corridor_width = corridor_width
+        self.nPoints = nPoints
+        self.gen_length = gen_length
+        if coords is None:
+            self.coords = np.array(dim)/2.
+        else:
+            self.coords = coords
+        self.holes = None
+        self.boundaryTags = {'inner_wall': 1,
+                             'outer_wall': 2,
+                             'z-': 3,
+                             'z+': 4,
+                             'sponge_x-': 5,
+                             'sponge_x+': 6,}
+        self.BC = {}
+        for key in self.boundaryTags:
+            self.BC[key] = self.BC_class(shape=self, name=key)
+        self.BC_list = [self.BC['inner_wall'],
+                        self.BC['outer_wall'],
+                        self.BC['z-'],
+                        self.BC['z+'],
+                        self.BC['sponge_x-'],
+                        self.BC['sponge_x+']]
+        # self.BC = BCContainer(self.BC_dict)
+        self.barycenter = np.array([0., 0., 0.])
+        #self.spongeLayers = {'y+': None, 'y-': None, 'x+': None, 'x-': None}
+        self.setDimensions(dim, gen_length)
+
+
+    def setDimensions(self, dim, gen_length=0.):
+        """
+        Set dimension of the tank
+
+        Parameters
+        ----------
+        dim: array_like
+            dimensions of the tank (excluding sponge layers), array of length 3.
+        """
+        L, W, H = dim
+        self.dim = dim
+        x, y, z = self.coords
+        self.coords = [x, y, z]
+        x0, x1 = x-0.5*L, x+0.5*L
+        y0, y1 = y-0.5*W, y+0.5*W
+        z0, z1 = z-0.5*H, z+0.5*H
+        y0_inner = y0+self.corridor_width
+        y1_inner = y1-self.corridor_width
+        y0_outer = y0
+        y1_outer = y1
+        bt = self.boundaryTags
+        gen_length = self.gen_length
+        vertices = []
+        vertexFlags = []
+        surfaces = []
+        facetFlags = []
+        regions = []
+        regionFlags = []
+        volumes = []
+        self.regionIndice = {'tank': 0, 'sponge': 1}
+        if gen_length > 0.:
+            regions += [[(x0+gen_length+x1)/2., y0_inner+y0_outer, (z0+z1)/2.],
+                        [x0+gen_length/2., y0_inner+y0_outer, (z0+z1)/2.]]
+            regionFlags += [1, 2]
+        else:
+            regions += [[(x0+gen_length+x1)/2., y0_inner+y0_outer, (z0+z1)/2.]]
+            regionFlags += [1]
+        radius_inner = (self.dim[1]-self.corridor_width*2)/2.
+        self.arc=np.pi*radius_inner/(self.nPoints-1)
+        self.ang=self.arc/radius_inner
+        vertices_inner =[]
+        vertices_inner += [[x0, y0_inner, 0.]]
+        if gen_length > 0.:
+            vertices_inner += [[x0+gen_length, y0_inner, 0.]]
+        vertices_inner += [[x1, y0_inner, 0.]]
+        for i in range(1, self.nPoints-1):
+            vertices_inner += [[x1-radius_inner*cos(self.ang*i+np.pi/2.),
+                          y0_inner+radius_inner-radius_inner*sin(self.ang*i+np.pi/2.),
+                          0.]]
+        vertices_inner += [[x1, y1_inner, 0.], [x0, y1_inner, 0.]]
+        for i in range(1,self.nPoints-1):
+            vertices_inner += [[x0-radius_inner*cos(self.ang*i-np.pi/2.),
+                          y1_inner-radius_inner-radius_inner*sin(self.ang*i-np.pi/2.),
+                          0.]]
+        vertices += vertices_inner
+        vertexFlags += [bt['z-'] for v in vertices_inner]
+
+
+        radius_outer = self.dim[1]/2.
+        self.arc=np.pi*radius_outer/(self.nPoints-1)
+        self.ang=self.arc/radius_outer
+        vertices_outer =[]
+        vertices_outer += [[x0, y0_outer, 0.]]
+        if gen_length > 0.:
+            vertices_outer += [[x0+gen_length, y0_outer, 0.]]
+        vertices_outer += [[x1, y0_outer, 0.]]
+        for i in range(1, self.nPoints-1):
+            vertices_outer += [[x1-radius_outer*cos(self.ang*i+np.pi/2.),
+                          y0_outer+radius_outer-radius_outer*sin(self.ang*i+np.pi/2.),
+                          0.]]
+        vertices_outer += [[x1, y1_outer, 0.], [x0, y1_outer, 0.]]
+        for i in range(1,self.nPoints-1):
+            vertices_outer += [[x0-radius_outer*cos(self.ang*i-np.pi/2.),
+                          y1_outer-radius_outer-radius_outer*sin(self.ang*i-np.pi/2.),
+                          0.]]
+        vertices += vertices_outer
+        vertexFlags += [bt['z-'] for v in vertices_outer]
+
+        # bottom surfaces
+        nv_loop = len(vertices_inner)
+        surfaces_bottom = []
+        for i in range(nv_loop-1):
+            surfaces_bottom += [[[i, i+1, nv_loop+i+1, nv_loop+i]]]
+        surfaces_bottom += [[[i+1, 0, nv_loop, nv_loop+i+1]]]
+        surfaces += surfaces_bottom
+        facetFlags += [bt['z-'] for s in surfaces_bottom]
+
+        # top vertices
+        vertices_inner_top = np.array(vertices_inner)+[0.,0.,z1]
+        vertices += vertices_inner_top.tolist()
+        vertexFlags += [bt['z+'] for v in vertices_inner_top]
+        vertices_outer_top = np.array(vertices_outer)+[0.,0.,z1]
+        vertices += vertices_outer_top.tolist()
+        vertexFlags += [bt['z+'] for v in vertices_outer_top]
+
+        # top surfaces
+        surfaces_top = []
+        for i in range(nv_loop-1):
+            surfaces_top += [[[nv_loop*2+i, nv_loop*2+i+1, nv_loop*3+i+1, nv_loop*3+i]]]
+        surfaces_top += [[[nv_loop*2+i+1, nv_loop*2+0, nv_loop*3, nv_loop*3+i+1]]]
+        surfaces += surfaces_top
+        facetFlags += [bt['z+'] for s in surfaces_top]
+
+        # side surfaces
+        surfaces_sides_inner = []
+        for i in range(nv_loop-1):
+            surfaces_sides_inner += [[[i, i+1, nv_loop*2+i+1, nv_loop*2+i]]]
+        surfaces_sides_inner += [[[i+1, 0, nv_loop*2, nv_loop*2+i+1]]]
+        surfaces += surfaces_sides_inner
+        facetFlags += [bt['inner_wall'] for s in surfaces_sides_inner]
+        surfaces_sides_outer = []
+        for i in range(nv_loop-1):
+            surfaces_sides_outer += [[[nv_loop+i, nv_loop+i+1, nv_loop*3+i+1, nv_loop*3+i]]]
+        surfaces_sides_outer += [[[nv_loop+i+1, nv_loop+0, nv_loop*3, nv_loop*3+i+1]]]
+        surfaces += surfaces_sides_outer
+        facetFlags += [bt['outer_wall'] for s in surfaces_sides_inner]
+
+        volumes += [[[i for i in range(len(surfaces))]]] 
+        # gen zone surface
+        if gen_length > 0.:
+            surfaces_gen = [[[0, nv_loop*2, nv_loop*3, nv_loop]],
+                           [[1, nv_loop*2+1, nv_loop*3+1, nv_loop+1]]]
+            surfaces += surfaces_gen
+            facetFlags += [bt['sponge_x-'], bt['sponge_x+']]
+            volumes[0][0].remove(0)
+            volumes[0][0].remove(len(surfaces_bottom))
+            volumes[0][0].remove(len(surfaces_bottom)+len(surfaces_top))
+            volumes[0][0].remove(len(surfaces_bottom)+len(surfaces_top)+len(surfaces_sides_outer))
+            volumes[0][0] += [len(surfaces)-1, len(surfaces)-2]
+            volumes += [[[0, len(surfaces_bottom), len(surfaces_bottom)+len(surfaces_top),
+                          len(surfaces_bottom)+len(surfaces_top)+len(surfaces_sides_outer),
+                          len(surfaces)-1, len(surfaces)-2]]]
+
+        self.vertices = np.array(vertices)
+        self.vertexFlags = np.array(vertexFlags)
+        self.facets = surfaces
+        self.facetFlags = np.array(facetFlags)
+        self.regions = np.array(regions)
+        self.regionFlags = np.array(regionFlags)
+        self.volumes = volumes
+
+    def setGenerationZonesEasy(self,  dragAlpha, smoothing, waves=None,
+                           wind_speed=(0. ,0., 0.), dragBeta=0.,
+                           porosity=1.):
+        """
+        Sets regions (sponge) to generation zones
+
+        Parameters
+        ----------
+        dragAlpha: float
+            Relaxation zone coefficient.
+        smoothing: float
+            Smoothing distance (typically 3.*he)
+        waves: proteus.WaveTools
+            Class instance of wave generated from proteus.WaveTools.
+        wind_speed: Optional[array_like]
+            Speed of wind in generation zone (default is (0., 0., 0.))
+        dragBeta: Optional[float]
+            Relaxation zone coefficient.
+        porosity: Optional[float]
+            Relaxation zone coefficient.
+        """
+        waves = waves
+        wind_speed = np.array(wind_speed)
+        self._attachAuxiliaryVariable('RelaxZones')
+        ind = self.regionIndice['sponge']
+        flag = self.regionFlags[ind]
+        center = self.regions[ind]
+        epsFact_solid = self.gen_length/2.
+        orientation = np.array([1., 0., 0.])
+        self.zones[flag] = bc.RelaxationZone(shape=self,
+                                                zone_type='generation',
+                                                orientation=orientation,
+                                                center=center,
+                                                waves=waves,
+                                                wind_speed=wind_speed,
+                                                epsFact_solid=epsFact_solid,
+                                                dragAlpha=dragAlpha,
+                                                dragBeta=dragBeta,
+                                                porosity=porosity,
+                                                smoothing=smoothing)
+
+    def setAbsorptionZonesEasy(self, dragAlpha, dragBeta=0., porosity=1.):
+        """
+        Sets regions (x+, x-, y+, y-) to absorption zones
+
+        Parameters
+        ----------
+        dragAlpha: float
+            Relaxation zone coefficient.
+        dragBeta: Optional[float]
+            Relaxation zone coefficient.
+        porosity: Optional[float]
+            Relaxation zone coefficient.
+        """
+        waves = None
+        wind_speed = np.array([0., 0., 0.])
+        self._attachAuxiliaryVariable('RelaxZones')
+        ind = self.regionIndice['sponge']
+        flag = self.regionFlags[ind]
+        center = self.regions[ind]
+        epsFact_solid = self.gen_length/2.
+        orientation = np.array([1., 0., 0.])
+        self.zones[flag] = bc.RelaxationZone(shape=self,
+                                                zone_type='absorption',
+                                                orientation=orientation,
+                                                center=center,
+                                                waves=waves,
+                                                wind_speed=wind_speed,
+                                                epsFact_solid=epsFact_solid,
+                                                dragAlpha=dragAlpha,
+                                                dragBeta=dragBeta,
+                                                porosity=porosity)
+
+
 class Tank2D(ShapeRANS):
     """
     Class to create a 2D tank (rectangular shape).
