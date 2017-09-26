@@ -109,7 +109,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             sc_uref=1.0,
             sc_beta=1.0,
             setParamsFunc=None,
-            movingDomain=False):
+            movingDomain=False,
+            vos_function=None):
+        self.vos_function=vos_function
         self.useMetrics = useMetrics
         self.variableNames = ['vos']
         nc = 1

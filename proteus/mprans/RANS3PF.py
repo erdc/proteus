@@ -473,12 +473,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.q_vos = modelList[self.VOF_model].coefficients.q_vos
             self.q_dvos_dt = self.q_vos.copy()
             self.ebqe_vos = modelList[self.VOF_model].coefficients.ebqe_vos
-                for eN in range(self.model.q['x'].shape[0]):
-                    for k in range(self.model.q['x'].shape[1]):
-                        self.vos_dof[eN,k] = self.vos_function(self.model.q['x'][eN,k])
-                        self.q_vos[eN,k] = self.vos_function(self.model.q['x'][eN,k])
-                        self.q_dvos_dt[eN,k] = self.vos_function(self.model.q['x'][eN,k])
-                        self.ebqe_vos[eN,k] = self.vos_function(self.model.q['x'][eN,k])
+            for eN in range(self.model.q['x'].shape[0]):
+                for k in range(self.model.q['x'].shape[1]):
+                    self.vos_dof[eN,k] = self.vos_function(self.model.q['x'][eN,k])
+                    self.q_vos[eN,k] = self.vos_function(self.model.q['x'][eN,k])
+                    self.q_dvos_dt[eN,k] = self.vos_function(self.model.q['x'][eN,k])
+                    self.ebqe_vos[eN,k] = self.vos_function(self.model.q['x'][eN,k])
         else:
             if self.VOF_model is None:
                 self.vos_dof = modelList[self.ME_model].u[0].dof.copy()
