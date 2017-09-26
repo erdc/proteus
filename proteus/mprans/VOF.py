@@ -306,7 +306,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd = True,
-                 movingDomain=False):
+                 movingDomain=False,
+                 bdyNullSpace=False):
         #
         #set the objects describing the method and boundary conditions
         #
@@ -336,6 +337,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
         self.dirichletNodeSetList=None #explicit Dirichlet  conditions for now, no Dirichlet BC constraints
+        self.bdyNullSpace=False
         self.coefficients = coefficients
         self.coefficients.initializeMesh(self.mesh)
         self.nc = self.coefficients.nc

@@ -190,6 +190,7 @@ class Gauges(AV_base):
         self.dofsVecs = []
         self.pointGaugeVecs = []
         self.segments = []
+        self.adapted = False
 
         self.isPointGauge = bool(points)
         self.isLineGauge = bool(lines) and not integrate
@@ -310,13 +311,17 @@ class Gauges(AV_base):
 
         numLocalQuantities = sum([len(self.measuredQuantities[field]) for field in self.fields])
         self.localQuantitiesBuf = np.zeros(numLocalQuantities)
-
         if self.gaugeComm.rank != 0:
             self.globalQuantitiesBuf = None
             self.globalQuantitiesCounts = None
         else:
-            self.fileName = os.path.join(Profiling.logDir, self.fileName)
-            self.file = open(self.fileName, 'w')
+            if self.adapted:
+              if(Profiling.logDir not in self.fileName):
+                self.fileName = os.path.join(Profiling.logDir, self.fileName)                
+              self.file = open(self.fileName, 'a')
+            else:
+              self.fileName = os.path.join(Profiling.logDir, self.fileName)
+              self.file = open(self.fileName, 'w')
 
             if self.isLineIntegralGauge:
                 #Only need to set up mapping for point gauges
@@ -662,7 +667,7 @@ class Gauges(AV_base):
             lineSegments = self.getMeshIntersections(line)
             self.addLineGaugePoints(line, lineSegments)
             linesSegments.append(lineSegments)
-
+  
         self.identifyMeasuredQuantities()
 
         self.buildGaugeComm()
@@ -671,7 +676,10 @@ class Gauges(AV_base):
             self.initOutputWriter()
             self.buildPointGaugeOperators()
             self.buildLineIntegralGaugeOperators(self.lines, linesSegments)
-            self.outputHeader()
+            if self.adapted:
+              pass
+            else:
+              self.outputHeader()
         return self
 
     def get_time(self):
@@ -683,7 +691,6 @@ class Gauges(AV_base):
         """ Outputs a single header for a CSV style file to self.file"""
 
         assert self.isGaugeOwner
-
         if self.gaugeComm.rank == 0:
             self.file.write("%10s" % ('time',))
             if self.isPointGauge or self.isLineGauge:
