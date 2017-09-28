@@ -52,6 +52,97 @@ class D_base:
         # use_gmsh hack
         self.use_gmsh = False
         self.MeshOptions = MeshTools.MeshOptions(self)
+        # for PUMI compatibility
+        self.faceList=[] #list of the boundary IDs that have corresponding BCs, might be the same as self.facets[]
+        self.regList=[] # list of regions in the domain, this might be the same as self.regions[]
+
+    #Get the mesh entity to model entity classification for every entity
+    def isOnLine(self,pointA,pointB,testPoint):
+      pointA_np = np.asarray(pointA).astype('d')
+      pointB_np = np.asarray(pointB).astype('d')
+      vector1 = testPoint-pointA_np
+      vector2 = pointB_np-pointA_np
+      value = np.cross(vector1,vector2)
+      if(np.linalg.norm(value)<1e-13): #is the point collinear
+        if(abs(vector1[0]) >= abs(vector1[1]) and abs(vector1[0]) >= abs(vector1[2])):
+          if((vector1[0]<0)==(vector2[0]<0) and abs(vector1[0])<abs(vector2[0])):
+            return 1
+        elif(abs(vector1[1]) >= abs(vector1[0]) and abs(vector1[1]) >= abs(vector1[2])):
+          if((vector1[1]<0)==(vector2[1]<0) and abs(vector1[1])<abs(vector2[1])):
+            return 1
+        elif(abs(vector1[2]) >= abs(vector1[1]) and abs(vector1[2]) >= abs(vector1[0])):
+          if((vector1[2]<0)==(vector2[2]<0) and abs(vector1[2])<abs(vector2[2])):
+            return 1
+        else:
+          return 0
+
+    def getMesh2ModelClassification(self,mesh):
+      #There is an implicit assumption that the mesh comprises simplices  
+
+      from scipy import spatial
+      #initialize the necessary list
+      vertexClassifyChecklist = [0]*mesh.nNodes_owned
+      edgeClassifyChecklist = [0]*mesh.nEdges_owned
+      boundaryClassifyChecklist = [0]*mesh.nElementBoundaries_global
+      #self.meshVertex2Model= [0]*mesh.nNodes_owned
+      #self.meshEdge2Model=[(0,0)]*mesh.nEdges_owned
+      #self.meshBoundary2Model=[0]*mesh.nElementBoundaries_global
+
+      #identify model vertices with a k-d tree
+      meshVertexTree = spatial.cKDTree(mesh.nodeArray)
+      for idx,vertex in enumerate(self.vertices):
+        if(self.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
+          vertex.append(0.0) #need to make a 3D coordinate
+        closestVertex = meshVertexTree.query(vertex)
+        self.meshVertex2Model[closestVertex[1]] = (idx,0) #in cpp will make this a 1D array?
+        vertexClassifyChecklist[closestVertex[1]] = 1 #mark mesh vertex as having found a classification
+        
+      #Construct Model vertices 
+      modelPoints = []
+      for i in range(len(self.vertices)):
+        point = np.asarray([self.vertices[i][0],self.vertices[i][1],self.vertices[i][2]]).astype('d')
+        modelPoints.append(point)
+
+      #find faces
+      #self.meshEdge2Model 
+      for i in range(mesh.nExteriorElementBoundaries_global):
+        idx = mesh.exteriorElementBoundariesArray[i]
+        testPoint = np.asarray([mesh.elementBoundaryBarycentersArray[idx][0],mesh.elementBoundaryBarycentersArray[idx][1],mesh.elementBoundaryBarycentersArray[idx][2]]).astype('d')
+        for idxBoundary,modelBoundary in enumerate(self.segments):
+          if(self.isOnLine(self.vertices[modelBoundary[0]],self.vertices[modelBoundary[1]],testPoint)):
+            self.meshBoundary2Model[idx] = (idxBoundary,self.nd-1)
+            boundaryClassifyChecklist[idx] = 1            
+            #if vertex is not classified as model vertex, the adjacent vertices of the exterior mesh boundary in 2D must be on a model boundary 
+            for vID in mesh.elementBoundaryNodesArray[idx]:
+            #in 3D, I will need to add an additional function to check if a vertex is on model edges as well
+              if (not vertexClassifyChecklist[vID]):
+                self.meshVertex2Model[vID] = (idxBoundary,self.nd-1)
+                vertexClassifyChecklist[vID] = 1
+            break
+      ##interior entities
+      for i in range(mesh.nInteriorElementBoundaries_global):
+        idx = mesh.interiorElementBoundariesArray[i]
+        if(mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[idx][0]] != mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[idx][1]]):
+          testPoint = np.asarray([mesh.elementBoundaryBarycentersArray[idx][0],mesh.elementBoundaryBarycentersArray[idx][1],mesh.elementBoundaryBarycentersArray[idx][2]]).astype('d')
+          for idxBoundary,modelBoundary in enumerate(self.segments):
+            if(self.isOnLine(self.vertices[modelBoundary[0]],self.vertices[modelBoundary[1]],testPoint)):
+              self.meshBoundary2Model[idx] = (idxBoundary,self.nd-1)
+          boundaryClassifyChecklist[idx] = 1            
+          for vID in mesh.elementBoundaryNodesArray[idx]:
+            if (vertexClassifyChecklist[vID] != 1): #it can be 0 or it can be 2 
+              self.meshVertex2Model[vID] = (idxBoundary,self.nd-1)
+              vertexClassifyChecklist[vID]=1
+        else:
+          regionID = mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[idx][0]]
+          self.meshBoundary2Model[idx] = (regionID,self.nd)
+          boundaryClassifyChecklist[idx] = 1            
+          for vID in mesh.elementBoundaryNodesArray[idx]:
+            if (not vertexClassifyChecklist[vID]):
+              self.meshVertex2Model[vID] = (regionID,self.nd)
+              vertexClassifyChecklist[vID]=2
+  
+      assert(len(boundaryClassifyChecklist)==sum(boundaryClassifyChecklist))
+      assert(min(boundaryClassifyChecklist)==1)
 
     def writeAsymptote(self, fileprefix):
         """
@@ -514,7 +605,7 @@ class PlanarStraightLineGraphDomain(D_base):
     2D domains described by planar straight line graphs.
     """
 
-    def __init__(self, fileprefix=None, vertices=None, segments=None, holes=None, regions=None, vertexFlags=None,
+    def __init__(self, fileprefix=None, vertices=None, segments=None, facets=None, holes=None, regions=None, vertexFlags=None,
                  segmentFlags=None, regionFlags=None, regionConstraints=None, bc=None, name="DefaultPSLGDomain", units="m"):
         """
         Construct the PSLG from lists of vertices, segments, etc. If no vertex or segment flags are given, then they are assigned as zero.
@@ -526,6 +617,7 @@ class PlanarStraightLineGraphDomain(D_base):
             self.polyfile = None
             self.vertices = vertices or []
             self.segments = segments or []
+            self.facets = facets or []
             self.holes = holes or []
             self.regions = regions or []
             self.vertexFlags = vertexFlags or []
@@ -875,6 +967,7 @@ class PUMIDomain(D_base):
   def __init__(self, name="PUMIDomain", dim=3):
       D_base.__init__(self,dim,name)
       self.faceList=[]
+      self.regList=[]
       self.PUMIMesh=None
       #
       #it would be useful to define a dictionary mapping strings to faces
@@ -1046,7 +1139,7 @@ class PiecewiseLinearComplexDomain(D_base):
                     pf.write('\n')
                 if self.facetHoles:
                     for hN, h in enumerate(self.facetHoles[fN]):
-                        pf.write(`hN+1`+' %f %f %f\n' % h)
+                        pf.write(`hN+1`+' %f %f %f\n' % (h[0],h[1],h[2]))
             if self.holes:
                 pf.write('%d\n' % (len(self.holes),))
                 for hN, h in enumerate(self.holes):

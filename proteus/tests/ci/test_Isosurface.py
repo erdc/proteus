@@ -29,7 +29,7 @@ class TestIsosurface():
         import subprocess
         import os
         urllib.urlretrieve(
-            'https://dl.dropboxusercontent.com/u/26353144/floating_bar.h5',
+            'https://dl.dropbox.com/s/tjkj3ella3ntv75/floating_bar.h5',
             'floating_bar.h5')
         subprocess.check_call(['povgen.py',
                                'floating_bar',
@@ -41,7 +41,7 @@ class TestIsosurface():
             with open(filename, 'r') as f:
                 povfiles.append(f.readlines())
         urllib.urlretrieve(
-            'https://dl.dropboxusercontent.com/u/26353144/phi_t_0.000000_000.tgz',
+            'https://dl.dropbox.com/s/um635cllwdjxajc/phi_t_0.000000_000.tgz',
             'phi_t_0.000000_000.tgz')
         subprocess.check_call(['tar', 'xzf', 'phi_t_0.000000_000.tgz'])
         saved_povfiles = []
