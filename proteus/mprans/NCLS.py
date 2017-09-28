@@ -58,38 +58,24 @@ class RKEV(proteus.TimeIntegration.SSP):
         SSP.__init__(self, transport,integrateInterpolationPoints=integrateInterpolationPoints)
         self.runCFL=runCFL
         self.dtLast=None
-        self.dtRatioMax = 2.
         self.isAdaptive=True
         # About the cfl 
-        if transport.coefficients.STABILIZATION_TYPE==0: # SUPG
-            self.cfl = transport.q[('cfl',0)]
-        else:
-            assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
-            self.cfl = transport.edge_based_cfl
+        assert transport.coefficients.STABILIZATION_TYPE>0, "SSP method just works for edge based EV methods; i.e., STABILIZATION_TYPE>0"
+        assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
+        self.cfl = transport.edge_based_cfl
         # Stuff particular for SSP
         self.timeOrder = timeOrder  #order of approximation
         self.nStages = timeOrder  #number of stages total
         self.lstage = 0  #last stage completed
         # storage vectors
-        # previous time step mass and solution dof per component
-        self.m_last = {}
-        #temporarily use this to stash previous solution since m_last used
-        #in EV transport models for previous solution value
-        self.m_last_save = {}
         self.u_dof_last = {}
         # per component stage values, list with array at each stage
-        self.m_stage = {}
         self.u_dof_stage = {}
         for ci in range(self.nc):
              if transport.q.has_key(('m',ci)):
-                self.m_last[ci] = transport.q[('m',ci)].copy()
-                self.m_last_save[ci] = transport.q[('m',ci)].copy()
-
                 self.u_dof_last[ci] = transport.u[ci].dof.copy()
-                self.m_stage[ci] = []
                 self.u_dof_stage[ci] = []
                 for k in range(self.nStages+1):                    
-                    self.m_stage[ci].append(transport.q[('m',ci)].copy())
                     self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
 
     def choose_dt(self):        
@@ -98,16 +84,14 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.dt = self.runCFL/maxCFL
         if self.dtLast is None:
             self.dtLast = self.dt
-        if self.dt/self.dtLast  > self.dtRatioMax:
-            self.dt = self.dtLast*self.dtRatioMax            
         self.t = self.tLast + self.dt
         self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now        
+
     def initialize_dt(self,t0,tOut,q):
         """
         Modify self.dt
         """
         self.tLast=t0
-        #self.dt=1E-6
         self.choose_dt()
         self.t = t0+self.dt
  
@@ -158,9 +142,9 @@ class RKEV(proteus.TimeIntegration.SSP):
             if self.lstage == 1:
                 logEvent("First stage of SSP22 method",level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) #no need for .copy?
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
                     # Update u_dof_old
-                    self.transport.u_dof_old = numpy.copy(self.transport.u[ci].dof)
+                    self.transport.u_dof_old[:] = self.transport.u[ci].dof
             elif self.lstage == 2:
                 logEvent("Second stage of SSP22 method",level=4)
                 for ci in range(self.nc):
@@ -174,7 +158,6 @@ class RKEV(proteus.TimeIntegration.SSP):
         else:
             assert self.timeOrder == 1
             for ci in range(self.nc):
-                self.m_stage[ci][self.lstage][:]=self.transport.q[('m',ci)][:]
                 self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
  
     def initializeTimeHistory(self,resetFromDOF=True):
@@ -182,9 +165,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         Push necessary information into time history arrays
         """
         for ci in range(self.nc):
-            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
             self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
-            self.m_last_save[ci][:] = self.transport.q[('m',ci)][:]
  
     def updateTimeHistory(self,resetFromDOF=False):
         """
@@ -192,15 +173,13 @@ class RKEV(proteus.TimeIntegration.SSP):
         """
         self.t = self.tLast + self.dt
         for ci in range(self.nc):
-            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
-            self.m_last_save[ci][:] = self.transport.q[('m',ci)][:]
             self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
             for k in range(self.nStages):
-                self.m_stage[ci][k][:]=self.transport.q[('m',ci)][:]
                 self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
         self.lstage=0
         self.dtLast = self.dt
         self.tLast = self.t
+
     def generateSubsteps(self,tList):
         """
         create list of substeps over time values given in tList. These correspond to stages
@@ -221,14 +200,11 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.lstage = 0  #last stage completed
         # storage vectors
         # per component stage values, list with array at each stage
-        self.m_stage = {}
         self.u_dof_stage = {}
         for ci in range(self.nc):
              if self.transport.q.has_key(('m',ci)):
-                self.m_stage[ci] = []
                 self.u_dof_stage[ci] = []
                 for k in range(self.nStages+1):                    
-                    self.m_stage[ci].append(self.transport.q[('m',ci)].copy())
                     self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
         self.substeps = [self.t for i in range(self.nStages)]            
 
@@ -331,7 +307,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def attachModels(self,modelList):
         #the level set model
-        print self.modelIndex
         self.model = modelList[self.modelIndex]
         #the velocity
         if self.flowModelIndex >= 0:
@@ -528,7 +503,7 @@ class LevelModel(OneLevelTransport):
         self.mesh = self.u[0].femSpace.mesh #assume the same mesh for  all components for now
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
-        self.dirichletNodeSetList=None #explicit Dirichlet  conditions for now, no Dirichlet BC constraints
+        self.dirichletNodeSetList=None #explicit Dirichlet  conditions for now, no Dirichlet BC constraint
         self.bdyNullSpace=bdyNullSpace
         self.coefficients = coefficients
         self.coefficients.initializeMesh(self.mesh)
@@ -766,18 +741,19 @@ class LevelModel(OneLevelTransport):
 
         self.setupFieldStrides()
 
-        # Check the solver when EV or smoothness based stab is used and the mass matrix is lumped
-        if self.coefficients.STABILIZATION_TYPE > 0 and self.coefficients.LUMPED_MASS_MATRIX==True: # EV or smoothness based indicator
-            condSolver = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix
-            assert condSolver,"Use levelNonlinearSolver=ExplicitLumpedMassMatrix when the mass matrix is lumped and STABILIZATION_TYPE>0"
-        if self.coefficients.STABILIZATION_TYPE > 0:
-            assert self.timeIntegration.isSSP, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within NCLS. timeOrder=2 is recommended"
+        # mql. Some ASSERTS to restrict the combination of the methods        
+        if self.coefficients.LUMPED_MASS_MATRIX==True:
+            cond = self.coefficients.STABILIZATION_TYPE==2
+            assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
+            cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix
+            assert cond,"Use levelNonlinearSolver=ExplicitLumpedMassMatrix when the mass matrix is lumped"
         if self.coefficients.DO_REDISTANCING:
             assert self.coefficients.STABILIZATION_TYPE > 0, "If DO_REDISTANCING=True, use: STABILIZATION_TYPE>0"
             assert self.coefficients.LUMPED_MASS_MATRIX==False, "If DO_REDISTANCING=True, use: LUMPED_MASS_MATRIX=False"
             cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitConsistentMassMatrixWithRedistancing
             assert cond, "If DO_REDISTANCING=True, use: levelNonlinearSolver=ExplicitConsistentMassMatrixWithRedistancing"
             assert self.timeIntegration.isSSP, "If DO_REDISTANCING=True, use RKEV timeIntegration within NCLS. timeOrder=2 is recommended"
+        # END OF ASSERTS 
 
         #Smoothing matrix
         self.SmoothingMatrix=None #Mass-epsilon^2*Laplacian 
@@ -889,7 +865,7 @@ class LevelModel(OneLevelTransport):
         self.coefficients.q_v[...,0] = self.velocityField[0](X,t)
         self.coefficients.q_v[...,1] = self.velocityField[1](X,t)
         if (self.nSpace_global==3):
-            self.coefficients.q_v[...,2] = self.velocityField[1](X,t)
+            self.coefficients.q_v[...,2] = self.velocityField[2](X,t)
 
         # BOUNDARY
         ebqe_X = {0:self.ebqe['x'][:,:,0],
@@ -898,7 +874,7 @@ class LevelModel(OneLevelTransport):
         self.coefficients.ebqe_v[...,0] = self.velocityField[0](ebqe_X,t)
         self.coefficients.ebqe_v[...,1] = self.velocityField[1](ebqe_X,t)
         if (self.nSpace_global==3):
-            self.coefficients.ebqe_v[...,2] = self.velocityField[1](ebqe_X,t)
+            self.coefficients.ebqe_v[...,2] = self.velocityField[2](ebqe_X,t)
 
     ######################################
     ######## GET REDISTANCING RHS ########
@@ -1022,6 +998,7 @@ class LevelModel(OneLevelTransport):
     def calculateElementResidual(self):
         if self.globalResidualDummy is not None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
+
     def getResidual(self,u,r):
         import pdb
         import copy

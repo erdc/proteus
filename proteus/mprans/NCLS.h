@@ -6,7 +6,7 @@
 #include "ModelFactory.h"
 
 #define POWER_SMOOTHNESS_INDICATOR 2
-#define BETAij 0
+#define IS_BETAij_ONE 0
 
 /////////////////////
 //ENTROPY FUNCTION //
@@ -1462,9 +1462,9 @@ namespace proteus
 					     double* ML,
 					     int STABILIZATION_TYPE, 
 					     int ENTROPY_TYPE,
-					     double cE
-					     )
+					     double cE)
     {
+      // NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than VOF.h
       // inverse of mass matrix in reference element 
       //double inverse_elMassMatrix_degree2 [9][9]= 
       //{
@@ -1491,8 +1491,8 @@ namespace proteus
 	}
       
       // Allocate and init to zero the Entropy residual vector
-      register double global_entropy_residual[numDOFs];
-      if (STABILIZATION_TYPE==1) // EV Stab
+      register double global_entropy_residual[numDOFs]; //, eta[numDOFs];
+      if (STABILIZATION_TYPE==1) //EV stab
 	for (int i=0; i<numDOFs; i++)
 	  global_entropy_residual[i] = 0.;
 
@@ -1534,7 +1534,7 @@ namespace proteus
 		eN_nDOF_trial_element = eN*nDOF_trial_element;
 	      register double 
 		// for entropy residual
-		aux_entropy_residual, DENTROPY_un, DENTROPY_uni,
+		aux_entropy_residual=0., DENTROPY_un, DENTROPY_uni,
 		//for mass matrix contributions
 		u=0.0, uStar=0.0, hquad=0.0,
 		u_test_dV[nDOF_trial_element], 
@@ -1543,9 +1543,23 @@ namespace proteus
 		u_grad_trial[nDOF_trial_element*nSpace],
 		//for general use
 		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
-		dV,x,y,z;
+		dV,x,y,z,xt,yt,zt;
 	      //get the physical integration weight
-	      ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
+	      ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,x,y,z);
+	      ck.calculateMappingVelocity_element(eN,
+						  k,
+						  mesh_velocity_dof,
+						  mesh_l2g,
+						  mesh_trial_ref,
+						  xt,yt,zt);
 	      dV = fabs(jacDet)*dV_ref[k];
 	      JacDet = fabs(jacDet);
 	      // get h at quad points
@@ -1563,22 +1577,26 @@ namespace proteus
 	      for (int j=0;j<nDOF_trial_element;j++)
 		u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
 
+	      //
+	      //moving mesh
+	      //
+	      double mesh_velocity[3];
+	      mesh_velocity[0] = xt;
+	      mesh_velocity[1] = yt;
+	      mesh_velocity[2] = zt;
 	      //epsCoupez = 3*hquad;
-#if nSpace==2	      
-	      double norm_grad_un = std::sqrt(std::pow(grad_un[0],2) + std::pow(grad_un[1],2)) + 1E-10;
-#else
-	      double norm_grad_un = std::sqrt(std::pow(grad_un[0],2) + std::pow(grad_un[1],2) + std::pow(grad_un[2],2)) + 1E-10;
-#endif
+	      double norm_grad_un = 0.;
+	      for (int I=0;I<nSpace;I++)
+		norm_grad_un += std::pow(grad_un[I],2);
+	      norm_grad_un = std::sqrt(norm_grad_un) + 1E-10;
 	      double dist_error = fabs(norm_grad_un - (1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)));
 	      double sgn = sign(uStar,epsFactRedistancing);
 	      
 	      // get velocity
-	      vn[0] = velocity[eN_k_nSpace+0] + dist_error*COUPEZ*lambda_coupez*sgn*grad_un[0]/norm_grad_un;
-	      vn[1] = velocity[eN_k_nSpace+1] + dist_error*COUPEZ*lambda_coupez*sgn*grad_un[1]/norm_grad_un;
-#if nSpace==3
-	      vn[2] = velocity[eN_k_nSpace+2] + dist_error*COUPEZ*lambda_coupez*sgn*grad_un[2]/norm_grad_un;
-#endif
-
+	      for (int I=0;I<nSpace;I++)
+		vn[I] = (velocity[eN_k_nSpace+I] - MOVING_DOMAIN*mesh_velocity[I] 
+			 + dist_error*COUPEZ*lambda_coupez*sgn*grad_un[I]/norm_grad_un);
+	      
 	      //////////////////////////////
 	      // CALCULATE CELL BASED CFL //
 	      //////////////////////////////
@@ -1591,12 +1609,10 @@ namespace proteus
 		{
 		  //double entropy_residual = ((un - unm1)/dt + vn[0]*grad_un[0] + vn[1]*grad_un[1]
 		  //			 -dist_error*COUPEZ*lambda_coupez*sgn
-		  //			 *(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)))*DENTROPY(un,-epsCoupez,epsCoupez);	      
-		  aux_entropy_residual = (vn[0]*grad_un[0] + vn[1]*grad_un[1]
-#if nSpace==3
-					  +vn[2]*grad_un[2]
-#endif
-					  -dist_error*COUPEZ*lambda_coupez*sgn*(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)));
+		  //			 *(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)))*DENTROPY(un,-epsCoupez,epsCoupez);
+		  for (int I=0;I<nSpace;I++)
+		    aux_entropy_residual += vn[I]*grad_un[I];
+		  aux_entropy_residual -= dist_error*COUPEZ*lambda_coupez*sgn*(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)));
 		  DENTROPY_un = ENTROPY_TYPE==1 ? DENTROPY(un,-epsCoupez,epsCoupez) : DENTROPY_LOG(un,-epsCoupez,epsCoupez);
 		}
 	      //////////////
@@ -1630,11 +1646,12 @@ namespace proteus
 			ck.HamiltonianJacobian_weak(vn,&u_grad_trial[i_nSpace],u_test_dV[j]);
 		    }
 		}//i
-	      //save solution for other models 
-	      q_u[eN_k] = u;
+	      //save solution at quadrature points for other models to use
+	      q_u[eN_k]=u;
 	      q_m[eN_k] = u;
+	      for (int I=0;I<nSpace;I++)
+		q_n[eN_k_nSpace+I]  = grad_u[I];
 	    }
-
 	  // MULTIPLY Transport Matrix times preconditioner//
 	  //if (false)
 	  //  {
@@ -1658,7 +1675,6 @@ namespace proteus
 	  /////////////////
 	  // DISTRIBUTE // load cell based element into global residual
 	  ////////////////
-	  double h=elementDiameter[eN]/degree_polynomial;
 	  for(int i=0;i<nDOF_test_element;i++) 
 	    { 
 	      int eN_i=eN*nDOF_test_element+i;
@@ -1669,6 +1685,7 @@ namespace proteus
 	      // distribute entropy_residual
 	      if (STABILIZATION_TYPE==1) // EV Stab
 		global_entropy_residual[gi] += element_entropy_residual[i];
+
 	      // distribute transport matrices
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
@@ -1681,10 +1698,10 @@ namespace proteus
 	    }//i
 	}//elements
 
-      //////////////////////////////////////////
-      // COMPUTE g vector and ENTROPY AT DOFs //
-      //////////////////////////////////////////
-      // gi=1/mi*sum_j(Cij*uj)
+      ///////////////////////////////
+      // COMPUTE g, ETA and others //
+      ///////////////////////////////
+      // NOTE: see VOF.h for a different but equivalent implementation of this. 
       register double gx[numDOFs], gy[numDOFs], gz[numDOFs], eta[numDOFs], 
 	alpha_numerator_pos[numDOFs], alpha_numerator_neg[numDOFs],
 	alpha_denominator_pos[numDOFs], alpha_denominator_neg[numDOFs];
@@ -1698,9 +1715,7 @@ namespace proteus
 	    {
 	      gx[i]=0.;
 	      gy[i]=0.;
-#if nSpace==3
 	      gz[i]=0.;
-#endif	     
 	      // for smoothness indicator // 
 	      alpha_numerator_pos[i] = 0.;
 	      alpha_numerator_neg[i] = 0.;
@@ -1806,17 +1821,18 @@ namespace proteus
 	      double sigmaNegi = fmin(1.,(SumPos+1E-15)/(fabs(SumNeg)+1E-15));
 	      double alpha_numi = fabs(sigmaPosi*alpha_numerator_pos[i] + sigmaNegi*alpha_numerator_neg[i]);
 	      double alpha_deni = sigmaPosi*alpha_denominator_pos[i] + sigmaNegi*alpha_denominator_neg[i];	      
-	      if (BETAij == 1)
+	      if (IS_BETAij_ONE == 1)
 		{
 		  alpha_numi = fabs(alpha_numerator_pos[i] + alpha_numerator_neg[i]);
 		  alpha_deni = alpha_denominator_pos[i] + alpha_denominator_neg[i];
 		}
 	      double alphai = alpha_numi/(alpha_deni+1E-15);
+	      quantDOFs[i] = alphai;
+
 	      if (POWER_SMOOTHNESS_INDICATOR==0)
 		psi[i] = 1.0;
 	      else
 		psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
-	      quantDOFs[i] = psi[i]; 
 	    }
 	}	  
       // END OF COMPUTING SMOOTHNESS INDICATOR 
@@ -1837,25 +1853,25 @@ namespace proteus
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
 	      double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
-	      double dLowij, dLij, dHij, dEVij;
-
+	      double dLowij, dHij, dEVij;
+	      
 	      ith_flux_term += TransportMatrix[ij]*solnj;
 	      if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term)
-		{
+		{		  
 		  // first-order dissipative operator
 		  dLowij = fmax(fabs(TransportMatrix[ij]),fabs(TransposeTransportMatrix[ij]));
 		  if (STABILIZATION_TYPE==1) //EV Stab
 		    {
 		      // high-order (entropy viscosity) dissipative operator 		  
 		      dEVij = fmax(fabs(global_entropy_residual[i]),fabs(global_entropy_residual[j]));
-		      ith_dissipative_term += fmin(dLowij,dEVij)*(solnj-solni);
+		      dHij = fmin(dLowij,dEVij);
 		    }
 		  else // smoothness based stab
-		    { 
-		      dLij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
-		      ith_dissipative_term += dLij*(solnj-solni);
-		    }
-		  dLowii -= dLowij;
+		    dHij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
+
+		  // compute dissipative term
+		  ith_dissipative_term += dHij*(solnj-solni);
+		  dLowii -= dHij;
 		}
 	      //update ij
 	      ij+=1;
@@ -2896,9 +2912,8 @@ namespace proteus
 		      int j_nSpace = j*nSpace;
 		      int i_nSpace = i*nSpace;
 		      elementJacobian_u_u[i][j] += 
-			dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i])
-			+ std::pow(he,2)*(u_grad_trial[i*nSpace+0]*u_grad_test_dV[j*nSpace+0] 
-					  +u_grad_trial[i*nSpace+1]*u_grad_test_dV[j*nSpace+1]);
+			dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) + 
+			ck.NumericalDiffusionJacobian(std::pow(he,2),&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
 		    }//j
 		}//i
 	    }//k
