@@ -1,7 +1,7 @@
 import os
 from os.path import join as pjoin
 import sys
-
+import platform
 PROTEUS_PRELOAD_LIBS=[]
 
 prefix = os.getenv('PROTEUS_PREFIX')
@@ -22,7 +22,9 @@ if sys.platform == 'darwin':
     platform_lapack_integer = '__CLPK_integer'
     platform_blas_h = r'<Accelerate/Accelerate.h>'
     platform_lapack_h = r'<Accelerate/Accelerate.h>'
-    platform_extra_compile_args = ['-flax-vector-conversions','-DPETSC_SKIP_COMPLEX']
+    platform_extra_compile_args = ['-flax-vector-conversions','-DPETSC_INCLUDE_AS_C','-DPETSC_SKIP_COMPLEX']
+    major,minor = platform.mac_ver()[0].split('.')[0:2]
+    os.environ["MACOSX_DEPLOYMENT_TARGET"]= major+'.'+minor
 elif sys.platform == 'linux2':
     platform_extra_compile_args = ['-DPETSC_INCLUDE_AS_C', '-DPETSC_SKIP_COMPLEX']
     platform_extra_link_args = ['-L'+PROTEUS_LIB_DIR,'-Wl,-rpath,' + PROTEUS_LIB_DIR]
@@ -53,6 +55,16 @@ def get_flags(package):
     return include_dir, lib_dir
 
 PROTEUS_BLAS_INCLUDE_DIR, PROTEUS_BLAS_LIB_DIR = get_flags('blas')
+
+if sys.platform == 'darwin':
+    PROTEUS_BLAS_LIB ='m'
+    PROTEUS_BLAS_LIB_DIR = PROTEUS_LIB_DIR
+    PROTEUS_BLAS_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
+    PROTEUS_EXTRA_LINK_ARGS=platform_extra_link_args
+else:
+    PROTEUS_BLAS_LIB   ='openblas'
+    PROTEUS_BLAS_INCLUDE_DIR, PROTEUS_BLAS_LIB_DIR = get_flags('blas')
+
 PROTEUS_EXTRA_LINK_ARGS=[]
 
 PROTEUS_CHRONO_INCLUDE_DIR, PROTEUS_CHRONO_LIB_DIR = get_flags('chrono')
@@ -61,18 +73,22 @@ PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
 PROTEUS_EXTRA_FC_LINK_ARGS=[]
 
 
+
 if platform_blas_h:
     PROTEUS_BLAS_H = platform_blas_h
 else:
     PROTEUS_BLAS_H = r'"cblas.h"'
-PROTEUS_BLAS_LIB   = 'openblas'
 
 PROTEUS_LAPACK_INCLUDE_DIR, PROTEUS_LAPACK_LIB_DIR = get_flags('lapack')
 if platform_lapack_h:
     PROTEUS_LAPACK_H = platform_lapack_h
 else:
     PROTEUS_LAPACK_H   = r'"clapack.h"'
-PROTEUS_LAPACK_LIB = 'openblas'
+
+if sys.platform == 'darwin':
+    PROTEUS_LAPACK_LIB ='m'
+else:
+    PROTEUS_LAPACK_LIB = 'openblas'
 
 if platform_lapack_integer:
     PROTEUS_LAPACK_INTEGER = platform_lapack_integer
