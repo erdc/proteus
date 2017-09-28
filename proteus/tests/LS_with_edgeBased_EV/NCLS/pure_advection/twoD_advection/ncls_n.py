@@ -1,27 +1,27 @@
 from proteus import *
 from proteus.default_n import *
-from oneD_advection_p import *
-from oneD_advection import *
+from ncls_p import *
+from twoD_advection import *
 nd = 2
 
 multilevelNonlinearSolver  = Newton
-#levelNonlinearSolver = ExplicitLumpedMassMatrix
-levelNonlinearSolver = Newton
-#levelNonlinearSolver = ExplicitConsistentMassMatrixWithRedistancing
-
-fullNewtonFlag = True
-updateJacobian = True
-
-timeIntegration = BackwardEuler
-#timeIntegration = NCLS.RKEV # SSP33 #mwf right now need timeIntegration to be SSP33 to run
-stepController = Min_dt_controller
-
-if timeIntegration_ncls == "SSP33": #mwf hack
-    timeOrder = 3
-    nStagesTime = 3
+if STABILIZATION_TYPE==0: #SUPG
+    levelNonlinearSolver = Newton
+    fullNewtonFlag = True
+    updateJacobian = True
+    timeIntegration = BackwardEuler_cfl
 else:
-    timeOrder = 1
-    nStagesTime = 1
+    fullNewtonFlag = False
+    updateJacobian = False
+    timeIntegration = NCLS.RKEV # SSP33 
+    if LUMPED_MASS_MATRIX==True: 
+        levelNonlinearSolver = ExplicitLumpedMassMatrix
+    else:
+        levelNonlinearSolver = ExplicitConsistentMassMatrixWithRedistancing
+
+stepController = Min_dt_controller
+timeOrder = SSPOrder
+nStagesTime = SSPOrder
 
 if useHex:
     quad=True
@@ -34,8 +34,8 @@ if useHex:
             femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}
     else:
         print "pDegree = %s not recognized " % pDegree_ncls
-    elementQuadrature = CubeGaussQuadrature(nd,oneD_advection_quad_order)
-    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,oneD_advection_quad_order)
+    elementQuadrature = CubeGaussQuadrature(nd,twoD_advection_quad_order)
+    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,twoD_advection_quad_order)
 else:
     if pDegree_ncls == 1:
         femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
@@ -43,16 +43,16 @@ else:
         femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
         print "pDegree = %s not recognized " % pDegree_ncls
-    elementQuadrature = SimplexGaussQuadrature(nd,oneD_advection_quad_order)
-    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,oneD_advection_quad_order)
+    elementQuadrature = SimplexGaussQuadrature(nd,twoD_advection_quad_order)
+    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,twoD_advection_quad_order)
 
 nonlinearSmoother = None
 subgridError = None
 #subgridError = HamiltonJacobi_ASGS_opt(coefficients,nd,lag=True)
 
 #numericalFluxType = NCLS.NumericalFlux
-numericalFluxType = DoNothing
-#numericalFluxType = Advection_DiagonalUpwind_IIPG_exterior # PERIODIC
+#numericalFluxType = DoNothing
+numericalFluxType = Advection_DiagonalUpwind_IIPG_exterior # PERIODIC
 
 shockCapturing = NCLS.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_ncls,lag=lag_shockCapturing_ncls)
 
@@ -72,11 +72,11 @@ if parallel:
     linear_solver_options_prefix = 'ncls_'
     linearSolverConvergenceTest = 'r-true'
 else:
-    multilevelLinearSolver = LU
-    
+    multilevelLinearSolver = LU    
     levelLinearSolver = LU
 
 conservativeFlux = {}
 if checkMass:
     auxiliaryVariables = [MassOverRegion()]
 
+tnList=[0.,1E-6]+[float(n)*T/float(nDTout) for n in range(1,nDTout+1)]
