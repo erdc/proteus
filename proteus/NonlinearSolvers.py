@@ -852,11 +852,14 @@ class ExplicitConsistentMassMatrixForVOF(Newton):
         ############
         # FCT STEP #
         ############ 
-        self.F.FCTStep()
+        if self.F.coefficients.FCT==True:
+            self.F.FCTStep()
         ###########################################
         # DISTRIBUTE SOLUTION FROM u to u[ci].dof #
         ###########################################
+        self.F.auxiliaryCallCalculateResidual = True
         self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
 
 class NewtonWithL2ProjectionForMassCorrection(Newton):
     """
