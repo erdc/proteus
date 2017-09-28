@@ -48,64 +48,54 @@ class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIP
                                                                                         getAdvectiveFluxBoundaryConditions,
                                                                                         getDiffusiveFluxBoundaryConditions)
 
-class RKEV(proteus.TimeIntegration.SSP33):
+class RKEV(proteus.TimeIntegration.SSP):
     from proteus import TimeIntegration
     """
     Wrapper for SSPRK time integration using EV
 
     ... more to come ...
     """
-    def __init__(self, transport, timeOrder=1, runCFL=0.1):
-        TimeIntegration.SSP33.__init__(self, transport,runCFL=runCFL)
+    def __init__(self, transport, timeOrder=1, runCFL=0.1, integrateInterpolationPoints=False):
+        TimeIntegration.SSP.__init__(self, transport,integrateInterpolationPoints=integrateInterpolationPoints)
+        self.runCFL=runCFL
+        self.dtLast=None
+        self.isAdaptive=True
+        # About the cfl 
+        assert transport.coefficients.STABILIZATION_TYPE>0, "SSP method just works for edge based EV methods; i.e., STABILIZATION_TYPE>0"
+        assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
+        self.cfl = transport.edge_based_cfl
+        # Stuff particular for SSP
         self.timeOrder = timeOrder  #order of approximation
         self.nStages = timeOrder  #number of stages total
         self.lstage = 0  #last stage completed
-        # About the cfl 
-        assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
-        self.edge_based_cfl = transport.edge_based_cfl
-        self.cell_based_cfl = transport.q[('cfl',0)]
         # storage vectors
-        # previous time step mass and solution dof per component
-        self.m_last = {}
-        #temporarily use this to stash previous solution since m_last used
-        #in EV transport models for previous solution value
-        self.m_last_save = {}
         self.u_dof_last = {}
         # per component stage values, list with array at each stage
-        self.m_stage = {}
         self.u_dof_stage = {}
         for ci in range(self.nc):
              if transport.q.has_key(('m',ci)):
-                self.m_last[ci] = transport.q[('m',ci)].copy()
-                self.m_last_save[ci] = transport.q[('m',ci)].copy()
-
                 self.u_dof_last[ci] = transport.u[ci].dof.copy()
-                self.m_stage[ci] = []
                 self.u_dof_stage[ci] = []
                 for k in range(self.nStages+1):                    
-                    self.m_stage[ci].append(transport.q[('m',ci)].copy())
                     self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
         
     #def set_dt(self, DTSET):
     #    self.dt = DTSET #  don't update t
     def choose_dt(self):
         maxCFL = 1.0e-6
-        maxCFL = max(maxCFL,globalMax(self.edge_based_cfl.max()))
-        #maxCFL = max(maxCFL,globalMax(self.cell_based_cfl.max())) #FOR SUPG
+        maxCFL = max(maxCFL,globalMax(self.cfl.max()))
         self.dt = self.runCFL/maxCFL
         if self.dtLast == None:
             self.dtLast = self.dt
-        if self.dt/self.dtLast  > self.dtRatioMax:
-            self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
         self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
+
     def initialize_dt(self,t0,tOut,q):
         """
         Modify self.dt
         """
-        self.dt=1E-6
         self.tLast=t0
-        #self.choose_dt()
+        self.choose_dt()
         self.t = t0+self.dt
  
     def setCoefficients(self):
@@ -124,66 +114,64 @@ class RKEV(proteus.TimeIntegration.SSP33):
         #import pdb
         #pdb.set_trace()
         self.lstage += 1
-        assert self.timeOrder in [1,3]
+        assert self.timeOrder in [1,2,3]
         assert self.lstage > 0 and self.lstage <= self.timeOrder
         if self.timeOrder == 3:
             if self.lstage == 1:
+                logEvent("First stage of SSP33 method",level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) #no need for .copy?
-                    self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
-                    #needs to be updated for non-scalar equations
-                    #this as used as last stage value in EV Transport model
-                    #mwf TODO, get rid of m_last here
-                    self.m_last[ci] = numpy.copy(self.transport.q[('m',ci)])
-
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
             elif self.lstage == 2:
-                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) 
+                logEvent("Second stage of SSP33 method",level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
                     self.u_dof_stage[ci][self.lstage] *= 1./4.
                     self.u_dof_stage[ci][self.lstage] += 3./4.*self.u_dof_last[ci]
-                    self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
-                    self.m_stage[ci][self.lstage] *= 1./4.
-                    #mwf this has to be fixed
-                    #previous stage updated m_last to the stage value
-                    #either have another temporary here or have the VOF code use m_stage
-                    #instead of m_last
-                    self.m_stage[ci][self.lstage] += 3./4.*self.m_last_save[ci] 
-                    #mwf TODO get rid of this
-                    self.m_last[ci] = numpy.copy(self.m_stage[ci][self.lstage])
+                    #Update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
             elif self.lstage == 3:
+                logEvent("Third stage of SSP33 method",level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof)
-                    self.u_dof_stage[ci][self.lstage][:] *= 2.0/3.0
-                    self.u_dof_stage[ci][self.lstage][:] += 1.0/3.0*self.u_dof_last[ci]
-                    #switch  time history back
-                    #mwf TODO this needs to be fixed for multipcomponent
-                    self.transport.u[ci].dof = numpy.copy(self.u_dof_stage[ci][self.lstage])
-                    self.m_last[ci] = numpy.copy(self.m_last_save[ci])
-                    tmp_dof_stage = self.u_dof_stage[ci][self.lstage].copy()
-                    self.u_dof_stage[ci][self.lstage][:] = self.u_dof_last[ci]
-                    self.transport.getResidual(tmp_dof_stage,
-                                               self.transport.globalResidualDummy)
-                    self.u_dof_stage[ci][self.lstage][:] = tmp_dof_stage
-                    
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    self.u_dof_stage[ci][self.lstage] *= 2.0/3.0
+                    self.u_dof_stage[ci][self.lstage] += 1.0/3.0*self.u_dof_last[ci]
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_last[ci]
+                    # update solution to u[0].dof
+                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage]
+        elif self.timeOrder == 2:
+            if self.lstage == 1:
+                logEvent("First stage of SSP22 method",level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    # Update u_dof_old
+                    self.transport.u_dof_old[:] = self.transport.u[ci].dof
+            elif self.lstage == 2:
+                logEvent("Second stage of SSP22 method",level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    self.u_dof_stage[ci][self.lstage][:] *= 1./2.
+                    self.u_dof_stage[ci][self.lstage][:] += 1./2.*self.u_dof_last[ci]
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_last[ci]
+                    # update solution to u[0].dof
+                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage]
         else:
             assert self.timeOrder == 1
             for ci in range(self.nc):
-                self.m_stage[ci][self.lstage][:]=self.transport.q[('m',ci)][:]
                 self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
-                
-            
 
     def initializeTimeHistory(self,resetFromDOF=True):
         """
         Push necessary information into time history arrays
         """
         for ci in range(self.nc):
-            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
             self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
-            self.m_last_save[ci][:] = self.transport.q[('m',ci)][:]
             for k in range(self.nStages):
-                self.m_stage[ci][k][:] = self.transport.q[('m',ci)][:]
                 self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
+
     def updateTimeHistory(self,resetFromDOF=False):
         """
         assumes successful step has been taken
@@ -191,15 +179,13 @@ class RKEV(proteus.TimeIntegration.SSP33):
         
         self.t = self.tLast + self.dt
         for ci in range(self.nc):
-            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
-            self.m_last_save[ci][:] = self.transport.q[('m',ci)][:]
             self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
             for k in range(self.nStages):
-                self.m_stage[ci][k][:]=self.transport.q[('m',ci)][:]
                 self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
         self.lstage=0
         self.dtLast = self.dt
         self.tLast = self.t
+
     def generateSubsteps(self,tList):
         """
         create list of substeps over time values given in tList. These correspond to stages
@@ -220,16 +206,14 @@ class RKEV(proteus.TimeIntegration.SSP33):
         self.lstage = 0  #last stage completed
         # storage vectors
         # per component stage values, list with array at each stage
-        self.m_stage = {}
         self.u_dof_stage = {}
         for ci in range(self.nc):
              if self.transport.q.has_key(('m',ci)):
-                self.m_stage[ci] = []
                 self.u_dof_stage[ci] = []
                 for k in range(self.nStages+1):                    
-                    self.m_stage[ci].append(self.transport.q[('m',ci)].copy())
                     self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
         self.substeps = [self.t for i in range(self.nStages)]            
+
     def setFromOptions(self,nOptions):
         """
         allow classes to set various numerical parameters
@@ -252,18 +236,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
     from proteus.cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
     def __init__(self,
-                 LUMPED_MASS_MATRIX=0,
-                 FCT=0,
-                 # FOR LOG BASED ENTROPY FUNCTION
-                 uL=0.0, 
-                 uR=1.0,
-                 # FOR ARTIFICIAL COMPRESSION
-                 cK=1.0,
-                 # FOR IMPOSING DIRICHLET BCs STRONGLY
-                 forceStrongConditions=0,
-                 # FOR ELEMENT BASED ENTROPY VISCOSITY
-                 cMax=0.1,
-                 cE=1.0,
                  LS_model=None,
                  V_model=0,
                  RD_model=None,
@@ -275,7 +247,20 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  sc_uref=1.0,
                  sc_beta=1.0,
                  setParamsFunc=None,
-                 movingDomain=False):
+                 movingDomain=False,
+                 forceStrongConditions=0,
+                 # FOR EDGE BASED EV
+                 STABILIZATION_TYPE=0,
+                 ENTROPY_TYPE=2, #logarithmic
+                 LUMPED_MASS_MATRIX=False,
+                 FCT=True,
+                 # FOR ENTROPY VISCOSITY
+                 cE=1.0,
+                 uL=0.0, 
+                 uR=1.0,
+                 # FOR ARTIFICIAL COMPRESSION
+                 cK=1.0):
+
         self.useMetrics = useMetrics
         self.variableNames=['vof']
         nc=1
@@ -309,17 +294,19 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.checkMass = checkMass
         #VRANS
         self.q_porosity = None; self.ebq_porosity = None; self.ebqe_porosity = None
+        self.porosity_dof = None
         self.setParamsFunc   = setParamsFunc
         self.flowCoefficients=None
         self.movingDomain=movingDomain
         # EDGE BASED (AND ENTROPY) VISCOSITY 
         self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
+        self.STABILIZATION_TYPE=STABILIZATION_TYPE
+        self.ENTROPY_TYPE=ENTROPY_TYPE
         self.FCT=FCT
         self.uL=uL
         self.uR=uR
         self.cK=cK
         self.forceStrongConditions=forceStrongConditions
-        self.cMax=cMax
         self.cE=cE
 
     def initializeMesh(self,mesh):
@@ -327,8 +314,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def attachModels(self,modelList):
         #self
         self.model = modelList[self.modelIndex]
-        self.u_dof_old = numpy.copy(self.model.u[0].dof)
-        self.u_dof_old_old = numpy.copy(self.model.u[0].dof)
         #redistanced level set
         if self.RD_modelIndex is not None:
             self.rdModel = modelList[self.RD_modelIndex]
@@ -354,7 +339,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             else:
                 self.q_v = modelList[self.flowModelIndex].q[('f',0)]
                 self.ebqe_v = modelList[self.flowModelIndex].ebqe[('f',0)]
-                self.ux_dof = modelList[solf.flowModelIndex].u[1].dof
                 #self.ux_dof = modelList[solf.flowModelIndex].u[1].dof
                 #self.uy_dof = modelList[solf.flowModelIndex].u[2].dof
                 #self.uz_dof = modelList[solf.flowModelIndex].u[3].dof
@@ -398,10 +382,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #VRANS
         self.flowCoefficients = modelList[self.flowModelIndex].coefficients
         if hasattr(self.flowCoefficients,'q_porosity'):
-            self.q_porosity = self.flowCoefficients.q_porosity
+            self.q_porosity = self.flowCoefficients.q_porosity            
+            if self.STABILIZATION_TYPE>0: # edge based stabilization: EV or smoothness based
+                assert hasattr(self.flowCoefficients,'porosity_dof'), 'If STABILIZATION_TYPE>0, the flow model must have porosity_dof'
+                self.porosity_dof = self.flowCoefficients.porosity_dof
+            else:
+                self.porosity_dof = numpy.ones(modelList[self.modelIndex].u[0].dof.shape,'d')
         else:
-            self.q_porosity = numpy.ones(modelList[self.modelIndex].q[('u',0)].shape,
-                                           'd')
+            # If the flow model doesn't have porosity then set q_porosity=1 and porosity_dof=1
+            self.q_porosity = numpy.ones(modelList[self.modelIndex].q[('u',0)].shape,'d')
+            self.porosity_dof = numpy.ones(modelList[self.modelIndex].u[0].dof.shape,'d')
+
             if self.setParamsFunc != None:
                 self.setParamsFunc(modelList[self.modelIndex].q['x'],self.q_porosity)
             #
@@ -429,6 +420,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
         #VRANS
         self.q_porosity = numpy.ones(cq[('u',0)].shape,'d')
+
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         if self.flowModelIndex == None:
             self.ebq_v = numpy.ones(cebq[('f',0)].shape,'d')
@@ -440,8 +432,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
     def preStep(self,t,firstStep=False):
-	self.u_dof_old_old = numpy.copy(self.u_dof_old)
-	self.u_dof_old = numpy.copy(self.model.u[0].dof)
+        # SAVE OLD SOLUTION #
+	self.model.u_dof_old[:] = self.model.u[0].dof
+
+        # COMPUTE NEW VELOCITY (if given by user) # 
+        if self.model.hasVelocityFieldAsFunction:
+            self.model.updateVelocityFieldAsFunction()
+
         if self.checkMass:
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV_last'],
                                                     self.model.q[('m',0)],
@@ -454,7 +451,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-        #self.model.q['dV_last'][:] = self.model.q['dV']
+        self.model.q['dV_last'][:] = self.model.q['dV']
         if self.checkMass:
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
@@ -544,10 +541,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd = True,
-                 movingDomain=False):
+                 movingDomain=False,
+                 bdyNullSpace=False):
+
+        self.auxiliaryCallCalculateResidual=False
         #
         #set the objects describing the method and boundary conditions
         #
+        self.bdyNullSpace=bdyNullSpace
         self.movingDomain=movingDomain
         self.tLast_mesh=None
         #
@@ -569,6 +570,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.reuse_test_trial_quadrature:
             for ci in range(1,coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
+        self.u_dof_old = None
+
         ## Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh #assume the same mesh for  all components for now
         self.testSpace = testSpaceDict
@@ -755,6 +758,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('advectiveFlux_bc_flag',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
         self.ebqe[('advectiveFlux_bc',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.ebqe[('advectiveFlux',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        # mql. Allow the user to provide functions to define the velocity field
+        self.hasVelocityFieldAsFunction = False
+        if ('velocityField') in dir (options): 
+            self.velocityField = options.velocityField
+            self.hasVelocityFieldAsFunction = True
+
         self.points_elementBoundaryQuadrature= set()
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
@@ -801,6 +810,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
         self.setupFieldStrides()
 
+        # mql. Some ASSERTS to restrict the combination of the methods        
+        if self.coefficients.LUMPED_MASS_MATRIX==True:
+            cond = self.coefficients.STABILIZATION_TYPE==2 and self.coefficients.FCT==False
+            assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.) and FCT=False"
+            cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix
+            assert cond,"Use levelNonlinearSolver=ExplicitLumpedMassMatrix when the mass matrix is lumped"
+        if self.coefficients.FCT==True: 
+            cond = self.coefficients.STABILIZATION_TYPE==1, "Use FCT just with STABILIZATION_TYPE==1 (EV)"
+        # END OF ASSERTS 
+
         #cek adding empty data member for low order numerical viscosity structures here for now
         self.ML=None #lumped mass matrix
         self.MC_global=None #consistent mass matrix
@@ -812,7 +831,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.min_u_bc=None
         self.max_u_bc=None
         # Aux quantity at DOFs to be filled by optimized code (MQL)
-        self.quantDOFss=None
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
         comm = Comm.get()
         self.comm=comm
@@ -919,17 +938,44 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def calculateCoefficients(self):
         pass
 
+    def updateVelocityFieldAsFunction(self):
+        X = {0:self.q[('x')][:,:,0],
+             1:self.q[('x')][:,:,1],
+             2:self.q[('x')][:,:,2]}
+        t = self.timeIntegration.t
+        self.coefficients.q_v[...,0] = self.velocityField[0](X,t)
+        self.coefficients.q_v[...,1] = self.velocityField[1](X,t)
+        if (self.nSpace_global==3):
+            self.coefficients.q_v[...,2] = self.velocityField[2](X,t)
+
+        # BOUNDARY
+        ebqe_X = {0:self.ebqe['x'][:,:,0],
+                  1:self.ebqe['x'][:,:,1],
+                  2:self.ebqe['x'][:,:,2]}
+        self.coefficients.ebqe_v[...,0] = self.velocityField[0](ebqe_X,t)
+        self.coefficients.ebqe_v[...,1] = self.velocityField[1](ebqe_X,t)
+        if (self.nSpace_global==3):
+            self.coefficients.ebqe_v[...,2] = self.velocityField[2](ebqe_X,t)
+
     def calculateElementResidual(self):
         if self.globalResidualDummy != None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
+
     def getResidual(self,u,r):
         import pdb
         import copy
         """
         Calculate the element residuals and add in to the global residual
         """
-
-        #COMPUTE C MATRIX 
+        
+        if self.coefficients.porosity_dof is None: 
+            self.coefficients.porosity_dof = numpy.ones(self.u[0].dof.shape,'d')
+        if self.u_dof_old is None:
+            # Pass initial condition to u_dof_old
+            self.u_dof_old = numpy.copy(self.u[0].dof)
+        ########################
+        ### COMPUTE C MATRIX ###
+        ########################
         if self.cterm_global is None:
             #since we only need cterm_global to persist, we can drop the other self.'s
             self.cterm={}
@@ -989,9 +1035,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                           self.q['abs(det(J))'],
                                                           self.q[('grad(w)',0)],
                                                           self.q[('grad(w)*dV_f',0)])
-            #
-            #lumped mass matrix
-            #
+            ##########################
+            ### LUMPED MASS MATRIX ###
+            ##########################
             #assume a linear mass term
             dm = np.ones(self.q[('u',0)].shape,'d')
             elementMassMatrix = np.zeros((self.mesh.nElements_global,
@@ -1020,7 +1066,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ML = np.zeros((self.nFreeDOF_global[0],),'d')
             for i in range(self.nFreeDOF_global[0]):
                 self.ML[i] = self.MC_a[rowptr[i]:rowptr[i+1]].sum()
-            #np.testing.assert_almost_equal(self.ML.sum(), self.mesh.volume, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
+            np.testing.assert_almost_equal(self.ML.sum(), 
+                                           self.mesh.volume, 
+                                           err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
             for d in range(self.nSpace_global): #spatial dimensions
                 #C matrices
                 self.cterm[d] = np.zeros((self.mesh.nElements_global,
@@ -1075,18 +1123,24 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                           self.csrColumnOffsets[(0,0)],
                                                                           self.cterm_transpose[d],
                                                                           self.cterm_global_transpose[d])
-
-                self.quantDOFss = numpy.zeros(self.u[0].dof.shape,'d')
+                
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
+        if (self.nSpace_global==3):
+            Cz = self.cterm_global[2].getCSRrepresentation()
+        else:
+            Cz = numpy.zeros(Cx.shape,'d')
         rowptr, colind, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
+        if (self.nSpace_global==3):
+            CTz = self.cterm_global_transpose[2].getCSRrepresentation()
+        else:
+            CTz = numpy.zeros(CTx.shape,'d')
+
         # This is dummy. I just care about the csr structure of the sparse matrix
         self.dt_times_dC_minus_dL = np.zeros(Cx.shape,'d')
-        self.min_u_bc = numpy.zeros(self.u[0].dof.shape,'d')
-        self.max_u_bc = numpy.zeros(self.u[0].dof.shape,'d')
-        self.min_u_bc.fill(1E10);
-        self.max_u_bc.fill(-1E10);
+        self.min_u_bc = numpy.zeros(self.u[0].dof.shape,'d')+1E10
+        self.max_u_bc = numpy.zeros(self.u[0].dof.shape,'d')-1E10
         self.low_order_solution = numpy.zeros(self.u[0].dof.shape,'d')
         
         #
@@ -1108,8 +1162,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
-        ##print "***************max/min(m_last)*********************",max(self.timeIntegration.m_last[0].flat[:]),min(self.timeIntegration.m_last[0].flat[:])
-        ##print "***************max/min(m_last)*********************",max(-self.timeIntegration.dt*self.timeIntegration.beta_bdf[0].flat[:]),min(-self.timeIntegration.dt*self.timeIntegration.beta_bdf[0].flat[:]),
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
         #cek can put in logic to skip of BC's don't depend on t or u
@@ -1130,11 +1182,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             degree_polynomial = self.u[0].femSpace.order
         except:
             pass
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()   
-        #self.vof.calculateResidual_development(#element # FOR SUPG
-        self.vof.calculateResidual(#element
+
+        if (self.coefficients.STABILIZATION_TYPE == 0): #SUPG
+            self.calculateResidual = self.vof.calculateResidual
+            self.calculateJacobian = self.vof.calculateJacobian 
+        else:
+            self.calculateResidual = self.vof.calculateResidual_entropy_viscosity
+            self.calculateJacobian = self.vof.calculateMassMatrix
+
+        self.calculateResidual(#element
+            self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -1166,16 +1223,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.sc_beta,
             #VRANS start
             self.coefficients.q_porosity,
+            self.coefficients.porosity_dof, #I need this for edge based methods
             #VRANS end
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             degree_polynomial,
             self.u[0].dof,
-            #mwf need another argument for u_dof_old to represent u^n
-            #self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage], #u last stage and u^n right now
-            self.coefficients.u_dof_old, # TMP
-            self.coefficients.u_dof_old,
-            self.coefficients.u_dof_old_old,
+            self.u_dof_old, #For Backward Euler this is un, for SSP this is the lstage
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u',0)],
@@ -1205,7 +1259,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux',0)],
             #ENTROPY VISCOSITY and ARTIFICIAL COMRPESSION
             self.coefficients.cE,
-            self.coefficients.cMax,
             self.coefficients.cK,
             #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
             self.coefficients.uL, 
@@ -1218,28 +1271,35 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrRowIndeces[(0,0)], #row indices (convenient for element loops)
             self.csrColumnOffsets[(0,0)], #column indices (convenient for element loops)
             self.csrColumnOffsets_eb[(0, 0)], #indices for boundary terms
-            Cx, #Cij Matrix
+            # C matrices
+            Cx, 
             Cy,
+            Cz,
             CTx,
-            CTy, #NOTE: for now I assume the problem is in 2D!!!! (MQL). TODO: make it general 
+            CTy,
+            CTz,
+            self.ML,
             # PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
             self.coefficients.LUMPED_MASS_MATRIX,
+            self.coefficients.STABILIZATION_TYPE,
+            self.coefficients.ENTROPY_TYPE,
             # FLUX CORRECTED TRANSPORT
             self.low_order_solution,
             self.dt_times_dC_minus_dL, 
             self.min_u_bc,
             self.max_u_bc,
-            self.quantDOFss)
+            self.quantDOFs)
         
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
 
-        edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
-        cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
-        logEvent("...   Current dt = " + str(self.timeIntegration.dt),level=4)
-        logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax),level=2)
-        logEvent("...   Maximum Edge Based CFL = " + str(edge_based_cflMax),level=2)
+        if (self.auxiliaryCallCalculateResidual==False):
+            edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
+            cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
+            logEvent("...   Current dt = " + str(self.timeIntegration.dt),level=4)
+            logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax),level=2)
+            logEvent("...   Maximum Edge Based CFL = " + str(edge_based_cflMax),level=2)
 
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
@@ -1259,8 +1319,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         except:
             pass
 
-        #self.vof.calculateJacobian(#element # FOR SUPG
-        self.vof.calculateMassMatrix(#element
+        self.calculateJacobian(#element
+            self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
