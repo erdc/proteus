@@ -79,6 +79,7 @@ class cppRigidBody {
   void setName(std::string name);
   void setPrescribedMotionPoly(double coeff1);
   void setPrescribedMotionSine(double a, double f);
+  void setPrescribedMotionCustom(std::vector<double> x, std::vector<double> y);
 };
 
 cppSystem::cppSystem(double* gravity):
@@ -288,6 +289,23 @@ void cppRigidBody::poststep()
   angvel = body->GetWvel_loc();
   F = body->Get_Xforce();
   M = body->Get_Xtorque();
+}
+
+void cppRigidBody::setPrescribedMotionCustom(std::vector<double> x,
+                                             std::vector<double> y) {
+  auto fixed_body = std::make_shared<ChBody>();
+  fixed_body->SetPos(body->GetPos());
+  fixed_body->SetBodyFixed(true);
+  system->system.Add(fixed_body);
+  auto lock = std::make_shared<ChLinkLockLock>();
+  lock->Initialize(body, fixed_body, fixed_body->GetCoord());
+  system->system.Add(lock);
+  auto forced_motion = std::make_shared<ChFunction_Recorder>();
+  for (int i = 0; i < x.size(); ++i) {
+    forced_motion->AddPoint(x[i], y[i]);
+  }
+  std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+  lock->SetMotion_X(forced_ptr);
 }
 
 void cppRigidBody::setPrescribedMotionPoly(double coeff1) {

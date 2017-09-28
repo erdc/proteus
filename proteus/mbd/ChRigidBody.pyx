@@ -154,6 +154,7 @@ cdef extern from "ChRigidBody.h":
         void setConstraints(double* free_x, double* free_r)
         void setInertiaXX(double* inertia)
         void setName(string name)
+        void setPrescribedMotionCustom(vector[double] x, vector[double] y)
         void setPrescribedMotionPoly(double coeff1)
         void setPrescribedMotionSine(double a, double f)
 
@@ -864,6 +865,19 @@ cdef class ProtChBody:
 
     def calculate(self):
         pass
+
+    def setPrescribedMotionCustom(self, double[:] x, double[:] y):
+        """Sets custom prescribed motion for body
+        """
+        cdef vector[double] x_vec
+        cdef vector[double] y_vec
+        assert len(x) == len(y), 'x and y should have the same length'
+        for xx in x:
+            x_vec.push_back(xx)
+        for yy in y:
+            y_vec.push_back(yy)
+                
+        self.thisptr.setPrescribedMotionCustom(x_vec, y_vec)
 
     def setPrescribedMotionSine(self, double a, double f):
         """Sets sinusoidal prescribed motion for body
