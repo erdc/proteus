@@ -61,7 +61,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.dtLast=None
         self.isAdaptive=True
         # About the cfl 
-        assert transport.coefficients.STABILIZATION_TYPE>0, "SSP method just works for edge based EV methods; i.e., STABILIZATION_TYPE>0"
+        assert transport.coefficients.STABILIZATION_TYPE>0,"SSP method just works for edge based EV methods; i.e., STABILIZATION_TYPE>0"
         assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
         self.cfl = transport.edge_based_cfl
         # Stuff particular for SSP
@@ -812,12 +812,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # mql. Some ASSERTS to restrict the combination of the methods        
         if self.coefficients.LUMPED_MASS_MATRIX==True:
-            cond = self.coefficients.STABILIZATION_TYPE==2 and self.coefficients.FCT==False
-            assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.) and FCT=False"
+            cond = self.coefficients.STABILIZATION_TYPE==2 
+            assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
             cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix
             assert cond,"Use levelNonlinearSolver=ExplicitLumpedMassMatrix when the mass matrix is lumped"
         if self.coefficients.FCT==True: 
-            cond = self.coefficients.STABILIZATION_TYPE==1, "Use FCT just with STABILIZATION_TYPE==1 (EV)"
+            cond = self.coefficients.STABILIZATION_TYPE>0, "Use FCT just with STABILIZATION_TYPE>0; i.e., edge based stabilization"
         # END OF ASSERTS 
 
         #cek adding empty data member for low order numerical viscosity structures here for now

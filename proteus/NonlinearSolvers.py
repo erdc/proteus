@@ -716,6 +716,14 @@ class ExplicitLumpedMassMatrix(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):                                  
         self.computeResidual(u,r,b)
         u[:] = r
+        ############
+        # FCT STEP # 
+        ############
+        if hasattr(self.F.coefficients,'FCT') and self.F.coefficients.FCT==True:
+            self.F.FCTStep()
+        ###########################################
+        # DISTRUBUTE SOLUTION FROM u to u[ci].dof #
+        ###########################################
         self.F.auxiliaryCallCalculateResidual = True
         self.computeResidual(u,r,b)
         self.F.auxiliaryCallCalculateResidual = False
