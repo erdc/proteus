@@ -2,7 +2,6 @@ import sys
 import setuptools
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
-from petsc4py.conf.petscconf import Extension as PetscExtension
 
 import numpy
 from Cython.Distutils import build_ext
@@ -350,27 +349,27 @@ setup(name='proteus',
                              libraries=['m'],
                              extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
                              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS),
-                   PetscExtension('flcbdfWrappers',
-                                  ['proteus/flcbdfWrappersModule.cpp','proteus/mesh.cpp','proteus/meshio.cpp'],
-                                  define_macros=[('PROTEUS_TRIANGLE_H',PROTEUS_TRIANGLE_H),
-                                                 ('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H),
-                                                 ('CMRVEC_BOUNDS_CHECK',1),
-                                                 ('MV_VECTOR_BOUNDS_CHECK',1),
-                                                 ('PETSCVEC_BOUNDS_CHECK',1),
-                                                 ('F77_POST_UNDERSCORE',1),
-                                                 ('USE_BLAS',1)],
-                                  include_dirs=['proteus',
-                                                numpy.get_include(),
-                                                PROTEUS_SUPERLU_INCLUDE_DIR,
-                                                PROTEUS_TRIANGLE_INCLUDE_DIR,
-                                                PROTEUS_DAETK_INCLUDE_DIR,
-                                                PROTEUS_HDF5_INCLUDE_DIR] + \
-                                      PROTEUS_PETSC_INCLUDE_DIRS + \
-                                      PROTEUS_MPI_INCLUDE_DIRS,
-                                  library_dirs=[PROTEUS_DAETK_LIB_DIR]+PROTEUS_PETSC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS+PROTEUS_HDF5_LIB_DIRS,
-                                  libraries=['hdf5','stdc++','m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS+PROTEUS_HDF5_LIBS,
-                                  extra_link_args=PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_LINK_ARGS,
-                                  extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS),
+                   Extension('flcbdfWrappers',
+                             ['proteus/flcbdfWrappersModule.cpp','proteus/mesh.cpp','proteus/meshio.cpp'],
+                             define_macros=[('PROTEUS_TRIANGLE_H',PROTEUS_TRIANGLE_H),
+                                            ('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H),
+                                            ('CMRVEC_BOUNDS_CHECK',1),
+                                            ('MV_VECTOR_BOUNDS_CHECK',1),
+                                            ('PETSCVEC_BOUNDS_CHECK',1),
+                                            ('F77_POST_UNDERSCORE',1),
+                                            ('USE_BLAS',1)],
+                             include_dirs=['proteus',
+                                            numpy.get_include(),
+                                            PROTEUS_SUPERLU_INCLUDE_DIR,
+                                            PROTEUS_TRIANGLE_INCLUDE_DIR,
+                                            PROTEUS_DAETK_INCLUDE_DIR,
+                                            PROTEUS_HDF5_INCLUDE_DIR] + \
+                             PROTEUS_PETSC_INCLUDE_DIRS + \
+                             PROTEUS_MPI_INCLUDE_DIRS,
+                             library_dirs=[PROTEUS_DAETK_LIB_DIR]+PROTEUS_PETSC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS+PROTEUS_HDF5_LIB_DIRS,
+                             libraries=['hdf5','stdc++','m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS+PROTEUS_HDF5_LIBS,
+                             extra_link_args=PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_LINK_ARGS,
+                             extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS),
                     Extension("mprans.cNCLS",["proteus/mprans/cNCLS.pyx"],depends=["proteus/mprans/NCLS.h"], language="c++",
                               include_dirs=[numpy.get_include(), 'proteus']),
                    Extension("mprans.cMCorr",["proteus/mprans/cMCorr.pyx"],depends=["proteus/mprans/MCorr.h"], define_macros=[('PROTEUS_LAPACK_H',PROTEUS_LAPACK_H),
