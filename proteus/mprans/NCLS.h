@@ -1612,7 +1612,7 @@ namespace proteus
 		  //			 *(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)))*DENTROPY(un,-epsCoupez,epsCoupez);
 		  for (int I=0;I<nSpace;I++)
 		    aux_entropy_residual += vn[I]*grad_un[I];
-		  aux_entropy_residual -= dist_error*COUPEZ*lambda_coupez*sgn*(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)));
+		  aux_entropy_residual -= dist_error*COUPEZ*lambda_coupez*sgn*(1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2));
 		  DENTROPY_un = ENTROPY_TYPE==1 ? DENTROPY(un,-epsCoupez,epsCoupez) : DENTROPY_LOG(un,-epsCoupez,epsCoupez);
 		}
 	      //////////////
