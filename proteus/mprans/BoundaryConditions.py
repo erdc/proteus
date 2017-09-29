@@ -65,7 +65,14 @@ class BC_RANS(BC_Base):
         self.vos_advective = BoundaryCondition() 
         self.us_diffusive = BoundaryCondition()   
         self.vs_diffusive = BoundaryCondition()  
-        self.ws_diffusive = BoundaryCondition()  
+        self.ws_diffusive = BoundaryCondition() 
+        # projection scheme
+        self.pInit_dirichlet = BoundaryCondition() # initial pressure
+        self.pInc_dirichlet = BoundaryCondition() # pressure increment
+        self.pInit_advective = BoundaryCondition() 
+        self.pInc_advective = BoundaryCondition() 
+        self.pInit_diffusive = BoundaryCondition() 
+        self.pInc_diffusive = BoundaryCondition() 
 
     def reset(self):
         """

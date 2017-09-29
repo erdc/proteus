@@ -61,6 +61,14 @@ cdef class BC_RANS(BC_Base):
         cdef BoundaryCondition us_diffusive
         cdef BoundaryCondition vs_diffusive
         cdef BoundaryCondition ws_diffusive
+        # projection scheme
+        cdef BoundaryCondition pInit_dirichlet
+        cdef BoundaryCondition pInc_dirichlet
+        cdef BoundaryCondition pInit_advective
+        cdef BoundaryCondition pInc_advective
+        cdef BoundaryCondition pInit_diffusive
+        cdef BoundaryCondition pInc_diffusive
+
 
         # functions
         # cpdef void reset(self)
