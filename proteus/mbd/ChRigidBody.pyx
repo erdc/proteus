@@ -107,6 +107,7 @@ cdef extern from "ChRigidBody.h":
         void setGravity(double* gravity)
         void setDirectory(string directory)
         void setTimestepperType(string tstype, bool verbose)
+        void setCollisionEnvelopeMargin(double envelope, double margin)
     cppSystem * newSystem(double* gravity)
     cdef cppclass cppRigidBody:
         shared_ptr[ch.ChBody] body
@@ -1537,6 +1538,9 @@ cdef class ProtChSystem:
             # broadcast to all processors
             w_grad = comm.bcast(w_grad, rank)
         return u_grad, v_grad, w_grad
+
+    def setCollisionEnvelopeMargin(self, double envelope, double margin):
+        self.thisptr.setCollisionEnvelopeMargin(envelope, margin)
 
     # def findFluidVelocityAtCoords(self, coords):
     #     """Finds solution from NS for velocity of fluid at given coordinates

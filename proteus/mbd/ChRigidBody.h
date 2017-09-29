@@ -23,6 +23,7 @@ class cppSystem {
   void setGravity(double* gravity);
   void setDirectory(std::string dir);
   void setTimestepperType(std::string tstype, bool verbose);
+  void setCollisionEnvelopeMargin(double envelope, double margin);
 };
 
 
@@ -105,7 +106,6 @@ gravity(gravity)
   if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system.GetTimestepper())) {
     mystepper->SetAlpha(-0.2);
   }
-  //system.SetTimestepper(std::make_shared<ChTimestepperEulerImplicitLinearized>());  // default: fast, 1st order
 }
 
 void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
@@ -213,6 +213,12 @@ ChVector<double> cppRigidBody::hxyz(double* x, double t)
   return xNew - xx;
 }
 
+
+void cppSystem::setCollisionEnvelopeMargin(double envelope, double margin) {
+  collision::ChCollisionModel::SetDefaultSuggestedEnvelope(envelope);
+  collision::ChCollisionModel::SetDefaultSuggestedMargin(margin);
+}
+
 double cppRigidBody::hx(double* x, double t)
 {
   /* rotm = body->GetA(); */
@@ -301,7 +307,7 @@ void cppRigidBody::setPrescribedMotionCustom(std::vector<double> x,
   lock->Initialize(body, fixed_body, fixed_body->GetCoord());
   system->system.Add(lock);
   auto forced_motion = std::make_shared<ChFunction_Recorder>();
-  for (int i = 0; i < x.size(); ++i) {
+  for (int i = 0; i < x.size(); i++) {
     forced_motion->AddPoint(x[i], y[i]);
   }
   std::shared_ptr<ChFunction> forced_ptr = forced_motion;
