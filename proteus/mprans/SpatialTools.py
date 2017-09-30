@@ -631,7 +631,7 @@ class Tank3D(ShapeRANS):
                         bt['z+'], bt['z+']]
         volumes[0][0] += [f_i]  # add to volume
         facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
-        facetFlags += [bt['x+']]
+        facetFlags += [bt['x-']]
         regions += [[(x0+(x0-x_n))/2., (y0+y1)/2., (z0+z1)/2.]]
         self.regionIndice['x-'] = r_i
         regionFlags += [r_i+1]
