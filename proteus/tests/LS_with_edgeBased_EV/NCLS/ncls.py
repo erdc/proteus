@@ -8,7 +8,7 @@ import math
 
 opts=Context.Options([
     # General parameters #
-    ("problem",1,"0: 1D advection with PBCs. 1: 2D rotation of disk"),
+    ("problem",0,"0: 1D advection with PBCs. 1: 2D rotation of disk"),
     ("level_set_function",1,"0: distance function, 1: saturated distance function"),
     ("T",1.0,"Final time"),
     ("nDTout",10,"Number of time steps to archive"),
