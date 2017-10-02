@@ -20,8 +20,11 @@ comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
 import numpy as np
+import pytest
+
 import bdm_tests_template_3dmesh as bt
 
+@pytest.mark.PostProcessingTools
 class TestBDM2Mesh3D():
 
     @classmethod

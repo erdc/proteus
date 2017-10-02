@@ -20,8 +20,10 @@ comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
 import numpy as np
+import pytest
 import bdm_tests_3Dtemplate as bt_temp
 
+@pytest.mark.PostProcessingTools
 class TestBDM2Reference1():
 
     @classmethod
