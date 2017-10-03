@@ -20,7 +20,7 @@ import poisson_3d_c0q2_n
 import pytest
 
 @pytest.mark.modelTest
-@pytest.mark.poisson
+@pytest.mark.poissonTest
 class TestPoisson():
 
     @classmethod
