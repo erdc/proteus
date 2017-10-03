@@ -228,7 +228,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.NonlinearSolvers import EikonalSolver
 
     def __init__(self,
-                 epsCoupez, #relative to he
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
@@ -251,6 +250,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  pure_redistancing=False,
                  COUPEZ=False,
                  SATURATED_LEVEL_SET=False,
+                 epsCoupez=0.1, 
                  epsFactRedistancing=0.33, #For the signed distance function
                  redistancing_tolerance=0.1,
                  maxIter_redistancing=3,
