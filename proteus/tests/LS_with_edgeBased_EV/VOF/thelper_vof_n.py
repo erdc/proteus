@@ -1,7 +1,7 @@
 from proteus import *
 from proteus.default_n import *
-from vof_p import *
-from vof import *
+from thelper_vof_p import *
+from thelper_vof import *
 nd = 2
 
 multilevelNonlinearSolver  = Newton
