@@ -274,8 +274,10 @@ class NS_base:  # (HasTraits):
                         tmesh.readFromPolyFile(p.domain.polyfile)
                         tmesh.writeToFile(p.domain.polyfile)
                     comm.barrier()
+
                     mesh = MeshTools.TriangularMesh()
                     mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
+
                     mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
                                                                 nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                 parallelPartitioningType=n.parallelPartitioningType)
@@ -1584,14 +1586,14 @@ class NS_base:  # (HasTraits):
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
         try:
-            quantDOFs = {}
-            quantDOFs[0] = model.levelModelList[-1].coefficients.phi_s
+            phi_s = {}
+            phi_s[0] = model.levelModelList[-1].coefficients.phi_s
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
                                                                    self.tnList[0],
                                                                    self.tCount,
-                                                                   quantDOFs,
+                                                                   phi_s,
                                                                    res_name_base='phi_s')
-            logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+            logEvent("Writing initial phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass  
 
@@ -1702,29 +1704,28 @@ class NS_base:  # (HasTraits):
                                                                                     initialPhase=False,meshChanged=True)
 
         try:
-            quantDOFs = {}
-            try:
-                quantDOFs[0] = model.levelModelList[-1].coefficients.phi_s
-                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                       self.tnList[0],
-                                                                       self.tCount,
-                                                                       quantDOFs,
-                                                                       res_name_base='quantDOFs_for_'+model.name)
-                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
-            except:
-                pass
-            try:
-                quantDOFs[0] = model.levelModelList[-1].quantDOFs
-                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                       self.tnList[0],
-                                                                       self.tCount,
-                                                                       quantDOFs,
-                                                                       res_name_base='phi_s')
-                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
-            except:
-                pass
+            phi_s = {}
+            phi_s[0] = model.levelModelList[-1].coefficients.phi_s
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   phi_s,
+                                                                   res_name_base='phi_s')
+            logEvent("Writing phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
-            pass  
+            pass
+        
+        try:
+            quantDOFs = {}
+            quantDOFs[0] = model.levelModelList[-1].quantDOFs
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   quantDOFs,
+                                                                   res_name_base='quantDOFs_for_'+model.name)        
+            logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass
 
         #Write bathymetry for Shallow water equations (MQL)
         try:
