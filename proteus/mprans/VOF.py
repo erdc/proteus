@@ -812,7 +812,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
         self.setupFieldStrides()
 
-        # mql. Some ASSERTS to restrict the combination of the methods        
+        # mql. Some ASSERTS to restrict the combination of the methods
+        if self.coefficients.STABILIZATION_TYPE>0:
+            assert self.timeIntegration.isSSP==True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within VOF model"
+            cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver==ExplicitLumpedMassMatrix or options.levelNonlinearSolver==ExplicitConsistentMassMatrixForVOF)
+            assert cond, "If STABILIZATION_TYPE>0, use levelNonlinearSolver=ExplicitLumpedMassMatrix or ExplicitConsistentMassMatrixForVOF"
+        if 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix:
+            assert self.coefficients.LUMPED_MASS_MATRIX, "If levelNonlinearSolver=ExplicitLumpedMassMatrix, use LUMPED_MASS_MATRIX=True"
         if self.coefficients.LUMPED_MASS_MATRIX==True:
             cond = self.coefficients.STABILIZATION_TYPE==2 
             assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
