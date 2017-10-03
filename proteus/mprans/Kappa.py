@@ -429,12 +429,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd = True,
-                 movingDomain=False):
+                 movingDomain=False,
+                 bdyNullSpace=False,
+                 ):
         #
         #set the objects describing the method and boundary conditions
         #
         self.movingDomain=movingDomain
         self.tLast_mesh=None
+        self.bdyNullSpace = bdyNullSpace
         #
         self.name=name
         self.sd=sd
