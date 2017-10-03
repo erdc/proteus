@@ -366,6 +366,28 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     char namebuffer[20];
     sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
+
+/* Code to output size scale and frame
+    apf::MeshIterator* it = m->begin(0);
+    apf::MeshEntity* test;
+    std::ofstream myfile;
+    myfile.open("meshSizeScale.txt");
+    while(test = m->iterate(it)){ 
+      apf::Vector3 tempScale;
+      apf::getVector(size_scale, test, 0,tempScale);
+      myfile << tempScale[0] <<","<<tempScale[1]<<","<<tempScale[2]<<std::endl;
+    }
+    myfile.close();
+    it = m->begin(0);
+    myfile.open("meshSizeFrame.txt");
+    while(test = m->iterate(it)){
+      apf::Matrix3x3 tempFrame;
+      apf::getMatrix(size_frame, test, 0,tempFrame);
+      myfile << tempFrame[0][0]<<","<<tempFrame[0][1]<<","<<tempFrame[0][2]<<","<<tempFrame[1][0]<<","<<tempFrame[1][1]<<","<<tempFrame[1][2]<<","<<tempFrame[2][0]<<","<<tempFrame[2][1]<<","<<tempFrame[2][2]<<std::endl;
+    }
+    m->end(it);
+    m->writeNative("beforeAnisotropicAdapt.smb");
+*/
   }
 
   if(size_field_config=="ERM"){
@@ -388,8 +410,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   ma::Input* in;
   if(adapt_type_config=="anisotropic" || size_field_config== "interface")
     in = ma::configure(m, size_scale, size_frame);
-  else
+  else{
     in = ma::configure(m, size_iso);
+  }
   ma::validateInput(in);
   in->shouldRunPreZoltan = true;
   in->shouldRunMidParma = true;
@@ -398,6 +421,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   in->shouldFixShape = true;
+  in->shouldForceAdaptation = true;
   double mass_before = getTotalMass();
 
   double t1 = PCU_Time();
@@ -432,8 +456,10 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     char namebuffer[20];
     sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
-  }
 
+    //m->writeNative("afterAnisotropicAdapt.smb");
+  }
+  std::abort();
   //isReconstructed = 0; //this is needed to maintain consistency with the post-adapt conversion back to Proteus
   nAdapt++; //counter for number of adapt steps
   return 0;
