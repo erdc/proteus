@@ -10,9 +10,11 @@ Profiling.logLevel=2
 Profiling.verbose=True
 import numpy as np
 import tables
-import ncls as test_ncls_ncls
-import ncls_p as test_ncls_ncls_p
-import ncls_n as test_ncls_ncls_n
+import sys
+sys.path.append('import_files')
+import ncls
+import ncls_p
+import ncls_n
 
 class TestNCLS():
 
@@ -26,9 +28,9 @@ class TestNCLS():
     
     def setup_method(self,method):
         """Initialize the test problem. """
-        reload(test_ncls_ncls)
-        self.pList = [test_ncls_ncls_p]
-        self.nList = [test_ncls_ncls_n]        
+        reload(ncls)
+        self.pList = [ncls_p]
+        self.nList = [ncls_n]        
         self.sList = [default_s]
         self.so = default_so
         self.so.tnList = self.nList[0].tnList
@@ -40,12 +42,12 @@ class TestNCLS():
         pass
     
     def test_pure_advection_supg(self):
-        test_ncls_ncls.ct.level_set_function = 0 # distance function
-        test_ncls_ncls.ct.STABILIZATION_TYPE = 0 # SUPG
-        test_ncls_ncls.ct.COUPEZ = False
-        test_ncls_ncls.ct.DO_REDISTANCING = False
-        reload(test_ncls_ncls_n)
-        reload(test_ncls_ncls_p)
+        ncls.ct.level_set_function = 0 # distance function
+        ncls.ct.STABILIZATION_TYPE = 0 # SUPG
+        ncls.ct.COUPEZ = False
+        ncls.ct.DO_REDISTANCING = False
+        reload(ncls_n)
+        reload(ncls_p)
         self.so.name = self.pList[0].name+"_pureAdvection_SUPG"        
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
@@ -66,14 +68,14 @@ class TestNCLS():
         actual.close()
         
     def test_pure_advection_ev1(self):
-        test_ncls_ncls.ct.level_set_function = 0 # distance function
-        test_ncls_ncls.ct.STABILIZATION_TYPE = 1 # EV1
-        test_ncls_ncls.ct.SATURATED_LEVEL_SET = False
-        test_ncls_ncls.ct.ENTROPY_TYPE = 1 # quadratic entropy
-        test_ncls_ncls.ct.COUPEZ = False
-        test_ncls_ncls.ct.DO_REDISTANCING = False
-        reload(test_ncls_ncls_n)
-        reload(test_ncls_ncls_p)
+        ncls.ct.level_set_function = 0 # distance function
+        ncls.ct.STABILIZATION_TYPE = 1 # EV1
+        ncls.ct.SATURATED_LEVEL_SET = False
+        ncls.ct.ENTROPY_TYPE = 1 # quadratic entropy
+        ncls.ct.COUPEZ = False
+        ncls.ct.DO_REDISTANCING = False
+        reload(ncls_n)
+        reload(ncls_p)
         self.so.name = self.pList[0].name+"_pureAdvection_EV1"
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
@@ -94,14 +96,14 @@ class TestNCLS():
         actual.close()
         
     def test_coupez_with_redistancing_non_saturated(self):
-        test_ncls_ncls.ct.level_set_function = 0 # distance function
-        test_ncls_ncls.ct.STABILIZATION_TYPE = 1 # EV1
-        test_ncls_ncls.ct.SATURATED_LEVEL_SET = False
-        test_ncls_ncls.ct.ENTROPY_TYPE = 1
-        test_ncls_ncls.ct.COUPEZ = True
-        test_ncls_ncls.ct.DO_REDISTANCING = True
-        reload(test_ncls_ncls_n)
-        reload(test_ncls_ncls_p)
+        ncls.ct.level_set_function = 0 # distance function
+        ncls.ct.STABILIZATION_TYPE = 1 # EV1
+        ncls.ct.SATURATED_LEVEL_SET = False
+        ncls.ct.ENTROPY_TYPE = 1
+        ncls.ct.COUPEZ = True
+        ncls.ct.DO_REDISTANCING = True
+        reload(ncls_n)
+        reload(ncls_p)
         self.so.name = self.pList[0].name+"_non_saturated_ls"
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
@@ -122,14 +124,14 @@ class TestNCLS():
         actual.close()
         
     def test_coupez_with_redistancing_saturated(self):
-        test_ncls_ncls.ct.level_set_function = 1 # saturated distance function
-        test_ncls_ncls.ct.STABILIZATION_TYPE = 1 # EV2
-        test_ncls_ncls.ct.SATURATED_LEVEL_SET = True
-        test_ncls_ncls.ct.ENTROPY_TYPE = 2
-        test_ncls_ncls.ct.COUPEZ = True
-        test_ncls_ncls.ct.DO_REDISTANCING = True
-        reload(test_ncls_ncls_n)
-        reload(test_ncls_ncls_p)
+        ncls.ct.level_set_function = 1 # saturated distance function
+        ncls.ct.STABILIZATION_TYPE = 1 # EV2
+        ncls.ct.SATURATED_LEVEL_SET = True
+        ncls.ct.ENTROPY_TYPE = 2
+        ncls.ct.COUPEZ = True
+        ncls.ct.DO_REDISTANCING = True
+        reload(ncls_n)
+        reload(ncls_p)
         self.so.name = self.pList[0].name+"_saturated_ls"
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
