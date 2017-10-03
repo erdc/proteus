@@ -1599,14 +1599,15 @@ class NS_base:  # (HasTraits):
 
         #For aux quantity of interest (MQL)        
         try:
-            quantDOFs = {}
-            quantDOFs[0] = model.levelModelList[-1].quantDOFs
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   quantDOFs,
-                                                                   res_name_base='quantDOFs_for_'+model.name)
-            logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                quantDOFs = {}
+                quantDOFs[0] = model.levelModelList[-1].quantDOFs
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='quantDOFs_for_'+model.name)
+                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass   
 
@@ -1716,14 +1717,15 @@ class NS_base:  # (HasTraits):
             pass
         
         try:
-            quantDOFs = {}
-            quantDOFs[0] = model.levelModelList[-1].quantDOFs
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   quantDOFs,
-                                                                   res_name_base='quantDOFs_for_'+model.name)        
-            logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                quantDOFs = {}
+                quantDOFs[0] = model.levelModelList[-1].quantDOFs
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='quantDOFs_for_'+model.name)        
+                logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass
 

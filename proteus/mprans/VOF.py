@@ -259,7 +259,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  uL=0.0, 
                  uR=1.0,
                  # FOR ARTIFICIAL COMPRESSION
-                 cK=1.0):
+                 cK=1.0,
+                 # OUTPUT quantDOFs
+                 outputQuantDOFs = False):
 
         self.useMetrics = useMetrics
         self.variableNames=['vof']
@@ -308,7 +310,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.cK=cK
         self.forceStrongConditions=forceStrongConditions
         self.cE=cE
-
+        self.outputQuantDOFs=outputQuantDOFs
+        
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def attachModels(self,modelList):
@@ -542,7 +545,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  sd = True,
                  movingDomain=False,
                  bdyNullSpace=False):
-
+        
         self.auxiliaryCallCalculateResidual=False
         #
         #set the objects describing the method and boundary conditions
