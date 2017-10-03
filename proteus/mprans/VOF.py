@@ -328,7 +328,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_phi = numpy.zeros(self.model.ebqe[('u',0)].shape,'d')#cek hack, we don't need this
         #flow model
         #print "flow model index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))        
-
         if self.flowModelIndex is not None:
             if modelList[self.flowModelIndex].q.has_key(('velocity',0)):
                 self.q_v = modelList[self.flowModelIndex].q[('velocity',0)]
@@ -760,8 +759,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('advectiveFlux',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         # mql. Allow the user to provide functions to define the velocity field
         self.hasVelocityFieldAsFunction = False
-        if ('velocityField') in dir (options): 
-            self.velocityField = options.velocityField
+        if ('velocityFieldAsFunction') in dir (options): 
+            self.velocityFieldAsFunction = options.velocityFieldAsFunction
             self.hasVelocityFieldAsFunction = True
 
         self.points_elementBoundaryQuadrature= set()
@@ -943,19 +942,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              1:self.q[('x')][:,:,1],
              2:self.q[('x')][:,:,2]}
         t = self.timeIntegration.t
-        self.coefficients.q_v[...,0] = self.velocityField[0](X,t)
-        self.coefficients.q_v[...,1] = self.velocityField[1](X,t)
+        self.coefficients.q_v[...,0] = self.velocityFieldAsFunction[0](X,t)
+        self.coefficients.q_v[...,1] = self.velocityFieldAsFunction[1](X,t)
         if (self.nSpace_global==3):
-            self.coefficients.q_v[...,2] = self.velocityField[2](X,t)
+            self.coefficients.q_v[...,2] = self.velocityFieldAsFunction[2](X,t)
 
         # BOUNDARY
         ebqe_X = {0:self.ebqe['x'][:,:,0],
                   1:self.ebqe['x'][:,:,1],
                   2:self.ebqe['x'][:,:,2]}
-        self.coefficients.ebqe_v[...,0] = self.velocityField[0](ebqe_X,t)
-        self.coefficients.ebqe_v[...,1] = self.velocityField[1](ebqe_X,t)
+        self.coefficients.ebqe_v[...,0] = self.velocityFieldAsFunction[0](ebqe_X,t)
+        self.coefficients.ebqe_v[...,1] = self.velocityFieldAsFunction[1](ebqe_X,t)
         if (self.nSpace_global==3):
-            self.coefficients.ebqe_v[...,2] = self.velocityField[2](ebqe_X,t)
+            self.coefficients.ebqe_v[...,2] = self.velocityFieldAsFunction[2](ebqe_X,t)
 
     def calculateElementResidual(self):
         if self.globalResidualDummy != None:
