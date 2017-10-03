@@ -255,7 +255,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  redistancing_tolerance=0.1,
                  maxIter_redistancing=3,
                  lambda_coupez=0.1,
-                 cfl_redistancing=1.0):
+                 cfl_redistancing=1.0,
+                 # OUTPUT quantDOFs
+                 outputQuantDOFs=False):
 
         self.DO_SMOOTHING=DO_SMOOTHING
         self.COUPEZ=COUPEZ
@@ -272,6 +274,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.cfl_redistancing=cfl_redistancing
         self.epsCoupez=epsCoupez
         self.lambda_coupez=lambda_coupez
+        self.outputQuantDOFs=outputQuantDOFs
         self.movingDomain=movingDomain
         self.useMetrics=useMetrics
         self.epsFact=epsFact
