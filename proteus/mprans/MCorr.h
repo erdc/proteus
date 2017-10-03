@@ -12,6 +12,16 @@ namespace proteus
   {
   public:
     virtual ~MCorr_base(){}
+    virtual void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
+			 int numDOFs, //number of DOFs
+			 double* lumped_mass_matrix, //lumped mass matrix (as vector)
+			 double* solH, //DOFs of high order solution at tnp1
+			 double* solL,
+			 double* limited_solution,
+			 int* csrRowIndeces_DofLoops, //csr row indeces 
+			 int* csrColumnOffsets_DofLoops, //csr column offsets 
+			 double* MassMatrix //mass matrix
+			 )=0;
     virtual void calculateResidual(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -59,6 +69,43 @@ namespace proteus
 				   int* exteriorElementBoundariesArray,
 				   int* elementBoundaryElementsArray,
 				   int* elementBoundaryLocalElementBoundariesArray)=0;
+    virtual void calculateMassMatrix(//element (MQL)
+				   double* mesh_trial_ref,
+				   double* mesh_grad_trial_ref,
+				   double* mesh_dof,
+				   int* mesh_l2g,
+				   double* dV_ref,
+				   double* u_trial_ref,
+				   double* u_grad_trial_ref,
+				   double* u_test_ref,
+				   double* u_grad_test_ref,
+				   //element boundary
+				   double* mesh_trial_trace_ref,
+				   double* mesh_grad_trial_trace_ref,
+				   double* dS_ref,
+				   double* u_trial_trace_ref,
+				   double* u_grad_trial_trace_ref,
+				   double* u_test_trace_ref,
+				   double* u_grad_test_trace_ref,
+				   double* normal_ref,
+				   double* boundaryJac_ref,
+				   //physics
+				   int nElements_global,
+				   double useMetrics,
+				   double epsFactHeaviside,
+				   double epsFactDirac,
+				   double epsFactDiffusion,
+				   int* u_l2g,
+				   double* elementDiameter,
+				   double* nodeDiametersArray,
+				   double* u_dof, 
+				   double* q_phi,
+				   double* q_normal_phi,
+				   double* q_H,
+				   double* q_porosity,
+				   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				   double* globalJacobian, 
+				     double* globalLumpedMassMatrix)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -411,6 +458,84 @@ namespace proteus
     {
       r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H;
       dr = porosity*smoothedDirac(epsDirac,phi+u);
+    }
+
+    void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
+		 int numDOFs, //number of DOFs
+		 double* lumped_mass_matrix, //lumped mass matrix (as vector)
+		 double* solH, //DOFs of high order solution at tnp1
+		 double* solL,
+		 double* limited_solution,
+		 int* csrRowIndeces_DofLoops, //csr row indeces 
+		 int* csrColumnOffsets_DofLoops, //csr column offsets 
+		 double* MassMatrix //mass matrix
+		 )
+    {
+      register double Rpos[numDOFs], Rneg[numDOFs];
+      register double FluxCorrectionMatrix[NNZ];
+      //////////////////
+      // LOOP in DOFs //
+      //////////////////
+      int ij=0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  //read some vectors 
+	  double solHi = solH[i];
+	  double solLi = solL[i];
+	  double mi = lumped_mass_matrix[i];
+
+	  double mini=0., maxi=1.0;
+	  double Pposi=0, Pnegi=0;
+	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      // i-th row of flux correction matrix 
+	      FluxCorrectionMatrix[ij] = ((i==j ? 1. : 0.)*mi - MassMatrix[ij]) * (solH[j]-solHi);
+
+	      ///////////////////////
+	      // COMPUTE P VECTORS //
+	      ///////////////////////
+	      Pposi += FluxCorrectionMatrix[ij]*((FluxCorrectionMatrix[ij] > 0) ? 1. : 0.);
+	      Pnegi += FluxCorrectionMatrix[ij]*((FluxCorrectionMatrix[ij] < 0) ? 1. : 0.);
+
+	      //update ij 
+	      ij+=1;
+	    }
+	  ///////////////////////
+	  // COMPUTE Q VECTORS //
+	  ///////////////////////
+	  double Qposi = mi*(maxi-solLi);
+	  double Qnegi = mi*(mini-solLi);
+
+	  ///////////////////////
+	  // COMPUTE R VECTORS //
+	  ///////////////////////
+	  Rpos[i] = ((Pposi==0) ? 1. : std::min(1.0,Qposi/Pposi));
+	  Rneg[i] = ((Pnegi==0) ? 1. : std::min(1.0,Qnegi/Pnegi));
+	} // i DOFs
+      
+      //////////////////////
+      // COMPUTE LIMITERS // 
+      //////////////////////
+      ij=0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  double ith_Limiter_times_FluxCorrectionMatrix = 0.;
+	  double Rposi = Rpos[i], Rnegi = Rneg[i];
+	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      ith_Limiter_times_FluxCorrectionMatrix += 
+		((FluxCorrectionMatrix[ij]>0) ? std::min(Rposi,Rneg[j]) : std::min(Rnegi,Rpos[j])) 
+		* FluxCorrectionMatrix[ij];
+	      //ith_Limiter_times_FluxCorrectionMatrix += FluxCorrectionMatrix[ij];
+	      //update ij
+	      ij+=1;
+	    }
+	  limited_solution[i] = fmax(0.0,solL[i] + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix);
+	}
     }
 
     inline void calculateElementResidual(//element
@@ -792,9 +917,269 @@ namespace proteus
 		ebqe_n[ebNE_kb_nSpace+I] = grad_u_ext[I]/norm;
 	    }//kb
 	}//ebNE
-
-
     }
+
+    ///////////////////////////
+    // CALCULATE MASS MATRIX // (MQL)
+    ///////////////////////////
+    // copied from calculateElementJacobian. NOTE: there are some not necessary computations!!! 
+    inline void calculateElementMassMatrix(//element
+				     double* mesh_trial_ref,
+				     double* mesh_grad_trial_ref,
+				     double* mesh_dof,
+				     int* mesh_l2g,
+				     double* dV_ref,
+				     double* u_trial_ref,
+				     double* u_grad_trial_ref,
+				     double* u_test_ref,
+				     double* u_grad_test_ref,
+				     //element boundary
+				     double* mesh_trial_trace_ref,
+				     double* mesh_grad_trial_trace_ref,
+				     double* dS_ref,
+				     double* u_trial_trace_ref,
+				     double* u_grad_trial_trace_ref,
+				     double* u_test_trace_ref,
+				     double* u_grad_test_trace_ref,
+				     double* normal_ref,
+				     double* boundaryJac_ref,
+				     //physics
+				     int nElements_global,
+				     double useMetrics,
+				     double epsFactHeaviside,
+				     double epsFactDirac,
+				     double epsFactDiffusion,
+				     int* u_l2g,
+				     double* elementDiameter,
+				     double* nodeDiametersArray,
+				     double* u_dof, 
+				     // double* u_trial, 
+				     // double* u_grad_trial, 
+				     // double* u_test_dV, 
+				     // double* u_grad_test_dV, 
+				     double* q_phi,
+				     double* q_normal_phi,
+				     double* q_H,
+				     double* q_porosity,
+				     double* elementMassMatrix,
+				     double* elementLumpedMassMatrix,
+				     double* element_u,
+				     int eN)
+    {
+      for (int i=0;i<nDOF_test_element;i++)
+	{
+	  elementLumpedMassMatrix[i] = 0.0;
+	  for (int j=0;j<nDOF_trial_element;j++)
+	    {
+	      elementMassMatrix[i*nDOF_trial_element+j]=0.0;
+	    }
+	}
+      double epsHeaviside,epsDirac,epsDiffusion;
+      for  (int k=0;k<nQuadraturePoints_element;k++)
+	{
+	  int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
+	    eN_k_nSpace = eN_k*nSpace;
+	    //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
+	  
+	  //declare local storage
+	  register double u=0.0,
+	    grad_u[nSpace],
+	    r=0.0,dr=0.0,
+	    jac[nSpace*nSpace],
+	    jacDet,
+	    jacInv[nSpace*nSpace],
+	    u_grad_trial[nDOF_trial_element*nSpace],
+	    dV,
+	    u_test_dV[nDOF_test_element],
+	    u_grad_test_dV[nDOF_test_element*nSpace],
+	    x,y,z,
+	    G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
+	  //
+	  //calculate solution and gradients at quadrature points
+	  //
+	  ck.calculateMapping_element(eN,
+				      k,
+				      mesh_dof,
+				      mesh_l2g,
+				      mesh_trial_ref,
+				      mesh_grad_trial_ref,
+				      jac,
+				      jacDet,
+				      jacInv,
+				      x,y,z);
+	  ck.calculateH_element(eN,
+				k,
+				nodeDiametersArray,
+				mesh_l2g,
+				mesh_trial_ref,
+				h_phi);
+	  //get the physical integration weight
+	  dV = fabs(jacDet)*dV_ref[k];
+	  ck.calculateG(jacInv,G,G_dd_G,tr_G);
+	  
+	  /* double dir[nSpace]; */
+	  /* double norm = 1.0e-8; */
+	  /* for (int I=0;I<nSpace;I++) */
+	  /*   norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
+	  /* norm = sqrt(norm); */
+	  /* for (int I=0;I<nSpace;I++) */
+	  /*   dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
+	  /* ck.calculateGScale(G,dir,h_phi); */
+	  
+	  
+	  //get the trial function gradients
+	  ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+	  //get the solution 	
+	  ck.valFromElementDOF(element_u,&u_trial_ref[k*nDOF_trial_element],u);
+	  //get the solution gradients
+	  ck.gradFromElementDOF(element_u,u_grad_trial,grad_u);
+	  //precalculate test function products with integration weights
+	  for (int j=0;j<nDOF_trial_element;j++)
+	    {
+	      u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+	      for (int I=0;I<nSpace;I++)
+		{
+		  u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+		}
+	    }
+	  //
+	  //calculate pde coefficients and derivatives at quadrature points
+	  //
+	  epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	  epsDirac    =epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	  epsDiffusion=epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	  //    *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	  evaluateCoefficients(epsHeaviside,
+			       epsDirac,
+			       q_phi[eN_k],
+			       q_H[eN_k],
+			       u,
+			       q_porosity[eN_k],
+			       r,
+			       dr);
+	  for(int i=0;i<nDOF_test_element;i++)
+	    {
+	      //int eN_k_i=eN_k*nDOF_test_element+i;
+	      //int eN_k_i_nSpace=eN_k_i*nSpace;
+	      elementLumpedMassMatrix[i] += u_test_dV[i];
+	      for(int j=0;j<nDOF_trial_element;j++) 
+		{ 
+		  elementMassMatrix[i*nDOF_trial_element+j] += u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i];
+		}//j
+	    }//i
+	}//k
+    }
+
+    void calculateMassMatrix(//element
+			   double* mesh_trial_ref,
+			   double* mesh_grad_trial_ref,
+			   double* mesh_dof,
+			   int* mesh_l2g,
+			   double* dV_ref,
+			   double* u_trial_ref,
+			   double* u_grad_trial_ref,
+			   double* u_test_ref,
+			   double* u_grad_test_ref,
+			   //element boundary
+			   double* mesh_trial_trace_ref,
+			   double* mesh_grad_trial_trace_ref,
+			   double* dS_ref,
+			   double* u_trial_trace_ref,
+			   double* u_grad_trial_trace_ref,
+			   double* u_test_trace_ref,
+			   double* u_grad_test_trace_ref,
+			   double* normal_ref,
+			   double* boundaryJac_ref,
+			   //physics
+			   int nElements_global,
+			   double useMetrics,
+			   double epsFactHeaviside,
+			   double epsFactDirac,
+			   double epsFactDiffusion,
+			   int* u_l2g,
+			   double* elementDiameter,
+			   double* nodeDiametersArray,
+			   double* u_dof, 
+			   // double* u_trial, 
+			   // double* u_grad_trial, 
+			   // double* u_test_dV, 
+			   // double* u_grad_test_dV, 
+			   double* q_phi,
+			   double* q_normal_phi,
+			   double* q_H,
+			   double* q_porosity,
+			   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+			   double* globalMassMatrix, 
+			     double* globalLumpedMassMatrix)
+    {
+      //
+      //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
+      //
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  register double  elementMassMatrix[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element], elementLumpedMassMatrix[nDOF_trial_element];
+	  for (int j=0;j<nDOF_trial_element;j++)
+	    {
+	      register int eN_j = eN*nDOF_trial_element+j;
+	      element_u[j] = u_dof[u_l2g[eN_j]];
+	    }
+	  calculateElementMassMatrix(mesh_trial_ref,
+				   mesh_grad_trial_ref,
+				   mesh_dof,
+				   mesh_l2g,
+				   dV_ref,
+				   u_trial_ref,
+				   u_grad_trial_ref,
+				   u_test_ref,
+				   u_grad_test_ref,
+				   mesh_trial_trace_ref,
+				   mesh_grad_trial_trace_ref,
+				   dS_ref,
+				   u_trial_trace_ref,
+				   u_grad_trial_trace_ref,
+				   u_test_trace_ref,
+				   u_grad_test_trace_ref,
+				   normal_ref,
+				   boundaryJac_ref,
+				   nElements_global,
+				   useMetrics,
+				   epsFactHeaviside,
+				   epsFactDirac,
+				   epsFactDiffusion,
+				   u_l2g,
+				   elementDiameter,
+				   nodeDiametersArray,
+				   u_dof, 
+				   q_phi,
+				   q_normal_phi,
+				   q_H,
+				   q_porosity,
+				     elementMassMatrix,
+				     elementLumpedMassMatrix,
+				   element_u,
+				   eN);
+	  //
+	  //load into element Jacobian into global Jacobian
+	  //
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      int eN_i = eN*nDOF_test_element+i;
+	      int gi = u_l2g[eN_i];
+	      globalLumpedMassMatrix[gi] += elementLumpedMassMatrix[i];
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  int eN_i_j = eN_i*nDOF_trial_element+j;
+
+		  globalMassMatrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += 
+		    elementMassMatrix[i*nDOF_trial_element+j];
+		}//j
+	    }//i
+	}//elements
+    }//computeJacobian
+
+    //////////////////////////////////
+    // END OF COMPUTING MASS MATRIX // (MQL)
+    //////////////////////////////////
 
     inline void calculateElementJacobian(//element
 					 double* mesh_trial_ref,
@@ -936,13 +1321,14 @@ namespace proteus
 		  //int eN_k_j=eN_k*nDOF_trial_element+j;
 		  //int eN_k_j_nSpace = eN_k_j*nSpace;
 		  int j_nSpace = j*nSpace;
-		  
-		  elementJacobian_u_u[i*nDOF_trial_element+j] += ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) + 
+		  elementJacobian_u_u[i*nDOF_trial_element+j] += 
+		    ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) + 
 		    ck.NumericalDiffusionJacobian(epsDiffusion,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); 
 		}//j
 	    }//i
 	}//k
     }
+
     void calculateJacobian(//element
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
