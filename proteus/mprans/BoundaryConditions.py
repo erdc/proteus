@@ -71,8 +71,6 @@ class BC_RANS(BC_Base):
         self.pInc_dirichlet = BoundaryCondition() # pressure increment
         self.pInit_advective = BoundaryCondition() 
         self.pInc_advective = BoundaryCondition() 
-        self.pInit_diffusive = BoundaryCondition() 
-        self.pInc_diffusive = BoundaryCondition() 
 
     def reset(self):
         """
@@ -464,7 +462,7 @@ class BC_RANS(BC_Base):
             water level at global coordinate system.
         smoothing: float.
             range within smoothing function is valid.
-            [3.0 times mesh element size can be a good value].
+           [3.0 times mesh element size can be a good value]
         vert_axis: optional. 
             index of vertical in position vector, must always be
             aligned with gravity, by default set to 1].      

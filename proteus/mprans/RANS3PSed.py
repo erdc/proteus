@@ -196,7 +196,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
  		 fContact=0.02,
                  mContact=2.0,
                  nContact=5.0,
-                 angFriction=pi/6.0):
+                 angFriction=pi/6.0,
+                 vos_function=None,
+                 ):
         self.aDarcy=aDarcy
         self.betaForch=betaForch
         self.grain=grain
@@ -213,6 +215,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nContact=nContact
         self.angFriction=angFriction
         self.PSTAB=PSTAB
+        self.vos_function=vos_function
         self.barycenters = barycenters
         self.smagorinskyConstant = smagorinskyConstant
         self.turbulenceClosureModel = turbulenceClosureModel
@@ -386,10 +389,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.q_grad_p_fluid = modelList[self.PRESSURE_model].q[('grad(u)',0)]
             self.model.ebqe_grad_p_fluid = modelList[self.PRESSURE_model].ebqe[('grad(u)',0)]
         if self.VOS_model is not None:
-            self.model.vos_dof = modelList[self.VOS_model].u[0].dof
-            self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
-            self.model.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
-            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
+            self.model.vos_dof = modelList[self.VOS_model].u[0].dof.copy()
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)].copy()
+            self.model.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)].copy()
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)].copy()
         if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u', 0)]
             if modelList[self.LS_model].ebq.has_key(('u', 0)):
