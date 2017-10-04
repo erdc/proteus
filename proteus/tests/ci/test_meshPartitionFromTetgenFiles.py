@@ -19,7 +19,10 @@ import poisson_3d_tetgen_c0p2_n
 reload(poisson_3d_tetgen_p)
 reload(poisson_3d_tetgen_c0p1_n)
 reload(poisson_3d_tetgen_c0p2_n)
+import pytest
 
+@pytest.mark.modelTest
+@pytest.mark.poissonTest
 class TestPoissonTetgen():
 
     @classmethod
@@ -69,6 +72,7 @@ class TestPoissonTetgen():
         ns.calculateSolution('poisson_3d_c0p1')
         assert(True)
 
+    @pytest.mark.slowTest
     def test_c0p2(genMesh=True):
         reload(poisson_3d_tetgen_c0p2_n)
         pList = [poisson_3d_tetgen_p]
