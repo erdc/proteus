@@ -21,6 +21,7 @@ from scipy.sparse import csr_matrix
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 
+@pytest.mark.LinearAlgebraTools
 class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
 
     def setup_method(self,method):
