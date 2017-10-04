@@ -39,7 +39,23 @@ for arg in sys.argv:
         break
 
 setup(name='proteus',
-      version='1.3.3.dev0',
+      version='1.4.0.dev0',
+      classifiers=[
+          'Development Status :: 4 - Beta',
+          'Environment :: Console',
+          'Environment :: Web Environment',
+          'Intended Audience :: End Users/Desktop',
+          'Intended Audience :: Developers',
+          'Intended Audience :: Science/Research',
+          'License :: OSI Approved :: MIT License',
+          'Programming Language :: Python :: 2.7'
+          'Programming Language :: Python :: 2 :: Only',
+          'Programming Language :: Python :: Implementation :: CPython',
+          'Topic :: Scientific/Engineering :: Mathematics',
+          'Topic :: Scientific/Engineering :: Physics',
+          'Operating System :: MacOS :: MacOS X',
+          'Operating System :: POSIX',
+          ],
       description='Python tools for multiphysics modeling',
       author='The Proteus Developers',
       author_email='proteus-dev@googlegroups.com',

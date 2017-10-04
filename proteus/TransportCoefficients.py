@@ -9768,7 +9768,6 @@ class GroundwaterBryantDawsonIonExCoefficients(TC_base):
                                                         c[('dr',1,0)],
                                                         c[('dr',1,1)])
 
-from proteus import FemTools
 class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
     """
     version of Re where element material type id's used in evals
