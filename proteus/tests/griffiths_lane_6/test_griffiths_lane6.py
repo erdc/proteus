@@ -92,8 +92,8 @@ class TestRichards():
         expected_path = so.name+'_expected.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file(so.name+'.h5','r')
-        assert np.allclose(expected.root.displacement_t37,
-                           actual.root.displacement_t37,
+        assert np.allclose(expected.root.displacement_t1,
+                           actual.root.displacement_t1,
                            atol=1e-10)
         expected.close()
         actual.close()

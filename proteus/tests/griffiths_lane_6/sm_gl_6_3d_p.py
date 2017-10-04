@@ -105,7 +105,7 @@ if usePorePressure:
     coefficients = ElastoPlastic.Coefficients(modelType_block=smFlags,modelParams_block=smTypes,
                                               g=g,rhow=rhow,pa=pa,nd=nd,SRF=SRF_init,
                                               meIndex=0,
-                                              pore_pressure_file_base="richards",
+                                              pore_pressure_file_base="richards_expected",
                                               pore_pressure_field_path="/pressure_head_t1")
 else:
     coefficients = ElastoPlastic.Coefficients(modelType_block=smFlags,modelParams_block=smTypes,g=g,rhow=rhow,pa=pa,nd=nd,SRF=SRF_init)
