@@ -22,7 +22,7 @@ Profiling.verbose=True
 import numpy as np
 import pytest
 
-import bdm_tests_template_3dmesh as bt
+from post_processing.import_modules import bdm_tests_template_3dmesh as bt
 
 @pytest.mark.PostProcessingTools
 class TestBDM2Mesh3D():

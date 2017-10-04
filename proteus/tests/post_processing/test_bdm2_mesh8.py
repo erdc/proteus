@@ -21,7 +21,7 @@ Profiling.logLevel=7
 Profiling.verbose=True
 import numpy as np
 import pytest
-import bdm_tests_template_mesh8 as bt
+from post_processing.import_modules import bdm_tests_template_mesh8 as bt
 
 @pytest.mark.PostProcessingTools
 class TestBDM2Mesh8():

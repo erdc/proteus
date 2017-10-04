@@ -21,7 +21,7 @@ Profiling.logLevel=7
 Profiling.verbose=True
 import numpy as np
 import pytest
-import bdm_tests_3Dtemplate as bt_temp
+from post_processing.import_modules import bdm_tests_3Dtemplate as bt_temp
 
 @pytest.mark.PostProcessingTools
 class TestBDM2Reference1():
