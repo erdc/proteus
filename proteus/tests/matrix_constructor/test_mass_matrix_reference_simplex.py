@@ -10,11 +10,13 @@ import os
 import sys
 import inspect
 import numpy
+import pytest
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 import mass_matrix_reference_C0P1_2D as mm_2d_C0P1
 import mass_matrix_reference_TH_2D as mm_2d_TH
 
+@pytest.mark.LinearSolvers
 class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
     """ Verify construction of 2D Mass Matrix using transport coefficients """
 
