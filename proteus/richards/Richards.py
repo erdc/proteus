@@ -481,7 +481,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
-            if options == None or options.periodicDirichletConditions == None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,
@@ -549,7 +549,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #cek hack
         self.movingDomain=False
         self.MOVING_DOMAIN=0.0
-        if self.mesh.nodeVelocityArray==None:
+        if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')        
         self.forceStrongConditions=False
         self.dirichletConditionsForceDOF = {}
@@ -674,7 +674,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #pdb.set_trace()
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy == None:
+        if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
 	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
