@@ -45,8 +45,8 @@ class TestVOF():
         ########
         thelper_vof.ct.STABILIZATION_TYPE = 0 # SUPG
         thelper_vof.ct.FCT = False
-        reload(thelper_vof_n)
         reload(thelper_vof_p)
+        reload(thelper_vof_n)
         self.so.name = self.pList[0].name+"_SUPG"        
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
@@ -74,9 +74,9 @@ class TestVOF():
         thelper_vof.ct.ENTROPY_TYPE = 1 #polynomial
         thelper_vof.ct.cE = 1.0
         thelper_vof.ct.FCT = True
-        reload(thelper_vof_n)
         reload(thelper_vof_p)
-        self.so.name = self.pList[0].name+"_EV1"        
+        reload(thelper_vof_n)
+        self.so.name = self.pList[0].name+"_EV1"
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                self.pList,
@@ -100,8 +100,8 @@ class TestVOF():
         thelper_vof.ct.ENTROPY_TYPE = 2 #logarithmic
         thelper_vof.ct.cE = 0.1
         thelper_vof.ct.FCT = True
-        reload(thelper_vof_n)
         reload(thelper_vof_p)
+        reload(thelper_vof_n)
         self.so.name = self.pList[0].name+"_EV2"
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
@@ -124,8 +124,8 @@ class TestVOF():
     def test_SmoothnessBased(self):
         thelper_vof.ct.STABILIZATION_TYPE = 2 # EV
         thelper_vof.ct.FCT = True
-        reload(thelper_vof_n)
         reload(thelper_vof_p)
+        reload(thelper_vof_n)
         self.so.name = self.pList[0].name+"_SmoothnessBased"
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
