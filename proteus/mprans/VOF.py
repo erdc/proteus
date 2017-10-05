@@ -911,7 +911,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN=1.0
         else:
             self.MOVING_DOMAIN=0.0
-        if self.mesh.nodeVelocityArray==None:
+        if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
@@ -1127,13 +1127,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
         if (self.nSpace_global==3):
-            Cz = self.cterm_global[2].getCSRrepresentation()
+            rowptr, colind, Cz = self.cterm_global[2].getCSRrepresentation()
         else:
             Cz = numpy.zeros(Cx.shape,'d')
         rowptr, colind, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
         if (self.nSpace_global==3):
-            CTz = self.cterm_global_transpose[2].getCSRrepresentation()
+            rowptr, colind, CTz = self.cterm_global_transpose[2].getCSRrepresentation()
         else:
             CTz = numpy.zeros(CTx.shape,'d')
 
