@@ -900,7 +900,7 @@ class LevelModel(OneLevelTransport):
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
         if (self.nSpace_global==3):
-            Cz = self.cterm_global[2].getCSRrepresentation()
+            rowptr, colind, Cz = self.cterm_global[2].getCSRrepresentation()
         else:
             Cz = numpy.zeros(Cx.shape,'d')
 
@@ -1134,7 +1134,7 @@ class LevelModel(OneLevelTransport):
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
         if (self.nSpace_global==3):
-            Cz = self.cterm_global[2].getCSRrepresentation()
+            rowptr, colind, Cz = self.cterm_global[2].getCSRrepresentation()
         else:
             Cz = numpy.zeros(Cx.shape,'d')
 
