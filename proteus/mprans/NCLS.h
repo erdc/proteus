@@ -1871,7 +1871,7 @@ namespace proteus
 
 		  // compute dissipative term
 		  ith_dissipative_term += dHij*(solnj-solni);
-		  dLowii -= dLowij;
+		  dLowii -= dHij;
 		}
 	      //update ij
 	      ij+=1;
