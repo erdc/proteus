@@ -14,7 +14,7 @@ atol_res = {0:1.0e-4}
 timeIntegration_vof = "BE"
 timeIntegration_ls = "BE"
 #if want bdf2 or bdf1
-timeOrder = 1
+timeOrder = 2
 runCFL = 0.3#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 #
 #spatial approximation orders
@@ -39,7 +39,7 @@ lRefinement=1
 #soname="vortexcgp2_bdf2_mc"+`lRefinement`
 pseudo2D=True
 if pseudo2D:
-    nn=nnx=nny=(2**lRefinement)*10+1
+    nn=nnx=nny=(2**lRefinement)*5+1
     nnz=2
     he=1.0/(nnx-1.0)
     L=[1.0,1.0,he]

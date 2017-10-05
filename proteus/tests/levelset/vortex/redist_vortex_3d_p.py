@@ -4,6 +4,7 @@ from math import *
 from vortex import *
 from proteus.mprans import RDLS
 import ls_vortex_3d_p
+name=soname+"_rdls"
 
 LevelModelType = RDLS.LevelModel
 
