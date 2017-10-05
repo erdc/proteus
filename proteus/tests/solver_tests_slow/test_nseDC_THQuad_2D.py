@@ -48,8 +48,8 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         self.ns.calculateSolution('stokes')
         
         relpath = 'comparison_files/drivenCavityNSE_LSC_expected.h5'
-        expected = tables.openFile(os.path.join(self._scriptdir,relpath))
-        actual = tables.openFile('drivenCavityNSETrial.h5','r')
+        expected = tables.open_file(os.path.join(self._scriptdir,relpath))
+        actual = tables.open_file('drivenCavityNSETrial.h5','r')
         assert numpy.allclose(expected.root.velocity_t7,
                               actual.root.velocity_t7,
                               atol=1e-2)
