@@ -74,8 +74,8 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
                                             opts)
         self.ns.calculateSolution('stokes')
         relpath = 'comparison_files/drivenCavityStokes_expected.h5'
-        expected = tables.openFile(os.path.join(self._scriptdir,relpath))
-        actual = tables.openFile('drivenCavityStokesTrial.h5','r')
+        expected = tables.open_file(os.path.join(self._scriptdir,relpath))
+        actual = tables.open_file('drivenCavityStokesTrial.h5','r')
         assert numpy.allclose(expected.root.velocity_t1,
                               actual.root.velocity_t1,
                               atol=1e-2)
