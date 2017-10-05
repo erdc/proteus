@@ -35,7 +35,7 @@ else:
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 #spatial mesh
-lRefinement=3
+lRefinement=1
 #tag simulation name to level of refinement
 #soname="vortexcgp2_bdf2_mc"+`lRefinement`
 nn=nnx=nny=(2**lRefinement)*10+1

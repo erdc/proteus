@@ -4,7 +4,7 @@ from math import *
 from vortex2D import *
 from proteus.mprans import RDLS
 import ls_vortex_2d_p
-
+name = soname+"_rdls"
 LevelModelType = RDLS.LevelModel
 
 coefficients = RDLS.Coefficients(applyRedistancing=applyRedistancing,

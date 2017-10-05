@@ -57,7 +57,7 @@ class OscillatingVortex2Dcylinder:
 
 analyticalSolution = {0:OscillatingVortex2D(L)}
 
-class UnitSquareVortex(TransportCoefficients.TC_base):
+class UnitSquareVortex(NCLS.Coefficients):
     from proteus.ctransportCoefficients import unitSquareVortexEvaluate
     from proteus.ctransportCoefficients import unitSquareVortexLevelSetEvaluate
     def __init__(self,useHJ=False,epsFact=1.5,checkMass=False,
@@ -79,14 +79,7 @@ class UnitSquareVortex(TransportCoefficients.TC_base):
             hamiltonian={0:{0:'linear'}}
         else:
             hamiltonian={}
-        TransportCoefficients.TC_base.__init__(self,
-                                             1,
-                                             mass,
-                                             advection,
-                                             diffusion,
-                                             potential,
-                                             reaction,
-                                             hamiltonian)
+        NCLS.Coefficients.__init__(self)
         self.checkMass=checkMass
         self.useMetrics = 0.0
 	self.sc_uref=1.0
