@@ -99,7 +99,7 @@ class AR_base:
                 self.dataItemFormat="HDF"
             elif self.hasTables and not useTextArchive:
                 self.hdfFilename=filename+str(self.rank)+".h5"
-                self.hdfFile=tables.openFile(os.path.join(self.dataDir,
+                self.hdfFile=tables.open_file(os.path.join(self.dataDir,
                                                           self.hdfFilename),
                                              mode = "a",
                                              title = filename+" Data")
@@ -143,13 +143,13 @@ class AR_base:
                 self.dataItemFormat="HDF"
             elif self.hasTables and not useTextArchive:
                 self.hdfFilename=filename+str(self.rank)+".h5"
-                self.hdfFile=tables.openFile(os.path.join(self.dataDir,
+                self.hdfFile=tables.open_file(os.path.join(self.dataDir,
                                                           self.hdfFilename),
                                              mode = "r",
                                              title = filename+" Data")
                 try:
                     # The "global" extension is hardcoded in collect.py
-                    self.hdfFileGlb=tables.openFile(os.path.join(self.dataDir,
+                    self.hdfFileGlb=tables.open_file(os.path.join(self.dataDir,
                                                                  filename+"global.h5"),
                                                     mode = "r",
                                                     title = filename+" Data")
@@ -192,7 +192,7 @@ class AR_base:
                 self.comm.barrier()
             elif self.hasTables and not useTextArchive:
                 self.hdfFilename=filename+str(self.rank)+".h5"
-                self.hdfFile=tables.openFile(os.path.join(self.dataDir,
+                self.hdfFile=tables.open_file(os.path.join(self.dataDir,
                                                           self.hdfFilename),
                                              mode = "w",
                                              title = filename+" Data")
