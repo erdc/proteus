@@ -31,7 +31,7 @@ class TestRichards():
     def setup_method(self,method):
         self.aux_names = []
         self.meshdir = os.path.dirname(os.path.abspath(__file__))
-        self._scriptdir = os.path.dirname(__file__)
+        self._scriptdir = os.path.dirname(os.path.abspath(__file__))
         
     def teardown_method(self,method):
         filenames = []

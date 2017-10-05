@@ -1,3 +1,4 @@
+import os
 from proteus import *
 from proteus.default_p import *
 from proteus.elastoplastic import ElastoPlastic
@@ -105,7 +106,8 @@ if usePorePressure:
     coefficients = ElastoPlastic.Coefficients(modelType_block=smFlags,modelParams_block=smTypes,
                                               g=g,rhow=rhow,pa=pa,nd=nd,SRF=SRF_init,
                                               meIndex=0,
-                                              pore_pressure_file_base="richards_expected",
+                                              pore_pressure_file_base=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                                                   "richards_expected"),
                                               pore_pressure_field_path="/pressure_head_t1")
 else:
     coefficients = ElastoPlastic.Coefficients(modelType_block=smFlags,modelParams_block=smTypes,g=g,rhow=rhow,pa=pa,nd=nd,SRF=SRF_init)
