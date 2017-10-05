@@ -311,7 +311,7 @@ doc:
 test: check
 	@echo "************************************"
 	@echo "Running test suite"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
 	@echo "Tests complete "
 	@echo "************************************"
 

@@ -59,8 +59,8 @@ class TestNCLS():
         ns.calculateSolution('ncls')
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/ncls_level_3_pureAdvection_SUPG.h5'
-        expected = tables.openFile(os.path.join(self._scriptdir,expected_path))
-        actual = tables.openFile('ncls_level_3_pureAdvection_SUPG.h5','r')
+        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        actual = tables.open_file('ncls_level_3_pureAdvection_SUPG.h5','r')
         assert np.allclose(expected.root.u_t2,
                            actual.root.u_t2,
                            atol=1e-10)
@@ -87,8 +87,8 @@ class TestNCLS():
         ns.calculateSolution('ncls')
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/ncls_level_3_pureAdvection_EV1.h5'
-        expected = tables.openFile(os.path.join(self._scriptdir,expected_path))
-        actual = tables.openFile('ncls_level_3_pureAdvection_EV1.h5','r')
+        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        actual = tables.open_file('ncls_level_3_pureAdvection_EV1.h5','r')
         assert np.allclose(expected.root.u_t2,
                            actual.root.u_t2,
                            atol=1e-10)
@@ -115,8 +115,8 @@ class TestNCLS():
         ns.calculateSolution('ncls')
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/ncls_level_3_non_saturated_ls.h5'
-        expected = tables.openFile(os.path.join(self._scriptdir,expected_path))
-        actual = tables.openFile('ncls_level_3_non_saturated_ls.h5','r')
+        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        actual = tables.open_file('ncls_level_3_non_saturated_ls.h5','r')
         assert np.allclose(expected.root.u_t2,
                            actual.root.u_t2,
                            atol=1e-10)
@@ -143,8 +143,8 @@ class TestNCLS():
         ns.calculateSolution('ncls')                
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/ncls_level_3_saturated_ls.h5'
-        expected = tables.openFile(os.path.join(self._scriptdir,expected_path))
-        actual = tables.openFile('ncls_level_3_saturated_ls.h5','r')
+        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        actual = tables.open_file('ncls_level_3_saturated_ls.h5','r')
         assert np.allclose(expected.root.u_t2,
                            actual.root.u_t2,
                            atol=1e-10)
