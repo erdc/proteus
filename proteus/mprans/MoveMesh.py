@@ -158,13 +158,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='Plasticity',
                  reuse_trial_and_test_quadrature=True,
                  sd = True,
-                 movingDomain=False):
+                 movingDomain=False,
+                 bdyNullSpace=False):
         #
         #set the objects describing the method and boundary conditions
         #
         self.moveCalls = 0
         self.movingDomain=movingDomain
         self.tLast_mesh=None
+        self.bdyNullSpace = bdyNullSpace
         #
         #cek todo clean up these flags in the optimized version
         self.bcsTimeDependent=options.bcsTimeDependent
