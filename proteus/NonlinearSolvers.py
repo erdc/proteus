@@ -962,7 +962,7 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
                 return self.failedFlag
             else:
                 logEvent("+++++ L2 projection of mass-corrected VOF +++++",level=2)
-                if (self.F.MassMatrix is None): 
+                if (self.F.MassMatrix is None):
                     self.F.getMassMatrix()
                     # Set matrix of linear solver to be the Mass Matrix
                     self.linearSolver.L = self.F.MassMatrix
@@ -974,7 +974,7 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
                     # Compute the new sparse factor; i.e., self.F.MassMatrix_sparseFactor
                     self.linearSolver.prepare(b=r)
                 # Compute rhs for L2 projection and low (lumped) L2 projection
-                self.F.setMassQuadrature()
+                self.F.setMassQuadratureEdgeBasedStabilizationMethods()
                 r[:] = self.F.rhs_mass_correction
                 # Solve mass matrix for L2 projection
                 self.du[:]=0.0
