@@ -1395,11 +1395,11 @@ namespace proteus
         duc_dv = v/(uc+1.0e-12);
         duc_dw = w/(uc+1.0e-12);
         double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
-        double new_beta = closure.betaCoeff(1.0-phi_s,
-                                            rho,
-                                            fluid_velocity,
-                                            solid_velocity,
-                                            viscosity);
+        double new_beta =0.0;// closure.betaCoeff(1.0-phi_s,
+                             //               rho,
+                             //               fluid_velocity,
+                             //               solid_velocity,
+                             //               viscosity);
 
         new_beta /= rho;
         mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s);
