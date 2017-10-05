@@ -4,7 +4,27 @@ from proteus.mprans.cMCorr import *
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import levelSetConservationCoefficientsEvaluate
     from proteus.ctransportCoefficients import levelSetConservationCoefficientsEvaluate_sd
-    def __init__(self,applyCorrection=True,epsFactHeaviside=0.0,epsFactDirac=1.0,epsFactDiffusion=2.0,LSModel_index=3,V_model=2,me_model=5,VOFModel_index=4,checkMass=True,sd=True,nd=None,applyCorrectionToDOF=True,useMetrics=0.0,useConstantH=False):
+    def __init__(self,
+                 applyCorrection=True,
+                 epsFactHeaviside=0.0,
+                 epsFactDirac=1.0,
+                 epsFactDiffusion=2.0,
+                 LSModel_index=3,
+                 V_model=2,
+                 me_model=5,
+                 VOFModel_index=4,
+                 checkMass=True,
+                 sd=True,
+                 nd=None,
+                 applyCorrectionToDOF=True,
+                 useMetrics=0.0,
+                 useConstantH=False,
+                 # mql. For edge based stabilization methods
+                 useQuadraticRegularization=False,
+                 edgeBasedStabilizationMethods=False):
+
+        self.useQuadraticRegularization=useQuadraticRegularization
+        self.edgeBasedStabilizationMethods=edgeBasedStabilizationMethods                 
         self.useConstantH=useConstantH
         self.useMetrics=useMetrics
         self.sd=sd
@@ -35,6 +55,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          self.variableNames,
                          sparseDiffusionTensors=sdInfo,
                          useSparseDiffusion = sd)
+        self.useQuadraticRegularization=useQuadraticRegularization
+        self.edgeBasedStabilizationMethods=edgeBasedStabilizationMethods
         self.levelSetModelIndex=LSModel_index
         self.flowModelIndex=V_model
         self.epsFactHeaviside=epsFactHeaviside
@@ -53,7 +75,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.h=mesh.h
         self.epsHeaviside = self.epsFactHeaviside*mesh.h
         self.epsDirac = self.epsFactDirac*mesh.h
-        self.epsDiffusion = self.epsFactDiffusion*mesh.h
+        self.epsDiffusion = (self.epsFactDiffusion*mesh.h*
+                             (mesh.h if self.useQuadraticRegularization==True else 1.))
     def attachModels(self,modelList):
         import copy
         logEvent("Attaching models in LevelSetConservation")
@@ -69,6 +92,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebq_u_ls = modelList[self.levelSetModelIndex].ebq[('u',0)]
         else:
             self.ebq_u_ls = None
+
         #volume of fluid
         self.vofModel = modelList[self.VOFModelIndex]
         self.q_H_vof = modelList[self.VOFModelIndex].q[('u',0)]
@@ -139,7 +163,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 	    self.lsModel.q[('grad(u)',0)] += self.massCorrModel.q[('grad(u)',0)]
 	    self.lsModel.ebqe[('grad(u)',0)] += self.massCorrModel.ebqe[('grad(u)',0)]
             #vof
-            self.massCorrModel.setMassQuadrature()
+            if self.edgeBasedStabilizationMethods==False:
+                self.massCorrModel.setMassQuadrature()
+            #else setMassQuadratureEdgeBasedStabilizationMethods is called within specialized nolinear solver
+            
             #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
             #####print "********************max VOF************************",max(self.vofModel.q[('u',0)].flat[:])
         if self.checkMass:
@@ -479,6 +506,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
         self.setupFieldStrides()
 
+        # (MQL)
+        self.MassMatrix=None #consistent mass matrix
+        self.LumpedMassMatrix=None
+        self.rhs_mass_correction = None
+        self.MassMatrix_sparseFactor=None
+        self.Jacobian_sparseFactor=None
+        self.lumped_L2p_vof_mass_correction=None
+        self.limited_L2p_vof_mass_correction=None
+        self.L2p_vof_mass_correction=None
+
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -538,6 +575,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
     #mwf these are getting called by redistancing classes,
+    def FCTStep(self):
+        rowptr, colind, MassMatrix = self.MassMatrix.getCSRrepresentation()
+        if (self.limited_L2p_vof_mass_correction is None):
+            self.limited_L2p_vof_mass_correction = numpy.zeros(self.LumpedMassMatrix.size,'d')
+
+        self.mcorr.FCTStep(
+            self.nnz, #number of non zero entries 
+            len(rowptr)-1, #number of DOFs
+            self.LumpedMassMatrix, #Lumped mass matrix
+            self.L2p_vof_mass_correction, # high order projection
+            self.lumped_L2p_vof_mass_correction, #low order projection
+            self.limited_L2p_vof_mass_correction,
+            rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
+            colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
+            MassMatrix)        
+    
     def calculateCoefficients(self):
         pass
     def calculateElementResidual(self):
@@ -605,10 +658,68 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray)
         logEvent("Global residual",level=9,data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
-        logEvent("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
+        logEvent("   Mass Conservation Error: ",level=3,data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
+
+    # GET MASS MATRIX # (MQL)
+    def getMassMatrix(self):
+        #NOTE. Both, the consistent and the lumped mass matrix must be init to zero
+        if (self.MassMatrix is None):
+            rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+            self.MassMatrix_a = nzval.copy()
+            nnz = nzval.shape[-1] #number of non-zero entries in sparse matrix
+            self.MassMatrix = LinearAlgebraTools.SparseMat(self.nFreeDOF_global[0],
+                                                           self.nFreeDOF_global[0],
+                                                           nnz,
+                                                           self.MassMatrix_a,
+                                                           colind,
+                                                           rowptr)
+            # Lumped mass matrix
+            self.LumpedMassMatrix = numpy.zeros(rowptr.size-1,'d')
+        else:
+            self.LumpedMassMatrix.fill(0.0)
+
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       self.MassMatrix)
+        self.mcorr.calculateMassMatrix(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            #element boundary
+            self.u[0].femSpace.elementMaps.psi_trace,
+            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.elementBoundaryQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
+            self.mesh.nElements_global,
+            self.coefficients.useMetrics,
+            self.coefficients.epsFactHeaviside,
+            self.coefficients.epsFactDirac,
+            self.coefficients.epsFactDiffusion,
+            self.u[0].femSpace.dofMap.l2g,
+            self.elementDiameter,#self.mesh.elementDiametersArray,
+            self.mesh.nodeDiametersArray,
+            self.u[0].dof,
+            self.coefficients.q_u_ls,
+			self.coefficients.q_n_ls,
+            self.coefficients.q_H_vof,
+            self.coefficients.q_porosity,
+            self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
+            self.MassMatrix, 
+            self.LumpedMassMatrix)
+
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,jacobian)
         self.mcorr.calculateJacobian(#element
@@ -940,6 +1051,69 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray))
+
+    def setMassQuadratureEdgeBasedStabilizationMethods(self):
+        #Compute mass matrix
+        #Set rhs of mass correction to zero
+        if self.rhs_mass_correction is None:
+            self.rhs_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape,'d')
+            self.lumped_L2p_vof_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape,'d')
+            self.L2p_vof_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape,'d')
+        else: 
+            self.rhs_mass_correction.fill(0.0)
+        
+        self.mcorr.setMassQuadratureEdgeBasedStabilizationMethods(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            #element boundary
+            self.u[0].femSpace.elementMaps.psi_trace,
+            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.elementBoundaryQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
+            #physics
+            self.mesh.nElements_global,
+	    self.coefficients.useMetrics,
+            self.coefficients.epsFactHeaviside,
+            self.coefficients.epsFactDirac,
+            self.coefficients.epsFactDiffusion,
+            self.coefficients.lsModel.u[0].femSpace.dofMap.l2g,
+            self.elementDiameter,#self.mesh.elementDiametersArray,
+            self.mesh.nodeDiametersArray,
+            self.coefficients.lsModel.u[0].dof,
+            self.coefficients.q_u_ls,
+            self.coefficients.q_n_ls,
+            self.coefficients.ebqe_u_ls,
+            self.coefficients.ebqe_n_ls,
+            self.coefficients.q_H_vof,
+            self.q[('u',0)],
+            self.q[('grad(u)',0)],
+            self.ebqe[('u',0)],
+            self.ebqe[('grad(u)',0)],
+            self.q[('r',0)],
+            self.coefficients.q_porosity,
+            self.offset[0],self.stride[0],
+            self.u[0].dof,#dummy r,not used
+            self.mesh.nExteriorElementBoundaries_global,
+            self.mesh.exteriorElementBoundariesArray,
+            self.mesh.elementBoundaryElementsArray,
+            self.mesh.elementBoundaryLocalElementBoundariesArray,
+            self.rhs_mass_correction, # (MQL): compute rhs for L2 projection. 
+            self.lumped_L2p_vof_mass_correction, 
+            self.LumpedMassMatrix,
+            self.lumped_L2p_vof_mass_correction.size)
+        
     def setMassQuadrature(self):
         self.mcorr.setMassQuadrature(#element
             self.u[0].femSpace.elementMaps.psi,
@@ -989,7 +1163,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.vofModel.u[0].dof)
-        #self.coefficients.q_H_vof.flat[:]=777.0
+
     def calculateSolutionAtQuadrature(self):
         pass
     def updateAfterMeshMotion(self):
