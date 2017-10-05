@@ -21,6 +21,9 @@ import nseDrivenCavity_2d_n
 import nseDrivenCavity_2d_p
 from NavierStokes_ST_LS_SO_VV import NavierStokes_ST_LS_SO_VV
 
+@pytest.mark.LinearSolvers
+@pytest.mark.modelTest
+@pytest.mark.navierstokesTest
 class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
 
     def setup_method(self):
@@ -60,7 +63,8 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         L1 = expected_log.get_ksp_resid_it_info(plot_lst)
         L2 = actual_log.get_ksp_resid_it_info(plot_lst)
         assert L1 == L2        
-        
+
+    @pytest.mark.slowTest
     def test_01_FullRun(self):
         """Runs with nsedriven cavity with the following settings.
         - RE enforced through viscosity
