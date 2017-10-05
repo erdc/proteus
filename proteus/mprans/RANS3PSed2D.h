@@ -634,11 +634,11 @@ namespace proteus
       //..hardwired
       
       //u momentum accumulation
-      mom_u_acc=u;//trick for non-conservative form
+      mom_u_acc=vos*u;//trick for non-conservative form
       dmom_u_acc_u=vos;
   
       //v momentum accumulation
-      mom_v_acc=v;
+      mom_v_acc=vos*v;
       dmom_v_acc_v=vos;
   
       /* //w momentum accumulation */
@@ -715,20 +715,20 @@ namespace proteus
       /* dmom_w_adv_w[2]=0.0; */
 
       //u momentum diffusion tensor
-      mom_uu_diff_ten[0] = vos*2.0*nu;
-      mom_uu_diff_ten[1] = vos*nu;
+      mom_uu_diff_ten[0] =0.0;// vos*2.0*nu;
+      mom_uu_diff_ten[1] =0.0;// vos*nu;
       /* mom_uu_diff_ten[2] = vos*nu; */
   
-      mom_uv_diff_ten[0]=vos*nu;
+      mom_uv_diff_ten[0]=0.0;//vos*nu;
   
       /* mom_uw_diff_ten[0]=vos*nu; */
   
       //v momentum diffusion tensor
-      mom_vv_diff_ten[0] = vos*nu;
-      mom_vv_diff_ten[1] = vos*2.0*nu;
+      mom_vv_diff_ten[0] =0.0;// vos*nu;
+      mom_vv_diff_ten[1] =0.0;// vos*2.0*nu;
       /* mom_vv_diff_ten[2] = vos*nu; */
   
-      mom_vu_diff_ten[0]=vos*nu;
+      mom_vu_diff_ten[0]=0.0;//vos*nu;
   
       /* mom_vw_diff_ten[0]=vos*nu; */
   
@@ -766,15 +766,15 @@ namespace proteus
       /* dmom_w_ham_grad_p[2]=vos/rho; */
 
       //u momentum Hamiltonian (advection)
-      mom_u_ham += vos*(uStar*grad_u[0]+vStar*grad_u[1]);
-      dmom_u_ham_grad_u[0]=vos*uStar;
-      dmom_u_ham_grad_u[1]=vos*vStar;
+      mom_u_ham += 0.0;// vos*(uStar*grad_u[0]+vStar*grad_u[1]);
+      dmom_u_ham_grad_u[0]=0.0;// vos*uStar;
+      dmom_u_ham_grad_u[1]=0.0;// vos*vStar;
       /* dmom_u_ham_grad_u[2]=vos*wStar; */
   
       //v momentum Hamiltonian (advection)
-      mom_v_ham += vos*(uStar*grad_v[0]+vStar*grad_v[1]);
-      dmom_v_ham_grad_v[0]=vos*uStar;
-      dmom_v_ham_grad_v[1]=vos*vStar;
+      mom_v_ham += 0.0;// vos*(uStar*grad_v[0]+vStar*grad_v[1]);
+      dmom_v_ham_grad_v[0]=0.0;// vos*uStar;
+      dmom_v_ham_grad_v[1]=0.0;// vos*vStar;
       /* dmom_v_ham_grad_v[2]=vos*wStar; */
       
       /* //w momentum Hamiltonian (advection) */
@@ -836,21 +836,21 @@ namespace proteus
                                           viscosity);
       new_beta/=rho;
       //std::cout<<"total "<<(1.0-phi_s)*new_beta<<std::endl;
-      mom_u_source += (1.0 - phi_s)*new_beta*(u-u_f);
-      mom_v_source += (1.0 - phi_s)*new_beta*(v-v_f);
+      mom_u_source += 1e-10;// (1.0 - phi_s)*new_beta*(u-u_f);
+      mom_v_source += 1e-10;// (1.0 - phi_s)*new_beta*(v-v_f);
       /* mom_w_source += phi_s*new_beta*(w-w_s); */
 
-      dmom_u_source[0] = (1.0 - phi_s)*new_beta;
+      dmom_u_source[0] = 1e-10;// (1.0 - phi_s)*new_beta;
       dmom_u_source[1] = 0.0;
       /* dmom_u_source[2] = 0.0; */
       
       dmom_v_source[0] = 0.0;
-      dmom_v_source[1] = (1.0 - phi_s)*new_beta;
+      dmom_v_source[1] = 1e-10;// (1.0 - phi_s)*new_beta;
       dmom_v_source[2] = 0.0;
 
       dmom_w_source[0] = 0.0;
       dmom_w_source[1] = 0.0;
-      dmom_w_source[2] = (1.0 - phi_s)*new_beta;
+      dmom_w_source[2] = 1e-10;// (1.0 - phi_s)*new_beta;
     }
 
     inline
