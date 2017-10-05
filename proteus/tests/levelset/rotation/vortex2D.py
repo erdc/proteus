@@ -39,7 +39,7 @@ partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 lRefinement=1
 #tag simulation name to level of refinement
 #soname="vortexcgp2_bdf2_mc"+`lRefinement`
-nn=nnx=nny=(2**lRefinement)*10+1
+nn=nnx=nny=(2**lRefinement)*5+1
 nnz=1
 he=1.0/(nnx-1.0)
 L=[1.0,1.0]
