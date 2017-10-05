@@ -104,7 +104,7 @@ class TwophaseDarcyFlow_base(TC_base):
                 self.rwork_psk[i,0] = Sw_min
                 self.rwork_psk[i,1] = Sw_max
         elif self.psk_model in ['VGM','VGB']:
-            assert(vg_alpha_types != None and vg_m_types  != None)
+            assert(vg_alpha_types is not None and vg_m_types  is not None)
             self.rwork_psk = numpy.zeros((self.nTypesAvailable,4),'d')
             for Sw_min,Sw_max,vg_alpha,vg_m,i in zip(Sw_min_types,Sw_max_types,vg_alpha_types,vg_m_types,range(self.nTypesAvailable)):
                 self.rwork_psk[i,0] = Sw_min
@@ -112,7 +112,7 @@ class TwophaseDarcyFlow_base(TC_base):
                 self.rwork_psk[i,2] = vg_alpha
                 self.rwork_psk[i,3] = vg_m
         elif self.psk_model in ['BCM','BCB']:
-            assert(bc_lambda_types != None and bc_lambda_types  != None)
+            assert(bc_lambda_types is not None and bc_lambda_types  is not None)
             self.rwork_psk = numpy.zeros((self.nTypesAvailable,4),'d')
             for Sw_min,Sw_max,bc_pd,bc_lambda,i in zip(Sw_min_types,Sw_max_types,bc_pd_types,bc_lambda_types,range(self.nTypesAvailable)):
                 self.rwork_psk[i,0] = Sw_min
@@ -142,7 +142,7 @@ class TwophaseDarcyFlow_base(TC_base):
         if self.hasMaterialTypes and not self.isHomogeneous:
             self.materialTypes_q = self.elementMaterialTypes
             self.q_shape = cq[('u',0)].shape
-        elif self.setParams != None:
+        elif self.setParams is not None:
             self.rwork_psk_q = numpy.zeros(cq[('u',0)].shape+(self.len_rwork_psk,),'d')
             self.Ks_q = numpy.zeros(cq[('u',0)].shape,'d')
             self.omega_q = numpy.zeros(cq[('u',0)].shape,'d')
@@ -165,7 +165,7 @@ class TwophaseDarcyFlow_base(TC_base):
             self.ebq_shape = cebq[('u',0)].shape
             for eN in range(self.elementMaterialTypes.shape[0]):
                 self.materialTypes_ebq[eN,:] = self.elementMaterialTypes[eN]
-        elif self.setParams != None:
+        elif self.setParams is not None:
             self.rwork_psk_ebq = numpy.zeros(cebq[('u',0)].shape+(self.len_rwork_psk,),'d')
             self.Ks_ebq = numpy.zeros(cebq[('u',0)].shape,'d')
             self.omega_ebq = numpy.zeros(cebq[('u',0)].shape,'d')
@@ -182,7 +182,7 @@ class TwophaseDarcyFlow_base(TC_base):
             self.ebqe_shape = cebqe[('u',0)].shape
             for ebNE in range(self.exteriorElementBoundaryTypes.shape[0]):
                 self.materialTypes_ebqe[ebNE] = self.exteriorElementBoundaryTypes[ebNE]
-        elif self.setParams != None:
+        elif self.setParams is not None:
             self.rwork_psk_ebqe = numpy.zeros(cebqe[('u',0)].shape+(self.len_rwork_psk,),'d')
             self.Ks_ebqe = numpy.zeros(cebqe[('u',0)].shape,'d')
             self.omega_ebqe = numpy.zeros(cebqe[('u',0)].shape,'d')
@@ -198,7 +198,7 @@ class TwophaseDarcyFlow_base(TC_base):
             self.ip_shape = cip[('u',0)].shape
             #should be element based so can use elementMaterialTypes
             self.materialTypes_ip = self.elementMaterialTypes
-        elif self.setParams != None:
+        elif self.setParams is not None:
             self.rwork_psk_ip = numpy.zeros(cip[('u',0)].shape+(self.len_rwork_psk,),'d')
             self.Ks_ip = numpy.zeros(cip[('u',0)].shape,'d')
             self.omega_ip = numpy.zeros(cip[('u',0)].shape,'d')
@@ -256,9 +256,9 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
         self.density_n_parameters = density_n_parameters
         density_w_model = 'Constant'
         density_n_model = 'Constant'
-        if self.density_w_parameters != None:
+        if self.density_w_parameters is not None:
             density_w_model = self.density_w_parameters['model']
-        if self.density_n_parameters != None:
+        if self.density_n_parameters is not None:
             density_n_model = self.density_n_parameters['model']
         #for handling sparse diffusion options
         self.diagonal = diagonalHet
@@ -300,7 +300,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
         #set up density relationships
         for params,rwork in zip([self.density_w_parameters,self.density_n_parameters],
                                 ['rwork_density_w','rwork_density_n']):
-            if params != None:
+            if params is not None:
                 if params['model'] == 'Exponential':
                     setattr(self,rwork,numpy.array([params['rho_0']/params['rho_0'],#normalize by phase density
                                                     params['psi_0'],
@@ -812,8 +812,8 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
         #so can't turn off easily
         self.capillaryDiffusionScaling = capillaryDiffusionScaling
     def attachModels(self,modelList):
-        if self.nModel == None:
-            print 'Warning Twophase_split_pressure nModel == None returning in attachModels'
+        if self.nModel is None:
+            print 'Warning Twophase_split_pressure nModel is None returning in attachModels'
             return
         #mwf debug
         #import pdb
@@ -1111,8 +1111,8 @@ class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
         #scaling factor in evals instead
         self.capillaryDiffusionScaling = capillaryDiffusionScaling
     def attachModels(self,modelList):
-        if self.nModel == None:
-            print 'Warning Twophase_split_saturation nModel == None returning in attachModels'
+        if self.nModel is None:
+            print 'Warning Twophase_split_saturation nModel is None returning in attachModels'
             return
         #mwf debug
         self.flowModel = modelList[self.nModel]

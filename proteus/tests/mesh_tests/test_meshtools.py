@@ -5,6 +5,7 @@ import numpy as np
 from nose.tools import eq_, ok_
 import os
 import math
+import pytest
 import xml.etree.ElementTree as ElementTree
 from proteus.EGeometry import (EVec,
                                ETen)
@@ -45,6 +46,7 @@ Profiling.procID = comm.rank()
 
 GNUPLOT=False
 
+@pytest.mark.MeshTools
 class TestMeshTools():
 
     @classmethod

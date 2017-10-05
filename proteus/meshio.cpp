@@ -726,7 +726,7 @@ write2dmMeshNodesAndElements(const char * filebase,
   bool failed = false;
   const int vertexDim=3; const int simplexDim = 2+1;
   
-  std::string meshFileName = std::string(filebase) + ".2dm";
+  std::string meshFileName = std::string(filebase) + ".3dm";
   std::ofstream meshFile(meshFileName.c_str());
 
   if (!meshFile.good())

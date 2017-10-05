@@ -80,6 +80,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebq_H_vof = None
         #correction
         self.massCorrModel = modelList[self.me_model]
+        self.massCorrModel.setMassQuadrature()
         self.vofModel.q[('m_last',0)][:] = self.vofModel.q[('m',0)]
         if self.checkMass:
             self.m_tmp = copy.deepcopy(self.massCorrModel.q[('r',0)])
@@ -227,7 +228,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd = True,
-                 movingDomain=False):#,
+                 movingDomain=False,
+                 bdyNullSpace=False):#,
         self.useConstantH=coefficients.useConstantH
         from proteus import Comm
         #
@@ -259,6 +261,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
         self.dirichletNodeSetList=None #explicit Dirichlet  conditions for now, no Dirichlet BC constraints
+        self.bdyNullSpace = bdyNullSpace
         self.coefficients = coefficients
         self.coefficients.initializeMesh(self.mesh)
         self.nc = self.coefficients.nc
@@ -419,6 +422,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe={}
         self.phi_ip={}
         #mesh
+        #uncomment this to store q arrays, see calculateElementQuadrature below 
         #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
         self.q[('u',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('grad(u)',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
@@ -863,6 +867,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         This function should be called only when the mesh changes.
         """
+        #uncomment this to store q arrays
         #self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
         #                                          self.q['x'])
         self.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
@@ -1227,8 +1232,6 @@ class Newton_controller(proteus.StepControl.Newton_controller):
         for m,u,r in zip(self.model.levelModelList,
                          self.model.uList,
                          self.model.rList):
-            #pass
-            #m.setMassQuadrature()
             u.flat[:]=0.0
             m.getResidual(u,r)
             m.coefficients.postStep(self.t_model)
