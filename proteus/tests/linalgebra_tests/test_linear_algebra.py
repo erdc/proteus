@@ -1,6 +1,7 @@
 from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
+import pytest
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 
@@ -41,7 +42,7 @@ class MockMat():
         B = self.A.getSubMatrix(isg)
         return B.getValuesCSR()
 
-
+@pytest.mark.LinearAlgebraTools
 def test_vec_create():
     """test_vec_create
 
@@ -65,7 +66,7 @@ def test_vec_create():
         x[:] = range(1, n+1)
         eq(np.count_nonzero(x), n)
 
-
+@pytest.mark.LinearAlgebraTools
 def test_mat_create():
     """test_mat_create
 
@@ -91,7 +92,7 @@ def test_mat_create():
         x[:, 0] = range(1, m+1)
         eq(np.count_nonzero(x), m+n-1)
 
-
+@pytest.mark.LinearAlgebraTools
 def test_vec_scalar_math():
     """test_vec_scalar_math
 
@@ -123,7 +124,7 @@ def test_vec_scalar_math():
     v_scalar_sum = np.asarray([1.5, 2])
     npt.assert_almost_equal(v_scalar_sum, 0.5*v1+1)
 
-
+@pytest.mark.LinearAlgebraTools
 def test_mat_vec_math():
     """test_mat_vec_math
 
@@ -147,7 +148,7 @@ def test_mat_vec_math():
     dot_product = np.asarray([3, 5, 9])
     npt.assert_almost_equal(dot_product, m1.dot(v1))
 
-
+@pytest.mark.LinearAlgebraTools
 def test_superlu_mat():
     """test_superlu_mat
 
@@ -166,7 +167,7 @@ def compute_norms(h, A, vecs):
     for norm in [energyNorm]:
         yield norm.__name__, [energyNorm(x, A) for x in vecs]
 
-
+@pytest.mark.LinearAlgebraTools
 def test_norm_correctness():
     from math import sqrt
     from proteus.LinearAlgebraTools import Mat
@@ -180,31 +181,16 @@ def test_norm_correctness():
     A[0, 0] = 1
     A[1, 1] = 1
 
-    test = lambda a,b: npt.assert_almost_equal(a,b)
-    test.description = 'test_correctness_l1Norm'
-    yield test, l1Norm(x), 2
-    test = lambda a,b: npt.assert_almost_equal(a,b)
-    test.description = 'test_correctness_l2Norm'
-    yield test, l2Norm(x), sqrt(2)
-    test = lambda a,b: npt.assert_almost_equal(a,b)
-    test.description = 'test_correctness_lInfNorm'
-    yield test, lInfNorm(x), 1
-    test = lambda a,b: npt.assert_almost_equal(a,b)
-    test.description = 'test_correctness_rmsNorm'
-    yield test, rmsNorm(x), 1
-    test = lambda a,b: npt.assert_almost_equal(a,b)
-    test.description = 'test_correctness_wl1Norm'
-    yield test, wl1Norm(x, h), 2
-    test = lambda a,b: npt.assert_almost_equal(a,b)
-    test.description = 'test_correctness_wl2Norm'
-    yield test, wl2Norm(x, h), sqrt(2)
-    test = lambda a,b: npt.assert_almost_equal(a,b)
-    test.description = 'test_correctness_wlInfNorm'
-    yield test, wlInfNorm(x, h), 1
-    test = lambda a,b: npt.assert_almost_equal(a,b)
-    test.description = 'test_correctness_energyNorm'
-    yield test, energyNorm(x, A), sqrt(2)
+    assert l1Norm(x)==2
+    assert l2Norm(x)==sqrt(2)
+    assert lInfNorm(x)==1
+    assert rmsNorm(x)==1
+    assert wl1Norm(x,h)==2
+    assert wl2Norm(x,h)==sqrt(2)
+    assert wlInfNorm(x,h)==1
+    assert energyNorm(x,A)==sqrt(2)
 
+@pytest.mark.LinearAlgebraTools
 def test_norm_zero():
     """test_norm_zero
 
@@ -227,11 +213,9 @@ def test_norm_zero():
 
     for name, norms in compute_norms(h, A, [v]):
         n = norms[0]
-        test = lambda a,b: npt.assert_almost_equal(a,b)
-        test.description = 'test_norm_zero[{}]'.format(name)
-        yield test, n, 0
+        assert np.allclose(n,0)
 
-
+@pytest.mark.LinearAlgebraTools
 def test_norm_homogeneity():
     """test_norm_homogeneity
 
@@ -256,11 +240,9 @@ def test_norm_homogeneity():
     for a in [0.5, -2]:
         for name, norms in compute_norms(h, A, [v1, a*v1]):
             t1, t2 = norms
-            test = lambda a,b: npt.assert_almost_equal(a,b)
-            test.description = 'test_norm_homogeneity[{}]'.format(name)
-            yield test, abs(a)*t1, t2
+            assert np.allclose(abs(a)*t1,t2)
 
-
+@pytest.mark.LinearAlgebraTools
 def test_norm_triangle_inequality():
     """test_norm_triangle_inequality
 
@@ -287,11 +269,9 @@ def test_norm_triangle_inequality():
 
     for name, norms in compute_norms(h, A, [v1+v2, v1, v2]):
         t1, t2, t3 = norms
-        test = lambda b: ok(b)
-        test.description = 'test_norm_triangle_inequality[{}]'.format(name)
-        yield test, t1 <= t2 + t3
+        assert t1 <= t2 + t3
 
-
+@pytest.mark.LinearAlgebraTools
 def test_petsc_binary_mat_io():
     """test_petsc_binary_mat_io
 
