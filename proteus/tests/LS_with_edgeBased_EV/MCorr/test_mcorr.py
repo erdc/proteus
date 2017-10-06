@@ -10,18 +10,16 @@ Profiling.logLevel=2
 Profiling.verbose=True
 import numpy as np
 import tables
-import sys
-sys.path.append('import_files')
-import cons_ls
-import cons_ls_so
-import vof_p
-import vof_n
-import ncls_p
-import ncls_n
-import redist_p
-import redist_n
-import MCorr_p
-import MCorr_n
+import thelper_cons_ls
+import thelper_cons_ls_so
+import thelper_vof_p
+import thelper_vof_n
+import thelper_ncls_p
+import thelper_ncls_n
+import thelper_redist_p
+import thelper_redist_n
+import thelper_MCorr_p
+import thelper_MCorr_n
 
 class TestMCorr():
 
@@ -35,27 +33,27 @@ class TestMCorr():
     
     def setup_method(self,method):        
         """Initialize the test problem. """
-        reload(cons_ls)
+        reload(thelper_cons_ls)
         self._scriptdir = os.path.dirname(__file__)
         
     def teardown_method(self,method):
         pass
 
     def test_supg(self):
-        cons_ls.ct.STABILIZATION_TYPE_ncls=0
-        cons_ls.ct.DO_REDISTANCING=False
-        cons_ls.ct.STABILIZATION_TYPE_vof=0
-        reload(cons_ls_so)
-        reload(ncls_p)
-        reload(ncls_n)
-        reload(redist_p)
-        reload(redist_n)
-        reload(vof_p)
-        reload(vof_n)
-        reload(MCorr_p)
-        reload(MCorr_n)
+        thelper_cons_ls.ct.STABILIZATION_TYPE_ncls=0
+        thelper_cons_ls.ct.DO_REDISTANCING=False
+        thelper_cons_ls.ct.STABILIZATION_TYPE_vof=0
+        reload(thelper_cons_ls_so)
+        reload(thelper_ncls_p)
+        reload(thelper_ncls_n)
+        reload(thelper_redist_p)
+        reload(thelper_redist_n)
+        reload(thelper_vof_p)
+        reload(thelper_vof_n)
+        reload(thelper_MCorr_p)
+        reload(thelper_MCorr_n)
 
-        self.so = __import__("cons_ls_so")
+        self.so = __import__("thelper_cons_ls_so")
         self.pList=[]
         self.nList=[]
         self.sList=[]
@@ -86,18 +84,18 @@ class TestMCorr():
         actual.close()
 
     def test_edge_based_EV(self):
-        cons_ls.ct.STABILIZATION_TYPE_ncls=1
-        cons_ls.ct.DO_REDISTANCING=True
-        cons_ls.ct.STABILIZATION_TYPE_vof=1
-        reload(cons_ls_so)
-        reload(ncls_p)
-        reload(ncls_n)
-        reload(vof_p)
-        reload(vof_n)
-        reload(MCorr_p)
-        reload(MCorr_n)
+        thelper_cons_ls.ct.STABILIZATION_TYPE_ncls=1
+        thelper_cons_ls.ct.DO_REDISTANCING=True
+        thelper_cons_ls.ct.STABILIZATION_TYPE_vof=1
+        reload(thelper_cons_ls_so)
+        reload(thelper_ncls_p)
+        reload(thelper_ncls_n)
+        reload(thelper_vof_p)
+        reload(thelper_vof_n)
+        reload(thelper_MCorr_p)
+        reload(thelper_MCorr_n)
 
-        self.so = __import__("cons_ls_so")
+        self.so = __import__("thelper_cons_ls_so")
         self.pList=[]
         self.nList=[]
         self.sList=[]
