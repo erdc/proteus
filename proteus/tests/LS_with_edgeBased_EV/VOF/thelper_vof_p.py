@@ -34,8 +34,8 @@ def vely(X,t):
     else:
         return 2*pi*(X[0]-0.5)
 
-velocityField={0:velx, 
-               1:vely}
+velocityFieldAsFunction={0:velx,
+                         1:vely}
 
 #####################
 # INITIAL CONDITION #
