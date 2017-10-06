@@ -962,7 +962,7 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
                 return self.failedFlag
             else:
                 logEvent("+++++ L2 projection of mass-corrected VOF +++++",level=2)
-                if (self.F.MassMatrix is None):
+                if (self.F.MassMatrix is None): 
                     self.F.getMassMatrix()
                     # Set matrix of linear solver to be the Mass Matrix
                     self.linearSolver.L = self.F.MassMatrix

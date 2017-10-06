@@ -85,7 +85,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         maxCFL = 1.0e-6
         maxCFL = max(maxCFL,globalMax(self.cfl.max()))
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
         self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
@@ -311,7 +311,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.forceStrongConditions=forceStrongConditions
         self.cE=cE
         self.outputQuantDOFs=outputQuantDOFs
-        
+
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def attachModels(self,modelList):
@@ -545,7 +545,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  sd = True,
                  movingDomain=False,
                  bdyNullSpace=False):
-        
+
         self.auxiliaryCallCalculateResidual=False
         #
         #set the objects describing the method and boundary conditions
@@ -848,7 +848,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
-            if options == None or options.periodicDirichletConditions == None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,
@@ -1135,13 +1135,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
         if (self.nSpace_global==3):
-            Cz = self.cterm_global[2].getCSRrepresentation()
+            rowptr, colind, Cz = self.cterm_global[2].getCSRrepresentation()
         else:
             Cz = numpy.zeros(Cx.shape,'d')
         rowptr, colind, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
         if (self.nSpace_global==3):
-            CTz = self.cterm_global_transpose[2].getCSRrepresentation()
+            rowptr, colind, CTz = self.cterm_global_transpose[2].getCSRrepresentation()
         else:
             CTz = numpy.zeros(CTx.shape,'d')
 

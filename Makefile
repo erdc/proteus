@@ -25,6 +25,7 @@ HASHDIST_DEFAULT_VERSION := $(shell cat .hashdist_default)
 HASHSTACK_DEFAULT_VERSION := $(shell cat .hashstack_default)
 HASHDIST_VERSION := $(shell cd hashdist; ${VER_CMD})
 HASHSTACK_VERSION := $(shell cd stack; ${VER_CMD})
+TEST_MARKER="' '"
 
 define show_info
 	@echo "Please include this information in all bug reports."
@@ -310,7 +311,7 @@ doc:
 test: check
 	@echo "************************************"
 	@echo "Running test suite"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests --ignore proteus/tests/POD
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
 	@echo "Tests complete "
 	@echo "************************************"
 

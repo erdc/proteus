@@ -228,7 +228,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.NonlinearSolvers import EikonalSolver
 
     def __init__(self,
-                 epsCoupez, #relative to he
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
@@ -251,6 +250,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  pure_redistancing=False,
                  COUPEZ=False,
                  SATURATED_LEVEL_SET=False,
+                 epsCoupez=0.1, 
                  epsFactRedistancing=0.33, #For the signed distance function
                  redistancing_tolerance=0.1,
                  maxIter_redistancing=3,
@@ -909,7 +909,7 @@ class LevelModel(OneLevelTransport):
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
         if (self.nSpace_global==3):
-            Cz = self.cterm_global[2].getCSRrepresentation()
+            rowptr, colind, Cz = self.cterm_global[2].getCSRrepresentation()
         else:
             Cz = numpy.zeros(Cx.shape,'d')
 
@@ -1143,7 +1143,7 @@ class LevelModel(OneLevelTransport):
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
         if (self.nSpace_global==3):
-            Cz = self.cterm_global[2].getCSRrepresentation()
+            rowptr, colind, Cz = self.cterm_global[2].getCSRrepresentation()
         else:
             Cz = numpy.zeros(Cx.shape,'d')
 
