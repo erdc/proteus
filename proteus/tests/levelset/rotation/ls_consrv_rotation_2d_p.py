@@ -1,6 +1,6 @@
 from proteus import *
 from proteus.default_p import *
-from vortex2D import *
+from rotation2D import *
 name=soname+"_phicor"
 from proteus.mprans import MCorr
 

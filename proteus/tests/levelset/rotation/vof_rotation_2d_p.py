@@ -1,7 +1,7 @@
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
-from vortex2D import *
+from rotation2D import *
 from proteus.mprans import VOF
 name=soname+"_vof"
 
@@ -12,9 +12,9 @@ The non-conservative level set description of a bubble in a two-phase flow
 LevelModelType = VOF.LevelModel
 
 ##\ingroup test
-#\file vof_vortex_2d_p.py
+#\file vof_rotation_2d_p.py
 #
-# \todo finish vof_vortex_2d_p.py
+# \todo finish vof_rotation_2d_p.py
 
 if applyRedistancing:
     coefficients = VOF.Coefficients(LS_model=0,V_model=0,RD_model=1,ME_model=2,checkMass=checkMass,
@@ -35,7 +35,7 @@ def Heaviside(phi):
     else:
         return 0.5
 
-class Vortex_phi:
+class Rotation_phi:
     def __init__(self,center=[0.5,0.75,0.5],radius=0.15):
         self.radius  = radius
         self.center  = center
@@ -47,9 +47,9 @@ class Vortex_phi:
     def uOfXT(self,X,t):
         return self.uOfX(X)
     #end
-#end Vortex_phi
+#end Rotation_phi
 
-class Vortex_phi_cylinder:
+class Rotation_phi_cylinder:
     def __init__(self,center=[0.5,0.75,0.5],radius=0.15):
         self.radius  = radius
         self.center  = center
@@ -61,7 +61,7 @@ class Vortex_phi_cylinder:
     def uOfXT(self,X,t):
         return self.uOfX(X)
     #end
-#end Vortex_phi
+#end Rotation_phi
 
 analyticalSolutions = None
 
@@ -70,7 +70,7 @@ def getDBC(x,flag):
 
 dirichletConditions = {0:getDBC}
 
-initialConditions  = {0:Vortex_phi(center=[0.0,0.5],radius=0.25)}
+initialConditions  = {0:Rotation_phi(center=[0.0,0.5],radius=0.25)}
 
 fluxBoundaryConditions = {0:'outFlow'}
 

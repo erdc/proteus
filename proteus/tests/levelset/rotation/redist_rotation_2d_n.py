@@ -1,7 +1,7 @@
 from proteus import *
 from proteus.default_n import *
-from redist_vortex_2d_p import *
-from vortex2D import *
+from redist_rotation_2d_p import *
+from rotation2D import *
 
 if redist_Newton:
     timeIntegration = NoIntegration
@@ -39,15 +39,15 @@ if cDegree_ls==0:
             femSpaces = {0:C0_AffineLinearOnCubeWithNodalBasis}
         elif pDegree_ls==2:
             femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}
-        elementQuadrature = CubeGaussQuadrature(nd,vortex_quad_order)
-        elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,vortex_quad_order)
+        elementQuadrature = CubeGaussQuadrature(nd,rotation_quad_order)
+        elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,rotation_quad_order)
     else:    
         if pDegree_ls==1:
             femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
         elif pDegree_ls==2:
             femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
-        elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)    
-        elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
+        elementQuadrature = SimplexGaussQuadrature(nd,rotation_quad_order)    
+        elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,rotation_quad_order)
     if LevelModelType == RDLS.LevelModel:
         subgridError = HamiltonJacobi_ASGS_opt(coefficients,nd,stabFlag='2',lag=False)
     else:

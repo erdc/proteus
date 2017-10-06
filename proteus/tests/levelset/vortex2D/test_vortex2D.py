@@ -6,15 +6,15 @@ from proteus.iproteus import *
 import os
 import numpy as np
 import tables
-from . import ls_consrv_vortex_2d_p
-from . import ls_vortex_2d_p
-from . import redist_vortex_2d_n
-from . import vof_vortex_2d_p
-from . import ls_consrv_vortex_2d_n
-from . import ls_vortex_2d_n
-from . import ls_vortex_2d_so
-from . import redist_vortex_2d_p
-from . import vof_vortex_2d_n
+from . import (ls_vortex_2d_p,
+               redist_vortex_2d_p,
+               vof_vortex_2d_p,
+               ls_consrv_vortex_2d_p,
+               ls_vortex_2d_n,
+               redist_vortex_2d_n,
+               vof_vortex_2d_n,
+               ls_consrv_vortex_2d_n,
+               ls_vortex_2d_so)
 
 class TestVortex2D():
 
@@ -61,8 +61,14 @@ class TestVortex2D():
             sList = ls_vortex_2d_so.sList
 
         ns = NumericalSolution.NS_base(ls_vortex_2d_so,
-                                       [__import__(pn[0]) for pn in ls_vortex_2d_so.pnList],
-                                       [__import__(pn[1]) for pn in ls_vortex_2d_so.pnList],
+                                       [ls_vortex_2d_p,
+                                        redist_vortex_2d_p,
+                                        vof_vortex_2d_p,
+                                        ls_consrv_vortex_2d_p],
+                                       [ls_vortex_2d_n,
+                                        redist_vortex_2d_n,
+                                        vof_vortex_2d_n,
+                                        ls_consrv_vortex_2d_n],
                                        sList,
                                        opts)
         ns.calculateSolution(ls_vortex_2d_so.name)

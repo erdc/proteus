@@ -1,7 +1,7 @@
 from proteus import *
 from proteus.default_n import *
-from ls_vortex_2d_p import *
-from vortex2D import *
+from ls_rotation_2d_p import *
+from rotation2D import *
 nd = 2
 
 if timeIntegration_ls == "be":
@@ -31,8 +31,8 @@ if useHex:
         femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}#this is hardwired to p2 right now
     else:
         print "pDegree_ls = %s not recognized " % pDegree_ls
-    elementQuadrature = CubeGaussQuadrature(nd,vortex_quad_order)
-    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,vortex_quad_order)
+    elementQuadrature = CubeGaussQuadrature(nd,rotation_quad_order)
+    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,rotation_quad_order)
 else:
     if pDegree_ls == 1:
         femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
@@ -40,8 +40,8 @@ else:
         femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
         print "pDegree_ls = %s not recognized " % pDegree_ls
-    elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
-    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
+    elementQuadrature = SimplexGaussQuadrature(nd,rotation_quad_order)
+    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,rotation_quad_order)
 
 subgridError = None
 
@@ -89,4 +89,4 @@ maxLineSearches = 0
 #checkMass = True
 
 if not applyCorrection and checkMass:
-   auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryLS("vortex2dnc"+`lRefinement`)]
+   auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryLS("rotation2dnc"+`lRefinement`)]

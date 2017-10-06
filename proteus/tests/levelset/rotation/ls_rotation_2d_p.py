@@ -1,7 +1,7 @@
 from proteus import *
 from proteus.default_p import *
 from math import *
-from vortex2D import *
+from rotation2D import *
 from proteus.mprans import NCLS
 #import Profiling
 
@@ -12,14 +12,14 @@ name=soname+"_ls"
 nd=2
 
 ## \page Tests Test Problems
-# \ref ls_vortex_2d_p.py "Linear advection of a circular level set function in an oscillating vortex velocity field"
+# \ref ls_rotation_2d_p.py "Linear advection of a circular level set function in an oscillating rotation velocity field"
 #
 
 ##\ingroup test
-# \file la_vortex_2d_p.py
+# \file la_rotation_2d_p.py
 # @{
 #  \brief Conservative linear advection of a circle signed distance function
-#  in a oscillating vortex velocity field.
+#  in a oscillating rotation velocity field.
 #
 # \f{eqnarray*}
 # \phi_t + \nabla \cdot (\vec u \phi) &=& 0 \\
@@ -32,13 +32,13 @@ nd=2
 # Outflow boundaries are applied on \f$\partial \Omega\f$.
 #
 #
-# \image html  save_la_vortex_2d_dgp2_exact.jpg "exact solution, T=8.0"
-# \image latex save_la_vortex_2d_dgp2_exact.eps "exact solution, T=8.0"
-# \image html  save_la_vortex_2d_dgp2_phi.jpg "RKDG P^2 solution, Cr=0.1, L^2 error= 7.84e-3"
-# \image latex save_la_vortex_2d_dgp2_phi.eps "RKDG $P^2$ solution, Cr=0.1, $L^2$ error= 7.84e-3"
+# \image html  save_la_rotation_2d_dgp2_exact.jpg "exact solution, T=8.0"
+# \image latex save_la_rotation_2d_dgp2_exact.eps "exact solution, T=8.0"
+# \image html  save_la_rotation_2d_dgp2_phi.jpg "RKDG P^2 solution, Cr=0.1, L^2 error= 7.84e-3"
+# \image latex save_la_rotation_2d_dgp2_phi.eps "RKDG $P^2$ solution, Cr=0.1, $L^2$ error= 7.84e-3"
 #
 
-class OscillatingVortex2D:
+class OscillatingRotation2D:
     #cek changed to put sphere inside arbitrary box with dimensions in L
     def __init__(self,L):
         self.radius = 0.25
@@ -46,7 +46,7 @@ class OscillatingVortex2D:
         self.yc=0.5
     def uOfXT(self,x,t):
         return self.radius - math.sqrt((x[0]-self.xc)**2 + (x[1]-self.yc)**2)
-class OscillatingVortex2Dcylinder:
+class OscillatingRotation2Dcylinder:
     #cek changed to put sphere inside arbitrary box with dimensions in L
     def __init__(self,L):
         self.radius = 0.15*L[0]
@@ -55,11 +55,11 @@ class OscillatingVortex2Dcylinder:
     def uOfXT(self,x,t):
         return self.radius - math.sqrt((x[0]-self.xc)**2 + (x[1]-self.yc)**2)
 
-analyticalSolution = {0:OscillatingVortex2D(L)}
+analyticalSolution = {0:OscillatingRotation2D(L)}
 
-class UnitSquareVortex(NCLS.Coefficients):
-    from proteus.ctransportCoefficients import unitSquareVortexEvaluate
-    from proteus.ctransportCoefficients import unitSquareVortexLevelSetEvaluate
+class UnitSquareRotation(NCLS.Coefficients):
+    from proteus.ctransportCoefficients import unitSquareRotationEvaluate
+    from proteus.ctransportCoefficients import unitSquareRotationLevelSetEvaluate
     def __init__(self,useHJ=False,epsFact=1.5,checkMass=False,
                  RD_model=None,
                  useMetrics=0.0,sc_uref=1.0,sc_beta=1.0):
@@ -89,7 +89,7 @@ class UnitSquareVortex(NCLS.Coefficients):
 	self.u_old_dof = numpy.copy(self.model.u[0].dof)
         self.q_v = numpy.zeros(self.model.q[('dH',0,0)].shape,'d')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH',0,0)].shape,'d')
-        self.unitSquareVortexLevelSetEvaluate(self.model.timeIntegration.tLast,
+        self.unitSquareRotationLevelSetEvaluate(self.model.timeIntegration.tLast,
                                               self.model.q['x'],
                                               self.model.q[('u',0)],self.model.q[('grad(u)',0)],
                                               self.model.q[('m',0)],self.model.q[('dm',0,0)],
@@ -109,7 +109,7 @@ class UnitSquareVortex(NCLS.Coefficients):
         #                                                              self.model.q[('m',0)],
         #                                                              self.model.mesh.nElements_owned)
 
-        #     logEvent("Attach Models UnitSquareVortex: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
+        #     logEvent("Attach Models UnitSquareRotation: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
         #     self.totalFluxGlobal=0.0
         #     self.lsGlobalMassArray = [self.m_pre]
         #     self.lsGlobalMassErrorArray = [0.0]
@@ -131,7 +131,7 @@ if applyRedistancing:
     RD_model=1
 else:
     RD_model=None
-coefficients = UnitSquareVortex(useHJ=True,epsFact=epsFactHeaviside,checkMass=checkMass,RD_model=RD_model,useMetrics=useMetrics)
+coefficients = UnitSquareRotation(useHJ=True,epsFact=epsFactHeaviside,checkMass=checkMass,RD_model=RD_model,useMetrics=useMetrics)
 
 coefficients.variableNames=['u']
 

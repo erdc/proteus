@@ -1,9 +1,9 @@
 from proteus import *
 from proteus.default_p import *
 from math import *
-from vortex2D import *
+from rotation2D import *
 from proteus.mprans import RDLS
-import ls_vortex_2d_p
+import ls_rotation_2d_p
 name = soname+"_rdls"
 LevelModelType = RDLS.LevelModel
 
@@ -30,7 +30,7 @@ else:
 #weakDirichletConditions = None
 
 
-initialConditions  = ls_vortex_2d_p.initialConditions
+initialConditions  = ls_rotation_2d_p.initialConditions
 
 fluxBoundaryConditions = {0:'noFlow'}
 
