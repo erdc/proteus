@@ -522,18 +522,23 @@ class Tank3D(ShapeRANS):
         f_i = len(facets)
         nb_sponge = 0  # number of sponge layers defined
 
+        corners = True
         # y-
-        vertices += [[x0, y0-y_n, z0], [x1, y0-y_n, z0],
-                     [x0, y0-y_n, z1], [x1, y0-y_n, z1]]
-        vertexFlags += [bt['z-'], bt['z-'],
-                        bt['z+'], bt['z+']]
-        volumes[0][0] += [f_i]  # add to volume
-        facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
-        facetFlags += [bt['y-']]
-        regions += [[(x0+x1)/2., (y0+(y0-y_n))/2., (z0+z1)/2.]]
-        self.regionIndice['y-'] = r_i
-        regionFlags += [r_i+1]
         if y_n:
+            if corners:
+                vertices += [[x0-x_n, y0-y_n, z0], [x1+x_p, y0-y_n, z0],
+                             [x0-x_n, y0-y_n, z1], [x1+x_p, y0-y_n, z1]]
+            else:
+                vertices += [[x0, y0-y_n, z0], [x1, y0-y_n, z0],
+                             [x0, y0-y_n, z1], [x1, y0-y_n, z1]]
+            vertexFlags += [bt['z-'], bt['z-'],
+                            bt['z+'], bt['z+']]
+            volumes[0][0] += [f_i]  # add to volume
+            facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
+            facetFlags += [bt['y-']]
+            regions += [[(x0+x1)/2., (y0+(y0-y_n))/2., (z0+z1)/2.]]
+            self.regionIndice['y-'] = r_i
+            regionFlags += [r_i+1]
             facets += [[[0, 1, v_i+1, v_i]],
                        [[4, 5, v_i+3, v_i+2]],
                        [[0, 1, 5, 4]],
@@ -552,22 +557,26 @@ class Tank3D(ShapeRANS):
                 facetFlags += [bt['x+']]
             volumes[0][0][-1] = f_i+3 
             volumes += [[[ f_i+i for i in range(6)]]]
-        v_i += 4  # 2 vertices were added
-        r_i += 1  # 1 region was added
-        nb_sponge += 1
-        f_i = len(facets)
+            v_i += 4  # 2 vertices were added
+            r_i += 1  # 1 region was added
+            nb_sponge += 1
+            f_i = len(facets)
         # y+
-        vertices += [[x1, y1+y_p, z0], [x0, y1+y_p, z0],
-                     [x1, y1+y_p, z1], [x0, y1+y_p, z1]]
-        vertexFlags += [bt['z-'], bt['z-'],
-                        bt['z+'], bt['z+']]
-        volumes[0][0] += [f_i]  # add to volume
-        facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
-        facetFlags += [bt['y+']]
-        regions += [[(x0+x1)/2., (y1+(y1+y_p))/2., (z0+z1)/2.]]
-        self.regionIndice['y+'] = r_i
-        regionFlags += [r_i+1]
         if y_p:
+            if corners:
+                vertices += [[x1+x_p, y1+y_p, z0], [x0-x_n, y1+y_p, z0],
+                             [x1+x_p, y1+y_p, z1], [x0-x_n, y1+y_p, z1]]
+            else:
+                vertices += [[x1, y1+y_p, z0], [x0, y1+y_p, z0],
+                             [x1, y1+y_p, z1], [x0, y1+y_p, z1]]
+            vertexFlags += [bt['z-'], bt['z-'],
+                            bt['z+'], bt['z+']]
+            volumes[0][0] += [f_i]  # add to volume
+            facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
+            facetFlags += [bt['y+']]
+            regions += [[(x0+x1)/2., (y1+(y1+y_p))/2., (z0+z1)/2.]]
+            self.regionIndice['y+'] = r_i
+            regionFlags += [r_i+1]
             facets += [[[2, 3, v_i+1, v_i]],
                        [[6, 7, v_i+3, v_i+2]],
                        [[2, 3, 7, 6]],
@@ -586,22 +595,26 @@ class Tank3D(ShapeRANS):
                 facetFlags += [bt['x-']]
             volumes[0][0][-1] = f_i+3 
             volumes += [[[f_i+i for i in range(6)]]]
-        v_i += 4
-        r_i += 1
-        nb_sponge += 1
-        f_i = len(facets)
+            v_i += 4
+            r_i += 1
+            nb_sponge += 1
+            f_i = len(facets)
         # x+
-        vertices += [[x1+x_p, y0, z0], [x1+x_p, y1, z0],
-                     [x1+x_p, y0, z1], [x1+x_p, y1, z1]]
-        vertexFlags += [bt['z-'], bt['z-'],
-                        bt['z+'], bt['z+']]
-        volumes[0][0] += [f_i]  # add to volume
-        facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
-        facetFlags += [bt['x+']]
-        regions += [[(x1+(x1+x_p))/2., (y0+y1)/2., (z0+z1)/2.]]
-        self.regionIndice['x+'] = r_i
-        regionFlags += [r_i+1]
         if x_p:
+            if corners:
+                vertices += [[x1+x_p, y0-y_n, z0], [x1+x_p, y1+y_p, z0],
+                             [x1+x_p, y0-y_n, z1], [x1+x_p, y1+y_p, z1]]
+            else:
+                vertices += [[x1+x_p, y0, z0], [x1+x_p, y1, z0],
+                             [x1+x_p, y0, z1], [x1+x_p, y1, z1]]
+            vertexFlags += [bt['z-'], bt['z-'],
+                            bt['z+'], bt['z+']]
+            volumes[0][0] += [f_i]  # add to volume
+            facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
+            facetFlags += [bt['x+']]
+            regions += [[(x1+(x1+x_p))/2., (y0+y1)/2., (z0+z1)/2.]]
+            self.regionIndice['x+'] = r_i
+            regionFlags += [r_i+1]
             facets += [[[1, 2, v_i+1, v_i]],
                        [[5, 6, v_i+3, v_i+2]],
                        [[1, 2, 6, 5]],
@@ -620,22 +633,26 @@ class Tank3D(ShapeRANS):
                 facetFlags += [bt['y+']]
             volumes[0][0][-1] = f_i+3 
             volumes += [[[f_i+i for i in range(6)]]]
-        v_i += 4
-        r_i += 1
-        nb_sponge += 1
-        f_i = len(facets)
+            v_i += 4
+            r_i += 1
+            nb_sponge += 1
+            f_i = len(facets)
         # x-
-        vertices += [[x0-x_n, y0, z0], [x0-x_n, y1, z0],
-                     [x0-x_n, y0, z1], [x0-x_n, y1, z1]]
-        vertexFlags += [bt['z-'], bt['z-'],
-                        bt['z+'], bt['z+']]
-        volumes[0][0] += [f_i]  # add to volume
-        facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
-        facetFlags += [bt['x-']]
-        regions += [[(x0+(x0-x_n))/2., (y0+y1)/2., (z0+z1)/2.]]
-        self.regionIndice['x-'] = r_i
-        regionFlags += [r_i+1]
         if x_n:
+            if corners:
+                vertices += [[x0-x_n, y0-y_n, z0], [x0-x_n, y1+y_p, z0],
+                             [x0-x_n, y0-y_n, z1], [x0-x_n, y1+y_p, z1]]
+            else:
+                vertices += [[x0-x_n, y0, z0], [x0-x_n, y1, z0],
+                             [x0-x_n, y0, z1], [x0-x_n, y1, z1]]
+            vertexFlags += [bt['z-'], bt['z-'],
+                            bt['z+'], bt['z+']]
+            volumes[0][0] += [f_i]  # add to volume
+            facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
+            facetFlags += [bt['x-']]
+            regions += [[(x0+(x0-x_n))/2., (y0+y1)/2., (z0+z1)/2.]]
+            self.regionIndice['x-'] = r_i
+            regionFlags += [r_i+1]
             facets += [[[0, 3, v_i+1, v_i]],
                        [[4, 7, v_i+3, v_i+2]],
                        [[0, 3, 7, 4]],
@@ -654,10 +671,10 @@ class Tank3D(ShapeRANS):
                 facetFlags += [bt['y+']]
             volumes[0][0][-1] = f_i+3 
             volumes += [[[f_i+i for i in range(6)]]]
-        v_i += 4
-        r_i += 1
-        nb_sponge += 1
-        f_i = len(facets)
+            v_i += 4
+            r_i += 1
+            nb_sponge += 1
+            f_i = len(facets)
         self.vertices = np.array(vertices)
         self.vertices = np.dot(self.vertices, self.coords_system)
         self.vertexFlags = np.array(vertexFlags)
