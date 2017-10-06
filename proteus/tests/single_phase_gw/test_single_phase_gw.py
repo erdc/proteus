@@ -15,6 +15,10 @@ import numpy.testing as npt
 
 from proteus.iproteus import *
 
+import sp_gw_p
+import sp_gw_c0p1_n
+import sp_gw_ncp1_n
+
 class TestSinglePhaseGW():
 
     @classmethod
@@ -43,8 +47,8 @@ class TestSinglePhaseGW():
                 pass
 
     def test_c0p1(self):
-        import sp_gw_p
-        import sp_gw_c0p1_n
+        reload(sp_gw_p)
+        reload(sp_gw_c0p1_n)
         pList = [sp_gw_p]
         nList = [sp_gw_c0p1_n]    
         so = default_so
@@ -76,8 +80,8 @@ class TestSinglePhaseGW():
         assert (not failed)
 
     def test_ncp1(self):
-        import sp_gw_p
-        import sp_gw_ncp1_n
+        reload(sp_gw_p)
+        reload(sp_gw_ncp1_n)
         pList = [sp_gw_p]
         nList = [sp_gw_ncp1_n]    
         so = default_so
@@ -106,8 +110,8 @@ class TestSinglePhaseGW():
 
     def test_mass_and_stiff_jacobians(self):
         ###setup fine grid problem
-        import sp_gw_p
-        import sp_gw_c0p1_n
+        reload(sp_gw_p)
+        reload(sp_gw_c0p1_n)
         pList = [sp_gw_p]
         nList = [sp_gw_c0p1_n] 
         pList[0].ndays=500

@@ -718,7 +718,7 @@ class Min_dt_cfl_controller(Min_dt_controller):
             if self.cfl.has_key(ci):
                 maxCFL = max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt_model = self.runCFL/maxCFL
-        if self.dt_model_last == None:
+        if self.dt_model_last is None:
             self.dt_model_last = self.dt_model
         if self.dt_model/self.dt_model_last  > self.dt_ratio_max:
             self.dt_model = self.dt_model_last*self.dt_ratio_max
@@ -738,7 +738,7 @@ class Min_dt_cfl_controller(Min_dt_controller):
             if self.cfl.has_key(ci):
                 maxCFL = max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt_model = self.runCFL/maxCFL
-        if self.dt_model_last == None:
+        if self.dt_model_last is None:
             self.dt_model_last = self.dt_model
         if self.dt_model/self.dt_model_last  > self.dt_ratio_max:
             self.dt_model = self.dt_model_last*self.dt_ratio_max
@@ -1143,7 +1143,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
         nOptions.computeNonlinearSolverRates = True
         self.useTemporalErrorEstimate = self.model.levelModelList[-1].timeIntegration.isAdaptive
         self.errorNorm = None
-        if self.useTemporalErrorEstimate and self.model.levelModelList[-1].timeIntegration.error_estimate != None:
+        if self.useTemporalErrorEstimate and self.model.levelModelList[-1].timeIntegration.error_estimate is not None:
             self.errorNorm = {}
             for ci in self.model.levelModelList[-1].timeIntegration.error_estimate.keys():
                 self.errorNorm[ci] = WeightedNorm(self.model.levelModelList[-1].timeIntegration.error_estimate[ci].shape,
@@ -1287,7 +1287,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
         #put call for time integrator's estimate error directly?
         mFine = self.model.levelModelList[-1]
         if (not mFine.timeIntegration.provides_dt_estimate and
-            mFine.timeIntegration.error_estimate != None and
+            mFine.timeIntegration.error_estimate is not None and
             self.useTemporalErrorEstimate):
             error = mFine.timeIntegration.error_estimate
             localError = {}
@@ -1307,7 +1307,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
         mFine = self.model.levelModelList[-1]
 
         if (not mFine.timeIntegration.provides_dt_estimate and
-            mFine.timeIntegration.error_estimate != None):
+            mFine.timeIntegration.error_estimate is not None):
             ordInv = 1.0/(mFine.timeIntegration.timeOrder+1.)
             minErr = max(self.errorEstimate,self.timeEps)
             r  = self.errorSafetyFactor*(self.timeErrorTolerance/minErr)**ordInv
@@ -1378,7 +1378,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
             m.updateTimeHistory(resetFromDOF)
             m.timeIntegration.updateTimeHistory(resetFromDOF)
         #this needs to be more general to allow not just setting based on m
-        if self.errorNorm != None:
+        if self.errorNorm is not None:
             for ci in range(self.model.levelModelList[-1].nc):
                 if self.model.levelModelList[-1].q.has_key(('m',ci)):
                     self.errorNorm[ci].setWeight(self.model.levelModelList[-1].q[('m',ci)])

@@ -253,7 +253,7 @@ number of edges         = %d
 # #             elif edgeDict.has_key(e0rev):     #opposite orientation
 # #                 e0_global = edgeDict[e0rev]   #could make negative to denote orientation
 # #             #end if
-# #             assert(not e0_global == None)
+# #             assert(not e0_global is None)
 # #             #1
 # #             e1 = (locNodes[2],locNodes[0]); e1rev = (locNodes[0],locNodes[2])
 # #             e1_global = None
@@ -263,7 +263,7 @@ number of edges         = %d
 # #             elif edgeDict.has_key(e1rev):     #opposite orientation
 # #                 e1_global = edgeDict[e1rev]   #could make negative to denote orientation
 # #             #end if
-# #             assert(not e1_global == None)
+# #             assert(not e1_global is None)
 # #             #2
 # #             e2 = (locNodes[0],locNodes[1]); e2rev = (locNodes[1],locNodes[0])
 # #             e2_global = None
@@ -273,7 +273,7 @@ number of edges         = %d
 # #             elif edgeDict.has_key(e2rev):     #opposite orientation
 # #                 e2_global = edgeDict[e2rev]   #could make negative to denote orientation
 # #             #end if
-# #             assert(not e2_global == None)
+# #             assert(not e2_global is None)
 # #             eI_global = numpy.array([e0_global,e1_global,e2_global],
 # #                                       'i')
 # #             meshout.elementBoundariesArray[eN,:] = eI_global

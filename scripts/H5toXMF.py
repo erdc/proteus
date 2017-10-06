@@ -24,7 +24,7 @@ def H5toXMF(basename,size,start,finaltime,stride):
 
             filename="solution.p"+str(proc)+"."+str(step)+".h5"
             print filename
-            f1 = tables.openFile(filename)
+            f1 = tables.open_file(filename)
             XMFfile.write (r'<Grid GridType="Uniform">'+"\n")
             XMFfile.write(r'      <Time Value="'+str(step)+'" />'+"\n")
             for tmp in f1.root:
