@@ -1909,7 +1909,7 @@ namespace proteus
 	      /* ck.calculateGScale(G,dir,h_phi); */
 	      epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 	      q_H[eN_k] = q_porosity[eN_k]*smoothedHeaviside(epsHeaviside,q_phi[eN_k]);
-	    }//k
+	    }//k	  
 	  for (int i=0;i<nDOF_trial_element;i++)
 	    {
 	      int eN_i = eN*nDOF_trial_element + i;

@@ -56,6 +56,9 @@ The object should be of type :class:`proteus.TransportCoefficients.TC_base`"""
 dirichletConditions = {}
 """Dictionary of Dirichlet conditions for each component"""
 
+boundaryCreatesNullSpace = False
+"""Indicates Dirichlet boundary conditions create global null space. """
+
 periodicDirichletConditions = None
 """Dictionary of periodic boundary conditions for each component"""
 
