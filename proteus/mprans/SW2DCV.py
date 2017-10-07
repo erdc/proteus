@@ -75,7 +75,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
                                                                     globalMax(self.numDiff_last[1].max()),
                                                                     globalMax(self.numDiff_last[2].max())))
 
-class RKEV(proteus.TimeIntegration.SSP33):
+class RKEV(proteus.TimeIntegration.SSP):
     from proteus import TimeIntegration
     """
     Wrapper for SSPRK time integration using EV
@@ -91,40 +91,25 @@ class RKEV(proteus.TimeIntegration.SSP33):
         # About the cfl 
         assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
         self.edge_based_cfl = transport.edge_based_cfl
-        self.cell_based_cfl = transport.q[('cfl',0)]
-        # Stuff particular for SSP33
+        # Stuff particular for SSP
         self.timeOrder = timeOrder  #order of approximation
         self.nStages = timeOrder  #number of stages total
         self.lstage = 0  #last stage completed
         # storage vectors
-        # previous time step mass and solution dof per component
-        self.m_last = {}
-        #temporarily use this to stash previous solution since m_last used
-        #in EV transport models for previous solution value
-        self.m_last_save = {}
         self.u_dof_last = {}
         # per component stage values, list with array at each stage
-        self.m_stage = {}
         self.u_dof_stage = {}
         for ci in range(self.nc):
-             if transport.q.has_key(('m',ci)):
-                self.m_last[ci] = transport.q[('m',ci)].copy()
-                self.m_last_save[ci] = transport.q[('m',ci)].copy()
-
-                self.u_dof_last[ci] = transport.u[ci].dof.copy()
-                self.m_stage[ci] = []
-                self.u_dof_stage[ci] = []
-                for k in range(self.nStages+1):                    
-                    self.m_stage[ci].append(transport.q[('m',ci)].copy())
-                    self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
+            self.u_dof_last[ci] = transport.u[ci].dof.copy()
+            self.u_dof_stage[ci] = []
+            for k in range(self.nStages+1):                    
+                self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
         
-    #def set_dt(self, DTSET):
-    #    self.dt = DTSET #  don't update t
     def choose_dt(self):
         maxCFL = 1.0e-6
         # COMPUTE edge_based_cfl        
         rowptr_cMatrix, colind_cMatrix, Cx = self.transport.cterm_global[0].getCSRrepresentation()
-        rowptr_cMatrix, colind_cMatrix, Cy = self.transport.cterm_global[1].getCSRrepresentation()        
+        rowptr_cMatrix, colind_cMatrix, Cy = self.transport.cterm_global[1].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, CTx = self.transport.cterm_global_transpose[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, CTy = self.transport.cterm_global_transpose[1].getCSRrepresentation()
         numDOFsPerEqn = self.transport.u[0].dof.size
@@ -150,14 +135,12 @@ class RKEV(proteus.TimeIntegration.SSP33):
             self.transport.edge_based_cfl)
 
         maxCFL = max(maxCFL,max(adjusted_maxCFL, globalMax(self.edge_based_cfl.max())))
-        # maxCFL = max(maxCFL,globalMax(self.cell_based_cfl.max()))
         self.dt = self.runCFL/maxCFL            
         if self.dtLast is None:
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
-        # mwf debug
-        #print "RKEv max cfl component ci dt dtLast {0} {1} {2} {3}".format(maxCFL,ci,self.dt,self.dtLast)
         self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
+
     def initialize_dt(self,t0,tOut,q):
         """
         Modify self.dt
@@ -178,57 +161,40 @@ class RKEV(proteus.TimeIntegration.SSP33):
         """
         Need to switch to use coefficients
         """
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         self.lstage += 1
-        assert self.timeOrder in [1,3]
+        assert self.timeOrder in [1,2,3]
         assert self.lstage > 0 and self.lstage <= self.timeOrder
         if self.timeOrder == 3:
             if self.lstage == 1:
+                logEvent("First stage of SSP33 method",level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) #no need for .copy?
-                    self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
-                    #needs to be updated for non-scalar equations
-                    #this as used as last stage value in EV Transport model
-                    #mwf TODO, get rid of m_last here
-                    self.m_last[ci] = numpy.copy(self.transport.q[('m',ci)])
-
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    # update u_dof_old
+                    #self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
             elif self.lstage == 2:
+                logEvent("Second stage of SSP33 method",level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) 
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
                     self.u_dof_stage[ci][self.lstage] *= 1./4.
                     self.u_dof_stage[ci][self.lstage] += 3./4.*self.u_dof_last[ci]
-                    self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
-                    self.m_stage[ci][self.lstage] *= 1./4.
-                    #mwf this has to be fixed
-                    #previous stage updated m_last to the stage value
-                    #either have another temporary here or have the VOF code use m_stage
-                    #instead of m_last
-                    self.m_stage[ci][self.lstage] += 3./4.*self.m_last_save[ci] 
-                    #mwf TODO get rid of this
-                    self.m_last[ci] = numpy.copy(self.m_stage[ci][self.lstage])
+                    # update u_dof_old
+                    #self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
             elif self.lstage == 3:
+                logEvent("Third stage of SSP33 method",level=4)
                 for ci in range(self.nc):
                     self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof)
                     self.u_dof_stage[ci][self.lstage][:] *= 2.0/3.0
                     self.u_dof_stage[ci][self.lstage][:] += 1.0/3.0*self.u_dof_last[ci]
-                    #switch  time history back
-                    #mwf TODO this needs to be fixed for multipcomponent
-                    self.transport.u[ci].dof[:] = numpy.copy(self.u_dof_stage[ci][self.lstage])
-                    self.m_last[ci] = numpy.copy(self.m_last_save[ci])
+                    # update solution to u[0].dof
+                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage]
+
                     tmp_dof_stage = self.u_dof_stage[ci][self.lstage].copy()
                     self.u_dof_stage[ci][self.lstage][:] = self.u_dof_last[ci]
-                    #globalResidualDummy = numpy.zeros(self.u.shape,'d')
-                    #self.transport.getResidual(tmp_dof_stage,
-                    #                           globalResidualDummy)
                     self.u_dof_stage[ci][self.lstage][:] = tmp_dof_stage
-                    #self.setUnkowns(self.u)
 
         else:
             assert self.timeOrder == 1
             for ci in range(self.nc):
-                self.m_stage[ci][self.lstage][:]=self.transport.q[('m',ci)][:]
                 self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
                             
     def initializeTimeHistory(self,resetFromDOF=True):
@@ -236,12 +202,10 @@ class RKEV(proteus.TimeIntegration.SSP33):
         Push necessary information into time history arrays
         """
         for ci in range(self.nc):
-            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
             self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
-            self.m_last_save[ci][:] = self.transport.q[('m',ci)][:]
             for k in range(self.nStages):
-                self.m_stage[ci][k][:] = self.transport.q[('m',ci)][:]
                 self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
+
     def updateTimeHistory(self,resetFromDOF=False):
         """
         assumes successful step has been taken
@@ -249,15 +213,13 @@ class RKEV(proteus.TimeIntegration.SSP33):
         
         self.t = self.tLast + self.dt
         for ci in range(self.nc):
-            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
-            self.m_last_save[ci][:] = self.transport.q[('m',ci)][:]
             self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
             for k in range(self.nStages):
-                self.m_stage[ci][k][:]=self.transport.q[('m',ci)][:]
                 self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
         self.lstage=0
         self.dtLast = self.dt
         self.tLast = self.t
+
     def generateSubsteps(self,tList):
         """
         create list of substeps over time values given in tList. These correspond to stages
@@ -278,16 +240,14 @@ class RKEV(proteus.TimeIntegration.SSP33):
         self.lstage = 0  #last stage completed
         # storage vectors
         # per component stage values, list with array at each stage
-        self.m_stage = {}
         self.u_dof_stage = {}
         for ci in range(self.nc):
              if self.transport.q.has_key(('m',ci)):
-                self.m_stage[ci] = []
                 self.u_dof_stage[ci] = []
                 for k in range(self.nStages+1):                    
-                    self.m_stage[ci].append(self.transport.q[('m',ci)].copy())
                     self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
         self.substeps = [self.t for i in range(self.nStages)]            
+
     def setFromOptions(self,nOptions):
         """
         allow classes to set various numerical parameters
