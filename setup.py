@@ -39,7 +39,7 @@ for arg in sys.argv:
         break
 
 setup(name='proteus',
-      version='1.4.1',
+      version='1.4.1.dev0',
       classifiers=[
           'Development Status :: 4 - Beta',
           'Environment :: Console',
