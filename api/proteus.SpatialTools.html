@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.SpatialTools module &#8212; Proteus 1.4.0 documentation</title>
+    <title>proteus.SpatialTools module &#8212; Proteus 1.4.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.4.0',
+        VERSION:     '1.4.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -56,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.4.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -164,26 +164,8 @@ created for each facet (3D) or segment (2D) defining the shape.</p>
 <span class="n">st</span><span class="o">.</span><span class="n">assembleDomain</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span>
 </pre></div>
 </div>
-digraph inheritance44a015191f {
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;BCContainer&quot; [URL=&quot;../api/proteus.SpatialTools.html#proteus.SpatialTools.BCContainer&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Creates a class from a dictionary (keys become class variable names)&quot;];
-  &quot;Circle&quot; [URL=&quot;../api/proteus.SpatialTools.html#proteus.SpatialTools.Circle&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Class to create a circular shape.&quot;];
-  &quot;Shape&quot; -&gt; &quot;Circle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Cuboid&quot; [URL=&quot;../api/proteus.SpatialTools.html#proteus.SpatialTools.Cuboid&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Class to create a 3D cuboid&quot;];
-  &quot;Shape&quot; -&gt; &quot;Cuboid&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;CustomShape&quot; [URL=&quot;../api/proteus.SpatialTools.html#proteus.SpatialTools.CustomShape&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Class to create a custom 2D or 3D shape&quot;];
-  &quot;Shape&quot; -&gt; &quot;CustomShape&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Cylinder&quot; [URL=&quot;../api/proteus.SpatialTools.html#proteus.SpatialTools.Cylinder&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Class to create a cylinder.&quot;];
-  &quot;Shape&quot; -&gt; &quot;Cylinder&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Rectangle&quot; [URL=&quot;../api/proteus.SpatialTools.html#proteus.SpatialTools.Rectangle&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Class to create a rectangle&quot;];
-  &quot;Shape&quot; -&gt; &quot;Rectangle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Shape&quot; [URL=&quot;../api/proteus.SpatialTools.html#proteus.SpatialTools.Shape&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base/super class of all shapes.&quot;];
-  &quot;ShapeSTL&quot; [URL=&quot;../api/proteus.SpatialTools.html#proteus.SpatialTools.ShapeSTL&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Class to extract geometrical information from STL file&quot;];
-  &quot;Shape&quot; -&gt; &quot;ShapeSTL&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Sphere&quot; [URL=&quot;../api/proteus.SpatialTools.html#proteus.SpatialTools.Sphere&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Class to create a 3D cuboid&quot;];
-  &quot;Shape&quot; -&gt; &quot;Sphere&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-}
+<object data="../_images/inheritance-fcab10325422774ac89ea028fc52caec328ffd7d.svg" type="image/svg+xml">
+            <p class="warning">Inheritance diagram of proteus.SpatialTools</p></object>
 <dl class="class">
 <dt id="proteus.SpatialTools.Shape">
 <em class="property">class </em><code class="descclassname">proteus.SpatialTools.</code><code class="descname">Shape</code><span class="sig-paren">(</span><em>domain</em>, <em>nd=None</em>, <em>BC_class=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.Shape" title="Permalink to this definition">¶</a></dt>

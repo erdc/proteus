@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.SplitOperator module &#8212; Proteus 1.4.0 documentation</title>
+    <title>proteus.SplitOperator module &#8212; Proteus 1.4.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.4.0',
+        VERSION:     '1.4.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -56,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.4.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -139,30 +139,8 @@
   <div class="section" id="module-proteus.SplitOperator">
 <span id="proteus-splitoperator-module"></span><h1>proteus.SplitOperator module<a class="headerlink" href="#module-proteus.SplitOperator" title="Permalink to this headline">¶</a></h1>
 <p>A class hierarchy for split operator methods.</p>
-digraph inheritancea2a0a950e2 {
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;ISO_fixed_MinAdaptiveModelStep&quot; [URL=&quot;../api/proteus.SplitOperator.html#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Look at the minimum model step and make that the system step as&quot;];
-  &quot;SO_base&quot; -&gt; &quot;ISO_fixed_MinAdaptiveModelStep&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;SO_base&quot; [URL=&quot;../api/proteus.SplitOperator.html#proteus.SplitOperator.SO_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for operating splitting methods for systems.&quot;];
-  &quot;SequentialNotInOrder_MinAdaptiveModelStep&quot; [URL=&quot;../api/proteus.SplitOperator.html#proteus.SplitOperator.SequentialNotInOrder_MinAdaptiveModelStep&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;loop through the models in some specified order&quot;];
-  &quot;Sequential_MinAdaptiveModelStep&quot; -&gt; &quot;SequentialNotInOrder_MinAdaptiveModelStep&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;SequentialNotInOrder_MinFLCBDFModelStep&quot; [URL=&quot;../api/proteus.SplitOperator.html#proteus.SplitOperator.SequentialNotInOrder_MinFLCBDFModelStep&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;loop through the models in some specified order&quot;];
-  &quot;Sequential_MinFLCBDFModelStep&quot; -&gt; &quot;SequentialNotInOrder_MinFLCBDFModelStep&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Sequential_MinAdaptiveModelStep&quot; [URL=&quot;../api/proteus.SplitOperator.html#proteus.SplitOperator.Sequential_MinAdaptiveModelStep&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Look at the minimum model step and make that the system step as&quot;];
-  &quot;SO_base&quot; -&gt; &quot;Sequential_MinAdaptiveModelStep&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Sequential_MinAdaptiveModelStep_SS&quot; [URL=&quot;../api/proteus.SplitOperator.html#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Look at the minimum model step and make that the system step as&quot;];
-  &quot;SO_base&quot; -&gt; &quot;Sequential_MinAdaptiveModelStep_SS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Sequential_MinFLCBDFModelStep&quot; [URL=&quot;../api/proteus.SplitOperator.html#proteus.SplitOperator.Sequential_MinFLCBDFModelStep&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Look at the minimum model step and make that the system step as&quot;];
-  &quot;SO_base&quot; -&gt; &quot;Sequential_MinFLCBDFModelStep&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Sequential_MinModelStep&quot; [URL=&quot;../api/proteus.SplitOperator.html#proteus.SplitOperator.Sequential_MinModelStep&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Look at the minimum model step and make that the system step as&quot;];
-  &quot;SO_base&quot; -&gt; &quot;Sequential_MinModelStep&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Sequential_NonUniformFixedStep&quot; [URL=&quot;../api/proteus.SplitOperator.html#proteus.SplitOperator.Sequential_NonUniformFixedStep&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Just step to system output time levels, allowing models to&quot;];
-  &quot;SO_base&quot; -&gt; &quot;Sequential_NonUniformFixedStep&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Sequential_tnList&quot; [URL=&quot;../api/proteus.SplitOperator.html#proteus.SplitOperator.Sequential_tnList&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;SO_base&quot; -&gt; &quot;Sequential_tnList&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;System&quot; [URL=&quot;../api/proteus.SplitOperator.html#proteus.SplitOperator.System&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-}
+<object data="../_images/inheritance-2223d5a37d5bb95a1227b757863a4f9b6bb84463.svg" type="image/svg+xml">
+            <p class="warning">Inheritance diagram of proteus.SplitOperator</p></object>
 <dl class="class">
 <dt id="proteus.SplitOperator.System">
 <em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">System</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.System" title="Permalink to this definition">¶</a></dt>

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.LinearAlgebraTools module &#8212; Proteus 1.4.0 documentation</title>
+    <title>proteus.LinearAlgebraTools module &#8212; Proteus 1.4.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.4.0',
+        VERSION:     '1.4.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -56,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.4.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -142,38 +142,8 @@
 <p>Vectors are just numpy arrays, as are dense matrices. Sparse matrices
 are CSR matrices. Parallel vector and matrix are built on top of those
 representations using PETSc.</p>
-digraph inheritanceb0b43b8140 {
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;InvOperatorShell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.InvOperatorShell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A base class for inverse operator shells &quot;];
-  &quot;OperatorShell&quot; -&gt; &quot;InvOperatorShell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;LSCInv_shell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.LSCInv_shell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Shell class for the LSC Inverse Preconditioner &quot;];
-  &quot;InvOperatorShell&quot; -&gt; &quot;LSCInv_shell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Mat&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Object&quot; -&gt; &quot;Mat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;MatrixInvShell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.MatrixInvShell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A PETSc shell class for a inverse operator.&quot;];
-  &quot;InvOperatorShell&quot; -&gt; &quot;MatrixInvShell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;MatrixShell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.MatrixShell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A shell class for a matrix.&quot;];
-  &quot;ProductOperatorShell&quot; -&gt; &quot;MatrixShell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Object&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;OperatorShell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.OperatorShell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A base class for operator shells&quot;];
-  &quot;ParInfo_petsc4py&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParInfo_petsc4py&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;ARB - this class is experimental.  My idea is to store the&quot;];
-  &quot;ParMat_petsc4py&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParMat_petsc4py&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Parallel matrix based on petsc4py's wrappers for PETSc. &quot;];
-  &quot;Mat&quot; -&gt; &quot;ParMat_petsc4py&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;ParVec&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A parallel vector built on top of daetk's wrappers for petsc&quot;];
-  &quot;ParVec_petsc4py&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Parallel vector using petsc4py's wrappers for PETSc&quot;];
-  &quot;Vec&quot; -&gt; &quot;ParVec_petsc4py&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;ProductOperatorShell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ProductOperatorShell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A base class for shell operators that apply multiplcation. &quot;];
-  &quot;OperatorShell&quot; -&gt; &quot;ProductOperatorShell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Sp_shell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.Sp_shell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Shell class for the SIMPLE preconditioner which applies the &quot;];
-  &quot;InvOperatorShell&quot; -&gt; &quot;Sp_shell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;SparseMatShell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.SparseMatShell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Build a parallel matrix shell from CSR data structures.&quot;];
-  &quot;TwoPhase_PCDInv_shell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Shell class for the two-phase PCD preconditioner.  The&quot;];
-  &quot;InvOperatorShell&quot; -&gt; &quot;TwoPhase_PCDInv_shell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Vec&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Object&quot; -&gt; &quot;Vec&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;WeightedNorm&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.WeightedNorm&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Compute the weighted norm for time step control (not currently parallel)&quot;];
-}
+<object data="../_images/inheritance-5cbf6ada3623164cccee64adede68ccfa9e2d5ef.svg" type="image/svg+xml">
+            <p class="warning">Inheritance diagram of proteus.LinearAlgebraTools</p></object>
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.petsc_load_matrix">
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">petsc_load_matrix</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc_load_matrix" title="Permalink to this definition">¶</a></dt>

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.LinearSolvers module &#8212; Proteus 1.4.0 documentation</title>
+    <title>proteus.LinearSolvers module &#8212; Proteus 1.4.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.4.0',
+        VERSION:     '1.4.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -56,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.4.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -139,62 +139,8 @@
   <div class="section" id="module-proteus.LinearSolvers">
 <span id="proteus-linearsolvers-module"></span><h1>proteus.LinearSolvers module<a class="headerlink" href="#module-proteus.LinearSolvers" title="Permalink to this headline">¶</a></h1>
 <p>A hierarchy of classes for linear algebraic system solvers.</p>
-digraph inheritance478a470905 {
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;ChebyshevSemiIteration&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.ChebyshevSemiIteration&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Class for implementing the ChebyshevSemiIteration. &quot;];
-  &quot;LinearSolver&quot; -&gt; &quot;ChebyshevSemiIteration&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;GaussSeidel&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.GaussSeidel&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Damped Gauss-Seidel.&quot;];
-  &quot;LinearSolver&quot; -&gt; &quot;GaussSeidel&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Jacobi&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.Jacobi&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Damped Jacobi iteration.&quot;];
-  &quot;LinearSolver&quot; -&gt; &quot;Jacobi&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;KSP_Preconditioner&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.KSP_Preconditioner&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for PETSCc KSP precondtioners.&quot;];
-  &quot;KSP_petsc4py&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.KSP_petsc4py&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class that interfaces Proteus with PETSc KSP.&quot;];
-  &quot;LinearSolver&quot; -&gt; &quot;KSP_petsc4py&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;LU&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.LU&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A wrapper for pysparse's wrapper for superlu.&quot;];
-  &quot;LinearSolver&quot; -&gt; &quot;LU&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;LinearSolver&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.LinearSolver&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The base class for linear solvers.  &quot;];
-  &quot;MGM&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.MGM&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A generic multigrid W cycle.&quot;];
-  &quot;MultilevelLinearSolver&quot; -&gt; &quot;MGM&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;MultilevelLinearSolver&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.MultilevelLinearSolver&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A generic multilevel solver.&quot;];
-  &quot;NI&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NI&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A generic nested iteration solver.&quot;];
-  &quot;MultilevelLinearSolver&quot; -&gt; &quot;NI&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;NavierStokes2D&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NavierStokes2D&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;NavierStokes3D&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NavierStokes3D&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;NavierStokesPressureCorrection&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NavierStokesPressureCorrection&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;NavierStokesSchur&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NavierStokesSchur&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Schur complement preconditioners for Navier-Stokes problems.&quot;];
-  &quot;SchurPrecon&quot; -&gt; &quot;NavierStokesSchur&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;NavierStokes_TwoPhasePCD&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NavierStokes_TwoPhasePCD&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Two-phase PCD Schur complement approximation class.&quot;];
-  &quot;NavierStokesSchur&quot; -&gt; &quot;NavierStokes_TwoPhasePCD&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;OperatorConstructor&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.OperatorConstructor&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for operator constructors.&quot;];
-  &quot;OperatorConstructor_oneLevel&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.OperatorConstructor_oneLevel&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class for building common discrete operators from one-level&quot;];
-  &quot;OperatorConstructor&quot; -&gt; &quot;OperatorConstructor_oneLevel&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;OperatorConstructor_rans2p&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.OperatorConstructor_rans2p&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class for building common discrete rans2p operators.&quot;];
-  &quot;OperatorConstructor&quot; -&gt; &quot;OperatorConstructor_rans2p&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;PETSc&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.PETSc&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;LinearSolver&quot; -&gt; &quot;PETSc&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;SchurOperatorConstructor&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.SchurOperatorConstructor&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Generate matrices for use in Schur complement preconditioner operators.&quot;];
-  &quot;SchurPrecon&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.SchurPrecon&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for PETSc Schur complement preconditioners.&quot;];
-  &quot;KSP_Preconditioner&quot; -&gt; &quot;SchurPrecon&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Schur_LSC&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.Schur_LSC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The Least-Squares Communtator preconditioner for saddle&quot;];
-  &quot;SchurPrecon&quot; -&gt; &quot;Schur_LSC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Schur_Qp&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.Schur_Qp&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A Navier-Stokes (or Stokes) preconditioner which uses the &quot;];
-  &quot;SchurPrecon&quot; -&gt; &quot;Schur_Qp&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Schur_Sp&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.Schur_Sp&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;This class implements the SIMPLE approximation to the Schur &quot;];
-  &quot;SchurPrecon&quot; -&gt; &quot;Schur_Sp&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;SimpleDarcyFC&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.SimpleDarcyFC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;StarBILU&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.StarBILU&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Alternating Schwarz Method on 'blocks' consisting of consectutive rows in system for things like dg ...&quot;];
-  &quot;LinearSolver&quot; -&gt; &quot;StarBILU&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;StarILU&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.StarILU&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Alternating Schwarz Method on node stars.&quot;];
-  &quot;LinearSolver&quot; -&gt; &quot;StarILU&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;StorageSet&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.StorageSet&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;TwoLevel&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.TwoLevel&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A generic two-level multiplicative Schwarz solver.&quot;];
-  &quot;LinearSolver&quot; -&gt; &quot;TwoLevel&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;petsc_ASM&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.petsc_ASM&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;ASM PETSc preconditioner class.&quot;];
-  &quot;KSP_Preconditioner&quot; -&gt; &quot;petsc_ASM&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;petsc_LU&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.petsc_LU&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;LU PETSc preconditioner class.&quot;];
-  &quot;KSP_Preconditioner&quot; -&gt; &quot;petsc_LU&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-}
+<object data="../_images/inheritance-5e73fb128eaf19a35c3b410553a460d2dadbe64c.svg" type="image/svg+xml">
+            <p class="warning">Inheritance diagram of proteus.LinearSolvers</p></object>
 <dl class="class">
 <dt id="proteus.LinearSolvers.LinearSolver">
 <em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">LinearSolver</code><span class="sig-paren">(</span><em>L</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>rtol_du=0.0001</em>, <em>atol_du=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver" title="Permalink to this definition">¶</a></dt>
