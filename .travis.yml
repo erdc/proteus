@@ -54,4 +54,5 @@ notifications:
     on_failure: always
 
 after_success:
+  - pip install codecov
   - codecov
