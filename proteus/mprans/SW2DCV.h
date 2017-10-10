@@ -13,7 +13,7 @@
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define POWER_SMOOTHNESS_INDICATOR 2
-#define LINEAR_FRICTION 0
+#define LINEAR_FRICTION 1
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
 
@@ -3531,7 +3531,7 @@ namespace proteus
 	      double veli_norm = std::sqrt(ui*ui+vi*vi);
 	      double hi_to_the_gamma = std::pow(hi,gamma);
 	      double friction_aux = 
-		veli_norm == 0. ? 0. : 2*g*n2*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,10*xi*g*n2*dt*veli_norm));
+		veli_norm == 0. ? 0. : 2*g*n2*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
 	      double ith_friction_term2 = friction_aux*hui;
 	      double ith_friction_term3 = friction_aux*hvi;
 
