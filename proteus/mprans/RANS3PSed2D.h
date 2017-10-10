@@ -766,15 +766,15 @@ namespace proteus
       /* dmom_w_ham_grad_p[2]=vos/rho; */
 
       //u momentum Hamiltonian (advection)
-      mom_u_ham += 0.0;// vos*(uStar*grad_u[0]+vStar*grad_u[1]);
-      dmom_u_ham_grad_u[0]=0.0;// vos*uStar;
-      dmom_u_ham_grad_u[1]=0.0;// vos*vStar;
+      mom_u_ham +=  vos*(uStar*grad_u[0]+vStar*grad_u[1]);
+      dmom_u_ham_grad_u[0]= vos*uStar;
+      dmom_u_ham_grad_u[1]= vos*vStar;
       /* dmom_u_ham_grad_u[2]=vos*wStar; */
   
       //v momentum Hamiltonian (advection)
-      mom_v_ham += 0.0;// vos*(uStar*grad_v[0]+vStar*grad_v[1]);
-      dmom_v_ham_grad_v[0]=0.0;// vos*uStar;
-      dmom_v_ham_grad_v[1]=0.0;// vos*vStar;
+      mom_v_ham += vos*(uStar*grad_v[0]+vStar*grad_v[1]);
+      dmom_v_ham_grad_v[0]= vos*uStar;
+      dmom_v_ham_grad_v[1]= vos*vStar;
       /* dmom_v_ham_grad_v[2]=vos*wStar; */
       
       /* //w momentum Hamiltonian (advection) */

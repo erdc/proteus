@@ -768,22 +768,22 @@ namespace proteus
       dmom_w_ham_grad_p[2]=vos/rho;
 
       //u momentum Hamiltonian (advection)
-      mom_u_ham += 0.0;// vos*(uStar*grad_u[0]+vStar*grad_u[1]+wStar*grad_u[2]);
-      dmom_u_ham_grad_u[0]=0.0;// vos*uStar;
-      dmom_u_ham_grad_u[1]=0.0;// vos*vStar;
-      dmom_u_ham_grad_u[2]=0.0;// vos*wStar;
+      mom_u_ham += vos*(uStar*grad_u[0]+vStar*grad_u[1]+wStar*grad_u[2]);
+      dmom_u_ham_grad_u[0]= vos*uStar;
+      dmom_u_ham_grad_u[1]= vos*vStar;
+      dmom_u_ham_grad_u[2]= vos*wStar;
   
       //v momentum Hamiltonian (advection)
       mom_v_ham += 0.0;// vos*(uStar*grad_v[0]+vStar*grad_v[1]+wStar*grad_v[2]);
-      dmom_v_ham_grad_v[0]=0.0;// vos*uStar;
-      dmom_v_ham_grad_v[1]=0.0;// vos*vStar;
-      dmom_v_ham_grad_v[2]=0.0;// vos*wStar;
+      dmom_v_ham_grad_v[0]= vos*uStar;
+      dmom_v_ham_grad_v[1]= vos*vStar;
+      dmom_v_ham_grad_v[2]= vos*wStar;
   
       //w momentum Hamiltonian (advection)
       mom_w_ham += 0.0;// vos*(uStar*grad_w[0]+vStar*grad_w[1]+wStar*grad_w[2]);
-      dmom_w_ham_grad_w[0]=0.0;// vos*uStar;
-      dmom_w_ham_grad_w[1]=0.0;// vos*vStar;
-      dmom_w_ham_grad_w[2]=0.0;// vos*wStar;
+      dmom_w_ham_grad_w[0]= vos*uStar;
+      dmom_w_ham_grad_w[1]= vos*vStar;
+      dmom_w_ham_grad_w[2]= vos*wStar;
     }
     //VRANS specific
     inline
