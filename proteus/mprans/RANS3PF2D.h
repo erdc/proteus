@@ -1192,6 +1192,10 @@ namespace proteus
           }
 
         double phi_s_effect = (phi_s > 0.0) ? 1.0 : 0.0;
+        
+        //printf("phi_s --> %3.2f\n", phi_s);
+        //printf("phi_s_effect --> %3.2f\n", phi_s_effect);
+        //printf("porosity --> %3.2f\n", porosity);
 
         //u momentum accumulation
         mom_u_acc=phi_s_effect * u;//trick for non-conservative form
@@ -1395,11 +1399,11 @@ namespace proteus
         duc_dv = v/(uc+1.0e-12);
         duc_dw = w/(uc+1.0e-12);
         double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
-        double new_beta =0.0;// closure.betaCoeff(1.0-phi_s,
-                             //               rho,
-                             //               fluid_velocity,
-                             //               solid_velocity,
-                             //               viscosity);
+        double new_beta = closure.betaCoeff(1.0-phi_s,
+                                            rho,
+                                            fluid_velocity,
+                                            solid_velocity,
+                                            viscosity);
 
         new_beta /= rho;
         mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s);
