@@ -4,11 +4,10 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
-extern "C"
-{
+
 #include PROTEUS_LAPACK_H
 #include PROTEUS_BLAS_H
-}
+
 #include "proteus_blas.h"
 #include "CompKernel.h"
 #include "ModelFactory.h"
