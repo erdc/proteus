@@ -2,10 +2,11 @@ from proteus import Domain
 from proteus import Context
 
 ct=Context.Options([
-    ("parallel",False,"Use PETSc or not"),
-    ("linearSmoother",False,"Use linear smoother or not"),
+    ("T",1.0,"Time interval [0, T]"),
     ("checkMass",False,"Check mass or not"),
     ("cfl",0.3,"Target CFL number"),
+    ("parallel",False,"Use PETSc or not"),
+    ("linearSmoother",False,"Use linear smoother or not"),
     ("correctionType",'cg',"Use 'cg' or 'dg' or 'dgp0' or 'global' or 'none'"),
     ("unstructured",False,"unstructured mesh or not")
 ],mutable=True)
@@ -30,7 +31,6 @@ timeOrder = 2
 runCFL = ct.cfl#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 #
 #spatial approximation orders
-import pdb;pdb.set_trace()
 cDegree_ls=0#0 -- CG. -1 -- DG
 cDegree_vof=0
 pDegree_ls=1 #level set
@@ -70,7 +70,7 @@ if unstructured:
 else:
     domain = box
 #end time of simulation, full problem is T=8.0
-T = 1.0#8.0#
+T = ct.T#8.0#
 #number of output time steps
 nDTout = 10
 #mass correction
