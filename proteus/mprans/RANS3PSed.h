@@ -837,21 +837,21 @@ namespace proteus
                                           solid_velocity,
                                           viscosity);
       new_beta/=rho;
-      mom_u_source += 1e-10;// (1.0 - phi_s)*new_beta*(u-u_f);
-      mom_v_source += 1e-10;// (1.0 - phi_s)*new_beta*(v-v_f);
-      mom_w_source += 1e-10;// (1.0 - phi_s)*new_beta*(w-w_f);
+      mom_u_source += (1.0 - phi_s)*new_beta*(u-u_f);
+      mom_v_source += (1.0 - phi_s)*new_beta*(v-v_f);
+      mom_w_source += (1.0 - phi_s)*new_beta*(w-w_f);
 
       dmom_u_source[0] = 1e-10;// (1.0 - phi_s)*new_beta;
       dmom_u_source[1] = 0.0;
       dmom_u_source[2] = 0.0;
     
       dmom_v_source[0] = 0.0;
-      dmom_v_source[1] = 1e-10;// (1.0 - phi_s)*new_beta;
+      dmom_v_source[1] = (1.0 - phi_s)*new_beta;
       dmom_v_source[2] = 0.0;
 
       dmom_w_source[0] = 0.0;
       dmom_w_source[1] = 0.0;
-      dmom_w_source[2] = 1e-10;// (1.0 - phi_s)*new_beta;
+      dmom_w_source[2] = (1.0 - phi_s)*new_beta;
     }
 
     inline
