@@ -29,7 +29,7 @@ public:
 		 
 ): 
  
-  aDarcy_(aDarcy), 
+    aDarcy_(aDarcy), 
     betaForch_(betaForch), 
     grain_(grain),
     packFraction_(packFraction),

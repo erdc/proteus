@@ -634,12 +634,12 @@ namespace proteus
       //..hardwired
       
       //u momentum accumulation
-      mom_u_acc=vos*u;//trick for non-conservative form
-      dmom_u_acc_u=vos;
+      mom_u_acc=u;//trick for non-conservative form
+      dmom_u_acc_u=vos*rho;
   
       //v momentum accumulation
-      mom_v_acc=vos*v;
-      dmom_v_acc_v=vos;
+      mom_v_acc=v;
+      dmom_v_acc_v=vos*rho;
   
       /* //w momentum accumulation */
       /* mom_w_acc=w; */
@@ -743,20 +743,20 @@ namespace proteus
   
       //momentum sources
       norm_n = sqrt(n[0]*n[0]+n[1]*n[1]);//+n[2]*n[2]);
-      mom_u_source = -vos*g[0];// - vos*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
-      mom_v_source = -vos*g[1];// - vos*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
+      mom_u_source = -vos*rho*g[0];// - vos*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
+      mom_v_source = -vos*rho*g[1];// - vos*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
       /* mom_w_source = -vos*g[2];// - vos*d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8)); */
    
       //u momentum Hamiltonian (pressure)
-      mom_u_ham = vos*grad_p[0]/rho;
-      dmom_u_ham_grad_p[0]=vos/rho;
+      mom_u_ham = vos*grad_p[0];///rho;
+      dmom_u_ham_grad_p[0]=vos;///rho;
       dmom_u_ham_grad_p[1]=0.0;
       /* dmom_u_ham_grad_p[2]=0.0; */
   
       //v momentum Hamiltonian (pressure)
-      mom_v_ham = vos*grad_p[1]/rho;
+      mom_v_ham = vos*grad_p[1];///rho;
       dmom_v_ham_grad_p[0]=0.0;
-      dmom_v_ham_grad_p[1]=vos/rho;
+      dmom_v_ham_grad_p[1]=vos;///rho;
       /* dmom_v_ham_grad_p[2]=0.0; */
   
       /* //w momentum Hamiltonian (pressure) */
@@ -766,15 +766,15 @@ namespace proteus
       /* dmom_w_ham_grad_p[2]=vos/rho; */
 
       //u momentum Hamiltonian (advection)
-      mom_u_ham +=  vos*(uStar*grad_u[0]+vStar*grad_u[1]);
-      dmom_u_ham_grad_u[0]= vos*uStar;
-      dmom_u_ham_grad_u[1]= vos*vStar;
+      mom_u_ham +=  vos*rho*(uStar*grad_u[0]+vStar*grad_u[1]);
+      dmom_u_ham_grad_u[0]= vos*rho*uStar;
+      dmom_u_ham_grad_u[1]= vos*rho*vStar;
       /* dmom_u_ham_grad_u[2]=vos*wStar; */
   
       //v momentum Hamiltonian (advection)
-      mom_v_ham += vos*(uStar*grad_v[0]+vStar*grad_v[1]);
-      dmom_v_ham_grad_v[0]= vos*uStar;
-      dmom_v_ham_grad_v[1]= vos*vStar;
+      mom_v_ham += vos*rho*(uStar*grad_v[0]+vStar*grad_v[1]);
+      dmom_v_ham_grad_v[0]= vos*rho*uStar;
+      dmom_v_ham_grad_v[1]= vos*rho*vStar;
       /* dmom_v_ham_grad_v[2]=vos*wStar; */
       
       /* //w momentum Hamiltonian (advection) */
@@ -834,23 +834,23 @@ namespace proteus
                                           fluid_velocity,
                                           solid_velocity,
                                           viscosity);
-      new_beta/=rho;
+      //new_beta/=rho;
       //std::cout<<"total "<<(1.0-phi_s)*new_beta<<std::endl;
-      mom_u_source += (1.0 - phi_s)*new_beta*(u-u_f);
-      mom_v_source += (1.0 - phi_s)*new_beta*(v-v_f);
+      mom_u_source += -(1.0 - phi_s)*new_beta*(u-u_f);
+      mom_v_source += -(1.0 - phi_s)*new_beta*(v-v_f);
       /* mom_w_source += phi_s*new_beta*(w-w_s); */
 
-      dmom_u_source[0] = (1.0 - phi_s)*new_beta;
+      dmom_u_source[0] = -(1.0 - phi_s)*new_beta;
       dmom_u_source[1] = 0.0;
       /* dmom_u_source[2] = 0.0; */
       
       dmom_v_source[0] = 0.0;
-      dmom_v_source[1] = (1.0 - phi_s)*new_beta;
+      dmom_v_source[1] = -(1.0 - phi_s)*new_beta;
       dmom_v_source[2] = 0.0;
 
       dmom_w_source[0] = 0.0;
       dmom_w_source[1] = 0.0;
-      dmom_w_source[2] = (1.0 - phi_s)*new_beta;
+      dmom_w_source[2] = -(1.0 - phi_s)*new_beta;
     }
 
     inline
