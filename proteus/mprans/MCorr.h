@@ -12,7 +12,7 @@ namespace proteus
   {
   public:
     virtual ~MCorr_base(){}
-    virtual void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
+    virtual void FCTStepL2p(int NNZ, //number on non-zero entries on sparsity pattern
 			 int numDOFs, //number of DOFs
 			 double* lumped_mass_matrix, //lumped mass matrix (as vector)
 			 double* solH, //DOFs of high order solution at tnp1
@@ -511,7 +511,7 @@ namespace proteus
       dr = porosity*smoothedDirac(epsDirac,phi+u);
     }
 
-    void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
+    void FCTStepL2p(int NNZ, //number on non-zero entries on sparsity pattern
 		 int numDOFs, //number of DOFs
 		 double* lumped_mass_matrix, //lumped mass matrix (as vector)
 		 double* solH, //DOFs of high order solution at tnp1

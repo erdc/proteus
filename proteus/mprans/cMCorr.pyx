@@ -6,7 +6,7 @@ from proteus.Transport import OneLevelTransport
 
 cdef extern from "MCorr.h" namespace "proteus":
     cdef cppclass MCorr_base:
-        void FCTStep(int NNZ,
+        void FCTStepL2p(int NNZ,
 		     int numDOFs,
 		     double* lumped_mass_matrix, 
 		     double* solH, 
@@ -432,7 +432,7 @@ cdef class cMCorr_base:
                               CompKernelFlag)
    def __dealloc__(self):
        del self.thisptr
-   def FCTStep(self, 
+   def FCTStepL2p(self, 
                int NNZ,
 	       int numDOFs,
 	       numpy.ndarray lumped_mass_matrix, 
@@ -442,7 +442,7 @@ cdef class cMCorr_base:
 	       numpy.ndarray csrRowIndeces_DofLoops, 
 	       numpy.ndarray csrColumnOffsets_DofLoops, 
 	       numpy.ndarray MassMatrix):
-       self.thisptr.FCTStep(NNZ,
+       self.thisptr.FCTStepL2p(NNZ,
 	                    numDOFs,
 			    <double*> lumped_mass_matrix.data, 
 			    <double*> solH.data,

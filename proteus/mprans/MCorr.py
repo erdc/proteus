@@ -512,9 +512,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.rhs_mass_correction = None
         self.MassMatrix_sparseFactor=None
         self.Jacobian_sparseFactor=None
-        self.lumped_L2p_vof_mass_correction=None
-        self.limited_L2p_vof_mass_correction=None
-        self.L2p_vof_mass_correction=None
+        self.lumped_L2p=None
+        self.limited_L2p=None
+        self.consistent_L2p=None
 
         comm = Comm.get()
         self.comm=comm
@@ -575,18 +575,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
     #mwf these are getting called by redistancing classes,
-    def FCTStep(self):
+    def FCTStepL2p(self):
         rowptr, colind, MassMatrix = self.MassMatrix.getCSRrepresentation()
-        if (self.limited_L2p_vof_mass_correction is None):
-            self.limited_L2p_vof_mass_correction = numpy.zeros(self.LumpedMassMatrix.size,'d')
+        if (self.limited_L2p is None):
+            self.limited_L2p = numpy.zeros(self.LumpedMassMatrix.size,'d')
 
-        self.mcorr.FCTStep(
+        self.mcorr.FCTStepL2p(
             self.nnz, #number of non zero entries 
             len(rowptr)-1, #number of DOFs
             self.LumpedMassMatrix, #Lumped mass matrix
-            self.L2p_vof_mass_correction, # high order projection
-            self.lumped_L2p_vof_mass_correction, #low order projection
-            self.limited_L2p_vof_mass_correction,
+            self.consistent_L2p, # high order projection
+            self.lumped_L2p, #low order projection
+            self.limited_L2p,
             rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
             colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
             MassMatrix)        
@@ -1057,8 +1057,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #Set rhs of mass correction to zero
         if self.rhs_mass_correction is None:
             self.rhs_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape,'d')
-            self.lumped_L2p_vof_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape,'d')
-            self.L2p_vof_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape,'d')
+            self.lumped_L2p = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape,'d')
+            self.consistent_L2p = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape,'d')
         else: 
             self.rhs_mass_correction.fill(0.0)
         
@@ -1110,9 +1110,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.rhs_mass_correction, # (MQL): compute rhs for L2 projection. 
-            self.lumped_L2p_vof_mass_correction, 
+            self.lumped_L2p, 
             self.LumpedMassMatrix,
-            self.lumped_L2p_vof_mass_correction.size)
+            self.lumped_L2p.size)
         
     def setMassQuadrature(self):
         self.mcorr.setMassQuadrature(#element
