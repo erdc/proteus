@@ -537,7 +537,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
-    #mwf these are getting called by redistancing classes,
+        self.history = open("lagrange_history.txt","w")
+        self.history.write('J'+","+
+                           'LAGR'+","+
+                           'LAGR_a'+","+
+                           'LAGR_l'+","+
+                           'LAGR_u'+","+
+                           'bu'+","+
+                           'bl'+"\n")
+
     def calculateCoefficients(self):
         pass
     def calculateElementResidual(self):
@@ -556,17 +564,24 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
         #no flux boundary conditions
-        self.lambda_dof = self.u[0].dof.copy()
-        self.lambda_dof[:]=1.0
         self.global_J=0.0
         self.global_LAGR=0.0
         self.global_LAGR_a=0.0
-        self.global_LAGR_u=r.copy()
-        self.global_b_u=r.copy()
-        self.global_b_l=r.copy()
-        self.global_LAGR_u[:]=0.0
-        self.global_b_u[:]=0.0
-        self.global_b_l[:]=0.0
+        try:
+            self.lambda_dof[:]=1.0
+            self.global_LAGR_u[:]=0.0
+            self.global_b_u[:]=0.0
+            self.global_b_l[:]=0.0
+        except:
+            self.lambda_dof = self.u[0].dof.copy()
+            self.global_LAGR_u=r.copy()
+            self.global_b_u=r.copy()
+            self.global_b_l=r.copy()
+            self.lambda_dof[:]=1.0
+            self.global_LAGR_u[:]=0.0
+            self.global_b_u[:]=0.0
+            self.global_b_l[:]=0.0
+            
         (self.global_J,
          self.global_LAGR,
          self.global_LAGR_a) = self.mcorr.calculateResidual(#element
@@ -620,12 +635,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.mesh.exteriorElementBoundariesArray,
              self.mesh.elementBoundaryElementsArray,
              self.mesh.elementBoundaryLocalElementBoundariesArray)
+        self.global_LAGR_l = r
         logEvent("Global residual",level=9,data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         logEvent("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
+
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,jacobian)
         try:
@@ -923,7 +940,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def estimate_mt(self):
         pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
-        pass
+        from numpy import linalg as LA
+        self.history.write(repr(self.global_J)+","+
+                           repr(self.global_LAGR)+","+
+                           repr(fabs(self.global_LAGR_a))+","+
+                           repr(fabs(globalSum(self.global_LAGR_l[:self.mesh.nNodes_owned].sum())))+","+
+                           repr(fabs(globalSum(LA.norm(self.global_LAGR_u[:self.mesh.nNodes_owned]))))+","+
+                           repr(fabs(globalSum(LA.norm(self.global_b_u[:self.mesh.nNodes_owned]))))+","+
+                           repr(fabs(globalSum(LA.norm(self.global_b_l[:self.mesh.nNodes_owned]))))+"\n")
+        self.history.flush()
+
     def calculateMass(self,q_phi):
         from proteus.flcbdfWrappers import globalSum
         return globalSum(self.mcorr.calculateMass(#element

@@ -85,7 +85,7 @@ else:
 
 #use absolute tolerances on al models
 atolRedistance = max(1.0e-12,0.1*he)
-atolConservation = max(1.0e-12,0.001*he**2)
+atolConservation = 1.0e-12#max(1.0e-12,0.001*he**2)
 atolVolumeOfFluid= max(1.0e-12,0.001*he**2)
 atolLevelSet     = max(1.0e-12,0.001*he**2)
 #controls
