@@ -556,6 +556,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
         #no flux boundary conditions
+        self.lambda_dof = self.u[0].dof.copy()
+        self.lambda_dof[:]=1.0
+        self.global_J=0.0
+        self.global_LAGR=0.0
+        self.global_LAGR_a=0.0
+        self.global_LAGR_u=r.copy()
+        self.global_b_u=r.copy()
+        self.global_b_l=r.copy()
+        self.global_LAGR_u[:]=0.0
+        self.global_b_u[:]=0.0
+        self.global_b_l[:]=0.0
         self.mcorr.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -586,6 +597,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter,#self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
+            self.lambda_dof,
             self.coefficients.q_u_ls,
             self.coefficients.q_n_ls,
             self.coefficients.ebqe_u_ls,
@@ -599,10 +611,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_porosity,
             self.offset[0],self.stride[0],
             r,
+            self.global_LAGR_u,
+            self.global_b_u,
+            self.global_b_l,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
+        #self.global_J,
+        #    self.global_LAGR,
+        #   self.global_LAGR_a,
         logEvent("Global residual",level=9,data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         logEvent("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
@@ -611,6 +629,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,jacobian)
+        import pdb
+        pdb.set_trace()
+        try:
+            cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,self.Nmat)
+        except:
+            rowptr, colind, nzval = jacobian.getCSRrepresentation()
+            self.Nmat = SparseMat(self.u[0].dof.shape[0],self.u[0].dof.shape[0],nzval.shape[0],nzval.copy(),colind.copy(),rowptr.copy())
+            cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,self.Nmat)
         self.mcorr.calculateJacobian(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -640,12 +666,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter,#self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
+            self.lambda_dof,
             self.coefficients.q_u_ls,
-			self.coefficients.q_n_ls,
+	    self.coefficients.q_n_ls,
             self.coefficients.q_H_vof,
             self.coefficients.q_porosity,
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-            jacobian)
+            jacobian,
+            self.Nmat)
+        pdb.set_trace()
         logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
