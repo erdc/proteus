@@ -454,7 +454,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         # motion update
             Tra[ii] = Dt - (self.last_position[ii] - self.init_barycenter[ii])
             Rot[ii] = Dr - (self.last_rotation_euler[ii])
-
+        
         return Tra, Rot
 
 
@@ -1375,7 +1375,7 @@ class PaddleBody(RigidBody):
         super(PaddleBody, self).__init__(shape, substeps)
         self.pivot = np.zeros(3)
         self.last_pivot = np.zeros(3)
-        self.barycenter = self.Shape.barycenter #= np.array([(self.Shape.vertices[0][0]+self.Shape.vertices[1][0])*0.5, 0.0,0.0] )
+        self.Shape.barycenter = np.array([(self.Shape.vertices[0][0]+self.Shape.vertices[1][0])*0.5, 0.0,0.0] )
         self.init_barycenter = self.Shape.barycenter.copy()
         # variables for checking numerical method
         self.ux = 0.0
@@ -1431,6 +1431,49 @@ class PaddleBody(RigidBody):
         self.last_uy = self.uy
 
 
+    def step(self, dt, substeps=20):
+        """
+        Step for rigid body calculations in Python
+        Parameters
+        ----------
+        dt: float
+            time step
+        """
+        nd = self.Shape.Domain.nd
+        # reinitialise displacement values
+        self.ang_disp[:] = np.zeros(3)
+        self.h[:] = np.zeros(3)
+
+        # Calculate or impose motion of the rigid body
+        if self.InputMotion == True:
+            # sinusoidal motion imposed
+            self.h[:], self.ang_disp[:] = self.imposeSinusoidalMotion()
+        else:
+            # Translational motion calculation
+            self.h[:] = self.getDisplacement(dt)
+            # Rotational motion calculation
+            self.ang_disp[:] = self.getAngularDisplacement(dt)
+        
+        # translate
+        self.Shape.translate(self.h[:nd])
+        # rotate
+        if nd ==2:
+            self.ang = self.ang_disp[2]
+        else:
+            self.ang = np.linalg.norm(self.ang_disp)
+        if self.ang != 0.:
+            self.Shape.rotate(self.ang, self.ang_vel, self.pivot)
+            self.rotation[:nd, :nd] = self.Shape.coords_system
+            self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation),
+                                             self.rotation)
+            self.rotation_euler[:] = getEulerAngles(self.rotation)
+        else:
+            self.rotation_matrix[:] = np.eye(3)
+        self.barycenter[:] = self.Shape.barycenter
+        self.position[:] = self.Shape.barycenter
+        
+
+
     def inputMotion(self, InputMotion=False, pivot=None, 
                           At=[0., 0., 0], Tt=[0., 0., 0],
                           Ar=[0., 0., 0], Tr=[0., 0., 0]):
@@ -1457,6 +1500,9 @@ class PaddleBody(RigidBody):
             self.pivot = self.Shape.barycenter
         else:
             self.pivot = np.array(pivot)
+            self.Shape.barycenter = self.pivot
+            self.init_barycenter = self.Shape.barycenter.copy()
+
         self.At = np.array(At)
         self.Tt = np.array(Tt)
         self.Ar = np.array(Ar)
@@ -1488,56 +1534,8 @@ class PaddleBody(RigidBody):
         # motion update
             Tra[ii] = Dt - (self.last_position[ii] - self.init_barycenter[ii])
             Rot[ii] = Dr - (self.last_rotation_euler[ii])
-
+        
         return Tra, Rot       
-
-
-    def step(self, dt, substeps=20):
-        """
-        Step for rigid body calculations in Python
-        Parameters
-        ----------
-        dt: float
-            time step
-        """
-        nd = self.Shape.Domain.nd
-        # reinitialise displacement values
-        self.ang_disp[:] = np.zeros(3)
-        self.h[:] = np.zeros(3)
-
-        # Calculate or impose motion of the rigid body
-        if self.InputMotion == True:
-            # sinusoidal motion imposed
-            self.h[:], self.ang_disp[:] = self.imposeSinusoidalMotion()
-        else:
-            # Translational motion calculation
-            self.h[:] = self.getDisplacement(dt)
-            # Rotational motion calculation
-            ang_disp[:] = self.getAngularDisplacement(dt)
-        
-        # translate
-        self.Shape.translate(self.h[:nd])
-        # rotate
-        if nd ==2:
-            self.ang = self.ang_disp[2]
-        else:
-            self.ang = np.linalg.norm(self.ang_disp)
-        if self.ang != 0.:
-            self.Shape.rotate(self.ang, self.ang_vel, self.pivot)
-            self.rotation[:nd, :nd] = self.Shape.coords_system
-            self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation),
-                                             self.rotation)
-            self.rotation_euler[:] = getEulerAngles(self.rotation)
-        else:
-            self.rotation_matrix[:] = np.eye(3)
-        self.barycenter[:] = self.Shape.barycenter
-        self.position[:] = self.Shape.barycenter
-        
-        # update vertices for friction and overturning modules
-        self.cV[0] = self.Shape.vertices[0]
-        self.cV[1] = self.Shape.vertices[1]
-        self.cV[2] = self.Shape.vertices[2]
-        self.cV[3] = self.Shape.vertices[3]
 
 
 
