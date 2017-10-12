@@ -485,9 +485,9 @@ namespace proteus
 					 double* element_u,
 					 int eN,
 					 double *element_lambda,
-					 double element_J,
-					 double element_LAGR,
-					 double element_LAGR_a,
+					 double& element_J,
+					 double& element_LAGR,
+					 double& element_LAGR_a,
 					 double *element_LAGR_u,
 					 double *element_b_u,
 					 double *element_b_l)
@@ -703,6 +703,9 @@ namespace proteus
       //eN_j is the element trial function index
       //eN_k_j is the quadrature point index for a trial function
       //eN_k_i is the quadrature point index for a trial function
+      *global_J =0.0;
+      *global_LAGR =0.0;
+      *global_LAGR_a =0.0;
       for(int eN=0;eN<nElements_global;eN++)
 	{
 	  //declare local storage for element residual and initialize
@@ -768,9 +771,9 @@ namespace proteus
 				   element_u,
 				   eN,
 				   element_lambda,
-				   element_J=0.0,
-				   element_LAGR=0.0,
-				   element_LAGR_a=0.0,
+				   element_J,
+				   element_LAGR,
+				   element_LAGR_a,
 				   element_LAGR_u,
 				   element_b_u,
 				   element_b_l);
@@ -1234,7 +1237,7 @@ namespace proteus
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
 	      element_u[i]=0.0;
-	      /* element_lambda[i]=1.0; */
+	      element_lambda[i]=1.0;
 	    }//i
 	  calculateElementResidual(mesh_trial_ref,
 				   mesh_grad_trial_ref,
@@ -1283,9 +1286,9 @@ namespace proteus
 				   element_u,
 				   eN,
 				   element_lambda,
-				   element_J=0.0,
-				   element_LAGR=0.0,
-				   element_LAGR_a=0.0,
+				   element_J,
+				   element_LAGR,
+				   element_LAGR_a,
 				   element_LAGR_u,
 				   element_b_u,
 				   element_b_l);
@@ -1418,9 +1421,9 @@ namespace proteus
 					   element_u,
 					   eN,
 					   element_lambda,
-					   element_J=0.0,
-					   element_LAGR=0.0,
-					   element_LAGR_a=0.0,
+					   element_J,
+					   element_LAGR,
+					   element_LAGR_a,
 					   element_LAGR_u,
 					   element_b_u,
 					   element_b_l);
@@ -1556,9 +1559,9 @@ namespace proteus
 				   element_u,
 				   eN,
 				   element_lambda,
-				   element_J=0.0,
-				   element_LAGR=0.0,
-				   element_LAGR_a=0.0,
+				   element_J,
+				   element_LAGR,
+				   element_LAGR_a,
 				   element_LAGR_u,
 				   element_b_u,
 				   element_b_l);
@@ -1674,9 +1677,9 @@ namespace proteus
 				       element_u,
 				       eN,
 				       element_lambda,
-				       element_J=0.0,
-				       element_LAGR=0.0,
-				       element_LAGR_a=0.0,
+				       element_J,
+				       element_LAGR,
+				       element_LAGR_a,
 				       element_LAGR_u,
 				       element_b_u,
 				       element_b_l);
@@ -1812,9 +1815,9 @@ namespace proteus
 				   element_u,
 				   eN,
 				   element_lambda,
-				   element_J=0.0,
-				   element_LAGR=0.0,
-				   element_LAGR_a=0.0,
+				   element_J,
+				   element_LAGR,
+				   element_LAGR_a,
 				   element_LAGR_u,
 				   element_b_u,
 				   element_b_l);
