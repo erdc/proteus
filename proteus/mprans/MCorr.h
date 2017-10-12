@@ -620,6 +620,9 @@ namespace proteus
 	      	ck.NumericalDiffusion(epsDiffusion,
 	      			      grad_lambda,
 	      			      &u_grad_test_dV[i_nSpace]);
+
+	      element_b_l[i] += ck.NumericalDiffusion(1.0,grad_lambda,&u_grad_test_dV[i_nSpace]);
+	      element_b_u[i] += ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace]);
 	    }//i
 	  
 	  //
@@ -789,8 +792,8 @@ namespace proteus
           
 	      globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
 	      global_LAGR_u[offset_u+stride_u*u_l2g[eN_i]]+=element_LAGR_u[i];
-	      global_b_u[offset_u+stride_u*u_l2g[eN_i]]+=global_b_u[i];
-	      global_b_l[offset_u+stride_u*u_l2g[eN_i]]+=global_b_l[i];
+	      global_b_u[offset_u+stride_u*u_l2g[eN_i]]+=element_b_u[i];
+	      global_b_l[offset_u+stride_u*u_l2g[eN_i]]+=element_b_l[i];
 	    }//i
 	}//elements
       //
