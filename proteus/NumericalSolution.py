@@ -1597,9 +1597,14 @@ class NS_base:  # (HasTraits):
         except:
             pass  
 
-        #For aux quantity of interest (MQL)        
+        #For aux quantity of interest (MQL)
+
         try:
             if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                try:
+                    model.levelModelList[-1].setQuantDOFs()
+                except:
+                    pass
                 quantDOFs = {}
                 quantDOFs[0] = model.levelModelList[-1].quantDOFs
                 model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
