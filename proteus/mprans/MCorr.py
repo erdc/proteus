@@ -567,60 +567,59 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_LAGR_u[:]=0.0
         self.global_b_u[:]=0.0
         self.global_b_l[:]=0.0
-        self.mcorr.calculateResidual(#element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u',0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            #element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u',0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            #physics
-            self.mesh.nElements_global,
-	    self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,#self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            self.lambda_dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.ebqe_u_ls,
-            self.coefficients.ebqe_n_ls,
-            self.coefficients.q_H_vof,
-            self.q[('u',0)],
-            self.q[('grad(u)',0)],
-            self.ebqe[('u',0)],
-            self.ebqe[('grad(u)',0)],
-            self.q[('r',0)],
-            self.coefficients.q_porosity,
-            self.offset[0],self.stride[0],
-            r,
-            self.global_LAGR_u,
-            self.global_b_u,
-            self.global_b_l,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray)
-        #self.global_J,
-        #    self.global_LAGR,
-        #   self.global_LAGR_a,
+        (self.global_J,
+         self.global_LAGR,
+         self.global_LAGR_a) = self.mcorr.calculateResidual(#element
+             self.u[0].femSpace.elementMaps.psi,
+             self.u[0].femSpace.elementMaps.grad_psi,
+             self.mesh.nodeArray,
+             self.mesh.elementNodesArray,
+             self.elementQuadratureWeights[('u',0)],
+             self.u[0].femSpace.psi,
+             self.u[0].femSpace.grad_psi,
+             self.u[0].femSpace.psi,
+             self.u[0].femSpace.grad_psi,
+             #element boundary
+             self.u[0].femSpace.elementMaps.psi_trace,
+             self.u[0].femSpace.elementMaps.grad_psi_trace,
+             self.elementBoundaryQuadratureWeights[('u',0)],
+             self.u[0].femSpace.psi_trace,
+             self.u[0].femSpace.grad_psi_trace,
+             self.u[0].femSpace.psi_trace,
+             self.u[0].femSpace.grad_psi_trace,
+             self.u[0].femSpace.elementMaps.boundaryNormals,
+             self.u[0].femSpace.elementMaps.boundaryJacobians,
+             #physics
+             self.mesh.nElements_global,
+	     self.coefficients.useMetrics,
+             self.coefficients.epsFactHeaviside,
+             self.coefficients.epsFactDirac,
+             self.coefficients.epsFactDiffusion,
+             self.u[0].femSpace.dofMap.l2g,
+             self.elementDiameter,#self.mesh.elementDiametersArray,
+             self.mesh.nodeDiametersArray,
+             self.u[0].dof,
+             self.lambda_dof,
+             self.coefficients.q_u_ls,
+             self.coefficients.q_n_ls,
+             self.coefficients.ebqe_u_ls,
+             self.coefficients.ebqe_n_ls,
+             self.coefficients.q_H_vof,
+             self.q[('u',0)],
+             self.q[('grad(u)',0)],
+             self.ebqe[('u',0)],
+             self.ebqe[('grad(u)',0)],
+             self.q[('r',0)],
+             self.coefficients.q_porosity,
+             self.offset[0],self.stride[0],
+             r,
+             self.global_LAGR_u,
+             self.global_b_u,
+             self.global_b_l,
+             self.mesh.nExteriorElementBoundaries_global,
+             self.mesh.exteriorElementBoundariesArray,
+             self.mesh.elementBoundaryElementsArray,
+             self.mesh.elementBoundaryLocalElementBoundariesArray)
         logEvent("Global residual",level=9,data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         logEvent("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
@@ -629,13 +628,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,jacobian)
-        import pdb
-        pdb.set_trace()
         try:
             cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,self.Nmat)
         except:
             rowptr, colind, nzval = jacobian.getCSRrepresentation()
-            self.Nmat = SparseMat(self.u[0].dof.shape[0],self.u[0].dof.shape[0],nzval.shape[0],nzval.copy(),colind.copy(),rowptr.copy())
+            self.rowptr_N = rowptr.copy()
+            self.colind_N = colind.copy()
+            self.nzval_N = nzval.copy()
+            self.Nmat = SparseMat(self.u[0].dof.shape[0],
+                                  self.u[0].dof.shape[0],
+                                  self.nzval_N.shape[0],
+                                  self.nzval_N,
+                                  self.colind_N,
+                                  self.rowptr_N)
             cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,self.Nmat)
         self.mcorr.calculateJacobian(#element
             self.u[0].femSpace.elementMaps.psi,
@@ -674,7 +679,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
             jacobian,
             self.Nmat)
-        pdb.set_trace()
         logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
