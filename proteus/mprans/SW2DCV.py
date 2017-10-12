@@ -95,15 +95,13 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.timeOrder = timeOrder  #order of approximation
         self.nStages = timeOrder  #number of stages total
         self.lstage = 0  #last stage completed
-        # storage vectors
+        # storage vectors (at old time step)
         self.u_dof_last = {}
-        # per component stage values, list with array at each stage
-        self.u_dof_stage = {}
+        # per component lstage values
+        self.u_dof_lstage = {}
         for ci in range(self.nc):
             self.u_dof_last[ci] = transport.u[ci].dof.copy()
-            self.u_dof_stage[ci] = []
-            for k in range(self.nStages+1):                    
-                self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
+            self.u_dof_lstage[ci] = transport.u[ci].dof.copy()
         
     def choose_dt(self):
         maxCFL = 1.0e-6
@@ -113,13 +111,13 @@ class RKEV(proteus.TimeIntegration.SSP):
         rowptr_cMatrix, colind_cMatrix, CTx = self.transport.cterm_global_transpose[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, CTy = self.transport.cterm_global_transpose[1].getCSRrepresentation()
         numDOFsPerEqn = self.transport.u[0].dof.size
-        
+
         adjusted_maxCFL = self.transport.sw2d.calculateEdgeBasedCFL(
             self.transport.coefficients.g, 
             numDOFsPerEqn,
             self.transport.ML,
-            self.transport.u[0].dof, 
-            self.transport.u[1].dof, 
+            self.transport.u[0].dof,
+            self.transport.u[1].dof,
             self.transport.u[2].dof,
             self.transport.coefficients.b.dof,
             rowptr_cMatrix, 
@@ -135,7 +133,8 @@ class RKEV(proteus.TimeIntegration.SSP):
             self.transport.edge_based_cfl)
 
         maxCFL = max(maxCFL,max(adjusted_maxCFL, globalMax(self.edge_based_cfl.max())))
-        self.dt = self.runCFL/maxCFL            
+        self.dt = self.runCFL/maxCFL
+
         if self.dtLast is None:
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
@@ -154,8 +153,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         beta are all 1's here
         mwf not used right now
         """
-        self.alpha = numpy.zeros((self.nStages, self.nStages),'d')
-        self.dcoefs = numpy.zeros((self.nStages),'d')
+        # Not needed for an implementation when alpha and beta are not used
         
     def updateStage(self):
         """
@@ -168,34 +166,35 @@ class RKEV(proteus.TimeIntegration.SSP):
             if self.lstage == 1:
                 logEvent("First stage of SSP33 method",level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
-                    # update u_dof_old
-                    #self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
+                    self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
+                # update u_dof_old
+                self.transport.h_dof_old[:] = self.u_dof_lstage[0]
+                self.transport.hu_dof_old[:] = self.u_dof_lstage[1]
+                self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
             elif self.lstage == 2:
                 logEvent("Second stage of SSP33 method",level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
-                    self.u_dof_stage[ci][self.lstage] *= 1./4.
-                    self.u_dof_stage[ci][self.lstage] += 3./4.*self.u_dof_last[ci]
-                    # update u_dof_old
-                    #self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
+                    self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
+                    self.u_dof_lstage[ci] *= 1./4.
+                    self.u_dof_lstage[ci] += 3./4.*self.u_dof_last[ci]
+                # update u_dof_old
+                self.transport.h_dof_old[:] = self.u_dof_lstage[0]
+                self.transport.hu_dof_old[:] = self.u_dof_lstage[1]
+                self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
             elif self.lstage == 3:
                 logEvent("Third stage of SSP33 method",level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof)
-                    self.u_dof_stage[ci][self.lstage][:] *= 2.0/3.0
-                    self.u_dof_stage[ci][self.lstage][:] += 1.0/3.0*self.u_dof_last[ci]
+                    self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
+                    self.u_dof_lstage[ci][:] *= 2.0/3.0
+                    self.u_dof_lstage[ci][:] += 1.0/3.0*self.u_dof_last[ci]
                     # update solution to u[0].dof
-                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage]
-
-                    tmp_dof_stage = self.u_dof_stage[ci][self.lstage].copy()
-                    self.u_dof_stage[ci][self.lstage][:] = self.u_dof_last[ci]
-                    self.u_dof_stage[ci][self.lstage][:] = tmp_dof_stage
-
+                    self.transport.u[ci].dof[:] = self.u_dof_lstage[ci]
+                # update u_dof_old
+                self.transport.h_dof_old[:] = self.u_dof_last[0]
+                self.transport.hu_dof_old[:] = self.u_dof_last[1]
+                self.transport.hv_dof_old[:] = self.u_dof_last[2]                        
         else:
             assert self.timeOrder == 1
-            for ci in range(self.nc):
-                self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
                             
     def initializeTimeHistory(self,resetFromDOF=True):
         """
@@ -203,19 +202,14 @@ class RKEV(proteus.TimeIntegration.SSP):
         """
         for ci in range(self.nc):
             self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
-            for k in range(self.nStages):
-                self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
 
     def updateTimeHistory(self,resetFromDOF=False):
         """
         assumes successful step has been taken
         """
-        
         self.t = self.tLast + self.dt
         for ci in range(self.nc):
             self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
-            for k in range(self.nStages):
-                self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
         self.lstage=0
         self.dtLast = self.dt
         self.tLast = self.t
@@ -240,12 +234,9 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.lstage = 0  #last stage completed
         # storage vectors
         # per component stage values, list with array at each stage
-        self.u_dof_stage = {}
+        self.u_dof_lstage = {}
         for ci in range(self.nc):
-             if self.transport.q.has_key(('m',ci)):
-                self.u_dof_stage[ci] = []
-                for k in range(self.nStages+1):                    
-                    self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
+            self.u_dof_lstage[ci] = self.transport.u[ci].dof.copy()
         self.substeps = [self.t for i in range(self.nStages)]            
 
     def setFromOptions(self,nOptions):
@@ -396,7 +387,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  bdyNullSpace=False):
         self.bdyNullSpace=bdyNullSpace
         self.inf_norm_hu=[] #To test 1D well balancing
-        self.firstCalculateResidualCall=True
         self.secondCallCalculateResidual=0
         self.postProcessing = False#this is a hack to test the effect of post-processing
         #
@@ -876,9 +866,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           self.nnz, #number of non zero entries 
                           len(rowptr)-1, #number of DOFs
                           self.ML, #Lumped mass matrix
-                          self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage], #hn
-                          self.timeIntegration.u_dof_stage[1][self.timeIntegration.lstage], #hun
-                          self.timeIntegration.u_dof_stage[2][self.timeIntegration.lstage], #hvn
+                          self.h_dof_old,
+                          self.hu_dof_old,
+                          self.hv_dof_old,
                           self.coefficients.b.dof,
                           self.timeIntegration.u[hIndex], #high order solution 
                           self.timeIntegration.u[huIndex],
@@ -1168,12 +1158,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if (self.check_positivity_water_height==True):
             assert self.u[0].dof.min() >= 0, ("Negative water height: ", self.u[0].dof.min())
 
-        if (self.firstCalculateResidualCall):
-            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage][:] = self.u[0].dof
-            self.timeIntegration.u_dof_stage[1][self.timeIntegration.lstage][:] = self.u[1].dof
-            self.timeIntegration.u_dof_stage[2][self.timeIntegration.lstage][:] = self.u[2].dof
-            self.firstCalculateResidualCall = False
-
         self.calculateResidual(
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1217,9 +1201,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.h_dof_old,
             self.hu_dof_old,
             self.hv_dof_old,
-            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],
-            self.timeIntegration.u_dof_stage[1][self.timeIntegration.lstage],
-            self.timeIntegration.u_dof_stage[2][self.timeIntegration.lstage],
             self.coefficients.b.dof,
             self.u[0].dof,
             self.u[1].dof,
