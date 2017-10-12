@@ -16,7 +16,9 @@ namespace proteus
                double* detJ_last_array,
                double* detJ0_array,
                double* E_array,
+               double* dilation_array,
                double* dilation_last_array,
+               double* distortion_array,
                double* distortion_last_array,
                double* distortion0_array,
                double* body_pos,
@@ -73,7 +75,9 @@ namespace proteus
                    double* detJ_last_array,
                    double* detJ0_array,
                    double* E_array,
+                   double* dilation_array,
                    double* dilation_last_array,
+                   double* distortion_view,
                    double* distortion_last_view,
                    double* distortion0_view,
                    double* body_pos,
@@ -198,22 +202,21 @@ namespace proteus
     }
     
     inline void evaluateCoefficients(double det_J,
-             double* J,
-             const double* materialProperties,
-             double* strain,
-             double* stress,
-             double* dstress,
-             double det_J0,
-             double* E_in_array,
-             double* dilation_last,
-             double* distortion_last,
-             double distortion0,
-             double distance
+                                     double* J,
+                                     const double* materialProperties,
+                                     double* strain,
+                                     double* stress,
+                                     double* dstress,
+                                     double det_J0,
+                                     double* E_in_array,
+                                     double* dilation_array,  // to store new value
+                                     double dilation_last,
+                                     double* distortion_array,
+                                     double distortion_last,
+                                     double distortion0,
+                                     double distance
                                      )
     {
-      double dist_last = distortion_last[0];
-      double dil_last = dilation_last[0];
-
       double JT [4] = {J[XX],J[YX],J[XY],J[YY]};
       double JTJ [4];
       // distortion
@@ -234,7 +237,10 @@ namespace proteus
       }
       double trJTJ = JTJ[XX]+JTJ[YY]; // see compkernel.h calculateMapping_element
       double distortion = (1.-det_J/pow((1./nSpace)*fabs(trJTJ), nSpace/2.));  // in 2D
-      distortion_last[0] = distortion;
+      distortion_array[0] = distortion;
+      //if (distortion < distortion_last) {
+      //  distortion = distortion/2.;
+      //}
 
       // dilation
       double dilation;
@@ -244,17 +250,22 @@ namespace proteus
       else {
         dilation = 1.;
       }
-      dilation_last[0] = dilation;
+      dilation_array[0] = dilation;
+      //if (dilation < dilation_last) {
+      //  dilation = 1.+(dilation-1.)/2.;
+      //}
 
       // weighting of dilation/distortion
       double alpha = 0.5;
       double Eweight = (1-alpha)*distortion+alpha*(std::min(dilation,2.)-1.);
+      //double Eweight = std::max(distortion, dilation-1);
+      //Eweight = 1.;
 
       if (det_J0 == 0) {det_J0 = det_J;};
 
       //cek hack/todo need to set E based on reference configuration
       const double strainTrace=(strain[sXX]+strain[sYY]/* +strain[sZZ] */),
-      E=materialProperties[0]*Eweight/det_J0+0.000000001,//for mesh motion penalize small elements
+      E=materialProperties[0]*Eweight/det_J0+0.0000000001,//for mesh motion penalize small elements
       nu=materialProperties[1];
       E_in_array[0] = E;  // store E value
 
@@ -450,7 +461,9 @@ namespace proteus
                    double* detJ_last_array,
                    double* detJ0_array,
                    double* E_array,
+                   double* dilation_array,
                    double* dilation_last_array,
+                   double* distortion_array,
                    double* distortion_last_array,
                    double* distortion0_array,
                    double* body_pos,
@@ -596,8 +609,10 @@ namespace proteus
 				   dstress,
            fabs(detJ0),
            &E_array[eN*nQuadraturePoints_element+k],
-           &dilation_last_array[eN*nQuadraturePoints_element+k],
-           &distortion_last_array[eN*nQuadraturePoints_element+k],
+           &dilation_array[eN*nQuadraturePoints_element+k],
+           dilation_last_array[eN*nQuadraturePoints_element+k],
+           &distortion_array[eN*nQuadraturePoints_element+k],
+           distortion_last_array[eN*nQuadraturePoints_element+k],
            distortion0_array[eN*nQuadraturePoints_element+k],
            dist);
 	      //
@@ -732,7 +747,9 @@ namespace proteus
            fabs(detJ0),
            nn,
            nn,
+           0,
            nn,
+           0,
            distortion0_array[eN*nQuadraturePoints_element+kb],
            dist);
 	      // 
@@ -794,7 +811,9 @@ namespace proteus
                    double* detJ_last_array,
                    double* detJ0_array,
                    double* E_array,
+                   double* dilation_array,
                    double* dilation_last_array,
+                   double* distortion_array,
                    double* distortion_last_array,
                    double* distortion0_array,
                    double* body_pos,
@@ -954,8 +973,10 @@ namespace proteus
 				   dstress,
            fabs(detJ0),
            &E_array[eN*nQuadraturePoints_element+k],
-           &dilation_last_array[eN*nQuadraturePoints_element+k],
-           &distortion_last_array[eN*nQuadraturePoints_element+k],
+           &dilation_array[eN*nQuadraturePoints_element+k],
+           dilation_last_array[eN*nQuadraturePoints_element+k],
+           &distortion_array[eN*nQuadraturePoints_element+k],
+           distortion_last_array[eN*nQuadraturePoints_element+k],
            distortion0_array[eN*nQuadraturePoints_element+k],
            dist);
 	      //
@@ -1104,7 +1125,9 @@ namespace proteus
            fabs(detJ0),
            nn,
            nn,
+           0.,
            nn,
+           0.,
            distortion0_array[eN*nQuadraturePoints_element+kb],
            dist);
 	      //
