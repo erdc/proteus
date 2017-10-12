@@ -261,8 +261,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # FOR ARTIFICIAL COMPRESSION
                  cK=1.0,
                  # OUTPUT quantDOFs
-                 outputQuantDOFs = False):
+                 outputQuantDOFs = False,
+                 # NONLINEAR VOF
+                 epsFactHeaviside=0.0,
+                 epsFactDirac=1.0,
+                 epsFactDiffusion=2.0,
+                 nonlinearVOF = False):
 
+        self.epsFactHeaviside=epsFactHeaviside
+        self.epsFactDirac=epsFactDirac
+        self.epsFactDiffusion=epsFactDiffusion
+        self.nonlinearVOF = nonlinearVOF
         self.useMetrics = useMetrics
         self.variableNames=['vof']
         nc=1
@@ -328,7 +337,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             if modelList[self.LS_modelIndex].ebq.has_key(('u',0)):
                 self.ebq_phi = modelList[self.LS_modelIndex].ebq[('u',0)]
         else:
-            self.ebqe_phi = numpy.zeros(self.model.ebqe[('u',0)].shape,'d')#cek hack, we don't need this
+            self.ebqe_phi = numpy.zeros(self.model.ebqe[('u',0)].shape,'d')#cek hack, we don't need this        
         #flow model
         #print "flow model index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))        
         if self.flowModelIndex is not None:
@@ -453,6 +462,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
+        if self.nonlinearVOF:
+            #For visualization, send H(phiHat+u) to the DOFs and store it in quantDOFs
+            #This is done via a limited L2Projection
+            #Update DOFs of NCLS. Since NCLS, MCorr and CLS live on the same space, this is valid:
+            self.lsModel.u[0].dof += self.model.u[0].dof
+            
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.checkMass:
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
@@ -546,6 +561,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  movingDomain=False,
                  bdyNullSpace=False):
 
+        self.mass_history=[]
         self.auxiliaryCallCalculateResidual=False
         #
         #set the objects describing the method and boundary conditions
@@ -830,7 +846,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         #cek adding empty data member for low order numerical viscosity structures here for now
         self.ML=None #lumped mass matrix
-        self.MC_global=None #consistent mass matrix
+        self.MassMatrix=None #consistent mass matrix
+        self.MassMatrix_sparseFactor=None
+        self.Jacobian_sparseFactor=None
         self.cterm_global=None
         self.cterm_transpose_global=None
         # dL_global and dC_global are not the full matrices but just the CSR arrays containing the non zero entries
@@ -840,6 +858,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.max_u_bc=None
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+        # FOR nonlinear VOF; i.e., MCorr with VOF
+        self.phiHat_dof = None
+        self.phin = None
+        self.calculateResidual = None
+        self.calculateJacobian = None
+        #FOR limited L2Projection
+        self.rhs_mass_correction = None
+        self.lumped_L2p = None
+        self.limited_L2p = None
+        self.consistent_L2p = None
+        if self.coefficients.nonlinearVOF==True:
+            self.populate_vofModel_with_limited_L2p=False
+        else:
+            self.populate_vofModel_with_limited_L2p=True
 
         comm = Comm.get()
         self.comm=comm
@@ -921,8 +953,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray==None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
+
+    def FCTStepL2p(self):
+        rowptr, colind, MassMatrix = self.MassMatrix.getCSRrepresentation()
+        if (self.limited_L2p is None):
+            self.limited_L2p = numpy.zeros(self.u[0].dof.shape,'d')
+
+        self.vof.FCTStepL2p(
+            self.nnz, #number of non zero entries 
+            len(rowptr)-1, #number of DOFs
+            self.ML, #Lumped mass matrix
+            self.consistent_L2p, # high order projection
+            self.lumped_L2p, #low order projection
+            self.limited_L2p,
+            rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
+            colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
+            MassMatrix)
+        
     def FCTStep(self):
-        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
+        rowptr, colind, MassMatrix = self.MassMatrix.getCSRrepresentation()
         limited_solution = numpy.zeros(self.u[0].dof.shape)
 
         self.vof.FCTStep(
@@ -968,6 +1017,45 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def calculateElementResidual(self):
         if self.globalResidualDummy != None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
+
+    def getMassMatrix(self):
+        assert self.MassMatrix is not None, "Mass matrix in None, run getResidual first"
+
+    def setQuantDOFs(self):
+        from proteus.ctransportCoefficients import smoothedHeaviside
+        for i in range (self.mesh.nodeDiametersArray.size):
+            epsHeaviside = self.coefficients.epsFactHeaviside*self.mesh.nodeDiametersArray[i]
+            phi = self.coefficients.lsModel.u[0].dof[i]
+            self.quantDOFs[i] = smoothedHeaviside(epsHeaviside,phi)
+        
+    def setMassQuadratureEdgeBasedStabilizationMethods(self):
+        if self.rhs_mass_correction is None:
+            self.rhs_mass_correction = numpy.zeros(self.u[0].dof.shape,'d')
+            self.lumped_L2p = numpy.zeros(self.u[0].dof.shape,'d')
+            self.consistent_L2p = numpy.zeros(self.u[0].dof.shape,'d')
+        else: 
+            self.rhs_mass_correction.fill(0.0)
+
+        mass = self.vof.calculateRhsQuadratureMass(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.mesh.elementDiametersArray,
+            self.u[0].dof,
+            self.offset[0],self.stride[0],
+            self.nFreeDOF_global[0], #numDOFs
+            self.rhs_mass_correction,
+            self.lumped_L2p,
+            self.ML,
+            self.coefficients.epsFactHeaviside,
+            self.phiHat_dof)
+        self.mass_history.append([self.timeIntegration.dt,mass])
 
     def getResidual(self,u,r):
         import pdb
@@ -1056,13 +1144,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                          self.q[('w*dV_m',0)],
                                                          elementMassMatrix)
             self.MC_a = nzval.copy()
-            self.MC_global = SparseMat(self.nFreeDOF_global[0],
-                                       self.nFreeDOF_global[0],
-                                       nnz,
-                                       self.MC_a,
-                                       colind,
-                                       rowptr)
-            cfemIntegrals.zeroJacobian_CSR(self.nnz, self.MC_global)
+            self.MassMatrix = SparseMat(self.nFreeDOF_global[0],
+                                        self.nFreeDOF_global[0],
+                                        nnz,
+                                        self.MC_a,
+                                        colind,
+                                        rowptr)
+            cfemIntegrals.zeroJacobian_CSR(self.nnz, self.MassMatrix)
             cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.l2g[0]['nFreeDOF'],
@@ -1070,7 +1158,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       self.csrRowIndeces[(0,0)],
                                                                       self.csrColumnOffsets[(0,0)],
                                                                       elementMassMatrix,
-                                                                      self.MC_global)
+                                                                      self.MassMatrix)
             self.ML = np.zeros((self.nFreeDOF_global[0],),'d')
             for i in range(self.nFreeDOF_global[0]):
                 self.ML[i] = self.MC_a[rowptr[i]:rowptr[i+1]].sum()
@@ -1191,12 +1279,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         except:
             pass
 
-        if (self.coefficients.STABILIZATION_TYPE == 0): #SUPG
-            self.calculateResidual = self.vof.calculateResidual
-            self.calculateJacobian = self.vof.calculateJacobian 
-        else:
-            self.calculateResidual = self.vof.calculateResidual_entropy_viscosity
-            self.calculateJacobian = self.vof.calculateMassMatrix
+        if self.calculateResidual is None:
+            if (self.coefficients.STABILIZATION_TYPE == 0): #SUPG
+                self.calculateResidual = self.vof.calculateResidual
+                self.calculateJacobian = self.vof.calculateJacobian 
+            else:
+                self.calculateResidual = self.vof.calculateResidual_entropy_viscosity
+                self.calculateJacobian = self.vof.calculateMassMatrix
+
+        if self.phiHat_dof is None:
+            if self.coefficients.nonlinearVOF == True:
+                cond = self.coefficients.LS_modelIndex is not None
+                assert cond, "If nonlinearVOF=True, a NCLS model must be attached"
+                self.phiHat_dof = self.coefficients.lsModel.u[0].dof
+                self.phin_dof = self.coefficients.lsModel.u_dof_old
+            else:
+                self.phiHat_dof = numpy.zeros(self.u[0].dof.shape,'d')
+                self.phin_dof = numpy.zeros(self.u[0].dof.shape,'d')
+            self.calculateResidual = self.vof.calculateResidual_MCorr_with_VOF
+            self.calculateJacobian = self.vof.calculateJacobian_MCorr_with_VOF
 
         self.calculateResidual(#element
             self.timeIntegration.dt,
@@ -1296,8 +1397,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dt_times_dC_minus_dL, 
             self.min_u_bc,
             self.max_u_bc,
+            # FOR NONLINEAR VOF; i.e.,
+            self.coefficients.epsFactHeaviside,
+            self.coefficients.epsFactDirac,
+            self.coefficients.epsFactDiffusion,
+            self.phin_dof,
+            self.phiHat_dof,
             self.quantDOFs)
-        
+
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
@@ -1326,7 +1433,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             degree_polynomial = self.u[0].femSpace.order
         except:
             pass
-
+        
         self.calculateJacobian(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1381,7 +1488,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag',0)],
             self.ebqe[('advectiveFlux_bc',0)],
             self.csrColumnOffsets_eb[(0,0)], 
-            self.coefficients.LUMPED_MASS_MATRIX)
+            self.coefficients.LUMPED_MASS_MATRIX,
+            self.coefficients.epsFactHeaviside,
+            self.coefficients.epsFactDirac,
+            self.coefficients.epsFactDiffusion,
+            self.phiHat_dof)
+
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
             scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system

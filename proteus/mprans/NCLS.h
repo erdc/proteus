@@ -5,7 +5,7 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-#define POWER_SMOOTHNESS_INDICATOR 2
+#define POWER_SMOOTHNESS_INDICATOR 0
 #define IS_BETAij_ONE 0
 
 /////////////////////
@@ -1589,7 +1589,7 @@ namespace proteus
 	      for (int I=0;I<nSpace;I++)
 		norm_grad_un += std::pow(grad_un[I],2);
 	      norm_grad_un = std::sqrt(norm_grad_un) + 1E-10;
-	      double dist_error = fabs(norm_grad_un - (1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)));
+	      double dist_error = 1; //fabs(norm_grad_un - (1-SATURATED_LEVEL_SET*std::pow(un/epsCoupez,2)));
 	      double sgn = sign(uStar,epsFactRedistancing);
 	      
 	      // get velocity
@@ -1857,7 +1857,7 @@ namespace proteus
 	      
 	      ith_flux_term += TransportMatrix[ij]*solnj;
 	      if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term)
-		{		  
+		{
 		  // first-order dissipative operator
 		  dLowij = fmax(fabs(TransportMatrix[ij]),fabs(TransposeTransportMatrix[ij]));
 		  if (STABILIZATION_TYPE==1) //EV Stab
@@ -1879,7 +1879,7 @@ namespace proteus
 	  // update residual
 	  double mi = ML[i];
 	  // compute edge_based_cfl
-	  edge_based_cfl[i] = 2.*fabs(dLowii)/mi;
+	  edge_based_cfl[i] = 2*fabs(dLowii)/mi;
 
 	  if (LUMPED_MASS_MATRIX==1)
 	    {
