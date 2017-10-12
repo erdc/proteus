@@ -65,7 +65,9 @@ namespace proteus
 				   int nExteriorElementBoundaries_global,
 				   int* exteriorElementBoundariesArray,
 				   int* elementBoundaryElementsArray,
-				   int* elementBoundaryLocalElementBoundariesArray)=0;
+				   int* elementBoundaryLocalElementBoundariesArray,
+				   const double beta,
+				   const double epsFactDiffusion_last)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -694,7 +696,9 @@ namespace proteus
 			   int nExteriorElementBoundaries_global,
 			   int* exteriorElementBoundariesArray,
 			   int* elementBoundaryElementsArray,
-			   int* elementBoundaryLocalElementBoundariesArray)
+			   int* elementBoundaryLocalElementBoundariesArray,
+			   const double beta,
+			   const double epsFactDiffusion_last)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -706,9 +710,9 @@ namespace proteus
       //eN_j is the element trial function index
       //eN_k_j is the quadrature point index for a trial function
       //eN_k_i is the quadrature point index for a trial function
-      *global_J =0.0;
-      *global_LAGR =0.0;
-      *global_LAGR_a =0.0;
+      *global_J = 0.5*beta*(epsFactDiffusion-epsFactDiffusion_last)*(epsFactDiffusion-epsFactDiffusion_last);
+      *global_LAGR = 0.0;
+      *global_LAGR_a = beta*(epsFactDiffusion-epsFactDiffusion_last);
       for(int eN=0;eN<nElements_global;eN++)
 	{
 	  //declare local storage for element residual and initialize
@@ -1027,7 +1031,7 @@ namespace proteus
 			       q_porosity[eN_k],
 			       r,
 			       dr);
-	  double ddr = dsmoothedDirac(epsDirac, q_phi[eN_k]+u);
+	  double ddr = q_porosity[eN_k]*dsmoothedDirac(epsDirac, q_phi[eN_k]+u);
 	  for(int i=0;i<nDOF_test_element;i++)
 	    {
 	      int i_nSpace=i*nSpace;

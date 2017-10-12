@@ -537,8 +537,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
-        self.history = open("lagrange_history.txt","w")
-        self.history.write('J'+","+
+        self.history = open(self.name+"lagrange_history.txt","w")
+        self.history.write('a'+","+
+                           'J'+","+
                            'LAGR'+","+
                            'LAGR_a'+","+
                            'LAGR_l'+","+
@@ -564,11 +565,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
         #no flux boundary conditions
+        self.beta_Tikhonov=0.001
         self.global_J=0.0
         self.global_LAGR=0.0
         self.global_LAGR_a=0.0
         try:
-            self.lambda_dof[:]=1.0
             self.global_LAGR_u[:]=0.0
             self.global_b_u[:]=0.0
             self.global_b_l[:]=0.0
@@ -580,8 +581,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lambda_dof[:]=1.0
             self.global_LAGR_u[:]=0.0
             self.global_b_u[:]=0.0
-            self.global_b_l[:]=0.0
-            
+            self.global_b_l[:]=0.0            
         (self.global_J,
          self.global_LAGR,
          self.global_LAGR_a) = self.mcorr.calculateResidual(#element
@@ -634,7 +634,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.mesh.nExteriorElementBoundaries_global,
              self.mesh.exteriorElementBoundariesArray,
              self.mesh.elementBoundaryElementsArray,
-             self.mesh.elementBoundaryLocalElementBoundariesArray)
+             self.mesh.elementBoundaryLocalElementBoundariesArray,
+             self.beta_Tikhonov,
+             self.epsFactDiffusion_last)
         self.global_LAGR_l = r
         logEvent("Global residual",level=9,data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
@@ -920,6 +922,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #uncomment this to store q arrays
         #self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
         #                                          self.q['x'])
+        self.epsFactDiffusion_last = self.coefficients.epsFactDiffusion
         self.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
@@ -941,7 +944,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
         from numpy import linalg as LA
-        self.history.write(repr(self.global_J)+","+
+        self.epsFactDiffusion_last = self.coefficients.epsFactDiffusion
+        self.history.write(repr(self.coefficients.epsFactDiffusion)+","+
+                           repr(self.global_J)+","+
                            repr(self.global_LAGR)+","+
                            repr(fabs(self.global_LAGR_a))+","+
                            repr(fabs(globalSum(self.global_LAGR_l[:self.mesh.nNodes_owned].sum())))+","+
