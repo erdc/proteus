@@ -56,7 +56,9 @@ cdef extern from "MCorr.h" namespace "proteus":
                                int nExteriorElementBoundaries_global,
                                int* exteriorElementBoundariesArray,
                                int* elementBoundaryElementsArray,
-                               int* elementBoundaryLocalElementBoundariesArray)
+                               int* elementBoundaryLocalElementBoundariesArray,
+                               double beta,
+                               double epsFactDiffusion_last)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -313,15 +315,15 @@ cdef extern from "MCorr.h" namespace "proteus":
                                double* q_u,
                                double* q_n,
                                double* ebqe_u,
-                                       double* ebqe_n,
-                                       double* q_r,
-                                       double* q_porosity,
-                                       int offset_u, int stride_u,
-                                       double* globalResidual,
-                                   int nExteriorElementBoundaries_global,
-                                   int* exteriorElementBoundariesArray,
-                                   int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray,
+                               double* ebqe_n,
+                               double* q_r,
+                               double* q_porosity,
+                               int offset_u, int stride_u,
+                               double* globalResidual,
+                               int nExteriorElementBoundaries_global,
+                               int* exteriorElementBoundariesArray,
+                               int* elementBoundaryElementsArray,
+                               int* elementBoundaryLocalElementBoundariesArray,
                                double* H_dof)
     MCorr_base* newMCorr(int nSpaceIn,
                        int nQuadraturePoints_elementIn,
@@ -399,7 +401,9 @@ cdef class cMCorr_base:
                           int nExteriorElementBoundaries_global,
                           numpy.ndarray exteriorElementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
-                          numpy.ndarray elementBoundaryLocalElementBoundariesArray):
+                          numpy.ndarray elementBoundaryLocalElementBoundariesArray,
+                          double beta,
+                          double epsFactDiffusion_last):
         cdef double global_J
         cdef double global_LAGR
         cdef double global_LAGR_a
@@ -454,7 +458,9 @@ cdef class cMCorr_base:
                                        nExteriorElementBoundaries_global,
                                        <int*> exteriorElementBoundariesArray.data,
                                        <int*> elementBoundaryElementsArray.data,
-                                       <int*> elementBoundaryLocalElementBoundariesArray.data)
+                                       <int*> elementBoundaryLocalElementBoundariesArray.data,
+                                       beta,
+                                       epsFactDiffusion_last)
         return (global_J, global_LAGR, global_LAGR_a)
 
     def calculateJacobian(self,

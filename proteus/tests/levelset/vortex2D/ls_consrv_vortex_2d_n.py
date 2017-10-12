@@ -68,6 +68,7 @@ nl_atol_res = atolConservation
 useEisenstatWalker = True
 
 maxNonlinearIts = 100
+maxLineSearches =0
 
 matrix = SparseMatrix
 
