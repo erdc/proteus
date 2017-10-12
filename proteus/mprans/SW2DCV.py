@@ -359,12 +359,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def evaluate(self,t,c):
         pass
     def preStep(self,t,firstStep=False):
-        self.model.h_dof_old_old = numpy.copy(self.model.h_dof_old)
-        self.model.hu_dof_old_old = numpy.copy(self.model.hu_dof_old)
-        self.model.hv_dof_old_old = numpy.copy(self.model.hv_dof_old)
-        self.model.h_dof_old = numpy.copy(self.model.u[0].dof)
-        self.model.hu_dof_old = numpy.copy(self.model.u[1].dof)
-        self.model.hv_dof_old = numpy.copy(self.model.u[2].dof)
+        self.model.h_dof_old[:] = self.model.u[0].dof
+        self.model.hu_dof_old[:] = self.model.u[1].dof
+        self.model.hv_dof_old[:] = self.model.u[2].dof
     def postStep(self,t,firstStep=False):
         pass
 
@@ -605,12 +602,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #NOTE (Mql): It is important to link h_dof_old by reference with u[0].dof (and so on).
         # This is because  I need the initial condition to be passed to them as well (before calling calculateResidual). 
         # During preStep I change this and copy the values instead of keeping the reference. 
-        self.h_dof_old_old = self.u[0].dof
-        self.hu_dof_old_old = self.u[1].dof
-        self.hv_dof_old_old = self.u[2].dof
-        self.h_dof_old = self.u[0].dof
-        self.hu_dof_old = self.u[1].dof
-        self.hv_dof_old = self.u[2].dof
+        self.h_dof_old = None
+        self.hu_dof_old = None
+        self.hv_dof_old = None
 
         #Vector for mass matrix
         self.check_positivity_water_height=True
@@ -914,6 +908,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
 
+        if self.h_dof_old is None:
+            self.h_dof_old = numpy.copy(self.u[0].dof)
+            self.hu_dof_old = numpy.copy(self.u[1].dof)
+            self.hv_dof_old = numpy.copy(self.u[2].dof)                        
         #COMPUTE hEps
         if self.hEps is None: 
             eps=1E-14
@@ -1219,9 +1217,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.h_dof_old,
             self.hu_dof_old,
             self.hv_dof_old,
-            self.h_dof_old_old,
-            self.hu_dof_old_old,
-            self.hv_dof_old_old,
             self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],
             self.timeIntegration.u_dof_stage[1][self.timeIntegration.lstage],
             self.timeIntegration.u_dof_stage[2][self.timeIntegration.lstage],
