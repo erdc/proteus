@@ -962,7 +962,7 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
                 return self.failedFlag
             else:
                 logEvent("+++++ L2 projection of mass-corrected VOF +++++",level=2)
-                if (self.F.MassMatrix is None): 
+                if (self.F.MassMatrix is None or self.F.MassMatrix_sparseFactor is None):
                     self.F.getMassMatrix()
                     # Set matrix of linear solver to be the Mass Matrix
                     self.linearSolver.L = self.F.MassMatrix
@@ -989,13 +989,17 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
                     self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
                     self.linearSolverFailed = self.linearSolver.failed()
                 # copy the solution to the L2p vector
-                self.F.L2p_vof_mass_correction[:] = self.du
+                self.F.consistent_L2p[:] = self.du
                 # Perform limitation on L2 projection 
-                self.F.FCTStep()
+                self.F.FCTStepL2p()
                 # Pass the solution to the DOFs of the VOF model
                 #self.F.coefficients.vofModel.u[0].dof[:] = self.du
-                self.F.coefficients.vofModel.u[0].dof[:] = self.F.limited_L2p_vof_mass_correction
-
+                if self.F.populate_vofModel_with_limited_L2p==True:
+                    self.F.coefficients.vofModel.u[0].dof[:] = self.F.limited_L2p
+                else:
+                    assert hasattr(self.F,'quantDOFs')
+                    self.F.quantDOFs[:] = self.F.limited_L2p
+                    
         logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
         logEvent(memory("Newton","Newton"),level=4)
