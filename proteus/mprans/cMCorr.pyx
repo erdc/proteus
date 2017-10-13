@@ -58,7 +58,8 @@ cdef extern from "MCorr.h" namespace "proteus":
                                int* elementBoundaryElementsArray,
                                int* elementBoundaryLocalElementBoundariesArray,
                                double beta,
-                               double epsFactDiffusion_last)
+                               double epsFactDiffusion_last,
+			       const double H1)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -93,7 +94,8 @@ cdef extern from "MCorr.h" namespace "proteus":
                                double* q_porosity,
                                int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                                double* globalJacobian,
-                               double* globalN)
+                               double* globalN,
+                               const double H1)
         void elementSolve(double* mesh_trial_ref,
                           double* mesh_grad_trial_ref,
                           double* mesh_dof,
@@ -403,7 +405,8 @@ cdef class cMCorr_base:
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray,
                           double beta,
-                          double epsFactDiffusion_last):
+                          double epsFactDiffusion_last,
+                          const double H1):
         cdef double global_J
         cdef double global_LAGR
         cdef double global_LAGR_a
@@ -460,7 +463,8 @@ cdef class cMCorr_base:
                                        <int*> elementBoundaryElementsArray.data,
                                        <int*> elementBoundaryLocalElementBoundariesArray.data,
                                        beta,
-                                       epsFactDiffusion_last)
+                                       epsFactDiffusion_last,
+                                       H1)
         return (global_J, global_LAGR, global_LAGR_a)
 
     def calculateJacobian(self,
@@ -499,7 +503,8 @@ cdef class cMCorr_base:
                           numpy.ndarray csrRowIndeces_u_u,
                           numpy.ndarray csrColumnOffsets_u_u,
                           globalJacobian,
-                          globalN):
+                          globalN,
+                          const double H1):
         cdef numpy.ndarray rowptr,colind,globalJacobian_a
         (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
         cdef numpy.ndarray rowptr_N,colind_N,globalN_a
@@ -539,7 +544,8 @@ cdef class cMCorr_base:
                                        <int*> csrRowIndeces_u_u.data,
                                        <int*> csrColumnOffsets_u_u.data,
                                        <double*> globalJacobian_a.data,
-                                       <double*> globalN_a.data)
+                                       <double*> globalN_a.data,
+                                       H1)
     def elementSolve(self,
                      numpy.ndarray mesh_trial_ref,
                      numpy.ndarray mesh_grad_trial_ref,

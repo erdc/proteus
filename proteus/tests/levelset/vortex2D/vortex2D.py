@@ -13,7 +13,7 @@ atol_res = {0:1.0e-4}
 #
 timeIntegration_vof = "vbdf"#vbdf,be,flcbdf,rk
 timeIntegration_ls = "vbdf"#vbdf,be,flcbdf,rk
-timeOrder = 2
+timeOrder = 3
 
 runCFL = 0.3#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 #
@@ -35,7 +35,7 @@ else:
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 #spatial mesh
-lRefinement=3
+lRefinement=1
 #tag simulation name to level of refinement
 #soname="vortexcgp2_bdf2_mc"+`lRefinement`
 nn=nnx=nny=(2**lRefinement)*10+1
@@ -66,7 +66,7 @@ onlyVOF=False#True
 #eps
 epsFactHeaviside=epsFactDirac=epsFact_vof=1.5
 epsFactRedistance=0.33
-epsFactDiffusion=50.0
+epsFactDiffusion=20.0
 #
 if useMetrics:
     shockCapturingFactor_vof=0.0

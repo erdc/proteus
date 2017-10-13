@@ -671,8 +671,8 @@ class MCorrNewton(Newton):
         self.convergedFlag = False
         self.norm_r = self.norm(r)
         self.norm_du = self.unorm(self.du)
-        self.norm_l = self.norm(self.F.global_LAGR_u)
-        self.norm_a = fabs(self.F.global_LAGR_a)
+        self.norm_lagr_u = self.norm(self.F.global_LAGR_u)
+        self.norm_lagr_a = fabs(self.F.global_LAGR_a)
         
         if self.computeRates ==  True:
             self.computeConvergenceRates()
@@ -682,7 +682,7 @@ class MCorrNewton(Newton):
         #print self.atol_r, self.rtol_r
         if self.convergenceTest == 'r' or self.convergenceTest == 'rits':
             if (self.its != 0 and
-                max(self.norm_r,self.norm_l,self.norm_a) < self.rtol_r*self.norm_r0 + self.atol_r):
+                max(self.norm_r,self.norm_lagr_u,self.norm_lagr_a) < self.rtol_r*self.norm_r0 + self.atol_r):
                 self.convergedFlag = True
         if self.convergenceTest == 'u':
             if (self.convergingIts != 0 and
@@ -702,7 +702,7 @@ class MCorrNewton(Newton):
         u -- solution
         r -- F(u) - b
         """
-
+        from numpy import linalg as LA
         import Viewers
         memory()
         if self.linearSolver.computeEigenvalues:
@@ -757,45 +757,32 @@ class MCorrNewton(Newton):
                 #
                 # s
                 #
+                b_a = self.du.copy()
+                b_a[:]=0.0
                 tmp_vec = self.du.copy()
-                tmp_vec2 = self.du.copy()
                 tmp_vec[:]=0.0
+                tmp_vec2 = self.du.copy()
                 tmp_vec2[:]=0.0
-                self.linearSolver.solve(u=tmp_vec,
+                self.linearSolver.solve(u=b_a,
                                         b=self.F.global_b_u,
                                         par_u=self.par_du,
                                         par_b=par_r)
-                s=self.F.beta_Tikhonov-2.0*np.dot(self.F.global_b_l,tmp_vec)
-                self.F.Nmat.matvec(tmp_vec,tmp_vec2)
-                tmp_vec[:]=0.0
-                self.linearSolver.solve(u=tmp_vec,
-                                        b=tmp_vec2,
-                                        par_u=self.par_du,
-                                        par_b=par_r)
-                s+=np.dot(self.F.global_b_u,tmp_vec)
+                s=self.F.beta_Tikhonov-2.0*np.dot(b_a,self.F.global_b_l)
+                self.F.Nmat.matvec(b_a,tmp_vec)
+                s+=np.dot(b_a,tmp_vec)
                 #
                 # c
                 #
-                c = - self.F.global_LAGR_a
                 tmp_vec[:]=0.0
                 self.linearSolver.solve(u=tmp_vec,
                                         b=self.F.global_LAGR_l,
                                         par_u=self.par_du,
                                         par_b=par_r)
-                c += np.dot(self.F.global_b_l,tmp_vec)
-                self.F.Nmat.matvec(tmp_vec,tmp_vec2)
-                tmp_vec[:]=0.0
-                self.linearSolver.solve(u=tmp_vec,
-                                        b=tmp_vec2,
-                                        par_u=self.par_du,
-                                        par_b=par_r)
-                c -= np.dot(self.F.global_b_u,tmp_vec)
-                tmp_vec[:]=0.0
-                self.linearSolver.solve(u=tmp_vec,
-                                        b=self.F.global_LAGR_u,
-                                        par_u=self.par_du,
-                                        par_b=par_r)
-                c += np.dot(self.F.global_b_u,tmp_vec)
+                self.F.Nmat.matvec(b_a,tmp_vec2)
+                c  = - self.F.global_LAGR_a \
+                     + np.dot(b_a,self.F.global_LAGR_u) \
+                     + np.dot(self.F.global_b_l,tmp_vec) \
+                     - np.dot(tmp_vec2,tmp_vec)
                 #
                 #da
                 #
@@ -825,7 +812,6 @@ class MCorrNewton(Newton):
                                         b=tmp_vec,
                                         par_u=self.par_du,
                                         par_b=par_r)
-            from numpy import linalg as LA
             print " du ",LA.norm(self.du)," dlambda ",LA.norm(self.dlambda)," da ",da
             u += self.du
             self.F.lambda_dof += self.dlambda
