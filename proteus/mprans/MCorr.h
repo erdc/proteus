@@ -67,7 +67,8 @@ namespace proteus
 				   int* elementBoundaryElementsArray,
 				   int* elementBoundaryLocalElementBoundariesArray,
 				   const double beta,
-				   const double epsFactDiffusion_last)=0;
+				   const double epsFactDiffusion_last,
+				   const double H1)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -105,7 +106,8 @@ namespace proteus
 				   double* q_porosity,
 				   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
 				   double* globalJacobian,
-				   double* globalN)=0;
+				   double* globalN,
+				   const double H1)=0;
     virtual void elementSolve(//element
 			       double* mesh_trial_ref,
 			       double* mesh_grad_trial_ref,
@@ -420,7 +422,7 @@ namespace proteus
 	dd=0.0;
       else
 	//derivative of d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
-	dd = -0.5*(sin(M_PI*phi/eps))*M_PI/eps/eps;
+	dd = -0.5*sin(M_PI*phi/eps)*M_PI/(eps*eps);
       return dd;
     }
     inline
@@ -492,8 +494,12 @@ namespace proteus
 					 double& element_LAGR_a,
 					 double *element_LAGR_u,
 					 double *element_b_u,
-					 double *element_b_l)
+					 double *element_b_l,
+					 const double H1)
     {
+      element_J=0.0;
+      element_LAGR=0.0;
+      element_LAGR_a=0.0;
       for (int i=0;i<nDOF_test_element;i++)
 	{
 	  elementResidual_u[i]=0.0;
@@ -595,12 +601,12 @@ namespace proteus
 			       r,
 			       dr);
 	  double J_tmp= 0.5*(ck.Reaction_weak(u*u, dV) +
-	  	    ck.NumericalDiffusion(1.0,grad_u, grad_u_dV));
+	  	    H1*ck.NumericalDiffusion(1.0,grad_u, grad_u_dV));
 	  element_J += J_tmp;
 	  element_LAGR += J_tmp +
 	    ck.Reaction_weak(r*lambda, dV) +
 	    ck.NumericalDiffusion(epsDiffusion, grad_u, grad_lambda_dV);
-	  element_LAGR_a += ck.NumericalDiffusion(epsDiffusion,
+	  element_LAGR_a += ck.NumericalDiffusion(1.0,
 	  					  grad_u,
 	  					  grad_lambda_dV);
 	  // 
@@ -615,16 +621,20 @@ namespace proteus
 	      elementResidual_u[i] += ck.Reaction_weak(r,u_test_dV[i]) + 
 		ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]);
 	      element_LAGR_u[i] += ck.Reaction_weak(u,u_test_dV[i]) +
-	      	ck.NumericalDiffusion(1.0,
-	      			      grad_u,
-	      			      &u_grad_test_dV[i_nSpace]) +
+	      	H1*ck.NumericalDiffusion(1.0,
+					 grad_u,
+					 &u_grad_test_dV[i_nSpace]) +
 	      	ck.Reaction_weak(dr*lambda,u_test_dV[i]) +
 	      	ck.NumericalDiffusion(epsDiffusion,
 	      			      grad_lambda,
 	      			      &u_grad_test_dV[i_nSpace]);
 
-	      element_b_l[i] += ck.NumericalDiffusion(1.0,grad_lambda,&u_grad_test_dV[i_nSpace]);
-	      element_b_u[i] += ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace]);
+	      element_b_l[i] += ck.NumericalDiffusion(1.0,
+						      grad_lambda,
+						      &u_grad_test_dV[i_nSpace]);
+	      element_b_u[i] += ck.NumericalDiffusion(1.0,
+						      grad_u,
+						      &u_grad_test_dV[i_nSpace]);
 	    }//i
 	  
 	  //
@@ -698,7 +708,8 @@ namespace proteus
 			   int* elementBoundaryElementsArray,
 			   int* elementBoundaryLocalElementBoundariesArray,
 			   const double beta,
-			   const double epsFactDiffusion_last)
+			   const double epsFactDiffusion_last,
+			   const double H1)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -783,7 +794,8 @@ namespace proteus
 				   element_LAGR_a,
 				   element_LAGR_u,
 				   element_b_u,
-				   element_b_l);
+				   element_b_l,
+				   H1);
 	  //
 	  //load element into global residual and save element residual
 	  //
@@ -936,7 +948,8 @@ namespace proteus
 					 double* element_u,
 					 double* element_N,
 					 double* element_lambda,
-					 int eN)
+					 int eN,
+					 const double H1)
     {
       for (int i=0;i<nDOF_test_element;i++)
 	for (int j=0;j<nDOF_trial_element;j++)
@@ -1048,7 +1061,7 @@ namespace proteus
 		  element_N[i*nDOF_trial_element+j] += ck.ReactionJacobian_weak(1.0,
 		  								u_trial_ref[k*nDOF_trial_element+j],
 		  								u_test_dV[i]) +
-		    ck.NumericalDiffusionJacobian(1.0,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]) +
+		    H1*ck.NumericalDiffusionJacobian(1.0,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]) +
 		    ck.ReactionJacobian_weak(ddr*lambda,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]);
 		}//j
 	    }//i
@@ -1095,7 +1108,8 @@ namespace proteus
 			   double* q_porosity,
 			   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
 			   double* globalJacobian,
-			   double* globalN)
+			   double* globalN,
+			   const double H1)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -1107,7 +1121,7 @@ namespace proteus
 	    {
 	      register int eN_j = eN*nDOF_trial_element+j;
 	      element_u[j] = u_dof[u_l2g[eN_j]];
-	      /* element_lambda[j] = lambda_dof[u_l2g[eN_j]]; */
+	      element_lambda[j] = lambda_dof[u_l2g[eN_j]];
 	    }
 	  calculateElementJacobian(mesh_trial_ref,
 				   mesh_grad_trial_ref,
@@ -1144,7 +1158,8 @@ namespace proteus
 				   element_u,
 				   element_N,
 				   element_lambda,
-				   eN);
+				   eN,
+				   H1);
 	  //
 	  //load into element Jacobian into global Jacobian
 	  //
@@ -1246,6 +1261,7 @@ namespace proteus
 	      element_u[i]=0.0;
 	      element_lambda[i]=1.0;
 	    }//i
+	  const double H1=1.0;
 	  calculateElementResidual(mesh_trial_ref,
 				   mesh_grad_trial_ref,
 				   mesh_dof,
@@ -1298,7 +1314,8 @@ namespace proteus
 				   element_LAGR_a,
 				   element_LAGR_u,
 				   element_b_u,
-				   element_b_l);
+				   element_b_l,
+				   H1);
 	  //compute l2 norm
 	  double resNorm=0.0;
 	  for (int i=0;i<nDOF_test_element;i++)
@@ -1346,7 +1363,8 @@ namespace proteus
 				       element_u,
 				       element_N,
 				       element_lambda,
-				       eN);
+				       eN,
+				       H1);
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
 		  element_du[i] = -elementResidual_u[i];
@@ -1433,7 +1451,8 @@ namespace proteus
 					   element_LAGR_a,
 					   element_LAGR_u,
 					   element_b_u,
-					   element_b_l);
+					   element_b_l,
+					   H1);
 		  lsIts +=1;
 		  //compute l2 norm
 		  resNormNew=0.0;
@@ -1519,6 +1538,7 @@ namespace proteus
 	      element_u[i]=elementConstant_u;
 	      element_lambda[i]=elementConstant_lambda;
 	    }//i
+	  const double H1=1.0;
 	  calculateElementResidual(mesh_trial_ref,
 				   mesh_grad_trial_ref,
 				   mesh_dof,
@@ -1571,7 +1591,8 @@ namespace proteus
 				   element_LAGR_a,
 				   element_LAGR_u,
 				   element_b_u,
-				   element_b_l);
+				   element_b_l,
+				   H1);
 	  //compute l2 norm
 	  elementConstantResidual=0.0;
 	  for (int i=0;i<nDOF_test_element;i++)
@@ -1619,7 +1640,8 @@ namespace proteus
 				       element_u,
 				       element_N,
 				       element_lambda,
-				       eN);
+				       eN,
+				       H1);
 	      elementConstantJacobian=0.0;
 	      elementConstant_N=0.0;
 	      for (int i=0;i<nDOF_test_element;i++)
@@ -1689,7 +1711,8 @@ namespace proteus
 				       element_LAGR_a,
 				       element_LAGR_u,
 				       element_b_u,
-				       element_b_l);
+				       element_b_l,
+				       H1);
 	      //compute l2 norm
 	      elementConstantResidual=0.0;
 	      for (int i=0;i<nDOF_test_element;i++)
@@ -1775,6 +1798,7 @@ namespace proteus
       //compute residual and Jacobian
       for(int eN=0;eN<nElements_owned;eN++)
 	{
+	  const double H1=1.0;
 	  calculateElementResidual(mesh_trial_ref,
 				   mesh_grad_trial_ref,
 				   mesh_dof,
@@ -1827,7 +1851,8 @@ namespace proteus
 				   element_LAGR_a,
 				   element_LAGR_u,
 				   element_b_u,
-				   element_b_l);
+				   element_b_l,
+				   H1);
 	  //compute l2 norm
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
@@ -1868,7 +1893,8 @@ namespace proteus
 				   element_u,
 				   element_N,
 				   element_lambda,
-				   eN);
+				   eN,
+				   H1);
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
 	      for (int j=0;j<nDOF_test_element;j++)

@@ -538,7 +538,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
         self.history = open(self.name+"lagrange_history.txt","w")
-        self.history.write('a'+","+
+        self.history.write('norm'+","+
+                           'reg'+","+
+                           'a'+","+
                            'J'+","+
                            'LAGR'+","+
                            'LAGR_a'+","+
@@ -565,7 +567,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
         #no flux boundary conditions
-        self.beta_Tikhonov=0.001
+        self.beta_Tikhonov=1.0e-3
+        self.H1=1.0
         self.global_J=0.0
         self.global_LAGR=0.0
         self.global_LAGR_a=0.0
@@ -636,7 +639,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.mesh.elementBoundaryElementsArray,
              self.mesh.elementBoundaryLocalElementBoundariesArray,
              self.beta_Tikhonov,
-             self.epsFactDiffusion_last)
+             self.epsFactDiffusion_last,
+             self.H1)
         self.global_LAGR_l = r
         logEvent("Global residual",level=9,data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
@@ -697,7 +701,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_porosity,
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
             jacobian,
-            self.Nmat)
+            self.Nmat,
+            self.H1)
         logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
@@ -944,8 +949,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
         from numpy import linalg as LA
-        self.epsFactDiffusion_last = self.coefficients.epsFactDiffusion
-        self.history.write(repr(self.coefficients.epsFactDiffusion)+","+
+        self.history.write(repr(self.global_J - 0.5*self.beta_Tikhonov*(self.coefficients.epsFactDiffusion-self.epsFactDiffusion_last)**2)+","+
+                           repr(0.5*self.beta_Tikhonov*(self.coefficients.epsFactDiffusion-self.epsFactDiffusion_last)**2)+","+
+                           repr(self.coefficients.epsFactDiffusion)+","+
                            repr(self.global_J)+","+
                            repr(self.global_LAGR)+","+
                            repr(fabs(self.global_LAGR_a))+","+
@@ -954,6 +960,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                            repr(fabs(globalSum(LA.norm(self.global_b_u[:self.mesh.nNodes_owned]))))+","+
                            repr(fabs(globalSum(LA.norm(self.global_b_l[:self.mesh.nNodes_owned]))))+"\n")
         self.history.flush()
+        self.epsFactDiffusion_last = self.coefficients.epsFactDiffusion
 
     def calculateMass(self,q_phi):
         from proteus.flcbdfWrappers import globalSum
