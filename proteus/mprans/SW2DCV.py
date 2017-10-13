@@ -162,9 +162,10 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.lstage += 1
         assert self.timeOrder in [1,2,3]
         assert self.lstage > 0 and self.lstage <= self.timeOrder
-        if self.timeOrder == 3:
+        #print "within update stage...: ", self.lstage
+        if self.timeOrder == 3:            
             if self.lstage == 1:
-                logEvent("First stage of SSP33 method",level=4)
+                logEvent("First stage of SSP33 method finished",level=4)
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
                 # update u_dof_old
@@ -172,7 +173,7 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.hu_dof_old[:] = self.u_dof_lstage[1]
                 self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
             elif self.lstage == 2:
-                logEvent("Second stage of SSP33 method",level=4)
+                logEvent("Second stage of SSP33 method finished",level=4)
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
                     self.u_dof_lstage[ci] *= 1./4.
@@ -181,8 +182,8 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.h_dof_old[:] = self.u_dof_lstage[0]
                 self.transport.hu_dof_old[:] = self.u_dof_lstage[1]
                 self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
-            elif self.lstage == 3:
-                logEvent("Third stage of SSP33 method",level=4)
+            else:
+                logEvent("Third stage of SSP33 method finished",level=4)
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
                     self.u_dof_lstage[ci][:] *= 2.0/3.0
@@ -192,10 +193,32 @@ class RKEV(proteus.TimeIntegration.SSP):
                 # update u_dof_old
                 self.transport.h_dof_old[:] = self.u_dof_last[0]
                 self.transport.hu_dof_old[:] = self.u_dof_last[1]
-                self.transport.hv_dof_old[:] = self.u_dof_last[2]                        
+                self.transport.hv_dof_old[:] = self.u_dof_last[2]
+        elif self.timeOrder == 2:
+            if self.lstage == 1:
+                logEvent("First stage of SSP22 method finished",level=4)
+                for ci in range(self.nc):
+                    self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
+                # Update u_dof_old
+                self.transport.h_dof_old[:] = self.u_dof_lstage[0]
+                self.transport.hu_dof_old[:] = self.u_dof_lstage[1]
+                self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
+            else:
+                logEvent("Second stage of SSP22 method finished",level=4)
+                for ci in range(self.nc):
+                    self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
+                    self.u_dof_lstage[ci][:] *= 1./2.
+                    self.u_dof_lstage[ci][:] += 1./2.*self.u_dof_last[ci]
+                    # update solution to u[0].dof
+                    self.transport.u[ci].dof[:] = self.u_dof_lstage[ci]
+                # Update u_dof_old
+                self.transport.h_dof_old[:] = self.u_dof_last[0] #HHHEEEEEREEEEE!!!
+                self.transport.hu_dof_old[:] = self.u_dof_last[1]
+                self.transport.hv_dof_old[:] = self.u_dof_last[2]                                
         else:
             assert self.timeOrder == 1
-                            
+            logEvent("FE method finished",level=4)
+            
     def initializeTimeHistory(self,resetFromDOF=True):
         """
         Push necessary information into time history arrays
