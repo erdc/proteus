@@ -4,8 +4,9 @@ from ls_rotation_2d_p import *
 from rotation2D import *
 nd = 2
 
-
-if useHex:
+quad = False
+if ct.useHex:
+    quad = True
     if pDegree_ls == 1:
         femSpaces = {0: C0_AffineLinearOnCubeWithNodalBasis}
     elif pDegree_ls == 2:
