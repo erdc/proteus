@@ -1,5 +1,7 @@
 import shelve
 from contextlib import closing
+import numpy
+import sys
 
 
 def get_convergence_rate(datafile):
@@ -36,17 +38,21 @@ def get_convergence_rate(datafile):
                 numpy.log(error[error_type][l] / error[error_type][l - 1]) / numpy.log(h[l] / h[l - 1]))
 
     # print level_convergence
-
-    for error_type in level_convergence:
-        convergence[error_type] = sum(
-            level_convergence[error_type]) / len(level_convergence[error_type])
+    if nl > 1:
+        for error_type in level_convergence:
+            convergence[error_type] = sum(
+                level_convergence[error_type]) / len(level_convergence[error_type])
     return error, convergence
 
 
 if __name__ == '__main__':
     import rotation2D
-    from proteus import Context
-    import numpy
+    from proteus import Context, Profiling, Comm
+    comm = Comm.init()
+    Profiling.procID = comm.rank()
 
-    ctx = Context.get()  # To get filename
-    print get_convergence_rate(ctx.datafile)
+    if len(sys.argv) > 1:
+        print get_convergence_rate(sys.argv[1])
+    else:
+        ctx = Context.get()  # To get filename
+        print get_convergence_rate(ctx.datafile)

@@ -10,14 +10,23 @@ ct = Context.Options([
     ("linearSmoother", False, "Use linear smoother or not"),
     ("correctionType", 'cg', "Use 'cg' or 'dg' or 'dgp0' or 'global' or 'none'"),
     ("unstructured", False, "unstructured mesh or not"),
-    ("ncells", 32, "cells in each direction"),
-    ("nLevels", 3, "number of refiments"),
+    ("ncells", 10, "Specify initial mesh size by giving number of cells in each direction"),
+    ("nLevels", 1, "number of refiments"),
     ("timeIntegration_ls", 'be',
      "method for Time integration: 'be', 'vbdf', 'flcbdf','rk' "),
-    ("datafile", 'dataFile.db', "Filename to save error information")
+    ("datafile", 'errorInfo.db', "Filename to save error information"),
+    ("useHex", False, "use quadrilateral or not")
 ], mutable=True)
 
+if ct.useHex:
+    ct.datafile = '_'.join(
+        [str(i) for i in ['rotation_qua', ct.timeIntegration_ls, ct.ncells, ct.nLevels, ct.datafile]])
+else:
+    ct.datafile = '_'.join(
+        [str(i) for i in ['rotation_tri', ct.timeIntegration_ls, ct.ncells, ct.nLevels, ct.datafile]])
+
 Context.set(ct)
+
 
 # if True uses PETSc solvers
 parallel = ct.parallel
@@ -54,7 +63,7 @@ else:
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 # spatial mesh
-lRefinement = 1
+# lRefinement = 1
 # tag simulation name to level of refinement
 # soname="rotationcgp2_bdf2_mc"+`lRefinement`
 nn = nnx = nny = ct.ncells + 1
@@ -128,10 +137,10 @@ fmmFlag = 0
 #correctionType = 'global'
 correctionType = ct.correctionType
 #correctionType = 'none'
-if useHex:
+if ct.useHex:
     hex = True
-    soname = "rotation_c0q" + `pDegree_ls`+correctionType + "_" + \
-        ct.timeIntegration_ls + "_level_" + `lRefinement`
+    soname = "rotation_qua_c0q" + `pDegree_ls`+"_" + correctionType + "_" + \
+        ct.timeIntegration_ls + "_level_" + `ct.nLevels`
 else:
-    soname = "rotation_c0p" + `pDegree_ls`+correctionType + "_" + \
-        ct.timeIntegration_ls + "_level_" + `lRefinement`
+    soname = "rotation_tri_c0p" + `pDegree_ls`+"_" + correctionType + "_" + \
+        ct.timeIntegration_ls + "_level_" + `ct.nLevels`

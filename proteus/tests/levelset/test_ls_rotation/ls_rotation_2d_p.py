@@ -98,15 +98,20 @@ class UnitSquareRotation(NCLS.Coefficients):
         self.u_old_dof = numpy.copy(self.model.u[0].dof)
         self.q_v = numpy.zeros(self.model.q[('dH', 0, 0)].shape, 'd')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH', 0, 0)].shape, 'd')
-        self.unitSquareRotationLevelSetEvaluate(self.model.timeIntegration.tLast,
-                                                self.model.q['x'],
-                                                self.model.q[('u', 0)], self.model.q[(
-                                                    'grad(u)', 0)],
-                                                self.model.q[('m', 0)], self.model.q[(
-                                                    'dm', 0, 0)],
-                                                self.model.q[('dH', 0, 0)], self.model.q[(
-                                                    'dH', 0, 0)],
-                                                self.model.q[('H', 0)], self.q_v)
+#         self.unitSquareRotationLevelSetEvaluate(self.model.timeIntegration.tLast,
+#                                                 self.model.q['x'],
+#                                                 self.model.q[('u', 0)], self.model.q[(
+#                                                     'grad(u)', 0)],
+#                                                 self.model.q[('m', 0)], self.model.q[(
+#                                                     'dm', 0, 0)],
+#                                                 self.model.q[('dH', 0, 0)], self.model.q[(
+#                                                     'dH', 0, 0)],
+# self.model.q[('H', 0)], self.q_v)
+        self.q_v[..., 0] = -2.0 * math.pi * \
+            (self.model.q['x'][..., 1] - rotation_center[0])
+        self.q_v[..., 1] = 2.0 * math.pi * \
+            (self.model.q['x'][..., 0] - rotation_center[1])
+
         self.model.q[('velocity', 0)] = self.q_v
         self.model.ebqe[('velocity', 0)] = self.ebqe_v
         if self.RD_modelIndex != None:
