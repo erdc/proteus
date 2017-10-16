@@ -682,7 +682,7 @@ class MCorrNewton(Newton):
         #print self.atol_r, self.rtol_r
         if self.convergenceTest == 'r' or self.convergenceTest == 'rits':
             if (self.its != 0 and
-                max(self.norm_r,self.norm_lagr_u,self.norm_lagr_a) < self.rtol_r*self.norm_r0 + self.atol_r):
+                self.norm_r+self.norm_lagr_u+self.norm_lagr_a < self.rtol_r*self.norm_r0 + self.atol_r):
                 self.convergedFlag = True
         if self.convergenceTest == 'u':
             if (self.convergingIts != 0 and
@@ -728,7 +728,7 @@ class MCorrNewton(Newton):
             logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
                 %(self.its-1, self.norm_r), level=1)            
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
-                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+                % (self.its-1,self.norm_r+self.norm_lagr_u+self.norm_lagr_a,((self.norm_r+self.norm_lagr_u+self.norm_lagr_a)/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
@@ -767,7 +767,7 @@ class MCorrNewton(Newton):
                                         b=self.F.global_b_u,
                                         par_u=self.par_du,
                                         par_b=par_r)
-                s=self.F.beta_Tikhonov-2.0*np.dot(b_a,self.F.global_b_l)
+                s=self.F.beta_Tikhonov - 2.0*np.dot(b_a,self.F.global_b_l)
                 self.F.Nmat.matvec(b_a,tmp_vec)
                 s+=np.dot(b_a,tmp_vec)
                 #
@@ -812,15 +812,15 @@ class MCorrNewton(Newton):
                                         b=tmp_vec,
                                         par_u=self.par_du,
                                         par_b=par_r)
-            print " du ",LA.norm(self.du)," dlambda ",LA.norm(self.dlambda)," da ",da
+            logEvent(" du "+repr(LA.norm(self.du))+" dlambda "+repr(LA.norm(self.dlambda))+" da "+repr(da))
             u += self.du
             self.F.lambda_dof += self.dlambda
             self.F.coefficients.epsFactDiffusion += da
             if par_u is not None:
                 par_u.scatter_forward_insert()
             self.computeResidual(u,r,b)
-            print " u ",LA.norm(u)," lambda ",LA.norm(self.F.lambda_dof)," a ",self.F.coefficients.epsFactDiffusion
-            print "J ",self.F.global_J," LAGR ",self.F.global_LAGR," LAGR_l ",LA.norm(self.F.global_LAGR_l)," LAGR_u ",LA.norm(self.F.global_LAGR_u)," LAGR_a ",fabs(self.F.global_LAGR_a)
+            logEvent(" u "+repr(LA.norm(u))+" lambda "+repr(LA.norm(self.F.lambda_dof))+" a "+repr(self.F.coefficients.epsFactDiffusion))
+            logEvent("J "+repr(self.F.global_J)+" LAGR "+repr(self.F.global_LAGR)+" LAGR_l "+repr(LA.norm(self.F.global_LAGR_l))+" LAGR_u "+repr(LA.norm(self.F.global_LAGR_u))+" LAGR_a "+repr(fabs(self.F.global_LAGR_a)))
             if par_r is not None:
                 #no overlap
                 if not self.par_fullOverlap:

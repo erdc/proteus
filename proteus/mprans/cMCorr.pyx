@@ -33,7 +33,7 @@ cdef extern from "MCorr.h" namespace "proteus":
                                double* elementDiameter,
                                double* nodeDiametersArray,
                                double* u_dof,
-			       double* lambda_dof,
+                               double* lambda_dof,
                                double* q_phi,
                                double* q_normal_phi,
                                double* ebqe_phi,
@@ -46,6 +46,8 @@ cdef extern from "MCorr.h" namespace "proteus":
                                double* q_r,
                                double* q_porosity,
                                int offset_u, int stride_u,
+                               double* global_L2_u,
+                               double* global_H1_u,
                                double* global_J,
                                double* global_LAGR,
                                double* global_LAGR_a,
@@ -59,7 +61,7 @@ cdef extern from "MCorr.h" namespace "proteus":
                                int* elementBoundaryLocalElementBoundariesArray,
                                double beta,
                                double epsFactDiffusion_last,
-			       const double H1)
+                               const double H1)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -407,6 +409,8 @@ cdef class cMCorr_base:
                           double beta,
                           double epsFactDiffusion_last,
                           const double H1):
+        cdef double global_L2_u
+        cdef double global_H1_u
         cdef double global_J
         cdef double global_LAGR
         cdef double global_LAGR_a
@@ -451,6 +455,8 @@ cdef class cMCorr_base:
                                        <double*> q_porosity.data,
                                        offset_u,
                                        stride_u,
+                                       &global_L2_u,
+                                       &global_H1_u,
                                        &global_J,
                                        &global_LAGR,
                                        &global_LAGR_a,
@@ -465,7 +471,7 @@ cdef class cMCorr_base:
                                        beta,
                                        epsFactDiffusion_last,
                                        H1)
-        return (global_J, global_LAGR, global_LAGR_a)
+        return (global_L2_u, global_H1_u, global_J, global_LAGR, global_LAGR_a)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,

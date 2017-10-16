@@ -538,7 +538,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
         self.history = open(self.name+"lagrange_history.txt","w")
-        self.history.write('norm'+","+
+        self.history.write('L2norm_u'+","+
+                           'H1norm_u'+","+
+                           'linfnorm_u'+","+
+                           'l2norm_u_by_n'+","+
+                           'H1norm_u'+","+
                            'reg'+","+
                            'a'+","+
                            'J'+","+
@@ -567,8 +571,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
         #no flux boundary conditions
-        self.beta_Tikhonov=1.0e-3
+        self.beta_Tikhonov=0.01
         self.H1=1.0
+        self.global_L2_u=0.0
+        self.global_H1_u=0.0
         self.global_J=0.0
         self.global_LAGR=0.0
         self.global_LAGR_a=0.0
@@ -584,8 +590,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lambda_dof[:]=1.0
             self.global_LAGR_u[:]=0.0
             self.global_b_u[:]=0.0
-            self.global_b_l[:]=0.0            
-        (self.global_J,
+            self.global_b_l[:]=0.0
+        (self.global_L2_u,
+         self.global_H1_u,
+         self.global_J,
          self.global_LAGR,
          self.global_LAGR_a) = self.mcorr.calculateResidual(#element
              self.u[0].femSpace.elementMaps.psi,
@@ -949,7 +957,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
         from numpy import linalg as LA
-        self.history.write(repr(self.global_J - 0.5*self.beta_Tikhonov*(self.coefficients.epsFactDiffusion-self.epsFactDiffusion_last)**2)+","+
+        self.history.write(repr(math.sqrt(self.global_L2_u))+","+
+                           repr(math.sqrt(self.global_H1_u))+","+
+                           repr(lInfNorm(self.u[0].dof))+","+
+                           repr(l2Norm(self.u[0].dof)/self.u[0].dof.shape[0])+","+
+                           repr(self.global_J - 0.5*self.beta_Tikhonov*(self.coefficients.epsFactDiffusion-self.epsFactDiffusion_last)**2)+","+
                            repr(0.5*self.beta_Tikhonov*(self.coefficients.epsFactDiffusion-self.epsFactDiffusion_last)**2)+","+
                            repr(self.coefficients.epsFactDiffusion)+","+
                            repr(self.global_J)+","+

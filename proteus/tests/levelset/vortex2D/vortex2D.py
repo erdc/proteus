@@ -1,3 +1,4 @@
+from proteus import Context
 #if True uses PETSc solvers
 parallel = False
 linearSmoother = None
@@ -5,6 +6,10 @@ linearSmoother = None
 checkMass=False#True
 #number of space dimensions
 nd=2
+opts=Context.Options([
+    ("eps",50.0,"Initial value of epsFactDiffusion"),
+    ("r",0,"Initial level of mesh refinement"),])
+
 #time integration, not relevant if using BDF with cfl timestepping
 rtol_u = {0:1.0e-4}
 atol_u = {0:1.0e-4}
@@ -13,9 +18,9 @@ atol_res = {0:1.0e-4}
 #
 timeIntegration_vof = "vbdf"#vbdf,be,flcbdf,rk
 timeIntegration_ls = "vbdf"#vbdf,be,flcbdf,rk
-timeOrder = 3
+timeOrder = 2
 
-runCFL = 0.3#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
+runCFL = 1.0#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 #
 #spatial approximation orders
 cDegree_ls=0 #0 -- CG. -1 -- DG
@@ -35,7 +40,7 @@ else:
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 #spatial mesh
-lRefinement=1
+lRefinement=opts.r
 #tag simulation name to level of refinement
 #soname="vortexcgp2_bdf2_mc"+`lRefinement`
 nn=nnx=nny=(2**lRefinement)*10+1
@@ -66,7 +71,7 @@ onlyVOF=False#True
 #eps
 epsFactHeaviside=epsFactDirac=epsFact_vof=1.5
 epsFactRedistance=0.33
-epsFactDiffusion=20.0
+epsFactDiffusion=opts.eps
 #
 if useMetrics:
     shockCapturingFactor_vof=0.0
@@ -100,6 +105,6 @@ correctionType = 'cg'
 #correctionType = 'none'
 if useHex:
     hex=True
-    soname="vortex_c0q"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="vortex_c0q"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`+"_epsFact0_"+`epsFactDiffusion`
 else:
-    soname="vortex_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="vortex_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`+"_epsFact0_"+`epsFactDiffusion`
