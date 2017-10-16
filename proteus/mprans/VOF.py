@@ -59,6 +59,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         TimeIntegration.SSP.__init__(self, transport,integrateInterpolationPoints=integrateInterpolationPoints)
         self.runCFL=runCFL
         self.dtLast=None
+        self.dtRatioMax=2.0
         self.isAdaptive=True
         # About the cfl 
         assert transport.coefficients.STABILIZATION_TYPE>0,"SSP method just works for edge based EV methods; i.e., STABILIZATION_TYPE>0"
@@ -88,6 +89,8 @@ class RKEV(proteus.TimeIntegration.SSP):
         if self.dtLast is None:
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
+        if self.dt/self.dtLast  > self.dtRatioMax:
+            self.dt = self.dtLast*self.dtRatioMax
         self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
 
     def initialize_dt(self,t0,tOut,q):
@@ -266,7 +269,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  epsFactHeaviside=0.0,
                  epsFactDirac=1.0,
                  epsFactDiffusion=2.0,
-                 nonlinearVOF = False):
+                 nonlinearVOF = 0):
 
         self.epsFactHeaviside=epsFactHeaviside
         self.epsFactDirac=epsFactDirac
@@ -462,11 +465,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-        if self.nonlinearVOF:
+        if self.nonlinearVOF > 0:
             #For visualization, send H(phiHat+u) to the DOFs and store it in quantDOFs
             #This is done via a limited L2Projection
             #Update DOFs of NCLS. Since NCLS, MCorr and CLS live on the same space, this is valid:
             self.lsModel.u[0].dof += self.model.u[0].dof
+            #self.lsModel.u[0].dof += self.epsFactDiffusion*self.model.u[0].dof #TMP
             
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.checkMass:
@@ -868,7 +872,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.lumped_L2p = None
         self.limited_L2p = None
         self.consistent_L2p = None
-        if self.coefficients.nonlinearVOF==True:
+        if self.coefficients.nonlinearVOF>0:
             self.populate_vofModel_with_limited_L2p=False
         else:
             self.populate_vofModel_with_limited_L2p=True
@@ -1026,7 +1030,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         for i in range (self.mesh.nodeDiametersArray.size):
             epsHeaviside = self.coefficients.epsFactHeaviside*self.mesh.nodeDiametersArray[i]
             phi = self.coefficients.lsModel.u[0].dof[i]
-            self.quantDOFs[i] = smoothedHeaviside(epsHeaviside,phi)
+            self.quantDOFs[i] = 2*smoothedHeaviside(epsHeaviside,phi)-1
         
     def setMassQuadratureEdgeBasedStabilizationMethods(self):
         if self.rhs_mass_correction is None:
@@ -1054,6 +1058,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_L2p,
             self.ML,
             self.coefficients.epsFactHeaviside,
+            self.coefficients.epsFactDiffusion,
             self.phiHat_dof)
         self.mass_history.append([self.timeIntegration.dt,mass])
 
@@ -1288,16 +1293,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.calculateJacobian = self.vof.calculateMassMatrix
 
         if self.phiHat_dof is None:
-            if self.coefficients.nonlinearVOF == True:
+            if self.coefficients.nonlinearVOF > 0:
                 cond = self.coefficients.LS_modelIndex is not None
                 assert cond, "If nonlinearVOF=True, a NCLS model must be attached"
                 self.phiHat_dof = self.coefficients.lsModel.u[0].dof
                 self.phin_dof = self.coefficients.lsModel.u_dof_old
+                if self.coefficients.nonlinearVOF==1:
+                    self.calculateResidual = self.vof.calculateResidual_MCorr_with_VOF
+                    self.calculateJacobian = self.vof.calculateJacobian_MCorr_with_VOF
+                else:
+                    assert self.coefficients.nonlinearVOF==2, 'nonlinearVOF must be 0,1 or 2'
+                    self.calculateResidual = self.vof.calculateResidual_MCorr_with_VOF2
+                    self.calculateJacobian = self.vof.calculateJacobian_MCorr_with_VOF2
             else:
                 self.phiHat_dof = numpy.zeros(self.u[0].dof.shape,'d')
                 self.phin_dof = numpy.zeros(self.u[0].dof.shape,'d')
-            self.calculateResidual = self.vof.calculateResidual_MCorr_with_VOF
-            self.calculateJacobian = self.vof.calculateJacobian_MCorr_with_VOF
 
         self.calculateResidual(#element
             self.timeIntegration.dt,
@@ -1405,6 +1415,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.phiHat_dof,
             self.quantDOFs)
 
+        
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
@@ -1492,6 +1503,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
+            self.coefficients.cK,
+            self.coefficients.uL,
+            self.coefficients.uR,
+            self.phin_dof,
             self.phiHat_dof)
 
         #Load the Dirichlet conditions directly into residual
