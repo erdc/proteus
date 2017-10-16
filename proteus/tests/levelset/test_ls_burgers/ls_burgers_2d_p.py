@@ -22,14 +22,14 @@ class Burgers2D:
         a = x - y
         a0 = 1 - 0.5 * t
         if a <= a0:
-            if 0 <= y and y < t:
+            if 0 <= y < t:
                 u = y / (t + 1e-10)
-            elif t <= y and y < 0.5 * t + 1 - a:
+            elif t <= y < 0.5 * t + 1 - a:
                 u = 1
             else:
                 u = 0
         elif a <= 1:
-            if 0 <= y and y < math.sqrt(2 * t * (1 - a)):
+            if 0 <= y < math.sqrt(2 * t * (1 - a)):
                 u = y / (t + 1e-10)
             else:
                 u = 0
@@ -76,20 +76,28 @@ class UnitSquareRotation(NCLS.Coefficients):
             hamiltonian = {0: {0: 'linear'}}
         else:
             hamiltonian = {}
+
         NCLS.Coefficients.__init__(self)
+
         self.checkMass = checkMass
         self.useMetrics = 0.0
         self.sc_uref = 1.0
         self.sc_beta = 1.0
 
+#         self.STABILIZATION_TYPE = 2
+
     def attachModels(self, modelList):
         self.model = modelList[0]
         self.u_old_dof = numpy.copy(self.model.u[0].dof)
+
         self.q_v = numpy.zeros(self.model.q[('dH', 0, 0)].shape, 'd')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH', 0, 0)].shape, 'd')
 
+        #self.q_v = self.model.q[('dH', 0, 0)]
+        #self.ebqe_v = self.model.ebqe[('dH', 0, 0)]
+
         self.q_v[:, :, 0] = self.model.q[('u', 0)]
-        self.q_v[:, :, 1] = self.model.q[('u', 0)]
+        self.ebqe_v[:, :, 1] = self.model.q[('u', 0)]
 
         self.model.q[('velocity', 0)] = self.q_v
         self.model.ebqe[('velocity', 0)] = self.ebqe_v
@@ -113,7 +121,7 @@ class UnitSquareRotation(NCLS.Coefficients):
         #     self.timeArray = [self.model.timeIntegration.t]
     def preStep(self, t, firstStep=False):
         self.q_v[:, :, 0] = self.model.q[('u', 0)]
-        self.q_v[:, :, 1] = self.model.q[('u', 0)]
+        self.ebqe_v[:, :, 1] = self.model.q[('u', 0)]
         copyInstructions = {}
         return copyInstructions
 
@@ -152,6 +160,8 @@ dirichletConditions = {0: getDBC}
 class initial_condition:
     def uOfXT(self, x, t=0):
         return (x[0] >= 0) * (x[0] <= 1) * (x[1] >= 0) * (x[1] <= 1)
+# return ((x[0] - 0.5) * (x[0] - 0.5) + (x[1] - 0.5) * (x[1] - 0.5) <=
+# 0.25)
 
 
 initialConditions = {0: initial_condition()}
