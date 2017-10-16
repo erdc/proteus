@@ -55,6 +55,8 @@ namespace proteus
 				   double* q_r,
 				   double* q_porosity,
 				   int offset_u, int stride_u,
+				   double* L2_u,
+				   double* H1_u,
 				   double* global_J,
 				   double* global_LAGR,
 				   double* global_LAGR_a,
@@ -420,8 +422,7 @@ namespace proteus
 	dd=0.0;
       else if (phi < -eps)
 	dd=0.0;
-      else
-	//derivative of d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
+      else//derivative of d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;	
 	dd = -0.5*sin(M_PI*phi/eps)*M_PI/(eps*eps);
       return dd;
     }
@@ -489,6 +490,8 @@ namespace proteus
 					 double* element_u,
 					 int eN,
 					 double *element_lambda,
+					 double& element_L2_u,
+					 double& element_H1_u,
 					 double& element_J,
 					 double& element_LAGR,
 					 double& element_LAGR_a,
@@ -497,6 +500,8 @@ namespace proteus
 					 double *element_b_l,
 					 const double H1)
     {
+      element_L2_u=0.0;
+      element_H1_u=0.0;
       element_J=0.0;
       element_LAGR=0.0;
       element_LAGR_a=0.0;
@@ -600,13 +605,16 @@ namespace proteus
 			       q_porosity[eN_k],
 			       r,
 			       dr);
-	  double J_tmp= 0.5*(ck.Reaction_weak(u*u, dV) +
-	  	    H1*ck.NumericalDiffusion(1.0,grad_u, grad_u_dV));
+	  double L2_tmp = ck.Reaction_weak(u*u, dV);
+	  double H1_tmp = L2_tmp + ck.NumericalDiffusion(1.0,grad_u, grad_u_dV);
+	  double J_tmp = 0.5*(L2_tmp + H1*ck.NumericalDiffusion(1.0,grad_u, grad_u_dV));
+	  element_L2_u += L2_tmp;
+	  element_H1_u += H1_tmp;
 	  element_J += J_tmp;
 	  element_LAGR += J_tmp +
-	    ck.Reaction_weak(r*lambda, dV) +
+	    ck.Reaction_weak(r, lambda*dV) +
 	    ck.NumericalDiffusion(epsDiffusion, grad_u, grad_lambda_dV);
-	  element_LAGR_a += ck.NumericalDiffusion(1.0,
+	  element_LAGR_a += ck.NumericalDiffusion(h_phi,
 	  					  grad_u,
 	  					  grad_lambda_dV);
 	  // 
@@ -624,15 +632,15 @@ namespace proteus
 	      	H1*ck.NumericalDiffusion(1.0,
 					 grad_u,
 					 &u_grad_test_dV[i_nSpace]) +
-	      	ck.Reaction_weak(dr*lambda,u_test_dV[i]) +
+	      	ck.Reaction_weak(dr, lambda*u_test_dV[i]) +
 	      	ck.NumericalDiffusion(epsDiffusion,
 	      			      grad_lambda,
 	      			      &u_grad_test_dV[i_nSpace]);
 
-	      element_b_l[i] += ck.NumericalDiffusion(1.0,
+	      element_b_l[i] += ck.NumericalDiffusion(h_phi,
 						      grad_lambda,
 						      &u_grad_test_dV[i_nSpace]);
-	      element_b_u[i] += ck.NumericalDiffusion(1.0,
+	      element_b_u[i] += ck.NumericalDiffusion(h_phi,
 						      grad_u,
 						      &u_grad_test_dV[i_nSpace]);
 	    }//i
@@ -696,6 +704,8 @@ namespace proteus
 			   double* q_r,
 			   double* q_porosity,
 			   int offset_u, int stride_u,
+			   double* global_L2_u,
+			   double* global_H1_u,
 			   double* global_J,
 			   double* global_LAGR,			   
 			   double* global_LAGR_a,
@@ -721,13 +731,17 @@ namespace proteus
       //eN_j is the element trial function index
       //eN_k_j is the quadrature point index for a trial function
       //eN_k_i is the quadrature point index for a trial function
+      *global_L2_u = 0.0;
+      *global_H1_u = 0.0;
       *global_J = 0.5*beta*(epsFactDiffusion-epsFactDiffusion_last)*(epsFactDiffusion-epsFactDiffusion_last);
-      *global_LAGR = 0.0;
+      *global_LAGR = *global_J;
       *global_LAGR_a = beta*(epsFactDiffusion-epsFactDiffusion_last);
       for(int eN=0;eN<nElements_global;eN++)
 	{
 	  //declare local storage for element residual and initialize
-	  register double element_J=0.0,
+	  register double element_L2_u=0.0,
+	    element_H1_u=0.0,
+	    element_J=0.0,
 	    element_LAGR=0.0,
 	    element_LAGR_a=0.0,
 	    elementResidual_u[nDOF_test_element],
@@ -789,6 +803,8 @@ namespace proteus
 				   element_u,
 				   eN,
 				   element_lambda,
+				   element_L2_u,
+				   element_H1_u,
 				   element_J,
 				   element_LAGR,
 				   element_LAGR_a,
@@ -799,6 +815,8 @@ namespace proteus
 	  //
 	  //load element into global residual and save element residual
 	  //
+	  *global_L2_u += element_L2_u;
+	  *global_H1_u += element_H1_u;
 	  *global_J += element_J;
 	  *global_LAGR += element_LAGR;
 	  *global_LAGR_a += element_LAGR_a;
@@ -1170,7 +1188,7 @@ namespace proteus
 		{
 		  int eN_i_j = eN_i*nDOF_trial_element+j;
 		  globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
-		  /* globalN[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += element_N[i*nDOF_trial_element+j]; */
+		  globalN[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += element_N[i*nDOF_trial_element+j];
 		}//j
 	    }//i
 	}//elements
@@ -1261,6 +1279,8 @@ namespace proteus
 	      element_u[i]=0.0;
 	      element_lambda[i]=1.0;
 	    }//i
+	  double element_L2_u=0.0,
+	    element_H1_u=0.0;
 	  const double H1=1.0;
 	  calculateElementResidual(mesh_trial_ref,
 				   mesh_grad_trial_ref,
@@ -1309,6 +1329,8 @@ namespace proteus
 				   element_u,
 				   eN,
 				   element_lambda,
+				   element_L2_u,
+				   element_H1_u,
 				   element_J,
 				   element_LAGR,
 				   element_LAGR_a,
@@ -1446,6 +1468,8 @@ namespace proteus
 					   element_u,
 					   eN,
 					   element_lambda,
+					   element_L2_u,
+					   element_H1_u,
 					   element_J,
 					   element_LAGR,
 					   element_LAGR_a,
@@ -1538,6 +1562,8 @@ namespace proteus
 	      element_u[i]=elementConstant_u;
 	      element_lambda[i]=elementConstant_lambda;
 	    }//i
+	  double element_L2_u=0.0,
+	    element_H1_u=0.0;
 	  const double H1=1.0;
 	  calculateElementResidual(mesh_trial_ref,
 				   mesh_grad_trial_ref,
@@ -1586,6 +1612,8 @@ namespace proteus
 				   element_u,
 				   eN,
 				   element_lambda,
+				   element_L2_u,
+				   element_H1_u,
 				   element_J,
 				   element_LAGR,
 				   element_LAGR_a,
@@ -1706,6 +1734,8 @@ namespace proteus
 				       element_u,
 				       eN,
 				       element_lambda,
+				       element_L2_u,
+				       element_H1_u,
 				       element_J,
 				       element_LAGR,
 				       element_LAGR_a,
@@ -1798,6 +1828,8 @@ namespace proteus
       //compute residual and Jacobian
       for(int eN=0;eN<nElements_owned;eN++)
 	{
+	  double element_L2_u=0.0,
+	    element_H1_u=0.0;
 	  const double H1=1.0;
 	  calculateElementResidual(mesh_trial_ref,
 				   mesh_grad_trial_ref,
@@ -1846,6 +1878,8 @@ namespace proteus
 				   element_u,
 				   eN,
 				   element_lambda,
+				   element_L2_u,
+				   element_H1_u,
 				   element_J,
 				   element_LAGR,
 				   element_LAGR_a,
