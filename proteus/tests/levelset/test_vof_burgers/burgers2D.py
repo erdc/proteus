@@ -8,26 +8,24 @@ ct = Context.Options([
     ("cfl", 0.3, "Target CFL number"),
     ("parallel", False, "Use PETSc or not"),
     ("linearSmoother", False, "Use linear smoother or not"),
-    ("correctionType", 'cg', "Use 'cg' or 'dg' or 'dgp0' or 'global' or 'none'"),
     ("unstructured", False, "unstructured mesh or not"),
-    ("ncells", 10, "Specify initial mesh size by giving number of cells in each direction"),
+    ("ncells", 64, "Specify initial mesh size by giving number of cells in each direction"),
     ("nLevels", 1, "number of refiments"),
-    ("timeIntegration_ls", 'be',
+    ("timeIntegration_vof", 'be',
      "method for Time integration: 'be', 'vbdf', 'flcbdf','rk' "),
     ("datafile", 'errorInfo.db', "Filename to save error information"),
     ("useHex", False, "use quadrilateral or not"),
-    ("stablization", 0, "Stabilization method: 0=SUPG, 1=EV, 2=FCT")
+    ("stablization", 1, "Stabilization method: 0=SUPG, 1=EV, 2=FCT")
 ], mutable=True)
-
 
 if ct.useHex:
     hex = True
     quad = True
     soname = '_'.join(
-        [str(i) for i in ['burgers_qua', ct.timeIntegration_ls, ct.ncells * 2**(ct.nLevels - 1)]])
+        [str(i) for i in ['burgers_qua', ct.timeIntegration_vof, ct.ncells, ct.nLevels]])
 else:
     soname = '_'.join(
-        [str(i) for i in ['burgers_tri', ct.timeIntegration_ls, ct.ncells * 2**(ct.nLevels - 1)]])
+        [str(i) for i in ['burgers_tri', ct.timeIntegration_vof, ct.ncells, ct.nLevels]])
 
 ct.datafile = soname + '_' + ct.datafile
 
@@ -79,8 +77,8 @@ he = 1.0 / (nnx - 1.0)
 # True for tetgen, false for tet or hex from rectangular grid
 unstructured = ct.unstructured
 
-lower_left_cornor = (0.0, 0.0)
-L = width_and_hight = (2.0, 2.0)
+L = lower_left_cornor = (-.25, -.25)
+width_and_hight = (2.0, 2.0)
 rotation_center = (lower_left_cornor[0] + 0.5 * width_and_hight[0],
                    lower_left_cornor[1] + 0.5 * width_and_hight[1])
 
@@ -96,8 +94,9 @@ if unstructured:
     triangleOptions = "pAq30Dena%8.8f" % (0.5 * he**2,)
 else:
     domain = box
-# end time of simulation, full problem is T=8.0
-T = ct.T  # 8.0#
+
+# Final time
+T = ct.T
 # number of output time steps
 nDTout = 10
 # mass correction
@@ -143,3 +142,10 @@ fmmFlag = 0
 #correctionType = 'global'
 # correctionType = ct.correctionType
 #correctionType = 'none'
+# if ct.useHex:
+#     hex = True
+#     soname = "rotation_qua_c0q" + `pDegree_ls`+"_" + \
+#         ct.timeIntegration_vof + "_level_" + `ct.nLevels`
+# else:
+#     soname = "rotation_tri_c0p" + `pDegree_ls`+"_" + \
+#         ct.timeIntegration_vof + "_level_" + `ct.nLevels`
