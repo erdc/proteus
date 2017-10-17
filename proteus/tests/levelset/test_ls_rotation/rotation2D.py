@@ -24,10 +24,10 @@ if ct.useHex:
     hex = True
     quad = True
     soname = '_'.join(
-        [str(i) for i in ['burgers_qua', ct.timeIntegration_ls, ct.ncells * 2**(ct.nLevels - 1)]])
+        [str(i) for i in ['rotation_qua', ct.timeIntegration_ls, ct.ncells, ct.nLevels]])
 else:
     soname = '_'.join(
-        [str(i) for i in ['burgers_tri', ct.timeIntegration_ls, ct.ncells * 2**(ct.nLevels - 1)]])
+        [str(i) for i in ['rotation_tri', ct.timeIntegration_ls, ct.ncells, ct.nLevels]])
 
 ct.datafile = soname + '_' + ct.datafile
 

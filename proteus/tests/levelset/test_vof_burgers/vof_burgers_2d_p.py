@@ -155,7 +155,8 @@ class Burgers2D:
             for i in xrange(L):
                 u[i] = self.true_value(XY[0][i], XY[0][i])
 
-        except TypeError:  # when XY is a tuple of 3 numbers
+        # when XY is a tuple of 3 numbers and XY[0] is a number
+        except TypeError:
             u = self.true_value(XY[0], XY[1], t)
 
         return u
