@@ -51,7 +51,8 @@ elif correctionType == 'global':
 elif correctionType == 'none':
     levelNonlinearSolver = MCorr.DummyNewton
 else:
-    levelNonlinearSolver = Newton
+    #levelNonlinearSolver = Newton
+    levelNonlinearSolver = MCorrNewton
     nonlinearSolverNorm = LinearAlgebraTools.l2Norm
 nonlinearSmoother = NLGaussSeidel
 
