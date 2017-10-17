@@ -9,13 +9,13 @@ ct = Context.Options([
     ("parallel", False, "Use PETSc or not"),
     ("linearSmoother", False, "Use linear smoother or not"),
     ("unstructured", False, "unstructured mesh or not"),
-    ("ncells", 64, "Specify initial mesh size by giving number of cells in each direction"),
-    ("nLevels", 1, "number of refiments"),
+    ("ncells", 32, "Specify initial mesh size by giving number of cells in each direction"),
+    ("nLevels", 3, "number of refiments"),
     ("timeIntegration_vof", 'be',
      "method for Time integration: 'be', 'vbdf', 'flcbdf','rk' "),
     ("datafile", 'errorInfo.db', "Filename to save error information"),
     ("useHex", False, "use quadrilateral or not"),
-    ("stablization", 1, "Stabilization method: 0=SUPG, 1=EV, 2=FCT")
+    ("stablization", 0, "Stabilization method: 0=SUPG, 1=EV, 2=FCT")
 ], mutable=True)
 
 if ct.useHex:
