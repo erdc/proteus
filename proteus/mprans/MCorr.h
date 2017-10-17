@@ -60,7 +60,7 @@ namespace proteus
 				   double* global_J,
 				   double* global_LAGR,
 				   double* global_LAGR_a,
-				   double* globalResidual,
+				   double* globalResidual, //LAGR_lambda
 				   double* global_LAGR_u,
 				   double* global_b_u,
 				   double* global_b_l,
@@ -68,9 +68,9 @@ namespace proteus
 				   int* exteriorElementBoundariesArray,
 				   int* elementBoundaryElementsArray,
 				   int* elementBoundaryLocalElementBoundariesArray,
-				   const double beta,
-				   const double epsFactDiffusion_last,
-				   const double H1)=0;
+				   const double beta, 
+				   const double epsFactDiffusion_last, //a_bar
+				   const double H1)=0; //H1=1. Min over H1 norm, if H1=0, min over L2
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
