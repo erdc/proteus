@@ -589,7 +589,7 @@ class NS_base:  # (HasTraits):
         self.modelList=[]
         self.lsList=[]
         self.nlsList=[]
-
+        
         for p,n,s,mlMesh,index \
             in zip(self.pList,self.nList,self.sList,self.mlMesh_nList,range(len(self.pList))):
 
@@ -763,8 +763,8 @@ class NS_base:  # (HasTraits):
                         nFile=n,
                         analyticalSolution=p.analyticalSolution))
                 model.simTools = self.simOutputList[-1]
-
-                #Code to refresh attached gauges. The goal is to first purge
+                
+                #Code to refresh attached gauges. The goal is to first purge 
                 #existing point gauge node associations as that may have changed
                 #If there is a line gauge, then all the points must be deleted
                 #and remade.
@@ -909,7 +909,7 @@ class NS_base:  # (HasTraits):
         n0 = self.nList[0]
         adaptMeshNow = False
         #will need to move this to earlier when the mesh is created
-        #from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+        from proteus.MeshAdaptPUMI import MeshAdaptPUMI
         if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
             import sys
             if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
@@ -965,7 +965,7 @@ class NS_base:  # (HasTraits):
                 for i in range(len(facetList)):
                   for j in range(maxFacetLength):
                     if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
-                      testSegment = [facetList[i][j],facetList[i][0]]
+                      testSegment = [facetList[i][j],facetList[i][0]] 
                     else:
                       testSegment = [facetList[i][j],facetList[i][j+1]]
                     try:
@@ -979,12 +979,12 @@ class NS_base:  # (HasTraits):
               mesh2Model_v = numpy.asarray(p0.domain.meshVertex2Model).astype("i")
               mesh2Model_e = numpy.asarray(p0.domain.meshEdge2Model).astype("i")
               mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
-
+            
             p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
             p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
         if (hasattr(p0.domain, 'PUMIMesh') and
             n0.adaptMesh and
-            self.so.useOneMesh and
+            self.so.useOneMesh and 
             self.nSolveSteps%n0.adaptMesh_nSteps==0):
             logEvent("Copying coordinates to PUMI")
             p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
@@ -1030,7 +1030,7 @@ class NS_base:  # (HasTraits):
                     del scalar
 
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-            # scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal
+            # scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal           
             # p0.domain.PUMIMesh.transferFieldToPUMI(
             #     'velocityError', scalar)
 
@@ -1055,7 +1055,7 @@ class NS_base:  # (HasTraits):
             sfConfig = p0.domain.PUMIMesh.size_field_config()
             if(sfConfig=="ERM"):
               errorTotal= p0.domain.PUMIMesh.get_local_error()
-
+              
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
@@ -1108,11 +1108,11 @@ class NS_base:  # (HasTraits):
         #code to suggest adapting until error is reduced;
         #not fully baked and can lead to infinite loops of adaptation
         #if(sfConfig=="ERM"):
-        #  p0.domain.PUMIMesh.get_local_error()
+        #  p0.domain.PUMIMesh.get_local_error() 
         #  while(p0.domain.PUMIMesh.willAdapt()):
         #    p0.domain.PUMIMesh.adaptPUMIMesh()
         #    p0.domain.PUMIMesh.get_local_error()
-
+        
         logEvent("Converting PUMI mesh to Proteus")
         #ibaned: PUMI conversion #2
         #TODO: this code is nearly identical to
@@ -1122,7 +1122,7 @@ class NS_base:  # (HasTraits):
           mesh = MeshTools.TetrahedralMesh()
         else:
           mesh = MeshTools.TriangularMesh()
-
+    
         mesh.convertFromPUMI(p0.domain.PUMIMesh,
                              p0.domain.faceList,
                              p0.domain.regList,
@@ -1403,7 +1403,7 @@ class NS_base:  # (HasTraits):
                                 stepFailed = not self.systemStepController.retryModelStep_errorFailure(model)
                             else:
                                 #set up next step
-                                self.systemStepController.modelStepTaken(model,self.t_stepSequence)
+                                self.systemStepController.modelStepTaken(model,self.t_stepSequence)                                
                                 logEvent("Step Taken, t_stepSequence= %s Model step t=%12.5e, dt=%12.5e for model %s" % (self.t_stepSequence,
                                                                                                                          model.stepController.t_model,
                                                                                                                          model.stepController.dt_model,
@@ -1485,7 +1485,7 @@ class NS_base:  # (HasTraits):
             #h-adapt mesh, cekees modified from chitak
             #
             #assuming same for all physics and numerics  for now
-
+        
             #can only handle PUMIDomain's for now
             self.nSolveSteps += 1
             if(self.PUMI_estimateError()):
@@ -1595,9 +1595,9 @@ class NS_base:  # (HasTraits):
                                                                    res_name_base='phi_s')
             logEvent("Writing initial phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
-            pass
+            pass  
 
-        #For aux quantity of interest (MQL)
+        #For aux quantity of interest (MQL)        
         try:
             quantDOFs = {}
             quantDOFs[0] = model.levelModelList[-1].quantDOFs
@@ -1608,7 +1608,7 @@ class NS_base:  # (HasTraits):
                                                                    res_name_base='quantDOFs_for_'+model.name)
             logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
-            pass
+            pass   
 
         #Write bathymetry for Shallow water equations (MQL)
         try:
@@ -1714,7 +1714,7 @@ class NS_base:  # (HasTraits):
             logEvent("Writing phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass
-
+        
         try:
             quantDOFs = {}
             quantDOFs[0] = model.levelModelList[-1].quantDOFs
@@ -1722,7 +1722,7 @@ class NS_base:  # (HasTraits):
                                                                    self.tnList[0],
                                                                    self.tCount,
                                                                    quantDOFs,
-                                                                   res_name_base='quantDOFs_for_'+model.name)
+                                                                   res_name_base='quantDOFs_for_'+model.name)        
             logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass
