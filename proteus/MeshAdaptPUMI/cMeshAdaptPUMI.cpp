@@ -5,6 +5,7 @@
 #include <maShape.h>
 #include <apfMDS.h>
 #include <PCU.h>
+#include <apf.h>
 
 #include <iostream>
 #include <fstream>
@@ -86,7 +87,6 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
  * Destructor for MeshAdaptPUMIDrvr
  */
 {
-
   freeField(err_reg);
   freeField(errRho_reg);
   freeField(errRel_reg);
@@ -362,6 +362,11 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   else if (size_field_config == "test"){
     testIsotropicSizeField();
   }
+  else if(size_field_config == "uniform"){
+      //special situation where I only care about err_reg
+      freeField(errRho_reg); 
+      freeField(errRel_reg); 
+  }
   else {
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
@@ -382,12 +387,20 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     freeNumbering(local[d]);
 
   /// Adapt the mesh
-  assert(size_iso || (size_scale && size_frame));
+
   ma::Input* in;
-  if(adapt_type_config=="anisotropic" || size_field_config== "interface")
-    in = ma::configure(m, size_scale, size_frame);
-  else
-    in = ma::configure(m, size_iso);
+  if(size_field_config == "uniform"){
+    in = ma::configureUniformRefine(m);
+    in->shouldFixShape=false;
+  }
+  else{
+    assert(size_iso || (size_scale && size_frame));
+    if(adapt_type_config=="anisotropic" || size_field_config== "interface")
+      in = ma::configure(m, size_scale, size_frame);
+    else
+      in = ma::configure(m, size_iso);
+  }
+
   ma::validateInput(in);
   in->shouldRunPreZoltan = true;
   in->shouldRunMidParma = true;
@@ -395,7 +408,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
   in->shouldSnap = false;
-  in->shouldFixShape = true;
+  //in->shouldFixShape = true;
   double mass_before = getTotalMass();
 
   double t1 = PCU_Time();
@@ -491,3 +504,10 @@ double MeshAdaptPUMIDrvr::getTotalMass()
   return mass;
 }
 /** @} */
+
+//Save mesh with solution
+
+void MeshAdaptPUMIDrvr::writeMesh(const char* meshFile){
+  m->writeNative(meshFile);
+  apf::writeVtkFiles(meshFile,m);
+}

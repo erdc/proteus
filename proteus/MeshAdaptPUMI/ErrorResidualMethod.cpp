@@ -694,9 +694,12 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
   freeField(err_reg);
   freeField(errRho_reg);
   freeField(errRel_reg);
-  err_reg = apf::createField(m,"ErrorRegion",apf::VECTOR,apf::getConstant(nsd));
+  //err_reg = apf::createField(m,"ErrorRegion",apf::VECTOR,apf::getConstant(nsd));
+  std::cout<<"FLAG1\n";
+  err_reg = apf::createField(m,"ErrorRegion",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   errRho_reg = apf::createField(m,"ErrorDensity",apf::SCALAR,apf::getConstant(nsd));
   errRel_reg = apf::createField(m,"RelativeError",apf::SCALAR,apf::getConstant(nsd));
+  std::cout<<"FLAG2\n";
 
   //Start computing element quantities
   int numqpt; //number of quadrature points
@@ -909,7 +912,8 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
     err_est = sqrt(Acomp); 
 
     apf::Vector3 err_in(err_est,Acomp,Bcomp);
-    apf::setVector(err_reg,ent,0,err_in);
+    //apf::setVector(err_reg,ent,0,err_in);
+    apf::setScalar(err_reg,ent,0,err_est);
     double errRho = err_est/sqrt(apf::measure(element));
     apf::setScalar(errRho_reg,ent,0,errRho);
     if(errRho>errRho_max)
