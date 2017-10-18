@@ -66,7 +66,7 @@ elif ct.timeIntegration_ls == "rk":
 
     levelNonlinearSolverType = SSPRKNewton
     stepController = Min_dt_RKcontroller
-    timeOrder = pDegree_ls + 1
+    timeOrder = 1  # pDegree_ls + 1
     nStagesTime = timeOrder
 else:
     raise RuntimeError

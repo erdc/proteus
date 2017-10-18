@@ -1,0 +1,288 @@
+from proteus import *
+from proteus.default_p import *
+from math import *
+from rotation2D import *
+from proteus.mprans import NCLS
+import numpy as np
+from Carbon.QuickTime import kMIDIImport20Playable
+
+
+def getResidual(
+    # double, self.timeIntegration.dt
+    dt,
+    # numpy.ndarray, self.u[0].femSpace.elementMaps.psi,
+    mesh_trial_ref,
+    # numpy.ndarray, self.u[0].femSpace.elementMaps.grad_psi
+    mesh_grad_trial_ref,
+    # numpy.ndarray, self.mesh.nodeArray
+    mesh_dof,
+    # numpy.ndarray, self.mesh.nodeVelocityArray
+    mesh_velocity_dof,
+    # double, self.MOVING_DOMAIN
+    MOVING_DOMAIN,
+    # numpy.ndarray, self.mesh.elementNodesArray
+    mesh_l2g,
+    # numpy.ndarray, self.elementQuadratureWeights[('u',0)]
+    dV_ref,
+    # numpy.ndarray, self.u[0].femSpace.psi
+    u_trial_ref,
+    # numpy.ndarray, self.u[0].femSpace.grad_psi
+    u_grad_trial_ref,
+    # numpy.ndarray, self.u[0].femSpace.psi
+    u_test_ref,
+    # numpy.ndarray, self.u[0].femSpace.grad_psi
+    u_grad_test_ref,
+    # numpy.ndarray, self.u[0].femSpace.elementMaps.psi_trace
+    mesh_trial_trace_ref,
+    # numpy.ndarray, self.u[0].femSpace.elementMaps.grad_psi_trace
+    mesh_grad_trial_trace_ref,
+    # numpy.ndarray, self.elementBoundaryQuadratureWeights[('u',0)]
+    dS_ref,
+    # numpy.ndarray, self.u[0].femSpace.psi_trace
+    u_trial_trace_ref,
+    # numpy.ndarray, self.u[0].femSpace.grad_psi_trace
+    u_grad_trial_trace_ref,
+    # numpy.ndarray, self.u[0].femSpace.psi_trace
+    u_test_trace_ref,
+    # numpy.ndarray, self.u[0].femSpace.grad_psi_trace
+    u_grad_test_trace_ref,
+    # numpy.ndarray, self.u[0].femSpace.elementMaps.boundaryNormals
+    normal_ref,
+    # numpy.ndarray, self.u[0].femSpace.elementMaps.boundaryJacobians
+    boundaryJac_ref,
+    # int, self.mesh.nElements_global
+    nElements_global,
+    # double,  self.coefficients.useMetrics
+    useMetrics,
+    # double, self.timeIntegration.alpha_bdf
+    alphaBDF,
+    # int, self.shockCapturing.lag
+    lag_shockCapturing,
+    # double, self.shockCapturing.shockCapturingFactor
+    shockCapturingDiffusion,
+    # double, self.coefficients.sc_uref
+    sc_uref,
+    # double, self.coefficients.sc_beta
+    sc_alpha,
+    # numpy.ndarray, self.u[0].femSpace.dofMap.l2g
+    u_l2g,
+    # numpy.ndarray, self.mesh.elementDiametersArray,
+    elementDiameter,
+    # numpy.ndarray, self.mesh.nodeDiametersArray,
+    nodeDiametersArray,
+    # int, degree_polynomial,
+    degree_polynomial,
+    # numpy.ndarray, self.u[0].dof,
+    u_dof,
+    # numpy.ndarray, self.u_dof_old, #DOFs at lstage. Used only when
+    # STABILIZATION_TYPE>0; i.e., EV
+    u_dof_old,
+    # numpy.ndarray, self.uStar_dof,
+    uStar_dof,
+    # numpy.ndarray, self.coefficients.q_v,
+    velocity,
+    # numpy.ndarray, self.timeIntegration.m_tmp[0],
+    q_m,
+    # numpy.ndarray, self.q[('u',0)],
+    q_u,
+    # numpy.ndarray, self.q[('grad(u)',0)],
+    q_n,
+    # numpy.ndarray, self.q[('dH_sge',0,0)],
+    q_dH,
+    # numpy.ndarray, self.timeIntegration.beta_bdf[0],#betaBDF. Used only when
+    # STABILIZATION_TYPE=0
+    q_m_betaBDF,
+    # numpy.ndarray, self.q['dV'],
+    q_dV,
+    # numpy.ndarray, self.q['dV_last'],
+    q_dV_last,
+    # numpy.ndarray, self.q[('cfl',0)],
+    cfl,
+    # numpy.ndarray, self.edge_based_cfl,
+    edge_based_cfl,
+    # numpy.ndarray, self.shockCapturing.numDiff[0],
+    q_numDiff_u,
+    # numpy.ndarray, self.shockCapturing.numDiff_last[0],
+    q_numDiff_u_last,
+    # int, self.offset[0]
+    offset_u,
+    # int, self.stride[0],
+    stride_u,
+    # numpy.ndarray, r,
+    globalResidual,
+    # int, self.mesh.nExteriorElementBoundaries_global,
+    nExteriorElementBoundaries_global,
+    # numpy.ndarray, self.mesh.exteriorElementBoundariesArray,
+    exteriorElementBoundariesArray,
+    # numpy.ndarray, self.mesh.elementBoundaryElementsArray,
+    elementBoundaryElementsArray,
+    # numpy.ndarray, self.mesh.elementBoundaryLocalElementBoundariesArray,
+    elementBoundaryLocalElementBoundariesArray,
+    # numpy.ndarray, self.coefficients.ebqe_v,
+    ebqe_velocity_ext,
+    # numpy.ndarray, self.numericalFlux.isDOFBoundary[0],
+    isDOFBoundary_u,
+    # numpy.ndarray, self.coefficients.rdModel.ebqe[('u',0)],
+    ebqe_rd_u_ext,
+    # numpy.ndarray, self.numericalFlux.ebqe[('u',0)],
+    ebqe_bc_u_ext,
+    # numpy.ndarray, self.ebqe[('u',0)],
+    ebqe_u,
+    # int, len(rowptr)-1,
+    numDOFs,
+    # int, self.nnz,
+    NNZ,
+    # numpy.ndarray, rowptr, #Row indices for Sparsity Pattern (convenient for
+    # DOF loops)
+    csrRowIndeces_DofLoops,
+    # numpy.ndarray, colind, #Column indices for Sparsity Pattern (convenient
+    # for DOF loops)
+    csrColumnOffsets_DofLoops,
+    # numpy.ndarray, self.csrRowIndeces[(0,0)], #row indices (convenient for
+    # element loops)
+    csrRowIndeces_CellLoops,
+    # numpy.ndarray, self.csrColumnOffsets[(0,0)], #column indices (convenient
+    # for element loops)
+    csrColumnOffsets_CellLoops,
+    # numpy.ndarray, self.csrColumnOffsets_eb[(0, 0)], #indices for boundary
+    # terms
+    csrColumnOffsets_eb_CellLoops,
+    # int, self.coefficients.LUMPED_MASS_MATRIX,
+    LUMPED_MASS_MATRIX,
+    # numpy.ndarray, self.quantDOFs,
+    quantDOFs,
+    # double, self.coefficients.lambda_coupez,
+    lambda_coupez,
+    # double, self.coefficients.epsCoupez,
+    epsCoupez,
+    # double, self.coefficients.epsFactRedistancing*self.mesh.h,
+    epsFactRedistancing,
+    # int, self.coefficients.COUPEZ,
+    COUPEZ,
+    # int, self.coefficients.SATURATED_LEVEL_SET,
+    SATURATED_LEVEL_SET,
+    # numpy.ndarray, Cx, 1d array
+    Cx,
+    # numpy.ndarray, Cy
+    Cy,
+    # numpy.ndarray, Cz
+    Cz,
+    # numpy.ndarray, self.ML,
+    ML,
+    # int, self.coefficients.STABILIZATION_TYPE,
+    STABILIZATION_TYPE,
+    # int, self.coefficients.ENTROPY_TYPE,
+    ENTROPY_TYPE,
+    # double, self.coefficients.cE
+        cE):
+
+    Cx[:] = 0.0
+    Cy[:] = 0.0
+    Cx_T = np.zeros_like(Cx, 'd')
+    Cy_T = np.zeros_like(Cy, 'd')
+    globalResidual[:] = 0.0
+
+    for e in xrange(nElements_global):
+        qpt, J, invJ, invJT, detJ = P1_calculateMapping_element(
+            mesh_dof[mesh_l2g[e]], mesh_trial_ref, mesh_grad_trial_ref)
+
+        dV = np.abs(detJ) * dV_ref
+
+        n_pts = len(dV)
+
+        u = np.dot(u_trial_ref, u_dof[u_l2g[e]])
+        ux = np.dot(u_grad_trial_ref[:, :, 0], u_dof[u_l2g[e]])
+        uy = np.dot(u_grad_trial_ref[:, :, 1], u_dof[u_l2g[e]])
+
+        v_basis = u_trial_ref
+        v_grad_basis = [np.dot(u_grad_trial_ref[k, :, :], invJ[k, :, :])
+                        for k in xrange(n_pts)]
+
+        w_basis = u_test_ref
+        w_grad_basis = [np.dot(u_grad_test_ref[k, :, :], invJ[k, :, :])
+                        for k in xrange(n_pts)]
+
+        c_x = np.zeros((3, 3), 'd')
+        c_y = np.zeros((3, 3), 'd')
+        for i in range(3):
+            for j in range(3):
+                for k in range(n_pts):
+                    c_x[i, j] += v_basis[k, i] * v_grad_basis[k][j, 0] * dV[k]
+                    c_y[i, j] += v_basis[k, i] * v_grad_basis[k][j, 1] * dV[k]
+
+                Cx[csrRowIndeces_CellLoops[e, i]
+                   +
+                   csrColumnOffsets_CellLoops[e, i, j]] += c_x[i, j]
+                Cy[csrRowIndeces_CellLoops[e, i]
+                   +
+                   csrColumnOffsets_CellLoops[e, i, j]] += c_y[i, j]
+
+                Cx_T[csrRowIndeces_CellLoops[e, i]
+                     +
+                     csrColumnOffsets_CellLoops[e, i, j]] += c_x[j, i]
+                Cy_T[csrRowIndeces_CellLoops[e, i]
+                     +
+                     csrColumnOffsets_CellLoops[e, i, j]] += c_y[j, i]
+
+    dij = np.zeros_like(Cx, 'd')
+    for dof_i in xrange(numDOFs - 1):
+
+        dii = 0.0
+        for j in xrange(csrRowIndeces_DofLoops[dof_i], csrRowIndeces_DofLoops[dof_i + 1]):
+            dof_j = csrColumnOffsets_DofLoops[j]
+            if dof_i != dof_j:
+                cx_ij = Cx[j]
+                cy_ij = Cy[j]
+
+                cx_ji = Cx_T[j]
+                cy_ji = Cy_T[j]
+
+                cij = np.array([cx_ij, cy_ij])
+                cji = np.array([cx_ji, cy_ji])
+                #nij /= np.sqrt(nij[0] * nij[0] + nij[1] * nij[1])
+
+                xij = np.array([0.5 * (mesh_dof[dof_i, 0] + mesh_dof[dof_j, 0]),
+                                0.5 * (mesh_dof[dof_i, 1] + mesh_dof[dof_j, 1])])
+
+                advection_ij = np.array([-2.0 * math.pi * (xij[1] - xij[0]),
+                                         2.0 * math.pi * (xij[0] - xij[1])])
+
+                dij[j] = max([np.abs(np.dot(cij, advection_ij)),
+                              np.abs(np.dot(cji, advection_ij))])
+
+                dii -= dij[j]
+                globalResidual[dof_i] += (dij[j] * u_dof[dof_j]
+                                          -
+                                          np.dot(cij, advection_ij))
+            else:
+                dof_ii_index = j
+        # end-of-loop-over-j
+        dij[dof_ii_index] = dii
+        globalResidual[dof_i] += dii * u_dof[dof_i]
+        globalResidual[dof_i] = (
+            u_dof[dof_i] - u_dof_old[dof_i]) * alphaBDF - globalResidual[dof_i]
+    # end-of-loop-over-dof_i
+
+
+def P1_calculateMapping_element(nodes_coord, geo_basis, grad_geo_basis):
+    n_pts = geo_basis.shape[0]
+    J = np.zeros((n_pts, 2, 2), 'd')
+    invJ = np.zeros((n_pts, 2, 2), 'd')
+    invJT = np.zeros((n_pts, 2, 2), 'd')
+    detJ = np.zeros((n_pts,), 'd')
+
+    quad_pts = np.dot(geo_basis, nodes_coord)  # [npx2]=[np,3]x[3,2]
+    # [npx2]=[np,3]x[3,2]
+    x_ksi_pts = np.dot(grad_geo_basis[:, :, 0], nodes_coord)
+    # [npx2]=[np,3]x[3,2]
+    x_eta_pts = np.dot(grad_geo_basis[:, :, 1], nodes_coord)
+    for i in xrange(n_pts):
+        J[i] = np.array([x_ksi_pts[i][:2], x_eta_pts[i][:2]])
+        detJ[i] = x_ksi_pts[i][0] * x_eta_pts[i][1] - \
+            x_ksi_pts[i][1] * x_eta_pts[i][0]
+        invJ[i] = np.array([[x_eta_pts[i][1], -x_ksi_pts[i][1]],
+                            [-x_eta_pts[i][0], x_ksi_pts[i][0]]]) / detJ[i]
+        invJT[i] = np.array([[x_eta_pts[i][1], -x_eta_pts[i][0]],
+                             [-x_ksi_pts[i][1], x_ksi_pts[i][0]]]) / detJ[i]
+
+    return quad_pts, J, invJ, invJT, detJ
