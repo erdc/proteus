@@ -22,6 +22,7 @@ class MeshAdaptPUMIDrvr{
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
+  void writeMesh(const char* meshFile);
 
   //Functions to construct proteus mesh data structures
   int reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int hasModel);
