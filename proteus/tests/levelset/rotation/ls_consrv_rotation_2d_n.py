@@ -57,7 +57,7 @@ elif correctionType == 'none':
     levelNonlinearSolver = MCorr.DummyNewton
 else:
     levelNonlinearSolver = Newton
-    nonlinearSolverNorm = MCorr.conservationNorm
+    nonlinearSolverNorm = LinearAlgebraTools.l2Norm#MCorr.conservationNorm
 nonlinearSmoother = NLGaussSeidel
 
 fullNewtonFlag = True

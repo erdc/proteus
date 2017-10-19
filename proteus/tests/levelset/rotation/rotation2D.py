@@ -1,4 +1,5 @@
-from proteus import Domain
+from proteus import (Domain,
+                     Context)
 #if True uses PETSc solvers
 parallel = False
 linearSmoother = None
@@ -6,6 +7,9 @@ linearSmoother = None
 checkMass=False#True
 #number of space dimensions
 nd=2
+opts=Context.Options([
+    ("eps",50.0,"Initial value of epsFactDiffusion"),
+    ("r",0,"Initial level of mesh refinement"),])
 #time integration, not relevant if using BDF with cfl timestepping
 rtol_u = {0:1.0e-4}
 atol_u = {0:1.0e-4}
@@ -36,7 +40,7 @@ else:
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 #spatial mesh
-lRefinement=1
+lRefinement=opts.r
 #tag simulation name to level of refinement
 #soname="rotationcgp2_bdf2_mc"+`lRefinement`
 nn=nnx=nny=(2**lRefinement)*5+1
@@ -45,9 +49,9 @@ he=1.0/(nnx-1.0)
 L=[1.0,1.0]
 
 unstructured=True#True for tetgen, false for tet or hex from rectangular grid
-box=Domain.RectangularDomain(L=(2.0,2.0),
-                             x=(-1.0,-1.0),
-                             name="box");
+box=box=Domain.RectangularDomain(L=(2.0,2.0),
+                                 x=(-1.0,-1.0),
+                                 name="box");
 box.writePoly("box")
 if unstructured:
     from rotationDomain import *
@@ -70,7 +74,7 @@ onlyVOF=False#True
 #eps
 epsFactHeaviside=epsFactDirac=epsFact_vof=1.5
 epsFactRedistance=0.33
-epsFactDiffusion=10.0
+epsFactDiffusion=opts.eps
 #
 if useMetrics:
     shockCapturingFactor_vof=0.5
@@ -89,7 +93,7 @@ else:
 
 #use absolute tolerances on al models
 atolRedistance = max(1.0e-12,0.1*he)
-atolConservation = max(1.0e-12,0.001*he**2)
+atolConservation = 1.0e-12
 atolVolumeOfFluid= max(1.0e-12,0.001*he**2)
 atolLevelSet     = max(1.0e-12,0.001*he**2)
 #controls
@@ -104,6 +108,6 @@ correctionType = 'cg'
 #correctionType = 'none'
 if useHex:
     hex=True
-    soname="rotation_c0q"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="rotation_c0q"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`+"_epsFact0_"+`epsFactDiffusion`
 else:
-    soname="rotation_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="rotation_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`+"_epsFact0_"+`epsFactDiffusion`
