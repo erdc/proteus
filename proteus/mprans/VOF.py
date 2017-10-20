@@ -259,7 +259,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  uL=0.0, 
                  uR=1.0,
                  # FOR ARTIFICIAL COMPRESSION
-                 cK=1.0):
+                 cK=1.0,
+                 # OUTPUT quantDOFs
+                 outputQuantDOFs = False):
 
         self.useMetrics = useMetrics
         self.variableNames=['vof']
@@ -308,6 +310,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.cK=cK
         self.forceStrongConditions=forceStrongConditions
         self.cE=cE
+        self.outputQuantDOFs=outputQuantDOFs
 
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
@@ -328,7 +331,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_phi = numpy.zeros(self.model.ebqe[('u',0)].shape,'d')#cek hack, we don't need this
         #flow model
         #print "flow model index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))        
-
         if self.flowModelIndex is not None:
             if modelList[self.flowModelIndex].q.has_key(('velocity',0)):
                 self.q_v = modelList[self.flowModelIndex].q[('velocity',0)]
@@ -416,18 +418,18 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #
         #
     def initializeElementQuadrature(self,t,cq):
-        if self.flowModelIndex is None:
+        if self.flowModelIndex == None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
         #VRANS
         self.q_porosity = numpy.ones(cq[('u',0)].shape,'d')
 
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.flowModelIndex is None:
+        if self.flowModelIndex == None:
             self.ebq_v = numpy.ones(cebq[('f',0)].shape,'d')
         #VRANS
         self.ebq_porosity = numpy.ones(cebq[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.flowModelIndex is None:
+        if self.flowModelIndex == None:
             self.ebqe_v = numpy.ones(cebqe[('f',0)].shape,'d')
         #VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
@@ -760,8 +762,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('advectiveFlux',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         # mql. Allow the user to provide functions to define the velocity field
         self.hasVelocityFieldAsFunction = False
-        if ('velocityField') in dir (options): 
-            self.velocityField = options.velocityField
+        if ('velocityFieldAsFunction') in dir (options): 
+            self.velocityFieldAsFunction = options.velocityFieldAsFunction
             self.hasVelocityFieldAsFunction = True
 
         self.points_elementBoundaryQuadrature= set()
@@ -810,7 +812,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
         self.setupFieldStrides()
 
-        # mql. Some ASSERTS to restrict the combination of the methods        
+        # mql. Some ASSERTS to restrict the combination of the methods
+        if self.coefficients.STABILIZATION_TYPE>0:
+            assert self.timeIntegration.isSSP==True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within VOF model"
+            cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver==ExplicitLumpedMassMatrix or options.levelNonlinearSolver==ExplicitConsistentMassMatrixForVOF)
+            assert cond, "If STABILIZATION_TYPE>0, use levelNonlinearSolver=ExplicitLumpedMassMatrix or ExplicitConsistentMassMatrixForVOF"
+        if 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix:
+            assert self.coefficients.LUMPED_MASS_MATRIX, "If levelNonlinearSolver=ExplicitLumpedMassMatrix, use LUMPED_MASS_MATRIX=True"
         if self.coefficients.LUMPED_MASS_MATRIX==True:
             cond = self.coefficients.STABILIZATION_TYPE==2 
             assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
@@ -911,7 +919,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN=1.0
         else:
             self.MOVING_DOMAIN=0.0
-        if self.mesh.nodeVelocityArray is None:
+        if self.mesh.nodeVelocityArray==None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
@@ -943,19 +951,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              1:self.q[('x')][:,:,1],
              2:self.q[('x')][:,:,2]}
         t = self.timeIntegration.t
-        self.coefficients.q_v[...,0] = self.velocityField[0](X,t)
-        self.coefficients.q_v[...,1] = self.velocityField[1](X,t)
+        self.coefficients.q_v[...,0] = self.velocityFieldAsFunction[0](X,t)
+        self.coefficients.q_v[...,1] = self.velocityFieldAsFunction[1](X,t)
         if (self.nSpace_global==3):
-            self.coefficients.q_v[...,2] = self.velocityField[2](X,t)
+            self.coefficients.q_v[...,2] = self.velocityFieldAsFunction[2](X,t)
 
         # BOUNDARY
         ebqe_X = {0:self.ebqe['x'][:,:,0],
                   1:self.ebqe['x'][:,:,1],
                   2:self.ebqe['x'][:,:,2]}
-        self.coefficients.ebqe_v[...,0] = self.velocityField[0](ebqe_X,t)
-        self.coefficients.ebqe_v[...,1] = self.velocityField[1](ebqe_X,t)
+        self.coefficients.ebqe_v[...,0] = self.velocityFieldAsFunction[0](ebqe_X,t)
+        self.coefficients.ebqe_v[...,1] = self.velocityFieldAsFunction[1](ebqe_X,t)
         if (self.nSpace_global==3):
-            self.coefficients.ebqe_v[...,2] = self.velocityField[2](ebqe_X,t)
+            self.coefficients.ebqe_v[...,2] = self.velocityFieldAsFunction[2](ebqe_X,t)
 
     def calculateElementResidual(self):
         if self.globalResidualDummy != None:
@@ -1306,7 +1314,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Global residual",level=9,data=r)
         
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy is None:
+        if self.globalResidualDummy == None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
 
     def getJacobian(self,jacobian):

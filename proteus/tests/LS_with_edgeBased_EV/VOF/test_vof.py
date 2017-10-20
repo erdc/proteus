@@ -39,7 +39,7 @@ class TestVOF():
     def teardown_method(self,method):
         pass
     
-    def thelper(self):
+    def test_supg(self):
         ########
         # SUPG #
         ########
