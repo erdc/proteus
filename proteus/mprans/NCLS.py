@@ -255,7 +255,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  redistancing_tolerance=0.1,
                  maxIter_redistancing=3,
                  lambda_coupez=0.1,
-                 cfl_redistancing=1.0):
+                 cfl_redistancing=1.0,
+                 # OUTPUT quantDOFs
+                 outputQuantDOFs=False):
 
         self.DO_SMOOTHING=DO_SMOOTHING
         self.COUPEZ=COUPEZ
@@ -272,6 +274,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.cfl_redistancing=cfl_redistancing
         self.epsCoupez=epsCoupez
         self.lambda_coupez=lambda_coupez
+        self.outputQuantDOFs=outputQuantDOFs
         self.movingDomain=movingDomain
         self.useMetrics=useMetrics
         self.epsFact=epsFact
@@ -741,7 +744,13 @@ class LevelModel(OneLevelTransport):
 
         self.setupFieldStrides()
 
-        # mql. Some ASSERTS to restrict the combination of the methods        
+        # mql. Some ASSERTS to restrict the combination of the methods
+        if self.coefficients.STABILIZATION_TYPE>0:
+            assert self.timeIntegration.isSSP==True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within NCLS model"
+            cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver==ExplicitLumpedMassMatrix or options.levelNonlinearSolver==ExplicitConsistentMassMatrixWithRedistancing)
+            assert cond, "If STABILIZATION_TYPE>0, use levelNonlinearSolver=ExplicitLumpedMassMatrix or ExplicitConsistentMassMatrixWithRedistancing"
+        if 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix:
+            assert self.coefficients.LUMPED_MASS_MATRIX, "If levelNonlinearSolver=ExplicitLumpedMassMatrix, use LUMPED_MASS_MATRIX=True"        
         if self.coefficients.LUMPED_MASS_MATRIX==True:
             cond = self.coefficients.STABILIZATION_TYPE==2
             assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
