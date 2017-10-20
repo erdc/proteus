@@ -266,7 +266,7 @@ def getResidual(
                 #nij /= np.sqrt(nij[0] * nij[0] + nij[1] * nij[1])
 
                 xij = 0.5 * (mesh_dof[dof_i, :] + mesh_dof[dof_j, :])
-                advection_ij = ad_function(xij[0], xij[1], 0)
+                advection_ij = ad_function(xij[0], xij[1])
 
                 # 'd' since type determine allocation
 #                 advection_ij = np.array([1.0, 0], 'd')

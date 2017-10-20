@@ -1,6 +1,6 @@
 from proteus import *
 from proteus.default_p import *
-from math import *
+import math
 from rotation2D import *
 from proteus.mprans import NCLS
 #import Profiling
@@ -14,40 +14,32 @@ nd = 2
 #
 
 
-class ProblemRotation2D:
+class ProblemRotationALE2D:
     def __init__(self):
         self.radius = 0.1 * min(width_and_hight)
         self.xc = lower_left_cornor[0] + 0.5 * width_and_hight[0]
-        self.yc = lower_left_cornor[1] + 0.6 * width_and_hight[1]
+        self.yc = lower_left_cornor[1] + 0.7 * width_and_hight[1]
         self.z0 = rotation_center[0] + 1j * rotation_center[1]
 
     def uOfXT(self, x, t=0):
-        z = x[0] + 1j * x[1] - self.z0
-        z *= numpy.exp(-1j * 2.0 * numpy.pi * t)
-        z += self.z0
-
-        return 1.0 - numpy.tanh(((numpy.real(z) - self.xc)**2 + (numpy.imag(z) - self.yc)**2) / self.radius / self.radius - 1)
+        # initial and final solution t=0 or 1
+        return 1.0 - numpy.tanh(((x[0] - self.xc)**2 + (x[1] - self.yc)**2) / self.radius / self.radius - 1)
 
     @staticmethod
     def advection_function(x, y, t=0):
-        return numpy.array([-2.0 * math.pi * (y - rotation_center[1]), 2.0 * math.pi * (x - rotation_center[0])])
-
-
-class ProblemAdvection2D:
-    def __init__(self):
-        self.radius = 0.1 * min(width_and_hight)
-        self.xc = lower_left_cornor[0] + 0.25 * width_and_hight[0]
-        self.yc = lower_left_cornor[1] + 0.5 * width_and_hight[1]
-
-    def uOfXT(self, x, t=0):
-        return 1.0 - numpy.tanh(((x[0] - t - self.xc)**2 + (x[1] - self.yc)**2) / self.radius / self.radius - 1)
+        return numpy.array([numpy.sin(numpy.pi * x) * numpy.cos(numpy.pi * y) * numpy.cos(2 * numpy.pi * t),
+                            -numpy.cos(numpy.pi * x) * numpy.sin(numpy.pi * y) * numpy.cos(2 * numpy.pi * t)])
 
     @staticmethod
-    def advection_function(x, y, t=0):
-        return numpy.array([1.0, 0.0])
+    def mesh_velocity(x, y, t=0):
+        return np.stack((numpy.sin(numpy.pi * x) * numpy.cos(numpy.pi * y) * numpy.cos(2 * numpy.pi * t),
+                         -numpy.cos(numpy.pi * x) * numpy.sin(numpy.pi *
+                                                              y) * numpy.cos(2 * numpy.pi * t),
+                         numpy.zeros_like(x, 'd')),
+                        axis=1)
 
 
-analyticalSolution = {0: ProblemRotation2D()}
+analyticalSolution = {0: ProblemRotationALE2D()}
 
 
 class UnitSquareRotation(NCLS.Coefficients):
@@ -116,7 +108,7 @@ class UnitSquareRotation(NCLS.Coefficients):
 
     def attachModels(self, modelList):
         self.model = modelList[0]
-
+        self.mesh = self.model.mesh
         # It must be related to self.model.u_dof_old so that postStep
         # can upate it corectly.
         self.u_old_dof = numpy.copy(self.model.u[0].dof)
@@ -162,6 +154,10 @@ class UnitSquareRotation(NCLS.Coefficients):
         #             (self.model.q['x'][..., 0] - rotation_center[1])
         self.q_v[..., 0] = 1.0
         self.q_v[..., 1] = 0.0
+
+        self.mesh.nodeVelocityArray[:] = analyticalSolution[0].mesh_velocity(
+            self.mesh.nodeArray[:, 0], self.mesh.nodeArray[:, 1], t)
+
         copyInstructions = {}
         return copyInstructions
 #
@@ -174,6 +170,11 @@ class UnitSquareRotation(NCLS.Coefficients):
 
         self.model.q['dV_last'][:] = self.model.q['dV']
 
+        # It should be model.stepController.dt_model
+        # But now there is only 1 substep
+        self.mesh.nodeArray[:] += self.model.timeIntegration.dt * \
+            self.mesh.nodeVelocityArray
+        print ">>>>>>>>>>>>>>>>>.moving mesh:", self.model.timeIntegration.dt
         copyInstructions = {}
         return copyInstructions
 #
@@ -185,7 +186,12 @@ class UnitSquareRotation(NCLS.Coefficients):
         #         import pdb
         #         pdb.set_trace()
         #import method_LxF as M
-        import method_GP as M
+        args[49][:] = args[33]
+        args[43][:] = 40
+        args[44][:] = 50
+        return None
+
+        import method_GP_ALE as M
         M.getResidual(
             *args, ad_function=analyticalSolution[0].advection_function)
 
