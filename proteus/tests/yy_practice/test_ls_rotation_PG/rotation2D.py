@@ -3,20 +3,21 @@ from proteus import Context
 from proteus.default_n import nLevels
 
 ct = Context.Options([
-    ("T", 1.0, "Time interval [0, T]"),
+    ("T", 0.5, "Time interval [0, T]"),
+    ("nDTout", 10, "Times to print out [0,T]"),
     ("checkMass", False, "Check mass or not"),
-    ("cfl", 0.3, "Target CFL number"),
+    ("cfl", 0.2, "Target CFL number"),
     ("parallel", False, "Use PETSc or not"),
     ("linearSmoother", False, "Use linear smoother or not"),
     ("correctionType", 'cg', "Use 'cg' or 'dg' or 'dgp0' or 'global' or 'none'"),
     ("unstructured", False, "unstructured mesh or not"),
-    ("ncells", 10, "Specify initial mesh size by giving number of cells in each direction"),
-    ("nLevels", 3, "number of refiments"),
-    ("timeIntegration_ls", 'vbdf',
-     "method for Time integration: 'rk', 'vbdf', 'flcbdf','rk' "),
+    ("ncells", 32, "Specify initial mesh size by giving number of cells in each direction"),
+    ("nLevels", 1, "number of refiments"),
+    ("timeIntegration_ls", 'be',
+     "method for Time integration: 'be', 'vbdf', 'flcbdf','rk' "),
     ("datafile", 'errorInfo.db', "Filename to save error information"),
     ("useHex", False, "use quadrilateral or not"),
-    ("stablization", 0, "Stabilization method: 0=SUPG, 1=EV, 2=FCT")
+    ("stablization", 1, "Stabilization method: 0=SUPG, 1=EV, 2=FCT")
 ], mutable=True)
 
 
@@ -97,9 +98,9 @@ if unstructured:
 else:
     domain = box
 # end time of simulation, full problem is T=8.0
-T = ct.T  # 8.0#
+T = ct.T
 # number of output time steps
-nDTout = 10
+nDTout = ct.nDTout
 # mass correction
 applyCorrection = False
 applyRedistancing = False

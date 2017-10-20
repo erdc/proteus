@@ -5,6 +5,7 @@ from rotation2D import *
 from proteus.mprans import NCLS
 import numpy as np
 
+
 run_times = 0
 dij = []
 Cx_T = []
@@ -178,7 +179,7 @@ def getResidual(
     # int, self.coefficients.ENTROPY_TYPE,
     ENTROPY_TYPE,
     # double, self.coefficients.cE
-    cE,
+        cE,
         ad_function):
 
     global run_times, dij, Cx_T, Cy_T
@@ -197,10 +198,13 @@ def getResidual(
             dV = np.abs(detJ) * dV_ref
 
             n_pts = len(dV)
-
 #             u = np.dot(u_trial_ref, u_dof[u_l2g[e]])
 #             ux = np.dot(u_grad_trial_ref[:, :, 0], u_dof[u_l2g[e]])
 #             uy = np.dot(u_grad_trial_ref[:, :, 1], u_dof[u_l2g[e]])
+# # useless, since this part only be run in 1st time
+#             q_u[e, :] = u
+#             q_n[e, :, 0] = ux
+#             q_n[e, :, 1] = uy
 
             v_basis = u_trial_ref
             v_grad_basis = [np.dot(u_grad_trial_ref[k, :, :], invJ[k, :, :])
@@ -212,7 +216,6 @@ def getResidual(
 
             c_x = np.zeros((3, 3), 'd')
             c_y = np.zeros((3, 3), 'd')
-
             dij_e = np.zeros((3, 3), 'd')
             for i in range(3):
                 for j in range(3):
@@ -250,13 +253,12 @@ def getResidual(
         #dij = np.zeros_like(Cx, 'd')
 
     run_times = run_times + 1
+
     globalResidual[:] = 0.0
 
     for dof_i in xrange(numDOFs):  # Serious error: numDOFs=nnz-1
-
         dii = 0.0
         spatial_residual_dof_i = 0.0
-
         for j in xrange(csrRowIndeces_DofLoops[dof_i], csrRowIndeces_DofLoops[dof_i + 1]):
             dof_j = csrColumnOffsets_DofLoops[j]
             if dof_i != dof_j:
@@ -271,25 +273,18 @@ def getResidual(
                 # 'd' since type determine allocation
 #                 advection_ij = np.array([1.0, 0], 'd')
 
-                # Because 1d LxF condition and interval length 1/2
-                dij[j] = max([fabs(np.dot(cij, advection_ij)),
-                              fabs(np.dot(cji, advection_ij)),
-                              0])
+                # Kuzmin Method
+                # works for advection problem, but not rotation problem
+                dij[j] = -max([np.dot(cij, advection_ij),
+                               np.dot(cji, advection_ij),
+                               0])
+
+                spatial_residual_dof_i += (-dij[j] - np.dot(cij, advection_ij)) * \
+                    (u_dof_old[dof_j] - u_dof_old[dof_i])
 
                 dii -= dij[j]
-
-                # This is because sum dij = 0.
-                # It implies LED.
-                # The value of GP method is to use 1d Riemann problem to get dt condition for total discrete method,
-                # while Kuzmin's argument is from ODE and LED.
-                # They are almost the same, the code may be exact same. Numerical viscosity larger is better.
-                # The difference is small.
-                # Both are low-order method.
-                spatial_residual_dof_i += (dij[j] - np.dot(cij, advection_ij)) * \
-                    (u_dof_old[dof_j] - u_dof_old[dof_i])
             else:
                 dof_ii_index = j
-        # end-of-loop-over-j
 
         quantDOFs[dof_i] = dij[dof_ii_index] = dii
 
@@ -298,8 +293,10 @@ def getResidual(
 
         edge_based_cfl[dof_i] = 2.0 * fabs(dii) / ML[dof_i]
 
+#         quantDOFs[dof_i] = globalResidual[dof_i]
+
     # end-of-loop-over-dof_i
-    cfl[:] = 40  # 1.0 / np.min(elementDiameter)
+    cfl[:] = 40  # 1.0 / np.max(elementDiameter)
 
 
 def P1_calculateMapping_element(nodes_coord, geo_basis, grad_geo_basis):

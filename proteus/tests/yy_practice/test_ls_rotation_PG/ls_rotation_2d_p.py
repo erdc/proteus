@@ -12,26 +12,20 @@ name = soname + "_ls"
 nd = 2
 
 
+def advection_function(x, y, t):
+    return numpy.array([-2.0 * math.pi * (y - rotation_center[0]), 2.0 * math.pi * (x - rotation_center[1])])
+   # return numpy.array([1.0, 0.0])
+
+
 class OscillatingRotation2D:
-    # cek changed to put sphere inside arbitrary box with dimensions in L
+   # cek changed to put sphere inside arbitrary box with dimensions in L
     def __init__(self):
         self.radius = 0.1 * min(width_and_hight)
         self.xc = lower_left_cornor[0] + 0.5 * width_and_hight[0]
         self.yc = lower_left_cornor[1] + 0.6 * width_and_hight[1]
 
-    def uOfXT(self, x, t):
-        return 1.0 - numpy.tanh(((x[0] - self.xc)**2 + (x[1] - self.yc)**2) / self.radius / self.radius - 1)
-
-
-class OscillatingRotation2Dcylinder:
-    # cek changed to put sphere inside arbitrary box with dimensions in L
-    def __init__(self, L):
-        self.radius = 0.15 * L[0]
-        self.xc = 0.5 * L[0]
-        self.yc = 0.75 * L[1]
-
-    def uOfXT(self, x, t):
-        return self.radius - math.sqrt((x[0] - self.xc)**2 + (x[1] - self.yc)**2)
+    def uOfXT(self, x, t=0):
+        return 1.0 - numpy.tanh(((x[0] - t - self.xc)**2 + (x[1] - self.yc)**2) / self.radius / self.radius - 1)
 
 
 analyticalSolution = {0: OscillatingRotation2D()}
@@ -69,17 +63,54 @@ class UnitSquareRotation(NCLS.Coefficients):
         self.sc_beta = 1.0
         self.STABILIZATION_TYPE = ct.stablization
 
+    def save_dirichlet_dofs(self):
+        mesh = self.model.mesh
+        fes = self.model.u[0].femSpace
+        self.dirichlet_bc_dofs = {'dof': [],
+                                  'xyz': [], 'label': [], 'value': []}
+
+        for eN in range(mesh.nElements_global):
+            for k in range(fes.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                i = fes.referenceFiniteElement.interpolationConditions.quadrature2DOF_element(
+                    k)
+                dofN = fes.dofMap.l2g[eN, i]
+                x = fes.interpolationPoints[eN, k]
+                for ebN_element in range(mesh.nElementBoundaries_element):
+                    if fes.referenceFiniteElement.interpolationConditions.definedOnLocalElementBoundary(k, ebN_element) == True:
+                        ebN = mesh.elementBoundariesArray[eN, ebN_element]
+                        materialFlag = mesh.elementBoundaryMaterialTypes[ebN]
+                        if materialFlag in [1, 2, 3, 4]:
+                            self.dirichlet_bc_dofs['dof'].append(dofN)
+                            self.dirichlet_bc_dofs['xyz'].append(x)
+                            self.dirichlet_bc_dofs['label'].append(
+                                materialFlag)
+                            self.dirichlet_bc_dofs['value'].append(0)
+
+        self.dirichlet_bc_dofs['dof'] = numpy.asarray(
+            self.dirichlet_bc_dofs['dof'], 'i')
+        self.dirichlet_bc_dofs['xyz'] = numpy.asarray(
+            self.dirichlet_bc_dofs['xyz'], 'd')
+        self.dirichlet_bc_dofs['label'] = numpy.asarray(
+            self.dirichlet_bc_dofs['label'], 'd')
+        self.dirichlet_bc_dofs['value'] = numpy.asarray(
+            self.dirichlet_bc_dofs['value'], 'd')
+
     def attachModels(self, modelList):
         self.model = modelList[0]
+
+        # It must be related to self.model.u_dof_old so that postStep
+        # can upate it corectly.
         self.u_old_dof = numpy.copy(self.model.u[0].dof)
 
         self.q_v = numpy.zeros(self.model.q[('dH', 0, 0)].shape, 'd')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH', 0, 0)].shape, 'd')
 
-        self.q_v[..., 0] = -2.0 * math.pi * \
-            (self.model.q['x'][..., 1] - rotation_center[0])
-        self.q_v[..., 1] = 2.0 * math.pi * \
-            (self.model.q['x'][..., 0] - rotation_center[1])
+#         self.q_v[..., 0] = -2.0 * math.pi * \
+#             (self.model.q['x'][..., 1] - rotation_center[0])
+#         self.q_v[..., 1] = 2.0 * math.pi * \
+#             (self.model.q['x'][..., 0] - rotation_center[1])
+        self.q_v[..., 0] = 1.0
+        self.q_v[..., 1] = 0.0
 
         self.model.q[('velocity', 0)] = self.q_v
         self.model.ebqe[('velocity', 0)] = self.ebqe_v
@@ -89,6 +120,8 @@ class UnitSquareRotation(NCLS.Coefficients):
             self.rdModel = modelList[self.RD_modelIndex]
         else:
             self.rdModel = self.model
+
+        self.save_dirichlet_dofs()
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,
@@ -104,16 +137,20 @@ class UnitSquareRotation(NCLS.Coefficients):
         #     self.timeArray = [self.model.timeIntegration.t]
     def preStep(self, t, firstStep=False):
 
-        self.q_v[..., 0] = -2.0 * math.pi * \
-            (self.model.q['x'][..., 1] - rotation_center[0])
-        self.q_v[..., 1] = 2.0 * math.pi * \
-            (self.model.q['x'][..., 0] - rotation_center[1])
-
+        #         self.q_v[..., 0] = -2.0 * math.pi * \
+        #             (self.model.q['x'][..., 1] - rotation_center[0])
+        #         self.q_v[..., 1] = 2.0 * math.pi * \
+        #             (self.model.q['x'][..., 0] - rotation_center[1])
+        self.q_v[..., 0] = 1.0
+        self.q_v[..., 1] = 0.0
         copyInstructions = {}
         return copyInstructions
 #
 
     def postStep(self, t, firstStep=False):
+        #         import pdb
+        #         pdb.set_trace()
+        # This is called from proteus/NumericalSolution.py(1524)postStep()
         self.u_old_dof = numpy.copy(self.model.u[0].dof)
 
         self.model.q['dV_last'][:] = self.model.q['dV']
@@ -126,8 +163,14 @@ class UnitSquareRotation(NCLS.Coefficients):
         pass
 
     def calculateResidual(self, *args):
-        import method_gp as M
-        M.getResidual(*args)
+        #         import pdb
+        #         pdb.set_trace()
+        #import method_LxF as M
+        import method_GP as M
+        M.getResidual(*args, ad_function=advection_function)
+
+        args[49][self.dirichlet_bc_dofs['dof']
+                 ] = self.dirichlet_bc_dofs['value']
 
 
 if applyRedistancing:
@@ -143,14 +186,11 @@ coefficients.variableNames = ['u']
 
 
 def getDBC(x, flag):
-    None
-    # if (x[1] == 0.0):
-    #    return lambda x,t: 0.0
-    # if (x[0] == 0.0 or
-    #    x[0] == 1.0 or
-    #    x[1] == 0.0 or
-    #    x[1] == 1.0):
-    #    return lambda x,t: 0.0
+    if (x[0] == 0.0 or
+        x[0] == 1.0 or
+        x[1] == 0.0 or
+            x[1] == 1.0):
+        return lambda x, t: 0.0
 
 
 def zeroInflow(x):

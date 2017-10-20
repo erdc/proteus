@@ -11,9 +11,9 @@ ct = Context.Options([
     ("correctionType", 'cg', "Use 'cg' or 'dg' or 'dgp0' or 'global' or 'none'"),
     ("unstructured", False, "unstructured mesh or not"),
     ("ncells", 10, "Specify initial mesh size by giving number of cells in each direction"),
-    ("nLevels", 1, "number of refiments"),
-    ("timeIntegration_ls", 'rk',
-     "method for Time integration: 'rk', 'vbdf', 'flcbdf','rk' "),
+    ("nLevels", 2, "number of refiments"),
+    ("timeIntegration_ls", 'be',
+     "method for Time integration: 'be', 'vbdf', 'flcbdf','rk' "),
     ("datafile", 'errorInfo.db', "Filename to save error information"),
     ("useHex", False, "use quadrilateral or not"),
     ("stablization", 0, "Stabilization method: 0=SUPG, 1=EV, 2=FCT")
@@ -79,7 +79,7 @@ he = 1.0 / (nnx - 1.0)
 # True for tetgen, false for tet or hex from rectangular grid
 unstructured = ct.unstructured
 
-lower_left_cornor = (0.0, 0.0)
+lower_left_cornor = (-1.0, -1.0)
 L = width_and_hight = (2.0, 2.0)
 rotation_center = (lower_left_cornor[0] + 0.5 * width_and_hight[0],
                    lower_left_cornor[1] + 0.5 * width_and_hight[1])

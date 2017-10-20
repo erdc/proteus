@@ -32,51 +32,61 @@ subgridError = None
 
 nLevels = ct.nLevels
 
-subgridError = HamiltonJacobi_ASGS_opt(coefficients, nd, lag=True)
+subgridError = None  # HamiltonJacobi_ASGS_opt(coefficients, nd, lag=True)
 
 massLumping = False
 
-numericalFluxType = None
 
 shockCapturing = NCLS.ShockCapturing(
     coefficients, nd, shockCapturingFactor=shockCapturingFactor_ls, lag=lag_shockCapturing_ls)
 
-numericalFluxType = DoNothing
+numericalFluxType = DoNothing  # StrongDirichlet
 
 
 multilevelNonlinearSolver = Newton
-levelNonlinearSolver = Newton
+# levelNonlinearSolver = Newton
+#
+#
+# if ct.timeIntegration_ls == "be":
+#     timeIntegration = BackwardEuler_cfl
+#     stepController = Min_dt_controller
+# elif ct.timeIntegration_ls == "vbdf":
+#     timeIntegration = VBDF
+#     stepController = Min_dt_cfl_controller
+#     timeOrder = 2
+# elif ct.timeIntegration_ls == "flcbdf":
+#     timeIntegration = FLCBDF
+#     stepController = FLCBDF_controller_sys
+# elif ct.timeIntegration_ls == "rk":
+#     if cDegree_ls == -1:
+#         timeIntegration = LinearSSPRKPIintegration
+#     else:
+#         timeIntegration = LinearSSPRKintegration
+#
+#     timeIntegration = NCLS.RKEV
+#     levelNonlinearSolverType = SSPRKNewton
+#     stepController = Min_dt_RKcontroller
+#     timeOrder = 1  # pDegree_ls + 1
+#     nStagesTime = timeOrder
+# else:
+#     raise RuntimeError
 
 
-if ct.timeIntegration_ls == "be":
-    timeIntegration = BackwardEuler_cfl
-    stepController = Min_dt_controller
-elif ct.timeIntegration_ls == "vbdf":
-    timeIntegration = VBDF
-    stepController = Min_dt_cfl_controller
-    timeOrder = 2
-elif ct.timeIntegration_ls == "flcbdf":
-    timeIntegration = FLCBDF
-    stepController = FLCBDF_controller_sys
-elif ct.timeIntegration_ls == "rk":
-    if cDegree_ls == -1:
-        timeIntegration = LinearSSPRKPIintegration
-    else:
-        timeIntegration = LinearSSPRKintegration
+timeIntegration = NCLS.RKEV  # SSP33
+timeOrder = 2
+# nStagesTime = timeOrder
 
-    levelNonlinearSolverType = SSPRKNewton
-    stepController = Min_dt_RKcontroller
-    timeOrder = 1  # pDegree_ls + 1
-    nStagesTime = timeOrder
-else:
-    raise RuntimeError
+timeIntegration = BackwardEuler_cfl
+# Serious error: it is not levelNonlinearSolverType
+levelNonlinearSolver = ExplicitLumpedMassMatrix
+stepController = Min_dt_cfl_controller
 
 
 nonlinearSolverConvergenceTest = 'rits'
 levelNonlinearSolverConvergenceTest = 'rits'
 nonlinearSmoother = None
 
-fullNewtonFlag = True
+fullNewtonFlag = False
 
 tolFac = 0.0
 
@@ -96,8 +106,8 @@ else:
     levelLinearSolver = LU
 
 conservativeFlux = {}
-maxNonlinearIts = 5
-maxLineSearches = 0
+maxNonlinearIts = 2
+maxLineSearches = 1
 
 #checkMass = True
 
