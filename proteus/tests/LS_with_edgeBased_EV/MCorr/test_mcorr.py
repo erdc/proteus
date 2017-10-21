@@ -75,8 +75,8 @@ class TestMCorr():
         ns.calculateSolution('vof')
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/cons_ls_level_3_supg.h5'
-        expected = tables.openFile(os.path.join(self._scriptdir,expected_path))
-        actual = tables.openFile('cons_ls_level_3_supg.h5','r')
+        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        actual = tables.open_file('cons_ls_level_3_supg.h5','r')
         assert np.allclose(expected.root.vof_t2,
                            actual.root.vof_t2,
                            atol=1e-10)
@@ -118,8 +118,8 @@ class TestMCorr():
         ns.calculateSolution('vof')
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/cons_ls_level_3_edge_based_EV.h5'
-        expected = tables.openFile(os.path.join(self._scriptdir,expected_path))
-        actual = tables.openFile('cons_ls_level_3_edge_based_EV.h5','r')
+        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        actual = tables.open_file('cons_ls_level_3_edge_based_EV.h5','r')
         assert np.allclose(expected.root.vof_t2,
                            actual.root.vof_t2,
                            atol=1e-10)
