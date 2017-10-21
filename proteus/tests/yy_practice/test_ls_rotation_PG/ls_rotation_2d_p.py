@@ -170,7 +170,7 @@ class UnitSquareRotation(NCLS.Coefficients):
         #         import pdb
         #         pdb.set_trace()
         # This is called from proteus/NumericalSolution.py(1524)postStep()
-        self.u_old_dof = numpy.copy(self.model.u[0].dof)
+        self.u_old_dof[:] = numpy.copy(self.model.u[0].dof)  # YY
 
         self.model.q['dV_last'][:] = self.model.q['dV']
 
