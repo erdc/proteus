@@ -52,16 +52,20 @@ class TestMCorr():
         reload(thelper_vof_n)
         reload(thelper_MCorr_p)
         reload(thelper_MCorr_n)
+        pnList = [(thelper_ncls_p,thelper_ncls_n),
+                  (thelper_redist_p,thelper_redist_n), 
+                  (thelper_vof_p,thelper_vof_n), 
+                  (thelper_MCorr_p,thelper_MCorr_n)]
 
-        self.so = __import__("thelper_cons_ls_so")
+        self.so = thelper_cons_ls_so
         self.pList=[]
         self.nList=[]
         self.sList=[]
-        for (pModule,nModule) in self.so.pnList:
-            self.pList.append(__import__(pModule))
+        for (pModule,nModule) in pnList:
+            self.pList.append(pModule)
             if self.pList[-1].name == None:
-                self.pList[-1].name = pModule
-            self.nList.append(__import__(nModule))
+                self.pList[-1].name = pModule.__name__
+            self.nList.append(nModule)
         for i in range(len(self.so.pnList)):
             s = default_s
             self.sList.append(s)                               
@@ -95,15 +99,18 @@ class TestMCorr():
         reload(thelper_MCorr_p)
         reload(thelper_MCorr_n)
 
-        self.so = __import__("thelper_cons_ls_so")
+        pnList = [(thelper_ncls_p,thelper_ncls_n),
+                  (thelper_vof_p,thelper_vof_n), 
+                  (thelper_MCorr_p,thelper_MCorr_n)]
+        self.so = thelper_cons_ls_so
         self.pList=[]
         self.nList=[]
         self.sList=[]
-        for (pModule,nModule) in self.so.pnList:
-            self.pList.append(__import__(pModule))
+        for (pModule,nModule) in pnList:
+            self.pList.append(pModule)
             if self.pList[-1].name == None:
-                self.pList[-1].name = pModule
-            self.nList.append(__import__(nModule))
+                self.pList[-1].name = pModule.__name__
+            self.nList.append(nModule)
         for i in range(len(self.so.pnList)):
             s = default_s
             self.sList.append(s)
