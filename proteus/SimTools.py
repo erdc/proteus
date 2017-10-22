@@ -458,9 +458,9 @@ class SimulationProcessor:
 
         mlvt : multilevel vector transport that holds the quantities to measure
         tsim : simulation time
-        
+
         """
-        
+
 #        input :
 #          p    --- problem definition
 #          n    --- numerics definition
@@ -647,6 +647,8 @@ class SimulationProcessor:
             #what else to store?
             if ('u_dof' in self.flags['storeQuantities']):
                 self.dataStorage['solutionData'] = self.solutionData
+            if ('meshsize' in self.flags['storeQuantities']):
+                self.dataStorage['mesh'] = self.simulationData['spatialMesh']
             #end solutionData
             self.dataStorage.close()
             #
@@ -661,7 +663,7 @@ class SimulationProcessor:
 
           mlvt : multilevel vector transport that holds the quantities to measure
           tsim : simulation time
-        
+
         """
 #        TO DO:
 #          synchronize Norms L*error*AF[,2] functions used to calculate error
@@ -713,12 +715,12 @@ class SimulationProcessor:
                         logEvent("SimTools proj velocity for error calling projectVelocityToFinestLevelNC")
                         velproj[ci] = projectVelocityToFinestLevelNC(mlvt,il,ci)
 
-                # CALCULATE THE L2 ERROR IN PRESSURE 
-                if 'p' in self.flags['errorQuantities']:                            
+                # CALCULATE THE L2 ERROR IN PRESSURE
+                if 'p' in self.flags['errorQuantities']:
                     assert hasattr(m,'analyticalPressureSolution'), "analyticalPressureSolution must be provided"
                     # COMPUTE MEAN VALUE OF PRESSURE
                     pressureAnalyticalSolution = m.analyticalPressureSolution[0]
-                    x = m.q['x'][0:m.mesh.subdomainMesh.nElements_owned]                        
+                    x = m.q['x'][0:m.mesh.subdomainMesh.nElements_owned]
                     abs_det_J = m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned]
                     quad_weight = m.elementQuadratureWeights.values()[0]
                     pressureNumericalSolution = m.q['p'][0:m.mesh.subdomainMesh.nElements_owned]
@@ -729,18 +731,18 @@ class SimulationProcessor:
                         for k in range(x.shape[1]):
                             mean_value_exact_p += pressureAnalyticalSolution.uOfXT(x[eN,k],tsim)*quad_weight[k]*abs_det_J[eN,k]
                             mean_value_numerical_p += pressureNumericalSolution[eN,k]*quad_weight[k]*abs_det_J[eN,k]
-                    # remove mean value of numerical solution and add mean value of exact solution 
+                    # remove mean value of numerical solution and add mean value of exact solution
                     pressureNumericalSolution += mean_value_exact_p - mean_value_numerical_p
-                    err = Norms.L2errorSFEMvsAF2(pressureAnalyticalSolution, 
-                                                 x, 
-                                                 abs_det_J, 
+                    err = Norms.L2errorSFEMvsAF2(pressureAnalyticalSolution,
+                                                 x,
+                                                 abs_det_J,
                                                  quad_weight,
-                                                 pressureNumericalSolution, 
+                                                 pressureNumericalSolution,
                                                  T=tsim)
                     kerr = 'error_'+'p'+'_'+'L2'
                     if self.flags['echo']:
                         logEvent("""\nt= %g; %s= %g;""" % (tsim,kerr,err),level=0)
-                # END OF COMPUTING THE L2 ERROR OF THE PRESSURE 
+                # END OF COMPUTING THE L2 ERROR OF THE PRESSURE
 
                 for ci in range(p.coefficients.nc):
                     if ci in self.flags['components']:

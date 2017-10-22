@@ -74,7 +74,7 @@ class TestLS():
         simFlagsList[0]['errorTimes'] = ['Last']  # 'All', 'Last'
         simFlagsList[0]['echo'] = True
         simFlagsList[0]['storeTimes'] = []
-        simFlagsList[0]['storeQuantities'] = ['mesh', 'errorData']
+        simFlagsList[0]['storeQuantities'] = ['meshsize', 'errorData']
         simFlagsList[0]['dataDir'] = '.'
         simFlagsList[0]['dataFile'] = my_so.ct.datafile
 
