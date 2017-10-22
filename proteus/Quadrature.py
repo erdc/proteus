@@ -241,6 +241,37 @@ class GaussTriangle(Q_base):
             )#weightsAll
         self.setOrder(order)
 
+
+class CompositeTriangle(Q_base):
+    """
+    Composite quadrature rule on the unit triangle.
+    """
+
+    # uniform refine the reference cell until size < hk.
+    def __init__(self,quad_rule,hk):
+
+        N = int(floor(1.0/hk))
+        h1= 1.0/N
+        h2= 1.0/N/N
+        npt = len(quad_rule.points)
+
+        self.weights = numpy.tile(quad_rule.weights, N*N)
+        self.weights *= h2
+
+        quad_points = numpy.asarray(quad_rule.points)
+
+        self.points = numpy.zeros((npt*N*N,3),'d')
+        k = 1
+        for j in range(N):
+            for i in range(N-j):
+                 self.points[(k-1)*npt:k*npt, :] = quad_points*h1 + numpy.array([i*h1,j*h1,0.0])
+                 k += 1
+        for j in range(1,N):
+            for i in range(1,N-j+1):
+                self.points[(k-1)*npt:k*npt, :] = -quad_points*h1 + numpy.array([i*h1,j*h1, 0.0])
+                k += 1
+
+
 class LobattoTriangle(Q_base):
     """
     Gauss-Lobatto quadrature on the unit triangle.
@@ -721,7 +752,7 @@ class FaceBarycenterTetrahedron(Q_base):
 
 class SimplexGaussQuadrature(Q_base):
     """ A class which defines quadrature on unit simplices.
-    
+
     Arguments
     ---------
     nd : int
