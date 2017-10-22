@@ -109,9 +109,8 @@ class UnitSquareRotation(NCLS.Coefficients):
     def attachModels(self, modelList):
         self.model = modelList[0]
         self.mesh = self.model.mesh
-        # It must be related to self.model.u_dof_old so that postStep
-        # can upate it corectly.
-        self.u_old_dof = numpy.copy(self.model.u[0].dof)
+
+        self.model.u_dof_old = numpy.copy(self.model.u[0].dof)
 
         self.q_v = numpy.zeros(self.model.q[('dH', 0, 0)].shape, 'd')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH', 0, 0)].shape, 'd')
@@ -163,16 +162,22 @@ class UnitSquareRotation(NCLS.Coefficients):
 #
 
     def postStep(self, t, firstStep=False):
-        #         import pdb
-        #         pdb.set_trace()
-        # This is called from proteus/NumericalSolution.py(1524)postStep()
-        # Serious error it should be [:]
-        self.u_old_dof[:] = numpy.copy(self.model.u[0].dof)
+        # Serious error without [:]
+
+        self.model.u_dof_old[:] = numpy.copy(self.model.u[0].dof)
 
         self.model.q['dV_last'][:] = self.model.q['dV']
 
-        # It should be model.stepController.dt_model
-        # But now there is only 1 substep
+        """
+        It should be model.stepController.dt_model
+        since now the meshmoving is in poststep and the mesh is changed only one time no matter how many substep there are 
+        in the algorithm. If one wants to move the mesh in each substep, one has to put mesh moving steps into model.stepController.updateSubstep
+        and use model.stepController.substeps as time interval instead of self.model.stepController.dt_model which is used right now. But 
+        self.model.stepController.dt_model is not available from model.
+        
+        But one should be careful when all model.stepController.substeps are equal to dt since in this case one can only move the mesh once 
+        because model.stepController.substeps cannot be used.  
+        """
         self.mesh.nodeArray[:] += self.model.timeIntegration.dt * \
             self.mesh.nodeVelocityArray
         print ">>>>>>>>>>>>>>>>>.moving mesh:", self.model.timeIntegration.dt
@@ -187,9 +192,9 @@ class UnitSquareRotation(NCLS.Coefficients):
         #         import pdb
         #         pdb.set_trace()
         #import method_LxF as M
-        args[49][:] = args[33]
-        args[43][:] = 40
-        args[44][:] = 50
+        args[49][:] = args[33]  # residual = un
+        args[43][:] = 40  # cfl
+        args[44][:] = 50  # edge-cfl
         return None
 
         import method_GP_ALE as M

@@ -119,7 +119,7 @@ class UnitSquareRotation(NCLS.Coefficients):
 
         # It must be related to self.model.u_dof_old so that postStep
         # can upate it corectly.
-        self.u_old_dof = numpy.copy(self.model.u[0].dof)
+        self.model.u_dof_old = numpy.copy(self.model.u[0].dof)
 
         self.q_v = numpy.zeros(self.model.q[('dH', 0, 0)].shape, 'd')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH', 0, 0)].shape, 'd')
@@ -167,10 +167,8 @@ class UnitSquareRotation(NCLS.Coefficients):
 #
 
     def postStep(self, t, firstStep=False):
-        #         import pdb
-        #         pdb.set_trace()
-        # This is called from proteus/NumericalSolution.py(1524)postStep()
-        self.u_old_dof[:] = numpy.copy(self.model.u[0].dof)  # YY
+        # Serious error without [:]
+        self.model.u_dof_old[:] = numpy.copy(self.model.u[0].dof)  # YY
 
         self.model.q['dV_last'][:] = self.model.q['dV']
 

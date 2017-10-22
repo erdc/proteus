@@ -75,11 +75,12 @@ multilevelNonlinearSolver = Newton
 timeIntegration = NCLS.RKEV  # SSP33
 timeOrder = 2
 # nStagesTime = timeOrder
+stepController = Min_dt_RKcontroller  # since substeps are substages
 
-timeIntegration = BackwardEuler_cfl
+# timeIntegration = BackwardEuler_cfl
 # Serious error: it is not levelNonlinearSolverType
 levelNonlinearSolver = ExplicitLumpedMassMatrix
-stepController = Min_dt_cfl_controller
+#stepController = Min_dt_cfl_controller
 
 
 nonlinearSolverConvergenceTest = 'rits'

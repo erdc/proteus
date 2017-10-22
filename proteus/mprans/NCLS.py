@@ -1011,8 +1011,6 @@ class LevelModel(OneLevelTransport):
         if self.u_dof_old is None:
             # Pass initial condition to u_dof_old
             self.u_dof_old = numpy.copy(self.u[0].dof)
-        #YY
-        self.u_dof_old=self.coefficients.u_old_dof
 
         ########################
         ### COMPUTE C MATRIX ###
