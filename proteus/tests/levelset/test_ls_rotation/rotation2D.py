@@ -11,7 +11,7 @@ ct = Context.Options([
     ("correctionType", 'cg', "Use 'cg' or 'dg' or 'dgp0' or 'global' or 'none'"),
     ("unstructured", False, "unstructured mesh or not"),
     ("ncells", 10, "Specify initial mesh size by giving number of cells in each direction"),
-    ("nLevels", 1, "number of refiments"),
+    ("nLevels", 3, "number of refiments"),
     ("timeIntegration_ls", 'be',
      "method for Time integration: 'be', 'vbdf', 'flcbdf','rk' "),
     ("datafile", 'errorInfo.db', "Filename to save error information"),
