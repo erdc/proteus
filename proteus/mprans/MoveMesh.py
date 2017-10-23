@@ -158,10 +158,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='Plasticity',
                  reuse_trial_and_test_quadrature=True,
                  sd = True,
-                 movingDomain=False):
+                 movingDomain=False,
+                 bdyNullSpace=False):
         #
         #set the objects describing the method and boundary conditions
         #
+        self.bdyNullSpace=bdyNullSpace
         self.moveCalls = 0
         self.movingDomain=movingDomain
         self.tLast_mesh=None
