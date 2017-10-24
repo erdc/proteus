@@ -1196,15 +1196,17 @@ namespace proteus
           }
 
         double phi_s_effect = (phi_s > 0.0) ? 1.0 : 0.0;
-
+	//cek hack
+	phi_s_effect=1.0;
+	
         //u momentum accumulation
         mom_u_acc=phi_s_effect * u;//trick for non-conservative form
-        dmom_u_acc_u=phi_s_effect * rho*porosity; 
+        dmom_u_acc_u=phi_s_effect * rho*porosity;
       
         //v momentum accumulation
         mom_v_acc=phi_s_effect * v;
         dmom_v_acc_v=phi_s_effect * rho*porosity;
-      
+	
         /* //w momentum accumulation */
         /* mom_w_acc=w; */
         /* dmom_w_acc_w=rho*porosity; */
@@ -1566,7 +1568,7 @@ namespace proteus
         for(int I=0;I<nSpace;I++)
           nrm_df+=df[I]*df[I];
         nrm_df = sqrt(nrm_df);
-        cfl = nrm_df/(h*(density+1.0e-8));//this is really cfl/dt, but that's what we want to know, the step controller expect this
+        cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
       }
 
       inline void updateTurbulenceClosure(const int turbulenceClosureModel,
