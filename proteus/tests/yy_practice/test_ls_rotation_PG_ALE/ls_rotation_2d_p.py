@@ -15,11 +15,14 @@ nd = 2
 
 
 class ProblemRotationALE2D:
+
     def __init__(self):
         self.radius = 0.1 * min(width_and_hight)
         self.xc = lower_left_cornor[0] + 0.5 * width_and_hight[0]
         self.yc = lower_left_cornor[1] + 0.7 * width_and_hight[1]
         self.z0 = rotation_center[0] + 1j * rotation_center[1]
+
+        self.t = 0
 
     def uOfXT(self, x, t=0):
         # initial and final solution t=0 or 1
@@ -27,16 +30,16 @@ class ProblemRotationALE2D:
 
     @staticmethod
     def advection_function(x, y, t=0):
-        return numpy.array([numpy.sin(numpy.pi * x) * numpy.cos(numpy.pi * y) * numpy.cos(2 * numpy.pi * t),
-                            -numpy.cos(numpy.pi * x) * numpy.sin(numpy.pi * y) * numpy.cos(2 * numpy.pi * t)])
+        return numpy.array([-2.0 * math.pi * (y - rotation_center[1]), 2.0 * math.pi * (x - rotation_center[0])])
 
-    @staticmethod
-    def mesh_velocity(x, y, t=0):
-        return np.stack((numpy.sin(numpy.pi * x) * numpy.cos(numpy.pi * y) * numpy.cos(2 * numpy.pi * t),
+    def mesh_velocity(self, x, y):
+        return np.stack((numpy.sin(numpy.pi * x) * numpy.cos(numpy.pi * y) * numpy.cos(2 * numpy.pi * self.t),
                          -numpy.cos(numpy.pi * x) * numpy.sin(numpy.pi *
-                                                              y) * numpy.cos(2 * numpy.pi * t),
+                                                              y) * numpy.cos(2 * numpy.pi * self.t),
                          numpy.zeros_like(x, 'd')),
                         axis=1)
+
+        return np.zeros((x.shape[0], 3), 'd')
 
 
 analyticalSolution = {0: ProblemRotationALE2D()}
@@ -115,12 +118,12 @@ class UnitSquareRotation(NCLS.Coefficients):
         self.q_v = numpy.zeros(self.model.q[('dH', 0, 0)].shape, 'd')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH', 0, 0)].shape, 'd')
 
-#         self.q_v[..., 0] = -2.0 * math.pi * \
-#             (self.model.q['x'][..., 1] - rotation_center[0])
-#         self.q_v[..., 1] = 2.0 * math.pi * \
-#             (self.model.q['x'][..., 0] - rotation_center[1])
-        self.q_v[..., 0] = 1.0
-        self.q_v[..., 1] = 0.0
+        self.q_v[..., 0] = -2.0 * math.pi * \
+            (self.model.q['x'][..., 1] - rotation_center[0])
+        self.q_v[..., 1] = 2.0 * math.pi * \
+            (self.model.q['x'][..., 0] - rotation_center[1])
+#         self.q_v[..., 0] = 1.0
+#         self.q_v[..., 1] = 0.0
 
         self.model.q[('velocity', 0)] = self.q_v
         self.model.ebqe[('velocity', 0)] = self.ebqe_v
@@ -147,15 +150,16 @@ class UnitSquareRotation(NCLS.Coefficients):
         #     self.timeArray = [self.model.timeIntegration.t]
     def preStep(self, t, firstStep=False):
 
-        #         self.q_v[..., 0] = -2.0 * math.pi * \
-        #             (self.model.q['x'][..., 1] - rotation_center[0])
-        #         self.q_v[..., 1] = 2.0 * math.pi * \
-        #             (self.model.q['x'][..., 0] - rotation_center[1])
-        self.q_v[..., 0] = 1.0
-        self.q_v[..., 1] = 0.0
+        self.q_v[..., 0] = -2.0 * math.pi * \
+            (self.model.q['x'][..., 1] - rotation_center[0])
+        self.q_v[..., 1] = 2.0 * math.pi * \
+            (self.model.q['x'][..., 0] - rotation_center[1])
+#         self.q_v[..., 0] = 1.0
+#         self.q_v[..., 1] = 0.0
 
+        analyticalSolution[0].t = self.model.timeIntegration.tLast
         self.mesh.nodeVelocityArray[:] = analyticalSolution[0].mesh_velocity(
-            self.mesh.nodeArray[:, 0], self.mesh.nodeArray[:, 1], t)
+            self.mesh.nodeArray[:, 0], self.mesh.nodeArray[:, 1])
 
         copyInstructions = {}
         return copyInstructions
@@ -178,6 +182,7 @@ class UnitSquareRotation(NCLS.Coefficients):
         But one should be careful when all model.stepController.substeps are equal to dt since in this case one can only move the mesh once 
         because model.stepController.substeps cannot be used.  
         """
+
         self.mesh.nodeArray[:] += self.model.timeIntegration.dt * \
             self.mesh.nodeVelocityArray
         print ">>>>>>>>>>>>>>>>>.moving mesh:", self.model.timeIntegration.dt
@@ -192,15 +197,14 @@ class UnitSquareRotation(NCLS.Coefficients):
         #         import pdb
         #         pdb.set_trace()
         #import method_LxF as M
-        args[49][:] = args[33]  # residual = un
-        args[43][:] = 40  # cfl
-        args[44][:] = 50  # edge-cfl
-        return None
-
         import method_GP_ALE as M
-        M.getResidual(
-            *args, ad_function=analyticalSolution[0].advection_function)
 
+        M.getResidual(
+            *args,
+            ad_function=analyticalSolution[0].advection_function,
+            moving_function=analyticalSolution[0].mesh_velocity)  # t is already updated in prestep
+
+        # Dirichlete BC
         args[49][self.dirichlet_bc_dofs['dof']
                  ] = self.dirichlet_bc_dofs['value']
 

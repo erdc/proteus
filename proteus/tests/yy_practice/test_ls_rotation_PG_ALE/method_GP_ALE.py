@@ -135,7 +135,7 @@ def getResidual(
     ebqe_u,
     # int, len(rowptr)-1,
     numDOFs,
-    # int, self.nnz,
+    # int, self.nnz, number of non-zero entries in sparse matrix
     NNZ,
     # numpy.ndarray, rowptr, #Row indices for Sparsity Pattern (convenient for
     # DOF loops)
@@ -180,9 +180,10 @@ def getResidual(
     ENTROPY_TYPE,
     # double, self.coefficients.cE
     cE,
-        ad_function):
+    ad_function,
+        moving_function):
 
-    global run_times, dij, Cx_T, Cy_T
+    global run_times, dij, Cx_T, Cy_T, ML_new
 
     Cx[:] = 0.0
     Cy[:] = 0.0
@@ -192,6 +193,11 @@ def getResidual(
         Cy_T = np.zeros_like(Cy, 'd')
         dij = np.zeros_like(Cx, 'd')
         ML_new = np.zeros_like(ML, 'd')
+    else:
+        Cx_T[:] = 0.0
+        Cy_T[:] = 0.0
+        dij[:] = 0.0
+        ML_new[:] = 0.0
 
     # Since the mesh is new
     for e in xrange(nElements_global):
@@ -264,11 +270,10 @@ def getResidual(
         for j in xrange(csrRowIndeces_DofLoops[dof_i], csrRowIndeces_DofLoops[dof_i + 1]):
             dof_j = csrColumnOffsets_DofLoops[j]
 
-            mi_new += Cx[j] * mesh_velocity_dof[dof_j, 0] + \
-                Cy[j] * mesh_velocity_dof[dof_j,
-                                          1]  # assume dof of function is equal to dof of node
+            mi_new += dt * (Cx[j] * mesh_velocity_dof[dof_j, 0] +
+                            Cy[j] * mesh_velocity_dof[dof_j, 1])  # assume dof of function is equal to dof of node
 
-        mi_new[dof_i] = ML[dof_i] + mi_new
+        ML_new[dof_i] = ML[dof_i] + mi_new
 
         dii = 0.0
         spatial_residual_dof_i = 0.0
@@ -284,12 +289,25 @@ def getResidual(
                 xij = 0.5 * (mesh_dof[dof_i, :] + mesh_dof[dof_j, :])
                 advection_ij = ad_function(xij[0], xij[1])
 
+                vj = ad_function(mesh_dof[dof_j, 0], mesh_dof[dof_j, 1])
+                vi = ad_function(mesh_dof[dof_i, 0], mesh_dof[dof_i, 1])
+
+                #wj = moving_function(mesh_dof[dof_j, 0], mesh_dof[dof_j, 1])
+                #wi = moving_function(mesh_dof[dof_i, 0], mesh_dof[dof_i, 1])
+                wj = mesh_velocity_dof[dof_j][:-1]
+                wi = mesh_velocity_dof[dof_i][:-1]
                 # 'd' since type determine allocation
 #                 advection_ij = np.array([1.0, 0], 'd')
 
                 # Because 1d LxF condition and interval length 1/2
-                dij[j] = max([fabs(np.dot(cij, advection_ij)),
-                              fabs(np.dot(cji, advection_ij)),
+                # Method 1
+                dij[j] = max([fabs(np.dot(cij, advection_ij - wj)),
+                              fabs(np.dot(cji, advection_ij - wi)),
+                              0])
+
+                # Method 2
+                dij[j] = max([fabs(np.dot(cij, vj - wj)),
+                              fabs(np.dot(cji, vi - wi)),
                               0])
 
                 dii -= dij[j]
@@ -301,7 +319,7 @@ def getResidual(
                 # They are almost the same, the code may be exact same. Numerical viscosity larger is better.
                 # The difference is small.
                 # Both are low-order method.
-                spatial_residual_dof_i += (dij[j] - np.dot(cij, advection_ij)) * \
+                spatial_residual_dof_i += (dij[j] - np.dot(cij, advection_ij - wj)) * \
                     (u_dof_old[dof_j] - u_dof_old[dof_i])
             else:
                 dof_ii_index = j
@@ -309,8 +327,9 @@ def getResidual(
 
         quantDOFs[dof_i] = dij[dof_ii_index] = dii
 
-        globalResidual[dof_i] = u_dof_old[dof_i] + \
-            dt / ML[dof_i] * spatial_residual_dof_i
+        globalResidual[dof_i] = (u_dof_old[dof_i] * ML[dof_i] +
+                                 dt * spatial_residual_dof_i) / ML_new[dof_i]
+        ML[dof_i] = ML_new[dof_i]
 
         edge_based_cfl[dof_i] = 2.0 * fabs(dii) / ML[dof_i]
 

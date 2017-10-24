@@ -4,14 +4,14 @@ from proteus.default_n import nLevels
 
 ct = Context.Options([
     ("T", 1.0, "Time interval [0, T]"),
-    ("nDTout", 100, "Times to print out [0,T]"),
+    ("nDTout", 50, "Times to print out [0,T]"),
     ("checkMass", False, "Check mass or not"),
     ("cfl", 0.2, "Target CFL number"),
     ("parallel", False, "Use PETSc or not"),
     ("linearSmoother", False, "Use linear smoother or not"),
     ("correctionType", 'cg', "Use 'cg' or 'dg' or 'dgp0' or 'global' or 'none'"),
     ("unstructured", False, "unstructured mesh or not"),
-    ("ncells", 32, "Specify initial mesh size by giving number of cells in each direction"),
+    ("ncells", 64, "Specify initial mesh size by giving number of cells in each direction"),
     ("nLevels", 1, "number of refiments"),
     ("timeIntegration_ls", 'be',
      "method for Time integration: 'be', 'vbdf', 'flcbdf','rk' "),
@@ -81,7 +81,7 @@ he = 1.0 / (nnx - 1.0)
 unstructured = ct.unstructured
 
 lower_left_cornor = (0.0, 0.0)
-L = width_and_hight = (1.0, 1.0)
+width_and_hight = (1.0, 1.0)
 rotation_center = (lower_left_cornor[0] + 0.5 * width_and_hight[0],
                    lower_left_cornor[1] + 0.5 * width_and_hight[1])
 

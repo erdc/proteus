@@ -169,7 +169,95 @@ namespace proteus
 				   int STABILIZATION_TYPE, 
 				   int ENTROPY_TYPE,
 				   double cE
-				   )=0;				   
+				   )=0;	
+    virtual void calculateResidual_PG_ALE(//element
+						     double dt,
+						     double* mesh_trial_ref,
+						     double* mesh_grad_trial_ref,
+						     double* mesh_dof,
+						     double* meshVelocity_dof,
+						     double MOVING_DOMAIN,
+						     int* mesh_l2g,
+						     double* dV_ref,
+						     double* u_trial_ref,
+						     double* u_grad_trial_ref,
+						     double* u_test_ref,
+						     double* u_grad_test_ref,
+						     //element boundary
+						     double* mesh_trial_trace_ref,
+						     double* mesh_grad_trial_trace_ref,
+						     double* dS_ref,
+						     double* u_trial_trace_ref,
+						     double* u_grad_trial_trace_ref,
+						     double* u_test_trace_ref,
+						     double* u_grad_test_trace_ref,
+						     double* normal_ref,
+						     double* boundaryJac_ref,
+						     //physics
+						     int nElements_global,
+						     double useMetrics, 
+						     double alphaBDF,
+						     int lag_shockCapturing, /*mwf not used yet*/
+						     double shockCapturingDiffusion,
+						     double sc_uref, double sc_alpha,
+						     int* u_l2g, 
+						     double* elementDiameter,
+						     double* nodeDiametersArray,
+						     int degree_polynomial,
+						     double* u_dof,
+						     double* u_dof_old,	
+						     double* uStar_dof, 
+						     double* velocity,
+						     double* q_m,
+						     double* q_u,				   
+						     double* q_n,
+						     double* q_dH,
+						     double* q_m_betaBDF,
+						     double* q_dV,
+						     double* q_dV_last,
+						     double* cfl,
+						     double* edge_based_cfl, 
+						     double* q_numDiff_u, 
+						     double* q_numDiff_u_last, 
+						     int offset_u, int stride_u, 
+						     double* globalResidual,
+						     int nExteriorElementBoundaries_global,
+						     int* exteriorElementBoundariesArray,
+						     int* elementBoundaryElementsArray,
+						     int* elementBoundaryLocalElementBoundariesArray,
+						     double* ebqe_velocity_ext,
+						     int* isDOFBoundary_u,
+						     double* ebqe_rd_u_ext,				   
+						     double* ebqe_bc_u_ext,				   
+						     double* ebqe_u,
+						     // PARAMETERS FOR EDGE VISCOSITY
+						     int numDOFs,
+						     int NNZ,
+						     int* csrRowIndeces_DofLoops,
+						     int* csrColumnOffsets_DofLoops,
+						     int* csrRowIndeces_CellLoops,
+						     int* csrColumnOffsets_CellLoops,
+						     int* csrColumnOffsets_eb_CellLoops,
+						     // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+						     int LUMPED_MASS_MATRIX, 
+						     // AUX QUANTITIES OF INTEREST
+						     double* quantDOFs, 
+						     // COUPEZ
+						     double lambda_coupez, 
+						     double epsCoupez, 
+						     double epsFactRedistancing, 
+						     int COUPEZ, 
+						     int SATURATED_LEVEL_SET,
+						     // C-Matrices
+						     double* Cx, 
+						     double* Cy,
+						     double* Cz,
+						     double* ML, 
+						     int STABILIZATION_TYPE,
+						     int ENTROPY_TYPE,
+						     double cE
+						     )=0;
+    
     virtual void calculateResidual_entropy_viscosity(//element
 						     double dt,
 						     double* mesh_trial_ref,
@@ -1376,6 +1464,236 @@ namespace proteus
 	    }//i
 	}//ebNE
     }
+
+    double dot_product_2(double a[],double b[])
+    {
+        return a[0]*b[0]+a[1]*b[1];
+    }
+    void get_velocity(double x[],double v[])
+    {
+        v[0] = -2*M_PI*(x[1]-0.5);
+        v[1] = 2*M_PI*(x[0]-0.5);
+    }
+    void calculateResidual_PG_ALE(//element
+					     double dt,
+					     double* mesh_trial_ref,
+					     double* mesh_grad_trial_ref,
+					     double* mesh_dof,
+					     double* mesh_velocity_dof,
+					     double MOVING_DOMAIN,
+					     int* mesh_l2g,
+					     double* dV_ref,
+					     double* u_trial_ref,
+					     double* u_grad_trial_ref,
+					     double* u_test_ref,
+					     double* u_grad_test_ref,
+					     //element boundary
+					     double* mesh_trial_trace_ref,
+					     double* mesh_grad_trial_trace_ref,
+					     double* dS_ref,
+					     double* u_trial_trace_ref,
+					     double* u_grad_trial_trace_ref,
+					     double* u_test_trace_ref,
+					     double* u_grad_test_trace_ref,
+					     double* normal_ref,
+					     double* boundaryJac_ref,
+					     //physics
+					     int nElements_global,
+					     double useMetrics, 
+					     double alphaBDF,
+					     int lag_shockCapturing, 
+					     double shockCapturingDiffusion,
+					     double sc_uref, double sc_alpha,
+					     int* u_l2g, 
+					     double* elementDiameter,
+					     double* nodeDiametersArray,
+					     int degree_polynomial,
+					     double* u_dof,
+					     double* u_dof_old,			   
+					     double* uStar_dof,
+					     double* velocity,
+					     double* q_m,
+					     double* q_u,				   
+					     double* q_n,
+					     double* q_dH,
+					     double* q_m_betaBDF,
+					     double* q_dV,
+					     double* q_dV_last,
+					     double* cfl,
+					     double* edge_based_cfl, 
+					     double* q_numDiff_u, 
+					     double* q_numDiff_u_last, 
+					     int offset_u, int stride_u, 
+					     double* globalResidual,
+					     int nExteriorElementBoundaries_global,
+					     int* exteriorElementBoundariesArray,
+					     int* elementBoundaryElementsArray,
+					     int* elementBoundaryLocalElementBoundariesArray,
+					     double* ebqe_velocity_ext,
+					     int* isDOFBoundary_u,
+					     double* ebqe_rd_u_ext,
+					     double* ebqe_bc_u_ext,
+					     double* ebqe_u, 
+					     // PARAMETERS FOR EDGE VISCOSITY
+					     int numDOFs,
+					     int NNZ,
+					     int* csrRowIndeces_DofLoops,
+					     int* csrColumnOffsets_DofLoops,
+					     int* csrRowIndeces_CellLoops,
+					     int* csrColumnOffsets_CellLoops,
+					     int* csrColumnOffsets_eb_CellLoops,
+					     // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+					     int LUMPED_MASS_MATRIX, 
+					     // AUX QUANTITIES OF INTEREST
+					     double* quantDOFs,
+					     // COPUEZ 
+					     double lambda_coupez, 
+					     double epsCoupez,
+					     double epsFactRedistancing,
+					     int COUPEZ, 
+					     int SATURATED_LEVEL_SET,
+					     // C-Matrices
+					     double* Cx, 
+					     double* Cy,
+					     double* Cz,
+					     double* ML,
+					     int STABILIZATION_TYPE, 
+					     int ENTROPY_TYPE,
+					     double cE)
+    {
+        register double Cx_T[NNZ], Cy_T[NNZ], dij[NNZ], ML_new[numDOFs];
+        for (int i=0; i<NNZ; i++)
+	    {
+	        Cx[i] = 0.;
+	        Cy[i] = 0.;
+            Cx_T[i] = 0.;
+            Cy_T[i] = 0.;
+            dij[i] = 0.;
+	    }
+        for (int i=0; i<numDOFs; ++i){
+            ML_new[i] = 0.;
+            globalResidual[i]=0.;
+        }
+ 
+        register double element_Cx[nDOF_test_element][nDOF_trial_element]; 
+        register double element_Cy[nDOF_test_element][nDOF_trial_element];
+
+        for (int eN=0;eN<nElements_global;++eN)
+        {
+	        for (int i=0;i<nDOF_test_element;++i)
+                for(int j=0;j<nDOF_test_element;++j)
+                {
+                    element_Cx[i][j]=0.0;
+                    element_Cy[i][j]=0.0;
+                }
+
+            for  (int k=0;k<nQuadraturePoints_element;k++)
+	        {
+                register int eN_k = eN*nQuadraturePoints_element+k,
+		                        eN_k_nSpace = eN_k*nSpace,
+                        		eN_nDOF_trial_element = eN*nDOF_trial_element;
+                register double jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+                        		dV,x,y,z,xt,yt,zt,
+                                u_grad_trial[nDOF_trial_element*nSpace];
+
+                //get the physical integration weight
+	            ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,x,y,z);
+                
+                dV = fabs(jacDet)*dV_ref[k];
+                
+                // TODO: consider mesh velocity
+                cfl[eN_k] = 80.0;
+
+                //get the solution gradients at tn for entropy viscosity
+	            ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+	            
+                for(int i=0;i<nDOF_test_element;++i)
+                    for(int j=0;j<nDOF_test_element;++j)
+                    {
+                        element_Cx[i][j] += u_test_ref[k*nDOF_test_element+i]*u_grad_trial[j*nSpace+0]*dV;
+                        element_Cy[i][j] += u_test_ref[k*nDOF_test_element+i]*u_grad_trial[j*nSpace+1]*dV;
+                    }
+            }//k
+            //assemble
+            for(int i=0;i<nDOF_test_element;i++) 
+	        { 
+	            int eN_i=eN*nDOF_test_element+i;
+                
+                for (int j=0;j<nDOF_trial_element;j++)
+		        {
+    	            int eN_j=eN*nDOF_test_element+j;
+                    int eN_i_j = eN_i*nDOF_trial_element+j;
+                    int eN_j_i = eN_j*nDOF_trial_element+i;
+
+		            Cx[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]] 
+		                += element_Cx[i][j];
+		            Cy[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]] 
+		                += element_Cy[i][j];
+                    Cx_T[csrRowIndeces_CellLoops[eN_j] + csrColumnOffsets_CellLoops[eN_j_i]] 
+		                += element_Cx[i][j];
+		            Cy_T[csrRowIndeces_CellLoops[eN_j] + csrColumnOffsets_CellLoops[eN_j_i]] 
+		                += element_Cy[i][j];
+		        }//j
+	        }//i      
+        }//e
+
+        for (int dof_i=0;dof_i<numDOFs;++dof_i)
+        {
+            double mi_new = 0.;
+            for (int j=csrRowIndeces_DofLoops[dof_i];j<csrRowIndeces_DofLoops[dof_i+1];++j)
+            {
+                int dof_j = csrColumnOffsets_DofLoops[j];
+                mi_new += dt*(mesh_velocity_dof[dof_j*3 + 0]*Cx[j]
+                        +mesh_velocity_dof[dof_j*3 + 1]*Cy[j]);
+            }
+            ML_new[dof_i] = mi_new+ML[dof_i];
+
+            double dii = 0.0;
+            double spatial_residual_dof_i = 0.0;
+            int dof_ii_index;
+            for (int j=csrRowIndeces_DofLoops[dof_i];j<csrRowIndeces_DofLoops[dof_i+1];++j)
+            {
+                int dof_j = csrColumnOffsets_DofLoops[j];
+                if(dof_i!= dof_j)
+                {
+                    double cij[2]={Cx[j],Cy[j]};
+                    double cji[2]={Cx_T[j],Cy_T[j]};
+                    double xi[2]={mesh_dof[dof_i*3+0], mesh_dof[dof_i*3+1]};
+                    double xj[2]={mesh_dof[dof_j*3+0], mesh_dof[dof_j*3+1]};
+                    double vi[2];//={velocity[dof_i*3+0], velocity[dof_i*3+1]};
+                    get_velocity(xi,vi);
+                    double vj[2];//={velocity[dof_j*3+0], velocity[dof_j*3+1]};
+                    get_velocity(xj,vj);
+                    double wi[2]={mesh_velocity_dof[dof_i*3+0],mesh_velocity_dof[dof_i*3+1]};
+                    double wj[2]={mesh_velocity_dof[dof_j*3+0],mesh_velocity_dof[dof_j*3+1]};
+                    
+                    dij[j] = fmax(fabs(dot_product_2(cij,vj)-dot_product_2(cij,wj)),
+                            fabs(dot_product_2(cji,vi)-dot_product_2(cji,wi)));
+                    dii -= dij[j];
+                    spatial_residual_dof_i += (dij[j]-(dot_product_2(cij,vj)-dot_product_2(cij,wj)))
+                        *(u_dof_old[dof_j]-u_dof_old[dof_i]);
+                    
+                }else{
+                    dof_ii_index = j;
+                }
+            }//j
+            dij[dof_ii_index] = dii;
+            globalResidual[dof_i]=(u_dof_old[dof_i]*ML[dof_i]+dt*spatial_residual_dof_i)/ML_new[dof_i];
+            ML[dof_i] = ML_new[dof_i];
+            edge_based_cfl[dof_i] = 2.0 * fabs(dii) / ML[dof_i];
+            
+        }//dof_i
+        
+                         
+    }    
 
     void calculateResidual_entropy_viscosity(//element
 					     double dt,
