@@ -1665,7 +1665,7 @@ namespace proteus
         for(int I=0;I<nSpace;I++)
           nrm_df+=df[I]*df[I];
         nrm_df = sqrt(nrm_df);
-        cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
+        cfl = nrm_df/(h*(density+1.0e-8));//this is really cfl/dt, but that's what we want to know, the step controller expect this
       }
 
       inline
