@@ -2408,20 +2408,24 @@ namespace proteus
               }//i
 	    //detect cut cells
 	    int pos_counter=0;
-	    for (int I=0;I<nDOF_test_element;I++)
+	    for (int I=0;I<nDOF_mesh_trial_element;I++)
 	      {
-		if (phi_solid_nodes[mesh_l2g[eN,I]] >= 0)
+		std::cout<<"eN,I,nN "<<eN<<','<<I<<','<<mesh_l2g[eN*nDOF_mesh_trial_element+I]<<" phi = "<<phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]<<std::endl;
+		if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] >= 0)
 		  pos_counter++;
 	      }
 	    if (pos_counter == 2)
 	      {
+		std::cout<<"Identified cut cell"<<std::endl;
 		int opp_node=-1;
-		for (int I=0;I<nDOF_test_element;I++)
+		for (int I=0;I<nDOF_mesh_trial_element;I++)
 		  {
-		    if (phi_solid_nodes[mesh_l2g[eN,I]] < 0)
+		    if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] < 0)
 		      opp_node = I;
 		  }
-		int ebN = elementBoundariesArray[eN*3+opp_node];
+		assert(opp_node >=0);
+		assert(opp_node <nDOF_mesh_trial_element);
+		int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
 		surrogate_boundaries.push_back(ebN);
 		//now find which element neighbor this element is
 		if (eN == elementBoundaryElementsArray[eN*2+0])
@@ -3102,7 +3106,7 @@ namespace proteus
 	for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
 	  {
 	    register int ebN = surrogate_boundaries[ebN_s],
-	      eN = elementBoundaryElementsArray[surrogate_boundary_elements[ebN_s]],
+	      eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
 	      ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
               eN_nDOF_trial_element = eN*nDOF_trial_element;
             register double elementResidual_mesh[nDOF_test_element],
@@ -3112,7 +3116,7 @@ namespace proteus
               //elementResidual_w[nDOF_test_element],
               eps_rho,eps_mu;
             const double* elementResidual_w(NULL);
-	    std::cout<<"Surrogate edge "<<ebN<<" element neighbor "<<eN<<std::endl;
+	    std::cout<<"Surrogate edge "<<ebN<<" element neighbor "<<eN<<" local element boundary "<<ebN_local<<std::endl;
             for (int i=0;i<nDOF_test_element;i++)
               {
                 elementResidual_mesh[i]=0.0;
