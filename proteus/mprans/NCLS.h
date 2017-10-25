@@ -1469,6 +1469,15 @@ namespace proteus
     {
         return a[0]*b[0]+a[1]*b[1];
     }
+    double norm_a(double a[])
+    {
+        return sqrt(a[0]*a[0]+a[1]*a[1]);
+    }
+    double norm_amb(double a[], double b[])
+    {
+        return sqrt((a[0]-b[0])*(a[0]-b[0])+(a[1]-b[1])*(a[1]-b[1]));
+    }
+
     void get_velocity(double x[],double v[])
     {
         v[0] = -2*M_PI*(x[1]-0.5);
@@ -1580,22 +1589,35 @@ namespace proteus
 
         for (int eN=0;eN<nElements_global;++eN)
         {
+            register int eN_nDOF_trial_element = eN*nDOF_trial_element;
 	        for (int i=0;i<nDOF_test_element;++i)
                 for(int j=0;j<nDOF_test_element;++j)
                 {
                     element_Cx[i][j]=0.0;
                     element_Cy[i][j]=0.0;
                 }
-
-            for  (int k=0;k<nQuadraturePoints_element;k++)
+            
+            //compute max speed
+            register double element_max_speed = 1e-10;
+            for(int i=0;i<nDOF_test_element;i++) 
 	        {
+                int dof_i = u_l2g[eN_nDOF_trial_element+i];
+                double vi[2]={velocity[dof_i*3+0], velocity[dof_i*3+1]};
+                double wi[2]={mesh_velocity_dof[dof_i*3+0],mesh_velocity_dof[dof_i*3+1]};
+                element_max_speed = fmax(fmax(norm_a(wi),norm_amb(vi,wi)),element_max_speed);
+            }
+            //get element matrix
+            for  (int k=0;k<nQuadraturePoints_element;k++)
+	        {   
                 register int eN_k = eN*nQuadraturePoints_element+k,
-		                        eN_k_nSpace = eN_k*nSpace,
-                        		eN_nDOF_trial_element = eN*nDOF_trial_element;
+		                        eN_k_nSpace = eN_k*nSpace;
                 register double jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
                         		dV,x,y,z,xt,yt,zt,
                                 u_grad_trial[nDOF_trial_element*nSpace];
 
+                //compute element cfl
+                cfl[eN_k] = element_max_speed/elementDiameter[eN];
+                
                 //get the physical integration weight
 	            ck.calculateMapping_element(eN,
 					  k,
@@ -1609,9 +1631,6 @@ namespace proteus
                 
                 dV = fabs(jacDet)*dV_ref[k];
                 
-                // TODO: consider mesh velocity
-                cfl[eN_k] = 80.0;
-
                 //get the solution gradients at tn for entropy viscosity
 	            ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 	            
@@ -1668,10 +1687,10 @@ namespace proteus
                     double cji[2]={Cx_T[j],Cy_T[j]};
                     double xi[2]={mesh_dof[dof_i*3+0], mesh_dof[dof_i*3+1]};
                     double xj[2]={mesh_dof[dof_j*3+0], mesh_dof[dof_j*3+1]};
-                    double vi[2];//={velocity[dof_i*3+0], velocity[dof_i*3+1]};
-                    get_velocity(xi,vi);
-                    double vj[2];//={velocity[dof_j*3+0], velocity[dof_j*3+1]};
-                    get_velocity(xj,vj);
+                    double vi[2]={velocity[dof_i*3+0], velocity[dof_i*3+1]};
+                    //get_velocity(xi,vi);
+                    double vj[2]={velocity[dof_j*3+0], velocity[dof_j*3+1]};
+                    //get_velocity(xj,vj);
                     double wi[2]={mesh_velocity_dof[dof_i*3+0],mesh_velocity_dof[dof_i*3+1]};
                     double wj[2]={mesh_velocity_dof[dof_j*3+0],mesh_velocity_dof[dof_j*3+1]};
                     

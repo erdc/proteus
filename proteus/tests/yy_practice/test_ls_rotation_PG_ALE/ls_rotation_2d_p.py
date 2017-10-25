@@ -115,13 +115,22 @@ class UnitSquareRotation(NCLS.Coefficients):
 
         self.model.u_dof_old = numpy.copy(self.model.u[0].dof)
 
-        self.q_v = numpy.zeros(self.model.q[('dH', 0, 0)].shape, 'd')
+#         self.q_v = numpy.zeros(self.model.q[('dH', 0, 0)].shape, 'd')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH', 0, 0)].shape, 'd')
+#         self.q_v[..., 0] = -2.0 * math.pi * \
+#             (self.model.q['x'][..., 1] - rotation_center[1])
+#         self.q_v[..., 1] = 2.0 * math.pi * \
+#             (self.model.q['x'][..., 0] - rotation_center[0])
 
+        # Change it to f(u^n_j), that is the nodal values corresponding to mesh
+        # dofs or P1 dofs
+        self.q_v = numpy.zeros((self.model.u[0].dof.shape[0], 3), 'd')
         self.q_v[..., 0] = -2.0 * math.pi * \
-            (self.model.q['x'][..., 1] - rotation_center[0])
+            (self.mesh.nodeArray[..., 1] - rotation_center[1])
         self.q_v[..., 1] = 2.0 * math.pi * \
-            (self.model.q['x'][..., 0] - rotation_center[1])
+            (self.mesh.nodeArray[..., 0] - rotation_center[0])
+
+
 #         self.q_v[..., 0] = 1.0
 #         self.q_v[..., 1] = 0.0
 
@@ -150,12 +159,18 @@ class UnitSquareRotation(NCLS.Coefficients):
         #     self.timeArray = [self.model.timeIntegration.t]
     def preStep(self, t, firstStep=False):
 
+        # Serious error: Veclocity depends on time, since the mesh is moving.
+        #         self.q_v[..., 0] = -2.0 * math.pi * \
+        #             (self.model.q['x'][..., 1] - rotation_center[0])
+        #         self.q_v[..., 1] = 2.0 * math.pi * \
+        #             (self.model.q['x'][..., 0] - rotation_center[1])
+        #         self.q_v[..., 0] = 1.0
+        #         self.q_v[..., 1] = 0.0
+
         self.q_v[..., 0] = -2.0 * math.pi * \
-            (self.model.q['x'][..., 1] - rotation_center[0])
+            (self.mesh.nodeArray[..., 1] - rotation_center[1])
         self.q_v[..., 1] = 2.0 * math.pi * \
-            (self.model.q['x'][..., 0] - rotation_center[1])
-#         self.q_v[..., 0] = 1.0
-#         self.q_v[..., 1] = 0.0
+            (self.mesh.nodeArray[..., 0] - rotation_center[0])
 
         analyticalSolution[0].t = self.model.timeIntegration.tLast
         self.mesh.nodeVelocityArray[:] = analyticalSolution[0].mesh_velocity(
@@ -205,8 +220,7 @@ class UnitSquareRotation(NCLS.Coefficients):
             moving_function=analyticalSolution[0].mesh_velocity)  # t is already updated in prestep
 
         # Dirichlete BC
-        args[49][self.dirichlet_bc_dofs['dof']
-                 ] = self.dirichlet_bc_dofs['value']
+        #args[49][self.dirichlet_bc_dofs['dof']] = self.dirichlet_bc_dofs['value']
 
 
 if applyRedistancing:

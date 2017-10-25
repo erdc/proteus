@@ -220,6 +220,18 @@ def getResidual(
         w_grad_basis = [np.dot(u_grad_test_ref[k, :, :], invJ[k, :, :])
                         for k in xrange(n_pts)]
 
+        # Computer cell cfl number
+        ele_max_speed = 1e-10
+        for i in range(3):
+            dof_i = u_l2g[e, i]
+            vi = velocity[dof_i][:-1]
+            wi = mesh_velocity_dof[dof_i][:-1]
+            vi = vi - wi
+            ele_max_speed = max(
+                [np.sqrt(vi[0] * vi[0] + vi[1] * vi[1]), np.sqrt(wi[0] * wi[0] + wi[1] * wi[1]), ele_max_speed])
+        cfl[e, :] = ele_max_speed / elementDiameter[e]
+
+        # compute C matrix
         c_x = np.zeros((3, 3), 'd')
         c_y = np.zeros((3, 3), 'd')
 
@@ -277,7 +289,7 @@ def getResidual(
 
         dii = 0.0
         spatial_residual_dof_i = 0.0
-
+        dof_ii_index = 0
         for j in xrange(csrRowIndeces_DofLoops[dof_i], csrRowIndeces_DofLoops[dof_i + 1]):
             dof_j = csrColumnOffsets_DofLoops[j]
             if dof_i != dof_j:
@@ -286,9 +298,14 @@ def getResidual(
                 cji = np.array([Cx_T[j], Cy_T[j]])
                 #nij /= np.sqrt(nij[0] * nij[0] + nij[1] * nij[1])
 
-                xij = 0.5 * (mesh_dof[dof_i, :] + mesh_dof[dof_j, :])
-                advection_ij = ad_function(xij[0], xij[1])
-
+#                 xij = 0.5 * (mesh_dof[dof_i, :] + mesh_dof[dof_j, :])
+#                 advection_ij = ad_function(xij[0], xij[1])
+#                 # Because 1d LxF condition and interval length 1/2
+#                 # Method 1
+#                 dij[j] = max([fabs(np.dot(cij, advection_ij - wj)),
+#                               fabs(np.dot(cji, advection_ij - wi)),
+#                               0])
+#
                 vj = ad_function(mesh_dof[dof_j, 0], mesh_dof[dof_j, 1])
                 vi = ad_function(mesh_dof[dof_i, 0], mesh_dof[dof_i, 1])
 
@@ -298,12 +315,6 @@ def getResidual(
                 wi = mesh_velocity_dof[dof_i][:-1]
                 # 'd' since type determine allocation
 #                 advection_ij = np.array([1.0, 0], 'd')
-
-                # Because 1d LxF condition and interval length 1/2
-                # Method 1
-                dij[j] = max([fabs(np.dot(cij, advection_ij - wj)),
-                              fabs(np.dot(cji, advection_ij - wi)),
-                              0])
 
                 # Method 2
                 dij[j] = max([fabs(np.dot(cij, vj - wj)),
@@ -319,7 +330,7 @@ def getResidual(
                 # They are almost the same, the code may be exact same. Numerical viscosity larger is better.
                 # The difference is small.
                 # Both are low-order method.
-                spatial_residual_dof_i += (dij[j] - np.dot(cij, advection_ij - wj)) * \
+                spatial_residual_dof_i += (dij[j] - np.dot(cij, vj - wj)) * \
                     (u_dof_old[dof_j] - u_dof_old[dof_i])
             else:
                 dof_ii_index = j
@@ -332,9 +343,7 @@ def getResidual(
         ML[dof_i] = ML_new[dof_i]
 
         edge_based_cfl[dof_i] = 2.0 * fabs(dii) / ML[dof_i]
-
     # end-of-loop-over-dof_i
-    cfl[:] = 40  # 1.0 / np.min(elementDiameter)
 
 
 def P1_calculateMapping_element(nodes_coord, geo_basis, grad_geo_basis):
