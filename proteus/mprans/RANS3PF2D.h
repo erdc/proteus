@@ -109,6 +109,7 @@ namespace proteus
                                    double C_dc,
                                    double C_b,
                                    const double* eps_solid,
+                                   const double* ebq_global_phi_solid,
                                    const double* phi_solid_nodes,
                                    const double* phi_solid,
                                    const double* q_velocity_solid,
@@ -348,6 +349,7 @@ namespace proteus
                                    double C_b,
                                    //VRANS
                                    const double *eps_solid,
+				   const double *ebq_global_phi_solid,
                                    const double *phi_solid_nodes,
                                    const double *phi_solid,
                                    const double *q_velocity_solid,
@@ -2218,6 +2220,7 @@ namespace proteus
                              double C_b,
                              //VRANS
                              const double* eps_solid,
+			     const double* ebq_global_phi_solid,
                              const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
@@ -3148,7 +3151,7 @@ namespace proteus
               }
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) 
               { 
-                register int /* ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb, */
+                register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
                   /* ebNE_kb_nSpace = ebNE_kb*nSpace, */
                   ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                   ebN_local_kb_nSpace = ebN_local_kb*nSpace;
@@ -3227,6 +3230,7 @@ namespace proteus
 		//
 		//update the element and global residual storage
 		//
+		std::cout<<"phi_s(x) "<<ebq_global_phi_solid[ebN_kb]<<std::endl;
 		double Csb=1.0e4;
 		for (int i=0;i<nDOF_test_element;i++)
 		  {
@@ -4196,6 +4200,7 @@ namespace proteus
                              double C_b,
                              //VRANS
                              const double* eps_solid,
+			     const double* ebq_global_phi_solid,
                              const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
