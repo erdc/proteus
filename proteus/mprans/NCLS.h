@@ -83,6 +83,24 @@ namespace proteus
 					 int offset_u, int stride_u, 
 					 double* globalResidual
 					 )=0;
+    virtual double calculateRhsLumpedL2p(
+				      double* mesh_trial_ref,
+				      double* mesh_grad_trial_ref,
+				      double* mesh_dof,
+				      int* mesh_l2g,
+				      double* dV_ref,
+				      //double* u_trial_ref,
+				      //double* u_grad_trial_ref,
+				      double* u_test_ref,
+				      //physics
+				      int nElements_global,
+				      int* u_l2g, 
+				      //double* elementDiameter,
+				      //double* nodeDiametersArray,
+				      double* q_f,
+				      int offset_u, int stride_u, 
+				      double* globalResidual
+				      )=0;
     virtual void calculateResidual(//element
 				   double dt,
 				   double* mesh_trial_ref,
@@ -169,7 +187,94 @@ namespace proteus
 				   int STABILIZATION_TYPE, 
 				   int ENTROPY_TYPE,
 				   double cE
-				   )=0;				   
+				   )=0;
+    virtual void calculateResidual_dummy(//element
+				   double dt,
+				   double* mesh_trial_ref,
+				   double* mesh_grad_trial_ref,
+				   double* mesh_dof,
+				   double* meshVelocity_dof,
+				   double MOVING_DOMAIN,
+				   int* mesh_l2g,
+				   double* dV_ref,
+				   double* u_trial_ref,
+				   double* u_grad_trial_ref,
+				   double* u_test_ref,
+				   double* u_grad_test_ref,
+				   //element boundary
+				   double* mesh_trial_trace_ref,
+				   double* mesh_grad_trial_trace_ref,
+				   double* dS_ref,
+				   double* u_trial_trace_ref,
+				   double* u_grad_trial_trace_ref,
+				   double* u_test_trace_ref,
+				   double* u_grad_test_trace_ref,
+				   double* normal_ref,
+				   double* boundaryJac_ref,
+				   //physics
+				   int nElements_global,
+			           double useMetrics, 
+				   double alphaBDF,
+				   int lag_shockCapturing, /*mwf not used yet*/
+				   double shockCapturingDiffusion,
+		                   double sc_uref, double sc_alpha,
+				   int* u_l2g, 
+				   double* elementDiameter,
+				   double* nodeDiametersArray,
+				   int degree_polynomial,
+				   double* u_dof,
+				   double* u_dof_old,	
+				   double* uStar_dof, 
+				   double* velocity,
+				   double* q_m,
+				   double* q_u,				   
+				   double* q_n,
+				   double* q_dH,
+				   double* q_m_betaBDF,
+                                   double* q_dV,
+                                   double* q_dV_last,
+				   double* cfl,
+				   double* edge_based_cfl, 
+				   double* q_numDiff_u, 
+				   double* q_numDiff_u_last, 
+				   int offset_u, int stride_u, 
+				   double* globalResidual,
+				   int nExteriorElementBoundaries_global,
+				   int* exteriorElementBoundariesArray,
+				   int* elementBoundaryElementsArray,
+				   int* elementBoundaryLocalElementBoundariesArray,
+				   double* ebqe_velocity_ext,
+				   int* isDOFBoundary_u,
+				   double* ebqe_rd_u_ext,				   
+				   double* ebqe_bc_u_ext,				   
+				   double* ebqe_u,
+				   // PARAMETERS FOR EDGE VISCOSITY
+				   int numDOFs,
+				   int NNZ,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops,
+				   int* csrRowIndeces_CellLoops,
+				   int* csrColumnOffsets_CellLoops,
+				   int* csrColumnOffsets_eb_CellLoops,
+				   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+				   int LUMPED_MASS_MATRIX, 				   
+				   // AUX QUANTITIES OF INTEREST
+				   double* quantDOFs, 
+				   // COUPEZ 
+				   double lambda_coupez, 
+				   double epsCoupez, 
+				   double epsFactRedistancing,
+				   int COUPEZ, 
+				   int SATURATED_LEVEL_SET,
+				   // C-Matrices				   
+				   double* Cx, 
+				   double* Cy, 
+				   double* Cz, 
+				   double* ML, 
+				   int STABILIZATION_TYPE, 
+				   int ENTROPY_TYPE,
+				   double cE
+				   )=0;				       
     virtual void calculateResidual_entropy_viscosity(//element
 						     double dt,
 						     double* mesh_trial_ref,
@@ -922,6 +1027,81 @@ namespace proteus
 	}//elements
     }
 
+    double calculateRhsLumpedL2p(
+			      double* mesh_trial_ref, //
+			      double* mesh_grad_trial_ref, //
+			      double* mesh_dof, //
+			      int* mesh_l2g, //
+			      double* dV_ref, //
+			      //double* u_trial_ref, 
+			      //double* u_grad_trial_ref,
+			      double* u_test_ref, //
+			      //physics
+			      int nElements_global, //
+			      int* u_l2g, //
+			      //double* elementDiameter,
+			      //double* nodeDiametersArray,
+			      double* q_f,	
+			      int offset_u, int stride_u, 
+			      double* globalResidual)
+    {
+      //////////////////////////////////////////////
+      // ** LOOP IN CELLS FOR CELL BASED TERMS ** //
+      //////////////////////////////////////////////
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  //declare local storage for local contributions and initialize
+	  register double 
+	    elementResidual_u[nDOF_test_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    elementResidual_u[i]=0.0;
+	  
+	  //loop over quadrature points and compute integrands
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      //compute indeces and declare local storage
+	      register int eN_k = eN*nQuadraturePoints_element+k;
+	      register double 
+		u_test_dV[nDOF_trial_element],
+		//for general use
+		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		dV,x,y,z;
+	      //get the physical integration weight
+	      ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,
+					  x,y,z);
+	      dV = fabs(jacDet)*dV_ref[k];
+
+	      //precalculate test function products with integration weights for mass matrix terms
+	      for (int j=0;j<nDOF_trial_element;j++)
+		u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+	      // ith-LOOP //
+	      for(int i=0;i<nDOF_test_element;i++) 
+		elementResidual_u[i] += q_f[eN_k]*u_test_dV[i];
+	    }
+	  
+	  /////////////////
+	  // DISTRIBUTE // load cell based element into global residual
+	  ////////////////
+	  for(int i=0;i<nDOF_test_element;i++) 
+	    { 
+	      int eN_i=eN*nDOF_test_element+i;
+	      int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+	      
+	      // distribute global residual
+	      globalResidual[gi] += elementResidual_u[i];
+	    }//i
+	}//elements
+    }
+
     void calculateResidual(//element
 			   double dt,
 			   double* mesh_trial_ref,
@@ -1377,6 +1557,224 @@ namespace proteus
 	}//ebNE
     }
 
+    void calculateResidual_dummy(//element
+			   double dt,
+			   double* mesh_trial_ref,
+			   double* mesh_grad_trial_ref,
+			   double* mesh_dof,
+			   double* mesh_velocity_dof,
+			   double MOVING_DOMAIN,
+			   int* mesh_l2g,
+			   double* dV_ref,
+			   double* u_trial_ref,
+			   double* u_grad_trial_ref,
+			   double* u_test_ref,
+			   double* u_grad_test_ref,
+			   //element boundary
+			   double* mesh_trial_trace_ref,
+			   double* mesh_grad_trial_trace_ref,
+			   double* dS_ref,
+			   double* u_trial_trace_ref,
+			   double* u_grad_trial_trace_ref,
+			   double* u_test_trace_ref,
+			   double* u_grad_test_trace_ref,
+			   double* normal_ref,
+			   double* boundaryJac_ref,
+			   //physics
+			   int nElements_global,
+			   double useMetrics, 
+			   double alphaBDF,
+			   int lag_shockCapturing, /*mwf not used yet*/
+			   double shockCapturingDiffusion,
+			   double sc_uref, double sc_alpha,
+			   int* u_l2g, 
+			   double* elementDiameter,
+			   double* nodeDiametersArray,
+			   int degree_polynomial,
+			   double* u_dof,
+			   double* u_dof_old,			   
+			   double* uStar_dof, 
+			   double* velocity,
+			   double* q_m,
+			   double* q_u,				   
+			   double* q_n,
+			   double* q_dH,
+			   double* q_m_betaBDF,
+                           double* q_dV,
+                           double* q_dV_last,
+			   double* cfl,
+			   double* edge_based_cfl, 
+			   double* q_numDiff_u, 
+			   double* q_numDiff_u_last, 
+			   int offset_u, int stride_u, 
+			   double* globalResidual,
+			   int nExteriorElementBoundaries_global,
+			   int* exteriorElementBoundariesArray,
+			   int* elementBoundaryElementsArray,
+			   int* elementBoundaryLocalElementBoundariesArray,
+			   double* ebqe_velocity_ext,
+			   int* isDOFBoundary_u,
+			   double* ebqe_rd_u_ext,
+			   double* ebqe_bc_u_ext,
+			   double* ebqe_u, 
+			   // PARAMETERS FOR EDGE VISCOSITY
+			   int numDOFs,
+			   int NNZ,
+			   int* csrRowIndeces_DofLoops,
+			   int* csrColumnOffsets_DofLoops,
+			   int* csrRowIndeces_CellLoops,
+			   int* csrColumnOffsets_CellLoops,
+			   int* csrColumnOffsets_eb_CellLoops,
+			   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+			   int LUMPED_MASS_MATRIX, 
+			   // AUX QUANTITIES OF INTEREST
+			   double* quantDOFs,
+			   // COUPEZ
+			   double lambda_coupez, 
+			   double epsCoupez,
+			   double epsFactRedistancing,
+			   int COUPEZ, 
+			   int SATURATED_LEVEL_SET,
+			   // C-Matrices
+			   double* Cx, 
+			   double* Cy,
+			   double* Cz,
+			   double* ML,
+			   int STABILIZATION_TYPE, 
+			   int ENTROPY_TYPE,
+			   double cE
+			   )
+    {
+      //loop over elements 
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  //declare local storage for element residual and initialize
+	  register double elementResidual_u[nDOF_test_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    elementResidual_u[i]=0.0;
+	  //loop over quadrature points and compute integrands
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      //compute indeces and declare local storage
+	      register int eN_k = eN*nQuadraturePoints_element+k,
+		eN_k_nSpace = eN_k*nSpace,
+		eN_nDOF_trial_element = eN*nDOF_trial_element;
+	      register double u=0.0, grad_u[nSpace],
+		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		u_grad_trial[nDOF_trial_element*nSpace],
+		x,y,z;
+	      //
+	      //compute solution and gradients at quadrature points
+	      //
+	      ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,
+					  x,y,z);
+	      //get the trial function gradients
+	      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				  jacInv,
+				  u_grad_trial);
+	      //get the solution
+	      ck.valFromDOF(u_dof,
+			    &u_l2g[eN_nDOF_trial_element],
+			    &u_trial_ref[k*nDOF_trial_element],
+			    u);
+	      //get the solution gradients
+	      ck.gradFromDOF(u_dof,
+			     &u_l2g[eN_nDOF_trial_element],
+			     u_grad_trial,
+			     grad_u);
+	      //save solution at quadrature points for other models to use
+	      q_u[eN_k]=u;
+	      q_m[eN_k]=u;	      
+	      for (int I=0;I<nSpace;I++)
+		q_n[eN_k_nSpace+I]  = grad_u[I];
+	      for(int i=0;i<nDOF_test_element;i++) 
+		elementResidual_u[i] += 0.; // dummy
+	    }
+	  //load element into global residual and save element residual
+	  for(int i=0;i<nDOF_test_element;i++) 
+	    { 
+	      register int eN_i=eN*nDOF_test_element+i;
+	      globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+	    }//i
+	}//elements
+      //loop over exterior element boundaries 
+      for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) 
+	{ 
+	  register int ebN = exteriorElementBoundariesArray[ebNE], 
+	    eN  = elementBoundaryElementsArray[ebN*2+0],
+	    ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+	    eN_nDOF_trial_element = eN*nDOF_trial_element;
+	  register double elementResidual_u[nDOF_test_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      elementResidual_u[i]=0.0;
+	    }
+	  for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) 
+	    { 
+	      register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+		ebNE_kb_nSpace = ebNE_kb*nSpace,
+		ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+		ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+	      register double u_ext=0.0,
+		grad_u_ext[nSpace],
+		jac_ext[nSpace*nSpace],jacDet_ext,jacInv_ext[nSpace*nSpace],
+		boundaryJac[nSpace*(nSpace-1)],
+		metricTensor[(nSpace-1)*(nSpace-1)],metricTensorDetSqrt,
+		u_grad_trial_trace[nDOF_trial_element*nSpace],
+		normal[nSpace],x_ext,y_ext,z_ext;
+	      ck.calculateMapping_elementBoundary(eN,
+						  ebN_local,
+						  kb,
+						  ebN_local_kb,
+						  mesh_dof,
+						  mesh_l2g,
+						  mesh_trial_trace_ref,
+						  mesh_grad_trial_trace_ref,
+						  boundaryJac_ref,
+						  jac_ext,
+						  jacDet_ext,
+						  jacInv_ext,
+						  boundaryJac,
+						  metricTensor,
+						  metricTensorDetSqrt,
+						  normal_ref,
+						  normal,
+						  x_ext,y_ext,z_ext);
+	      //get the metric tensor
+	      //solution and gradients	
+	      ck.valFromDOF(u_dof,
+			    &u_l2g[eN_nDOF_trial_element],
+			    &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
+			    u_ext);
+	      ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],
+				  jacInv_ext,
+				  u_grad_trial_trace);
+	      ck.gradFromDOF(u_dof,
+			     &u_l2g[eN_nDOF_trial_element],
+			     u_grad_trial_trace,
+			     grad_u_ext);
+	      ebqe_u[ebNE_kb] = u_ext;
+	      //update residuals
+	      for (int i=0;i<nDOF_test_element;i++)
+		elementResidual_u[i] += 0.;
+	    }//kb
+	  //update the element and global residual storage
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      int eN_i = eN*nDOF_test_element+i;	      
+	      globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];	  
+	    }//i
+	}//ebNE
+    }
+    
     void calculateResidual_entropy_viscosity(//element
 					     double dt,
 					     double* mesh_trial_ref,

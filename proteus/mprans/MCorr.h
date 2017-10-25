@@ -43,6 +43,7 @@ namespace proteus
 				   double* nodeDiametersArray,
 				   double* u_dof,
 				   double* lambda_dof,
+				   double* q_phiExact,
 				   double* q_phi,
 				   double* q_normal_phi,
 				   double* ebqe_phi,
@@ -55,6 +56,15 @@ namespace proteus
 				   double* q_r,
 				   double* q_porosity,
 				   int offset_u, int stride_u,
+				   double* L1_interface,
+				   double* L2_interface,
+				   double* LInf_interface,
+				   double* L1_Hinterface,
+				   double* L2_Hinterface,
+				   double* LInf_Hinterface,
+				   double* L1_Dinterface,
+				   double* L2_Dinterface,
+				   double* LInf_Dinterface,
 				   double* L2_u,
 				   double* H1_u,
 				   double* global_J,
@@ -140,6 +150,7 @@ namespace proteus
 			       double* elementDiameter,
 			       double* nodeDiametersArray,
 			       double* u_dof,
+			       double* q_phiExact,
 			       double* q_phi,
 			       double* q_normal_phi,
 			       double* ebqe_phi,
@@ -189,6 +200,7 @@ namespace proteus
 			       double* elementDiameter,
 			       double* nodeDiametersArray,
 			       double* u_dof,
+			       double* q_phiExact,
 			       double* q_phi,
 			       double* q_normal_phi,
 			       double* ebqe_phi,
@@ -238,6 +250,7 @@ namespace proteus
 			       double* elementDiameter,
 			       double* nodeDiametersArray,
 			       double* u_dof,
+			       double* q_phiExact,
 			       double* q_phi,
 			       double* q_normal_phi,
 			       double* ebqe_phi,
@@ -470,6 +483,7 @@ namespace proteus
 					 double* elementDiameter,
 					 double* nodeDiametersArray,
 					 double* u_dof,
+					 double* q_phiExact,
 					 double* q_phi,
 					 double* q_normal_phi,
 					 double* ebqe_phi,
@@ -490,6 +504,15 @@ namespace proteus
 					 double* element_u,
 					 int eN,
 					 double *element_lambda,
+					 double& element_L1_interface,
+					 double& element_L2_interface,
+					 double& element_LInf_interface,
+					 double& element_L1_Hinterface,
+					 double& element_L2_Hinterface,
+					 double& element_LInf_Hinterface,
+					 double& element_L1_Dinterface,
+					 double& element_L2_Dinterface,
+					 double& element_LInf_Dinterface, 
 					 double& element_L2_u,
 					 double& element_H1_u,
 					 double& element_J,
@@ -500,6 +523,15 @@ namespace proteus
 					 double *element_b_l,
 					 const double H1)
     {
+      element_L1_interface=0.0;
+      element_L2_interface=0.0;
+      element_LInf_interface=0.0;
+      element_L1_Hinterface=0.0;
+      element_L2_Hinterface=0.0;
+      element_LInf_Hinterface=0.0;
+      element_L1_Dinterface=0.0;
+      element_L2_Dinterface=0.0;
+      element_LInf_Dinterface=0.0;            
       element_L2_u=0.0;
       element_H1_u=0.0;
       element_J=0.0;
@@ -605,9 +637,39 @@ namespace proteus
 			       q_porosity[eN_k],
 			       r,
 			       dr);
+	  double L1_interface = fabs(q_phi[eN_k] + u - q_phiExact[eN_k])*dV;
+	  double L2_interface = std::pow(q_phi[eN_k] + u - q_phiExact[eN_k],2)*dV;
+	  double LInf_interface = fabs(q_phi[eN_k] + u - q_phiExact[eN_k]);
+	  //
+	  double L1_Hinterface = fabs(smoothedHeaviside(epsHeaviside,q_phi[eN_k]+u)
+				      - smoothedHeaviside(epsHeaviside,q_phiExact[eN_k]))*dV;
+	  double L2_Hinterface = std::pow(smoothedHeaviside(epsHeaviside,q_phi[eN_k]+u)
+					  - smoothedHeaviside(epsHeaviside,q_phiExact[eN_k]),2)*dV;
+	  double LInf_Hinterface = fabs(smoothedHeaviside(epsHeaviside,q_phi[eN_k]+u)
+					- smoothedHeaviside(epsHeaviside,q_phiExact[eN_k]));
+	  //
+	  double L1_Dinterface = fabs(smoothedDirac(epsDirac,q_phi[eN_k]+u)
+				      - smoothedDirac(epsDirac,q_phiExact[eN_k]))*dV;
+	  double L2_Dinterface = std::pow(smoothedDirac(epsDirac,q_phi[eN_k]+u)
+					  - smoothedDirac(epsDirac,q_phiExact[eN_k]),2)*dV;
+	  double LInf_Dinterface = fabs(smoothedDirac(epsDirac,q_phi[eN_k]+u)
+					- smoothedDirac(epsDirac,q_phiExact[eN_k]));
+	  //
 	  double L2_tmp = ck.Reaction_weak(u*u, dV);
 	  double H1_tmp = L2_tmp + ck.NumericalDiffusion(1.0,grad_u, grad_u_dV);
 	  double J_tmp = 0.5*(L2_tmp + H1*ck.NumericalDiffusion(1.0,grad_u, grad_u_dV));
+	  element_L1_interface += L1_interface;
+	  element_L2_interface += L2_interface;
+	  element_LInf_interface = fmax(element_LInf_interface, LInf_interface);
+	  //
+	  element_L1_Hinterface += L1_Hinterface;
+	  element_L2_Hinterface += L2_Hinterface;
+	  element_LInf_Hinterface = fmax(element_LInf_Hinterface, LInf_Hinterface);
+	  //
+	  element_L1_Dinterface += L1_Dinterface;
+	  element_L2_Dinterface += L2_Dinterface;
+	  element_LInf_Dinterface = fmax(element_LInf_Dinterface, LInf_Dinterface);
+	  //
 	  element_L2_u += L2_tmp;
 	  element_H1_u += H1_tmp;
 	  element_J += J_tmp;
@@ -661,6 +723,7 @@ namespace proteus
 	    q_n[eN_k_nSpace+I] = grad_u[I]/norm;
 	}
     }
+    
     void calculateResidual(//element
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
@@ -692,6 +755,7 @@ namespace proteus
 			   double* nodeDiametersArray,
 			   double* u_dof,
 			   double* lambda_dof,
+			   double* q_phiExact,
 			   double* q_phi,
 			   double* q_normal_phi,
 			   double* ebqe_phi,
@@ -704,6 +768,15 @@ namespace proteus
 			   double* q_r,
 			   double* q_porosity,
 			   int offset_u, int stride_u,
+			   double* global_L1_interface,
+			   double* global_L2_interface,
+			   double* global_LInf_interface,
+			   double* global_L1_Hinterface,
+			   double* global_L2_Hinterface,
+			   double* global_LInf_Hinterface,
+			   double* global_L1_Dinterface,
+			   double* global_L2_Dinterface,
+			   double* global_LInf_Dinterface,	   
 			   double* global_L2_u,
 			   double* global_H1_u,
 			   double* global_J,
@@ -731,6 +804,18 @@ namespace proteus
       //eN_j is the element trial function index
       //eN_k_j is the quadrature point index for a trial function
       //eN_k_i is the quadrature point index for a trial function
+      *global_L1_interface = 0.0;
+      *global_L2_interface = 0.0;
+      *global_LInf_interface = 0.0;
+      //
+      *global_L1_Hinterface = 0.0;
+      *global_L2_Hinterface = 0.0;
+      *global_LInf_Hinterface = 0.0;
+      //
+      *global_L1_Dinterface = 0.0;
+      *global_L2_Dinterface = 0.0;
+      *global_LInf_Dinterface = 0.0;            
+      //
       *global_L2_u = 0.0;
       *global_H1_u = 0.0;
       *global_J = 0.5*beta*(epsFactDiffusion-epsFactDiffusion_last)*(epsFactDiffusion-epsFactDiffusion_last);
@@ -740,6 +825,9 @@ namespace proteus
 	{
 	  //declare local storage for element residual and initialize
 	  register double element_L2_u=0.0,
+	    element_L1_interface=0.0, element_L2_interface=0.0, element_LInf_interface=0.0,
+	    element_L1_Hinterface=0.0, element_L2_Hinterface=0.0, element_LInf_Hinterface=0.0,
+	    element_L1_Dinterface=0.0, element_L2_Dinterface=0.0, element_LInf_Dinterface=0.0,
 	    element_H1_u=0.0,
 	    element_J=0.0,
 	    element_LAGR=0.0,
@@ -783,6 +871,7 @@ namespace proteus
 				   elementDiameter,
 				   nodeDiametersArray,
 				   u_dof,
+				   q_phiExact,
 				   q_phi,
 				   q_normal_phi,
 				   ebqe_phi,
@@ -803,7 +892,16 @@ namespace proteus
 				   element_u,
 				   eN,
 				   element_lambda,
-				   element_L2_u,
+				   element_L1_interface,
+				   element_L2_interface,
+				   element_LInf_interface,				   
+				   element_L1_Hinterface,
+				   element_L2_Hinterface,
+				   element_LInf_Hinterface,
+				   element_L1_Dinterface,
+				   element_L2_Dinterface,
+				   element_LInf_Dinterface,
+				   element_L2_u,				   
 				   element_H1_u,
 				   element_J,
 				   element_LAGR,
@@ -815,6 +913,15 @@ namespace proteus
 	  //
 	  //load element into global residual and save element residual
 	  //
+	  *global_L1_interface += element_L1_interface;
+	  *global_L2_interface += element_L2_interface;
+	  *global_LInf_interface = fmax(*global_LInf_interface, element_LInf_interface);
+	  *global_L1_Hinterface += element_L1_Hinterface;
+	  *global_L2_Hinterface += element_L2_Hinterface;
+	  *global_LInf_Hinterface = fmax(*global_LInf_Hinterface, element_LInf_Hinterface);
+	  *global_L1_Dinterface += element_L1_Dinterface;
+	  *global_L2_Dinterface += element_L2_Dinterface;
+	  *global_LInf_Dinterface = fmax(*global_LInf_Dinterface, element_LInf_Dinterface);
 	  *global_L2_u += element_L2_u;
 	  *global_H1_u += element_H1_u;
 	  *global_J += element_J;
@@ -920,8 +1027,6 @@ namespace proteus
 		ebqe_n[ebNE_kb_nSpace+I] = grad_u_ext[I]/norm;
 	    }//kb
 	}//ebNE
-
-
     }
 
     inline void calculateElementJacobian(//element
@@ -1223,6 +1328,7 @@ namespace proteus
 			       double* elementDiameter,
 			       double* nodeDiametersArray,
 			       double* u_dof,
+			       double* q_phiExact,
 			       double* q_phi,
 			       double* q_normal_phi,
 			       double* ebqe_phi,
@@ -1280,6 +1386,9 @@ namespace proteus
 	      element_lambda[i]=1.0;
 	    }//i
 	  double element_L2_u=0.0,
+	    element_L1_interface=0.0, element_L2_interface=0.0, element_LInf_interface=0.0,
+	    element_L1_Hinterface=0.0, element_L2_Hinterface=0.0, element_LInf_Hinterface=0.0,
+	    element_L1_Dinterface=0.0, element_L2_Dinterface=0.0, element_LInf_Dinterface=0.0,	    
 	    element_H1_u=0.0;
 	  const double H1=1.0;
 	  calculateElementResidual(mesh_trial_ref,
@@ -1309,6 +1418,7 @@ namespace proteus
 				   elementDiameter,
 				   nodeDiametersArray,
 				   u_dof,
+				   q_phiExact,
 				   q_phi,
 				   q_normal_phi,
 				   ebqe_phi,
@@ -1329,6 +1439,15 @@ namespace proteus
 				   element_u,
 				   eN,
 				   element_lambda,
+				   element_L1_interface,
+				   element_L2_interface,
+				   element_LInf_interface,
+				   element_L1_Hinterface,
+				   element_L2_Hinterface,
+				   element_LInf_Hinterface,
+				   element_L1_Dinterface,
+				   element_L2_Dinterface,
+				   element_LInf_Dinterface,
 				   element_L2_u,
 				   element_H1_u,
 				   element_J,
@@ -1448,7 +1567,8 @@ namespace proteus
 					   elementDiameter,
 					   nodeDiametersArray,
 					   u_dof,
-					   q_phi,
+					   q_phiExact,
+					   q_phi,					   
 					   q_normal_phi,
 					   ebqe_phi,
 					   ebqe_normal_phi,				   
@@ -1468,6 +1588,15 @@ namespace proteus
 					   element_u,
 					   eN,
 					   element_lambda,
+					   element_L1_interface,
+					   element_L2_interface,
+					   element_LInf_interface,
+					   element_L1_Hinterface,
+					   element_L2_Hinterface,
+					   element_LInf_Hinterface,
+					   element_L1_Dinterface,
+					   element_L2_Dinterface,
+					   element_LInf_Dinterface, 
 					   element_L2_u,
 					   element_H1_u,
 					   element_J,
@@ -1520,6 +1649,7 @@ namespace proteus
 			       double* elementDiameter,
 			       double* nodeDiametersArray,
 			       double* u_dof,
+			       double* q_phiExact,
 			       double* q_phi,
 			       double* q_normal_phi,
 			       double* ebqe_phi,
@@ -1563,6 +1693,9 @@ namespace proteus
 	      element_lambda[i]=elementConstant_lambda;
 	    }//i
 	  double element_L2_u=0.0,
+	    element_L1_interface=0.0, element_L2_interface=0.0, element_LInf_interface=0.0,
+	    element_L1_Hinterface=0.0, element_L2_Hinterface=0.0, element_LInf_Hinterface=0.0,
+	    element_L1_Dinterface=0.0, element_L2_Dinterface=0.0, element_LInf_Dinterface=0.0, 
 	    element_H1_u=0.0;
 	  const double H1=1.0;
 	  calculateElementResidual(mesh_trial_ref,
@@ -1592,7 +1725,8 @@ namespace proteus
 				   elementDiameter,
 				   nodeDiametersArray,
 				   u_dof,
-				   q_phi,
+				   q_phiExact,
+				   q_phi,				   
 				   q_normal_phi,
 				   ebqe_phi,
 				   ebqe_normal_phi,				   
@@ -1612,6 +1746,15 @@ namespace proteus
 				   element_u,
 				   eN,
 				   element_lambda,
+				   element_L1_interface,
+				   element_L2_interface,
+				   element_LInf_interface,
+				   element_L1_Hinterface,
+				   element_L2_Hinterface,
+				   element_LInf_Hinterface,
+				   element_L1_Dinterface,
+				   element_L2_Dinterface,
+				   element_LInf_Dinterface,	   
 				   element_L2_u,
 				   element_H1_u,
 				   element_J,
@@ -1714,7 +1857,8 @@ namespace proteus
 				       elementDiameter,
 				       nodeDiametersArray,
 				       u_dof,
-				       q_phi,
+				       q_phiExact,
+				       q_phi,				       
 				       q_normal_phi,
 				       ebqe_phi,
 				       ebqe_normal_phi,				   
@@ -1734,6 +1878,15 @@ namespace proteus
 				       element_u,
 				       eN,
 				       element_lambda,
+				       element_L1_interface,
+				       element_L2_interface,
+				       element_LInf_interface,
+				       element_L1_Hinterface,
+				       element_L2_Hinterface,
+				       element_LInf_Hinterface,
+				       element_L1_Dinterface,
+				       element_L2_Dinterface,
+				       element_LInf_Dinterface,	       
 				       element_L2_u,
 				       element_H1_u,
 				       element_J,
@@ -1784,6 +1937,7 @@ namespace proteus
 			     double* elementDiameter,
 			     double* nodeDiametersArray,
 			     double* u_dof,
+			     double* q_phiExact,
 			     double* q_phi,
 			     double* q_normal_phi,
 			     double* ebqe_phi,
@@ -1829,6 +1983,9 @@ namespace proteus
       for(int eN=0;eN<nElements_owned;eN++)
 	{
 	  double element_L2_u=0.0,
+	    element_L1_interface=0.0, element_L2_interface=0.0, element_LInf_interface=0.0,
+	    element_L1_Hinterface=0.0, element_L2_Hinterface=0.0, element_LInf_Hinterface=0.0,
+	    element_L1_Dinterface=0.0, element_L2_Dinterface=0.0, element_LInf_Dinterface=0.0,
 	    element_H1_u=0.0;
 	  const double H1=1.0;
 	  calculateElementResidual(mesh_trial_ref,
@@ -1858,7 +2015,8 @@ namespace proteus
 				   elementDiameter,
 				   nodeDiametersArray,
 				   u_dof,
-				   q_phi,
+				   q_phiExact,
+				   q_phi,				   
 				   q_normal_phi,
 				   ebqe_phi,
 				   ebqe_normal_phi,				   
@@ -1878,6 +2036,15 @@ namespace proteus
 				   element_u,
 				   eN,
 				   element_lambda,
+				   element_L1_interface,
+				   element_L2_interface,
+				   element_LInf_interface,
+				   element_L1_Hinterface,
+				   element_L2_Hinterface,
+				   element_LInf_Hinterface,
+				   element_L1_Dinterface,
+				   element_L2_Dinterface,
+				   element_LInf_Dinterface,	   
 				   element_L2_u,
 				   element_H1_u,
 				   element_J,

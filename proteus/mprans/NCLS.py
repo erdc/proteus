@@ -365,13 +365,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.flowModelIndex is None:
             self.ebqe_v = numpy.zeros(cebqe[('grad(u)',0)].shape,'d')
     def preStep(self,t,firstStep=False):
-        # SAVE OLD SOLUTION #
+        # SAVE OLD SOLUTION #        
+        #np.savetxt("zalesak_LS_refn2.csv",
+        #           self.model.q[('u',0)],
+        #           delimiter=",")  
+        #input("stop")
         self.model.u_dof_old[:] = self.model.u[0].dof
-
+        
         # COMPUTE NEW VELOCITY (if given by user) # 
         if self.model.hasVelocityFieldAsFunction:
             self.model.updateVelocityFieldAsFunction()
-
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,
@@ -392,6 +395,22 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
+        #TMP to test isolated MCorr
+        #Perturb phiHat
+        X = {0:self.model.q[('x')][:,:,0],
+             1:self.model.q[('x')][:,:,1],
+             2:self.model.q[('x')][:,:,2]}
+        #f = numpy.copy(self.model.q[('u',0)])
+        self.model.q[('u',0)][:] += self.model.perturb_phiHat[0](X,t)
+        self.model.getRhsLumpedL2p(self.model.q[('u',0)],
+                                   self.model.quantDOFs)
+        self.model.quantDOFs[:] /= self.model.ML[:] 
+        self.model.u[0].dof[:] = self.model.quantDOFs[:]
+
+        #self.model.getPerturbedLS()
+        
+        # END OF PERTURBING PHI HAT FIELD
+        
         self.model.q['dV_last'][:] = self.model.q['dV']
         # if self.checkMass:
         #     self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
@@ -695,6 +714,12 @@ class LevelModel(OneLevelTransport):
         if ('velocityField') in dir (options): 
             self.velocityField = options.velocityField
             self.hasVelocityFieldAsFunction = True
+
+        if ('perturb_phiHat') in dir (options):
+            self.perturb_phiHat = options.perturb_phiHat
+        else:
+             self.perturb_phiHat = None
+
         #
         # allocate residual and Jacobian storage
         #
@@ -768,6 +793,7 @@ class LevelModel(OneLevelTransport):
         self.cterm_global=None
 
         # Aux quantity at DOFs to be filled by optimized code (MQL)
+        self.tmpAux = None
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
         comm = Comm.get()
@@ -995,6 +1021,31 @@ class LevelModel(OneLevelTransport):
     ######################################
     ######################################
 
+    ####################################3
+    def getRhsLumpedL2p(self,f,rhs):
+        import pdb
+        import copy
+        """
+        Calculate the element residuals and add in to the global residual
+        """            
+        rhs.fill(0.0)
+
+        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()        
+        self.ncls.calculateRhsLumpedL2p(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            #physics
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            f, # This is u_lstage due to update stages in RKEV
+            self.offset[0],self.stride[0],
+            rhs)
+    ###############################################
+    
     def calculateElementResidual(self):
         if self.globalResidualDummy is not None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
@@ -1140,7 +1191,6 @@ class LevelModel(OneLevelTransport):
 
         # zero out residual
         r.fill(0.0)
-
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -1167,6 +1217,8 @@ class LevelModel(OneLevelTransport):
             self.calculateResidual = self.ncls.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.ncls.calculateMassMatrix
 
+        self.calculateResidual = self.ncls.calculateResidual_dummy        
+        self.calculateJacobian = self.ncls.calculateMassMatrix
         self.calculateResidual(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1252,6 +1304,10 @@ class LevelModel(OneLevelTransport):
             self.coefficients.ENTROPY_TYPE,
             self.coefficients.cE)
 
+        #if self.tmpAux is None: #TMP. Delete this
+        #    self.quantDOFs[:] = r[:]/self.ML[:]
+        #    self.tmpAux = 1.0
+            
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0

@@ -58,30 +58,56 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         import copy
         logEvent("Attaching models in LevelSetConservation")
         #level set
-        self.lsModel = modelList[self.levelSetModelIndex]
-        self.q_u_ls  = modelList[self.levelSetModelIndex].q[('u',0)]
-	self.q_n_ls  = modelList[self.levelSetModelIndex].q[('grad(u)',0)]
+        if self.levelSetModelIndex is None:
+            print "Testing MCorr algorithm by itself"
+            self.isolate_MCorr = True
+            self.q_u_ls = numpy.copy(modelList[self.me_model].q[('u',0)])
+            self.q_n_ls = numpy.copy(modelList[self.me_model].q[('grad(u)',0)])
+            self.ebqe_u_ls = numpy.copy(modelList[self.me_model].q[('u',0)])
+            self.ebqe_n_ls = numpy.copy(modelList[self.me_model].q[('grad(u)',0)])
 
-        self.ebqe_u_ls = modelList[self.levelSetModelIndex].ebqe[('u',0)]
-        self.ebqe_n_ls = modelList[self.levelSetModelIndex].ebqe[('grad(u)',0)]
+            self.q_H_vof = numpy.copy(modelList[self.me_model].q[('u',0)])
+            self.q_porosity = numpy.copy(modelList[self.me_model].q[('u',0)])
+            self.ebqe_H_vof = numpy.copy(modelList[self.me_model].q[('u',0)])
 
-        if modelList[self.levelSetModelIndex].ebq.has_key(('u',0)):
-            self.ebq_u_ls = modelList[self.levelSetModelIndex].ebq[('u',0)]
+            self.massCorrModel = modelList[self.me_model]
         else:
-            self.ebq_u_ls = None
-        #volume of fluid
-        self.vofModel = modelList[self.VOFModelIndex]
-        self.q_H_vof = modelList[self.VOFModelIndex].q[('u',0)]
-        self.q_porosity = modelList[self.VOFModelIndex].coefficients.q_porosity
-        self.ebqe_H_vof = modelList[self.VOFModelIndex].ebqe[('u',0)]
-        if modelList[self.VOFModelIndex].ebq.has_key(('u',0)):
-            self.ebq_H_vof = modelList[self.VOFModelIndex].ebq[('u',0)]
-        else:
-            self.ebq_H_vof = None
-        #correction
-        self.massCorrModel = modelList[self.me_model]
-        self.massCorrModel.setMassQuadrature()
-        self.vofModel.q[('m_last',0)][:] = self.vofModel.q[('m',0)]
+            self.isolate_MCorr = False
+            self.lsModel = modelList[self.levelSetModelIndex]            
+            self.q_u_ls  = modelList[self.levelSetModelIndex].q[('u',0)]
+	    self.q_n_ls  = modelList[self.levelSetModelIndex].q[('grad(u)',0)]
+
+            self.ebqe_u_ls = modelList[self.levelSetModelIndex].ebqe[('u',0)]
+            self.ebqe_n_ls = modelList[self.levelSetModelIndex].ebqe[('grad(u)',0)]
+
+            if modelList[self.levelSetModelIndex].ebq.has_key(('u',0)):
+                self.ebq_u_ls = modelList[self.levelSetModelIndex].ebq[('u',0)]
+            else:
+                self.ebq_u_ls = None
+            #volume of fluid
+            self.vofModel = modelList[self.VOFModelIndex]
+            self.q_H_vof = modelList[self.VOFModelIndex].q[('u',0)]
+            self.q_porosity = modelList[self.VOFModelIndex].coefficients.q_porosity
+            self.ebqe_H_vof = modelList[self.VOFModelIndex].ebqe[('u',0)]
+            if modelList[self.VOFModelIndex].ebq.has_key(('u',0)):
+                self.ebq_H_vof = modelList[self.VOFModelIndex].ebq[('u',0)]
+            else:
+                self.ebq_H_vof = None
+                
+            #correction
+            self.massCorrModel = modelList[self.me_model]
+            self.massCorrModel.setMassQuadrature()
+            self.vofModel.q[('m_last',0)][:] = self.vofModel.q[('m',0)]
+
+        # load exact interface (if defined)
+        self.q_phiExact = numpy.zeros(self.q_u_ls.shape,'d')
+        if self.massCorrModel.hasPhiExact:
+            # read phiExact from function in _p.py file
+            X = {0:self.massCorrModel.q[('x')][:,:,0],
+                 1:self.massCorrModel.q[('x')][:,:,1],
+                 2:self.massCorrModel.q[('x')][:,:,2]}
+            self.q_phiExact[:] = self.massCorrModel.phiExact[0](X) 
+                        
         if self.checkMass:
             self.m_tmp = copy.deepcopy(self.massCorrModel.q[('r',0)])
             if self.checkMass:
@@ -118,6 +144,24 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.sd and cebqe.has_key(('a',0,0)):
             cebqe[('a',0,0)].fill(self.epsDiffusion)
     def preStep(self,t,firstStep=False):
+        if self.isolate_MCorr==True:            
+            cond = self.massCorrModel.testFields_isolateMCorr is not None
+            assert cond, 'provide testField_to_isolateMCorr in _p.py file'            
+            X = {0:self.massCorrModel.q[('x')][:,:,0],
+                 1:self.massCorrModel.q[('x')][:,:,1],
+                 2:self.massCorrModel.q[('x')][:,:,2]}
+
+            self.q_u_ls[:] = self.massCorrModel.testFields_isolateMCorr[0](X,t)
+            self.q_H_vof[:] = self.massCorrModel.testFields_isolateMCorr[1](X,t)
+                
+            # BOUNDARY
+            ebqe_X = {0:self.massCorrModel.ebqe['x'][:,:,0],
+                      1:self.massCorrModel.ebqe['x'][:,:,1],
+                      2:self.massCorrModel.ebqe['x'][:,:,2]}
+            self.ebqe_u_ls[:] = self.massCorrModel.testFields_isolateMCorr[0](X,t)
+            self.ebqe_H_vof[:] = self.massCorrModel.testFields_isolateMCorr[1](X,t)
+
+            
         if self.checkMass:
             logEvent("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                  self.vofModel.q[('m',0)],
@@ -132,16 +176,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
     def postStep(self,t,firstStep=False):
         if self.applyCorrection:
-            #ls
-            self.lsModel.u[0].dof += self.massCorrModel.u[0].dof
-            self.lsModel.q[('u',0)] += self.massCorrModel.q[('u',0)]
-            self.lsModel.ebqe[('u',0)] += self.massCorrModel.ebqe[('u',0)]
-	    self.lsModel.q[('grad(u)',0)] += self.massCorrModel.q[('grad(u)',0)]
-	    self.lsModel.ebqe[('grad(u)',0)] += self.massCorrModel.ebqe[('grad(u)',0)]
-            #vof
-            self.massCorrModel.setMassQuadrature()
-            #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
-            #####print "********************max VOF************************",max(self.vofModel.q[('u',0)].flat[:])
+            if self.isolate_MCorr == False:
+                #ls
+                self.lsModel.u[0].dof += self.massCorrModel.u[0].dof
+                self.lsModel.q[('u',0)] += self.massCorrModel.q[('u',0)]
+                self.lsModel.ebqe[('u',0)] += self.massCorrModel.ebqe[('u',0)]
+	        self.lsModel.q[('grad(u)',0)] += self.massCorrModel.q[('grad(u)',0)]
+	        self.lsModel.ebqe[('grad(u)',0)] += self.massCorrModel.ebqe[('grad(u)',0)]
+                #vof
+                self.massCorrModel.setMassQuadrature()
+                #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
+                #####print "********************max VOF************************",max(self.vofModel.q[('u',0)].flat[:])
         if self.checkMass:
             logEvent("Phase 0 mass after mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                 self.vofModel.q[('m',0)],
@@ -154,7 +199,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             logEvent("Phase 0 mass (consistent) after mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m',0)]),),level=2)
         copyInstructions = {}
         #get the waterline on the obstacle if option set in NCLS (boundary==7)
-	self.lsModel.computeWaterline(t)
+        if self.isolate_MCorr == False:
+	    self.lsModel.computeWaterline(t)
         return copyInstructions
     def evaluate(self,t,c):
         import math
@@ -422,8 +468,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe={}
         self.phi_ip={}
         #mesh
-        #uncomment this to store q arrays, see calculateElementQuadrature below 
-        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        #uncomment this to store q arrays, see calculateElementQuadrature below
+        self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
         self.q[('u',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('grad(u)',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q[('r',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
@@ -431,7 +478,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('u',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.ebqe[('grad(u)',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
 
+        if ('testFields_isolateMCorr') in dir(options):
+            self.testFields_isolateMCorr = options.testFields_isolateMCorr
+        else:
+            self.testFields_isolateMCorr = None
 
+        self.hasPhiExact = False
+        if ('phiExact') in dir(options):
+            self.phiExact = options.phiExact
+            self.hasPhiExact = True
+            
         self.points_elementBoundaryQuadrature= set()
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
@@ -537,12 +593,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
-        self.history = open(self.name+"lagrange_history.txt","w")
-        self.history.write('L2norm_u'+","+
+        self.history = open(self.name+"_lagrange_history.txt","w")
+        self.history.write('L1norm_interface'+","+
+                           'L2norm_interface'+","+
+                           'LInfnorm_interface'+","+
+                           'L1norm_Hinterface'+","+
+                           'L2norm_Hinterface'+","+
+                           'LInfnorm_Hinterface'+","+
+                           'L1norm_Dinterface'+","+
+                           'L2norm_Dinterface'+","+
+                           'LInfnorm_Dinterface'+","+
+                           'L2norm_u'+","+
                            'H1norm_u'+","+
-                           'linfnorm_u'+","+
-                           'l2norm_u_by_n'+","+
-                           'H1norm_u'+","+
+                           #'linfnorm_u'+","+
+                           #'l2norm_u_by_n'+","+
+                           #'H1norm_u'+","+
                            'reg'+","+
                            'a'+","+
                            'J'+","+
@@ -569,10 +634,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #Load the unknowns into the finite element dof
         self.setUnknowns(u)
 
-
+        self.calculateResidual = self.mcorr.calculateResidual
         #no flux boundary conditions
         self.beta_Tikhonov=0.01
         self.H1=1.0
+        self.global_L1_interface=0.0
+        self.global_L2_interface=0.0
+        self.global_LInf_interface=0.0
+        self.global_L1_Hinterface=0.0
+        self.global_L2_Hinterface=0.0
+        self.global_LInf_Hinterface=0.0
+        self.global_L1_Dinterface=0.0
+        self.global_L2_Dinterface=0.0
+        self.global_LInf_Dinterface=0.0                
         self.global_L2_u=0.0
         self.global_H1_u=0.0
         self.global_J=0.0
@@ -591,11 +665,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.global_LAGR_u[:]=0.0
             self.global_b_u[:]=0.0
             self.global_b_l[:]=0.0
-        (self.global_L2_u,
+        (self.global_L1_interface,
+         self.global_L2_interface,
+         self.global_LInf_interface,
+         self.global_L1_Hinterface,
+         self.global_L2_Hinterface,
+         self.global_LInf_Hinterface,
+         self.global_L1_Dinterface,
+         self.global_L2_Dinterface,
+         self.global_LInf_Dinterface,                  
+         self.global_L2_u,
          self.global_H1_u,
          self.global_J,
          self.global_LAGR,
-         self.global_LAGR_a) = self.mcorr.calculateResidual(#element
+         self.global_LAGR_a) = self.calculateResidual(#element
              self.u[0].femSpace.elementMaps.psi,
              self.u[0].femSpace.elementMaps.grad_psi,
              self.mesh.nodeArray,
@@ -626,7 +709,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.mesh.nodeDiametersArray,
              self.u[0].dof,
              self.lambda_dof,
-             self.coefficients.q_u_ls,
+             self.coefficients.q_phiExact,
+             self.coefficients.q_u_ls, #q_phi
              self.coefficients.q_n_ls,
              self.coefficients.ebqe_u_ls,
              self.coefficients.ebqe_n_ls,
@@ -933,8 +1017,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         This function should be called only when the mesh changes.
         """
         #uncomment this to store q arrays
-        #self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
-        #                                          self.q['x'])
+        self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
+                                                 self.q['x'])
         self.epsFactDiffusion_last = self.coefficients.epsFactDiffusion
         self.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
@@ -957,11 +1041,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
         from numpy import linalg as LA
-        self.history.write(repr(math.sqrt(self.global_L2_u))+","+
-                           repr(math.sqrt(self.global_H1_u))+","+
-                           repr(lInfNorm(self.u[0].dof))+","+
-                           repr(l2Norm(self.u[0].dof)/self.u[0].dof.shape[0])+","+
-                           repr(self.global_J - 0.5*self.beta_Tikhonov*(self.coefficients.epsFactDiffusion-self.epsFactDiffusion_last)**2)+","+
+        self.history.write(repr(self.global_L1_interface)+","+
+                           repr(math.sqrt(self.global_L2_interface))+","+
+                           repr(self.global_LInf_interface)+","+
+                           repr(self.global_L1_Hinterface)+","+
+                           repr(math.sqrt(self.global_L2_Hinterface))+","+
+                           repr(self.global_LInf_Hinterface)+","+
+                           repr(self.global_L1_Dinterface)+","+
+                           repr(math.sqrt(self.global_L2_Dinterface))+","+
+                           repr(self.global_LInf_Dinterface)+","+                           
+                            repr(math.sqrt(self.global_L2_u))+","+
+                            repr(math.sqrt(self.global_H1_u))+","+
+                           #repr(lInfNorm(self.u[0].dof))+","+
+                           #repr(l2Norm(self.u[0].dof)/self.u[0].dof.shape[0])+","+
+                           #repr(self.global_J - 0.5*self.beta_Tikhonov*(self.coefficients.epsFactDiffusion-self.epsFactDiffusion_last)**2)+","+
                            repr(0.5*self.beta_Tikhonov*(self.coefficients.epsFactDiffusion-self.epsFactDiffusion_last)**2)+","+
                            repr(self.coefficients.epsFactDiffusion)+","+
                            repr(self.global_J)+","+
@@ -1318,5 +1411,6 @@ class Newton_controller(proteus.StepControl.Newton_controller):
             u.flat[:]=0.0
             m.getResidual(u,r)
             m.coefficients.postStep(self.t_model)
-            m.coefficients.vofModel.updateTimeHistory(self.t_model,resetFromDOF=False)
-            m.coefficients.vofModel.timeIntegration.updateTimeHistory(resetFromDOF=False)
+            if m.coefficients.isolate_MCorr == False:
+                m.coefficients.vofModel.updateTimeHistory(self.t_model,resetFromDOF=False)
+                m.coefficients.vofModel.timeIntegration.updateTimeHistory(resetFromDOF=False)

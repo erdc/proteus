@@ -434,7 +434,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def preStep(self,t,firstStep=False):
         # SAVE OLD SOLUTION #
 	self.model.u_dof_old[:] = self.model.u[0].dof
-
+        
         # COMPUTE NEW VELOCITY (if given by user) # 
         if self.model.hasVelocityFieldAsFunction:
             self.model.updateVelocityFieldAsFunction()
@@ -763,7 +763,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if ('velocityField') in dir (options): 
             self.velocityField = options.velocityField
             self.hasVelocityFieldAsFunction = True
-
+        
         self.points_elementBoundaryQuadrature= set()
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
@@ -1158,7 +1158,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #        j = colind[offset]
         #        y[i] += c[ij]*x[j]
         #        ij+=1
-                        
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
@@ -1176,7 +1175,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.forceStrongConditions:
               for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                   self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
-
         degree_polynomial = 1
         try:
             degree_polynomial = self.u[0].femSpace.order
@@ -1189,7 +1187,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             self.calculateResidual = self.vof.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.vof.calculateMassMatrix
-
+        
+        #self.calculateResidual = self.vof.calculateResidual_dummy
+        #self.calculateJacobian = self.vof.calculateMassMatrix
+    
         self.calculateResidual(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1289,7 +1290,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.min_u_bc,
             self.max_u_bc,
             self.quantDOFs)
-        
+
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
