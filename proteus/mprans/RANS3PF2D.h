@@ -3137,7 +3137,7 @@ namespace proteus
               //elementResidual_w[nDOF_test_element],
               eps_rho,eps_mu;
             const double* elementResidual_w(NULL);
-	    std::cout<<"Surrogate edge "<<ebN<<" element neighbor "<<eN<<" local element boundary "<<ebN_local<<std::endl;
+	    //std::cout<<"Surrogate edge "<<ebN<<" element neighbor "<<eN<<" local element boundary "<<ebN_local<<std::endl;
             for (int i=0;i<nDOF_test_element;i++)
               {
                 elementResidual_mesh[i]=0.0;
@@ -3231,10 +3231,8 @@ namespace proteus
 		for (int i=0;i<nDOF_test_element;i++)
 		  {
 		    int eN_i = eN*nDOF_test_element+i;
-		    /*
-		    globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=Csb*(u_ext - bc_u_ext)/h_penalty;
-		    globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=Csb*(v_ext - bc_u_ext)/h_penalty;
-		    */
+		    globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*Csb*(u_ext - bc_u_ext)*dS/h_penalty;
+		    globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*Csb*(v_ext - bc_u_ext)*dS/h_penalty;
 		  }//i
 	      }//kb
           }//ebN_s
@@ -5263,10 +5261,8 @@ namespace proteus
                     for (int j=0;j<nDOF_trial_element;j++)
                       {
                         register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
-			/*
-                        globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += Csb/h_penalty;
-                        globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += Csb/h_penalty;
-			*/
+                        globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+j]*Csb*dS/h_penalty;
+                        globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+j]*Csb*dS/h_penalty;
                       }//j
                   }//i
               }//kb
