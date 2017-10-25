@@ -594,7 +594,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 for j in range(mesh.nodeArray.shape[0]):
                      self.phi_s[j],sdNormals=sdf(0,mesh.nodeArray[j,:])
 
-
         # cek we eventually need to use the local element diameter
         self.eps_density = self.epsFact_density * mesh.h
         self.eps_viscosity = self.epsFact * mesh.h
@@ -1013,8 +1012,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     for k in range(self.model.q['x'].shape[1]):
                         self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(t, self.model.q['x'][eN,k])
                         self.particle_velocities[i,eN,k]=vel(t,self.model.q['x'][eN,k])
-
-
          
 	if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
@@ -2239,7 +2236,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else: 
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
-        
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
