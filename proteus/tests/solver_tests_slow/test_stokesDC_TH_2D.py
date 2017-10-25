@@ -20,6 +20,8 @@ TestTools.addSubFolders( inspect.currentframe() )
 import stokesDrivenCavity_2d_p
 import stokesDrivenCavity_2d_n        
 
+@pytest.mark.LinearSolvers
+@pytest.mark.modelTest
 class TestStokes(proteus.test_utils.TestTools.SimulationTest):
     """Run a Stokes test with mumps LU factorization """
 
@@ -72,14 +74,15 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
                                             opts)
         self.ns.calculateSolution('stokes')
         relpath = 'comparison_files/drivenCavityStokes_expected.h5'
-        expected = tables.openFile(os.path.join(self._scriptdir,relpath))
-        actual = tables.openFile('drivenCavityStokesTrial.h5','r')
+        expected = tables.open_file(os.path.join(self._scriptdir,relpath))
+        actual = tables.open_file('drivenCavityStokesTrial.h5','r')
         assert numpy.allclose(expected.root.velocity_t1,
                               actual.root.velocity_t1,
                               atol=1e-2)
         expected.close()
         actual.close()
 
+    @pytest.mark.slowTest
     def test_01_FullRun(self):
         stokesDrivenCavity_2d_n.linearSmoother = proteus.LinearSolvers.Schur_Qp
         self._setPETSc()
@@ -93,6 +96,7 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
         L2 = actual_log.get_ksp_resid_it_info(plot_lst)
         assert L1 == L2
 
+    @pytest.mark.slowTest
     def test_02_FullRun(self):
         self._setPETSc_LU()
         self._runTest()
