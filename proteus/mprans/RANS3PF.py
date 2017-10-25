@@ -2236,6 +2236,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else: 
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
+        self.isActiveDOF = np.zeros_like(r);
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2474,8 +2475,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dynamic_viscosity'], 
             self.ebqe['density'],
             self.ebqe['dynamic_viscosity'],             
-            self.u[0].femSpace.order)
-
+            self.u[0].femSpace.order,
+            self.isActiveDOF)
+        r*=self.isActiveDOF
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):
             self.q[('u',dim)][:] = self.q[('velocity',0)][:,:,dim]
@@ -2782,6 +2784,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             self.nzval[i] = 0.0
                             # print "RBLES zeroing residual cj = %s dofN= %s
                             # global_dofN= %s " % (cj,dofN,global_dofN)
+        # sb method
+        for global_dofN in np.where(self.isActiveDOF==0.0)[0]:
+            for i in range(
+                    self.rowptr[global_dofN],
+                    self.rowptr[global_dofN + 1]):
+                if (self.colind[i] == global_dofN):
+                    self.nzval[i] = 1.0
+                else:
+                    self.nzval[i] = 0.0
         log("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
