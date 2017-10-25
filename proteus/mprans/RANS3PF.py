@@ -424,6 +424,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_velocities=np.zeros((self.nParticles,)+self.model.q[('velocity',0)].shape,'d')
 
         self.phisField=np.ones(self.model.q[('u',0)].shape,'d')*1e10
+        self.ebq_global_phi_s = numpy.ones_like(self.model.ebq_global[('totalFlux',0)])*1.e10
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
         # otherwise the sdf are calculated based on the input sdf list for each body
@@ -443,6 +444,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 temp_3=np.minimum(temp_2,self.phisField)
                 self.phisField=temp_3
                 self.model.q[('phis')] = temp_3
+                for ebN in range(self.model.ebq_global['x'].shape[0]):
+                    for kb in range(self.model.ebq_global['x'].shape[1]):
+                        sdf,sdNormals = self.granular_sdf_Calc(self.model.ebq_global['x'][ebN,kb],i)
+                        if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                            self.ebq_global_phi_s[ebN,kb]=sdf
         else:
             for i,sdf,vel in zip(range(self.nParticles),
                             self.particle_sdfList, self.particle_velocityList):
@@ -452,6 +458,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         self.particle_velocities[i,eN,k]=vel(0,self.model.q['x'][eN,k])
                 self.model.q[('phis',i)] = self.particle_signed_distances[i]
                 self.model.q[('phis_vel',i)] = self.particle_velocities[i]
+                for ebN in range(self.model.ebq_global['x'].shape[0]):
+                    for kb in range(self.model.ebq_global['x'].shape[1]):
+                        sdf_ebN_kb,sdNormals = sdf(0,self.model.ebq_global['x'][ebN,kb],)
+                        if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                            self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
 
 	
         if self.PRESSURE_model is not None:
@@ -579,21 +590,21 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         ), "epsFact_solid  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
 
     def initializeMesh(self, mesh):
-        self.phi_s = numpy.zeros(mesh.nodeArray.shape[0],'d')
-
+        self.phi_s = numpy.ones(mesh.nodeArray.shape[0],'d')*1.e10
         if self.granular_sdf_Calc is not None:
             print ("updating",self.nParticles," particles...")
             for i in range(self.nParticles):
                 for j in range(mesh.nodeArray.shape[0]):
                     sdf,sdNormals = self.granular_sdf_Calc(mesh.nodeArray[j,:],i)
                     if ( abs(sdf) < abs(self.phi_s[j]) ):
-                         self.phi_s[j]=sdf
+                        self.phi_s[j]=sdf
         else:
             for i,sdf in zip(range(self.nParticles),
-                            self.particle_sdfList):
+                             self.particle_sdfList):
                 for j in range(mesh.nodeArray.shape[0]):
-                     self.phi_s[j],sdNormals=sdf(0,mesh.nodeArray[j,:])
-
+                    sdf_j,sdNormals=sdf(0,mesh.nodeArray[j,:])
+                    if (abs(sdf_j) < abs(self.phi_s[j])):
+                        self.phi_s[j] = sdf_j
         # cek we eventually need to use the local element diameter
         self.eps_density = self.epsFact_density * mesh.h
         self.eps_viscosity = self.epsFact * mesh.h
@@ -996,9 +1007,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         self.particle_velocities[i,eN,k] = self.granular_vel_Calc(self.model.q['x'][eN,k],i)
                         if ( abs(self.particle_signed_distances[i,eN,k]) < abs(self.phisField[eN,k]) ):
                             self.phisField[eN,k]=self.particle_signed_distances[i,eN,k]
-
+                for ebN in range(self.model.ebq_global['x'].shape[0]):
+                    for kb in range(self.model.ebq_global['x'].shape[1]):
+                        sdf,sdNormals = self.granular_sdf_Calc(self.model.ebq_global['x'][ebN,kb],i)
+                        if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                            self.ebq_global_phi_s[ebN,kb]=sdf
             self.model.q[('phis')] = self.phisField    
-
         else:
             for i,sdf,vel in zip(range(self.nParticles),
                             self.particle_sdfList,self.particle_velocityList
@@ -1012,6 +1026,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     for k in range(self.model.q['x'].shape[1]):
                         self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(t, self.model.q['x'][eN,k])
                         self.particle_velocities[i,eN,k]=vel(t,self.model.q['x'][eN,k])
+                for ebN in range(self.model.ebq_global['x'].shape[0]):
+                    for kb in range(self.model.ebq_global['x'].shape[1]):
+                        sdf_ebN_kb,sdNormals = sdf(t, self.model.ebq_global['x'][ebN,kb])
+                        if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                            self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
          
 	if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
@@ -2300,6 +2319,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.shockCapturing.shockCapturingFactor,
             self.numericalFlux.penalty_constant,
             self.coefficients.epsFact_solid,
+            self.coefficients.ebq_global_phi_s,
             self.coefficients.phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
@@ -2609,6 +2629,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.penalty_constant,
             # VRANS start
             self.coefficients.epsFact_solid,
+            self.coefficients.ebq_global_phi_s,
             self.coefficients.phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
