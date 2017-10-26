@@ -83,6 +83,25 @@ namespace proteus
 					 int offset_u, int stride_u, 
 					 double* globalResidual
 					 )=0;
+    virtual double calculateRhsLumpedL2p(
+					 double* mesh_trial_ref,
+					 double* mesh_grad_trial_ref,
+					 double* mesh_dof,
+					 int* mesh_l2g,
+					 double* dV_ref,
+					 //double* u_trial_ref,
+					 //double* u_grad_trial_ref,
+					 double* u_test_ref,
+					 //physics
+					 int nElements_global,
+					 int* u_l2g, 
+					 double* elementDiameter,
+					 //double* nodeDiametersArray,
+					 double* q_f,
+					 int offset_u, int stride_u, 
+					 double* globalResidual1,
+					 double* globalResidual2
+					 )=0;
     virtual void calculateResidual(//element
 				   double dt,
 				   double* mesh_trial_ref,
@@ -612,6 +631,21 @@ namespace proteus
       //return (u > tol_sign*epsFactRedistancing ? 1. : -1.)*((u > -tol_sign*epsFactRedistancing && u < tol_sign*epsFactRedistancing) ? 0. : 1.);
     }
 
+    inline double smoothedHeaviside(double eps, double phi)
+    {
+      double H;
+      if (phi > eps)
+	H=1.0;
+      else if (phi < -eps)
+	H=0.0;
+      else if (phi==0.0)
+	H=0.5;
+      else
+	H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
+      return H; //MQL. USE SIGNED FUNCTION. TMP
+      //return 2*H-1; //MQL. USE SIGNED FUNCTION. TMP
+    }
+	
     double calculateRedistancingResidual(
 					 double dt,
 					 double* mesh_trial_ref,
@@ -922,6 +956,90 @@ namespace proteus
 	}//elements
     }
 
+    double calculateRhsLumpedL2p(
+				 double* mesh_trial_ref, //
+				 double* mesh_grad_trial_ref, //
+				 double* mesh_dof, //
+				 int* mesh_l2g, //
+				 double* dV_ref, //
+				 //double* u_trial_ref, 
+				 //double* u_grad_trial_ref,
+				 double* u_test_ref, //
+				 //physics
+				 int nElements_global, //
+				 int* u_l2g, //
+				 double* elementDiameter,
+				 //double* nodeDiametersArray,
+				 double* q_f,	
+				 int offset_u, int stride_u, 
+				 double* globalResidual1,
+				 double* globalResidual2)
+    {
+      //////////////////////////////////////////////
+      // ** LOOP IN CELLS FOR CELL BASED TERMS ** //
+      //////////////////////////////////////////////
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  //declare local storage for local contributions and initialize
+	  register double 
+	    elementResidual_u1[nDOF_test_element], elementResidual_u2[nDOF_test_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      elementResidual_u1[i]=0.0;
+	      elementResidual_u2[i]=0.0;
+	    }
+	  
+	  //loop over quadrature points and compute integrands
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      //compute indeces and declare local storage
+	      register int eN_k = eN*nQuadraturePoints_element+k;
+	      register double 
+		u_test_dV[nDOF_trial_element],
+		//for general use
+		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		dV,x,y,z;
+	      //get the physical integration weight
+	      ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,
+					  x,y,z);
+	      dV = fabs(jacDet)*dV_ref[k];
+	      //precalculate test function products with integration weights for mass matrix terms
+	      for (int j=0;j<nDOF_trial_element;j++)
+		u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+	      double epsHeaviside = 1.5*elementDiameter[eN];
+	      // ith-LOOP //
+	      double Hhat = smoothedHeaviside(epsHeaviside,q_f[eN_k]);
+	      for(int i=0;i<nDOF_test_element;i++)
+		{
+		  elementResidual_u1[i] += q_f[eN_k]*u_test_dV[i];
+		  elementResidual_u2[i] += Hhat*u_test_dV[i];
+		}
+	    }
+	  
+	  /////////////////
+	  // DISTRIBUTE // load cell based element into global residual
+	  ////////////////
+	  for(int i=0;i<nDOF_test_element;i++) 
+	    { 
+	      int eN_i=eN*nDOF_test_element+i;
+	      int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+
+	      // distribute global residual
+	      globalResidual1[gi] += elementResidual_u1[i];
+	      globalResidual2[gi] += elementResidual_u2[i];
+	    }//i
+	}//elements
+    }
+    
     void calculateResidual(//element
 			   double dt,
 			   double* mesh_trial_ref,

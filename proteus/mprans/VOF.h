@@ -476,6 +476,32 @@ namespace proteus
 						  double* phiHat_dof,
 						  // AUX QUANTITIES OF INTEREST
 						  double* quantDOFs)=0;
+    virtual void calculateRhsL2p(
+				 double* mesh_trial_ref,
+				 double* mesh_grad_trial_ref,
+				 double* mesh_dof,
+				 int* mesh_l2g,
+				 double* dV_ref,
+				 double* u_trial_ref,
+				 double* u_grad_trial_ref,
+				 double* u_test_ref,
+				 //physics
+				 int nElements_global,
+				 int* u_l2g, 
+				 double* elementDiameter,
+				 //double* nodeDiametersArray,
+				 double* u_dof,
+				 double* phiHat_dof,
+				 double* phiExact_dof,
+				 int offset_u, int stride_u, 
+				 double* globalResidual,
+				 double* global_mass_error,
+				 double* global_L2_interface,
+				 double* global_H1_interface,
+				 double* global_L2_Hinterface,
+				 double* global_H1_Hinterface,
+				 double* global_L2_u,
+				 double* global_H1_u)=0;				 
     virtual double calculateRhsQuadratureMass(//element
 					    //double dt,
 					    double* mesh_trial_ref,
@@ -1058,7 +1084,8 @@ namespace proteus
 	H=0.5;
       else
 	H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
-      return 2*H-1; //MQL. USE SIGNED FUNCTION. TMP
+      return H; //MQL. USE SIGNED FUNCTION. TMP
+      //return 2*H-1; //MQL. USE SIGNED FUNCTION. TMP
     }
 
     inline double smoothedDirac(double eps, double phi)
@@ -1070,7 +1097,8 @@ namespace proteus
 	d=0.0;
       else
 	d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
-      return 2*d; //MQL. USE SIGNED FUNCTION. TMP
+      return d; //MQL. USE SIGNED FUNCTION. TMP
+      //return 2*d; //MQL. USE SIGNED FUNCTION. TMP
     }
 
     void FCTStepL2p(int NNZ, //number on non-zero entries on sparsity pattern
@@ -1097,7 +1125,7 @@ namespace proteus
 	  double solLi = solL[i];
 	  double mi = lumped_mass_matrix[i];
 
-	  double mini=-1.0, maxi=1.0; //MQL. USE SIGNED FUNCTION. TMP
+	  double mini=0.0, maxi=1.0; //MQL. USE SIGNED FUNCTION. TMP
 	  double Pposi=0, Pnegi=0;
 	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
@@ -2576,7 +2604,8 @@ namespace proteus
 	      // CALCULATE CELL BASED CFL //
 	      //////////////////////////////
 	      calculateCFL(elementDiameter[eN],relative_velocity,cfl[eN_k]); 
-	      double time_derivative_residual = (smoothedHeaviside(epsHeaviside,phiHatnp1+u)-Hn)/dt;
+	      //double time_derivative_residual = (smoothedHeaviside(epsHeaviside,phiHatnp1+u)-Hn)/dt;
+	      double time_derivative_residual = (smoothedHeaviside(epsHeaviside,phiHatnp1+u)-Hn); //TMP
 	      //double time_derivative_residual = (smoothedHeaviside(epsHeaviside,
 	      //						   phiHatnp1+epsFactDiffusion*u)
 	      //				 -Hn)/dt; //TMP
@@ -2589,8 +2618,9 @@ namespace proteus
 		  register int i_nSpace=i*nSpace;
 		  elementResidual_u[i] += 
 		    time_derivative_residual*u_test_dV[i]
-		    + ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])
-		    + ck.NumericalDiffusion(epsDiffusion/dt,grad_u,&u_grad_test_dV[i_nSpace]);
+		    //+ ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])
+		    //+ ck.NumericalDiffusion(epsDiffusion/dt,grad_u,&u_grad_test_dV[i_nSpace]);
+		    + ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]); //TMP
 		  //+ ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace]); //TMP
 		}//i
 	      //save solution for other models 
@@ -2612,6 +2642,7 @@ namespace proteus
       //////////////
       // BOUNDARY //
       //////////////
+      if(false)
       for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) 
 	{ 
 	  register int ebN = exteriorElementBoundariesArray[ebNE]; 
@@ -3035,6 +3066,164 @@ namespace proteus
 	}//ebNE
       // END OF BOUNDARY //
     }
+
+    void calculateRhsL2p(
+			 double* mesh_trial_ref, //
+			 double* mesh_grad_trial_ref, //
+			 double* mesh_dof, //
+			 int* mesh_l2g, //
+			 double* dV_ref, //
+			 double* u_trial_ref, 
+			 double* u_grad_trial_ref,
+			 double* u_test_ref, //
+			 //physics
+			 int nElements_global, //
+			 int* u_l2g, //
+			 double* elementDiameter,
+			 //double* nodeDiametersArray,
+			 double* u_dof,
+			 double* phiHat_dof,
+			 double* phiExact_dof,
+			 int offset_u, int stride_u, 
+			 double* globalResidual,
+			 double* global_mass_error,
+			 double* global_L2_interface,
+			 double* global_H1_interface,
+			 double* global_L2_Hinterface,
+			 double* global_H1_Hinterface,
+			 double* global_L2_u,
+			 double* global_H1_u)			 
+    {
+      double global_mass_exact = 0.0;
+      *global_mass_error = 0.0;
+      *global_L2_interface = 0.0;
+      *global_H1_interface = 0.0;
+      *global_L2_Hinterface = 0.0;
+      *global_H1_Hinterface = 0.0;
+      *global_L2_u = 0.0;
+      *global_H1_u = 0.0;
+      //////////////////////////////////////////////
+      // ** LOOP IN CELLS FOR CELL BASED TERMS ** //
+      //////////////////////////////////////////////
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  //declare local storage for local contributions and initialize
+	  register double 
+	    elementResidual_u[nDOF_test_element];
+	  double cell_mass_error = 0., cell_mass_exact = 0.,
+	    cell_L2_u = 0., cell_L2_int = 0., cell_L2_Hint = 0.,
+	    cell_H1_u = 0., cell_H1_int = 0., cell_H1_Hint = 0.;
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      elementResidual_u[i]=0.0;
+	    }
+	  
+	  //loop over quadrature points and compute integrands
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      //compute indeces and declare local storage
+	      register int eN_k = eN*nQuadraturePoints_element+k,
+		eN_k_nSpace = eN_k*nSpace,
+		eN_nDOF_trial_element = eN*nDOF_trial_element;
+	      register double
+		u, phiHat, phiExact,
+		u_grad_trial[nDOF_trial_element*nSpace],
+		grad_u[nSpace], grad_phiHat[nSpace], grad_phiExact[nSpace],
+		grad_int[nSpace], grad_Hint[nSpace],
+		u_test_dV[nDOF_trial_element],
+		//for general use
+		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		dV,x,y,z;
+	      //get the physical integration weight
+	      ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,
+					  x,y,z);
+	      dV = fabs(jacDet)*dV_ref[k];
+	      // get functions at quad points
+	      ck.valFromDOF(u_dof,
+			    &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			    u);
+	      ck.valFromDOF(phiHat_dof,
+			    &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			    phiHat);
+	      ck.valFromDOF(phiExact_dof,
+			    &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			    phiExact);
+	      // get gradients
+	      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				  jacInv,
+				  u_grad_trial);
+	      ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+	      ck.gradFromDOF(phiHat_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_phiHat);
+	      ck.gradFromDOF(phiExact_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_phiExact);
+		      
+	      //precalculate test function products with integration weights for mass matrix terms
+	      for (int j=0;j<nDOF_trial_element;j++)
+		u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+	      double epsHeaviside = 1.5*elementDiameter[eN];
+	      double epsDirac = 1.5*elementDiameter[eN];
+
+	      // gradients of errors in the interfaces
+	      for (int I=0;I<nSpace;I++)
+		{
+		  grad_int[I] = grad_phiHat[I]+grad_u[I] - grad_phiExact[I];
+		  grad_Hint[I] = (smoothedDirac(epsDirac,phiHat+u)*(grad_phiHat[I]+grad_u[I])
+				  -smoothedDirac(epsDirac,phiExact)*(grad_phiExact[I]));
+		}
+	      // cell mass error
+	      cell_mass_error += smoothedHeaviside(epsHeaviside,phiHat+u)*dV;
+	      cell_mass_exact += smoothedHeaviside(epsHeaviside,phiExact)*dV;
+	      // L2 component
+	      double L2_u_tmp = u*u*dV;
+	      double L2_int_tmp = std::pow(phiHat+u - phiExact,2)*dV; 
+	      double L2_Hint_tmp = std::pow(smoothedHeaviside(epsHeaviside,phiHat+u) -
+					    smoothedHeaviside(epsHeaviside,phiExact),2)*dV;
+	      // H1 Semi norm component
+	      double H1Semi_u_tmp = ck.NumericalDiffusion(dV,grad_u,grad_u);
+	      double H1Semi_int_tmp = ck.NumericalDiffusion(dV,grad_int,grad_int);
+	      double H1Semi_Hint_tmp = ck.NumericalDiffusion(dV,grad_Hint,grad_Hint);
+	      // cell L2 norms
+	      cell_L2_u    += L2_u_tmp;
+	      cell_L2_int  += L2_int_tmp;
+	      cell_L2_Hint += L2_Hint_tmp;
+	      // cell H1 norms
+	      cell_H1_u    += L2_u_tmp    + H1Semi_u_tmp;
+	      cell_H1_int  += L2_int_tmp  + H1Semi_int_tmp;
+	      cell_H1_Hint += L2_Hint_tmp + H1Semi_Hint_tmp;
+	      
+	      // ith-LOOP //	      
+	      for(int i=0;i<nDOF_test_element;i++)
+		elementResidual_u[i] += smoothedHeaviside(epsHeaviside,phiHat+0*u)*u_test_dV[i];
+	    }
+	  *global_mass_error += cell_mass_error;
+	  global_mass_exact += cell_mass_exact;
+	  *global_L2_interface += cell_L2_int;
+	  *global_H1_interface += cell_H1_int;
+	  *global_L2_Hinterface += cell_L2_Hint;
+	  *global_H1_Hinterface += cell_H1_Hint;
+	  *global_L2_u += cell_L2_u;
+	  *global_H1_u += cell_H1_u;
+	  /////////////////
+	  // DISTRIBUTE // load cell based element into global residual
+	  ////////////////
+	  for(int i=0;i<nDOF_test_element;i++) 
+	    { 
+	      int eN_i=eN*nDOF_test_element+i;
+	      int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+	      // distribute global residual
+	      globalResidual[gi] += elementResidual_u[i];
+	    }//i
+	}//elements
+      *global_mass_error -= global_mass_exact;
+    }
     
     double calculateRhsQuadratureMass(//element
 				    double* mesh_trial_ref,//
@@ -3102,7 +3291,7 @@ namespace proteus
 		u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
 	      
 	      double rhs = smoothedHeaviside(epsFactHeaviside*elementDiameter[eN],
-	      			     phiHatnp1+u);
+					     phiHatnp1+u);
 	      //double rhs = smoothedHeaviside(epsFactHeaviside*elementDiameter[eN],
 	      //			     phiHatnp1+epsFactDiffusion*u); //TMP
 	      for(int i=0;i<nDOF_test_element;i++) 
@@ -3964,7 +4153,8 @@ namespace proteus
 		}
 	      double epsDiffusion = epsFactDiffusion*elementDiameter[eN];
 	      double epsDirac = epsFactDirac*elementDiameter[eN];
-	      double time_derivative_jacobian = smoothedDirac(epsDirac,phiHatnp1+u)/dt;
+	      //double time_derivative_jacobian = smoothedDirac(epsDirac,phiHatnp1+u)/dt;
+	      double time_derivative_jacobian = smoothedDirac(epsDirac,phiHatnp1+u); //TMP
 	      //double time_derivative_jacobian=epsFactDiffusion*smoothedDirac(epsDirac,
 	      //							     phiHatnp1+epsFactDiffusion*u)/dt; //TMP
 	      
@@ -3992,9 +4182,12 @@ namespace proteus
 			time_derivative_jacobian*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i]
 			//+ ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],
 			//			    &u_grad_test_dV[i_nSpace])
-			+ ck.NumericalDiffusionJacobian(epsDiffusion/dt,
+			//+ ck.NumericalDiffusionJacobian(epsDiffusion/dt,
+			//				&u_grad_trial[j_nSpace],
+			//				&u_grad_test_dV[i_nSpace]);
+			+ ck.NumericalDiffusionJacobian(epsDiffusion,
 							&u_grad_trial[j_nSpace],
-							&u_grad_test_dV[i_nSpace]);
+							&u_grad_test_dV[i_nSpace]); //TMP
 			//+ ck.NumericalDiffusionJacobian(1.0,
 			//				&u_grad_trial[j_nSpace],
 			//				&u_grad_test_dV[i_nSpace]); //TMP

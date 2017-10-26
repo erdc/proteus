@@ -268,7 +268,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # NONLINEAR VOF
                  epsFactHeaviside=0.0,
                  epsFactDirac=1.0,
-                 epsFactDiffusion=2.0,
+                 epsFactDiffusion=10.0,
                  nonlinearVOF = 0):
 
         self.epsFactHeaviside=epsFactHeaviside
@@ -465,12 +465,55 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-        if self.nonlinearVOF > 0:
+        if self.nonlinearVOF > 0:            
             #For visualization, send H(phiHat+u) to the DOFs and store it in quantDOFs
             #This is done via a limited L2Projection
             #Update DOFs of NCLS. Since NCLS, MCorr and CLS live on the same space, this is valid:
-            self.lsModel.u[0].dof += self.model.u[0].dof
+            #self.lsModel.u[0].dof += self.model.u[0].dof
+            #self.lsModel.q[('u',0)] += self.model.q[('u',0)]
+            #self.lsModel.ebqe[('u',0)] += self.model.ebqe[('u',0)]
+	    #self.lsModel.q[('grad(u)',0)] += self.model.q[('grad(u)',0)]
+	    #self.lsModel.ebqe[('grad(u)',0)] += self.model.ebqe[('grad(u)',0)]            
             #self.lsModel.u[0].dof += self.epsFactDiffusion*self.model.u[0].dof #TMP
+
+            self.model.global_mass_error = 0.0
+            self.model.global_L2_interface = 0.0
+            self.model.global_H1_interface= 0.0
+            self.model.global_L2_Hinterface = 0.0
+            self.model.global_H1_Hinterface= 0.0
+            self.model.global_L2_u = 0.0
+            self.model.global_H1_u = 0.0
+
+            self.model.getRhsL2p(self.model.u[0].dof,
+                                 self.lsModel.u[0].dof, #phiHat at dofs
+                                 self.lsModel.u_dof_old, #phiExact at dofs
+                                 self.model.quantDOFs)
+            
+            self.model.history.write(repr(self.epsFactDiffusion)+","+
+                                     repr(self.model.newton_iterations)+","+
+                                     repr(abs(self.model.global_mass_error))+","+
+                                     repr(math.sqrt(self.model.global_L2_interface))+","+
+                                     repr(math.sqrt(self.model.global_H1_interface))+","+
+                                     repr(math.sqrt(self.model.global_L2_Hinterface))+","+
+                                     repr(math.sqrt(self.model.global_H1_Hinterface))+","+
+                                     repr(math.sqrt(self.model.global_L2_u))+","+
+                                     repr(math.sqrt(self.model.global_H1_u))+"\n")
+            self.model.history.flush()
+        
+            #self.model.quantDOFs[:] /= self.model.ML[:]
+           
+
+            # DO a nodal projection of H(phiHat)
+            from proteus.ctransportCoefficients import smoothedHeaviside
+            for i in range (self.model.mesh.nodeDiametersArray.size):
+                epsHeaviside = 1.5*self.model.mesh.nodeDiametersArray[i]
+                self.model.quantDOFs[i] = smoothedHeaviside(epsHeaviside,
+                                                            self.lsModel.u[0].dof[i]
+                                                            +self.model.u[0].dof[i])
+            self.model.quantDOFs2[:] = self.lsModel.u[0].dof[:] + self.model.u[0].dof[:] #phiHat + u
+            
+            # Compute norms
+            #self.model.
             
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.checkMass:
@@ -862,6 +905,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.max_u_bc=None
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFs2 = numpy.zeros(self.u[0].dof.shape,'d')
         # FOR nonlinear VOF; i.e., MCorr with VOF
         self.phiHat_dof = None
         self.phin = None
@@ -946,6 +990,26 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                              self.nElementBoundaryQuadraturePoints_elementBoundary,
                              compKernelFlag)
 
+        self.history = open(self.name+"_lagrange_history.txt","w")
+        self.history.write('a'+","+                           
+                           'massError'+","+
+                           'newtonIterations'+","+
+                           'L2norm_interface'+","+
+                           'H1norm_interface'+","+
+                           'L2norm_Hinterface'+","+
+                           'H1norm_Hinterface'+","+
+                           'L2norm_u'+","+
+                           'H1norm_u'+"\n")
+        self.newton_iterations = 0.0
+        self.global_mass_error = 0.0
+        self.global_L2_interface = 0.0
+        self.global_H1_interface= 0.0
+        self.global_L2_Hinterface = 0.0
+        self.global_H1_Hinterface= 0.0
+        self.global_L2_u = 0.0
+        self.global_H1_u = 0.0
+
+        
         self.forceStrongConditions=False
         if self.forceStrongConditions:
             self.dirichletConditionsForceDOF = DOFBoundaryConditions(self.u[0].femSpace,dofBoundaryConditionsSetterDict[0],weakDirichletConditions=False)
@@ -955,7 +1019,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN=1.0
         else:
             self.MOVING_DOMAIN=0.0
-        if self.mesh.nodeVelocityArray==None:
+        if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
 
     def FCTStepL2p(self):
@@ -1018,6 +1082,46 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if (self.nSpace_global==3):
             self.coefficients.ebqe_v[...,2] = self.velocityFieldAsFunction[2](ebqe_X,t)
 
+    ####################################3
+    def getRhsL2p(self,
+                        u_dof,
+                        phiHat_dof,
+                        phiExact_dof,
+                        rhs):
+        import pdb
+        import copy
+        """
+        Calculate the element residuals and add in to the global residual
+        """            
+        rhs.fill(0.0)
+
+        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+        (self.global_mass_error,
+         self.global_L2_interface,
+         self.global_H1_interface,
+         self.global_L2_Hinterface,
+         self.global_H1_Hinterface,
+         self.global_L2_u,
+         self.global_H1_u) = self.vof.calculateRhsL2p(#element
+             self.u[0].femSpace.elementMaps.psi,
+             self.u[0].femSpace.elementMaps.grad_psi,
+             self.mesh.nodeArray,
+             self.mesh.elementNodesArray,            
+             self.elementQuadratureWeights[('u',0)],            
+             self.u[0].femSpace.psi,
+             self.u[0].femSpace.grad_psi,
+             self.u[0].femSpace.psi,
+             #physics
+             self.mesh.nElements_global,
+             self.u[0].femSpace.dofMap.l2g,
+             self.mesh.elementDiametersArray,
+             u_dof, # This is u_lstage due to update stages in RKEV
+             phiHat_dof,
+             phiExact_dof,
+             self.offset[0],self.stride[0],
+             rhs)
+    ###############################################
+    
     def calculateElementResidual(self):
         if self.globalResidualDummy != None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
@@ -1025,12 +1129,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getMassMatrix(self):
         assert self.MassMatrix is not None, "Mass matrix in None, run getResidual first"
 
-    def setQuantDOFs(self):
-        from proteus.ctransportCoefficients import smoothedHeaviside
-        for i in range (self.mesh.nodeDiametersArray.size):
-            epsHeaviside = self.coefficients.epsFactHeaviside*self.mesh.nodeDiametersArray[i]
-            phi = self.coefficients.lsModel.u[0].dof[i]
-            self.quantDOFs[i] = 2*smoothedHeaviside(epsHeaviside,phi)-1
+    #def setQuantDOFs(self):
+    #    from proteus.ctransportCoefficients import smoothedHeaviside
+    #    for i in range (self.mesh.nodeDiametersArray.size):
+    #        epsHeaviside = self.coefficients.epsFactHeaviside*self.mesh.nodeDiametersArray[i]
+    #        phi = self.coefficients.lsModel.u[0].dof[i]
+    #        self.quantDOFs[i] = smoothedHeaviside(epsHeaviside,phi)
+    #        #self.quantDOFs[i] = 2*smoothedHeaviside(epsHeaviside,phi)-1            
         
     def setMassQuadratureEdgeBasedStabilizationMethods(self):
         if self.rhs_mass_correction is None:
@@ -1432,7 +1537,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Global residual",level=9,data=r)
         
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy == None:
+        if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
 
     def getJacobian(self,jacobian):

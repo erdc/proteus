@@ -408,7 +408,30 @@ cdef extern from "VOF.h" namespace "proteus":
 			       double epsFactDiffusion,
 			       double* phin_dof,
 			       double* phiHat_dof,
-			       double* quantDOFs)			       
+			       double* quantDOFs)
+        void calculateRhsL2p(double* mesh_trial_ref,
+                                      double* mesh_grad_trial_ref,
+                                      double* mesh_dof,
+                                      int* mesh_l2g,
+                                      double* dV_ref,                                 
+                                      double* u_trial_ref,
+				      double* u_grad_trial_ref,
+				      double* u_test_ref,
+                                      int nElements_global,
+                                      int* u_l2g,
+				      double* elementDiameter,
+                                      double* u_dof,
+				      double* phiHat_dof,
+				      double* phiExact_dof,
+                                      int offset_u, int stride_u, 
+				      double* globalResidual,
+				      double* global_mass_error,
+				      double* global_L2_interface,
+				      double* global_H1_interface,
+				      double* global_L2_Hinterface,
+				      double* global_H1_Hinterface,
+				      double* global_L2_u,
+				      double* global_H1_u)
         double calculateRhsQuadratureMass(
 	                               double* mesh_trial_ref,
 				       double* mesh_grad_trial_ref,	
@@ -1507,7 +1530,64 @@ cdef class cVOF_base:
 				       epsFactDiffusion,
 				       <double*> phin_dof.data,
 				       <double*> phiHat_dof.data,
-				       <double*> quantDOFs.data)				       
+				       <double*> quantDOFs.data) 
+   def calculateRhsL2p(self, 				      
+                         numpy.ndarray mesh_trial_ref,
+                         numpy.ndarray mesh_grad_trial_ref,
+                         numpy.ndarray mesh_dof,
+                         numpy.ndarray mesh_l2g,
+                         numpy.ndarray dV_ref,
+                         numpy.ndarray u_trial_ref,
+			 numpy.ndarray u_grad_trial_ref,			 
+                         numpy.ndarray u_test_ref,			 
+                         int nElements_global,
+			 numpy.ndarray u_l2g,
+                         numpy.ndarray elementDiameter,			 
+                         numpy.ndarray u_dof,
+                         numpy.ndarray phiHat_dof,
+                         numpy.ndarray phiExact_dof,			 
+                         int offset_u, int stride_u, 
+			 numpy.ndarray globalResidual):
+        cdef double global_mass_error
+        cdef double global_L2_interface
+        cdef double global_H1_interface
+        cdef double global_L2_Hinterface
+        cdef double global_H1_Hinterface
+        cdef double global_L2_u
+        cdef double global_H1_u
+        self.thisptr.calculateRhsL2p(
+                                       <double*>mesh_trial_ref.data,
+                                       <double*>mesh_grad_trial_ref.data,
+                                       <double*>mesh_dof.data,
+                                       <int*>mesh_l2g.data,
+                                       <double*>dV_ref.data,
+                                       <double*>u_trial_ref.data,
+				       <double*>u_grad_trial_ref.data,
+                                       <double*>u_test_ref.data,     
+                                       nElements_global,
+                                       <int*>u_l2g.data,
+				       <double*>elementDiameter.data,
+                                       <double*>u_dof.data,
+                                       <double*>phiHat_dof.data,
+                                       <double*>phiExact_dof.data,
+                                       offset_u, 
+                                       stride_u, 
+				       <double*>globalResidual.data,
+				       &global_mass_error,
+				       &global_L2_interface,
+				       &global_H1_interface,
+				       &global_L2_Hinterface,
+				       &global_H1_Hinterface,
+				       &global_L2_u,
+				       &global_H1_u)
+        return(global_mass_error,
+		global_L2_interface,
+		global_H1_interface,
+		global_L2_Hinterface,
+		global_H1_Hinterface,
+		global_L2_u,
+		global_H1_u)
+	
    def calculateRhsQuadratureMass(self,
 				  numpy.ndarray mesh_trial_ref,
 				  numpy.ndarray mesh_grad_trial_ref,
