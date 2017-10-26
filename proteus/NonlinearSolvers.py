@@ -575,6 +575,10 @@ class Newton(NonlinearSolver):
                     if ls_its > 0:
                         logEvent("Linesearches = %i" % ls_its,level=3)
         else:
+            try:
+                self.F.newton_iterations = self.its
+            except:
+                pass
             if self.linearSolver.computeEigenvalues:
                 try:
                     if self.betaK_0*self.etaK_0*self.gammaK_max <= 0.5:
@@ -632,7 +636,7 @@ class Newton(NonlinearSolver):
         logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
         logEvent(memory("Newton","Newton"),level=4)
-
+        
 class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
     """
     This is a fake solver meant to be used with optimized code
