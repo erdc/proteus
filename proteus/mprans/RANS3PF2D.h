@@ -110,6 +110,7 @@ namespace proteus
                                    double C_b,
                                    const double* eps_solid,
                                    const double* ebq_global_phi_solid,
+                                   const double* ebq_global_grad_phi_solid,
                                    const double* phi_solid_nodes,
                                    const double* phi_solid,
                                    const double* q_velocity_solid,
@@ -350,6 +351,7 @@ namespace proteus
                                    //VRANS
                                    const double *eps_solid,
 				   const double *ebq_global_phi_solid,
+				   const double *ebq_global_grad_phi_solid,
                                    const double *phi_solid_nodes,
                                    const double *phi_solid,
                                    const double *q_velocity_solid,
@@ -2221,6 +2223,7 @@ namespace proteus
                              //VRANS
                              const double* eps_solid,
 			     const double* ebq_global_phi_solid,
+			     const double* ebq_global_grad_phi_solid,
                              const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
@@ -4201,6 +4204,7 @@ namespace proteus
                              //VRANS
                              const double* eps_solid,
 			     const double* ebq_global_phi_solid,
+			     const double* ebq_global_grad_phi_solid,
                              const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,

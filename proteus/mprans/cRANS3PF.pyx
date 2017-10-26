@@ -2660,6 +2660,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                # VRANS start
                                double * eps_solid,
                                double * ebq_global_phi_solid,
+                               double * ebq_global_grad_phi_solid,
                                double * phi_solid_nodes,
                                double * phi_solid,
                                double * q_velocity_solid,
@@ -2879,6 +2880,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                # VRANS start
                                double * eps_solid,
                                double * ebq_global_phi_solid,
+                               double * ebq_global_grad_phi_solid,
                                double * phi_solid_nodes,
                                double * phi_solid,
                                double * q_velocity_solid,
@@ -3564,6 +3566,7 @@ cdef class RANS3PF2D:
                           # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray ebq_global_phi_solid,
+                          numpy.ndarray ebq_global_grad_phi_solid,
                           numpy.ndarray phi_solid_nodes,
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
@@ -3783,6 +3786,7 @@ cdef class RANS3PF2D:
                                        # VRANS start
                                        < double * > eps_solid.data,
                                        < double * > ebq_global_phi_solid.data,
+                                       < double * > ebq_global_grad_phi_solid.data,
                                        < double * > phi_solid_nodes.data,
                                        < double * > phi_solid.data,
                                        < double * > q_velocity_solid.data,
@@ -4002,6 +4006,7 @@ cdef class RANS3PF2D:
                           # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray ebq_global_phi_solid,
+                          numpy.ndarray ebq_global_grad_phi_solid,
                           numpy.ndarray phi_solid_nodes,
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
@@ -4189,6 +4194,7 @@ cdef class RANS3PF2D:
                                        # VRANS start
                                        < double * > eps_solid.data,
                                        < double * > ebq_global_phi_solid.data,
+                                       < double * > ebq_global_grad_phi_solid.data,
                                        < double * > phi_solid_nodes.data,
                                        < double * > phi_solid.data,
                                        < double * > q_velocity_solid.data,
