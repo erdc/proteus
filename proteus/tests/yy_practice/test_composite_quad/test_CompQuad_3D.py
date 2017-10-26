@@ -255,7 +255,7 @@ class TestCompQuad(unittest.TestCase):
         self.assertGreater(np.average(
             convergence_rate[1:]), 1.0, "convergence should be > 1")
 
-    def test_circle(self):
+    def test_sphere(self):
         M = 5
         #======================================================================
         # example 6: circle
