@@ -425,6 +425,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
         self.phisField=np.ones(self.model.q[('u',0)].shape,'d')*1e10
         self.ebq_global_phi_s = numpy.ones_like(self.model.ebq_global[('totalFlux',0)])*1.e10
+        self.ebq_global_grad_phi_s = numpy.ones_like(self.model.ebq_global[('totalVelocity',0)])*1.e10
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
         # otherwise the sdf are calculated based on the input sdf list for each body
@@ -449,6 +450,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         sdf,sdNormals = self.granular_sdf_Calc(self.model.ebq_global['x'][ebN,kb],i)
                         if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                             self.ebq_global_phi_s[ebN,kb]=sdf
+                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
         else:
             for i,sdf,vel in zip(range(self.nParticles),
                             self.particle_sdfList, self.particle_velocityList):
@@ -463,6 +465,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         sdf_ebN_kb,sdNormals = sdf(0,self.model.ebq_global['x'][ebN,kb],)
                         if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                             self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
+                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
 
 	
         if self.PRESSURE_model is not None:
@@ -1012,6 +1015,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         sdf,sdNormals = self.granular_sdf_Calc(self.model.ebq_global['x'][ebN,kb],i)
                         if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                             self.ebq_global_phi_s[ebN,kb]=sdf
+                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
             self.model.q[('phis')] = self.phisField    
         else:
             for i,sdf,vel in zip(range(self.nParticles),
@@ -1031,6 +1035,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         sdf_ebN_kb,sdNormals = sdf(t, self.model.ebq_global['x'][ebN,kb])
                         if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                             self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
+                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
          
 	if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
@@ -2320,6 +2325,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.penalty_constant,
             self.coefficients.epsFact_solid,
             self.coefficients.ebq_global_phi_s,
+            self.coefficients.ebq_global_grad_phi_s,
             self.coefficients.phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
@@ -2630,6 +2636,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # VRANS start
             self.coefficients.epsFact_solid,
             self.coefficients.ebq_global_phi_s,
+            self.coefficients.ebq_global_grad_phi_s,
             self.coefficients.phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
