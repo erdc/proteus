@@ -309,8 +309,8 @@ def getResidual(
 
                 # maximum wave speed
 
-                dij[j] = max([2.0 * (cij[0] + cij[1]) * maximum_wave_speed(ui, uj),  # for Burgers equation
-                              2.0 * (cji[0] + cji[1]) * maximum_wave_speed(uj, ui)])  # for symmetry
+                dij[j] = max([(cij[0] + cij[1]) * maximum_wave_speed(uj, ui),  # for Burgers equation
+                              (cji[0] + cji[1]) * maximum_wave_speed(ui, uj)])  # for symmetry
 
                 dii -= dij[j]
 

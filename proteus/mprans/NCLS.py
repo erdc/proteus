@@ -1171,8 +1171,8 @@ class LevelModel(OneLevelTransport):
             self.calculateJacobian = self.ncls.calculateMassMatrix
 
         #self.calculateResidual(#element
-        #self.coefficients.calculateResidual(#YY
-        self.ncls.calculateResidual_PG_ALE(
+        self.coefficients.calculateResidual(#YY
+        #self.ncls.calculateResidual_PG_ALE(
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
