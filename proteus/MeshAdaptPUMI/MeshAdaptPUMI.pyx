@@ -42,6 +42,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         double getTotalMass()
         double getMPvalue(double,double, double)
         void get_local_error(double) 
+        void get_VMS_error(double) 
         void writeMesh(char* )
 
 cdef class MeshAdaptPUMI:
@@ -129,6 +130,10 @@ cdef class MeshAdaptPUMI:
     def get_local_error(self):
         errTotal=0.0;
         self.thisptr.get_local_error(errTotal)
+        return errTotal
+    def get_VMS_error(self):
+        errTotal=0.0;
+        self.thisptr.get_VMS_error(errTotal)
         return errTotal
     def getMinimumQuality(self):
         return self.thisptr.getMinimumQuality()
