@@ -87,6 +87,9 @@ class MeshAdaptPUMIDrvr{
   void removeBCData();
   char* modelFileName; 
   
+  //VMS
+  void get_VMS_error(double& total_error);
+  
   //tags used to identify types of BC
   apf::MeshTag* BCtag;
   apf::MeshTag* DBCtag[4];
