@@ -407,8 +407,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.quantDOFs[:] /= self.model.ML[:] 
         self.model.u[0].dof[:] = self.model.quantDOFs[:]
 
-        #self.model.getPerturbedLS()
-        
+        # DO a nodal projection of H(phiHat)
+        from proteus.ctransportCoefficients import smoothedHeaviside
+        for i in range (self.model.mesh.nodeDiametersArray.size):
+            epsHeaviside = 1.5*self.model.mesh.nodeDiametersArray[i]
+            self.model.quantDOFs[i] = smoothedHeaviside(epsHeaviside,self.model.u[0].dof[i])
+            self.model.quantDOFs2[i] = smoothedHeaviside(epsHeaviside,self.model.u_dof_old[i])
+
         # END OF PERTURBING PHI HAT FIELD
         
         self.model.q['dV_last'][:] = self.model.q['dV']
@@ -795,6 +800,7 @@ class LevelModel(OneLevelTransport):
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.tmpAux = None
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFs2 = numpy.zeros(self.u[0].dof.shape,'d')
 
         comm = Comm.get()
         self.comm=comm

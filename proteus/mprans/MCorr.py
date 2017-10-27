@@ -535,6 +535,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
         self.setupFieldStrides()
 
+        self.phiHat_dof = None
+        self.phin = None
+        
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -634,6 +637,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #Load the unknowns into the finite element dof
         self.setUnknowns(u)
 
+
+        if self.phiHat_dof is None:
+            #cond = self.coefficients.LS_modelIndex is not None
+            #assert cond, "Make sure there is a LS model attached"
+            self.phiHat_dof = self.coefficients.lsModel.u[0].dof
+            self.phin_dof = self.coefficients.lsModel.u_dof_old
+        
         self.calculateResidual = self.mcorr.calculateResidual
         #no flux boundary conditions
         self.beta_Tikhonov=0.01
@@ -708,6 +718,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.elementDiameter,#self.mesh.elementDiametersArray,
              self.mesh.nodeDiametersArray,
              self.u[0].dof,
+             self.phiHat_dof,
+             self.phin_dof,
              self.lambda_dof,
              self.coefficients.q_phiExact,
              self.coefficients.q_u_ls, #q_phi
@@ -786,6 +798,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter,#self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
+            self.phiHat_dof,
+            self.phin_dof,
             self.lambda_dof,
             self.coefficients.q_u_ls,
 	    self.coefficients.q_n_ls,

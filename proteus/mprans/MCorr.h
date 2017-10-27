@@ -42,6 +42,8 @@ namespace proteus
 				   double* elementDiameter,
 				   double* nodeDiametersArray,
 				   double* u_dof,
+				   double* phiHat_dof,
+				   double* phin_dof,
 				   double* lambda_dof,
 				   double* q_phiExact,
 				   double* q_phi,
@@ -111,6 +113,8 @@ namespace proteus
 				   double* elementDiameter,
 				   double* nodeDiametersArray,
 				   double* u_dof,
+				   double* phiHat_dof,
+				   double* phin_dof,				   
 				   double* lambda_dof,
 				   double* q_phi,
 				   double* q_normal_phi,
@@ -150,6 +154,8 @@ namespace proteus
 			       double* elementDiameter,
 			       double* nodeDiametersArray,
 			       double* u_dof,
+			       double* phiHat_dof,
+			       double* phin_dof,
 			       double* q_phiExact,
 			       double* q_phi,
 			       double* q_normal_phi,
@@ -200,6 +206,8 @@ namespace proteus
 			       double* elementDiameter,
 			       double* nodeDiametersArray,
 			       double* u_dof,
+			       double* phiHat_dof,
+			       double* phin_dof,
 			       double* q_phiExact,
 			       double* q_phi,
 			       double* q_normal_phi,
@@ -250,6 +258,8 @@ namespace proteus
 			       double* elementDiameter,
 			       double* nodeDiametersArray,
 			       double* u_dof,
+			       double* phiHat_dof,
+			       double* phin_dof,
 			       double* q_phiExact,
 			       double* q_phi,
 			       double* q_normal_phi,
@@ -482,7 +492,9 @@ namespace proteus
 					 int* u_l2g, 
 					 double* elementDiameter,
 					 double* nodeDiametersArray,
-					 double* u_dof,
+					 double* u_dof,					 
+					 double* phiHat_dof,
+					 double* phin_dof,
 					 double* q_phiExact,
 					 double* q_phi,
 					 double* q_normal_phi,
@@ -550,8 +562,8 @@ namespace proteus
 	{
 	  //compute indeces and declare local storage
 	  register int eN_k = eN*nQuadraturePoints_element+k,
-	    eN_k_nSpace = eN_k*nSpace;
-	    //eN_nDOF_trial_element = eN*nDOF_trial_element;
+	    eN_k_nSpace = eN_k*nSpace,
+	    eN_nDOF_trial_element = eN*nDOF_trial_element;
 	  register double u=0.0,grad_u[nSpace],
 	    lambda=0.0,grad_lambda[nSpace],
 	    r=0.0,dr=0.0,
@@ -629,10 +641,21 @@ namespace proteus
 	  epsDirac     = epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 	  epsDiffusion = epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 
+	  // TMP hack to isolate MCorr
+	  double phiHatnp1, phin;
+	  ck.valFromDOF(phiHat_dof,
+			&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			phiHatnp1);
+	  ck.valFromDOF(phin_dof,
+			&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			phin);
+	  double Hn = smoothedHeaviside(epsHeaviside,phin);
 	  evaluateCoefficients(epsHeaviside,
 			       epsDirac,
-			       q_phi[eN_k],
-			       q_H[eN_k],
+			       //q_phi[eN_k], // change this. MQL. TMP
+			       //q_H[eN_k], // Change this. MQL. TMP
+			       phiHatnp1,
+			       Hn,
 			       u,
 			       q_porosity[eN_k],
 			       r,
@@ -754,6 +777,8 @@ namespace proteus
 			   double* elementDiameter,
 			   double* nodeDiametersArray,
 			   double* u_dof,
+			   double* phiHat_dof,
+			   double* phin_dof,
 			   double* lambda_dof,
 			   double* q_phiExact,
 			   double* q_phi,
@@ -871,6 +896,8 @@ namespace proteus
 				   elementDiameter,
 				   nodeDiametersArray,
 				   u_dof,
+				   phiHat_dof,
+				   phin_dof,
 				   q_phiExact,
 				   q_phi,
 				   q_normal_phi,
@@ -1058,7 +1085,9 @@ namespace proteus
 					 int* u_l2g,
 					 double* elementDiameter,
 					 double* nodeDiametersArray,
-					 double* u_dof, 
+					 double* u_dof,
+					 double* phiHat_dof,
+					 double* phin_dof, 
 					 // double* u_trial, 
 					 // double* u_grad_trial, 
 					 // double* u_test_dV, 
@@ -1084,7 +1113,7 @@ namespace proteus
       for  (int k=0;k<nQuadraturePoints_element;k++)
 	{
 	  int eN_k = eN*nQuadraturePoints_element+k; //index to a scalar at a quadrature point
-	  
+	  int eN_nDOF_trial_element = eN*nDOF_trial_element; 
 	  //declare local storage
 	  register double u=0.0,
 	    grad_u[nSpace],
@@ -1159,10 +1188,21 @@ namespace proteus
 	  epsDirac    =epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 	  epsDiffusion=epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 
+	  // TMP hack to isolate MCorr
+	  double phiHatnp1, phin;
+	  ck.valFromDOF(phiHat_dof,
+			&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			phiHatnp1);
+	  ck.valFromDOF(phin_dof,
+			&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			phin);
+	  double Hn = smoothedHeaviside(epsHeaviside,phin);
 	  evaluateCoefficients(epsHeaviside,
 			       epsDirac,
-			       q_phi[eN_k],
-			       q_H[eN_k],
+			       //q_phi[eN_k], // change this. MQL. TMP
+			       //q_H[eN_k], // Change this. MQL. TMP
+			       phiHatnp1,
+			       Hn,			       
 			       u,
 			       q_porosity[eN_k],
 			       r,
@@ -1219,7 +1259,9 @@ namespace proteus
 			   int* u_l2g,
 			   double* elementDiameter,
 			   double* nodeDiametersArray,
-			   double* u_dof, 
+			   double* u_dof,
+			   double* phiHat_dof,
+			   double* phin_dof, 
 			   double* lambda_dof, 
 			   // double* u_trial, 
 			   // double* u_grad_trial, 
@@ -1272,7 +1314,9 @@ namespace proteus
 				   u_l2g,
 				   elementDiameter,
 				   nodeDiametersArray,
-				   u_dof, 
+				   u_dof,
+				   phiHat_dof,
+				   phin_dof,
 				   q_phi,
 				   q_normal_phi,
 				   q_H,
@@ -1328,6 +1372,8 @@ namespace proteus
 			       double* elementDiameter,
 			       double* nodeDiametersArray,
 			       double* u_dof,
+			       double* phiHat_dof,
+			       double* phin_dof,
 			       double* q_phiExact,
 			       double* q_phi,
 			       double* q_normal_phi,
@@ -1418,6 +1464,8 @@ namespace proteus
 				   elementDiameter,
 				   nodeDiametersArray,
 				   u_dof,
+				   phiHat_dof,
+				   phin_dof,
 				   q_phiExact,
 				   q_phi,
 				   q_normal_phi,
@@ -1495,7 +1543,9 @@ namespace proteus
 				       u_l2g,
 				       elementDiameter,
 				       nodeDiametersArray,
-				       u_dof, 
+				       u_dof,
+				       phiHat_dof,
+				       phin_dof,
 				       q_phi,
 				       q_normal_phi,
 				       q_H,
@@ -1567,6 +1617,8 @@ namespace proteus
 					   elementDiameter,
 					   nodeDiametersArray,
 					   u_dof,
+					   phiHat_dof,
+					   phin_dof,
 					   q_phiExact,
 					   q_phi,					   
 					   q_normal_phi,
@@ -1649,6 +1701,8 @@ namespace proteus
 			       double* elementDiameter,
 			       double* nodeDiametersArray,
 			       double* u_dof,
+			       double* phiHat_dof,
+			       double* phin_dof,
 			       double* q_phiExact,
 			       double* q_phi,
 			       double* q_normal_phi,
@@ -1725,6 +1779,8 @@ namespace proteus
 				   elementDiameter,
 				   nodeDiametersArray,
 				   u_dof,
+				   phiHat_dof,
+				   phin_dof,
 				   q_phiExact,
 				   q_phi,				   
 				   q_normal_phi,
@@ -1802,7 +1858,9 @@ namespace proteus
 				       u_l2g,
 				       elementDiameter,
 				       nodeDiametersArray,
-				       u_dof, 
+				       u_dof,
+				       phiHat_dof,
+				       phin_dof,
 				       q_phi,
 				       q_normal_phi,
 				       q_H,
@@ -1857,6 +1915,8 @@ namespace proteus
 				       elementDiameter,
 				       nodeDiametersArray,
 				       u_dof,
+				       phiHat_dof,
+				       phin_dof,
 				       q_phiExact,
 				       q_phi,				       
 				       q_normal_phi,
@@ -1937,6 +1997,8 @@ namespace proteus
 			     double* elementDiameter,
 			     double* nodeDiametersArray,
 			     double* u_dof,
+			     double* phiHat_dof,
+			     double* phin_dof,
 			     double* q_phiExact,
 			     double* q_phi,
 			     double* q_normal_phi,
@@ -2015,6 +2077,8 @@ namespace proteus
 				   elementDiameter,
 				   nodeDiametersArray,
 				   u_dof,
+				   phiHat_dof,
+				   phin_dof,
 				   q_phiExact,
 				   q_phi,				   
 				   q_normal_phi,
@@ -2085,7 +2149,9 @@ namespace proteus
 				   u_l2g,
 				   elementDiameter,
 				   nodeDiametersArray,
-				   u_dof, 
+				   u_dof,
+				   phiHat_dof,
+				   phin_dof,
 				   q_phi,
 				   q_normal_phi,
 				   q_H,
