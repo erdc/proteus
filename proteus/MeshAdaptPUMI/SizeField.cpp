@@ -802,11 +802,13 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     m->end(it);
     apf::synchronize(size_scale);
 
+/*
   if(logging_config=="on"){
     char namebuffer[20];
     sprintf(namebuffer,"anisotropyPreAdapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
   }
+*/
 
     //apf::destroyField(gradphi);
     //apf::destroyField(grad2phi);
