@@ -637,15 +637,15 @@ namespace proteus
       
       //u momentum accumulation
       mom_u_acc=u;//trick for non-conservative form
-      dmom_u_acc_u=vos*rho;
+      dmom_u_acc_u=rho*vos;
   
       //v momentum accumulation
       mom_v_acc=v;
-      dmom_v_acc_v=vos*rho;
+      dmom_v_acc_v=rho*vos;
   
       //w momentum accumulation
       mom_w_acc=w;
-      dmom_w_acc_w=vos*rho;
+      dmom_w_acc_w=rho*vos;
 
       //mass advective flux
       mass_adv[0]=vos*u;
@@ -717,31 +717,31 @@ namespace proteus
       dmom_w_adv_w[2]=0.0;
 
       //u momentum diffusion tensor
-      mom_uu_diff_ten[0] =0.0;// vos*2.0*nu;
-      mom_uu_diff_ten[1] =0.0;// vos*nu;
-      mom_uu_diff_ten[2] =0.0;// vos*nu;
+      mom_uu_diff_ten[0] =0.0;// vos*2.0*nu;//mu;
+      mom_uu_diff_ten[1] =0.0;// vos*nu;//mu;
+      mom_uu_diff_ten[2] =0.0;// vos*nu;//mu;
   
-      mom_uv_diff_ten[0]=0.0;//vos*nu;
+      mom_uv_diff_ten[0]=0.0;//vos*nu;//mu;
   
-      mom_uw_diff_ten[0]=0.0;//vos*nu;
+      mom_uw_diff_ten[0]=0.0;//vos*nu;//mu;
   
       //v momentum diffusion tensor
-      mom_vv_diff_ten[0] =0.0;// vos*nu;
-      mom_vv_diff_ten[1] =0.0;// vos*2.0*nu;
-      mom_vv_diff_ten[2] =0.0;// vos*nu;
+      mom_vv_diff_ten[0] =0.0;// vos*nu;//mu;
+      mom_vv_diff_ten[1] =0.0;// vos*2.0*nu;//mu;
+      mom_vv_diff_ten[2] =0.0;// vos*nu;//mu;
   
-      mom_vu_diff_ten[0]=0.0;//vos*nu;
+      mom_vu_diff_ten[0]=0.0;//vos*nu;//mu;
   
-      mom_vw_diff_ten[0]=0.0;//vos*nu;
+      mom_vw_diff_ten[0]=0.0;//vos*nu;//mu;
   
       //w momentum diffusion tensor
-      mom_ww_diff_ten[0] =0.0;// vos*nu;
-      mom_ww_diff_ten[1] =0.0;// vos*nu;
-      mom_ww_diff_ten[2] =0.0;// vos*2.0*nu;
+      mom_ww_diff_ten[0] =0.0;// vos*nu;//mu;
+      mom_ww_diff_ten[1] =0.0;// vos*nu;//mu;
+      mom_ww_diff_ten[2] =0.0;// vos*2.0*nu;//mu;
   
-      mom_wu_diff_ten[0]=0.0;//vos*nu;
+      mom_wu_diff_ten[0]=0.0;//vos*nu;//mu;
   
-      mom_wv_diff_ten[0]=0.0;//vos*nu;
+      mom_wv_diff_ten[0]=0.0;//vos*nu;//mu;
   
       //momentum sources
       norm_n = sqrt(n[0]*n[0]+n[1]*n[1]+n[2]*n[2]);
@@ -750,22 +750,22 @@ namespace proteus
       mom_w_source = -vos*rho*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
    
       //u momentum Hamiltonian (pressure)
-      mom_u_ham = vos*grad_p[0];///rho;
-      dmom_u_ham_grad_p[0]=vos;///rho;
+      mom_u_ham = vos*grad_p[0];// /rho;
+      dmom_u_ham_grad_p[0]=vos;// /rho;
       dmom_u_ham_grad_p[1]=0.0;
       dmom_u_ham_grad_p[2]=0.0;
   
       //v momentum Hamiltonian (pressure)
-      mom_v_ham = vos*grad_p[1];///rho;
+      mom_v_ham = vos*grad_p[1];// /rho;
       dmom_v_ham_grad_p[0]=0.0;
-      dmom_v_ham_grad_p[1]=vos;///rho;
+      dmom_v_ham_grad_p[1]=vos;// /rho;
       dmom_v_ham_grad_p[2]=0.0;
   
       //w momentum Hamiltonian (pressure)
-      mom_w_ham = vos*grad_p[2];///rho;
+      mom_w_ham = vos*grad_p[2];// /rho;
       dmom_w_ham_grad_p[0]=0.0;
       dmom_w_ham_grad_p[1]=0.0;
-      dmom_w_ham_grad_p[2]=vos;///rho;
+      dmom_w_ham_grad_p[2]=vos;// /rho;
 
       //u momentum Hamiltonian (advection)
       mom_u_ham += vos*rho*(uStar*grad_u[0]+vStar*grad_u[1]+wStar*grad_u[2]);
@@ -825,33 +825,33 @@ namespace proteus
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-      viscosity = nu;
+      viscosity = mu;//nu;
       uc = sqrt(u*u+v*v*+w*w); 
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
       double solid_velocity[3]={uStar,vStar,wStar}, fluid_velocity[3]={u_f,v_f,w_f};
-      double new_beta = closure.betaCoeff(1.0-phi_s,
-                                          rho,
-                                          fluid_velocity,
-                                          solid_velocity,
-                                          viscosity);
+      double new_beta =0.0;// closure.betaCoeff(1.0-phi_s,
+                           //               rho,
+                           //               fluid_velocity,
+                           //               solid_velocity,
+                           //               viscosity);
       //new_beta/=rho;
-      mom_u_source += -(1.0 - phi_s)*new_beta*(u-u_f);
-      mom_v_source += -(1.0 - phi_s)*new_beta*(v-v_f);
-      mom_w_source += -(1.0 - phi_s)*new_beta*(w-w_f);
+      mom_u_source += 0.0;//(1.0 - phi_s)*new_beta*(u-u_f);
+      mom_v_source += 0.0;//(1.0 - phi_s)*new_beta*(v-v_f);
+      mom_w_source += 0.0;//(1.0 - phi_s)*new_beta*(w-w_f);
 
-      dmom_u_source[0] = -(1.0 - phi_s)*new_beta;
+      dmom_u_source[0] = 0.0;//(1.0 - phi_s)*new_beta;
       dmom_u_source[1] = 0.0;
       dmom_u_source[2] = 0.0;
     
       dmom_v_source[0] = 0.0;
-      dmom_v_source[1] = -(1.0 - phi_s)*new_beta;
+      dmom_v_source[1] = 0.0;//(1.0 - phi_s)*new_beta;
       dmom_v_source[2] = 0.0;
 
       dmom_w_source[0] = 0.0;
       dmom_w_source[1] = 0.0;
-      dmom_w_source[2] = -(1.0 - phi_s)*new_beta;
+      dmom_w_source[2] = 0.0;//(1.0 - phi_s)*new_beta;
     }
 
     inline

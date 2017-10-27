@@ -1192,15 +1192,15 @@ namespace proteus
 
         //u momentum accumulation
         mom_u_acc=phi_s_effect*u;//trick for non-conservative form
-        dmom_u_acc_u=phi_s_effect*rho*porosity;
+        dmom_u_acc_u=rho*phi_s_effect*porosity;
   
         //v momentum accumulation
         mom_v_acc=phi_s_effect*v;
-        dmom_v_acc_v=phi_s_effect*rho*porosity;
+        dmom_v_acc_v=rho*phi_s_effect*porosity;
   
         //w momentum accumulation
         mom_w_acc=phi_s_effect*w;
-        dmom_w_acc_w=phi_s_effect*rho*porosity;
+        dmom_w_acc_w=rho*phi_s_effect*porosity;
 
         //mass advective flux
         mass_adv[0]=phi_s_effect*porosity*u; // mql. CHECK. Why is this not multiply by rho? 
@@ -1300,9 +1300,9 @@ namespace proteus
   
         //momentum sources
         norm_n = sqrt(n[0]*n[0]+n[1]*n[1]+n[2]*n[2]);
-        mom_u_source = -phi_s_effect*porosity*rho*g[0];// - d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
-        mom_v_source = -phi_s_effect*porosity*rho*g[1];// - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
-        mom_w_source = -phi_s_effect*porosity*rho*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
+        mom_u_source = -phi_s_effect*rho*porosity*g[0];// - d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
+        mom_v_source = -phi_s_effect*rho*porosity*g[1];// - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
+        mom_w_source = -phi_s_effect*rho*porosity*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
    
         // mql: add general force term 
         mom_u_source -= forcex; 
@@ -1328,22 +1328,22 @@ namespace proteus
         dmom_w_ham_grad_p[2]=phi_s_effect*porosity*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
 
         //u momentum Hamiltonian (advection)
-        mom_u_ham += phi_s_effect*porosity*rho*(uStar*grad_u[0]+vStar*grad_u[1]+wStar*grad_u[2]);
-        dmom_u_ham_grad_u[0]=phi_s_effect*porosity*rho*uStar;
-        dmom_u_ham_grad_u[1]=phi_s_effect*porosity*rho*vStar;
-        dmom_u_ham_grad_u[2]=phi_s_effect*porosity*rho*wStar;
+        mom_u_ham += phi_s_effect*rho*porosity*(uStar*grad_u[0]+vStar*grad_u[1]+wStar*grad_u[2]);
+        dmom_u_ham_grad_u[0]=phi_s_effect*rho*porosity*uStar;
+        dmom_u_ham_grad_u[1]=phi_s_effect*rho*porosity*vStar;
+        dmom_u_ham_grad_u[2]=phi_s_effect*rho*porosity*wStar;
   
         //v momentum Hamiltonian (advection)
-        mom_v_ham += phi_s_effect*porosity*rho*(uStar*grad_v[0]+vStar*grad_v[1]+wStar*grad_v[2]);
-        dmom_v_ham_grad_v[0]=phi_s_effect*porosity*rho*uStar;
-        dmom_v_ham_grad_v[1]=phi_s_effect*porosity*rho*vStar;
-        dmom_v_ham_grad_v[2]=phi_s_effect*porosity*rho*wStar;
+        mom_v_ham += phi_s_effect*rho*porosity*(uStar*grad_v[0]+vStar*grad_v[1]+wStar*grad_v[2]);
+        dmom_v_ham_grad_v[0]=phi_s_effect*rho*porosity*uStar;
+        dmom_v_ham_grad_v[1]=phi_s_effect*rho*porosity*vStar;
+        dmom_v_ham_grad_v[2]=phi_s_effect*rho*porosity*wStar;
   
         //w momentum Hamiltonian (advection)
-        mom_w_ham += phi_s_effect*porosity*rho*(uStar*grad_w[0]+vStar*grad_w[1]+wStar*grad_w[2]);
-        dmom_w_ham_grad_w[0]=phi_s_effect*porosity*rho*uStar;
-        dmom_w_ham_grad_w[1]=phi_s_effect*porosity*rho*vStar;
-        dmom_w_ham_grad_w[2]=phi_s_effect*porosity*rho*wStar;
+        mom_w_ham += phi_s_effect*rho*porosity*(uStar*grad_w[0]+vStar*grad_w[1]+wStar*grad_w[2]);
+        dmom_w_ham_grad_w[0]=phi_s_effect*rho*porosity*uStar;
+        dmom_w_ham_grad_w[1]=phi_s_effect*rho*porosity*vStar;
+        dmom_w_ham_grad_w[2]=phi_s_effect*rho*porosity*wStar;
       }
 
       //VRANS specific
@@ -1386,33 +1386,33 @@ namespace proteus
         nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-        viscosity = nu; //mu; // mql. CHECK.
+        viscosity = mu; // mql. CHECK.
         uc = sqrt(u*u+v*v*+w*w); 
         duc_du = u/(uc+1.0e-12);
         duc_dv = v/(uc+1.0e-12);
         duc_dw = w/(uc+1.0e-12);
         double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
-        double new_beta = closure.betaCoeff(1.0-phi_s,
-                                          rho,
-                                          fluid_velocity,
-                                          solid_velocity,
-                                          viscosity);
+        double new_beta =0.0;// closure.betaCoeff(1.0-phi_s,
+                           //               rho,
+                           //               fluid_velocity,
+                           //               solid_velocity,
+                           //               viscosity);
         //new_beta/=rho;
-        mom_u_source += (1.0 - phi_s)*new_beta*(u-u_s);
-        mom_v_source += (1.0 - phi_s)*new_beta*(v-v_s);
-        mom_w_source += (1.0 - phi_s)*new_beta*(w-w_s);
+        mom_u_source += 0.0;//(1.0 - phi_s)*new_beta*(u-u_s);
+        mom_v_source += 0.0;//(1.0 - phi_s)*new_beta*(v-v_s);
+        mom_w_source += 0.0;//(1.0 - phi_s)*new_beta*(w-w_s);
 
-        dmom_u_source[0] = (1.0 - phi_s)*new_beta;
+        dmom_u_source[0] = 0.0;//(1.0 - phi_s)*new_beta;
         dmom_u_source[1] = 0.0;
         dmom_u_source[2] = 0.0;
     
         dmom_v_source[0] = 0.0;
-        dmom_v_source[1] = (1.0 - phi_s)*new_beta;
+        dmom_v_source[1] = 0.0;//(1.0 - phi_s)*new_beta;
         dmom_v_source[2] = 0.0;
 
         dmom_w_source[0] = 0.0;
         dmom_w_source[1] = 0.0;
-        dmom_w_source[2] = (1.0 - phi_s)*new_beta;
+        dmom_w_source[2] = 0.0;//(1.0 - phi_s)*new_beta;
       }
     
       inline
