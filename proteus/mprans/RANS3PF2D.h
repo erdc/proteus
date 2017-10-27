@@ -3234,17 +3234,28 @@ namespace proteus
 		//update the element and global residual storage
 		//
 		//std::cout<<"phi_s(x) "<<ebq_global_phi_solid[ebN_kb]<<std::endl;
+		//std::cout<<"(grad_phi_s(x))_x "<<ebq_global_grad_phi_solid[ebN_kb*nSpace+0]<<std::endl;
+		//std::cout<<"(grad_phi_s(x))_y "<<ebq_global_grad_phi_solid[ebN_kb*nSpace+1]<<std::endl;
+		
 		// LEO
-		double Csb=1.0e1;
-		double C_adim = Csb/h_penalty;
+		
+		double dist = ebq_global_phi_solid[ebN_kb];
+		double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
+		P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
+		P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
+		distance[0] = P_normal[0]*dist;
+		distance[1] = P_normal[1]*dist;
+		P_tangent[0] = -P_normal[1];
+		P_tangent[1] = P_normal[0];
+		double dx = distance[0];
+		double dy = distance[1];
+
 		double visco = nu_0*rho_0;
-		double dx = 0;
-		double dy = 0;
-		double beta = 5;
-		double beta_adim = 5*h_penalty;
-		double tangent[2];
-		for ( int id = 0 ; id < 2 ; ++id )
-		  tangent[id] = 0.0;
+		double Csb=20;
+		double C_adim = Csb*visco/h_penalty;
+		//std::cout << "C_adim "<< C_adim << std::endl;
+		double beta = 5.0;
+		double beta_adim = beta*h_penalty*visco;
 		
 		for (int i=0;i<nDOF_test_element;i++)
 		  {
@@ -3259,6 +3270,11 @@ namespace proteus
 		    double phi_i = vel_test_dS[i];
 		    double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
 		    double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
+		    
+		    double dd1 = dx*grad_u_ext[0] + dy*grad_v_ext[0];
+		    double dd2 = dx*grad_u_ext[1] + dy*grad_v_ext[1];
+		    double dt1 = P_tangent[0]*grad_u_ext[0] + P_tangent[1]*grad_v_ext[0];
+		    double dt2 = P_tangent[0]*grad_u_ext[1] + P_tangent[1]*grad_v_ext[1];
 		    
 		    // Classical Nitsche
 		    // C < w , u - uD > (1)
@@ -3276,27 +3292,31 @@ namespace proteus
 		    					  Gyphi_i*normal[1]*(v_ext - bc_v_ext));
 
 		    // second order Taylor expansion
+		    //
 		    // missing part of (1) :: C < w + Gw d , u + Gu d - ud >
-		    // C < Gw d , u - uD > 
+		    // C < Gw d , u - uD >
 		    globalResidual[GlobPos_u] += C_adim*dx*(Gxphi_i*(u_ext - bc_u_ext) + Gyphi_i*(v_ext - bc_v_ext));
 		    globalResidual[GlobPos_v] += C_adim*dy*(Gxphi_i*(u_ext - bc_u_ext) + Gyphi_i*(v_ext - bc_v_ext));
-
-		    // C < Gv d , Gu d > 
-		    double dd1 = dx*grad_u_ext[0] + dy*grad_v_ext[0];
-		    double dd2 = dx*grad_u_ext[1] + dy*grad_v_ext[1];
+		    
+		    // C < Gv d , Gu d >		   
 		    globalResidual[GlobPos_u] += C_adim*dx*(Gxphi_i*dd1 + Gyphi_i*dd2);
 		    globalResidual[GlobPos_v] += C_adim*dy*(Gxphi_i*dd1 + Gyphi_i*dd2);
 		    
-		    // C < v , Gu d > 
+		    // C < v , Gu d >
 		    globalResidual[GlobPos_u] += C_adim*phi_i*dd1;
 		    globalResidual[GlobPos_v] += C_adim*phi_i*dd2;
 
+		    //
+		    // missing part of (3)
+		    // - < mu Gw.nt , Gu.d >
+		    globalResidual[GlobPos_u] -= visco*normal[0]*(Gxphi_i*dd1 + Gyphi_i*dd2);
+		    globalResidual[GlobPos_v] -= visco*normal[1]*(Gxphi_i*dd1 + Gyphi_i*dd2);
+
 		    // the penalization on the tangential derivative
 		    // B < Gw t , (Gu - GuD) t >
-		    double dt1 = tangent[0]*grad_u_ext[0] + tangent[1]*grad_v_ext[0];
-		    double dt2 = tangent[0]*grad_u_ext[1] + tangent[1]*grad_v_ext[1];
-		    globalResidual[GlobPos_u] += beta_adim*tangent[0]*(Gxphi_i*dd1 + Gyphi_i*dd2);
-		    globalResidual[GlobPos_v] += beta_adim*tangent[1]*(Gxphi_i*dd1 + Gyphi_i*dd2);
+		    globalResidual[GlobPos_u] += beta_adim*P_tangent[0]*(Gxphi_i*dt1 + Gyphi_i*dt2);
+		    globalResidual[GlobPos_v] += beta_adim*P_tangent[1]*(Gxphi_i*dt1 + Gyphi_i*dt2);
+		   
 
 		  }//i
 	      }//kb
@@ -5322,17 +5342,23 @@ namespace proteus
                 //update the global Jacobian from the flux Jacobian
                 //
 		// LEO
-		double Csb=1.0e1;
-		double C_adim = Csb/h_penalty;
+		double dist = ebq_global_phi_solid[ebN_kb];
+		double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
+		P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
+		P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
+		distance[0] = P_normal[0]*dist;
+		distance[1] = P_normal[1]*dist;
+		P_tangent[0] = -P_normal[1];
+		P_tangent[1] = P_normal[0];
+		double dx = distance[0];
+		double dy = distance[1];	
+		double tx = P_tangent[0] ; double ty = P_tangent[1];
 		double visco = nu_0*rho_0;
-		double dx = 0;
-		double dy = 0;
-		double beta = 5;
-		double beta_adim = 5*h_penalty;
-		double tangent[2];
-		for ( int id = 0 ; id < 2 ; ++id )
-		  tangent[id] = 0.0;
-		
+		double Csb=20;
+		double C_adim = Csb*visco/h_penalty;
+		double beta = 5.0;
+		double beta_adim = beta*h_penalty*visco;
+	        		
                 for (int i=0;i<nDOF_test_element;i++)
                   {
                     register int eN_i = eN*nDOF_test_element+i;
@@ -5389,54 +5415,67 @@ namespace proteus
 
 			// second order Taylor expansion
 			// missing part of (1) :: C < w + Gw d , u + Gu d - ud >
-			// C < Gw d , u - uD > 
-			// diag 
-			globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += 
+		
+			// C < Gw d , u - uD >
+			// diag
+			globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
 			  C_adim*dx*Gxphi_i*phi_j;
-			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += 
+			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
 			  C_adim*dy*Gyphi_i*phi_j;
 			//extra diag
 			globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
 			  C_adim*dx*Gyphi_i*phi_j;
-			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += 
+			globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
 			  C_adim*dy*Gxphi_i*phi_j;
 
 			// C < Gv d , Gu d >
 			// diag
-			globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += 
+			globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
 			  C_adim*dx*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
-			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += 
-			  C_adim*dy*(Gxphi_i*dy*Gxphi_i + Gyphi_i*dy*Gyphi_j);
+			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+			  C_adim*dy*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
 			// extra diag
 			globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
 			  C_adim*dx*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
-			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += 
+			globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
 			  C_adim*dy*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
 			
 			// C < v , Gu d >
 			// diag
-			globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += 
+			globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
 			  C_adim*phi_i*dx*Gxphi_j;
-			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += 
-			  C_adim*phi_i*dx*Gyphi_j;
+			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+			  C_adim*phi_i*dy*Gyphi_j;
 			// extra diag
 			globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
 			  C_adim*phi_i*dy*Gxphi_j;
-			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += 
+			globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
 			  C_adim*phi_i*dx*Gyphi_j;
+
+			/* // missing part of (3) */
+			// - < mu Gw.nt , Gu.d >
+			globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
+			  visco*normal[0]*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
+			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
+			  visco*normal[1]*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
+			// extra diag
+			globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+			  visco*normal[0]*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
+			globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+			  visco*normal[1]*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
 			
 			// the penalization on the tangential derivative
 			// B < Gw t , (Gu - GuD) t >
 			// diag
-			globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += 
-			  beta_adim*tangent[0]*(Gxphi_i*tangent[0]*Gxphi_j + Gyphi_i*tangent[0]*Gyphi_j);
-			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += 
-			  beta_adim*tangent[1]*(Gxphi_i*tangent[1]*Gxphi_i + Gyphi_i*tangent[1]*Gyphi_j);
+			globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+			  beta_adim*tx*(Gxphi_i*tx*Gxphi_j + Gyphi_i*tx*Gyphi_j);
+			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+			  beta_adim*ty*(Gxphi_i*ty*Gxphi_j + Gyphi_i*ty*Gyphi_j);
 			// extra diag
 			globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
-			  beta_adim*tangent[0]*(Gxphi_i*tangent[1]*Gxphi_j + Gyphi_i*tangent[1]*Gyphi_j);
-			globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += 
-			  beta_adim*tangent[1]*(Gxphi_i*tangent[0]*Gxphi_j + Gyphi_i*tangent[0]*Gyphi_j);
+			  beta_adim*tx*(Gxphi_i*ty*Gxphi_j + Gyphi_i*ty*Gyphi_j);
+			globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+			  beta_adim*ty*(Gxphi_i*tx*Gxphi_j + Gyphi_i*tx*Gyphi_j);
 		    
                       }//j
                   }//i

@@ -425,7 +425,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
         self.phisField=np.ones(self.model.q[('u',0)].shape,'d')*1e10
         self.ebq_global_phi_s = numpy.ones_like(self.model.ebq_global[('totalFlux',0)])*1.e10
-        self.ebq_global_grad_phi_s = numpy.ones_like(self.model.ebq_global[('totalVelocity',0)])*1.e10
+        self.ebq_global_grad_phi_s = numpy.ones_like(self.model.ebq_global[('velocityAverage',0)])*1.e10
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
         # otherwise the sdf are calculated based on the input sdf list for each body
