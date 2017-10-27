@@ -3130,6 +3130,10 @@ namespace proteus
 	//
 	//loop over the surrogate boundaries in SB method and assembly into residual
 	//
+	
+	// LEO Initialization of the force to 0
+	double Fx = 0.0;
+	double Fy = 0.0;
 	for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
 	  {
 	    register int ebN = surrogate_boundaries[ebN_s],
@@ -3243,20 +3247,20 @@ namespace proteus
 		double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
 		P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
 		P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
-		distance[0] = P_normal[0]*dist;
-		distance[1] = P_normal[1]*dist;
+		distance[0] = -P_normal[0]*dist;
+		distance[1] = -P_normal[1]*dist;
 		P_tangent[0] = -P_normal[1];
 		P_tangent[1] = P_normal[0];
 		double dx = distance[0];
 		double dy = distance[1];
 
 		double visco = nu_0*rho_0;
-		double Csb=20;
+		double Csb=10;
 		double C_adim = Csb*visco/h_penalty;
 		//std::cout << "C_adim "<< C_adim << std::endl;
-		double beta = 5.0;
+		double beta = 0.0;
 		double beta_adim = beta*h_penalty*visco;
-		
+
 		for (int i=0;i<nDOF_test_element;i++)
 		  {
 		    int eN_i = eN*nDOF_test_element+i;
@@ -3317,10 +3321,33 @@ namespace proteus
 		    globalResidual[GlobPos_u] += beta_adim*P_tangent[0]*(Gxphi_i*dt1 + Gyphi_i*dt2);
 		    globalResidual[GlobPos_v] += beta_adim*P_tangent[1]*(Gxphi_i*dt1 + Gyphi_i*dt2);
 		   
-
 		  }//i
+
+		//
+		// LEO Forces
+		//
+		double p_ext = 0. ; // !!!! TO CHANGE BY REAL VALUE !!!!
+		double nx = -normal[0] ; // need ext normal of the solid
+		double ny = -normal[1] ;
+		for ( int i = 0 ; i < nDOF_test_element ; i++ ) {
+		  int eN_i = eN*nDOF_test_element+i;
+		  double phi_i = vel_test_dS[i];
+		  double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
+		  double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
+		  
+		  double S_xx = 2*visco*grad_u_ext[0];
+		  double S_xy = visco*(grad_u_ext[0] + grad_v_ext[1]); // sym tensor -> S_yx = S_xy
+		  double S_yy = 2*visco*grad_v_ext[1];
+		  
+		  Fx -= p_ext*nx;
+		  Fx += S_xx*nx + S_xy*ny;
+		  Fy -= p_ext*ny;
+		  Fy += S_xy*nx + S_yy*ny;
+		  
+		} // i
+		
 	      }//kb
-          }//ebN_s
+	  }//ebN_s
         //
         //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
         //
@@ -5346,17 +5373,17 @@ namespace proteus
 		double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
 		P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
 		P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
-		distance[0] = P_normal[0]*dist;
-		distance[1] = P_normal[1]*dist;
+		distance[0] = -P_normal[0]*dist;
+		distance[1] = -P_normal[1]*dist;
 		P_tangent[0] = -P_normal[1];
 		P_tangent[1] = P_normal[0];
 		double dx = distance[0];
 		double dy = distance[1];	
 		double tx = P_tangent[0] ; double ty = P_tangent[1];
 		double visco = nu_0*rho_0;
-		double Csb=20;
+		double Csb=10;
 		double C_adim = Csb*visco/h_penalty;
-		double beta = 5.0;
+		double beta = 0.0;
 		double beta_adim = beta*h_penalty*visco;
 	        		
                 for (int i=0;i<nDOF_test_element;i++)
