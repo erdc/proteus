@@ -459,7 +459,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 
     //m->writeNative("afterAnisotropicAdapt.smb");
   }
-  std::abort();
+  //std::abort();
   //isReconstructed = 0; //this is needed to maintain consistency with the post-adapt conversion back to Proteus
   nAdapt++; //counter for number of adapt steps
   return 0;
