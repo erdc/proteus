@@ -17,7 +17,7 @@ elif timeIntegration_ls == "rk":
     if cDegree_ls == -1:
         timeIntegration = LinearSSPRKPIintegration
     else:
-        timeIntegration = LinearSSPRKintegration        
+        timeIntegration = LinearSSPRKintegration
     stepController=Min_dt_RKcontroller
     timeOrder = pDegree_ls+1
     nStagesTime = timeOrder
@@ -40,7 +40,8 @@ else:
         femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
         print "pDegree_ls = %s not recognized " % pDegree_ls
-    elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
+    base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
+    elementQuadrature = CompositeTriangle(base_quad_rule,hk)
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
 
 subgridError = None
@@ -79,7 +80,7 @@ if parallel:
     linearSolverConvergenceTest = 'r-true'
 else:
     multilevelLinearSolver = LU
-    
+
     levelLinearSolver = LU
 
 conservativeFlux = {}
