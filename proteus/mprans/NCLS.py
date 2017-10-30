@@ -255,8 +255,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  redistancing_tolerance=0.1,
                  maxIter_redistancing=3,
                  lambda_coupez=0.1,
-                 cfl_redistancing=1.0):
+                 cfl_redistancing=1.0,
+                 epsFactHeaviside=1.5):
 
+        self.epsFactHeaviside=epsFactHeaviside
         self.DO_SMOOTHING=DO_SMOOTHING
         self.COUPEZ=COUPEZ
         self.SATURATED_LEVEL_SET=SATURATED_LEVEL_SET
@@ -392,6 +394,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
+        #compute int(H(phi))
+        mass = self.model.getMass()
+        self.model.history.write(repr(self.model.timeIntegration.dt)+","+
+                                 repr(mass)+"\n")        
         self.model.q['dV_last'][:] = self.model.q['dV']
         # if self.checkMass:
         #     self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
@@ -770,6 +776,9 @@ class LevelModel(OneLevelTransport):
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
+        self.history = open("mass_history.txt","w")
+        self.history.write('t'+","+
+                           'mass'+"\n")
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -876,6 +885,24 @@ class LevelModel(OneLevelTransport):
         if (self.nSpace_global==3):
             self.coefficients.ebqe_v[...,2] = self.velocityField[2](ebqe_X,t)
 
+    ############################
+    ######## GET MASS ##########
+    ############################
+    def getMass(self):
+        mass = self.ncls.calculateMass(
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.mesh.elementDiametersArray,
+            self.u[0].dof,
+            self.coefficients.epsFactHeaviside)
+        return mass
+    
     ######################################
     ######## GET REDISTANCING RHS ########
     ######################################
@@ -1163,9 +1190,16 @@ class LevelModel(OneLevelTransport):
         if (self.coefficients.STABILIZATION_TYPE == 0): #SUPG
             self.calculateResidual = self.ncls.calculateResidual
             self.calculateJacobian = self.ncls.calculateJacobian 
-        else:
+        elif (self.coefficients.STABILIZATION_TYPE == 1 or self.coefficients.STABILIZATION_TYPE==2):
+            #1: EV, 2: based on the smoothness indicator
             self.calculateResidual = self.ncls.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.ncls.calculateMassMatrix
+        elif (self.coefficients.STABILIZATION_TYPE == 3):
+            self.calculateResidual = self.ncls.calculateResidual_Lax_Wendroff
+            self.calculateJacobian = self.ncls.calculateMassMatrix
+        elif (self.coefficients.STABILIZATION_TYPE == 4):
+            self.calculateResidual = self.ncls.calculateResidual_TG3
+            self.calculateJacobian = self.ncls.calculateJacobian_TG3          
 
         self.calculateResidual(#element
             self.timeIntegration.dt,
