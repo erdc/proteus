@@ -301,16 +301,16 @@ def getResidual(
 
                 ui = u_dof_old[dof_i]
                 uj = u_dof_old[dof_j]
-                fi = np.array([0.5 * ui * ui, 0.5 * ui * ui])
-                fj = np.array([0.5 * uj * uj, 0.5 * uj * uj])
+                fi = np.array([0.5 * ui * ui, 0.5 * ui * ui]) - ui * vi
+                fj = np.array([0.5 * uj * uj, 0.5 * uj * uj]) - uj * vj
 
                 wj = mesh_velocity_dof[dof_j][:-1]
                 wi = mesh_velocity_dof[dof_i][:-1]
 
                 # maximum wave speed
 
-                dij[j] = max([(cij[0] + cij[1]) * maximum_wave_speed(uj, ui),  # for Burgers equation
-                              (cji[0] + cji[1]) * maximum_wave_speed(ui, uj)])  # for symmetry
+                dij[j] = max([(cij[0] + cij[1]) * maximum_wave_speed(ui, uj, np.dot(cij, wj) / (cij[0] + cij[1] + 1e-8)),  # for Burgers equation
+                              (cji[0] + cji[1]) * maximum_wave_speed(uj, ui, np.dot(cji, wi) / (cji[0] + cji[1] + 1e-8))])  # for symmetry
 
                 dii -= dij[j]
 
@@ -361,11 +361,11 @@ def P1_calculateMapping_element(nodes_coord, geo_basis, grad_geo_basis):
     return quad_pts, J, invJ, invJT, detJ
 
 
-def maximum_wave_speed(ui, uj):
+def maximum_wave_speed(uL, uR, w=0):
     maximum_speed = 0.0
-    if ui >= uj:
-        maximum_speed = fabs(0.5 * (ui + uj))
+    if uL >= uR:
+        maximum_speed = fabs(0.5 * (uL + uR) - w)
     else:
-        maximum_speed = max([fabs(ui), fabs(uj)])
+        maximum_speed = max([fabs(uL - w), fabs(uR - w)])
 
     return maximum_speed
