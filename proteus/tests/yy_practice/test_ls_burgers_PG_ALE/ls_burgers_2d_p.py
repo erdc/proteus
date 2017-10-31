@@ -89,11 +89,11 @@ class ProblemBurgersALE2D:
         return numpy.array([-2.0 * math.pi * (y - rotation_center[1]), 2.0 * math.pi * (x - rotation_center[0])])
 
     def mesh_velocity(self, x, y):
-        #         return np.stack((numpy.sin(numpy.pi * x) * numpy.cos(numpy.pi * y) * numpy.cos(2 * numpy.pi * self.t),
-        #                          -numpy.cos(numpy.pi * x) * numpy.sin(numpy.pi *
-        #                                                               y) * numpy.cos(2 * numpy.pi * self.t),
-        #                          numpy.zeros_like(x, 'd')),
-        #                         axis=1)
+        return np.stack((numpy.sin(numpy.pi * x) * numpy.cos(numpy.pi * y) * numpy.cos(2 * numpy.pi * self.t),
+                         -numpy.cos(numpy.pi * x) * numpy.sin(numpy.pi *
+                                                              y) * numpy.cos(2 * numpy.pi * self.t),
+                         numpy.zeros_like(x, 'd')),
+                        axis=1)
 
         return np.zeros((x.shape[0], 3), 'd')
 

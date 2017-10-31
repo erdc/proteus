@@ -301,16 +301,17 @@ def getResidual(
 
                 ui = u_dof_old[dof_i]
                 uj = u_dof_old[dof_j]
-                fi = np.array([0.5 * ui * ui, 0.5 * ui * ui]) - ui * vi
-                fj = np.array([0.5 * uj * uj, 0.5 * uj * uj]) - uj * vj
 
                 wj = mesh_velocity_dof[dof_j][:-1]
                 wi = mesh_velocity_dof[dof_i][:-1]
 
+                fi = np.array([0.5 * ui * ui, 0.5 * ui * ui]) - ui * wi
+                fj = np.array([0.5 * uj * uj, 0.5 * uj * uj]) - uj * wj
+
                 # maximum wave speed
 
-                dij[j] = max([(cij[0] + cij[1]) * maximum_wave_speed(ui, uj, np.dot(cij, wj) / (cij[0] + cij[1] + 1e-8)),  # for Burgers equation
-                              (cji[0] + cji[1]) * maximum_wave_speed(uj, ui, np.dot(cji, wi) / (cji[0] + cji[1] + 1e-8))])  # for symmetry
+                dij[j] = max([fabs(cij[0] + cij[1]) * maximum_wave_speed(ui, uj, np.dot(cij, wj) / (cij[0] + cij[1] + 1e-8)),  # for Burgers equation
+                              fabs(cji[0] + cji[1]) * maximum_wave_speed(uj, ui, np.dot(cji, wi) / (cji[0] + cji[1] + 1e-8))])  # for symmetry
 
                 dii -= dij[j]
 
