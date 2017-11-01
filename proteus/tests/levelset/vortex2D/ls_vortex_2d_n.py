@@ -18,46 +18,52 @@ elif timeIntegration_ls == "rk":
         timeIntegration = LinearSSPRKPIintegration
     else:
         timeIntegration = LinearSSPRKintegration
-    stepController=Min_dt_RKcontroller
-    timeOrder = pDegree_ls+1
+    stepController = Min_dt_RKcontroller
+    timeOrder = pDegree_ls + 1
     nStagesTime = timeOrder
 else:
     raise RuntimeError
 
 if useHex:
     if pDegree_ls == 1:
-        femSpaces = {0:C0_AffineLinearOnCubeWithNodalBasis}
+        femSpaces = {0: C0_AffineLinearOnCubeWithNodalBasis}
     elif pDegree_ls == 2:
-        femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}#this is hardwired to p2 right now
+        # this is hardwired to p2 right now
+        femSpaces = {0: C0_AffineLagrangeOnCubeWithNodalBasis}
     else:
         print "pDegree_ls = %s not recognized " % pDegree_ls
-    elementQuadrature = CubeGaussQuadrature(nd,vortex_quad_order)
-    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,vortex_quad_order)
+    elementQuadrature = CubeGaussQuadrature(nd, vortex_quad_order)
+    elementBoundaryQuadrature = CubeGaussQuadrature(nd - 1, vortex_quad_order)
 else:
     if pDegree_ls == 1:
-        femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
+        femSpaces = {0: C0_AffineLinearOnSimplexWithNodalBasis}
     elif pDegree_ls == 2:
-        femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
+        femSpaces = {0: C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
         print "pDegree_ls = %s not recognized " % pDegree_ls
-    base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
-    elementQuadrature = CompositeTriangle(base_quad_rule,hk)
-    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
+    base_quad_rule = SimplexGaussQuadrature(nd, vortex_quad_order)
+    elementQuadrature = CompositeTriangle(base_quad_rule, hk)
+    elementBoundaryQuadrature = SimplexGaussQuadrature(
+        nd - 1, vortex_quad_order)
+
+nLevels = ct.nLevels
+
 
 subgridError = None
 
-subgridError = HamiltonJacobi_ASGS_opt(coefficients,nd,lag=True)
+subgridError = HamiltonJacobi_ASGS_opt(coefficients, nd, lag=True)
 
 massLumping = False
 
 numericalFluxType = None
 
-shockCapturing = NCLS.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_ls,lag=lag_shockCapturing_ls)
+shockCapturing = NCLS.ShockCapturing(
+    coefficients, nd, shockCapturingFactor=shockCapturingFactor_ls, lag=lag_shockCapturing_ls)
 
 numericalFluxType = DoNothing
 
 
-multilevelNonlinearSolver  = Newton
+multilevelNonlinearSolver = Newton
 levelNonlinearSolver = Newton
 
 nonlinearSolverConvergenceTest = 'rits'
@@ -74,8 +80,8 @@ l_atol_res = atolLevelSet
 matrix = SparseMatrix
 
 if parallel:
-    multilevelLinearSolver = KSP_petsc4py#PETSc
-    levelLinearSolver = KSP_petsc4py#PETSc
+    multilevelLinearSolver = KSP_petsc4py  # PETSc
+    levelLinearSolver = KSP_petsc4py  # PETSc
     linear_solver_options_prefix = 'ncls_'
     linearSolverConvergenceTest = 'r-true'
 else:
@@ -90,4 +96,5 @@ maxLineSearches = 0
 #checkMass = True
 
 if not applyCorrection and checkMass:
-   auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryLS("vortex2dnc"+`lRefinement`)]
+    auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryLS(
+        "vortex2dnc" + `lRefinement`)]

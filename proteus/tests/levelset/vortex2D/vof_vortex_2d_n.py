@@ -3,7 +3,7 @@ from proteus.default_n import *
 from vof_vortex_2d_p import *
 from vortex2D import *
 
-multilevelNonlinearSolver  = NLNI
+multilevelNonlinearSolver = NLNI
 levelNonlinearSolver = Newton
 fullNewtonFlag = True
 
@@ -21,62 +21,67 @@ elif timeIntegration_vof == "rk":
         timeIntegration = LinearSSPRKPIintegration
     else:
         timeIntegration = LinearSSPRKintegration
-    stepController=Min_dt_RKcontroller
+    stepController = Min_dt_RKcontroller
     #timeIntegration = ForwardEuler
-    #stepController=Min_dt_controller
-    timeOrder = pDegree_vof+1
+    # stepController=Min_dt_controller
+    timeOrder = pDegree_vof + 1
     nStagesTime = timeOrder
-    limiterType =   {0:TimeIntegration.DGlimiterPkMonomial2d}
+    limiterType = {0: TimeIntegration.DGlimiterPkMonomial2d}
 else:
     raise RuntimeError
 
-if cDegree_vof==0:
+if cDegree_vof == 0:
     if useHex:
-        if pDegree_vof==1:
-            femSpaces = {0:C0_AffineLinearOnCubeWithNodalBasis}
-        elif pDegree_vof==2:
-            femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}
+        if pDegree_vof == 1:
+            femSpaces = {0: C0_AffineLinearOnCubeWithNodalBasis}
+        elif pDegree_vof == 2:
+            femSpaces = {0: C0_AffineLagrangeOnCubeWithNodalBasis}
     else:
-        if pDegree_vof==1:
-            femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
-        elif pDegree_vof==2:
-            femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
-    subgridError = Advection_ASGS(coefficients,nd,lag=False)
-    shockCapturing = VOF.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_vof,lag=lag_shockCapturing_vof)
+        if pDegree_vof == 1:
+            femSpaces = {0: C0_AffineLinearOnSimplexWithNodalBasis}
+        elif pDegree_vof == 2:
+            femSpaces = {0: C0_AffineQuadraticOnSimplexWithNodalBasis}
+    subgridError = Advection_ASGS(coefficients, nd, lag=False)
+    shockCapturing = VOF.ShockCapturing(
+        coefficients, nd, shockCapturingFactor=shockCapturingFactor_vof, lag=lag_shockCapturing_vof)
     if parallel or LevelModelType == VOF.LevelModel:
         numericalFluxType = Advection_DiagonalUpwind_IIPG_exterior
 
-elif cDegree_vof==-1:
-    if pDegree_vof==0:
-        femSpaces = {0:DG_AffineP0_OnSimplexWithMonomialBasis}
-    elif pDegree_vof==1:
-        femSpaces = {0:DG_AffineP1_OnSimplexWithMonomialBasis}
-    elif pDegree_vof==2:
-        femSpaces = {0:DG_AffineP2_OnSimplexWithMonomialBasis}
-    elif pDegree_vof==3:
-        femSpaces = {0:DG_AffineP3_OnSimplexWithMonomialBasis}
+elif cDegree_vof == -1:
+    if pDegree_vof == 0:
+        femSpaces = {0: DG_AffineP0_OnSimplexWithMonomialBasis}
+    elif pDegree_vof == 1:
+        femSpaces = {0: DG_AffineP1_OnSimplexWithMonomialBasis}
+    elif pDegree_vof == 2:
+        femSpaces = {0: DG_AffineP2_OnSimplexWithMonomialBasis}
+    elif pDegree_vof == 3:
+        femSpaces = {0: DG_AffineP3_OnSimplexWithMonomialBasis}
     numericalFluxType = Advection_DiagonalUpwind
-    limiterType =   {0:TimeIntegration.DGlimiterPkMonomial2d}
+    limiterType = {0: TimeIntegration.DGlimiterPkMonomial2d}
 
 if useHex:
-    elementQuadrature = CubeGaussQuadrature(nd,vortex_quad_order)
-    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,vortex_quad_order)
+    elementQuadrature = CubeGaussQuadrature(nd, vortex_quad_order)
+    elementBoundaryQuadrature = CubeGaussQuadrature(nd - 1, vortex_quad_order)
 else:
-    base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
-    elementQuadrature = CompositeTriangle(base_quad_rule,hk)
+    base_quad_rule = SimplexGaussQuadrature(nd, vortex_quad_order)
+    elementQuadrature = CompositeTriangle(base_quad_rule, hk)
     #elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
-    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
+    elementBoundaryQuadrature = SimplexGaussQuadrature(
+        nd - 1, vortex_quad_order)
 
 #elementQuadrature = SimplexLobattoQuadrature(nd,1)
 #
 #elementBoundaryQuadrature = SimplexLobattoQuadrature(nd-1,1)
 
-nonlinearSmoother = None#NLGaussSeidel
+nLevels = ct.nLevels
+
+
+nonlinearSmoother = None  # NLGaussSeidel
 
 tolFac = 0.0
 linTolFac = tolFac
 
-nl_atol_res = 100*atolVolumeOfFluid
+nl_atol_res = 100 * atolVolumeOfFluid
 l_atol_res = atolVolumeOfFluid
 
 maxNonlinearIts = 25
@@ -85,8 +90,8 @@ maxLineSearches = 0
 matrix = SparseMatrix
 
 if parallel:
-    multilevelLinearSolver = KSP_petsc4py#PETSc
-    levelLinearSolver = KSP_petsc4py#PETSc
+    multilevelLinearSolver = KSP_petsc4py  # PETSc
+    levelLinearSolver = KSP_petsc4py  # PETSc
     linear_solver_options_prefix = 'vof_'
     linearSolverConvergenceTest = 'r-true'
 else:
