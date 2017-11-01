@@ -245,7 +245,7 @@ namespace proteus
 		      	}
 		      else if (nQuadraturePoints_elementIn == 6)
 		      	{
-                        std::cout<<"666666666"
+                        std::cout<<"6-6-6-6-6-6-6-6-6"
                             <<std::endl<<std::flush;
                     
 		      	  if (nQuadraturePoints_elementBoundaryIn == 4)
@@ -255,7 +255,7 @@ namespace proteus
 		      	}
 		      else if (nQuadraturePoints_elementIn == 7)
 		      	{
-                        std::cout<<"777777777"
+                        std::cout<<"7-7-7-7-7-7-7-7-7"
                             <<std::endl<<std::flush;
                     
 		      	  if (nQuadraturePoints_elementBoundaryIn == 5)
@@ -299,6 +299,19 @@ namespace proteus
                         std::cout<<"I am here"
                             <<std::endl<<std::flush;
 		      	    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,100,3,3,3,3>());
+                    }else
+		      	        abort();
+                }
+              else if (nQuadraturePoints_elementIn == 400)//hk=0.1
+                {
+                        std::cout<<"400-400-400-400-400"
+                            <<std::endl<<std::flush;
+                    
+                  if (nQuadraturePoints_elementBoundaryIn == 3)
+                    {
+                        std::cout<<"I am here"
+                            <<std::endl<<std::flush;
+		      	    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,400,3,3,3,3>());
                     }else
 		      	        abort();
                 }

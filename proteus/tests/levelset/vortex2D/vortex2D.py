@@ -4,8 +4,9 @@ ct = Context.Options([("T", 8.0, "Time interval [0, T]"),
                       ("datafile", 'errorInfo.db',
                        "Filename to save error information"),
                       ("ncells", 32, "Specify initial mesh size by giving number of cells in each direction"),
-                      ("nLevels", 2, "number of refiments"),
-                      ("nDTout", 80, "Specify the time archive the solution")],
+                      ("hk", 0.1, "the size of composite cells"),
+                      ("nLevels", 1, "number of refiments"),
+                      ("nDTout", 2, "Specify the time archive the solution")],
                      mutable=True)
 
 # if True uses PETSc solvers
@@ -43,7 +44,7 @@ else:
     vortex_quad_order = 3
 
 # sub-element edge size, used to create composite quadrature rule
-hk = 0.6
+hk = ct.hk
 
 # parallel partitioning info
 from proteus import MeshTools
