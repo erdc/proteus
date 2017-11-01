@@ -3,8 +3,8 @@ from proteus import Context
 from proteus.default_n import nLevels
 
 ct = Context.Options([
-    ("T", 1.0, "Time interval [0, T]"),
-    ("nDTout", 50, "Times to print out [0,T]"),
+    ("T", 0.5, "Time interval [0, T]"),
+    ("nDTout", 25, "Times to print out [0,T]"),
     ("checkMass", False, "Check mass or not"),
     ("cfl", 0.3, "Target CFL number"),
     ("parallel", False, "Use PETSc or not"),
@@ -82,6 +82,8 @@ L = lower_left_cornor = (-0.2, -.2)
 width_and_hight = (2.0, 2.0)
 rotation_center = (lower_left_cornor[0] + 0.5 * width_and_hight[0],
                    lower_left_cornor[1] + 0.5 * width_and_hight[1])
+
+initial_area = width_and_hight[0] * width_and_hight[1] / nnx / nny / 2.0
 
 box = Domain.RectangularDomain(L=width_and_hight,
                                x=lower_left_cornor,

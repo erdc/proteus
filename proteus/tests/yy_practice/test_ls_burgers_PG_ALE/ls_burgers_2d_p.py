@@ -221,8 +221,24 @@ class UnitSquareRotation(NCLS.Coefficients):
         self.q_v[..., 1] = self.model.u[0].dof
 
         analyticalSolution[0].t = self.model.timeIntegration.tLast
-        self.mesh.nodeVelocityArray[:] = analyticalSolution[0].mesh_velocity(
-            self.mesh.nodeArray[:, 0], self.mesh.nodeArray[:, 1])
+
+        import get_Mesh_velocity_1 as MV
+
+        self.mesh.nodeVelocityArray[:] = 0.0
+        self.mesh.nodeVelocityArray[:, 0] = self.q_v[:, 0]
+        self.mesh.nodeVelocityArray[:, 1] = self.q_v[:, 1]
+
+        MV.get_mesh_velocity(self.mesh.nodeArray,
+                             self.mesh.nodeStarOffsets,
+                             self.mesh.nodeStarArray,
+                             self.mesh.elementNodesArray,
+                             self.dirichlet_bc_dofs['dof'],
+                             self.model.timeIntegration.dt,
+                             initial_area,
+                             self.mesh.nodeVelocityArray)
+
+#         self.mesh.nodeVelocityArray[:] = analyticalSolution[0].mesh_velocity(
+#             self.mesh.nodeArray[:, 0], self.mesh.nodeArray[:, 1])
 
         copyInstructions = {}
         return copyInstructions

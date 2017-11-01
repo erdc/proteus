@@ -274,17 +274,30 @@ def getResidual(
 
     globalResidual[:] = 0.0
 
+    edge_based_cfl[:] = 0.0
+
     for dof_i in xrange(numDOFs):  # Serious error: numDOFs=nnz-1
 
         # get new APPROXIMATE lumped mass matrix
-        mi_new = 0.0
+        div_w_i = 0.0
         for j in xrange(csrRowIndeces_DofLoops[dof_i], csrRowIndeces_DofLoops[dof_i + 1]):
             dof_j = csrColumnOffsets_DofLoops[j]
 
-            mi_new += dt * (Cx[j] * mesh_velocity_dof[dof_j, 0] +
-                            Cy[j] * mesh_velocity_dof[dof_j, 1])  # assume dof of function is equal to dof of node
+            div_w_i += dt * (Cx[j] * mesh_velocity_dof[dof_j, 0] +
+                             Cy[j] * mesh_velocity_dof[dof_j, 1])  # assume dof of function is equal to dof of node
 
-        ML_new[dof_i] = ML[dof_i] + mi_new
+        ML_new[dof_i] = ML[dof_i] + dt * div_w_i
+
+        # main problem
+        if div_w_i < 0.0:
+            #             import pdb
+            #             pdb.set_trace()
+            #             print dof_i, ML[dof_i], ML_new[dof_i]
+            edge_based_cfl[dof_i] = max(
+                [edge_based_cfl[dof_i],  -div_w_i / ML[dof_i]])
+
+        if ML_new[dof_i] < 0.0:
+            raise Exception(`ML_new[dof_i]`, `ML[dof_i]`, `dof_i`, `div_w_i`)
 
         dii = 0.0
         spatial_residual_dof_i = 0.0
@@ -334,7 +347,8 @@ def getResidual(
                                  dt * spatial_residual_dof_i) / ML_new[dof_i]
         ML[dof_i] = ML_new[dof_i]
 
-        edge_based_cfl[dof_i] = 2.0 * fabs(dii) / ML[dof_i]
+        edge_based_cfl[dof_i] = max(
+            [edge_based_cfl[dof_i],  2.0 * fabs(dii) / ML[dof_i]])
     # end-of-loop-over-dof_i
 
 
