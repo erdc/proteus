@@ -498,6 +498,40 @@ class NS_base:  # (HasTraits):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
+
+            
+            logEvent("Converting Reconstructed PUMI mesh to Proteus")
+            p = self.pList[0]
+            n = self.nList[0]
+            p.domain.PUMIMesh=n.MeshAdaptMesh
+            p.domain.hasModel = n.useModel
+            #p.domain.PUMIMesh.reconstructFromProteus2("reconmodel.dmg","reconmodel.smb")
+            p.domain.PUMIMesh.reconstructFromProteus2("marin_recon.dmg","marin_recon.smb")
+            logEvent("Converting to PUMI")
+            mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
+                p.domain.regList,
+                parallel = comm.size() > 1, dim = p.domain.nd)
+            if p.domain.nd == 3:
+              mlMesh = MeshTools.MultilevelTetrahedralMesh(
+                  0,0,0,skipInit=True,
+                  nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                  parallelPartitioningType=n.parallelPartitioningType)
+            if p.domain.nd == 2:
+              mlMesh = MeshTools.MultilevelTriangularMesh(
+                  0,0,0,skipInit=True,
+                  nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                  parallelPartitioningType=n.parallelPartitioningType)
+            logEvent("Generating %i-level mesh from PUMI mesh" % (n.nLevels,))
+            if comm.size()==1:
+              mlMesh.generateFromExistingCoarseMesh(
+                  mesh,n.nLevels,
+                  nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                  parallelPartitioningType=n.parallelPartitioningType)
+            else:
+              mlMesh.generatePartitionedMeshFromPUMI(
+                  mesh,n.nLevels,
+                  nLayersOfOverlap=n.nLayersOfOverlapForParallel)
+
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 logEvent("Attempting to visualize mesh")
@@ -987,7 +1021,8 @@ class NS_base:  # (HasTraits):
               mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
 
             p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
-            p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
+            #p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
+            p0.domain.PUMIMesh.reconstructFromProteus2("reconmodel.dmg","reconmodel.smb")
         if (hasattr(p0.domain, 'PUMIMesh') and
             n0.adaptMesh and
             self.so.useOneMesh and
@@ -1139,6 +1174,51 @@ class NS_base:  # (HasTraits):
         runName : str
             A name for the calculated solution.
         """
+
+        #Get mesh entities for reconstruction
+        #theMesh = self.modelList[0].levelModelList[0].mesh
+        #from scipy import spatial
+        #meshVertexTree = spatial.cKDTree(theMesh.nodeArray)
+        #meshVertex2Model= [0]*theMesh.nNodes_owned
+        #file0 = open('modelNodeArray.csv','w') 
+        #file0.write('%i\n' % len(self.pList[0].domain.vertices))
+        #for idx,vertex in enumerate(self.pList[0].domain.vertices):
+        #  #if(self.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
+        #  #  vertex.append(0.0) #need to make a 3D coordinate
+        #  closestVertex = meshVertexTree.query(vertex)
+        #  #file0.write('%i, %i\n' % (closestVertex[1],theMesh.nodeMaterialTypes[closestVertex[1]])) 
+        #  file0.write('%i, %i\n' % (closestVertex[1],idx)) 
+        #file0.close()      
+
+        #file1 = open('meshNodeArray.csv','w') 
+        #file1.write('%i\n' % theMesh.nNodes_owned)
+        #for nodeIdx in range(len(theMesh.nodeArray)):
+        #  file1.write('%i, %.15f, %.15f, %.15f\n' % (nodeIdx, 
+        #     theMesh.nodeArray[nodeIdx][0],
+        #     theMesh.nodeArray[nodeIdx][1], 
+        #     theMesh.nodeArray[nodeIdx][2]))
+        #file1.close() 
+        #file2 = open('meshConnectivity.csv','w') 
+        #file2.write('%i\n' % theMesh.nElements_owned)
+        #for elementIdx in range(len(theMesh.elementNodesArray)):
+        #  file2.write('%i, %i, %i, %i, %i\n' % (elementIdx, theMesh.elementNodesArray[elementIdx][0],
+        #     theMesh.elementNodesArray[elementIdx][1], theMesh.elementNodesArray[elementIdx][2],
+        #     theMesh.elementNodesArray[elementIdx][3]))
+        #file2.close() 
+        #file3 = open('meshBoundaryConnectivity.csv','w') 
+        #file3.write('%i\n' % theMesh.nExteriorElementBoundaries_global)
+        #for elementBdyIdx in range(len(theMesh.exteriorElementBoundariesArray)):
+        #  exteriorIdx = theMesh.exteriorElementBoundariesArray[elementBdyIdx]
+        #  file3.write('%i, %i, %i, %i, %i, %i\n' % (exteriorIdx,
+        #     theMesh.elementBoundaryMaterialTypes[exteriorIdx],
+        #     theMesh.elementBoundaryElementsArray[exteriorIdx][0], #should be adjacent to only one boundary
+        #     theMesh.elementBoundaryNodesArray[exteriorIdx][0],
+        #     theMesh.elementBoundaryNodesArray[exteriorIdx][1],
+        #     theMesh.elementBoundaryNodesArray[exteriorIdx][2],
+        #      ))
+        #file3.close() 
+        #exit()
+
         logEvent("Setting initial conditions",level=0)
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
@@ -1333,7 +1413,7 @@ class NS_base:  # (HasTraits):
        #     print "Min / Max residual %s / %s" %(lr.min(),lr.max())
 
         self.nSequenceSteps = 0
-        self.nSolveSteps=self.nList[0].adaptMesh_nSteps-1
+        self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-1
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
@@ -1476,9 +1556,9 @@ class NS_base:  # (HasTraits):
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
                 #can only handle PUMIDomain's for now
-                self.nSolveSteps += 1
-                if(self.PUMI_estimateError()):
-                    self.PUMI_adaptMesh()
+                #self.nSolveSteps += 1
+                #if(self.PUMI_estimateError()):
+                #    self.PUMI_adaptMesh()
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
                 self.tCount+=1

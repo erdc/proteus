@@ -386,9 +386,9 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
   scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
   scale[2] = 1.0;
 */
-  scale[0] = h_dest;  
+  scale[0] = hmin;//h_dest;  
   scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
-  scale[2] = 1.0;
+  scale[2] = sqrt(lambda[0]/lambda[2])*scale[0];
 /*
   scale[0] = 10.0*hmax;
   scale[1] = hmax;  
