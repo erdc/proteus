@@ -500,38 +500,40 @@ class NS_base:  # (HasTraits):
                                                           parallelPartitioningType=n.parallelPartitioningType)
 
             
-            logEvent("Converting Reconstructed PUMI mesh to Proteus")
-            p = self.pList[0]
-            n = self.nList[0]
-            p.domain.PUMIMesh=n.MeshAdaptMesh
-            p.domain.hasModel = n.useModel
-            #p.domain.PUMIMesh.reconstructFromProteus2("reconmodel.dmg","reconmodel.smb")
-            p.domain.PUMIMesh.reconstructFromProteus2("marin_recon.dmg","marin_recon.smb")
-            logEvent("Converting to PUMI")
-            mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
-                p.domain.regList,
-                parallel = comm.size() > 1, dim = p.domain.nd)
-            if p.domain.nd == 3:
-              mlMesh = MeshTools.MultilevelTetrahedralMesh(
-                  0,0,0,skipInit=True,
-                  nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                  parallelPartitioningType=n.parallelPartitioningType)
-            if p.domain.nd == 2:
-              mlMesh = MeshTools.MultilevelTriangularMesh(
-                  0,0,0,skipInit=True,
-                  nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                  parallelPartitioningType=n.parallelPartitioningType)
-            logEvent("Generating %i-level mesh from PUMI mesh" % (n.nLevels,))
-            if comm.size()==1:
-              mlMesh.generateFromExistingCoarseMesh(
-                  mesh,n.nLevels,
-                  nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                  parallelPartitioningType=n.parallelPartitioningType)
-            else:
-              mlMesh.generatePartitionedMeshFromPUMI(
-                  mesh,n.nLevels,
-                  nLayersOfOverlap=n.nLayersOfOverlapForParallel)
-
+            if(n.useModel):
+              logEvent("Converting Reconstructed PUMI mesh to Proteus")
+              p = self.pList[0]
+              n = self.nList[0]
+              p.domain.PUMIMesh=n.MeshAdaptMesh
+              p.domain.hasModel = n.useModel
+           
+              #p.domain.PUMIMesh.reconstructFromProteus2("reconmodel.dmg","reconmodel.smb")
+              p.domain.PUMIMesh.reconstructFromProteus2("marin_recon.dmg","marin_recon.smb")
+              logEvent("Converting to PUMI")
+              mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
+                  p.domain.regList,
+                  parallel = comm.size() > 1, dim = p.domain.nd)
+              if p.domain.nd == 3:
+                mlMesh = MeshTools.MultilevelTetrahedralMesh(
+                    0,0,0,skipInit=True,
+                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                    parallelPartitioningType=n.parallelPartitioningType)
+              if p.domain.nd == 2:
+                mlMesh = MeshTools.MultilevelTriangularMesh(
+                    0,0,0,skipInit=True,
+                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                    parallelPartitioningType=n.parallelPartitioningType)
+              logEvent("Generating %i-level mesh from PUMI mesh" % (n.nLevels,))
+              if comm.size()==1:
+                mlMesh.generateFromExistingCoarseMesh(
+                    mesh,n.nLevels,
+                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                    parallelPartitioningType=n.parallelPartitioningType)
+              else:
+                mlMesh.generatePartitionedMeshFromPUMI(
+                    mesh,n.nLevels,
+                    nLayersOfOverlap=n.nLayersOfOverlapForParallel)
+  
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 logEvent("Attempting to visualize mesh")
