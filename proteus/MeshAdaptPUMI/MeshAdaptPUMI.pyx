@@ -20,14 +20,16 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*,double,double)
         int numIter, numAdaptSteps
         string size_field_config, adapt_type_config
-        bint isReconstructed
+        int isReconstructed
         int loadModelAndMesh(char *, char*)
         int getSimmetrixBC()
         int reconstructFromProteus(Mesh&,Mesh&,int)
+        int reconstructFromProteus2(char*,char*)
         int constructFromSerialPUMIMesh(Mesh&)
         int constructFromParallelPUMIMesh(Mesh&, Mesh&)
         int updateMaterialArrays(Mesh&,int, int, int)
         int updateMaterialArrays(Mesh&)
+        int updateMaterialArrays2(Mesh&)
         int transferFieldToPUMI(char*, double*, int, int)
         int transferFieldToProteus(char*, double*, int, int)
         int transferPropertiesToPUMI(double*, double*,double*)
@@ -47,7 +49,7 @@ cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
     cdef double hmax, hmin
     cdef int numIter, numAdaptSteps
-    cdef bint isReconstructed
+    cdef int isReconstructed
     def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="ERM",maType="test",logType="off",targetError=0,targetElementCount=0):
         logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
         self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType,targetError,targetElementCount)
@@ -67,6 +69,8 @@ cdef class MeshAdaptPUMI:
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         cdef CMesh* global_cmesh_ptr = <CMesh*>global_cmesh
         return self.thisptr.reconstructFromProteus(cmesh_ptr.mesh,global_cmesh_ptr.mesh,hasModel)
+    def reconstructFromProteus2(self,testModel,testMesh):
+        return self.thisptr.reconstructFromProteus2(testModel,testMesh)
     def constructFromSerialPUMIMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.constructFromSerialPUMIMesh(cmesh_ptr.mesh)
@@ -80,6 +84,9 @@ cdef class MeshAdaptPUMI:
             return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh)
         else:
             return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh,dim, bdryId, geomTag)
+    def updateMaterialArrays2(self, cmesh):
+        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
+        return self.thisptr.updateMaterialArrays2(cmesh_ptr.mesh)
     def transferFieldToPUMI(self, name, np.ndarray[np.double_t,ndim=2,mode="c"] inArray):
         inArray = np.ascontiguousarray(inArray)
         return self.thisptr.transferFieldToPUMI(name, &inArray[0,0], inArray.shape[1], inArray.shape[0])
