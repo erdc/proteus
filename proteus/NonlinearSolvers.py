@@ -1114,12 +1114,25 @@ class ExplicitConsistentMassMatrixWithRedistancing(Newton):
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
                 self.linearSolverFailed = self.linearSolver.failed()
             u-=self.du
+            #CHECK IF TG3-2S
+            if self.F.coefficients.STABILIZATION_TYPE==5:
+                self.F.uTilde_dof[:] = u
+                self.F.stage=2
+                u[:] = self.F.u_dof_old
+                self.computeResidual(u,r,b)
+                if not self.directSolver:
+                    if self.EWtol:
+                        self.setLinearSolverTolerance(r)
+                if not self.linearSolverFailed:
+                    self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                    self.linearSolverFailed = self.linearSolver.failed()
+                u-=self.du                
             # DISTRIBUTE SOLUTION FROM u to u[ci].dof
             self.F.auxiliaryCallCalculateResidual = True
             self.computeResidual(u,r,b)
+            self.F.stage=1
             self.F.auxiliaryCallCalculateResidual = False
             # self.F.setUnknowns(self.F.timeIntegration.u)
-
         ############################
         ##### Do re-distancing #####
         ############################
