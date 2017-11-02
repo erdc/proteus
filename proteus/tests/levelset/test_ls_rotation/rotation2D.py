@@ -1,19 +1,44 @@
+from proteus import Domain
 from proteus import Context
+from proteus.default_n import nLevels
 
-ct = Context.Options([("T", 8.0, "Time interval [0, T]"),
-                      ("datafile", 'errorInfo.db',
-                       "Filename to save error information"),
-                      ("ncells", 32, "Specify initial mesh size by giving number of cells in each direction"),
-                      ("hk", 0.1, "the size of composite cells"),
-                      ("nLevels", 1, "number of refiments"),
-                      ("nDTout", 80, "Specify the time archive the solution")],
-                     mutable=True)
+ct = Context.Options([
+    ("T", 1.0, "Time interval [0, T]"),
+    ("checkMass", False, "Check mass or not"),
+    ("cfl", 0.3, "Target CFL number"),
+    ("parallel", False, "Use PETSc or not"),
+    ("linearSmoother", False, "Use linear smoother or not"),
+    ("correctionType", 'cg', "Use 'cg' or 'dg' or 'dgp0' or 'global' or 'none'"),
+    ("unstructured", False, "unstructured mesh or not"),
+    ("ncells", 10, "Specify initial mesh size by giving number of cells in each direction"),
+    ("nLevels", 3, "number of refiments"),
+    ("timeIntegration_ls", 'be',
+     "method for Time integration: 'be', 'vbdf', 'flcbdf','rk' "),
+    ("datafile", 'errorInfo.db', "Filename to save error information"),
+    ("useHex", False, "use quadrilateral or not"),
+    ("stablization", 0, "Stabilization method: 0=SUPG, 1=EV, 2=FCT")
+], mutable=True)
+
+
+if ct.useHex:
+    hex = True
+    quad = True
+    soname = '_'.join(
+        [str(i) for i in ['rotation_qua', ct.timeIntegration_ls, ct.ncells, ct.nLevels]])
+else:
+    soname = '_'.join(
+        [str(i) for i in ['rotation_tri', ct.timeIntegration_ls, ct.ncells, ct.nLevels]])
+
+ct.datafile = soname + '_' + ct.datafile
+
+Context.set(ct)
+
 
 # if True uses PETSc solvers
-parallel = False
-linearSmoother = None
+parallel = ct.parallel
+linearSmoother = ct.linearSmoother
 # compute mass balance statistics or not
-checkMass = False  # True
+checkMass = ct.checkMass  # True
 # number of space dimensions
 nd = 2
 # time integration, not relevant if using BDF with cfl timestepping
@@ -22,11 +47,9 @@ atol_u = {0: 1.0e-4}
 rtol_res = {0: 1.0e-4}
 atol_res = {0: 1.0e-4}
 #
-timeIntegration_vof = "vbdf"  # vbdf,be,flcbdf,rk
-timeIntegration_ls = "vbdf"  # vbdf,be,flcbdf,rk
-timeOrder = 2
 
-runCFL = 0.3  # 0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
+
+runCFL = ct.cfl  # 0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 #
 # spatial approximation orders
 cDegree_ls = 0  # 0 -- CG. -1 -- DG
@@ -39,54 +62,53 @@ useMetrics = 1.0
 # spatial quadrature orders
 # 2*max(pDegree_vof,pDegree_ls)+1
 if pDegree_ls == 2:
-    vortex_quad_order = 4
+    rotation_quad_order = 5
 else:
-    vortex_quad_order = 3
-
-# sub-element edge size, used to create composite quadrature rule
-hk = ct.hk
-
+    rotation_quad_order = 3
 # parallel partitioning info
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 # spatial mesh
-lRefinement = 1
+# lRefinement = 1
 # tag simulation name to level of refinement
-# soname="vortexcgp2_bdf2_mc"+`lRefinement`
-nn = nnx = nny = ct.ncells  # (2**lRefinement) * 10 + 1
+# soname="rotationcgp2_bdf2_mc"+`lRefinement`
+nn = nnx = nny = ct.ncells + 1
 nnz = 1
 he = 1.0 / (nnx - 1.0)
 
+# True for tetgen, false for tet or hex from rectangular grid
+unstructured = ct.unstructured
 
 lower_left_cornor = (0.0, 0.0)
-L = width_and_hight = (1.0, 1.0)
+L = width_and_hight = (2.0, 2.0)
 rotation_center = (lower_left_cornor[0] + 0.5 * width_and_hight[0],
                    lower_left_cornor[1] + 0.5 * width_and_hight[1])
 
-
-unstructured = False  # True for tetgen, false for tet or hex from rectangular grid
+box = Domain.RectangularDomain(L=width_and_hight,
+                               x=lower_left_cornor,
+                               name="box")
+box.writePoly("box")
 if unstructured:
-    from tank2dDomain import *
-    domain = tank2d(L=L)
+    from rotationDomain import *
+    domain = Domain.PlanarStraightLineGraphDomain(fileprefix="box")
+    domain.boundaryTags = box.boundaryTags
     bt = domain.boundaryTags
-    domain.writePoly("tank2d")
     triangleOptions = "pAq30Dena%8.8f" % (0.5 * he**2,)
 else:
-    from proteus.Domain import RectangularDomain
-    domain = RectangularDomain(L)
+    domain = box
 # end time of simulation, full problem is T=8.0
 T = ct.T  # 8.0#
 # number of output time steps
-nDTout = ct.nDTout
+nDTout = 10
 # mass correction
-applyCorrection = True
-applyRedistancing = True
-redist_Newton = True
+applyCorrection = False
+applyRedistancing = False
+redist_Newton = False
 onlyVOF = False  # True
 # smoothing factors
 # eps
-epsFactHeaviside = epsFactDirac = epsFact_vof = 1.5 * hk
-epsFactRedistance = 1.5 * hk
+epsFactHeaviside = epsFactDirac = epsFact_vof = 1.5
+epsFactRedistance = 0.33
 epsFactDiffusion = 10.0
 #
 if useMetrics:
@@ -119,16 +141,5 @@ fmmFlag = 0
 #correctionType = 'dg'
 #correctionType = 'dgp0'
 #correctionType = 'global'
-correctionType = 'cg'
+# correctionType = ct.correctionType
 #correctionType = 'none'
-if useHex:
-    hex = True
-    soname = "vortex_c0q" + `pDegree_ls`+correctionType + "_" + \
-        timeIntegration_vof + "_" + `timeOrder`+"_level_" + `lRefinement`
-else:
-    soname = "vortex_c0p" + `pDegree_ls`+correctionType + "_" + \
-        timeIntegration_vof + "_" + `timeOrder`+"_level_" + \
-        `lRefinement`+"_" + `hk`+"_" + `ct.ncells`
-
-ct.datafile = soname
-Context.set(ct)
