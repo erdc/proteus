@@ -155,7 +155,10 @@ cdef extern from "ChRigidBody.h":
         void setConstraints(double* free_x, double* free_r)
         void setInertiaXX(double* inertia)
         void setName(string name)
-        void setPrescribedMotionCustom(vector[double] x, vector[double] y)
+        void setPrescribedMotionCustom(vector[double] t, vector[double] x,
+                                       vector[double] y, vector[double] z,
+                                       vector[double] ang, vector[double] ang2,
+                                       vector[double] ang3, double t_max)
         void setPrescribedMotionPoly(double coeff1)
         void setPrescribedMotionSine(double a, double f)
 
@@ -867,18 +870,69 @@ cdef class ProtChBody:
     def calculate(self):
         pass
 
-    def setPrescribedMotionCustom(self, double[:] x, double[:] y):
-        """Sets custom prescribed motion for body
+    def setPrescribedMotionCustom(self, double[:] t, double[:] x=None,
+                                  double[:] y=None, double[:] z=None,
+                                  double[:] ang=None, double[:] ang2=None,
+                                  double[:] ang3=None, double t_max=0):
+        """Sets custom prescribed motion for body.
+        Parameters must have the same length as the time array t
+
+        Parameters
+        ----------
+        t: array_like
+            time array
+        x: array_like
+            x coordinates of body
+        y: array_like
+            y coordinates of body
+        z: array_like
+            z coordinates of body
+        ang: array_like
+            rotation of body
+        ang2: array_like
+            rotation of body
+        ang3: array_like
+            rotation coordinates of body
+        t_max: double
+            prescribed motion is released when t > t_max.
+            if t_max=0, the prescribed motion is never released.
         """
+        cdef vector[double] t_vec
         cdef vector[double] x_vec
         cdef vector[double] y_vec
-        assert len(x) == len(y), 'x and y should have the same length'
-        for xx in x:
-            x_vec.push_back(xx)
-        for yy in y:
-            y_vec.push_back(yy)
-                
-        self.thisptr.setPrescribedMotionCustom(x_vec, y_vec)
+        cdef vector[double] z_vec
+        cdef vector[double] ang_vec
+        cdef vector[double] ang2_vec
+        cdef vector[double] ang3_vec
+        for tt in t:
+            t_vec.push_back(tt)
+        if x is not None:
+            assert len(x) == len(t), 'x and t should have the same length'
+            for xx in x:
+                x_vec.push_back(xx)
+        if y is not None:
+            assert len(y) == len(t), 'y and t should have the same length'
+            for yy in y:
+                y_vec.push_back(yy)
+        if z is not None:
+            assert len(z) == len(t), 'z and t should have the same length'
+            for zz in z:
+                z_vec.push_back(zz)
+        if ang is not None:
+            assert len(ang) == len(t), 'ang and t should have the same length'
+            for angang in ang:
+                ang_vec.push_back(angang)
+        if ang2 is not None:
+            assert len(ang2) == len(t), 'ang2 and t should have the same length'
+            for ang2ang2 in ang2:
+                ang2_vec.push_back(ang2ang2)
+        if ang3 is not None:
+            assert len(ang3) == len(t), 'ang3 and t should have the same length'
+            for ang3ang3 in ang3:
+                ang3_vec.push_back(ang3ang3)
+        self.thisptr.setPrescribedMotionCustom(t_vec, x_vec, y_vec, z_vec,
+                                               ang_vec, ang2_vec, ang3_vec,
+                                               t_max)
 
     def setPrescribedMotionSine(self, double a, double f):
         """Sets sinusoidal prescribed motion for body
