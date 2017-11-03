@@ -87,6 +87,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.trasport = transport
         self.runCFL=runCFL
         self.dtLast=None
+        self.dtRatioMax = 2.0
         self.isAdaptive=True
         # About the cfl 
         assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
@@ -137,6 +138,8 @@ class RKEV(proteus.TimeIntegration.SSP):
 
         if self.dtLast is None:
             self.dtLast = self.dt
+        if self.dt/self.dtLast  > self.dtRatioMax:
+            self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
         self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
 
