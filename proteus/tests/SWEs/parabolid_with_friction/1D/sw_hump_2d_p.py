@@ -7,7 +7,7 @@ import numpy as np
 
 nd=2
 
-T=1345.71
+T=1000.00
 nDTout=10
 
 L=(8000.0,800.0)
