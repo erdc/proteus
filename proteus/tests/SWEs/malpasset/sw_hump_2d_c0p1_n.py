@@ -9,16 +9,15 @@ ct = Context.get()
 
 reflecting_BCs=ct.opts.reflecting_BCs
 refinement=ct.opts.refinement
-runCFL=0.5
-#timeIntegration_sw2d = "SSP33"
-timeIntegration_sw2d = "FE"
+runCFL=0.1
+timeIntegration_sw2d = "SSP33"
+#timeIntegration_sw2d = "FE"
 
 multilevelNonlinearSolver  = Newton
 if (ct.LUMPED_MASS_MATRIX==1):
     levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
 else:
     levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
-
 
 timeIntegration = ct.SW2DCV.RKEV 
 stepController = Min_dt_controller
