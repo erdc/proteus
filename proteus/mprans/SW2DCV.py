@@ -294,8 +294,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 		 useMetrics=0.0,
                  modelIndex=0, 
                  cE=1.0,
-                 LUMPED_MASS_MATRIX=1, 
-                 mannings=0.):
+                 LUMPED_MASS_MATRIX=1,
+                 LINEAR_FRICTION=0,
+                 mannings=0.):        
         self.bathymetry = bathymetry 
         self.useRBLES=useRBLES
         self.useMetrics=useMetrics
@@ -305,6 +306,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nd=nd
         self.cE=cE
         self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
+        self.LINEAR_FRICTION=LINEAR_FRICTION
         self.mannings=mannings
         self.modelIndex=modelIndex
         mass={}
@@ -1311,7 +1313,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.muH_minus_muL,
             self.coefficients.cE, 
             self.coefficients.LUMPED_MASS_MATRIX, 
-            self.timeIntegration.dt, 
+            self.timeIntegration.dt,
+            self.coefficients.LINEAR_FRICTION,
             self.coefficients.mannings,
             self.quantDOFs, 
             self.secondCallCalculateResidual, 

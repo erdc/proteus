@@ -13,7 +13,6 @@
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define POWER_SMOOTHNESS_INDICATOR 2
-#define LINEAR_FRICTION 0
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
 
@@ -229,6 +228,7 @@ namespace proteus
 				   double cE, 
 				   int LUMPED_MASS_MATRIX, 
 				   double dt,
+				   int LINEAR_FRICTION,
 				   double mannings, 
 				   double* quantDOFs,
 				   int SECOND_CALL_CALCULATE_RESIDUAL,
@@ -374,6 +374,7 @@ namespace proteus
 				   double cE,
 				   int LUMPED_MASS_MATRIX,
 				   double dt,
+				   int LINEAR_FRICTION,
 				   double mannings,
 				   // Quant of interests
 				   double* quantDOFs,
@@ -2251,7 +2252,8 @@ namespace proteus
 			   double* muH_minus_muL,
 			   double cE,
 			   int LUMPED_MASS_MATRIX,
-			   double dt, 
+			   double dt,
+			   int LINEAR_FRICTION,
 			   double mannings,
 			   // Quant of interests
 			   double* quantDOFs, 
@@ -3231,6 +3233,7 @@ namespace proteus
 			   double cE,
 			   int LUMPED_MASS_MATRIX,
 			   double dt,
+			   int LINEAR_FRICTION,
 			   double mannings,
 			   // Quant of interests
 			   double* quantDOFs,
