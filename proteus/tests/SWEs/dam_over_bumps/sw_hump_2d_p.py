@@ -33,7 +33,6 @@ else:
 #This is relevant just when use_second_order_NonFlatB_with_EV_stabilization=True
 cE=1
 LUMPED_MASS_MATRIX=0
-#reflecting_BCs=1
 
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
