@@ -144,7 +144,7 @@ cdef extern from "NCLS.h" namespace "proteus":
                                int ENTROPY_TYPE,
                                double cE,
 			       int stage,
-			       double* uTilde
+			       double* uTilde_dof
                                )
         void calculateResidual_Lax_Wendroff(double dt,
                                double* mesh_trial_ref,
@@ -225,7 +225,7 @@ cdef extern from "NCLS.h" namespace "proteus":
                                int ENTROPY_TYPE,
                                double cE,
 			       int stage,
-			       double* uTilde
+			       double* uTilde_dof
                                )
         void calculateResidual_TG3(double dt,
                                double* mesh_trial_ref,
@@ -306,7 +306,7 @@ cdef extern from "NCLS.h" namespace "proteus":
                                int ENTROPY_TYPE,
                                double cE,
 			       int stage,
-			       double* uTilde
+			       double* uTilde_dof
                                )
         void calculateResidual_TG3_2Stages(double dt,
                                double* mesh_trial_ref,
@@ -387,7 +387,7 @@ cdef extern from "NCLS.h" namespace "proteus":
                                int ENTROPY_TYPE,
                                double cE,
 			       int stage,
-			       double* uTilde
+			       double* uTilde_dof
                                )			       
         void calculateResidual_entropy_viscosity(double dt,
                                double* mesh_trial_ref,
@@ -468,7 +468,7 @@ cdef extern from "NCLS.h" namespace "proteus":
                                int ENTROPY_TYPE,
                                double cE,
 			       int stage,
-			       double* uTilde
+			       double* uTilde_dof
                                )
         void calculateJacobian(double dt,
                                double* mesh_trial_ref,
@@ -940,7 +940,7 @@ cdef class cNCLS_base:
                          int ENTROPY_TYPE,
                          double cE,
 			 int stage,
-			 numpy.ndarray uTilde):
+			 numpy.ndarray uTilde_dof):
        self.thisptr.calculateResidual(dt,
                                        <double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
@@ -1021,7 +1021,7 @@ cdef class cNCLS_base:
                                        ENTROPY_TYPE,
                                        cE,
 				       stage,
-				       <double*> uTilde.data)
+				       <double*> uTilde_dof.data)
    def calculateResidual_Lax_Wendroff(self,
                          double dt,
                          numpy.ndarray mesh_trial_ref,
@@ -1102,7 +1102,7 @@ cdef class cNCLS_base:
                          int ENTROPY_TYPE,
                          double cE,
 			 int stage,
-			 numpy.ndarray uTilde):
+			 numpy.ndarray uTilde_dof):
        self.thisptr.calculateResidual_Lax_Wendroff(dt,
                                        <double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
@@ -1183,7 +1183,7 @@ cdef class cNCLS_base:
                                        ENTROPY_TYPE,
                                        cE,
 				       stage,
-				       <double*> uTilde.data)
+				       <double*> uTilde_dof.data)
    def calculateResidual_TG3(self,
                          double dt,
                          numpy.ndarray mesh_trial_ref,
@@ -1264,7 +1264,7 @@ cdef class cNCLS_base:
                          int ENTROPY_TYPE,
                          double cE,
 			 int stage,
-			 numpy.ndarray uTilde):
+			 numpy.ndarray uTilde_dof):
        self.thisptr.calculateResidual_TG3(dt,
                                        <double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
@@ -1345,7 +1345,7 @@ cdef class cNCLS_base:
                                        ENTROPY_TYPE,
                                        cE,
 				       stage,
-				       <double*> uTilde.data)
+				       <double*> uTilde_dof.data)
    def calculateResidual_TG3_2Stages(self,
                          double dt,
                          numpy.ndarray mesh_trial_ref,
@@ -1426,7 +1426,7 @@ cdef class cNCLS_base:
                          int ENTROPY_TYPE,
                          double cE,
 			 int stage,
-			 numpy.ndarray uTilde):
+			 numpy.ndarray uTilde_dof):
        self.thisptr.calculateResidual_TG3_2Stages(dt,
                                        <double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
@@ -1507,7 +1507,7 @@ cdef class cNCLS_base:
                                        ENTROPY_TYPE,
                                        cE,
 				       stage,
-				       <double*> uTilde.data)
+				       <double*> uTilde_dof.data)
    def calculateResidual_entropy_viscosity(self,
                          double dt,
                          numpy.ndarray mesh_trial_ref,
@@ -1588,7 +1588,7 @@ cdef class cNCLS_base:
                          ENTROPY_TYPE,
                          double cE,
 			 int stage,
-			 numpy.ndarray uTilde):
+			 numpy.ndarray uTilde_dof):
        self.thisptr.calculateResidual_entropy_viscosity(dt,
                                        <double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
@@ -1669,7 +1669,7 @@ cdef class cNCLS_base:
                                        ENTROPY_TYPE,
                                        cE,
 				       stage,
-				       <double*> uTilde.data)
+				       <double*> uTilde_dof.data)
    def calculateJacobian(self,
                          double dt,
                          numpy.ndarray mesh_trial_ref,

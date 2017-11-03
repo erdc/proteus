@@ -190,7 +190,7 @@ namespace proteus
 				   double cE,
 				   // for 2-stage Taylor-Galerkin
 				   int stage,
-				   double* uTilde
+				   double* uTilde_dof
 				   )=0;
     virtual void calculateResidual_Lax_Wendroff(//element
 				   double dt,
@@ -280,7 +280,7 @@ namespace proteus
 				   double cE,
 				   // for 2-stage Taylor-Galerkin
 				   int stage,
-				   double* uTilde
+				   double* uTilde_dof
 				   )=0;
     virtual void calculateResidual_TG3(//element
 				   double dt,
@@ -370,7 +370,7 @@ namespace proteus
 				   double cE,
 				   // for 2-stage Taylor-Galerkin
 				   int stage,
-				   double* uTilde
+				   double* uTilde_dof
 				   )=0;
     virtual void calculateResidual_TG3_2Stages(//element
 				   double dt,
@@ -460,7 +460,7 @@ namespace proteus
 				   double cE,
 				   // for 2-stage Taylor-Galerkin
 				   int stage,
-				   double* uTilde
+				   double* uTilde_dof
 				   )=0;				      
     virtual void calculateResidual_entropy_viscosity(//element
 						     double dt,
@@ -550,7 +550,7 @@ namespace proteus
 						     double cE,
 						     // for 2-stage Taylor-Galerkin 
 						     int stage,
-						     double* uTilde
+						     double* uTilde_dof
 						     )=0;
     virtual void calculateJacobian(//element
 				   double dt,
@@ -1420,7 +1420,7 @@ namespace proteus
 			   double cE,
 			   // for 2-stage Taylor-Galerkin
 			   int stage,
-			   double* uTilde
+			   double* uTilde_dof
 			   )
     {
       //cek should this be read in?
@@ -1878,7 +1878,7 @@ namespace proteus
 			   double cE,
 			   // for 2-stage Taylor-Galerkin
 			   int stage,
-			   double* uTilde
+			   double* uTilde_dof
 			   )
     {
       //loop over elements 
@@ -2271,7 +2271,7 @@ namespace proteus
 			   double cE,
 			   // for 2-stage Taylor-Galerkin
 			   int stage,
-			   double* uTilde
+			   double* uTilde_dof
 			   )
     {
       //loop over elements 
@@ -2666,7 +2666,7 @@ namespace proteus
 			   double cE,
 			   // for 2stage Taylor-Galerkin
 			   int stage,
-			   double* uTilde
+			   double* uTilde_dof
 			   )
     {
       //loop over elements 
@@ -2739,7 +2739,7 @@ namespace proteus
 	      ck.gradFromDOF(u_dof_old,
 			     &u_l2g[eN_nDOF_trial_element],u_grad_trial,
 			     grad_un);
-	      ck.gradFromDOF(u_dof_old,
+	      ck.gradFromDOF(uTilde_dof,
 			     &u_l2g[eN_nDOF_trial_element],u_grad_trial,
 			     grad_uTilde);
 	      //precalculate test function products with integration weights
@@ -2788,8 +2788,10 @@ namespace proteus
 		    register int  i_nSpace=i*nSpace;		  
 		    elementResidual_u[i] +=		   
 		      ck.Mass_weak(u-un,u_test_dV[i]) +  // time derivative
-		      1./3*dt*ck.Hamiltonian_weak(H,u_test_dV[i]) + // v*grad(phi)
-		      dt*ck.NumericalDiffusion(dt/9.*H,dH,&u_grad_test_dV[i_nSpace]) +
+		      //1./3*dt*ck.Hamiltonian_weak(H,u_test_dV[i]) + // v*grad(phi)
+		      //1./9*ck.NumericalDiffusion(dt*dt*H,dH,&u_grad_test_dV[i_nSpace]) +
+		      0.141*dt*ck.Hamiltonian_weak(H,u_test_dV[i]) + // v*grad(phi)
+		      0.116*ck.NumericalDiffusion(dt*dt*H,dH,&u_grad_test_dV[i_nSpace]) +
 		      dt*MOVING_DOMAIN*ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]);
 		  }//i
 	      else // second stage
@@ -2800,8 +2802,10 @@ namespace proteus
 		    register int  i_nSpace=i*nSpace;		  
 		    elementResidual_u[i] +=
 		      ck.Mass_weak(u-un,u_test_dV[i]) +  // time derivative
-		      dt*ck.Hamiltonian_weak(H,u_test_dV[i]) + // v*grad(phi)
-		      dt*ck.NumericalDiffusion(dt/2.*HTilde,dH,&u_grad_test_dV[i_nSpace]) +
+		      //dt*ck.Hamiltonian_weak(H,u_test_dV[i]) + // v*grad(phi)
+		      //dt*ck.NumericalDiffusion(dt/2.*HTilde,dH,&u_grad_test_dV[i_nSpace]) +
+		      dt*ck.Hamiltonian_weak(HTilde,u_test_dV[i]) + // v*grad(phiTilde)
+		      0.359*ck.NumericalDiffusion(dt*dt*HTilde,dH,&u_grad_test_dV[i_nSpace]) +
 		      dt*MOVING_DOMAIN*ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]);
 		  }//i
 	      //
@@ -3082,7 +3086,7 @@ namespace proteus
 					     double cE,
 					     // for 2-stage Taylor-Galerkin
 					     int stage,
-					     double* uTilde)
+					     double* uTilde_dof)
     {
       // NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than VOF.h
       // inverse of mass matrix in reference element 

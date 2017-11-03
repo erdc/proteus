@@ -776,6 +776,10 @@ class LevelModel(OneLevelTransport):
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
+        # TG3-2s
+        self.stage = 1
+        self.uTilde_dof = numpy.zeros(self.u[0].dof.shape,'d')
+        
         self.history = open("mass_history.txt","w")
         self.history.write('t'+","+
                            'mass'+"\n")
@@ -1200,6 +1204,9 @@ class LevelModel(OneLevelTransport):
         elif (self.coefficients.STABILIZATION_TYPE == 4):
             self.calculateResidual = self.ncls.calculateResidual_TG3
             self.calculateJacobian = self.ncls.calculateJacobian_TG3          
+        elif(self.coefficients.STABILIZATION_TYPE == 5):
+            self.calculateResidual = self.ncls.calculateResidual_TG3_2Stages
+            self.calculateJacobian = self.ncls.calculateMassMatrix
 
         self.calculateResidual(#element
             self.timeIntegration.dt,
@@ -1284,7 +1291,9 @@ class LevelModel(OneLevelTransport):
             self.ML, 
             self.coefficients.STABILIZATION_TYPE, 
             self.coefficients.ENTROPY_TYPE,
-            self.coefficients.cE)
+            self.coefficients.cE,
+            self.stage,
+            self.uTilde_dof)
 
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
