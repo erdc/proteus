@@ -27,6 +27,7 @@ domain = RectangularDomain(L=L)
 #This is relevant just when use_second_order_NonFlatB_with_EV_stabilization=True
 cE=1
 LUMPED_MASS_MATRIX=0
+LINEAR_FRICTION=1
 
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
@@ -145,5 +146,5 @@ diffusiveFluxBoundaryConditions = {0:{},
 #########################################
 bathymetry={0:bathymetry_function}
 LevelModelType = SW2DCV.LevelModel
-coefficients = SW2DCV.Coefficients(g=g,bathymetry=bathymetry,cE=cE,LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,mannings=mannings)
+coefficients = SW2DCV.Coefficients(g=g,bathymetry=bathymetry,cE=cE,LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,LINEAR_FRICTION=LINEAR_FRICTION,mannings=mannings)
 
