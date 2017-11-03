@@ -3248,7 +3248,7 @@ namespace proteus
       //FOR FRICTION//
       double n2 = std::pow(mannings,2.);
       double gamma=4./3;
-      double xi=2.;
+      double xi=10.;
 
       //////////////////////////////////////
       // ********** CELL LOOPS ********** //
