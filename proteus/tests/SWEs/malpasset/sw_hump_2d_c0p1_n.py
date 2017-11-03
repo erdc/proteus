@@ -9,9 +9,9 @@ ct = Context.get()
 
 reflecting_BCs=ct.opts.reflecting_BCs
 refinement=ct.opts.refinement
-runCFL=0.1
-timeIntegration_sw2d = "SSP33"
-#timeIntegration_sw2d = "FE"
+runCFL=0.33
+#timeIntegration_sw2d = "SSP33"
+timeIntegration_sw2d = "FE"
 
 multilevelNonlinearSolver  = Newton
 if (ct.LUMPED_MASS_MATRIX==1):
@@ -80,7 +80,7 @@ multilevelLinearSolver = LU
 levelLinearSolver = LU
 
 #conservativeFlux = {0:'pwl'}
-tnList = [0]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
+tnList = [0.,1E-6]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
 #archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
 
 p = PointGauges(gauges=(( ('h'), ((5550.0,4400.0, 0),
