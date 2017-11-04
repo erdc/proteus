@@ -4,8 +4,8 @@ from sw_hump_2d_p import *
 
 refinement=3
 runCFL=0.5
-#timeIntegration_sw2d = "SSP33"
-timeIntegration_sw2d = "FE"
+timeIntegration_sw2d = "SSP33"
+#timeIntegration_sw2d = "FE"
 
 multilevelNonlinearSolver  = Newton
 if (LUMPED_MASS_MATRIX==1):
