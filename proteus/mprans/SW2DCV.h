@@ -3248,8 +3248,10 @@ namespace proteus
       //FOR FRICTION//
       double n2 = std::pow(mannings,2.);
       double gamma=4./3;
-      double xi=10.;
-
+      // mql. This parameter relaxes the cfl restriction.
+      // It is now conservative. I might change it after the local bounds are implemented 
+      double xi=10.; 
+      
       //////////////////////////////////////
       // ********** CELL LOOPS ********** //
       //////////////////////////////////////
