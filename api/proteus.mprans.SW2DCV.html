@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.mprans.SW2DCV module &#8212; Proteus 1.4.1 documentation</title>
+    <title>proteus.mprans.SW2DCV module &#8212; Proteus 1.4.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.4.1',
+        VERSION:     '1.4.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -56,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -136,8 +136,244 @@
   <div class="row">
     <div class="col-md-12 content">
       
-  <div class="section" id="proteus-mprans-sw2dcv-module">
-<h1>proteus.mprans.SW2DCV module<a class="headerlink" href="#proteus-mprans-sw2dcv-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-proteus.mprans.SW2DCV">
+<span id="proteus-mprans-sw2dcv-module"></span><h1>proteus.mprans.SW2DCV module<a class="headerlink" href="#module-proteus.mprans.SW2DCV" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="proteus.mprans.SW2DCV.SubgridError">
+<em class="property">class </em><code class="descclassname">proteus.mprans.SW2DCV.</code><code class="descname">SubgridError</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>lag=False</em>, <em>nStepsToDelay=0</em>, <em>hFactor=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.SubgridError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.SubgridError.html#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.SubgridError.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.SubgridError.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.SubgridError.updateSubgridErrorHistory">
+<code class="descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em>initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.SubgridError.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.SubgridError.calculateSubgridError">
+<code class="descname">calculateSubgridError</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.SubgridError.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.SW2DCV.NumericalFlux">
+<em class="property">class </em><code class="descclassname">proteus.mprans.SW2DCV.</code><code class="descname">NumericalFlux</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>h_eps=1e-08</em>, <em>tol_u=1e-08</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.NumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.NumericalFlux.html#proteus.NumericalFlux.ShallowWater_2D" title="proteus.NumericalFlux.ShallowWater_2D"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.ShallowWater_2D</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.mprans.SW2DCV.NumericalFlux.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.NumericalFlux.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.SW2DCV.ShockCapturing">
+<em class="property">class </em><code class="descclassname">proteus.mprans.SW2DCV.</code><code class="descname">ShockCapturing</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=False</em>, <em>nStepsToDelay=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.ShockCapturing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.ShockCapturing.html#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.ShockCapturing.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.ShockCapturing.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.ShockCapturing.updateShockCapturingHistory">
+<code class="descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.ShockCapturing.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.SW2DCV.RKEV">
+<em class="property">class </em><code class="descclassname">proteus.mprans.SW2DCV.</code><code class="descname">RKEV</code><span class="sig-paren">(</span><em>transport</em>, <em>timeOrder=1</em>, <em>runCFL=0.1</em>, <em>integrateInterpolationPoints=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.RKEV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TimeIntegration.html#proteus.TimeIntegration.SSP" title="proteus.TimeIntegration.SSP"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.SSP</span></code></a></p>
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.RKEV.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.RKEV.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.RKEV.initialize_dt">
+<code class="descname">initialize_dt</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em>, <em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.RKEV.initialize_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.RKEV.setCoefficients">
+<code class="descname">setCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.RKEV.setCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>beta are all 1&#8217;s here
+mwf not used right now</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.RKEV.updateStage">
+<code class="descname">updateStage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.RKEV.updateStage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Need to switch to use coefficients</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.RKEV.initializeTimeHistory">
+<code class="descname">initializeTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.RKEV.initializeTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push necessary information into time history arrays</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.RKEV.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.RKEV.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>assumes successful step has been taken</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.RKEV.generateSubsteps">
+<code class="descname">generateSubsteps</code><span class="sig-paren">(</span><em>tList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.RKEV.generateSubsteps" title="Permalink to this definition">¶</a></dt>
+<dd><p>create list of substeps over time values given in tList. These correspond to stages</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.RKEV.resetOrder">
+<code class="descname">resetOrder</code><span class="sig-paren">(</span><em>order</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.RKEV.resetOrder" title="Permalink to this definition">¶</a></dt>
+<dd><p>initialize data structures for stage updges</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.RKEV.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.RKEV.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.SW2DCV.RKEV.TimeIntegration">
+<code class="descname">TimeIntegration</code><em class="property"> = &lt;module 'proteus.TimeIntegration' from '/home/cekees/proteus/proteus/TimeIntegration.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.RKEV.TimeIntegration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.SW2DCV.Coefficients">
+<em class="property">class </em><code class="descclassname">proteus.mprans.SW2DCV.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>bathymetry</em>, <em>nu=1.004e-06</em>, <em>g=9.8</em>, <em>nd=2</em>, <em>sd=True</em>, <em>movingDomain=False</em>, <em>useRBLES=0.0</em>, <em>useMetrics=0.0</em>, <em>modelIndex=0</em>, <em>cE=1.0</em>, <em>LUMPED_MASS_MATRIX=1</em>, <em>LINEAR_FRICTION=0</em>, <em>mannings=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.Coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<p>The coefficients for the shallow water equations</p>
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.Coefficients.attachModels">
+<code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.Coefficients.initializeMesh">
+<code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.Coefficients.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.Coefficients.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.Coefficients.initializeElementBoundaryQuadrature">
+<code class="descname">initializeElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebq</em>, <em>cebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.Coefficients.initializeElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature">
+<code class="descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.Coefficients.updateToMovingDomain">
+<code class="descname">updateToMovingDomain</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.Coefficients.updateToMovingDomain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.Coefficients.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.Coefficients.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.Coefficients.preStep">
+<code class="descname">preStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.Coefficients.preStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.Coefficients.postStep">
+<code class="descname">postStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.Coefficients.postStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.SW2DCV.LevelModel">
+<em class="property">class </em><code class="descclassname">proteus.mprans.SW2DCV.</code><code class="descname">LevelModel</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressTraceBoundaryConditionsSetterDictDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='SW2DCV'</em>, <em>reuse_trial_and_test_quadrature=True</em>, <em>sd=True</em>, <em>movingDomain=False</em>, <em>bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.LevelModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.mprans.SW2DCV.LevelModel.nCalls">
+<code class="descname">nCalls</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.LevelModel.nCalls" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.LevelModel.FCTStep">
+<code class="descname">FCTStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.LevelModel.FCTStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.LevelModel.getResidual">
+<code class="descname">getResidual</code><span class="sig-paren">(</span><em>u</em>, <em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.LevelModel.getResidual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the element residuals and add in to the global residual</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.LevelModel.getJacobian">
+<code class="descname">getJacobian</code><span class="sig-paren">(</span><em>jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.LevelModel.getJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.LevelModel.calculateElementQuadrature">
+<code class="descname">calculateElementQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.LevelModel.calculateElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the physical location and weights of the quadrature rules
+and the shape information at the quadrature points.</p>
+<p>This function should be called only when the mesh changes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.LevelModel.calculateElementBoundaryQuadrature">
+<code class="descname">calculateElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.LevelModel.calculateElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the physical location and weights of the quadrature rules
+and the shape information at the quadrature points on element boundaries.</p>
+<p>This function should be called only when the mesh changes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.LevelModel.calculateExteriorElementBoundaryQuadrature">
+<code class="descname">calculateExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.LevelModel.calculateExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the physical location and weights of the quadrature rules
+and the shape information at the quadrature points on global element boundaries.</p>
+<p>This function should be called only when the mesh changes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.LevelModel.estimate_mt">
+<code class="descname">estimate_mt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.LevelModel.estimate_mt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.LevelModel.calculateSolutionAtQuadrature">
+<code class="descname">calculateSolutionAtQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.LevelModel.calculateSolutionAtQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.LevelModel.calculateAuxiliaryQuantitiesAfterStep">
+<code class="descname">calculateAuxiliaryQuantitiesAfterStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.LevelModel.calculateAuxiliaryQuantitiesAfterStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.SW2DCV.LevelModel.getForce">
+<code class="descname">getForce</code><span class="sig-paren">(</span><em>cg</em>, <em>forceExtractionFaces</em>, <em>force</em>, <em>moment</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SW2DCV.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SW2DCV.LevelModel.getForce" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 
 
