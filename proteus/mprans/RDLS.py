@@ -669,6 +669,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
         self.setupFieldStrides()
 
+        # mql. Vectors needed for other redistancing methods
+        self.u_old_newton_dof = numpy.zeros(self.u[0].dof.shape,'d')
+        
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -787,7 +790,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.elementResidual[0].fill(0.0)
         #cRDLS.calculateResidual(self.mesh.nElements_global,
         #print "beta_bdf",beta_bdf
-        self.rdls.calculateResidual(#element
+
+        #self.calculateResidual = self.rdls.calculateResidual
+        #self.calculateJacobian = self.rdls.calculateJacobian
+        #
+        self.calculateResidual = self.rdls.calculateResidual_ellipticRedist
+        self.calculateJacobian = self.rdls.calculateJacobian_ellipticRedist
+
+        self.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -825,6 +835,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter,#self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
+            self.u_old_newton_dof,
             self.coefficients.q_u0,
             self.timeIntegration.m_tmp[0],
             self.q[('u',0)],
@@ -878,7 +889,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             alpha_bdf = self.timeIntegration.dt
             beta_bdf  = self.timeIntegration.m_last
-        self.rdls.calculateJacobian(#element
+        self.calculateJacobian(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
