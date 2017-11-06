@@ -131,7 +131,22 @@ class PsiTC(proteus.StepControl.SC_base):
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import redistanceLevelSetCoefficientsEvaluate
-    def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=None,u0=None,rdModelId=0,penaltyParameter=0.0,useMetrics=0.0,useConstantH=False,weakDirichletFactor=10.0,backgroundDiffusionFactor=0.01):
+    def __init__(self,
+                 applyRedistancing=True,
+                 epsFact=2.0,
+                 nModelId=None,
+                 u0=None,
+                 rdModelId=0,
+                 penaltyParameter=0.0,
+                 useMetrics=0.0,
+                 useConstantH=False,
+                 weakDirichletFactor=10.0,
+                 backgroundDiffusionFactor=0.01,
+                 alpha=1.0,
+                 epsFactDirac=1.5):
+        
+        self.alpha=alpha
+        self.epsFactDirac=epsFactDirac
         self.useConstantH=useConstantH
         self.useMetrics=useMetrics
         variableNames=['phid']
@@ -201,8 +216,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.ebqe_u0.flat[i]=self.u0.uOfXT(cebqe['x'].flat[3*i:3*(i+1)],0.)
     def preStep(self,t,firstStep=False):
         import pdb
-        #pdb.set_trace()
-        if self.nModel is not None:
+        self.rdModel.uHat_dof[:] = self.nModel.u[0].dof
+        self.rdModel.u[0].dof[:] = self.nModel.u[0].dof
+        self.rdModel.u_old_newton_dof[:] = self.rdModel.u[0].dof        
+        if self.nModel is not None and False: #MQL. Turn this off
             logEvent("resetting signed distance level set to current level set",level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
             self.rdModel.calculateCoefficients()
@@ -225,6 +242,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             return {}
     def postStep(self,t,firstStep=False):
         if self.nModel is not None:
+            print self.nModel
             if self.applyRedistancing == True:
                 logEvent("resetting level set to signed distance")
                 self.nModel.u[0].dof.flat[:]  = self.rdModel.u[0].dof.flat[:]
@@ -670,7 +688,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setupFieldStrides()
 
         # mql. Vectors needed for other redistancing methods
+        self.uHat_dof = numpy.zeros(self.u[0].dof.shape,'d')
         self.u_old_newton_dof = numpy.zeros(self.u[0].dof.shape,'d')
+        self.evaluateResidual = False
         
         comm = Comm.get()
         self.comm=comm
@@ -835,7 +855,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter,#self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
+            self.uHat_dof,
             self.u_old_newton_dof,
+            self.coefficients.alpha,
+            self.coefficients.epsFactDirac,
+            self.evaluateResidual,
             self.coefficients.q_u0,
             self.timeIntegration.m_tmp[0],
             self.q[('u',0)],
@@ -924,6 +948,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter,#self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
+            self.uHat_dof,
+            self.u_old_newton_dof,
+            self.coefficients.alpha,
+            self.coefficients.epsFactDirac,
             self.u_dof_last,
             self.coefficients.q_u0,
             beta_bdf[0],

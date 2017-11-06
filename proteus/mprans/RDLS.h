@@ -49,7 +49,11 @@ namespace proteus
 			   double* elementDiameter,
 			   double* nodeDiametersArray,
 			   double* u_dof,
+			   double* uHat_dof,
 			   double* u_old_newton_dof,
+			   double alpha,
+			   double epsFactDirac,			   
+			   int evaluateResidual,
 			   double* phi_ls,
 			   double* q_m,
 			   double* q_u,
@@ -111,7 +115,11 @@ namespace proteus
 			   double* elementDiameter,
 			   double* nodeDiametersArray,
 			   double* u_dof,
+			   double* uHat_dof,
 			   double* u_old_newton_dof,
+			   double alpha,
+			   double epsFactDirac,			   
+			   int evaluateResidual,
 			   double* phi_ls,
 			   double* q_m,
 			   double* q_u,
@@ -170,7 +178,11 @@ namespace proteus
 				int* u_l2g,
 				double* elementDiameter,
 				double* nodeDiametersArray,
-				double* u_dof, 
+				double* u_dof,
+				double* uHat_dof,
+				double* u_old_newton_dof,				
+				double alpha,
+				double epsFactDirac,			   
 				double* u_weak_internal_bc_dofs,//for freezing level set
 				double* phi_ls,
 				double* q_m_betaBDF,
@@ -224,7 +236,11 @@ namespace proteus
 				int* u_l2g,
 				double* elementDiameter,
 				double* nodeDiametersArray,
-				double* u_dof, 
+				double* u_dof,
+				double* uHat_dof,
+				double* u_old_newton_dof,
+				double alpha,
+				double epsFactDirac,			   
 				double* u_weak_internal_bc_dofs,//for freezing level set
 				double* phi_ls,
 				double* q_m_betaBDF,
@@ -408,7 +424,11 @@ namespace proteus
 			   double* elementDiameter,
 			   double* nodeDiametersArray,
 			   double* u_dof,
+			   double* uHat_dof,
 			   double* u_old_newton_dof,
+			   double alpha,
+			   double epsFactDirac,			   
+			   int evaluateResidual,
 			   double* phi_ls,
 			   double* q_m,
 			   double* q_u,
@@ -921,7 +941,11 @@ namespace proteus
 					  double* elementDiameter,
 					  double* nodeDiametersArray,
 					  double* u_dof,
+					  double* uHat_dof,
 					  double* u_old_newton_dof,
+					  double alpha,
+					  double epsFactDirac,			   
+					  int evaluateResidual,
 					  double* phi_ls,
 					  double* q_m,
 					  double* q_u,
@@ -979,7 +1003,7 @@ namespace proteus
 		eN_k_nSpace = eN_k*nSpace,
 		eN_nDOF_trial_element = eN*nDOF_trial_element;
 	      register double
-		u=0.0,grad_u[nSpace],grad_un[nSpace],
+		u=0.0,un=0.0,uHat=0.0,grad_u[nSpace],grad_un[nSpace],
 		m=0.0,dm=0.0,
 		H=0.0,dH[nSpace],
 		m_t=0.0,dm_t=0.0,
@@ -1010,6 +1034,29 @@ namespace proteus
 	      //get the trial function gradients
 	      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
 				  jacInv,u_grad_trial);
+	      // get uHat
+	      ck.valFromDOF(uHat_dof,
+			    &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			    uHat);
+	      // get value and grad of old newton solution
+	      if (evaluateResidual==0)
+		{
+		  ck.valFromDOF(u_old_newton_dof,
+				&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+				un);
+		  ck.gradFromDOF(u_old_newton_dof,
+				 &u_l2g[eN_nDOF_trial_element],u_grad_trial,
+				 grad_un);
+		}
+	      else
+		{
+		  ck.valFromDOF(u_dof,
+				&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+				un);
+		  ck.gradFromDOF(u_dof,
+				 &u_l2g[eN_nDOF_trial_element],u_grad_trial,
+				 grad_un);
+		}
 	      //get the solution
 	      ck.valFromDOF(u_dof,
 			    &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
@@ -1018,10 +1065,6 @@ namespace proteus
 	      ck.gradFromDOF(u_dof,
 			     &u_l2g[eN_nDOF_trial_element],u_grad_trial,
 			     grad_u);
-	      //get the solution gradients
-	      ck.gradFromDOF(u_dof,
-			     &u_l2g[eN_nDOF_trial_element],u_grad_trial,
-			     grad_un);
 	      //precalculate test function products with integration weights
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
@@ -1060,9 +1103,8 @@ namespace proteus
 	      norm_grad_un = std::sqrt(norm_grad_un) + 1.0E-10;
 	      
 	      double coeff = -1.0/norm_grad_un;
-	      double alpha = 1.0;
-	      double epsDirac = 1.5*elementDiameter[eN];
-	      double dirac = 1.0;  //smoothedDirac(epsDirac,u);
+	      double epsDirac = epsFactDirac*elementDiameter[eN];
+	      double dirac = smoothedDirac(epsDirac,uHat); 
 
 	      // 
 	      //update element residual 
@@ -1072,9 +1114,10 @@ namespace proteus
 		  register int i_nSpace = i*nSpace;
 		  //register int eN_k_i=eN_k*nDOF_test_element+i;
 		  //register int eN_k_i_nSpace = eN_k_i*nSpace;
-		  elementResidual_u[i] +=
+		  elementResidual_u[i] += //(u-un)*u_test_dV[i];
 		    ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace]) + 
-		    //ck.NumericalDiffusion(coeff,grad_un,&u_grad_test_dV[i_nSpace]) + 
+		    ck.NumericalDiffusion(coeff,grad_un,&u_grad_test_dV[i_nSpace]) +
+		    //ck.NumericalDiffusion(coeff,grad_u,&u_grad_test_dV[i_nSpace]) + 
 		    alpha*dirac*u*u_test_dV[i]; // penalization 
 		}//i
 	      //
@@ -1084,8 +1127,7 @@ namespace proteus
 	  //
 	  for(int i=0;i<nDOF_test_element;i++) 
 	    { 
-	      register int eN_i=eN*nDOF_test_element+i;
-          
+	      register int eN_i=eN*nDOF_test_element+i;          
 	      globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
 	    }//i
 	}//elements
@@ -1130,6 +1172,10 @@ namespace proteus
 				double* elementDiameter,
 				double* nodeDiametersArray,
 				double* u_dof,
+				double* uHat_dof,
+				double* u_old_newton_dof,				
+				double alpha,
+				double epsFactDirac,			   
 				double* u_weak_internal_bc_dofs,//for freezing level set
 				double* phi_ls,
 				double* q_m_betaBDF,
@@ -1578,6 +1624,10 @@ namespace proteus
 				double* elementDiameter,
 				double* nodeDiametersArray,
 				double* u_dof,
+				double* uHat_dof,
+				double* u_old_newton_dof,
+				double alpha,
+				double epsFactDirac,			   
 				double* u_weak_internal_bc_dofs,//for freezing level set
 				double* phi_ls,
 				double* q_m_betaBDF,
@@ -1622,8 +1672,8 @@ namespace proteus
 		eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
 	      //declare local storage
-	      register double u=0.0,
-		grad_u[nSpace],
+	      register double u=0.0,uHat=0.0,
+		grad_u[nSpace],grad_un[nSpace],
 		m=0.0,dm=0.0,
 		H=0.0,dH[nSpace],
 		m_t=0.0,dm_t=0.0,r=0.0,
@@ -1666,6 +1716,10 @@ namespace proteus
 	      //get the trial function gradients
 	      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
 				  jacInv,u_grad_trial);
+	      // get uHat
+	      ck.valFromDOF(uHat_dof,
+			    &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			    uHat);
 	      //get the solution 	
 	      ck.valFromDOF(u_dof,
 			    &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
@@ -1674,6 +1728,9 @@ namespace proteus
 	      ck.gradFromDOF(u_dof,
 			     &u_l2g[eN_nDOF_trial_element],u_grad_trial,
 			     grad_u);
+	      //ck.gradFromDOF(u_old_newton_dof,
+	      //	     &u_l2g[eN_nDOF_trial_element],u_grad_trial,
+	      //	     grad_un);
 	      //precalculate test function products with integration weights
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
@@ -1691,20 +1748,28 @@ namespace proteus
 				   H,
 				   dH,
 				   r);
-	      double coeff = 1.0;
-	      double dirac = 1.0;
-	      double alpha = 1.0;
+	      //double norm_grad_un = 0.;
+	      //for (int I=0;I<nSpace;I++)
+	      //norm_grad_un += grad_un[I]*grad_un[I];
+	      //norm_grad_un = std::sqrt(norm_grad_un) + 1.0E-10;
 
+	      //double coeff = -1.0/norm_grad_un; 
+	      double epsDirac = epsFactDirac*elementDiameter[eN];
+	      double dirac = smoothedDirac(epsDirac,uHat);
+	      
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
 		  for(int j=0;j<nDOF_trial_element;j++) 
 		    { 
 		      int j_nSpace = j*nSpace;
 		      int i_nSpace = i*nSpace;		  
-		      elementJacobian_u_u[i][j] +=
+		      elementJacobian_u_u[i][j] +=			
 			ck.NumericalDiffusionJacobian(1.0,
 						      &u_grad_trial[j_nSpace],
-						      &u_grad_test_dV[i_nSpace]) + 
+						      &u_grad_test_dV[i_nSpace]) +
+			//ck.NumericalDiffusionJacobian(coeff,
+			//			      &u_grad_trial[j_nSpace],
+			//			      &u_grad_test_dV[i_nSpace]) + 
 			alpha*dirac*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i];
 		    }//j
 		}//i
