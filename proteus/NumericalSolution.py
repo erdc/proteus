@@ -332,6 +332,8 @@ class NS_base:  # (HasTraits):
                                                              parallelPartitioningType=n.parallelPartitioningType)
                 if opts.generatePartitionedMeshFromFiles:
                     logEvent("Generating partitioned mesh from Tetgen files")
+                    if("f" not in n.triangleOptions or "ee" not in n.triangleOptions):
+                        sys.exit("ERROR: Remake the mesh with the `f` flag and `ee` flags in triangleOptions.")
                     mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix,nbase,mesh,n.nLevels,
                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                   parallelPartitioningType=n.parallelPartitioningType)
