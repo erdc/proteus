@@ -629,6 +629,8 @@ namespace proteus
       nu += nu_t;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
 
+      //printf("grad_p[1] sed2d --> %3.2f\n", grad_p[1]);
+
       eddy_viscosity = nu_t;
       // mass (volume accumulation)
       //..hardwired
@@ -746,6 +748,7 @@ namespace proteus
       mom_u_source = -vos*rho*g[0];// - vos*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
       mom_v_source = -vos*rho*g[1];// - vos*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
       /* mom_w_source = -vos*g[2];// - vos*d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8)); */
+      printf("mom_source --> %3.2f", mom_v_source);
    
       //u momentum Hamiltonian (pressure)
       mom_u_ham = vos*grad_p[0];// /rho;

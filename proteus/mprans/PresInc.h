@@ -142,7 +142,10 @@ namespace proteus
     {
       for (int I=0;I<nSpace;I++)
         f[I] = (1.0-vos)*vf[I] + vos*vs[I];
-      a = (1.0-vos)/(rhof_min*alphaBDF) + vos/(rhos_min*alphaBDF);
+      //a = (1./((1.0-vos)*rhof_min + vos*rhos_min))/alphaBDF;
+      //a = (1.0-vos)/(rhof_min*alphaBDF) + vos/(rhos_min*alphaBDF);
+      a = (1.0-vos)*(rhof_min*alphaBDF) + vos*(rhos_min*alphaBDF);
+      //a = (rhof_min*alphaBDF);
     }
     
     inline

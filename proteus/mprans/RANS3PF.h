@@ -1189,6 +1189,8 @@ namespace proteus
           }
 
         double phi_s_effect = (phi_s > 0.0) ? 1.0 : 0.0;
+  
+        //printf("grad_p[1] fluid --> %3.2f\n", grad_p[1]);
 
         //u momentum accumulation
         mom_u_acc=phi_s_effect*u;//trick for non-conservative form
@@ -1303,6 +1305,7 @@ namespace proteus
         mom_u_source = -phi_s_effect*rho*porosity*g[0];// - d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
         mom_v_source = -phi_s_effect*rho*porosity*g[1];// - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
         mom_w_source = -phi_s_effect*rho*porosity*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
+        printf("mom_source fluid --> %3.2f", mom_v_source);
    
         // mql: add general force term 
         mom_u_source -= forcex; 
