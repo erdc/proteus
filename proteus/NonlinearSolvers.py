@@ -1359,6 +1359,7 @@ class LaggedNewton(Newton):
         memory()
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
+
         r=self.solveInitialize(u,r,b)
         if par_u is not None:
             #allow linear solver to know what type of assembly to use
@@ -1376,7 +1377,9 @@ class LaggedNewton(Newton):
         self.gammaK_max=0.0
         self.linearSolverFailed = False
         cond = hasattr(self.F, 'u_old_newton_dof')
-        assert cond, "model must have u_old_newton_dof with this solver"
+        assert cond, "model must have u_old_newton_dof with this solver (LaggedNewton)"
+        cond = hasattr(self.F, 'evaluateResidual')
+        assert cond, "Model must have evaluateResidual with  this solver (LaggedNewton)"        
         while (not self.converged(r) and
                not self.failed()):
             logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
@@ -1412,7 +1415,10 @@ class LaggedNewton(Newton):
             u-=self.du
             if par_u is not None:
                 par_u.scatter_forward_insert()
+            # This call to compute Residual is meant to evaluate if the residual is small
+            self.F.evaluateResidual=True
             self.computeResidual(u,r,b)
+            self.F.evaluateResidual=False
             if par_r is not None:
                 #no overlap
                 if not self.par_fullOverlap:
