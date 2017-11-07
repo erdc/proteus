@@ -3,8 +3,8 @@ from proteus import Context
 ct = Context.Options([("T", 8.0, "Time interval [0, T]"),
                       ("datafile", 'errorInfo.db',
                        "Filename to save error information"),
-                      ("ncells", 32, "Specify initial mesh size by giving number of cells in each direction"),
-                      ("hk", 0.1, "the size of composite cells"),
+                      ("ncells", 64, "Specify initial mesh size by giving number of cells in each direction"),
+                      ("hk", 1.0, "the size of composite cells"),
                       ("nLevels", 1, "number of refiments"),
                       ("nDTout", 80, "Specify the time archive the solution")],
                      mutable=True)
@@ -84,9 +84,11 @@ applyRedistancing = True
 redist_Newton = True
 onlyVOF = False  # True
 # smoothing factors
+
+
 # eps
 epsFactHeaviside = epsFactDirac = epsFact_vof = 1.5 * hk
-epsFactRedistance = 1.5 * hk
+epsFactRedistance = 0.33  # 1.5 * hk  # 0.33
 epsFactDiffusion = 10.0
 #
 if useMetrics:
