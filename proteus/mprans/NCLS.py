@@ -396,23 +396,23 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
     def postStep(self,t,firstStep=False):
         # PERTURB phiHat
-        X = {0:self.model.q[('x')][:,:,0],
-             1:self.model.q[('x')][:,:,1],
-             2:self.model.q[('x')][:,:,2]}
-        self.model.q[('u',0)][:] += self.model.perturb_phiHat[0](X,t)
-        self.model.getRhsLumpedL2p(self.model.q[('u',0)],
-                                   self.model.u[0].dof,
-                                   self.model.quantDOFs)
+        #X = {0:self.model.q[('x')][:,:,0],
+        #     1:self.model.q[('x')][:,:,1],
+        #     2:self.model.q[('x')][:,:,2]}
+        #self.model.q[('u',0)][:] += self.model.perturb_phiHat[0](X,t)
+        #self.model.getRhsLumpedL2p(self.model.q[('u',0)],
+        #                           self.model.u[0].dof,
+        #                           self.model.quantDOFs)
         
-        self.model.u[0].dof[:] /= self.model.ML[:]
-        self.model.quantDOFs[:] /= self.model.ML[:]
+        #self.model.u[0].dof[:] /= self.model.ML[:]
+        #self.model.quantDOFs[:] /= self.model.ML[:]
 
         # DO a nodal projection of H(phiHat)
-        from proteus.ctransportCoefficients import smoothedHeaviside
-        for i in range (self.model.mesh.nodeDiametersArray.size):
-            epsHeaviside = 1.5*self.model.mesh.nodeDiametersArray[i]
-            self.model.quantDOFs[i] = smoothedHeaviside(epsHeaviside,self.model.u[0].dof[i])
-            self.model.quantDOFs2[i] = smoothedHeaviside(epsHeaviside,self.model.u_dof_old[i])
+        #from proteus.ctransportCoefficients import smoothedHeaviside
+        #for i in range (self.model.mesh.nodeDiametersArray.size):
+        #    epsHeaviside = 1.5*self.model.mesh.nodeDiametersArray[i]
+        #    self.model.quantDOFs[i] = smoothedHeaviside(epsHeaviside,self.model.u[0].dof[i])
+        #    self.model.quantDOFs2[i] = smoothedHeaviside(epsHeaviside,self.model.u_dof_old[i])
 
         #                                   self.model.quantDOFs)
         #self.model.quantDOFs[:] /= self.model.ML[:] 
