@@ -959,6 +959,10 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
                 else:
                     par_r.scatter_forward_insert()
         else:
+            try:
+                self.F.newton_iterations = self.its
+            except:
+                pass            
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                      % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             logEvent(memory("Newton","Newton"),level=4)
