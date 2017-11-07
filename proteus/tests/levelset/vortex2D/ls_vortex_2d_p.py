@@ -46,8 +46,8 @@ class OscillatingVortex2D:
         self.xc = 0.5 * L[0]
         self.yc = 0.75 * L[1]
 
-    def uOfXT(self, x, t):
-        return self.radius - math.sqrt((x[0] - self.xc)**2 + (x[1] - self.yc)**2)
+    def uOfXT(self, x, t=0):
+        return self.radius - numpy.sqrt((x[0] - self.xc)**2 + (x[1] - self.yc)**2)
 
 
 class OscillatingVortex2Dcylinder:
@@ -57,8 +57,8 @@ class OscillatingVortex2Dcylinder:
         self.xc = 0.5 * L[0]
         self.yc = 0.75 * L[1]
 
-    def uOfXT(self, x, t):
-        return self.radius - math.sqrt((x[0] - self.xc)**2 + (x[1] - self.yc)**2)
+    def uOfXT(self, x, t=0):
+        return self.radius - numpy.sqrt((x[0] - self.xc)**2 + (x[1] - self.yc)**2)
 
 
 analyticalSolution = {0: OscillatingVortex2D()}
@@ -95,6 +95,9 @@ class UnitSquareVortex(NCLS.Coefficients):
 
     def attachModels(self, modelList):
         self.model = modelList[0]
+
+        self.phid = modelList[1].u[0].dof
+
         self.u_old_dof = numpy.copy(self.model.u[0].dof)
         self.q_v = numpy.zeros(self.model.q[('dH', 0, 0)].shape, 'd')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH', 0, 0)].shape, 'd')
@@ -183,6 +186,25 @@ class UnitSquareVortex(NCLS.Coefficients):
         # if self.model.ebq.has_key(('v',1)):
         #     self.model.u[0].getValuesTrace(self.model.ebq[('v',1)],self.model.ebq[('u',0)])
         #     self.model.u[0].getGradientValuesTrace(self.model.ebq[('grad(v)',1)],self.model.ebq[('grad(u)',0)])
+
+        # compute errors:
+        if t > T - 1e-10:
+            X = {0: self.model.mesh.nodeArray[:, 0],
+                 1: self.model.mesh.nodeArray[:, 1]}
+            true_solution = analyticalSolution[0].uOfXT(X)
+#             import pdb
+#             pdb.set_trace()
+            import compute_error as CE
+            u_L_infty, grad_u_L_infty, ls_grad_u_L_infty = CE.get_error(self.model.mesh.nodeArray,
+                                                                        self.model.mesh.elementNodesArray,
+                                                                        analyticalSolution[0].uOfXT,
+                                                                        self.phid,
+                                                                        self.model.u[0].dof,
+                                                                        true_solution)
+
+            logEvent(">>>>>>>>Error at final time is ", level=2)
+            logEvent(">>>>>>>>>>>>>>>>(h,infty error of u, infty error of grad_u, infty error of grad_u on local region)=(%12.5e,%12.5e,%12.5e,%12.5e)" % (
+                1.0 / ct.ncells, u_L_infty, grad_u_L_infty, ls_grad_u_L_infty), level=2)
         copyInstructions = {}
         return copyInstructions
 
