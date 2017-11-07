@@ -465,7 +465,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-        if self.nonlinearVOF > 0:            
+        if self.nonlinearVOF == 2:
+            print("dummy")
+            
+        if self.nonlinearVOF == 1:            
             #For visualization, send H(phiHat+u) to the DOFs and store it in quantDOFs
             #This is done via a limited L2Projection
             #Update DOFs of NCLS. Since NCLS, MCorr and CLS live on the same space, this is valid:
@@ -488,8 +491,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                  self.lsModel.u[0].dof, #phiHat at dofs
                                  self.lsModel.u_dof_old, #phiExact at dofs
                                  self.model.quantDOFs)
-            
-            self.model.history.write(repr(self.epsFactDiffusion)+","+
+
+            self.model.history.write(repr(self.model.timeIntegration.dt)+","+
                                      repr(self.model.newton_iterations)+","+
                                      repr(abs(self.model.global_mass_error))+","+
                                      repr(math.sqrt(self.model.global_L2_interface))+","+
@@ -990,10 +993,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                              self.nElementBoundaryQuadraturePoints_elementBoundary,
                              compKernelFlag)
 
-        self.history = open(self.name+"_lagrange_history.txt","w")
-        self.history.write('a'+","+                           
+        self.history = open(self.name+"_mass_history.csv","w")
+        self.history.write('dt'+","+
+                           'newtonIterations'+","+                           
                            'massError'+","+
-                           'newtonIterations'+","+
                            'L2norm_interface'+","+
                            'H1norm_interface'+","+
                            'L2norm_Hinterface'+","+
@@ -1398,7 +1401,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.calculateJacobian = self.vof.calculateMassMatrix
 
         if self.phiHat_dof is None:
-            if self.coefficients.nonlinearVOF > 0:
+            if self.coefficients.nonlinearVOF == 1:
                 cond = self.coefficients.LS_modelIndex is not None
                 assert cond, "If nonlinearVOF=True, a NCLS model must be attached"
                 self.phiHat_dof = self.coefficients.lsModel.u[0].dof
@@ -1406,13 +1409,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if self.coefficients.nonlinearVOF==1:
                     self.calculateResidual = self.vof.calculateResidual_MCorr_with_VOF
                     self.calculateJacobian = self.vof.calculateJacobian_MCorr_with_VOF
-                else:
-                    assert self.coefficients.nonlinearVOF==2, 'nonlinearVOF must be 0,1 or 2'
-                    self.calculateResidual = self.vof.calculateResidual_MCorr_with_VOF2
-                    self.calculateJacobian = self.vof.calculateJacobian_MCorr_with_VOF2
-            else:
+            else: # if nonlinearVOF = 0 or 2, no phiHat is needed
                 self.phiHat_dof = numpy.zeros(self.u[0].dof.shape,'d')
                 self.phin_dof = numpy.zeros(self.u[0].dof.shape,'d')
+        
+        self.calculateResidual = self.vof.calculateResidual_MCorr_with_VOF2
+        self.calculateJacobian = self.vof.calculateJacobian_MCorr_with_VOF2
 
         self.calculateResidual(#element
             self.timeIntegration.dt,
