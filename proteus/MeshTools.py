@@ -5705,7 +5705,7 @@ def readUniformElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topolog
     entry = Topology[0].text.split(':')[-1]
     logEvent("Reading  elementNodesArray from %s " % entry,3)
 
-    elementNodesArray = hdf5.getNode(entry).read()
+    elementNodesArray = hdf5.get_node(entry).read()
     assert elementNodesArray.shape[1] == nNodes_element
     nElements_global = elementNodesArray.shape[0]
     logEvent("nElements_global,nNodes_element= (%d,%d) " % (nElements_global,nNodes_element),3)
@@ -5735,7 +5735,7 @@ def readMixedElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topologyi
     entry = Topology[0].text.split(':')[-1]
     logEvent("Reading xdmf_topology from %s " % entry,3)
 
-    xdmf_topology = hdf5.getNode(entry).read()
+    xdmf_topology = hdf5.get_node(entry).read()
     #build elementNodesArray and offsets now
     nElements_global = 0
     i = 0
@@ -5816,7 +5816,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     MeshInfo = BasicMeshInfo()
 
     xmf = ET.parse(xmf_archive_base+'.xmf')
-    hdf5= tables.openFile(heavy_file_base+'.h5',mode="r")
+    hdf5= tables.open_file(heavy_file_base+'.h5',mode="r")
     assert hasHDF5
 
     Grid = findXMLgridElement(xmf,MeshTag,id_in_collection=-1,verbose=verbose)
@@ -5827,13 +5827,13 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     entry = Geometry[0].text.split(':')[-1]
     logEvent("Reading nodeArray from %s " % entry,3)
 
-    MeshInfo.nodeArray = hdf5.getNode(entry).read()
+    MeshInfo.nodeArray = hdf5.get_node(entry).read()
     MeshInfo.nNodes_global = MeshInfo.nodeArray.shape[0]
 
     if NodeMaterials is not None:
         entry = NodeMaterials[0].text.split(':')[-1]
         logEvent("Reading nodeMaterialTypes from %s " % entry,4)
-        MeshInfo.nodeMaterialTypes = hdf5.getNode(entry).read()
+        MeshInfo.nodeMaterialTypes = hdf5.get_node(entry).read()
     else:
         MeshInfo.nodeMaterialTypes = np.zeros((MeshInfo.nNodes_global,),'i')
 
@@ -5860,7 +5860,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     if ElementMaterials is not None:
         entry = ElementMaterials[0].text.split(':')[-1]
         logEvent("Reading elementMaterialTypes from %s " % entry,3)
-        MeshInfo.elementMaterialTypes = hdf5.getNode(entry).read()
+        MeshInfo.elementMaterialTypes = hdf5.get_node(entry).read()
 
     else:
         MeshInfo.elementMaterialTypes = np.zeros((MeshInfo.nElements_global,),'i')
