@@ -416,11 +416,11 @@ class AR_base:
             dataset = self.hdfFile.create_dataset(name  = name,
                                                   shape = tuple([offsets[-1]]+list(data.shape[1:])),
                                                   dtype = data.dtype)
-        except Exception as e:
-            print(e)
-            import pdb
-            pdb.set_trace()
-            dataset = self.hdfFile[name]
+        except:
+            try:
+                dataset = self.hdfFile[name]
+            except Exception as e:
+                raise e
         dataset[offsets[self.comm.rank()]:offsets[self.comm.rank()+1]] = data
 
 XdmfArchive=AR_base
