@@ -319,9 +319,9 @@ class NS_base:  # (HasTraits):
                         logEvent("Warning: couldn't move {0:s}.1.neigh".format(fileprefix))
                         pass
                     try:
-                        logEvent("Warning: couldn't move {0:s}.1.edge".format(fileprefix))
                         check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
                     except:
+                        logEvent("Warning: couldn't move {0:s}.1.edge".format(fileprefix))
                         pass
                 comm.barrier()
                 logEvent("Initializing mesh and MultilevelMesh")
@@ -332,6 +332,8 @@ class NS_base:  # (HasTraits):
                                                              parallelPartitioningType=n.parallelPartitioningType)
                 if opts.generatePartitionedMeshFromFiles:
                     logEvent("Generating partitioned mesh from Tetgen files")
+                    if("f" not in n.triangleOptions or "ee" not in n.triangleOptions):
+                        sys.exit("ERROR: Remake the mesh with the `f` flag and `ee` flags in triangleOptions.")
                     mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix,nbase,mesh,n.nLevels,
                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                   parallelPartitioningType=n.parallelPartitioningType)
