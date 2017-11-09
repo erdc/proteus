@@ -4,7 +4,7 @@ from proteus.default_n import nLevels
 
 ct = Context.Options([
     ("T", 0.5, "Time interval [0, T]"),
-    ("nDTout", 25, "Times to print out [0,T]"),
+    ("nDTout", 40, "Times to print out [0,T]"),
     ("checkMass", False, "Check mass or not"),
     ("cfl", 0.3, "Target CFL number"),
     ("parallel", False, "Use PETSc or not"),

@@ -77,8 +77,9 @@ def get_smoothed_coord(_old_coord, node_star_offset,
                 n_neightbor = 0
                 star_center = np.zeros((3,), 'd')
                 for j in range(node_star_offset[i], node_star_offset[i + 1]):
-                    star_center[:] += _old_coord[node_star_array[j]]
-                    n_neightbor += 1
+                    if node_star_array[j] != i:
+                        star_center[:] += _old_coord[node_star_array[j]]
+                        n_neightbor += 1
 
                 _new_coord[i] = star_center / n_neightbor
             else:
@@ -97,11 +98,11 @@ def get_mesh_velocity(node_coord,
                       _mesh_velocity_at_node):
     global smoothing_times, min_area_in_previous_step, max_angle_in_previous_step, min_angle_in_previous_step
     # Lagrangian mesh
-    _node_coord_lang = np.copy(node_coord)
-    _node_coord_lang += dt * _mesh_velocity_at_node
+    _node_coord_lagrange = np.copy(node_coord)
+    _node_coord_lagrange += dt * _mesh_velocity_at_node
 
-    _node_coord_smoothed_before = np.copy(_node_coord_lang)
-    _node_coord_smoothed_after = np.copy(_node_coord_lang)
+    _node_coord_smoothed_before = np.copy(_node_coord_lagrange)
+    _node_coord_smoothed_after = np.copy(_node_coord_lagrange)
 
     # mesh info
     _min_angle, _max_angle, _min_area = get_mesh_info(
@@ -114,16 +115,16 @@ def get_mesh_velocity(node_coord,
 
     # use smoothed coord to modify lang coord
     while True:
-        if _min_area < 0.0 or _min_angle < 0.0 or _min_area < 0.0:
+        if _min_area < 0.0 or _min_angle < 0.0:
             # If N=0, since Lagrangian mesh has more weight, maybe it has dead
             # loop.
-            N = 0
+            N = 8
             # assume previous mesh is regular
             _node_coord_smoothed_after[:] = node_coord
         elif _min_area < 0.8 * min_area_in_previous_step or _max_angle > 1.2 * max_angle_in_previous_step or _min_angle < 0.8 * min_area_in_previous_step or math.pi - 0.3 < _max_angle or _min_angle < 0.3:
             N = 4
         else:
-            N = 1
+            N = 2
 
         # continue to smooth previous smoothed mesh
         _node_coord_smoothed_before[:] = _node_coord_smoothed_after
@@ -137,27 +138,28 @@ def get_mesh_velocity(node_coord,
 
         # Use big weight on Lagrangian mesh since the problem is well-posed.
         # Otherwise, the mesh velocity should be regular enough.
-        _node_coord_smoothed_before[:] = _node_coord_lang
+        _node_coord_smoothed_before[:] = _node_coord_lagrange
         _node_coord_smoothed_before *= 0.5
         _node_coord_smoothed_before += 0.5 * _node_coord_smoothed_after
 
         _min_angle, _max_angle, _min_area = get_mesh_info(
             _node_coord_smoothed_before, element_nodes)
 
-        if _min_area > 0.5 * min_area_in_previous_step and math.pi - 0.3 > _max_angle or _min_angle > 0.3:
+        # Give good check rule to avoid dead loop
+        if _min_area > 0.4 * min_area_in_previous_step and math.pi - 0.2 > _max_angle or _min_angle > 0.2:
             break
 
     # save for the next step
     min_angle_in_previous_step, max_angle_in_previous_step, min_area_in_previous_step = _min_angle, _max_angle, _min_area
 
     # if no smoothing happened, it is equal to Lagrangian coordinate mesh.
-    #_node_coord_lang *= 0.2
-    #_node_coord_lang += 0.8 * _node_coord_smoothed_after
+    #_node_coord_lagrange *= 0.2
+    #_node_coord_lagrange += 0.8 * _node_coord_smoothed_after
     # use final mesh to get velocity
-    #_node_coord_lang -= node_coord
-    #_node_coord_lang /= dt
-    #_mesh_velocity_at_node[:] = _node_coord_lang
+    #_node_coord_lagrange -= node_coord
+    #_node_coord_lagrange /= dt
+    #_mesh_velocity_at_node[:] = _node_coord_lagrange
 
     _mesh_velocity_at_node[:] = (_node_coord_smoothed_before - node_coord) / dt
 
-    _mesh_velocity_at_node[:] = 0.0
+    #_mesh_velocity_at_node[:] = 0.0
