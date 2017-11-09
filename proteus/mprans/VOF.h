@@ -9,6 +9,8 @@
 #define IS_BETAij_ONE 0
 #define GLOBAL_FCT 0
 
+#define betaNormGrad(gradu2,beta2) std::sqrt(gradu2+beta2)
+
 /////////////////////
 //ENTROPY FUNCTION //
 /////////////////////
@@ -2924,14 +2926,16 @@ namespace proteus
 	      mesh_velocity[1] = yt;
 	      mesh_velocity[2] = zt;
 
-	      double norm_grad_u = 0;
+	      double gradu2 = 0;
 	      for(int I=0;I<nSpace;I++)
-		norm_grad_u += grad_u[I]*grad_u[I];
-	      norm_grad_u = std::sqrt(norm_grad_u)+1E-10;
+		gradu2 += grad_u[I]*grad_u[I];
+	      double beta_norm_grad_u = betaNormGrad(gradu2,1.E-15);
 	      
 	      double lambda = epsFactDiffusion;
 	      //double lambda = epsFactDiffusion*elementDiameter[eN]/dt;
-	      lambda *= (1.-1./norm_grad_u);
+	      double coeff1 = 1+2*std::pow(beta_norm_grad_u,2)-3*beta_norm_grad_u; //double potential
+	      //double coeff1= (1.-1./norm_grad_u); // single potential
+	      
 	      double epsHeaviside = epsFactHeaviside*elementDiameter[eN]; 	    
 	      double Hn = smoothedHeaviside(epsHeaviside,un);
 	      for (int I=0;I<nSpace;I++)
@@ -2954,8 +2958,7 @@ namespace proteus
 		  elementResidual_u[i] += 
 		    time_derivative_residual*u_test_dV[i]
 		    + ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])
-		    + ck.NumericalDiffusion(lambda,grad_u,&u_grad_test_dV[i_nSpace]);
-		    //+ ck.NumericalDiffusion(-1.0/norm_grad_u,grad_u,&u_grad_test_dV[i_nSpace]);
+		    + lambda*ck.NumericalDiffusion(coeff1,grad_u,&u_grad_test_dV[i_nSpace]);
 		}//i
 	      //save solution for other models 
 	      q_u[eN_k] = u;
@@ -4340,16 +4343,20 @@ namespace proteus
 		    u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;
 		}
 
-	      double norm_grad_u = 0;
+	      double gradu2 = 0;
 	      for(int I=0;I<nSpace;I++)
-		norm_grad_u += grad_u[I]*grad_u[I];
-	      norm_grad_u = std::sqrt(norm_grad_u)+1E-10;
+		gradu2 += grad_u[I]*grad_u[I];
+	      double beta_norm_grad_u = betaNormGrad(gradu2,1E-15);
 	      
 	      double lambda = epsFactDiffusion;
 	      //double lambda = epsFactDiffusion*elementDiameter[eN]/dt;
+
+	      double tol=1E-5;
+	      double coeff1 = fmax(tol,1+2*std::pow(beta_norm_grad_u,2)-3*beta_norm_grad_u);
+	      double coeff2 = fmax(tol,4.-3./beta_norm_grad_u);
+	      
 	      double epsDirac = epsFactDirac*elementDiameter[eN];
 	      double time_derivative_jacobian = smoothedDirac(epsDirac,u)/dt;
-	      //double time_derivative_jacobian = 1.0/dt;
 	      
   	      for(int i=0;i<nDOF_test_element;i++)
 		{
@@ -4360,9 +4367,13 @@ namespace proteus
 		      elementJacobian_u_u[i][j] +=
 			time_derivative_jacobian*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i]
 			//u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i]
-			+ ck.NumericalDiffusionJacobian(lambda,
-							&u_grad_trial[j_nSpace],
-							&u_grad_test_dV[i_nSpace]);
+			+ lambda*ck.NumericalDiffusionJacobian(coeff1,
+							       &u_grad_trial[j_nSpace],
+							       &u_grad_test_dV[i_nSpace])
+			+ lambda*( coeff2*dV*
+				   ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[i_nSpace])*
+				   ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[j_nSpace]) );
+			    
 		    }//j
 		}//i
 	    }//k
