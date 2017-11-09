@@ -976,7 +976,9 @@ class CustomShape(Shape):
     volumes: array_like
         Surface loops describing volumes (used for gmsh)
     holes: array_like
-        Array of holes coordinates (unmeshed regions)
+        Array of holes coordinates (unmeshed regions; for triangle/tetgen only)
+    holes: array_like
+        Array of holes index (volume or facet; unmeshed regions; for gmsh only)
     boundaryTags: dict
         Dictionary of flags (int) as keys, and tags (e.g. string) for BC.
     boundaryOrientations: Optional[array_like]
@@ -986,9 +988,9 @@ class CustomShape(Shape):
 
     def __init__(self, domain, barycenter=None, vertices=None,
                  vertexFlags=None, segments=None, segmentFlags=None,
-                 facets=None, facetFlags=None, holes=None, regions=None,
-                 regionFlags=None, volumes=None, boundaryTags=None,
-                 boundaryOrientations=None):
+                 facets=None, facetFlags=None, holes=None, holes_ind=None,
+                 regions=None, regionFlags=None, volumes=None,
+                 boundaryTags=None, boundaryOrientations=None):
         super(CustomShape, self).__init__(domain, nd=len(vertices[0]))
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
@@ -1000,12 +1002,14 @@ class CustomShape(Shape):
             self.segments = np.array(segments)
             self.segmentFlags = np.array(segmentFlags)
         if facets is not None:
-            self.facets = np.array(facets)
+            self.facets = facets
             self.facetFlags = np.array(facetFlags)
         if holes is not None:
             self.holes = np.array(holes)
+        if holes_ind is not None:
+            self.holes_ind = np.array(holes_ind)
         if volumes is not None:
-            self.volumes = np.array(volumes)
+            self.volumes = volumes
         if regions is not None:
             self._checkFlags(regionFlags)
             self.regions = np.array(regions)
