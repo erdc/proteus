@@ -3617,7 +3617,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
         if ar.hdfFile is not None:
             if ar.hdfFileGlb is not None:
                 map = self.mesh.globalMesh.nodeNumbering_subdomain2global
-                array=ar.hdfFileGlb.getNode("/",u.name+str(tCount))
+                array=ar.hdfFileGlb.get_node("/",u.name+str(tCount))
                 for i in range(len(map)):
                     u.dof[i] = array[map[i]]
                 del array
@@ -3634,7 +3634,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                     else:
                         u.dof[:]=ar.hdfFile["/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)]
                 else:
-                    u.dof[:]=ar.hdfFile.getNode("/",u.name+str(tCount))
+                    u.dof[:]=ar.hdfFile.get_node("/",u.name+str(tCount))
         else:
             assert(False)
             #numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)

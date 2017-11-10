@@ -21,8 +21,8 @@ nDTout=opts.nDTout
 g = 9.81
 # PARAMETERS #
 mannings=0.033 #0.025 #0.025#m^{-1/3} after Ying etal 2009
-cE=5
-LUMPED_MASS_MATRIX=1
+cE=1
+LUMPED_MASS_MATRIX=0
 
 domain = None#RectangularDomain(L=L)
 meshfile = "mal_50sec"
