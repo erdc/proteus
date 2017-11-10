@@ -408,6 +408,35 @@ class Newton(NonlinearSolver):
             self.u0 = numpy.zeros(self.F.dim,'d')
 
     def setLinearSolverTolerance(self,r):
+        """
+        This function dynamically sets the relative tolerance
+        of the linear solver associated with the non-linear iteration.
+        Set useEistenstatWalker=True in a simulation's numerics file
+        to ensure that this function is used.
+
+        Parameters
+        ----------
+        r : vector
+            non-linear residual vector
+
+        Notes
+        -----
+        The size of the relative reduction assigned to the linear
+        solver depends on two factors: (i) how far the non-linear
+        solver is from satifying its residual reductions and
+        (ii) how large the drop in the latest non-linear
+        residual was.
+
+        If the non-linear solver is both far from its residual
+        reduction targets and the latest non-linear residual showed
+        a big drop, then expect the algorithm to assign a large
+        relative reduction to the linear solver.
+
+        As the non-linear residual reduction targets get closer, or
+        the non-linear solver stagnates, the linear solver will be
+        assigned a smaller relative reduction up to a minimum of
+        0.001.
+        """
         self.norm_r = self.norm(r)
         gamma  = 0.0001
         etaMax = 0.001
@@ -419,7 +448,7 @@ class Newton(NonlinearSolver):
         if self.its > 1:
             etaA = gamma * self.norm_r**2/self.norm_r_last**2
             logEvent("etaA "+`etaA`)
-            logEvent("gama*self.etaLast**2 "+ `gamma*self.etaLast**2`)
+            logEvent("gamma*self.etaLast**2 "+ `gamma*self.etaLast**2`)
             if gamma*self.etaLast**2 < 0.1:
                 etaC = min(etaMax,etaA)
             else:

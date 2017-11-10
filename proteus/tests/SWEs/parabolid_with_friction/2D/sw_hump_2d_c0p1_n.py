@@ -2,8 +2,8 @@ from proteus import *
 from proteus.default_n import *
 from sw_hump_2d_p import *
 
-refinement=6
-runCFL=0.25
+refinement=2
+runCFL=0.5
 timeIntegration_sw2d = "SSP33"
 #timeIntegration_sw2d = "FE"
 
