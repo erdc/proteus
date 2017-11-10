@@ -829,32 +829,23 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
-        pass
-        # if self.comm.isMaster():
-        # print "wettedAreas"
-        # print self.wettedAreas[:]
-        # print "Forces_p"
-        # print self.netForces_p[:,:]
-        # print "Forces_v"
-        # print self.netForces_v[:,:]
+        # Compute 2nd order extrapolation on velocity
+        if (firstStep):
+            self.model.q[('velocityStar',0)][:] = self.model.q[('velocity',0)]        
+        else:
+            if self.model.timeIntegration.timeOrder == 1: 
+                r = 1.
+            else:
+                r = self.model.timeIntegration.dt/self.model.timeIntegration.dt_history[0] 
+            self.model.q[('velocityStar',0)][:] = (1+r)*self.model.q[('velocity',0)] - r*self.model.q[('velocityOld',0)]
+        self.model.q[('velocityOld',0)][:] = self.model.q[('velocity',0)]  
+        self.model.dt_last = self.model.timeIntegration.dt
 
     def postStep(self, t, firstStep=False):
+        if firstStep==True:
+            self.model.firstStep=False
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
-        # if self.comm.isMaster():
-        # print "wettedAreas"
-        # print self.wettedAreas[:]
-        # print "Forces_p"
-        # print self.netForces_p[:,:]
-        # print "Forces_v"
-        # print self.netForces_v[:,:]
-        # self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
-        # self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
-        # self.forceHistory_p.flush()
-        # self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_v[-1,:]))
-        # self.forceHistory_v.flush()
-        # self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1,:]))
-        # self.momentHistory.flush()
 
 
 class LevelModel(proteus.Transport.OneLevelTransport):
@@ -888,6 +879,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  movingDomain=False,
                  bdyNullSpace=False):
         self.bdyNullSpace=bdyNullSpace
+        self.firstStep=True
         self.eb_adjoint_sigma = coefficients.eb_adjoint_sigma
         # this is a hack to test the effect of using a constant smoothing width
         useConstant_he = coefficients.useConstant_he
@@ -1160,6 +1152,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nQuadraturePoints_element,
              self.nSpace_global),
             'd')
+        self.q[
+            ('velocityOld',
+            0)] = numpy.zeros(
+                (self.mesh.nElements_global,
+                 self.nQuadraturePoints_element,
+                 self.nSpace_global),
+                'd')
+        self.q[
+            ('velocityStar',
+             0)] = numpy.zeros(
+                 (self.mesh.nElements_global,
+                  self.nQuadraturePoints_element,
+                  self.nSpace_global),
+                 'd')
         self.q['vos'] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['x'] = numpy.zeros(
@@ -1363,6 +1369,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  self.nSpace_global),
                 'd')
             self.q['det(J)'] = numpy.zeros(
+                (self.mesh.nElements_global,
+                 self.nQuadraturePoints_element),
+                'd')
+            self.q['abs(det(J))'] = numpy.zeros(
                 (self.mesh.nElements_global,
                  self.nQuadraturePoints_element),
                 'd')
@@ -1676,7 +1686,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 ('u', 2)] = self.numericalFlux.ebqe[
                 ('u', 1)].copy()
             log("calling RANS3PSed2D ctor")
-            self.rans3pf = cRANS3PSed.RANS3PSed2D(
+            self.rans3psed = cRANS3PSed.RANS3PSed2D(
                 self.nSpace_global,
                 self.nQuadraturePoints_element,
                 self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -1701,7 +1711,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.coefficients.angFriction)
         else:
             log("calling  RANS3PSed ctor")
-            self.rans3pf = cRANS3PSed.RANS3PSed(
+            self.rans3psed = cRANS3PSed.RANS3PSed(
                 self.nSpace_global,
                 self.nQuadraturePoints_element,
                 self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -1781,18 +1791,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.netForces_v[:, :] = 0.0
         self.coefficients.netMoments[:, :] = 0.0
 
-        if self.forceStrongConditions:
+        if self.forceStrongConditions and self.firstStep == False:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[
                         cj].DOFBoundaryConditionsDict.iteritems():
-                    if cj == 0:
-                        self.u[cj].dof[dofN] = g(
-                            self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],
-                            self.timeIntegration.t)
-                    else:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
-                                                 dofN], self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
-        self.rans3pf.calculateResidual(  # element
+                            dofN], self.timeIntegration.t)# + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+
+        self.rans3psed.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -1884,7 +1890,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[2],
             self.q['dV'],
             self.q['dV_last'],
-            self.stabilization.v_last,
+            self.q[('velocityStar',0)], #mql: use uStar=2*un-unm1 to achieve 2nd order accuracy             
             self.coefficients.ebqe_velocity_last,
             self.q[('cfl', 0)],
             self.q[('numDiff', 0, 0)],
@@ -1930,7 +1936,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.bc_ebqe_phi,
             self.coefficients.ebqe_n,
             self.coefficients.ebqe_kappa,
-            self.ebqe_vos,
+            self.coefficients.ebqe_vos,
             self.coefficients.ebqe_turb_var[0],
             self.coefficients.ebqe_turb_var[1],
             self.pressureModel.numericalFlux.isDOFBoundary[0],
@@ -1981,14 +1987,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.coefficients.netMoments[i, I])
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
-                for dofN, g in self.dirichletConditionsForceDOF[
-                        cj].DOFBoundaryConditionsDict.iteritems():
-                    if cj == 0:
-                        r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - g(
-                            self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
-                    else:
-                        r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
-                                                                                               dofN], self.timeIntegration.t) - self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+                for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
+                        dofN], self.timeIntegration.t)# - self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
 
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         log("Maximum CFL = " + str(cflMax), level=2)
@@ -2024,7 +2025,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 1)] = self.csrColumnOffsets[(0, 1)]
             self.csrColumnOffsets_eb[(2, 2)] = self.csrColumnOffsets[(0, 1)]
 
-        self.rans3pf.calculateJacobian(  # element
+        self.rans3psed.calculateJacobian(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -2113,7 +2114,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[2],
             self.q['dV'],
             self.q['dV_last'],
-            self.stabilization.v_last,
+            self.q[('velocityStar',0)], #mql: use uStar=2*un-unm1 to achieve 2nd order accuracy 
             self.coefficients.ebqe_velocity_last,
             self.q[('cfl', 0)],
             self.shockCapturing.numDiff_last[0],
@@ -2174,7 +2175,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_n,
             self.coefficients.ebqe_kappa,
             # VRANS start
-            self.ebqe_vos,
+            self.coefficients.ebqe_vos,
             self.coefficients.ebqe_turb_var[0],
             self.coefficients.ebqe_turb_var[1],
             # VRANS end
@@ -2262,6 +2263,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.q['J'],
                 self.q['inverse(J)'],
                 self.q['det(J)'])
+            self.q['abs(det(J))'][:] = numpy.abs(self.q['det(J)'])
             self.u[0].femSpace.getBasisValues(
                 self.elementQuadraturePoints, self.q[('v', 0)])
         self.u[0].femSpace.elementMaps.getBasisValuesRef(
@@ -2384,7 +2386,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def calculateAuxiliaryQuantitiesAfterStep(self):
         if self.postProcessing and self.conservativeFlux:
-            self.rans3pf.calculateVelocityAverage(
+            self.rans3psed.calculateVelocityAverage(
                 self.mesh.nExteriorElementBoundaries_global,
                 self.mesh.exteriorElementBoundariesArray,
                 self.mesh.nInteriorElementBoundaries_global,
@@ -2403,7 +2405,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[0].dof,
                 self.u[1].dof,
                 self.u[2].dof,
-                self.vos_dof,
+                self.coefficients.vos_dof,
                 self.u[0].femSpace.psi_trace,
                 self.ebqe[
                     ('velocity',

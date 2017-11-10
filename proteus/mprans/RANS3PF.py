@@ -45,7 +45,6 @@ class SubgridError(proteus.SubgridError.SGE_base):
         self.cq = cq
         self.v_last = self.cq[('velocity', 0)]
 
-
     def updateSubgridErrorHistory(self, initializationPhase=False):
         self.nSteps += 1
         if self.lag:
@@ -54,6 +53,7 @@ class SubgridError(proteus.SubgridError.SGE_base):
             log("RANS3PF.SubgridError: switched to lagged subgrid error")
             self.lag = True
             self.v_last = self.cq[('velocity', 0)].copy()
+
     def calculateSubgridError(self, q):
         pass
 
@@ -463,11 +463,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.q_grad_p_fluid = modelList[self.PRESSURE_model].q[('grad(u)',0)]
             self.model.ebqe_grad_p_fluid = modelList[self.PRESSURE_model].ebqe[('grad(u)',0)]
         if self.VOS_model is not None:
-            self.model.vos_dof = modelList[self.VOS_model].u[0].dof.copy()
-            self.model.q_vos = modelList[self.VOS_model].q[('u',0)].copy()
-            self.model.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)].copy()
-            self.model.q_dvos_dt[:] = 0.0
-            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)].copy()
+            self.model.vos_dof = modelList[self.VOS_model].u[0].dof
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
+            self.model.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
             self.vos_dof = self.model.vos_dof
             self.q_vos = self.model.q_vos
             self.q_dvos_dt = self.model.q_dvos_dt
@@ -977,9 +976,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.updateMaterialParameters()
         if self.model.hasForceTermsAsFunctions: 
             self.model.updateForceTerms()
-
         self.model.dt_last = self.model.timeIntegration.dt
-        pass
 
     def postStep(self, t, firstStep=False):
         if firstStep==True:
@@ -2261,7 +2258,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
             self.pressureModel.q_p_sharp,
-            self.pressureModel.q_grad_p_sharp, 
+            self.pressureModel.q_grad_p_sharp,
             self.pressureModel.ebqe_p_sharp,
             self.pressureModel.ebqe_grad_p_sharp,
             #self.pressureModel.q[('u',0)],
@@ -2995,7 +2992,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
 def getErgunDrag(porosity, meanGrainSize, viscosity):
-    # cek hack, this d0oesn't seem right
+    # cek hack, this doesn't seem right
     # cek todo look up correct Ergun model for alpha and beta
     voidFrac = 1.0 - porosity
     if voidFrac > 1.0e-6:
