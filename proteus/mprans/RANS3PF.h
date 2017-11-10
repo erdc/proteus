@@ -1305,7 +1305,6 @@ namespace proteus
         mom_u_source = -phi_s_effect*rho*porosity*g[0];// - d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
         mom_v_source = -phi_s_effect*rho*porosity*g[1];// - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
         mom_w_source = -phi_s_effect*rho*porosity*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
-        printf("mom_source fluid --> %3.2f", mom_v_source);
    
         // mql: add general force term 
         mom_u_source -= forcex; 

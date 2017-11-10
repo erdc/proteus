@@ -44,6 +44,8 @@ class Coefficients(TC_base):
                  rho_f_min=998.0,
                  rho_s_min=998.0,
                  nd=2,
+                 VOS_model=0,
+                 VOF_model=1,
                  modelIndex = None,
                  fluidModelIndex = None, 
                  fixNullSpace=False, 
@@ -55,6 +57,8 @@ class Coefficients(TC_base):
         """
         self.fixNullSpace=fixNullSpace
         self.INTEGRATE_BY_PARTS_DIV_U=INTEGRATE_BY_PARTS_DIV_U
+        self.VOS_model=VOS_model
+        self.VOF_model=VOF_model
         assert(nd in [2,3])        
         self.nd = nd
         if self.nd == 2:
@@ -82,6 +86,9 @@ class Coefficients(TC_base):
         """
         self.model = modelList[self.modelIndex]
         self.fluidModel = modelList[self.fluidModelIndex]
+        if self.VOS_model is not None:
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)].copy()
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)].copy()
 
     def initializeMesh(self,mesh):
         """
@@ -163,8 +170,12 @@ class Coefficients(TC_base):
         #then a may become a full  tensor
         c['a_f'] = 1.0/(self.rho_f_min*alphaBDF)
         c['a_s'] = 1.0/(self.rho_s_min*alphaBDF)
-        c[('a',0,0)][...,0] = ((1.0-vos)*self.rho_f_min + vos*self.rho_s_min)*alphaBDF
+        a_penalty = ((1.0-vos)*self.rho_f_min + vos*self.rho_s_min)*alphaBDF
+        c[('a',0,0)][...,0] = 1./a_penalty 
+        #c[('a',0,0)][...,0] = ((1.0-vos)*self.rho_f_min + vos*self.rho_s_min)*alphaBDF
+        #c[('a',0,0)][...,0] = (self.rho_f_min/(1.0-vos) + self.rho_s_min/vos)*alphaBDF
         #c[('a',0,0)][...,0] = (1.0-vos)*c['a_f'] + vos*c['a_s']
+        #c[('a',0,0)][...,0] = c['a_f']/(1.0-vos) + c['a_s']/vos
         for i in range(1,c[('a',0,0)].shape[-1]):
             c[('a',0,0)][...,i] = c[('a',0,0)][...,0]
 
@@ -719,8 +730,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         for t,g in self.fluxBoundaryConditionsObjectsDict[
                 0].diffusiveFluxBoundaryConditionsDictDict[0].iteritems():
             self.ebqe[('diffusiveFlux_bc',0,0)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
-            self.ebqe[('diffusiveFlux_bc_flag',0,0)][t[0],t[1]] = 1
-            
+            self.ebqe[('diffusiveFlux_bc_flag',0,0)][t[0],t[1]] = 1 
         if self.coefficients.fixNullSpace:        
             self.u[0].dof[0] = 0
         self.presinc.calculateResidual(  # element

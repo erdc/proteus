@@ -750,7 +750,6 @@ namespace proteus
       mom_u_source = -vos*rho*g[0];// - d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
       mom_v_source = -vos*rho*g[1];// - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
       mom_w_source = -vos*rho*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
-      printf("mom_source --> %3.2f", mom_v_source);
    
       //u momentum Hamiltonian (pressure)
       mom_u_ham = vos*grad_p[0];// /rho;
