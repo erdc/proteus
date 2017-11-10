@@ -1148,14 +1148,21 @@ class NS_base:  # (HasTraits):
             if self.opts.hotStart:
                 logEvent("Setting initial conditions from hot start file for "+p.name)
                 tCount = int(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Name'])
+                offset=0
+                while tCount > 0:
+                    time = float(self.ar[index].tree.getroot()[-1][-1][-1-offset][0].attrib['Value'])
+                    if time < self.opts.hotStartTime:
+                        break
+                    else:
+                        tCount -=1
+                        offset +=1
                 self.ar[index].n_datasets = tCount + 1
-                time = float(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Value'])
-                if len(self.ar[index].tree.getroot()[-1][-1]) > 1:
-                    dt = time - float(self.ar[index].tree.getroot()[-1][-1][-2][0].attrib['Value'])
+                if len(self.ar[index].tree.getroot()[-1][-1]) - offset - 1 > 0:
+                    dt = time - float(self.ar[index].tree.getroot()[-1][-1][-1-offset-1][0].attrib['Value'])
                 else:
-                    logEvent("Only one step in hot start file, setting dt to 1.0")
+                    logEvent("Not enough steps in hot start file set set dt, setting dt to 1.0")
                     dt = 1.0
-                logEvent("Last time step in hot start file was t = "+`time`)
+                logEvent("Hot starting from time step t = "+`time`)
                 for lm,lu,lr in zip(m.levelModelList,m.uList,m.rList):
                     for cj in range(lm.coefficients.nc):
                         lm.u[cj].femSpace.readFunctionXdmf(self.ar[index],lm.u[cj],tCount)
