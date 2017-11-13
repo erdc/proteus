@@ -3,9 +3,8 @@ from proteus.default_n import *
 from sw_hump_2d_p import *
 
 refinement=3
-runCFL=0.5
-timeIntegration_sw2d = "SSP33"
-#timeIntegration_sw2d = "FE"
+runCFL=0.4
+SSPOrder=3 
 
 multilevelNonlinearSolver  = Newton
 if (LUMPED_MASS_MATRIX==1):
@@ -15,12 +14,8 @@ else:
 
 timeIntegration = SW2DCV.RKEV 
 stepController = Min_dt_controller
-if timeIntegration_sw2d == "SSP33": #mwf hack
-    timeOrder = 3
-    nStagesTime = 3
-else:
-    timeOrder = 1
-    nStagesTime = 1
+timeOrder = SSPOrder
+nStagesTime = SSPOrder
 
 rtol_u[0] = 1.0e-4
 rtol_u[1] = 1.0e-4
@@ -74,4 +69,4 @@ multilevelLinearSolver = LU
 levelLinearSolver = LU
 
 #conservativeFlux = {0:'pwl'}
-#tnList=[0.,1E-6]+[float(n)*T/float(nDTout) for n in range(1,nDTout+1)]
+tnList=[0.,1E-6]+[float(n)*T/float(nDTout) for n in range(1,nDTout+1)]
