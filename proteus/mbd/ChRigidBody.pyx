@@ -1810,8 +1810,8 @@ cdef class ProtChMoorings:
         """Records values in csv files
         """
         self.record_file = os.path.join(Profiling.logDir, self.name)
-        def record(record_file, row):
-            with open(record_file, 'a') as csvfile:
+        def record(record_file, row, mode='a'):
+            with open(record_file, mode) as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(row)
         t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
@@ -1833,27 +1833,27 @@ cdef class ProtChMoorings:
         file_name = '_t.csv'
         if t == 0:
             row = ['t', 't_ch', 't_sim']
-            record(self.record_file+file_name, row)
+            record(self.record_file+file_name, row, 'w')
         row = [t, t_chrono, t_sim]
         record(self.record_file+file_name, row)
         # Positions
         file_name = '_pos.csv'
         if t == 0:
-            record(self.record_file+file_name, header_x)
+            record(self.record_file+file_name, header_x, 'w')
         positions = self.getNodesPosition()
         row = (positions.flatten('C')).tolist()
         record(self.record_file+file_name, row)
         # Velocity
         file_name = '_posdt.csv'
         if t == 0:
-            record(self.record_file+file_name, header_x)
+            record(self.record_file+file_name, header_x, 'w')
         velocities = self.getNodesVelocity()
         row = (velocities.flatten('C')).tolist()
         record(self.record_file+file_name, row)
         # Acceleration
         file_name = '_posdtdt.csv'
         if t == 0:
-            record(self.record_file+file_name, header_x)
+            record(self.record_file+file_name, header_x, 'w')
         accelerations = self.getNodesAcceleration()
         row = (accelerations.flatten('C')).tolist()
         record(self.record_file+file_name, row)
@@ -1861,7 +1861,7 @@ cdef class ProtChMoorings:
         file_name = '_T.csv'
         if t == 0:
             row = ['Tb0', 'Tb1', 'Tb2', 'Tf0', 'Tf1', 'Tf2']
-            record(self.record_file+file_name, row)
+            record(self.record_file+file_name, row, 'w')
         Tb = self.getTensionBack()
         Tf = self.getTensionFront()
         row = [Tb[0], Tb[1], Tb[2], Tf[0], Tf[1], Tf[2]]
@@ -1871,41 +1871,42 @@ cdef class ProtChMoorings:
             eta = self._record_etas[i]
             file_name = '_strain'+str(eta)+'.csv'
             if t == 0:
-                record(self.record_file+file_name, header_x[:-3])
+                record(self.record_file+file_name, header_x[:-3], 'w')
             tensions = self.getNodesTension(eta=eta)
             row = (tensions.flatten('C')).tolist()
             record(self.record_file+file_name, row)
         # Drag
         file_name = '_drag.csv'
         if t == 0:
-            record(self.record_file+file_name, header_x)
+            record(self.record_file+file_name, header_x, 'w')
         forces = self.getDragForces()
         row = (forces.flatten('C')).tolist()
         record(self.record_file+file_name, row)
         # Added mass
         file_name = '_AM.csv'
         if t == 0:
-            record(self.record_file+file_name, header_x)
+            record(self.record_file+file_name, header_x, 'w')
         forces = self.getAddedMassForces()
         row = (forces.flatten('C')).tolist()
         record(self.record_file+file_name, row)
         # Fluid Velocity
         file_name = '_u.csv'
         if t == 0:
-            record(self.record_file+file_name, header_x)
+            record(self.record_file+file_name, header_x, 'w')
         velocities = self.fluid_velocity_array
         row = (velocities.flatten('C')).tolist()
         record(self.record_file+file_name, row)
         # Fluid Acceleration
         file_name = '_udt.csv'
         if t == 0:
-            record(self.record_file+file_name, header_x)
+            record(self.record_file+file_name, header_x, 'w')
         accelerations = self.fluid_acceleration_array
         row = (accelerations.flatten('C')).tolist()
         record(self.record_file+file_name, row)
 
     def getTensionBack(self):
         """
+        Get Tension at the back of the cable
         """
         cdef ch.ChVector T
         if self.thisptr.constraint_back:
@@ -1916,6 +1917,7 @@ cdef class ProtChMoorings:
 
     def getTensionFront(self):
         """
+        Get Tension at the front of the cable
         """
         cdef ch.ChVector T
         if self.thisptr.constraint_front:

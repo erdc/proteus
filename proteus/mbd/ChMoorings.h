@@ -226,7 +226,7 @@ cppMultiSegmentedCable::cppMultiSegmentedCable(
   beam_type(beam_type)
 {
   nodes_built = false;
-  nodes_chlink = false;  // build links (true) or link elements directly (false)
+  nodes_chlink = true;  // build links (true) or link elements directly (false)
 
 	std::shared_ptr<cppCable> segment;
 	double L0 = 0;
@@ -853,7 +853,7 @@ void cppCable::applyForces() {
   };
 
 void cppCable::addNodestoContactCloud(std::shared_ptr<ChContactSurfaceNodeCloud> cloud) {
-  for (int i = 0; i < nb_nodes; ++i) {
+  for (int i = 0; i < nb_nodes-1; ++i) {
     if (beam_type == "BeamEuler") {
       cloud->AddNode(nodesRot[i], d);
     }
