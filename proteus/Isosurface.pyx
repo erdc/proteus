@@ -139,14 +139,14 @@ class Isosurface(AV_base):
         from collections import namedtuple
         self.fieldNames = [isosurface[0] for isosurface in self.isosurfaces]
         print("ATTACHING TO HDF5 !!", self.fieldNames)
-        self.elementNodesArray = h5.getNode("/elementsSpatial_Domain" +
+        self.elementNodesArray = h5.get_node("/elementsSpatial_Domain" +
                                             repr(step))[:]
-        self.nodeArray = h5.getNode("/nodesSpatial_Domain" + repr(step))[:]
+        self.nodeArray = h5.get_node("/nodesSpatial_Domain" + repr(step))[:]
         self.num_owned_elements = len(self.elementNodesArray)
         self.u = {}
         FemField = namedtuple('FemField', ['dof'])
         for field_i, field in enumerate(self.fieldNames):
-            self.u[field_i] = FemField(dof=h5.getNode("/" +
+            self.u[field_i] = FemField(dof=h5.get_node("/" +
                                                       self.isosurfaces[0][0] +
                                                       repr(step))[:])
         self.nFrames = step

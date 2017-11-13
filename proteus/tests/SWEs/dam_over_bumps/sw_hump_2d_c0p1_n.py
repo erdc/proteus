@@ -8,8 +8,7 @@ ct = Context.get()
 reflecting_BCs=ct.opts.reflecting_BCs
 refinement=ct.opts.refinement
 runCFL=0.5
-timeIntegration_sw2d = "SSP33"
-#timeIntegration_sw2d = "FE"
+sspOrder = 3
 
 multilevelNonlinearSolver  = Newton
 if (ct.LUMPED_MASS_MATRIX==1):
@@ -20,12 +19,8 @@ else:
 
 timeIntegration = ct.SW2DCV.RKEV 
 stepController = Min_dt_controller
-if timeIntegration_sw2d == "SSP33": #mwf hack
-    timeOrder = 3
-    nStagesTime = 3
-else:
-    timeOrder = 1
-    nStagesTime = 1
+timeOrder = sspOrder
+nStagesTime = sspOrder
 
 rtol_u[0] = 1.0e-4
 rtol_u[1] = 1.0e-4

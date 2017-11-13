@@ -167,6 +167,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.moveCalls = 0
         self.movingDomain=movingDomain
         self.tLast_mesh=None
+        self.bdyNullSpace = bdyNullSpace
         #
         #cek todo clean up these flags in the optimized version
         self.bcsTimeDependent=options.bcsTimeDependent
