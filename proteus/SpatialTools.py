@@ -1334,17 +1334,19 @@ def _assembleGeometry(domain, BC_class):
                 del_v += 1
                 i_d = domain.vertices.index(vertex.tolist())
                 if shape.segments is not None:
-                    for i in np.nditer(segments, op_flags=['readwrite']):
+                    for i in np.nditer(np.array(segments), op_flags=['readwrite']):
                         if i > i_s:
                             i[...] -= 1
                         elif i == i_s:
                             i[...] = i_d-start_vertex
                 if shape.facets is not None:
-                    for i in np.nditer(facets, op_flags=['readwrite']):
-                        if i > i_s:
-                            i[...] -= 1
-                        elif i == i_s:
-                            i[...] = i_d-start_vertex
+                    for facet in shape.facets:
+                        for subfacet in facet:
+                            for ind, ver in enumerate(subfacet):
+                                if ver > i_s:
+                                    subfacet[ind] -= 1
+                                elif ver == i_s:
+                                    subfacet[ind] = i_d-start_vertex
         # adding shape geometry to domain
         domain.vertices += vertices.tolist()
         domain.vertexFlags += (vertexFlags+start_flag).tolist()
