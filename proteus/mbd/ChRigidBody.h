@@ -202,6 +202,8 @@ cppRigidBody::cppRigidBody(cppSystem* system):
   pos = body->GetPos();
   pos_last = body->GetPos();
   body->SetMass(mass);
+  free_x = {1., 1., 1.};
+  free_r = {1., 1., 1.};
 }
 
 

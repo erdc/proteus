@@ -1232,7 +1232,6 @@ cdef class ProtChSystem:
     cdef double proteus_dt
     cdef double proteus_dt_last
     cdef double proteus_dt_next
-    cdef double chrono_dt
     cdef string directory
     cdef object u
     cdef int nd
@@ -1247,6 +1246,7 @@ cdef class ProtChSystem:
     cdef double dt_last
     cdef double t
     cdef public:
+        double chrono_dt
         bool build_kdtree
         bool parallel_mode
         int chrono_processor
@@ -1809,6 +1809,11 @@ cdef class ProtChMoorings:
     def _recordValues(self):
         """Records values in csv files
         """
+        self.record_file = os.path.join(Profiling.logDir, self.name)
+        def record(record_file, row):
+            with open(record_file, 'a') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(row)
         t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
@@ -1820,115 +1825,84 @@ cdef class ProtChMoorings:
         else:
             t = t_chrono
         t_sim = Profiling.time()-Profiling.startTime
-        # Positions
-        self.record_file = os.path.join(Profiling.logDir, self.name+'_pos.csv')
         if t == 0:
-            headers = ['t', 't_ch', 't_sim']
+            header_x = []
             for i in range(self.thisptr.nodes.size()):
-                headers += ['x'+str(i), 'y'+str(i), 'z'+str(i)]
-            with open(self.record_file, 'w') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(headers)
-        positions = self.getNodesPosition()
-        row = [t, t_chrono, t_sim]+(positions.flatten('C')).tolist()
-        with open(self.record_file, 'a') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow(row)
-        # Velocity
-        self.record_file = os.path.join(Profiling.logDir, self.name+'_posdt.csv')
+                header_x += ['x'+str(i), 'y'+str(i), 'z'+str(i)]
+        # time
+        file_name = '_t.csv'
         if t == 0:
-            headers = ['t', 't_ch', 't_sim']
-            for i in range(self.thisptr.nodes.size()):
-                headers += ['x'+str(i), 'y'+str(i), 'z'+str(i)]
-            with open(self.record_file, 'w') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(headers)
-        velocities = self.getNodesVelocity()
-        row = [t, t_chrono, t_sim]+(velocities.flatten('C')).tolist()
-        with open(self.record_file, 'a') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow(row)
-        # Acceleration
-        self.record_file = os.path.join(Profiling.logDir, self.name+'_posdtdt.csv')
-        if t == 0:
-            headers = ['t', 't_ch', 't_sim']
-            for i in range(self.thisptr.nodes.size()):
-                headers += ['x'+str(i), 'y'+str(i), 'z'+str(i)]
-            with open(self.record_file, 'w') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(headers)
-        accelerations = self.getNodesAcceleration()
-        row = [t, t_chrono, t_sim]+(accelerations.flatten('C')).tolist()
-        with open(self.record_file, 'a') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow(row)
-        # Fairlead / anchor tensions
-        self.record_file = os.path.join(Profiling.logDir, self.name+'_T.csv')
-        if t == 0:
-            headers = ['t', 't_ch', 't_sim']
-            # for i in range(self.thisptr.nodes.size()):
-            #     headers += ['Tbx'+str(i), 'Tby'+str(i), 'Tbz'+str(i), 'Tfx'+str(i), 'Tfy'+str(i), 'Tfz'+str(i)]
-            headers += ['Tb0', 'Tb1', 'Tb2', 'Tf0', 'Tf1', 'Tf2']
-            with open(self.record_file, 'w') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(headers)
+            row = ['t', 't_ch', 't_sim']
+            record(self.record_file+file_name, row)
         row = [t, t_chrono, t_sim]
+        record(self.record_file+file_name, row)
+        # Positions
+        file_name = '_pos.csv'
+        if t == 0:
+            record(self.record_file+file_name, header_x)
+        positions = self.getNodesPosition()
+        row = (positions.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
+        # Velocity
+        file_name = '_posdt.csv'
+        if t == 0:
+            record(self.record_file+file_name, header_x)
+        velocities = self.getNodesVelocity()
+        row = (velocities.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
+        # Acceleration
+        file_name = '_posdtdt.csv'
+        if t == 0:
+            record(self.record_file+file_name, header_x)
+        accelerations = self.getNodesAcceleration()
+        row = (accelerations.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
+        # Fairlead / anchor tensions
+        file_name = '_T.csv'
+        if t == 0:
+            row = ['Tb0', 'Tb1', 'Tb2', 'Tf0', 'Tf1', 'Tf2']
+            record(self.record_file+file_name, row)
         Tb = self.getTensionBack()
         Tf = self.getTensionFront()
-        row += [Tb[0], Tb[1], Tb[2], Tf[0], Tf[1], Tf[2]]
-        with open(self.record_file, 'a') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow(row)
+        row = [Tb[0], Tb[1], Tb[2], Tf[0], Tf[1], Tf[2]]
+        record(self.record_file+file_name, row)
         # Tensions
         for i in range(len(self._record_etas)):
             eta = self._record_etas[i]
-            self.record_file = os.path.join(Profiling.logDir, self.name+'_TT'+str(eta)+'.csv')
+            file_name = '_strain'+str(eta)+'.csv'
             if t == 0:
-                headers = ['t', 't_ch', 't_sim']
-                for i in range(self.thisptr.nodes.size()-1):
-                    headers += ['Tx'+str(i), 'Ty'+str(i), 'Tz'+str(i)]
-                with open(self.record_file, 'w') as csvfile:
-                    writer = csv.writer(csvfile, delimiter=',')
-                    writer.writerow(headers)
-            row = [t, t_chrono, t_sim]
+                record(self.record_file+file_name, header_x[:-3])
             tensions = self.getNodesTension(eta=eta)
-            for T in tensions:
-                row += [T[0], T[1], T[2]]
-            with open(self.record_file, 'a') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(row)
+            row = (tensions.flatten('C')).tolist()
+            record(self.record_file+file_name, row)
         # Drag
-        self.record_file = os.path.join(Profiling.logDir, self.name+'_drag.csv')
+        file_name = '_drag.csv'
         if t == 0:
-            headers = ['t', 't_ch', 't_sim']
-            for i in range(self.thisptr.nodes.size()):
-                headers += ['Fx'+str(i), 'Fy'+str(i), 'Fz'+str(i)]
-            with open(self.record_file, 'w') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(headers)
-        row = [t, t_chrono, t_sim]
+            record(self.record_file+file_name, header_x)
         forces = self.getDragForces()
-        for F in forces:
-            row += [F[0], F[1], F[2]]
-        with open(self.record_file, 'a') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow(row)
+        row = (forces.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
         # Added mass
-        self.record_file = os.path.join(Profiling.logDir, self.name+'_AM.csv')
+        file_name = '_AM.csv'
         if t == 0:
-            headers = ['t', 't_ch', 't_sim']
-            for i in range(self.thisptr.nodes.size()):
-                headers += ['Fx'+str(i), 'Fy'+str(i), 'Fz'+str(i)]
-            with open(self.record_file, 'w') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(headers)
-        row = [t, t_chrono, t_sim]
+            record(self.record_file+file_name, header_x)
         forces = self.getAddedMassForces()
-        for F in forces:
-            row += [F[0], F[1], F[2]]
-        with open(self.record_file, 'a') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow(row)
+        row = (forces.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
+        # Fluid Velocity
+        file_name = '_u.csv'
+        if t == 0:
+            record(self.record_file+file_name, header_x)
+        velocities = self.fluid_velocity_array
+        row = (velocities.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
+        # Fluid Acceleration
+        file_name = '_udt.csv'
+        if t == 0:
+            record(self.record_file+file_name, header_x)
+        accelerations = self.fluid_acceleration_array
+        row = (accelerations.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
 
     def getTensionBack(self):
         """
