@@ -389,11 +389,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.q_grad_p_fluid = modelList[self.PRESSURE_model].q[('grad(u)',0)]
             self.model.ebqe_grad_p_fluid = modelList[self.PRESSURE_model].ebqe[('grad(u)',0)]
         if self.VOS_model is not None:
-            self.model.vos_dof = modelList[self.VOS_model].u[0].dof.copy()
-            self.model.q_vos = modelList[self.VOS_model].q[('u',0)].copy()
-            self.model.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)].copy()
-            self.model.q_dvos_dt[:] = 0.0
-            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)].copy()
+            self.model.vos_dof = modelList[self.VOS_model].u[0].dof
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
+            self.model.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
             self.vos_dof = self.model.vos_dof
             self.q_vos = self.model.q_vos
             self.q_dvos_dt = self.model.q_dvos_dt
@@ -511,7 +510,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def initializeElementQuadrature(self, t, cq):
         # VRANS
-        self.q_vos = numpy.ones(cq[('u', 0)].shape, 'd')
         self.q_dragAlpha = numpy.ones(cq[('u', 0)].shape, 'd')
         self.q_dragAlpha.fill(self.dragAlpha)
         self.q_dragBeta = numpy.ones(cq[('u', 0)].shape, 'd')
@@ -543,7 +541,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
         # VRANS
-        self.ebq_vos = numpy.ones(cebq['det(J)'].shape, 'd')
         self.ebq_dragAlpha = numpy.ones(cebq['det(J)'].shape, 'd')
         self.ebq_dragAlpha.fill(self.dragAlpha)
         self.ebq_dragBeta = numpy.ones(cebq['det(J)'].shape, 'd')
@@ -637,7 +634,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # VRANS
         log("ebqe_global allocations in coefficients")
         self.ebqe_velocity_last = numpy.zeros(cebqe[('velocity',0)].shape)
-        self.ebqe_vos = numpy.ones(cebqe[('u', 0)].shape, 'd')
         self.ebqe_dragAlpha = numpy.ones(cebqe[('u', 0)].shape, 'd')
         self.ebqe_dragAlpha.fill(self.dragAlpha)
         self.ebqe_dragBeta = numpy.ones(cebqe[('u', 0)].shape, 'd')
@@ -1143,11 +1139,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[
             ('velocity',
              0)] = numpy.zeros(
-            (self.mesh.nElements_global,
-             self.nQuadraturePoints_element,
-             self.nSpace_global),
-            'd')
-        self.q['velocity_fluid'] = numpy.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nSpace_global),
@@ -2435,14 +2426,3 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def updateAfterMeshMotion(self):
         pass
-
-
-def getErgunDrag(porosity, meanGrainSize, viscosity):
-    # cek hack, this doesn't seem right
-    # cek todo look up correct Ergun model for alpha and beta
-    voidFrac = 1.0 - porosity
-    if voidFrac > 1.0e-6:
-        dragBeta = porosity * porosity * porosity * meanGrainSize * 1.0e-2 / voidFrac
-    if (porosity > epsZero and meanGrainSize > epsZero):
-        dragAlpha = viscosity * 180.0 * voidFrac * voidFrac / \
-            (meanGrainSize * meanGrainSize * porosity)

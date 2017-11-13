@@ -629,8 +629,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def initializeElementQuadrature(self, t, cq):
         # VRANS
         self.q_phi_solid = numpy.ones(cq[('u', 0)].shape, 'd')
-        self.q_velocity_solid = numpy.zeros(cq[('velocity', 0)].shape, 'd')
-        self.q_porosity = numpy.ones(cq[('u', 0)].shape, 'd')
         self.q_dragAlpha = numpy.ones(cq[('u', 0)].shape, 'd')
         self.q_dragAlpha.fill(self.dragAlpha)
         self.q_dragBeta = numpy.ones(cq[('u', 0)].shape, 'd')
@@ -638,16 +636,22 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.setParamsFunc is not None:
             self.setParamsFunc(
                 cq['x'],
-                self.q_porosity,
+                self.q_vos,
                 self.q_dragAlpha,
                 self.q_dragBeta)
+            #convert from porosity to volume of sediment
+            self.q_vos -= 1.0
+            self.q_vos *= -1.0
         else:
             # TODO make loops faster
             if self.porosityTypes is not None:
-                for eN in range(self.q_porosity.shape[0]):
-                    self.q_porosity[
+                for eN in range(self.q_vos.shape[0]):
+                    self.q_vos[
                         eN, :] = self.porosityTypes[
                         self.elementMaterialTypes[eN]]
+                #convert from porosity to volume of sediment
+                self.q_vos -= 1.0
+                self.q_vos *= -1.0
             if self.dragAlphaTypes is not None:
                 for eN in range(self.q_dragAlpha.shape[0]):
                     self.q_dragAlpha[
@@ -658,13 +662,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.q_dragBeta[
                         eN, :] = self.dragBetaTypes[
                         self.elementMaterialTypes[eN]]
-        #
         cq['phisError'] = cq[('u',0)].copy()
         cq['velocityError'] = cq[('velocity',0)].copy()
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
         # VRANS
-        self.ebq_porosity = numpy.ones(cebq['det(J)'].shape, 'd')
         self.ebq_dragAlpha = numpy.ones(cebq['det(J)'].shape, 'd')
         self.ebq_dragAlpha.fill(self.dragAlpha)
         self.ebq_dragBeta = numpy.ones(cebq['det(J)'].shape, 'd')
@@ -672,9 +674,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.setParamsFunc is not None:
             self.setParamsFunc(
                 cebq['x'],
-                self.ebq_porosity,
+                self.ebq_vos,
                 self.ebq_dragAlpha,
                 self.ebq_dragBeta)
+            #convert from porosity to volume of sediment
+            self.ebq_vos -= 1.0
+            self.ebq_vos *= -1.0
         # TODO which mean to use or leave discontinuous
         # TODO make loops faster
         if self.porosityTypes is not None:
@@ -688,10 +693,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     ebN, 1]
                 avg = 0.5 * (self.porosityTypes[self.elementMaterialTypes[eN_left]] +
                              self.porosityTypes[self.elementMaterialTypes[eN_right]])
-                self.ebq_porosity[
+                self.ebq_vos[
                     eN_left, ebN_element_left, :] = self.porosityTypes[
                     self.elementMaterialTypes[eN_left]]
-                self.ebq_porosity[
+                self.ebq_vos[
                     eN_right, ebN_element_right, :] = self.porosityTypes[
                     self.elementMaterialTypes[eN_right]]
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
@@ -699,9 +704,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 eN = self.mesh.elementBoundaryElementsArray[ebN, 0]
                 ebN_element = self.mesh.elementBoundaryLocalElementBoundariesArray[
                     ebN, 0]
-                self.ebq_porosity[
+                self.ebq_vos[
                     eN, ebN_element, :] = self.porosityTypes[
                     self.elementMaterialTypes[eN]]
+            #convert from porosity to volume of sediment
+            self.ebq_vos -= 1.0
+            self.ebq_vos *= -1.0
         if self.dragAlphaTypes is not None:
             for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
                 ebN = self.mesh.interiorElementBoundariesArray[ebNI]
@@ -752,13 +760,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebq_dragBeta[
                     eN, ebN_element, :] = self.dragBetaTypes[
                     self.elementMaterialTypes[eN]]
-         #
 
     def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
         # VRANS
         log("ebqe_global allocations in coefficients")
         self.ebqe_velocity_last = numpy.zeros(cebqe[('velocity',0)].shape)
-        self.ebqe_porosity = numpy.ones(cebqe[('u', 0)].shape, 'd')
         self.ebqe_dragAlpha = numpy.ones(cebqe[('u', 0)].shape, 'd')
         self.ebqe_dragAlpha.fill(self.dragAlpha)
         self.ebqe_dragBeta = numpy.ones(cebqe[('u', 0)].shape, 'd')
@@ -768,17 +774,23 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.setParamsFunc is not None:
             self.setParamsFunc(
                 cebqe['x'],
-                self.ebqe_porosity,
+                self.ebqe_vos,
                 self.ebqe_dragAlpha,
                 self.ebqe_dragBeta)
+            #convert from porosity to volume of sediment
+            self.ebqe_vos -= 1.0
+            self.ebqe_vos *= -1.0
         else:
             if self.porosityTypes is not None:
                 for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                     ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                     eN = self.mesh.elementBoundaryElementsArray[ebN, 0]
-                    self.ebqe_porosity[
+                    self.ebqe_vos[
                         ebNE, :] = self.porosityTypes[
                         self.elementMaterialTypes[eN]]
+                #convert from porosity to volume of sediment
+                self.ebqe_vos -= 1.0
+                self.ebqe_vos *= -1.0
             if self.dragAlphaTypes is not None:
                 for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                     ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -793,7 +805,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.ebqe_dragBeta[
                         ebNE, :] = self.dragBetaTypes[
                         self.elementMaterialTypes[eN]]
-        #
 
     def updateToMovingDomain(self, t, c):
         pass
@@ -1366,11 +1377,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                   self.nQuadraturePoints_element,
                   self.nSpace_global),
                  'd')
-        self.q['velocity_solid'] = numpy.zeros(
-            (self.mesh.nElements_global,
-             self.nQuadraturePoints_element,
-             self.nSpace_global),
-            'd')
         # mql: create vectors to compute div(U)
         self.q['divU'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         # mql: create vectors to compute uStar = 2*un-unm1
@@ -2990,13 +2996,3 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def updateAfterMeshMotion(self):
         pass
 
-
-def getErgunDrag(porosity, meanGrainSize, viscosity):
-    # cek hack, this doesn't seem right
-    # cek todo look up correct Ergun model for alpha and beta
-    voidFrac = 1.0 - porosity
-    if voidFrac > 1.0e-6:
-        dragBeta = porosity * porosity * porosity * meanGrainSize * 1.0e-2 / voidFrac
-    if (porosity > epsZero and meanGrainSize > epsZero):
-        dragAlpha = viscosity * 180.0 * voidFrac * voidFrac / \
-            (meanGrainSize * meanGrainSize * porosity)
