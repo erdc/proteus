@@ -775,69 +775,83 @@ namespace proteus
         dmom_v_ham_grad_v[1]= vos*rho*vStar;
         /* dmom_v_ham_grad_v[2]=vos*wStar; */
       
-        /* //w momentum Hamiltonian (advection) */
-        /* mom_w_ham = vos*(uStar*grad_w[0]+vStar*grad_w[1]+wStar*grad_w[2]); */
-        /* dmom_w_ham_grad_w[0]=vos*rho*uStar; */
-        /* dmom_w_ham_grad_w[1]=vos*rho*vStar; */
-        /* dmom_w_ham_grad_w[2]=vos*rho*wStar; */
-      }
+      /* //w momentum Hamiltonian (advection) */
+      /* mom_w_ham = vos*(uStar*grad_w[0]+vStar*grad_w[1]+wStar*grad_w[2]); */
+      /* dmom_w_ham_grad_w[0]=vos*uStar; */
+      /* dmom_w_ham_grad_w[1]=vos*vStar; */
+      /* dmom_w_ham_grad_w[2]=vos*wStar; */
+    }
+    //VRANS specific
+    inline
+      void updateDarcyForchheimerTerms_Ergun(/* const double linearDragFactor, */
+					   /* const double nonlinearDragFactor, */
+					   /* const double vos, */
+					   /* const double meanGrainSize, */
+					   const double alpha,
+					   const double beta,
+					   const double eps_rho,
+					   const double eps_mu,
+					   const double rho_0,
+					   const double nu_0,
+					   const double rho_1,
+					   const double nu_1,
+					   const double useVF,
+					   const double vf,
+					   const double phi,
+					   const double u,
+					   const double v,
+					   const double w,
+					   const double uStar,
+					   const double vStar,
+					   const double wStar,
+					   const double eps_s,
+					   const double phi_s,
+					   const double u_f,
+					   const double v_f,
+					   const double w_f,
+					   double& mom_u_source,
+					   double& mom_v_source,
+					   double& mom_w_source,
+					   double dmom_u_source[nSpace],
+					   double dmom_v_source[nSpace],
+					   double dmom_w_source[nSpace])
+    {
+      double rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
+      H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
+      nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+      rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
+      mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+      viscosity = mu;//nu;
+      uc = sqrt(u*u+v*v*+w*w); 
+      duc_du = u/(uc+1.0e-12);
+      duc_dv = v/(uc+1.0e-12);
+      duc_dw = w/(uc+1.0e-12);
+      double solid_velocity[3]={uStar,vStar,wStar}, fluid_velocity[3]={u_f,v_f,w_f};
+      double new_beta = closure.betaCoeff(1.0-phi_s,
+                                          rho,
+                                          fluid_velocity,
+                                          solid_velocity,
+                                          viscosity);
+      //new_beta/=rho;
+      new_beta*=rho;
+      //std::cout<<"total "<<(1.0-phi_s)*new_beta<<std::endl;
+      mom_u_source += (1.0 - phi_s)*new_beta*(u-u_f);
+      mom_v_source += (1.0 - phi_s)*new_beta*(v-v_f);
+      /* mom_w_source += phi_s*new_beta*(w-w_s); */
 
-      //VRANS specific
-      inline
-        void updateDarcyForchheimerTerms_Ergun(/* const double linearDragFactor, */
-                                               /* const double nonlinearDragFactor, */
-                                               /* const double vos, */
-                                               /* const double meanGrainSize, */
-                                               const double alpha,
-                                               const double beta,
-                                               const double eps_rho,
-                                               const double eps_mu,
-                                               const double rho_0,
-                                               const double nu_0,
-                                               const double rho_1,
-                                               const double nu_1,
-                                               const double useVF,
-                                               const double vf,
-                                               const double phi,
-                                               const double u,
-                                               const double v,
-                                               const double w,
-                                               const double uStar,
-                                               const double vStar,
-                                               const double wStar,
-                                               const double eps_s,
-                                               const double phi_s,
-                                               const double u_f,
-                                               const double v_f,
-                                               const double w_f,
-                                               double& mom_u_source,
-                                               double& mom_v_source,
-                                               double& mom_w_source,
-                                               double dmom_u_source[nSpace],
-                                               double dmom_v_source[nSpace],
-                                               double dmom_w_source[nSpace])
-      {
-        double rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
-        H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
-        nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
-        rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
-        mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-        viscosity = mu;
-        uc = sqrt(u*u+v*v*+w*w); 
-        duc_du = u/(uc+1.0e-12);
-        duc_dv = v/(uc+1.0e-12);
-        duc_dw = w/(uc+1.0e-12);
-        double solid_velocity[3]={uStar,vStar,wStar}, fluid_velocity[3]={u_f,v_f,w_f};
-        double new_beta =0.0;// closure.betaCoeff(1.0-phi_s,
-        //               rho,
-        //               fluid_velocity,
-        //               solid_velocity,
-        //               viscosity);
+      dmom_u_source[0] = (1.0 - phi_s)*new_beta;
+      dmom_u_source[1] = 0.0;
+      /* dmom_u_source[2] = 0.0; */
+      
+      dmom_v_source[0] = 0.0;
+      dmom_v_source[1] = (1.0 - phi_s)*new_beta;
+      dmom_v_source[2] = 0.0;
 
-        //new_beta /= rho;
-        mom_u_source += 0.0;//(1.0 - phi_s) * new_beta * (u - u_s);
-        mom_v_source += 0.0;//(1.0 - phi_s) * new_beta * (v - v_s);
-        /* mom_w_source += phi_s*new_beta*(w-w_s); */
+      dmom_w_source[0] = 0.0;
+      dmom_w_source[1] = 0.0;
+      dmom_w_source[2] = (1.0 - phi_s)*new_beta;
+    }
+
 
         dmom_u_source[0] = 0.0;//(1.0 - phi_s) * new_beta;
         dmom_u_source[1] = 0.0;
