@@ -522,23 +522,36 @@ class Tank3D(ShapeRANS):
         f_i = len(facets)
         nb_sponge = 0  # number of sponge layers defined
 
+        ymin = y0-y_n
+        ymax = y1+y_p
+        xmin = x0-x_n
+        xmax = x1+x_p
+        corners = False
         # y-
-        vertices += [[x0, y0-y_n, z0], [x1, y0-y_n, z0],
-                     [x0, y0-y_n, z1], [x1, y0-y_n, z1]]
-        vertexFlags += [bt['z-'], bt['z-'],
-                        bt['z+'], bt['z+']]
-        volumes[0][0] += [f_i]  # add to volume
-        facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
-        facetFlags += [bt['y-']]
-        regions += [[(x0+x1)/2., (y0+(y0-y_n))/2., (z0+z1)/2.]]
-        self.regionIndice['y-'] = r_i
-        regionFlags += [r_i+1]
         if y_n:
-            facets += [[[0, 1, v_i+1, v_i]],
-                       [[4, 5, v_i+3, v_i+2]],
+            v0 = v_i
+            v1 = v_i+2
+            v2 = v_i+1
+            v3 = v_i+3
+            if corners:
+                vertices += [[x0, ymin, z0], [x0, ymin, z1],
+                             [x1, ymin, z0], [x1, ymin, z1]]
+            else:
+                vertices += [[xmin, ymin, z0], [xmin, ymin, z1],
+                             [xmax, ymin, z0], [xmax, ymin, z1]]
+            vertexFlags += [bt['z-'], bt['z+'],
+                            bt['z-'], bt['z+']]
+            facets += [[[v0, v1, v3, v2]]]
+            facetFlags += [bt['y-']]
+            volumes[0][0] += [f_i]
+            regions += [[(x0+x1)/2., (y0+(ymin))/2., (z0+z1)/2.]]
+            self.regionIndice['y-'] = r_i
+            regionFlags += [r_i+1]
+            facets += [[[0, 1, v1, v0]],
+                       [[4, 5, v3, v2]],
                        [[0, 1, 5, 4]],
-                       [[0, v_i, v_i+2, 4]],
-                       [[1, v_i+1, v_i+3, 5]]]
+                       [[0, v0, v2, 4]],
+                       [[1, v1, v3, 5]]]
             facetFlags += [bt['z-'],
                            bt['z+'],
                            bt['sponge']]
@@ -550,113 +563,210 @@ class Tank3D(ShapeRANS):
                 facetFlags += [bt['wall']]
             else:
                 facetFlags += [bt['x+']]
-            volumes[0][0][-1] = f_i+3 
-            volumes += [[[ f_i+i for i in range(6)]]]
-        v_i += 4  # 2 vertices were added
-        r_i += 1  # 1 region was added
-        nb_sponge += 1
-        f_i = len(facets)
-        # y+
-        vertices += [[x1, y1+y_p, z0], [x0, y1+y_p, z0],
-                     [x1, y1+y_p, z1], [x0, y1+y_p, z1]]
-        vertexFlags += [bt['z-'], bt['z-'],
-                        bt['z+'], bt['z+']]
-        volumes[0][0] += [f_i]  # add to volume
-        facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
-        facetFlags += [bt['y+']]
-        regions += [[(x0+x1)/2., (y1+(y1+y_p))/2., (z0+z1)/2.]]
-        self.regionIndice['y+'] = r_i
-        regionFlags += [r_i+1]
-        if y_p:
-            facets += [[[2, 3, v_i+1, v_i]],
-                       [[6, 7, v_i+3, v_i+2]],
-                       [[2, 3, 7, 6]],
-                       [[2, v_i, v_i+2, 6]],
-                       [[3, v_i+1, v_i+3, 7]]]
-            facetFlags += [bt['z-'],
-                           bt['z+'],
-                           bt['sponge']]
-            if x_p > 0:
-                facetFlags += [bt['wall']]
-            else:
-                facetFlags += [bt['x+']]
-            if x_n > 0:
-                facetFlags += [bt['wall']]
-            else:
-                facetFlags += [bt['x-']]
-            volumes[0][0][-1] = f_i+3 
-            volumes += [[[f_i+i for i in range(6)]]]
-        v_i += 4
-        r_i += 1
-        nb_sponge += 1
+            volumes[0][0][-1] = f_i+3  # add to volume
+            r_i += 1
+            nb_sponge += 1
+            volumes += [[[len(facets)-i-1 for i in range(6)]]]
+            x_n_facet_i = len(facets)-2
+        else:
+            facets += [[[0, 1, 5, 4]]]
+            facetFlags += [bt['y-']]
+            volumes[0][0] += [f_i]
+        v_i = len(vertices)
         f_i = len(facets)
         # x+
-        vertices += [[x1+x_p, y0, z0], [x1+x_p, y1, z0],
-                     [x1+x_p, y0, z1], [x1+x_p, y1, z1]]
-        vertexFlags += [bt['z-'], bt['z-'],
-                        bt['z+'], bt['z+']]
-        volumes[0][0] += [f_i]  # add to volume
-        facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
-        facetFlags += [bt['x+']]
-        regions += [[(x1+(x1+x_p))/2., (y0+y1)/2., (z0+z1)/2.]]
-        self.regionIndice['x+'] = r_i
-        regionFlags += [r_i+1]
         if x_p:
-            facets += [[[1, 2, v_i+1, v_i]],
-                       [[5, 6, v_i+3, v_i+2]],
-                       [[1, 2, 6, 5]],
-                       [[1, v_i, v_i+2, 5]],
-                       [[2, v_i+1, v_i+3, 6]]]
+            if corners:
+                vertices += [[xmax, y0, z0], [xmax, y0, z1],
+                             [xmax, y1, z0], [xmax, y1, z1]]
+                v0 = v_i
+                v1 = v_i+2
+                v2 = v_i+1
+                v3 = v_i+3
+                vertexFlags += [bt['z-'], bt['z+'],
+                                bt['z-'], bt['z+']]
+            else:
+                v0 = v_i-2
+                v1 = v_i
+                v2 = v_i-1
+                v3 = v_i+1
+                if not y_n:
+                    vertices += [[xmax, ymin, z0], [xmax, ymin, z1]]
+                    vertexFlags += [bt['z-'], bt['z+']]
+                    v0 = v_i
+                    v1 = v_i+2
+                    v2 = v_i+1
+                    v3 = v_i+3
+                vertices += [[xmax, ymax, z0], [xmax, ymax, z1]]
+                vertexFlags += [bt['z-'], bt['z+']]
+            facets += [[[v0, v1, v3, v2]]]
+            facetFlags += [bt['x+']]
+            volumes[0][0] += [f_i]
+            regions += [[(x1+(xmax))/2., (y0+y1)/2., (z0+z1)/2.]]
+            self.regionIndice['x+'] = r_i
+            regionFlags += [r_i+1]
+            facets += [[[1, 2, v1, v0]],
+                       [[5, 6, v3, v2]],
+                       [[1, 2, 6, 5]]]
             facetFlags += [bt['z-'],
                            bt['z+'],
                            bt['sponge']]
-            if y_n > 0:
-                facetFlags += [bt['wall']]
-            else:
-                facetFlags += [bt['y-']]
+            if corners or not y_n:
+                facets += [[[1, v0, v2, 5]]]
+                if y_n > 0:
+                    facetFlags += [bt['wall']]
+                else:
+                    facetFlags += [bt['y-']]
+            facets += [[[2, v1, v3, 6]]]
             if y_p > 0:
                 facetFlags += [bt['wall']]
             else:
                 facetFlags += [bt['y+']]
-            volumes[0][0][-1] = f_i+3 
-            volumes += [[[f_i+i for i in range(6)]]]
-        v_i += 4
-        r_i += 1
-        nb_sponge += 1
+            volumes[0][0][-1] = f_i+3  # add to volume
+            r_i += 1
+            nb_sponge += 1
+            volumes += [[[len(facets)-i-1 for i in range(6)]]]
+        else:
+            facets += [[[1, 2, 6, 5]]]
+            facetFlags += [bt['x+']]
+            volumes[0][0] += [f_i]
+        v_i = len(vertices)
+        f_i = len(facets)
+        # y+
+        if y_p:
+            if corners:
+                vertices += [[x1, ymax, z0], [x1, ymax, z1],
+                             [x0, ymax, z0], [x0, ymax, z1]]
+                v0 = v_i
+                v1 = v_i+2
+                v2 = v_i+1
+                v3 = v_i+3
+                vertexFlags += [bt['z-'], bt['z+'],
+                                bt['z-'], bt['z+']]
+            else:
+                v0 = v_i-2
+                v1 = v_i
+                v2 = v_i-1
+                v3 = v_i+1
+                if not x_p:
+                    vertices += [[xmax, ymax, z0], [xmax, ymax, z1]]
+                    vertexFlags += [bt['z-'], bt['z+']]
+                    v0 = v_i
+                    v1 = v_i+2
+                    v2 = v_i+1
+                    v3 = v_i+3
+                vertices += [[xmin, ymax, z0], [xmin, ymax, z1]]
+                vertexFlags += [bt['z-'], bt['z+']]
+            facets += [[[v0, v1, v3, v2]]]
+            volumes[0][0] += [f_i]
+            facetFlags += [bt['y+']]
+            regions += [[(x0+x1)/2., (y1+(ymax))/2., (z0+z1)/2.]]
+            self.regionIndice['y+'] = r_i
+            regionFlags += [r_i+1]
+            facets += [[[2, 3, v1, v0]],
+                       [[6, 7, v3, v2]],
+                       [[2, 3, 7, 6]]]
+            facetFlags += [bt['z-'],
+                           bt['z+'],
+                           bt['sponge']]
+            if corners or not x_p:
+                facets += [[[2, v0, v2, 6]]]
+                if x_p > 0:
+                    facetFlags += [bt['wall']]
+                else:
+                    facetFlags += [bt['x+']]
+            facets += [[[3, v1, v3, 7]]]
+            if x_n > 0:
+                facetFlags += [bt['wall']]
+            else:
+                facetFlags += [bt['x-']]
+            volumes[0][0][-1] = f_i+3
+            r_i += 1
+            nb_sponge += 1
+            volumes += [[[len(facets)-i-1 for i in range(6)]]]
+        else:
+            facets += [[[3, 2, 6, 7]]]
+            facetFlags += [bt['y+']]
+            volumes[0][0] += [f_i]
+        v_i = len(vertices)
         f_i = len(facets)
         # x-
-        vertices += [[x0-x_n, y0, z0], [x0-x_n, y1, z0],
-                     [x0-x_n, y0, z1], [x0-x_n, y1, z1]]
-        vertexFlags += [bt['z-'], bt['z-'],
-                        bt['z+'], bt['z+']]
-        volumes[0][0] += [f_i]  # add to volume
-        facets += [[[v_i, v_i+1, v_i+3, v_i+2]]]
-        facetFlags += [bt['x-']]
-        regions += [[(x0+(x0-x_n))/2., (y0+y1)/2., (z0+z1)/2.]]
-        self.regionIndice['x-'] = r_i
-        regionFlags += [r_i+1]
         if x_n:
-            facets += [[[0, 3, v_i+1, v_i]],
-                       [[4, 7, v_i+3, v_i+2]],
-                       [[0, 3, 7, 4]],
-                       [[0, v_i, v_i+2, 4]],
-                       [[3, v_i+1, v_i+3, 7]]]
+            volumes[0][0] += [f_i]
+            if corners:
+                vertices += [[xmin, y0, z0], [xmin, y0, z1],
+                             [xmin, y1, z0], [xmin, y1, z1]]
+                v0 = v_i
+                v1 = v_i+2
+                v2 = v_i+1
+                v3 = v_i+3
+                vertexFlags += [bt['z-'], bt['z+'],
+                                bt['z-'], bt['z+']]
+            else:
+                if not y_p:
+                    vertices += [[xmin, ymax, z0], [xmin, ymax, z1]]
+                    v0 = v_i-2
+                    v1 = v_i
+                    v2 = v_i-1
+                    v3 = v_i+1
+                    vertexFlags += [bt['z-'], bt['z+']]
+                if not y_n:
+                    vertices += [[xmin, ymin, z0], [xmin, ymin, z1]]
+                    if not y_p:
+                        v0 = v_i+2
+                        v1 = v_i
+                        v2 = v_i+3
+                        v3 = v_i+1
+                    else:
+                        v0 = v_i
+                        v1 = v_i-2
+                        v2 = v_i+1
+                        v3 = v_i-1
+                    vertexFlags += [bt['z-'], bt['z+']]
+                else:
+                    v1 = v_i-2
+                    v0 = 8
+                    v3 = v_i-1
+                    v2 = 9
+                    if not y_p:
+                        v1 = v_i
+                        v3 = v_i+1
+            facets += [[[v0, v1, v3, v2]]]
+            facetFlags += [bt['x-']]
+            regions += [[(x0+(xmin))/2., (y0+y1)/2., (z0+z1)/2.]]
+            self.regionIndice['x-'] = r_i
+            regionFlags += [r_i+1]
+            facets += [[[0, 3, v1, v0]],
+                       [[4, 7, v3, v2]],
+                       [[0, 3, 7, 4]]]
             facetFlags += [bt['z-'],
                            bt['z+'],
                            bt['sponge']]
-            if y_n > 0:
-                facetFlags += [bt['wall']]
+            volumes[0][0][-1] = f_i+3
+            if corners or not y_n or not y_p:
+                if corners or not y_n:
+                    facets += [[[0, v0, v2, 4]]]
+                    if y_n > 0:
+                        facetFlags += [bt['wall']]
+                    else:
+                        facetFlags += [bt['y-']]
+                if corners or not y_p:
+                    facets += [[[3, v1, v3, 7]]]
+                    if y_p > 0:
+                        facetFlags += [bt['wall']]
+                    else:
+                        facetFlags += [bt['y+']]
+            r_i += 1
+            nb_sponge += 1
+            if corners or not y_n:
+                volumes += [[[len(facets)-i-1 for i in range(6)]]]
             else:
-                facetFlags += [bt['y-']]
-            if y_p > 0:
-                facetFlags += [bt['wall']]
-            else:
-                facetFlags += [bt['y+']]
-            volumes[0][0][-1] = f_i+3 
-            volumes += [[[f_i+i for i in range(6)]]]
-        v_i += 4
-        r_i += 1
-        nb_sponge += 1
+                volumes += [[[len(facets)-i-1 for i in range(5)]+[x_n_facet_i]]]
+        else:
+            facets += [[[0, 3, 7, 4]]]
+            facetFlags += [bt['x-']]
+            volumes[0][0] += [f_i]
+        v_i = len(vertices)
         f_i = len(facets)
         self.vertices = np.array(vertices)
         self.vertices = np.dot(self.vertices, self.coords_system)
