@@ -16,6 +16,19 @@ extern int approx_order; //shape function order
 extern int int_order; //integration order
 extern double nu_0,nu_1,rho_0,rho_1;
 
+struct Inputs{
+  apf::Vector3 vel_vect;  
+  apf::Matrix3x3 gij;
+  apf::Matrix3x3 grad_vel;
+  apf::Vector3 grad_pres;
+  double visc_val;
+  double density;
+  int nsd;
+};
+
+double get_nu_err(struct Inputs info);
+
+
 inline void getProps(double*rho,double*nu)
 //Function used to transfer MeshAdaptPUMIDrvr variables into global variables
 {
@@ -45,7 +58,8 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
   //***** Compute the viscosity field *****//
   apf::Field* visc = getViscosityField(voff);
 
-  apf::Field* vmsErr = err_reg = apf::createField(m,"VMSL2",apf::SCALAR,apf::getVoronoiShape(nsd,1));
+  apf::Field* vmsErr = apf::createField(m,"VMSL2",apf::SCALAR,apf::getVoronoiShape(nsd,1));
+  apf::Field* vmsErrH1 = apf::createField(m,"VMSH1",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   
   //Start computing element quantities
   int numqpt; //number of quadrature points
@@ -84,7 +98,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     double areaCheck=0.0;
     numqpt=apf::countIntPoints(element,int_order);
 
-    
+    //Start the quadrature loop
     for(int k=0;k<numqpt;k++){
       apf::getIntPoint(element,int_order,k,qpt); //get a quadrature point and store in qpt
       apf::getJacobian(element,qpt,J); //evaluate the Jacobian at the quadrature point
@@ -135,8 +149,6 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
       apf::getVectorGrad(velo_elem,qpt,gradVelCheck);
       std::cout<<"grad vel is "<<gradVelCheck<<std::endl;
     }
-
-
       
       double pressure = apf::getScalar(pres_elem,qpt);
       apf::Vector3 grad_pres;
@@ -162,7 +174,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
       stabTerm2 = C2*visc_val*visc_val*stabTerm2;
       tau_m = 1/sqrt(stabTerm1 + stabTerm2);
       
-      if(count == 10){
+      if(count == 0){
         //std::cout<<"This is the tau "<<tau_m<<" velocity "<<vel_vect<<" grad vel "<<grad_vel<<" metric "<<gij<<" numdim "<<nsd<<" viscosity "<<visc_val<<" "<<KJ<<" gradP"<< grad_pres<<" stabTerms "<<stabTerm1<<" "<<stabTerm2<<std::endl;
         areaCheck += weight*Jdet;
       }
@@ -193,7 +205,59 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
       std::cout<<"This is the error "<< sqrt(strongResidualTauL2)<<std::endl;
       std::cout<<"This is the area check "<<areaCheck<<" true area is "<<apf::measure(m,ent);
     }
-  
+    
+    //H1 error compute nu_err at centroid and compute residual
+    //Need a getResidual()
+    qpt[0] = 1./3.;
+    qpt[1] = 1./3.;
+    qpt[2] = 0.0;
+    double pressure = apf::getScalar(pres_elem,qpt);
+    apf::Vector3 grad_pres;
+    apf::getGrad(pres_elem,qpt,grad_pres);
+    double visc_val = apf::getScalar(visc_elem,qpt);
+
+    apf::Vector3 vel_vect;
+    apf::getVector(velo_elem,qpt,vel_vect);
+    apf::Matrix3x3 grad_vel;
+    apf::getVectorGrad(velo_elem,qpt,grad_vel);
+    grad_vel = apf::transpose(grad_vel);
+      //compute residual
+      apf::Vector3 tempConv;
+      apf::Vector3 tempDiff;
+      tempConv.zero();
+      tempDiff.zero();
+      for(int i=0;i<nsd;i++){
+        for(int j=0;j<nsd;j++){
+          tempConv[i] = tempConv[i] + vel_vect[j]*grad_vel[i][j];
+        }
+      }
+      double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
+      apf::Vector3 tempResidual = (tempConv + grad_pres/density);
+      double tempVal = tempResidual.getLength();
+    apf::getJacobian(element,qpt,J);
+    if(nsd==2)
+      J[2][2] = 1.0; //this is necessary to avoid singular matrix
+    invJ = invert(J);
+    Jdet=fabs(apf::getJacobianDeterminant(J,nsd)); 
+    gij = apf::transpose(invJ)*(KJ*invJ);
+
+    //Need a get_nu_err()
+    //double nu_err = sqrt(visc_val*sqrt(61)+3.0*visc_val*visc_val*sqrt(5.0/2.0));
+    //nu_err = 1./nu_err;
+    Inputs info;
+    info.vel_vect = vel_vect;
+    info.grad_vel = grad_vel;  
+    info.grad_pres = grad_pres;
+    info.gij = gij;
+    info.visc_val = visc_val;
+    info.density = density;
+    info.nsd = nsd;
+
+    double nu_err = get_nu_err(info);
+    double VMSerrH1 = nu_err*tempVal*apf::measure(m,ent);
+    std::cout<<std::scientific<<std::setprecision(15)<<"H1 error for element "<<count<<" nu_err "<<nu_err<<" error "<<VMSerrH1<<std::endl;
+    apf::setScalar(vmsErrH1,ent,0,VMSerrH1);
+
     apf::destroyElement(visc_elem);
     apf::destroyElement(pres_elem);
     apf::destroyElement(velo_elem);
@@ -202,4 +266,18 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
 
 } //end function
 
-  
+double get_nu_err(struct Inputs info){
+  double stabTerm1 = 0.0;
+  double stabTerm2 = 0.0;
+  for(int i=0;i<info.nsd;i++){
+    for(int j=0;j<info.nsd;j++){
+       stabTerm1 += info.vel_vect[i]*info.gij[i][j]*info.vel_vect[j];
+       stabTerm2 += info.gij[i][j]*info.gij[i][j];
+     }
+   } 
+   double C_nu = 3.0;
+   stabTerm2 = C_nu*info.visc_val*info.visc_val*sqrt(stabTerm2);
+   double nu_err = 1.0/sqrt(info.visc_val*sqrt(stabTerm1) + stabTerm2);
+   return nu_err;
+}
+
