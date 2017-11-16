@@ -181,6 +181,8 @@ cdef class PresInc:
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray, 
 			  int INTEGRATE_BY_PARTS_DIV_U):
+        #from proteus.Profiling import logEvent as log
+        #log('u_grad_trial_ref.data --> %s' % u_grad_trial_ref.data)
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,

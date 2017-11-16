@@ -463,11 +463,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.q_grad_p_fluid = modelList[self.PRESSURE_model].q[('grad(u)',0)]
             self.model.ebqe_grad_p_fluid = modelList[self.PRESSURE_model].ebqe[('grad(u)',0)]
         if self.VOS_model is not None:
-            self.model.vos_dof = modelList[self.VOS_model].u[0].dof.copy()
-            self.model.q_vos = modelList[self.VOS_model].q[('u',0)].copy()
-            self.model.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)].copy()
+            self.model.vos_dof = modelList[self.VOS_model].u[0].dof#.copy()
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)]#.copy()
+            self.model.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]#.copy()
             self.model.q_dvos_dt[:] = 0.0
-            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)].copy()
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]#.copy()
             self.vos_dof = self.model.vos_dof
             self.q_vos = self.model.q_vos
             self.q_dvos_dt = self.model.q_dvos_dt
