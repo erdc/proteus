@@ -845,26 +845,14 @@ namespace proteus
       
       dmom_v_source[0] = 0.0;
       dmom_v_source[1] = (1.0 - phi_s)*new_beta;
-      dmom_v_source[2] = 0.0;
+      /*dmom_v_source[2] = 0.0;*/
 
-      dmom_w_source[0] = 0.0;
+      /*      dmom_w_source[0] = 0.0;
       dmom_w_source[1] = 0.0;
-      dmom_w_source[2] = (1.0 - phi_s)*new_beta;
+      dmom_w_source[2] = (1.0 - phi_s)*new_beta;*/
     }
 
 
-        dmom_u_source[0] = 0.0;//(1.0 - phi_s) * new_beta;
-        dmom_u_source[1] = 0.0;
-        /* dmom_u_source[2] = 0.0; */
-
-        dmom_v_source[0] = 0.0;
-        dmom_v_source[1] = 0.0;//(1.0 - phi_s) * new_beta;
-        dmom_v_source[2] = 0.0;
-
-        dmom_w_source[0] = 0.0;
-        dmom_w_source[1] = 0.0;
-        dmom_w_source[2] = 0.0;//(1.0 - phi_s)*new_beta;
-      }
 
       inline
         void updateTurbulenceClosure(const int turbulenceClosureModel,
