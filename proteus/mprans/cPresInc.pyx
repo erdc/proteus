@@ -54,7 +54,9 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                int * exteriorElementBoundariesArray,
                                int * elementBoundaryElementsArray,
                                int * elementBoundaryLocalElementBoundariesArray, 
-			       int INTEGRATE_BY_PARTS_DIV_U)
+			       int INTEGRATE_BY_PARTS_DIV_U,
+                               double* q_a,
+                               double* ebqe_a)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -180,9 +182,9 @@ cdef class PresInc:
                           numpy.ndarray exteriorElementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray, 
-			  int INTEGRATE_BY_PARTS_DIV_U):
-        #from proteus.Profiling import logEvent as log
-        #log('u_grad_trial_ref.data --> %s' % u_grad_trial_ref.data)
+			  int INTEGRATE_BY_PARTS_DIV_U,
+                          numpy.ndarray q_a,
+                          numpy.ndarray ebqe_a):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -234,7 +236,9 @@ cdef class PresInc:
                                        < int * > exteriorElementBoundariesArray.data,
                                        < int * > elementBoundaryElementsArray.data,
                                        < int * > elementBoundaryLocalElementBoundariesArray.data, 
-				       INTEGRATE_BY_PARTS_DIV_U)
+				        INTEGRATE_BY_PARTS_DIV_U,
+                                        <double*> q_a.data,
+                                        <double*> ebqe_a.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,

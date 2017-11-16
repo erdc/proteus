@@ -47,13 +47,12 @@ namespace proteus
                                double fContact,
                                double mContact,
                                double nContact,
-                               double angFriction) {}
-
-    virtual void calculateResidual(double *mesh_trial_ref,
-                                   double *mesh_grad_trial_ref,
-                                   double *mesh_dof,
-                                   double *mesh_velocity_dof,
-                                   double MOVING_DOMAIN, //0 or 1
+                               double angFriction){}
+    virtual void calculateResidual(double* mesh_trial_ref,
+                                   double* mesh_grad_trial_ref,
+                                   double* mesh_dof,
+                                   double* mesh_velocity_dof,
+                                   double MOVING_DOMAIN,//0 or 1
                                    double PSTAB,
                                    int *mesh_l2g,
                                    double *dV_ref,
@@ -742,7 +741,7 @@ namespace proteus
                                                      double* nodeDiametersArray,
                                                      double hFactor,
                                                      int nElements_global,
-						     int nElements_owned,
+                                                     int nElements_owned,
                                                      double useRBLES,
                                                      double useMetrics, 
                                                      double alphaBDF,
@@ -1038,7 +1037,7 @@ namespace proteus
       inline
         void evaluateCoefficients(const double eps_rho,
                                   const double eps_mu,
-				  const double particle_eps,
+                                  const double particle_eps,
                                   const double sigma,
                                   const double rho_0,
                                   double nu_0,
@@ -1052,9 +1051,9 @@ namespace proteus
                                   const double& vf,
                                   const double& phi,
                                   const double n[nSpace],
-				  const int nParticles,
-				  const int sd_offset,
-				  const double *particle_signed_distances,
+                                  const int nParticles,
+                                  const int sd_offset,
+                                  const double *particle_signed_distances,
                                   const double& kappa,
                                   const double porosity,//VRANS specific
                                   const double& p,
@@ -1134,20 +1133,16 @@ namespace proteus
             double norm_S;
           case 1:
             {
-              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] + //grad_w[2]*grad_w[2] +
-                                 0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));/* + 
-                                                                                      0.5*(grad_u[2]+grad_w[0])*(grad_u[2]+grad_w[0]) +
-                                                                                      0.5*(grad_v[2]+grad_w[1])*(grad_v[2]+grad_w[1])));*/
+              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +
+                                 0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));
               nu_t0 = smagorinskyConstant*smagorinskyConstant*h_e*h_e*norm_S;
               nu_t1 = smagorinskyConstant*smagorinskyConstant*h_e*h_e*norm_S;
             }
           case 2:
             {
               double re_0,cs_0=0.0,re_1,cs_1=0.0;
-              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] + //grad_w[2]*grad_w[2] +
-                                 0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));/* + 
-                                                                                      0.5*(grad_u[2]+grad_w[0])*(grad_u[2]+grad_w[0]) +
-                                                                                      0.5*(grad_v[2]+grad_w[1])*(grad_v[2]+grad_w[1])));*/
+              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +
+                                 0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));
               re_0 = h_e*h_e*norm_S/nu_0;
               if (re_0 > 1.0)
                 cs_0=0.027*pow(10.0,-3.23*pow(re_0,-0.92));
@@ -1395,17 +1390,19 @@ namespace proteus
         nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-        viscosity = mu; // mql. CHECK.
+        viscosity = mu;
         uc = sqrt(u*u+v*v*+w*w); 
         duc_du = u/(uc+1.0e-12);
         duc_dv = v/(uc+1.0e-12);
         duc_dw = w/(uc+1.0e-12);
         double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
+
         double new_beta = closure.betaCoeff(1.0-phi_s,
                                           rho,
                                           fluid_velocity,
                                           solid_velocity,
                                           viscosity);
+
 
         //new_beta /= rho;
         mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s);
@@ -1637,7 +1634,7 @@ namespace proteus
         //mwf hack
         nu_t     = fmin(nu_t,1.0e6*nu);
 
-        eddy_viscosity = nu_t*rho; // mql. CHECK.
+        eddy_viscosity = nu_t*rho;
         //u momentum diffusion tensor
         mom_uu_diff_ten[0] += porosity*2.0*eddy_viscosity;
         mom_uu_diff_ten[1] += porosity*eddy_viscosity;
@@ -1783,7 +1780,7 @@ namespace proteus
                                             const double& oneByRho,
                                             const double& bc_oneByRho,
                                             const double n[nSpace],
-                                            const double& porosity, //mql. CHECK. Multiply by rho outside
+                                            const double& porosity,
                                             const double& bc_p,
                                             const double& bc_u,
                                             const double& bc_v,
@@ -1884,27 +1881,15 @@ namespace proteus
         /*     if (flowSpeedNormal < 0.0) */
         /*       flux_wmom+=bc_speed*(bc_w - w); */
         /*   } */
-        /* if (isDOFBoundary_p == 1) */
-        /*   { */
-        /*     flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho); */
-        /*     flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho); */
-        /*     /\* flux_wmom+= n[2]*(bc_p*bc_oneByRho-p*oneByRho); *\/ */
-        /*   } */
-        /* if (isFluxBoundary_p == 1) */
-        /*   { */
-        /*     //correct velocity field to match mass flux BC */
-        /*     velocity[0] += (bc_flux_mass - flux_mass)*n[0]; */
-        /*     velocity[1] += (bc_flux_mass - flux_mass)*n[1]; */
-        /*     /\* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; *\/ */
-        /*     flux_mass = bc_flux_mass; */
-        /*   } */
         if (isFluxBoundary_u == 1)
           {
             flux_umom = bc_flux_umom;
+	    velocity[0] = bc_flux_umom/porosity;
           }
         if (isFluxBoundary_v == 1)
           {
             flux_vmom = bc_flux_vmom;
+	    velocity[1] = bc_flux_umom/porosity;
           }
         /* if (isFluxBoundary_w == 1) */
         /*   { */
@@ -1923,7 +1908,7 @@ namespace proteus
                                                        const int& isFluxBoundary_w,
                                                        const double& oneByRho,
                                                        const double n[nSpace],
-                                                       const double& porosity, //mql. CHECK. Multiply by rho outside
+                                                       const double& porosity,
                                                        const double& bc_p,
                                                        const double& bc_u,
                                                        const double& bc_v,
@@ -2814,7 +2799,7 @@ namespace proteus
                 //
                 //moving mesh
                 //
-                mom_u_adv[0] -= MOVING_DOMAIN*dmom_u_acc_u*mom_u_acc*xt; // multiply by rho*porosity. mql. CHECK. 
+                mom_u_adv[0] -= MOVING_DOMAIN*dmom_u_acc_u*mom_u_acc*xt;
                 mom_u_adv[1] -= MOVING_DOMAIN*dmom_u_acc_u*mom_u_acc*yt;
                 /* mom_u_adv[2] -= MOVING_DOMAIN*dmom_u_acc_u*mom_u_acc*zt; */
                 dmom_u_adv_u[0] -= MOVING_DOMAIN*dmom_u_acc_u*xt;
@@ -2867,8 +2852,8 @@ namespace proteus
                 //calculate subgrid error (strong residual and adjoint)
                 //
                 //calculate strong residual
-                pdeResidual_p = 
-                  ck.Mass_strong(-q_dvos_dt[eN_k]) + // mql. CHECK.
+                pdeResidual_p =
+                  ck.Mass_strong(-q_dvos_dt[eN_k]) +
                   ck.Advection_strong(dmass_adv_u,grad_u) +
                   ck.Advection_strong(dmass_adv_v,grad_v) +
                   /* ck.Advection_strong(dmass_adv_w,grad_w) + */
@@ -2882,7 +2867,7 @@ namespace proteus
                 /* dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt); */
 
                 pdeResidual_u = 
-                  ck.Mass_strong(mom_u_acc_t) + // mql. CHECK.
+                  ck.Mass_strong(mom_u_acc_t) +
                   ck.Advection_strong(dmom_adv_sge,grad_u) + //note here and below: same in cons. and non-cons.
                   ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
                   ck.Reaction_strong(mom_u_source) -
@@ -2895,10 +2880,10 @@ namespace proteus
                   ck.Reaction_strong(mom_v_source) -
                   ck.Reaction_strong(v*div_mesh_velocity);
               
-                /* pdeResidual_w = ck.Mass_strong(dmom_w_acc_w*mom_w_acc_t) + */
-                /*      ck.Advection_strong(dmom_adv_sge,grad_w) + */
-                /*      ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) + */
-                /*      ck.Reaction_strong(mom_w_source) - */
+                /* pdeResidual_w = ck.Mass_strong(mom_w_acc_t) + */
+                /*        ck.Advection_strong(dmom_adv_sge,grad_w) + */
+                /*        ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) + */
+                /*        ck.Reaction_strong(mom_w_source) - */
                 /*   ck.Reaction_strong(w*div_mesh_velocity); */
         
                 //calculate tau and tau*Res
@@ -2943,7 +2928,7 @@ namespace proteus
                 dmom_adv_star[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt + useRBLES*subgridError_v);
                 /* dmom_adv_star[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt + useRBLES*subgridError_w); */
          
-                mom_u_adv[0] += dmom_u_acc_u*(useRBLES*subgridError_u*q_velocity_sge[eN_k_nSpace+0]);      
+                mom_u_adv[0] += dmom_u_acc_u*(useRBLES*subgridError_u*q_velocity_sge[eN_k_nSpace+0]);        
                 mom_u_adv[1] += dmom_u_acc_u*(useRBLES*subgridError_v*q_velocity_sge[eN_k_nSpace+0]); 
                 /* mom_u_adv[2] += dmom_u_acc_u*(useRBLES*subgridError_w*q_velocity_sge[eN_k_nSpace+0]);  */
          
@@ -3013,7 +2998,7 @@ namespace proteus
                     /*   ck.SubgridError(subgridError_v,Lstar_v_p[i]);// +  */
                     /*   /\* ck.SubgridError(subgridError_w,Lstar_w_p[i]); *\/ */
 
-                    elementResidual_u[i] += // mql. CHECK.
+                    elementResidual_u[i] += 
                       ck.Mass_weak(mom_u_acc_t,vel_test_dV[i]) + 
                       ck.Advection_weak(mom_u_adv,&vel_grad_test_dV[i_nSpace]) +
                       ck.Diffusion_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) + 
@@ -3277,7 +3262,7 @@ namespace proteus
               
                 eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-		double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 
                 //compute shape and solution information
                 //shape
@@ -3318,7 +3303,7 @@ namespace proteus
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
-				     sigma,
+                                     sigma,
                                      rho_0,
                                      nu_0,
                                      rho_1,
@@ -3405,7 +3390,7 @@ namespace proteus
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
-				     sigma,
+                                     sigma,
                                      rho_0,
                                      nu_0,
                                      rho_1,
@@ -3558,7 +3543,7 @@ namespace proteus
                 //
                 //moving domain
                 //
-                mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*mom_u_acc_ext*xt_ext; // times rho*porosity. mql. CHECK.
+                mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*mom_u_acc_ext*xt_ext;
                 mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*mom_u_acc_ext*yt_ext;
                 /* mom_u_adv_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*mom_u_acc_ext*zt_ext; */
                 dmom_u_adv_u_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*xt_ext;
@@ -3581,17 +3566,17 @@ namespace proteus
 
                 //bc's
                 // mql. CHECK.
-                bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext; // times rho*porosity
-                bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
-                /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
+                bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext;
+                bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
+                /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
 
-                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext; 
-                bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
-                /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
+                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext; 
+                bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
+                /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
 
-                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */
-                /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
-                /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
+                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */
+                /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
+                /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
                 // 
                 //calculate the numerical fluxes 
                 // 
@@ -3608,7 +3593,7 @@ namespace proteus
                                                dmom_u_ham_grad_p_ext[0],//=1/rho,
                                                bc_dmom_u_ham_grad_p_ext[0],//=1/bc_rho,
                                                normal,
-                                               porosity_ext*ebqe_rho[ebNE_kb], // multiply by rho. mql. CHECK.
+                                               dmom_u_acc_u_ext,
                                                bc_p_ext,
                                                bc_u_ext,
                                                bc_v_ext,
@@ -3845,7 +3830,6 @@ namespace proteus
                       ck.ExteriorElementBoundaryFlux(flux_mom_u_adv_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_uu_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_uv_diff_ext,vel_test_dS[i])+
-                      /* ck.ExteriorElementBoundaryFlux(flux_mom_uw_diff_ext,vel_test_dS[i])+ */
                       ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
                                                                  isDiffusiveFluxBoundary_u[ebNE_kb],
                                                                  eb_adjoint_sigma,
@@ -3879,7 +3863,6 @@ namespace proteus
                     elementResidual_v[i] += ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) +
                       ck.ExteriorElementBoundaryFlux(flux_mom_vu_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_vv_diff_ext,vel_test_dS[i])+
-                      /* ck.ExteriorElementBoundaryFlux(flux_mom_vw_diff_ext,vel_test_dS[i])+ */
                       ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
                                                                  isDiffusiveFluxBoundary_v[ebNE_kb],
                                                                  eb_adjoint_sigma,
@@ -4010,7 +3993,7 @@ namespace proteus
                              double* nodeDiametersArray,
                              double hFactor,
                              int nElements_global,
-			     int nElements_owned,
+                             int nElements_owned,
                              double useRBLES,
                              double useMetrics, 
                              double alphaBDF,
@@ -4394,7 +4377,7 @@ namespace proteus
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
-				     sigma,
+                                     sigma,
                                      rho_0,
                                      nu_0,
                                      rho_1,
@@ -4610,7 +4593,7 @@ namespace proteus
                 //
                 //moving mesh
                 //
-                mom_u_adv[0] -= MOVING_DOMAIN*dmom_u_acc_u*mom_u_acc*xt; // multiply by rho*porosity. mql. CHECK.
+                mom_u_adv[0] -= MOVING_DOMAIN*dmom_u_acc_u*mom_u_acc*xt;
                 mom_u_adv[1] -= MOVING_DOMAIN*dmom_u_acc_u*mom_u_acc*yt;
                 /* mom_u_adv[2] -= MOVING_DOMAIN*dmom_u_acc_u*mom_u_acc*zt; */
                 dmom_u_adv_u[0] -= MOVING_DOMAIN*dmom_u_acc_u*xt;
@@ -4653,10 +4636,11 @@ namespace proteus
                 /*           dmom_w_acc_w_t); */
                 //
                 //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
-
-                mom_u_acc_t *= dmom_u_acc_u; //multiply by porosity*rho. mql. CHECK.
+		//
+		
+                mom_u_acc_t *= dmom_u_acc_u;
                 mom_v_acc_t *= dmom_v_acc_v; 
-              
+		
                 //
                 dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
                 dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
@@ -4665,7 +4649,7 @@ namespace proteus
                 //calculate strong residual
                 //
                 pdeResidual_p = 
-                  ck.Mass_strong(-q_dvos_dt[eN_k]) + // mql. CHECK. 
+                  ck.Mass_strong(-q_dvos_dt[eN_k]) +
                   ck.Advection_strong(dmass_adv_u,grad_u) +
                   ck.Advection_strong(dmass_adv_v,grad_v) +
                   /* ck.Advection_strong(dmass_adv_w,grad_w) + */
@@ -5457,17 +5441,17 @@ namespace proteus
               
                 //moving domain bc's
                 // mql. CHECK.
-                bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext; //times rho*porosity
-                bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
-                /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
+                bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext; //times rho*porosity
+                bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
+                /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
               
-                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext;
-                bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
-                /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
+                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext;
+                bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
+                /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
 
-                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */ 
-                /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
-                /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
+                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */ 
+                /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
+                /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
                 // 
                 //calculate the numerical fluxes 
                 // 
@@ -5481,7 +5465,7 @@ namespace proteus
                                                           isAdvectiveFluxBoundary_w[ebNE_kb],
                                                           dmom_u_ham_grad_p_ext[0],//=1/rho
                                                           normal,
-                                                          porosity_ext*rhoSave, //multiply by rho. mql. CHECK.
+                                                          porosity_ext*dmom_u_acc_u_ext, //multiply by rho. mql. CHECK.
                                                           bc_p_ext,
                                                           bc_u_ext,
                                                           bc_v_ext,
@@ -6410,7 +6394,7 @@ namespace proteus
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
-				     sigma,
+                                     sigma,
                                      rho_0,
                                      nu_0,
                                      rho_1,
@@ -6700,13 +6684,13 @@ namespace proteus
                 dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
                 /* dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt); */
 
-                //pdeResidual_u = ck.Mass_strong(dmom_u_acc_u*mom_u_acc_t) +
+                //pdeResidual_u = ck.Mass_strong(mom_u_acc_t) +
                 //ck.Advection_strong(dmom_adv_sge,grad_u) + //note here and below: same in cons. and non-cons.
                 //ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
                 //ck.Reaction_strong(mom_u_source) -
                 //ck.Reaction_strong(u*div_mesh_velocity);
           
-                //pdeResidual_v = ck.Mass_strong(dmom_v_acc_v*mom_v_acc_t) +
+                //pdeResidual_v = ck.Mass_strong(mom_v_acc_t) +
                 //ck.Advection_strong(dmom_adv_sge,grad_v) +
                 //ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) + 
                 //ck.Reaction_strong(mom_v_source) -
@@ -7164,7 +7148,7 @@ namespace proteus
               
                 eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-		double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 
                 //compute shape and solution information
                 //shape
@@ -7204,7 +7188,7 @@ namespace proteus
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
-				     particle_eps,
+                                     particle_eps,
                                      sigma,
                                      rho_0,
                                      nu_0,
@@ -7292,7 +7276,7 @@ namespace proteus
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
-				     sigma,
+                                     sigma,
                                      rho_0,
                                      nu_0,
                                      rho_1,
@@ -7468,17 +7452,17 @@ namespace proteus
 
                 //bc's
                 // mql. CHECK.
-                bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext; // times rho*porosity
-                bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
-                /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
+                bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext; // times rho*porosity
+                bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
+                /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
 
-                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext;
-                bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
-                /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
+                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext;
+                bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
+                /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
 
-                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */
-                /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
-                /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
+                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */
+                /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
+                /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
                 // 
                 //calculate the numerical fluxes 
                 // 
@@ -7495,7 +7479,7 @@ namespace proteus
                                                dmom_u_ham_grad_p_ext[0],//=1/rho,
                                                bc_dmom_u_ham_grad_p_ext[0],//=1/bc_rho,
                                                normal,
-                                               porosity_ext*ebqe_rho[ebNE_kb], // porosity*rho. mql. CHECK.
+                                               porosity_ext*dmom_u_acc_u_ext, // porosity*rho. mql. CHECK.
                                                bc_p_ext,
                                                bc_u_ext,
                                                bc_v_ext,
@@ -7929,7 +7913,7 @@ namespace proteus
                                                double* nodeDiametersArray,
                                                double hFactor,
                                                int nElements_global,
-					       int nElements_owned,
+                                               int nElements_owned,
                                                double useRBLES,
                                                double useMetrics, 
                                                double alphaBDF,
@@ -8317,7 +8301,7 @@ namespace proteus
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
-				     sigma,
+                                     sigma,
                                      rho_0,
                                      nu_0,
                                      rho_1,
@@ -8575,8 +8559,8 @@ namespace proteus
                 /*           mom_w_acc_t, */
                 /*           dmom_w_acc_w_t); */
               
-                //mom_u_acc_t *= dmom_u_acc_u; // multiply times rho*porosity
-                //mom_v_acc_t *= dmom_v_acc_v;
+                mom_u_acc_t *= dmom_u_acc_u; // multiply times rho*porosity
+                mom_v_acc_t *= dmom_v_acc_v;
               
                 //
                 //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
@@ -9122,7 +9106,7 @@ namespace proteus
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.),rhoSave, nuSave;//not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
-				     particle_eps,
+                                     particle_eps,
                                      sigma,
                                      rho_0,
                                      nu_0,
@@ -9209,7 +9193,7 @@ namespace proteus
                                      ebqe_dynamic_viscosity_as_function[ebNE_kb]);          
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
-				     particle_eps,
+                                     particle_eps,
                                      sigma,
                                      rho_0,
                                      nu_0,
@@ -9360,7 +9344,7 @@ namespace proteus
                 //
                 //moving domain
                 //
-                mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*mom_u_acc_ext*xt_ext; //times rho*porosity. mql. CHECK.
+                mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*mom_u_acc_ext*xt_ext;
                 mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*mom_u_acc_ext*yt_ext;
                 /* mom_u_adv_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*mom_u_acc_ext*zt_ext; */
                 dmom_u_adv_u_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*xt_ext;
@@ -9383,17 +9367,17 @@ namespace proteus
               
                 //moving domain bc's
                 // mql. CHECK. 
-                bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext; // times rho*porosity
-                bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
-                /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
+                bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext;
+                bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
+                /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
               
-                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext;
-                bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
-                /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
+                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext;
+                bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
+                /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
 
-                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */
-                /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
-                /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
+                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */
+                /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
+                /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
                 // 
                 //calculate the numerical fluxes 
                 // 
@@ -9407,7 +9391,7 @@ namespace proteus
                                                           isAdvectiveFluxBoundary_w[ebNE_kb],
                                                           dmom_u_ham_grad_p_ext[0],//=1/rho
                                                           normal,
-                                                          porosity_ext*rhoSave, //multiply by rho. mql. CHECK.
+                                                          dmom_u_acc_u_ext,
                                                           bc_p_ext,
                                                           bc_u_ext,
                                                           bc_v_ext,
@@ -9849,9 +9833,7 @@ namespace proteus
                   v_right=0.0,
                   w_right=0.0,
                   vos_left=0.0,
-                  vos_right=0.0,
-                  porosity_left=0.0,
-                  porosity_right=0.0;
+                  vos_right=0.0;
                 register int left_kb = kb,
                   right_kb = permutations[kb],
                   left_ebN_element_kb_nDOF_test_element=(left_ebN_element*nQuadraturePoints_elementBoundary+left_kb)*nDOF_test_element,
@@ -9869,8 +9851,6 @@ namespace proteus
                 ck.valFromDOF(v_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],v_right);
                 /* ck.valFromDOF(w_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],w_right); */
                 //
-                /* porosity_left = 1.0 - vos_left; */
-                /* porosity_right = 1.0 - vos_right; */
                 velocityAverage[ebN_kb_nSpace+0]=0.5*(u_left + u_right);
                 velocityAverage[ebN_kb_nSpace+1]=0.5*(v_left + v_right);
                 /* velocityAverage[ebN_kb_nSpace+2]=0.5*(w_left + w_right); */

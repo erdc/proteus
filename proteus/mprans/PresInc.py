@@ -48,6 +48,7 @@ class Coefficients(TC_base):
                  VOF_model=1,
                  modelIndex = None,
                  fluidModelIndex = None, 
+                 sedModelIndex = None, 
                  fixNullSpace=False, 
                  INTEGRATE_BY_PARTS_DIV_U=True):
         """Construct a coefficients object
@@ -79,6 +80,7 @@ class Coefficients(TC_base):
         self.rho_s_min = rho_s_min
         self.modelIndex = modelIndex
         self.fluidModelIndex = fluidModelIndex
+        self.sedModelIndex = sedModelIndex
 
     def attachModels(self,modelList):
         """
@@ -86,9 +88,14 @@ class Coefficients(TC_base):
         """
         self.model = modelList[self.modelIndex]
         self.fluidModel = modelList[self.fluidModelIndex]
+        if self.sedModelIndex is not None:
+            self.sedModel = modelList[self.sedModelIndex]
         if self.VOS_model is not None:
-            self.model.q_vos = modelList[self.VOS_model].q[('u',0)].copy()
-            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)].copy()
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
+        else:
+            self.model.q_vos = np.zeros_like(self.model.q[('u',0)])
+            self.model.ebqe_vos = np.zeros_like(self.model.ebqe[('u',0)])
 
     def initializeMesh(self,mesh):
         """
@@ -130,14 +137,17 @@ class Coefficients(TC_base):
             assert self.INTEGRATE_BY_PARTS_DIV_U, "INTEGRATE_BY_PARTS the div(U) must be set to true to correct the velocity"
             alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
             for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
-                self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
-                #cek hack, need to do scale this right for 3p flow
-                self.fluidModel.ebqe[('velocity',0)][...,i] -= self.model.ebqe[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
-                #self.fluidModel.ebqe[('velocity',0)][...,i] = (self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
-                self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
-                self.fluidModel.coefficients.ebqe_velocity_solid[...,i] -= self.model.ebqe[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
+                self.fluidModel.q[('velocity',0)][...,i] -= (1.0-self.model.q_vos)*self.model.q['a']*self.model.q[('grad(u)',0)][...,i]
+                self.fluidModel.ebqe[('velocity',0)][...,i] = (1.0-self.model.ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
+                self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q_vos*self.model.q['a']*self.model.q[('grad(u)',0)][...,i]
+                self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = self.model.ebqe_vos*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
             self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
             self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
+            if self.sedModelIndex is not None:
+                self.sedModel.stabilization.v_last[:] = self.sedModel.q[('velocity',0)]
+                self.sedModel.coefficients.ebqe_velocity_last[:] = self.sedModel.ebqe[('velocity',0)]
+                assert(self.fluidModel.coefficients.q_velocity_solid is self.sedModel.q[('velocity',0)])
+                assert(self.fluidModel.coefficients.ebqe_velocity_solid is self.sedModel.ebqe[('velocity',0)])
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):
@@ -160,6 +170,12 @@ class Coefficients(TC_base):
             vos = self.fluidModel.coefficients.ebqe_vos
             rho_s = self.fluidModel.coefficients.rho_s
             rho_f = self.fluidModel.coefficients.ebqe_rho
+        if  u_shape == self.fluidModel.ebq[('u',0)].shape:
+            vf = self.fluidModel.ebq[('velocity',0)]
+            vs = self.fluidModel.coefficients.ebq_velocity_solid
+            vos = self.fluidModel.coefficients.ebq_vos
+            rho_s = self.fluidModel.coefficients.rho_s
+            rho_f = self.fluidModel.coefficients.ebq_rho
         
         assert rho_s >= self.rho_s_min, "solid density out of bounds"
         assert (rho_f >= self.rho_f_min).all(), "fluid density out of bounds"
@@ -433,6 +449,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             'd')
         self.q[('u', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['a'] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[
             ('grad(u)',
              0)] = numpy.zeros(
@@ -443,6 +461,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[
             ('u',
              0)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary),
+            'd')
+        self.ebqe['a'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
@@ -786,7 +808,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray, 
-            self.coefficients.INTEGRATE_BY_PARTS_DIV_U)
+            self.coefficients.INTEGRATE_BY_PARTS_DIV_U,
+            self.q['a'],
+            self.ebqe['a'])
 
         if self.coefficients.fixNullSpace:
             r[0] = 0.

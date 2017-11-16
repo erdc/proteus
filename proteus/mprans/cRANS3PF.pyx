@@ -2562,7 +2562,6 @@ cdef class RANS3PF:
                                  numpy.ndarray vel_trial_trace_ref,
                                  numpy.ndarray ebqe_velocity,
                                  numpy.ndarray velocityAverage):
-
         self.thisptr.calculateVelocityAverage(nExteriorElementBoundaries_global,
                                               < int * > exteriorElementBoundariesArray.data,
                                               nInteriorElementBoundaries_global,

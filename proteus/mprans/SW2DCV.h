@@ -13,7 +13,6 @@
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define POWER_SMOOTHNESS_INDICATOR 2
-#define LINEAR_FRICTION 0
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
 
@@ -54,9 +53,9 @@ namespace proteus
 			    int NNZ, //number on non-zero entries on sparsity pattern
 			    int numDOFs, //number of DOFs
 			    double* lumped_mass_matrix, //lumped mass matrix (as vector)
-			    double* h_lstage, //DOFs of solution at last stage
-			    double* hu_lstage, 
-			    double* hv_lstage, 
+			    double* h_old, //DOFs of solution at last stage
+			    double* hu_old, 
+			    double* hv_old, 
 			    double* b_dof,
 			    double* high_order_hnp1, //DOFs of high order solution at tnp1
 			    double* high_order_hunp1, 
@@ -79,9 +78,9 @@ namespace proteus
       virtual double calculateEdgeBasedCFL(double g, 
 					   int numDOFsPerEqn, //number of DOFs
 					   double* lumped_mass_matrix, //lumped mass matrix (as vector)
-					   double* h_lstage, //DOFs of solution at last stage
-					   double* hu_lstage, 
-					   double* hv_lstage, 
+					   double* h_old, //DOFs of solution at last stage
+					   double* hu_old, 
+					   double* hv_old, 
 					   double* b_dof,
 					   int* csrRowIndeces_DofLoops, //csr row indeces 
 					   int* csrColumnOffsets_DofLoops, //csr column offsets 
@@ -138,12 +137,6 @@ namespace proteus
 				   double* h_dof_old,
  				   double* hu_dof_old, 
 				   double* hv_dof_old,
-				   double* h_dof_old_old,
- 				   double* hu_dof_old_old, 
-				   double* hv_dof_old_old,
-				   double* h_dof_lstage,
- 				   double* hu_dof_lstage, 
-				   double* hv_dof_lstage,
 				   double* b_dof,
 				   double* h_dof, 
 				   double* hu_dof, 
@@ -235,6 +228,7 @@ namespace proteus
 				   double cE, 
 				   int LUMPED_MASS_MATRIX, 
 				   double dt,
+				   int LINEAR_FRICTION,
 				   double mannings, 
 				   double* quantDOFs,
 				   int SECOND_CALL_CALCULATE_RESIDUAL,
@@ -289,12 +283,6 @@ namespace proteus
 				   double* h_dof_old,
 				   double* hu_dof_old, 
 				   double* hv_dof_old,
-				   double* h_dof_old_old, 
-				   double* hu_dof_old_old, 
-				   double* hv_dof_old_old,
-				   double* h_dof_lstage, 
-				   double* hu_dof_lstage, 
-				   double* hv_dof_lstage,
 				   double* b_dof,
 				   double* h_dof, 
 				   double* hu_dof, 
@@ -386,6 +374,7 @@ namespace proteus
 				   double cE,
 				   int LUMPED_MASS_MATRIX,
 				   double dt,
+				   int LINEAR_FRICTION,
 				   double mannings,
 				   // Quant of interests
 				   double* quantDOFs,
@@ -1800,9 +1789,9 @@ namespace proteus
 		    int NNZ, //number on non-zero entries on sparsity pattern
 		    int numDOFs, //number of DOFs
 		    double* lumped_mass_matrix, //lumped mass matrix (as vector))
-		    double* h_lstage, //DOFs of solution at last stage
-		    double* hu_lstage, 
-		    double* hv_lstage,
+		    double* h_old, //DOFs of solution at last stage
+		    double* hu_old, 
+		    double* hv_old,
 		    double* b_dof,
 		    double* high_order_hnp1, //DOFs of high order solution at tnp1
 		    double* high_order_hunp1, 
@@ -1832,7 +1821,7 @@ namespace proteus
 	{
 	  //read some vectors 
 	  double high_order_hnp1i  = high_order_hnp1[i];
-	  double hni = h_lstage[i];
+	  double hni = h_old[i];
 	  double Zi = b_dof[i];
 	  double mi = lumped_mass_matrix[i];
 
@@ -1843,7 +1832,7 @@ namespace proteus
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
 	      // read some vectors
-	      double hnj = h_lstage[j];
+	      double hnj = h_old[j];
 	      double Zj = b_dof[j];
 
 	      // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
@@ -1887,9 +1876,9 @@ namespace proteus
 	  double high_order_hnp1i  = high_order_hnp1[i];
 	  double high_order_hunp1i = high_order_hunp1[i];
 	  double high_order_hvnp1i = high_order_hvnp1[i];
-	  double hni = h_lstage[i];
-	  double huni = hu_lstage[i];
-	  double hvni = hv_lstage[i];
+	  double hni = h_old[i];
+	  double huni = hu_old[i];
+	  double hvni = hv_old[i];
 	  double Zi = b_dof[i];
 	  double mi = lumped_mass_matrix[i];
 	  double one_over_hiReg = 2*hni/(hni*hni+std::pow(fmax(hni,hEps),2)); //hEps
@@ -1903,9 +1892,9 @@ namespace proteus
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
 	      // read some vectors
-	      double hnj = h_lstage[j];
-	      double hunj = hu_lstage[j];
-	      double hvnj = hv_lstage[j];
+	      double hnj = h_old[j];
+	      double hunj = hu_old[j];
+	      double hvnj = hv_old[j];
 	      double Zj = b_dof[j];
 	      double one_over_hjReg = 2*hnj/(hnj*hnj+std::pow(fmax(hnj,hEps),2)); //hEps
 
@@ -1971,9 +1960,9 @@ namespace proteus
     double calculateEdgeBasedCFL(double g, 
 				 int numDOFsPerEqn, //number of DOFs
 				 double* lumped_mass_matrix, //lumped mass matrix (as vector))
-				 double* h_dof_lstage, //DOFs of solution at last stage
-				 double* hu_dof_lstage, 
-				 double* hv_dof_lstage,
+				 double* h_dof_old, //DOFs of solution at last stage
+				 double* hu_dof_old, 
+				 double* hv_dof_old,
 				 double* b_dof,
 				 int* csrRowIndeces_DofLoops, //csr row indeces 
 				 int* csrColumnOffsets_DofLoops, //csr column offsets 
@@ -1992,9 +1981,9 @@ namespace proteus
       int ij=0;
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
-	  double hi = h_dof_lstage[i]; // solution at time tn for the ith DOF
-	  double hui = hu_dof_lstage[i]; 
-	  double hvi = hv_dof_lstage[i]; 
+	  double hi = h_dof_old[i]; // solution at time tn for the ith DOF
+	  double hui = hu_dof_old[i]; 
+	  double hvi = hv_dof_old[i]; 
 	  double dLowii = 0.;
 
 	  double alphai;
@@ -2003,9 +1992,9 @@ namespace proteus
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    { //loop in j (sparsity pattern)
 	      int j = csrColumnOffsets_DofLoops[offset];
-	      double hj = h_dof_lstage[j]; // solution at time tn for the jth DOF
-	      double huj = hu_dof_lstage[j];
-	      double hvj = hv_dof_lstage[j];
+	      double hj = h_dof_old[j]; // solution at time tn for the jth DOF
+	      double huj = hu_dof_old[j];
+	      double hvj = hv_dof_old[j];
 
 	      if (i != j) 
 		{
@@ -2039,7 +2028,7 @@ namespace proteus
 	  // CALCULATE EDGE BASED CFL //
 	  //////////////////////////////
 	  double mi = lumped_mass_matrix[i];
-	  edge_based_cfl[i] = fabs(dLowii)/mi;
+	  edge_based_cfl[i] = 2*fabs(dLowii)/mi;
 	  max_edge_based_cfl = fmax(max_edge_based_cfl,edge_based_cfl[i]);
 
 	  //////////////////////////////////
@@ -2067,9 +2056,9 @@ namespace proteus
 	  ij=0;
 	  for (int i=0; i<numDOFsPerEqn; i++)
 	    {
-	      double hi = h_dof_lstage[i]; // solution at time tn for the ith DOF
-	      double hui = hu_dof_lstage[i]; 
-	      double hvi = hv_dof_lstage[i]; 
+	      double hi = h_dof_old[i]; // solution at time tn for the ith DOF
+	      double hui = hu_dof_old[i]; 
+	      double hvi = hv_dof_old[i]; 
 	      double Zi = b_dof[i];
 	      double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); // hEps
 	      double ui = hui*one_over_hiReg;
@@ -2082,9 +2071,9 @@ namespace proteus
 	      for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 		{
 		  int j = csrColumnOffsets_DofLoops[offset];
-		  double hj = h_dof_lstage[j]; // solution at time tn for the jth DOF
-		  double huj = hu_dof_lstage[j];
-		  double hvj = hv_dof_lstage[j];
+		  double hj = h_dof_old[j]; // solution at time tn for the jth DOF
+		  double huj = hu_dof_old[j];
+		  double hvj = hv_dof_old[j];
 		  double Zj = b_dof[j];	      
 		  double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
 		  double uj = huj*one_over_hjReg;
@@ -2173,12 +2162,6 @@ namespace proteus
 			   double* h_dof_old,
 			   double* hu_dof_old, 
 			   double* hv_dof_old,
-			   double* h_dof_old_old, 
-			   double* hu_dof_old_old, 
-			   double* hv_dof_old_old, 
-			   double* h_dof_lstage, 
-			   double* hu_dof_lstage, 
-			   double* hv_dof_lstage, 
 			   double* b_dof, 
 			   double* h_dof, 
 			   double* hu_dof, 
@@ -2269,7 +2252,8 @@ namespace proteus
 			   double* muH_minus_muL,
 			   double cE,
 			   int LUMPED_MASS_MATRIX,
-			   double dt, 
+			   double dt,
+			   int LINEAR_FRICTION,
 			   double mannings,
 			   // Quant of interests
 			   double* quantDOFs, 
@@ -3158,12 +3142,6 @@ namespace proteus
 			   double* h_dof_old,
 			   double* hu_dof_old, 
 			   double* hv_dof_old,
-			   double* h_dof_old_old, 
-			   double* hu_dof_old_old, 
-			   double* hv_dof_old_old, 
-			   double* h_dof_lstage, 
-			   double* hu_dof_lstage, 
-			   double* hv_dof_lstage, 
 			   double* b_dof, 
 			   double* h_dof, 
 			   double* hu_dof, 
@@ -3255,6 +3233,7 @@ namespace proteus
 			   double cE,
 			   int LUMPED_MASS_MATRIX,
 			   double dt,
+			   int LINEAR_FRICTION,
 			   double mannings,
 			   // Quant of interests
 			   double* quantDOFs,
@@ -3269,8 +3248,10 @@ namespace proteus
       //FOR FRICTION//
       double n2 = std::pow(mannings,2.);
       double gamma=4./3;
-      double xi=2.;
-
+      // mql. This parameter relaxes the cfl restriction.
+      // It is now conservative. I might change it after the local bounds are implemented 
+      double xi=10.; 
+      
       //////////////////////////////////////
       // ********** CELL LOOPS ********** //
       //////////////////////////////////////
@@ -3303,7 +3284,7 @@ namespace proteus
 		eN_nDOF_trial_element = eN*nDOF_trial_element;
 	      register double 
 		h=0.0,hu=0.0,hv=0.0, // solution at current time
-		h_lstage=0.0,hu_lstage=0.0,hv_lstage=0.0, // solution at lstage
+		h_old=0.0,hu_old=0.0,hv_old=0.0, // solution at lstage
 		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
 		h_test_dV[nDOF_trial_element],
 		dV,x,y,xt,yt;
@@ -3325,15 +3306,15 @@ namespace proteus
 	      ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
 	      ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
 	      // get the solution at the lstage
-	      ck.valFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_lstage);
-	      ck.valFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_lstage);
-	      ck.valFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_lstage);
+	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_old);
+	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_old);
+	      ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_old);
 	      // calculate cell based CFL to keep a reference
 	      calculateCFL(elementDiameter[eN],
 			   g,
-			   h_lstage,
-			   hu_lstage,
-			   hv_lstage,
+			   h_old,
+			   hu_old,
+			   hv_old,
 			   hEps,
 			   q_cfl[eN_k]);
 	      //precalculate test function products with integration weights
@@ -3349,9 +3330,9 @@ namespace proteus
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
 		  // compute time derivative part of global residual. NOTE: no lumping
-		  elementResidual_h[i]  += (h  - h_lstage)*h_test_dV[i];
-		  elementResidual_hu[i] += (hu - hu_lstage)*h_test_dV[i];
-		  elementResidual_hv[i] += (hv - hv_lstage)*h_test_dV[i];
+		  elementResidual_h[i]  += (h  - h_old)*h_test_dV[i];
+		  elementResidual_hu[i] += (hu - hu_old)*h_test_dV[i];
+		  elementResidual_hv[i] += (hv - hv_old)*h_test_dV[i];
 		}
 	    }
 	  // distribute
@@ -3379,9 +3360,9 @@ namespace proteus
 	  for (int i=0; i<numDOFsPerEqn; i++)
 	    {
 	      // COMPUTE ENTROPY. NOTE: WE CONSIDER A FLAT BOTTOM 
-	      double hni = h_dof_lstage[i]; 
+	      double hni = h_dof_old[i]; 
 	      double one_over_hniReg = 2*hni/(hni*hni+std::pow(fmax(hni,hEps),2)); //hEps
-	      eta[i] = ENTROPY(g,hni,hu_dof_lstage[i],hv_dof_lstage[i],0.,one_over_hniReg);
+	      eta[i] = ENTROPY(g,hni,hu_dof_old[i],hv_dof_old[i],0.,one_over_hniReg);
 	    }
 	  // ********** END OF COMPUTING ENTROPY ********** //
 	  
@@ -3395,9 +3376,9 @@ namespace proteus
 	  register double psi[numDOFsPerEqn], etaMax[numDOFsPerEqn], etaMin[numDOFsPerEqn];
 	  for (int i=0; i<numDOFsPerEqn; i++)
 	    {	      
-	      double hi = h_dof_lstage[i]; // solution at time tn for the ith DOF
-	      double hui = hu_dof_lstage[i]; 
-	      double hvi = hv_dof_lstage[i]; 
+	      double hi = h_dof_old[i]; // solution at time tn for the ith DOF
+	      double hui = hu_dof_old[i]; 
+	      double hvi = hv_dof_old[i]; 
 	      double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); //hEps
 
 	      // For eta min and max
@@ -3418,9 +3399,9 @@ namespace proteus
 	      for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 		{ //loop in j (sparsity pattern)
 		  int j = csrColumnOffsets_DofLoops[offset];
-		  double hj = h_dof_lstage[j]; // solution at time tn for the jth DOF
-		  double huj = hu_dof_lstage[j];
-		  double hvj = hv_dof_lstage[j];
+		  double hj = h_dof_old[j]; // solution at time tn for the jth DOF
+		  double huj = hu_dof_old[j];
+		  double hvj = hv_dof_old[j];
 		  double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
 		  double uj = huj*one_over_hjReg;
 		  double vj = hvj*one_over_hjReg;
@@ -3491,9 +3472,9 @@ namespace proteus
 	  ij = 0;
 	  for (int i=0; i<numDOFsPerEqn; i++)
 	    {
-	      double hi = h_dof_lstage[i];
-	      double hui = hu_dof_lstage[i];
-	      double hvi = hv_dof_lstage[i];	  
+	      double hi = h_dof_old[i];
+	      double hui = hu_dof_old[i];
+	      double hvi = hv_dof_old[i];	  
 	      double Zi = b_dof[i];
 	      double mi = lumped_mass_matrix[i];
 	      double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); // hEps
@@ -3531,15 +3512,11 @@ namespace proteus
 	      double veli_norm = std::sqrt(ui*ui+vi*vi);
 	      double hi_to_the_gamma = std::pow(hi,gamma);
 	      double friction_aux = 
-		veli_norm == 0. ? 0. : 2*g*n2*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,10*xi*g*n2*dt*veli_norm));
+		veli_norm == 0. ? 0.: (2*g*n2*veli_norm*mi/
+				       (hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm)));
 	      double ith_friction_term2 = friction_aux*hui;
 	      double ith_friction_term3 = friction_aux*hvi;
 
-	      //double ith_friction_term2 =  
-	      //veli_norm==0. ? 0. : 2*g*n2*hui*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
-	      //double ith_friction_term3 =  
-	      //veli_norm==0. ? 0. : 2*g*n2*hvi*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
-	      
 	      if (LINEAR_FRICTION==1)
 		{
 		  ith_friction_term2 = mannings*hui*mi;
@@ -3550,9 +3527,9 @@ namespace proteus
 	      for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 		{
 		  int j = csrColumnOffsets_DofLoops[offset];
-		  double hj = h_dof_lstage[j];
-		  double huj = hu_dof_lstage[j];
-		  double hvj = hv_dof_lstage[j];
+		  double hj = h_dof_old[j];
+		  double huj = hu_dof_old[j];
+		  double hvj = hv_dof_old[j];
 		  double Zj = b_dof[j];
 		  double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
 		  double uj = huj*one_over_hjReg;
@@ -3599,7 +3576,7 @@ namespace proteus
 								      hEps,hEps,false)*cji_norm); //hEps
 			}
 		      dLij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
-		      
+
 		      ///////////////////////////////////////
 		      // WELL BALANCING DISSIPATIVE MATRIX //
 		      ///////////////////////////////////////

@@ -4,12 +4,15 @@
 Test module for generating unit_simplex elements
 
 """
+import pytest
+
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
 
+@pytest.mark.MeshTools
 class TestReferenceSimplex():
 
     @classmethod
