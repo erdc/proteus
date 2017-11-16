@@ -24,9 +24,16 @@ struct Inputs{
   double visc_val;
   double density;
   int nsd;
+  apf::MeshElement* element;
+  apf::Element* pres_elem;
+  apf::Element* visc_elem;
+  apf::Element* velo_elem;
+  apf::Element* vof_elem;
+  apf::Matrix3x3 KJ;
 };
 
 double get_nu_err(struct Inputs info);
+apf::Vector3 getResidual(apf::Vector3 qpt,struct Inputs &info);
 
 
 inline void getProps(double*rho,double*nu)
@@ -207,10 +214,22 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     }
     
     //H1 error compute nu_err at centroid and compute residual
-    //Need a getResidual()
     qpt[0] = 1./3.;
     qpt[1] = 1./3.;
     qpt[2] = 0.0;
+
+    double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
+    Inputs info;
+    info.element = element;
+    info.pres_elem = pres_elem;
+    info.visc_elem = visc_elem;
+    info.velo_elem = velo_elem;
+    info.vof_elem = vof_elem;
+    info.KJ = KJ;
+    info.nsd = nsd;
+    info.density = density;
+
+/*
     double pressure = apf::getScalar(pres_elem,qpt);
     apf::Vector3 grad_pres;
     apf::getGrad(pres_elem,qpt,grad_pres);
@@ -234,30 +253,21 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
       double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
       apf::Vector3 tempResidual = (tempConv + grad_pres/density);
       double tempVal = tempResidual.getLength();
+*/
+    apf::Vector3 tempResidual = getResidual(qpt,info);
+    double tempVal = tempResidual.getLength();
     apf::getJacobian(element,qpt,J);
     if(nsd==2)
       J[2][2] = 1.0; //this is necessary to avoid singular matrix
     invJ = invert(J);
     Jdet=fabs(apf::getJacobianDeterminant(J,nsd)); 
     gij = apf::transpose(invJ)*(KJ*invJ);
-
-    //Need a get_nu_err()
-    //double nu_err = sqrt(visc_val*sqrt(61)+3.0*visc_val*visc_val*sqrt(5.0/2.0));
-    //nu_err = 1./nu_err;
-    Inputs info;
-    info.vel_vect = vel_vect;
-    info.grad_vel = grad_vel;  
-    info.grad_pres = grad_pres;
     info.gij = gij;
-    info.visc_val = visc_val;
-    info.density = density;
-    info.nsd = nsd;
 
     double nu_err = get_nu_err(info);
     double VMSerrH1 = nu_err*tempVal*apf::measure(m,ent);
-    std::cout<<std::scientific<<std::setprecision(15)<<"H1 error for element "<<count<<" nu_err "<<nu_err<<" error "<<VMSerrH1<<std::endl;
+    //std::cout<<std::scientific<<std::setprecision(15)<<"H1 error for element "<<count<<" nu_err "<<nu_err<<" error "<<VMSerrH1<<std::endl;
     apf::setScalar(vmsErrH1,ent,0,VMSerrH1);
-
     apf::destroyElement(visc_elem);
     apf::destroyElement(pres_elem);
     apf::destroyElement(velo_elem);
@@ -281,3 +291,31 @@ double get_nu_err(struct Inputs info){
    return nu_err;
 }
 
+apf::Vector3 getResidual(apf::Vector3 qpt,struct Inputs &info){
+    apf::Vector3 grad_pres;
+    apf::getGrad(info.pres_elem,qpt,grad_pres);
+    double visc_val = apf::getScalar(info.visc_elem,qpt);
+    apf::Vector3 vel_vect;
+    apf::getVector(info.velo_elem,qpt,vel_vect);
+    apf::Matrix3x3 grad_vel;
+    apf::getVectorGrad(info.velo_elem,qpt,grad_vel);
+    grad_vel = apf::transpose(grad_vel);
+
+    apf::Vector3 tempConv;
+    apf::Vector3 tempDiff;
+    tempConv.zero();
+    tempDiff.zero();
+    for(int i=0;i<info.nsd;i++){
+      for(int j=0;j<info.nsd;j++){
+        tempConv[i] = tempConv[i] + vel_vect[j]*grad_vel[i][j];
+      }
+    }
+    apf::Vector3 tempResidual = (tempConv + grad_pres/info.density);
+
+    info.vel_vect = vel_vect;
+    info.grad_vel = grad_vel;
+    info.visc_val = visc_val;
+    info.grad_pres = grad_pres;
+
+  return tempResidual;
+}
