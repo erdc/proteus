@@ -1400,7 +1400,6 @@ namespace proteus
                                           solid_velocity,
                                           viscosity);
         //new_beta/=rho;
-        new_beta*=rho;
         mom_u_source += (1.0 - phi_s)*new_beta*(u-u_s);
         mom_v_source += (1.0 - phi_s)*new_beta*(v-v_s);
         mom_w_source += (1.0 - phi_s)*new_beta*(w-w_s);

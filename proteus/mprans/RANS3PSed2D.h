@@ -837,7 +837,6 @@ namespace proteus
                                           solid_velocity,
                                           viscosity);
       //new_beta/=rho;
-      new_beta*=rho;
       //std::cout<<"total "<<(1.0-phi_s)*new_beta<<std::endl;
       mom_u_source += (1.0 - phi_s)*new_beta*(u-u_f);
       mom_v_source += (1.0 - phi_s)*new_beta*(v-v_f);
