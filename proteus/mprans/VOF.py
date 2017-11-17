@@ -445,10 +445,41 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_v = numpy.ones(cebqe[('f',0)].shape,'d')
         #VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
-    def preStep(self,t,firstStep=False):
+    def preStep(self,t,firstStep=False):        
+        # Compute uStar = (1+r)*un - r*unm1
+        if firstStep==True:
+            self.model.uStar_dof[:] = self.model.u[0].dof
+            self.model.getNormalReconstruction()
+            self.model.lumped_wx_tStar[:] = self.model.lumped_wx_tn
+            self.model.lumped_wy_tStar[:] = self.model.lumped_wy_tn            
+        else:
+            #r = self.model.timeIntegration.dt/self.model.timeIntegration.dt_history[0]
+            #print self.model.timeIntegration.dt_history[0], self.model.timeIntegration.dt
+            #self.model.uStar_dof[:] = (1+r)*self.model.u[0].dof - r*self.model.u_dof_old
+            self.model.uStar_dof[:] = self.model.u[0].dof
+            #############################
+            # GET NORMAL RECONSTRUCTION #
+            #############################
+            # save old normal reconstructions
+            #self.model.lumped_wx_tnm1[:] = self.model.lumped_wx_tn
+            #self.model.lumped_wy_tnm1[:] = self.model.lumped_wy_tn
+            # reconstruct normals; i.e, compute wx_tn, wy_tn
+            self.model.getNormalReconstruction()
+            # COMPUTE EXTRAPOLATED NORMAL RECONSTRUCTIONS
+            #self.model.lumped_wx_tStar[:] = ((1+r)*self.model.lumped_wx_tn
+            #                                 - r*self.model.lumped_wx_tnm1)
+            #self.model.lumped_wy_tStar[:] = ((1+r)*self.model.lumped_wy_tn
+            #                                 - r*self.model.lumped_wy_tnm1)            
+            self.model.lumped_wx_tStar[:] = self.model.lumped_wx_tn
+            self.model.lumped_wy_tStar[:] = self.model.lumped_wy_tn
+
+            #self.model.quantDOFs[:] = ((1+r)*self.model.lumped_wx_tn
+            #                           - r*self.model.lumped_wx_tnm1)
+            #self.model.quantDOFs2[:] = self.model.lumped_wx_tn
+            
         # SAVE OLD SOLUTION #
 	self.model.u_dof_old[:] = self.model.u[0].dof
-
+        
         # COMPUTE NEW VELOCITY (if given by user) # 
         if self.model.hasVelocityFieldAsFunction:
             self.model.updateVelocityFieldAsFunction()
@@ -639,6 +670,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for ci in range(1,coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         self.u_dof_old = None
+        self.uStar_dof = None
 
         ## Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh #assume the same mesh for  all components for now
@@ -923,7 +955,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.populate_vofModel_with_limited_L2p=False
         else:
             self.populate_vofModel_with_limited_L2p=True
-
+        # For normal reconstruction
+        self.lumped_wx_tn = numpy.zeros(self.u[0].dof.shape,'d')
+        self.lumped_wy_tn = numpy.zeros(self.u[0].dof.shape,'d')
+        self.lumped_wx_tnm1 = numpy.zeros(self.u[0].dof.shape,'d')
+        self.lumped_wy_tnm1 = numpy.zeros(self.u[0].dof.shape,'d')
+        self.lumped_wx_tStar = numpy.zeros(self.u[0].dof.shape,'d')
+        self.lumped_wy_tStar = numpy.zeros(self.u[0].dof.shape,'d')
+        
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -1003,6 +1042,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                            'H1norm_Hinterface'+","+
                            'L2norm_u'+","+
                            'H1norm_u'+"\n")
+        self.useFullNewton = False
         self.newton_iterations = 0.0
         self.global_mass_error = 0.0
         self.global_L2_interface = 0.0
@@ -1139,6 +1179,26 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     #        phi = self.coefficients.lsModel.u[0].dof[i]
     #        self.quantDOFs[i] = smoothedHeaviside(epsHeaviside,phi)
     #        #self.quantDOFs[i] = 2*smoothedHeaviside(epsHeaviside,phi)-1            
+
+    def getNormalReconstruction(self):
+        self.vof.normalReconstruction(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.mesh.elementDiametersArray,
+            self.u[0].dof, # phi
+            #self.uStar_dof, # phi
+            self.offset[0],self.stride[0],
+            self.nFreeDOF_global[0], #numDOFs
+            self.lumped_wx_tn,
+            self.lumped_wy_tn)
         
     def setMassQuadratureEdgeBasedStabilizationMethods(self):
         if self.rhs_mass_correction is None:
@@ -1182,6 +1242,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.u_dof_old is None:
             # Pass initial condition to u_dof_old
             self.u_dof_old = numpy.copy(self.u[0].dof)
+            self.uStar_dof = numpy.copy(self.u[0].dof)
         ########################
         ### COMPUTE C MATRIX ###
         ########################
@@ -1413,7 +1474,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.phiHat_dof = numpy.zeros(self.u[0].dof.shape,'d')
                 self.phin_dof = numpy.zeros(self.u[0].dof.shape,'d')
         
-        self.calculateResidual = self.vof.calculateResidual_MCorr_with_VOF2
+        self.calculateResidual = self.vof.calculateResidual_MCorr_with_VOF3
         self.calculateJacobian = self.vof.calculateJacobian_MCorr_with_VOF2
 
         self.calculateResidual(#element
@@ -1456,6 +1517,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             degree_polynomial,
             self.u[0].dof,
             self.u_dof_old, #For Backward Euler this is un, for SSP this is the lstage
+            self.uStar_dof,
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u',0)],
@@ -1515,11 +1577,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.min_u_bc,
             self.max_u_bc,
             # FOR NONLINEAR VOF; i.e.,
+            self.useFullNewton,
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
             self.phin_dof,
             self.phiHat_dof,
+            # normal reconstruction
+            self.lumped_wx_tStar,
+            self.lumped_wy_tStar,
             self.quantDOFs)
 
         
@@ -1607,6 +1673,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc',0)],
             self.csrColumnOffsets_eb[(0,0)], 
             self.coefficients.LUMPED_MASS_MATRIX,
+            self.useFullNewton,
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
