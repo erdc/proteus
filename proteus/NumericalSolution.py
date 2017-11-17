@@ -1492,28 +1492,28 @@ class NS_base:  # (HasTraits):
               self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
 
+        if(hasattr(self.pList[0].domain,"PUMIMesh")):
         #Transfer solution to PUMI mesh for output
-        for m in self.modelList:
-          for lm in m.levelModelList:
-            coef = lm.coefficients
-            if coef.vectorComponents is not None:
-              vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
-              for vci in range(len(coef.vectorComponents)):
-                vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
-              self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
-                 coef.vectorName, vector)
-              del vector
-            for ci in range(coef.nc):
-              if coef.vectorComponents is None or \
-                ci not in coef.vectorComponents:
-                scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-                scalar[:,0] = lm.u[ci].dof[:]
+          for m in self.modelList:
+            for lm in m.levelModelList:
+              coef = lm.coefficients
+              if coef.vectorComponents is not None:
+                vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+                for vci in range(len(coef.vectorComponents)):
+                  vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
                 self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
-                    coef.variableNames[ci], scalar)
-                del scalar
+                   coef.vectorName, vector)
+                del vector
+              for ci in range(coef.nc):
+                if coef.vectorComponents is None or \
+                  ci not in coef.vectorComponents:
+                  scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+                  scalar[:,0] = lm.u[ci].dof[:]
+                  self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                      coef.variableNames[ci], scalar)
+                  del scalar
+          self.pList[0].domain.PUMIMesh.writeMesh("finalMesh.smb")
 
-        self.pList[0].domain.PUMIMesh.writeMesh("finalMesh.smb")
-        #self.PUMI_writeSolution()
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
             self.closeArchive(model,index)
