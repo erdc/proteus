@@ -314,6 +314,7 @@ class BackwardEuler_cfl(BackwardEuler):
     """
     def __init__(self,transport,runCFL=0.9,integrateInterpolationPoints=False):
         BackwardEuler.__init__(self,transport,integrateInterpolationPoints=integrateInterpolationPoints)
+        self.dt_history=numpy.zeros(1,'d')
         self.runCFL=runCFL
         self.dtLast=None
         self.dtRatioMax = 2.0
@@ -342,6 +343,7 @@ class BackwardEuler_cfl(BackwardEuler):
         self.choose_dt()
         self.t = t0+self.dt
     def updateTimeHistory(self,resetFromDOF=False):
+        self.dt_history[0] = self.dt
         for ci in self.massComponents:
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
         self.dtLast = self.dt
