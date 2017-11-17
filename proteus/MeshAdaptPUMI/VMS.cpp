@@ -92,6 +92,8 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
 
   int count = 0 ; //for debugging purposes
   //Loop over elements and compute the VMS error in the L_2 norm
+  double VMSerrTotalL2 = 0.0;
+  double VMSerrTotalH1 = 0.0;
   while( (ent = m->iterate(iter)) ){
 
     element = apf::createMeshElement(m,ent);
@@ -208,10 +210,12 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
 
     double VMSerrL2 = sqrt(strongResidualTauL2);
     apf::setScalar(vmsErr,ent,0,VMSerrL2);
+/*
     if(count == 10){
       std::cout<<"This is the error "<< sqrt(strongResidualTauL2)<<std::endl;
       std::cout<<"This is the area check "<<areaCheck<<" true area is "<<apf::measure(m,ent);
     }
+*/
     
     //H1 error compute nu_err at centroid and compute residual
     qpt[0] = 1./3.;
@@ -265,15 +269,20 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     info.gij = gij;
 
     double nu_err = get_nu_err(info);
-    double VMSerrH1 = nu_err*tempVal*apf::measure(m,ent);
+    double VMSerrH1 = nu_err*tempVal*sqrt(apf::measure(m,ent));
     //std::cout<<std::scientific<<std::setprecision(15)<<"H1 error for element "<<count<<" nu_err "<<nu_err<<" error "<<VMSerrH1<<std::endl;
     apf::setScalar(vmsErrH1,ent,0,VMSerrH1);
+
+    VMSerrTotalL2 = VMSerrTotalL2+VMSerrL2*VMSerrL2;
+    VMSerrTotalH1 = VMSerrTotalH1+VMSerrH1*VMSerrH1;
+
     apf::destroyElement(visc_elem);
     apf::destroyElement(pres_elem);
     apf::destroyElement(velo_elem);
     count++;
   } //end loop over elements
 
+    std::cout<<std::scientific<<std::setprecision(15)<<std::cout<<"Total Error L2 "<<sqrt(VMSerrTotalL2)<<" H1 "<<sqrt(VMSerrTotalH1)<<std::endl;
 } //end function
 
 double get_nu_err(struct Inputs info){
