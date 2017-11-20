@@ -425,7 +425,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   double mass_before = getTotalMass();
 
   double t1 = PCU_Time();
-  ma::adapt(in);
+  //ma::adapt(in);
+  ma::adaptVerbose(in);
   double t2 = PCU_Time();
 
   m->verify();
@@ -458,7 +459,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     apf::writeVtkFiles(namebuffer, m);
     m->writeNative("afterAnisotropicAdapt.smb");
   }
-  //std::abort();
+  std::abort();
   //isReconstructed = 0; //this is needed to maintain consistency with the post-adapt conversion back to Proteus
   nAdapt++; //counter for number of adapt steps
   return 0;
