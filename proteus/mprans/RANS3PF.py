@@ -2341,8 +2341,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[2],
             self.q['dV'],
             self.q['dV_last'],
-            self.q[('velocityStar',0)], #mql: use uStar=2*un-unm1 to achieve 2nd order accuracy 
-            #self.stabilization.v_last,
+            self.q[('velocityStar',0)], #mql: use uStar=2*un-unm1 to achieve 2nd order accuracy             
             self.coefficients.ebqe_velocity_last,
             self.q[('cfl', 0)],
             self.q[('numDiff', 0, 0)],
@@ -2638,7 +2637,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[2],
             self.q['dV'],
             self.q['dV_last'],
-            self.stabilization.v_last,
+            self.q[('velocityStar',0)], #mql: use uStar=2*un-unm1 to achieve 2nd order accuracy 
             self.coefficients.ebqe_velocity_last,
             self.q[('cfl', 0)],
             self.shockCapturing.numDiff_last[0],
@@ -2978,12 +2977,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q['velocityError'][:]=self.q[('velocity',0)]                 
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
         self.q['velocityError']-=self.q[('velocity',0)]
-        if self.coefficients.granular_sdf_Calc is not None:
+        if self.q.has_key('phis') and self.coefficients.granular_sdf_Calc is not None:
             self.q['phisError']=self.q[('phis')]
         else:#this needs to be fixed for the case that multiple bodies are present
-            self.q['phisError'][:]=self.q[('phis',0)]
-
-
+            if self.q.has_key(('phis',0)):
+                self.q['phisError'][:]=self.q[('phis',0)]
 
     def updateAfterMeshMotion(self):
         pass

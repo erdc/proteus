@@ -144,13 +144,13 @@ initialConditions = {0:velx_at_t0(),
 def density(X,t):
     x = X[0]
     y = X[1]
-    return 1.0 #np.sin(x+y+t)**2+1
+    return np.sin(x+y+t)**2+1
 
-mu_constant=True
+mu_constant=False
 def dynamic_viscosity(X,t):
     x = X[0]
     y = X[1]
-    return mu #mu*(np.cos(x+y+t)**2+1)
+    return mu*(np.cos(x+y+t)**2+1)
     
 materialParameters = {'density':density, 
                       'dynamic_viscosity':dynamic_viscosity}

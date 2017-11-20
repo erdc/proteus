@@ -5,3 +5,9 @@
 *.smd	filter=lfs diff=lfs merge=lfs -crlf
 *.sms	filter=lfs diff=lfs merge=lfs -crlf
 *.x_t	filter=lfs diff=lfs merge=lfs -crlf
+*.h5	filter=lfs diff=lfs merge=lfs -crlf
+*.png	filter=lfs diff=lfs merge=lfs -crlf
+*.gif	filter=lfs diff=lfs merge=lfs -crlf
+*.jpg	filter=lfs diff=lfs merge=lfs -crlf
+*.jpeg	filter=lfs diff=lfs merge=lfs -crlf
+

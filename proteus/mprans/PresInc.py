@@ -194,7 +194,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False):
+                 movingDomain=False,
+                 bdyNullSpace=False):
+        self.bdyNullSpace=bdyNullSpace
         from proteus import Comm
         #
         # set the objects describing the method and boundary conditions

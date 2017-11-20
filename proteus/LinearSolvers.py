@@ -709,7 +709,8 @@ class KSP_petsc4py(LinearSolver):
                                                                    self.bdyNullSpace,
                                                                    density_scaling=self.preconditionerOptions[0],
                                                                    numerical_viscosity=self.preconditionerOptions[1],
-                                                                   lumped=self.preconditionerOptions[2])
+                                                                   lumped=self.preconditionerOptions[2],
+                                                                   num_chebyshev_its=self.preconditionerOptions[3])
                 except IndexError:
                     logEvent("Preconditioner options not specified, using defaults")
                     self.preconditioner = NavierStokes_TwoPhasePCD(par_L,
@@ -1601,6 +1602,153 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                  bdyNullSpace = False,
                  density_scaling = True,
                  numerical_viscosity = True,
+                 lumped = True,
+                 num_chebyshev_its = 0):
+        """
+        Initialize the two-phase PCD preconditioning class.
+
+        Parameters
+        ----------
+        L : petsc4py Matrix
+            Defines the problem's operator.
+        prefix : str
+            String allowing PETSc4py options.
+        bdyNullSpace : bool
+            Indicates whether there is a global null space.
+        density_scaling : bool
+            Indicates whether mass and advection terms should be
+            scaled with the density (True) or 1 (False).
+        numerical_viscosity : bool
+            Indicates whether the viscosity used to calculate
+            the inverse scaled mass matrix should include numerical
+            viscosity (True) or not (False).
+        lumped : bool
+            Indicates whether the viscosity and density mass matrices
+            should be lumped (True) or full (False).
+        num_chebyshev_its : int
+            This flag allows the user to apply the mass matrices with
+            a chebyshev semi-iteration.  0  indicates the semi-
+            iteration should not be used, where as a number 1,2,...
+            indicates the number of iterations the method should take.
+
+        """
+        NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
+        # Initialize the discrete operators
+        self.N_rho = self.operator_constructor.initializeTwoPhaseCp_rho()
+        self.A_invScaledRho = self.operator_constructor.initializeTwoPhaseInvScaledAp()
+        self.Q_rho = self.operator_constructor.initializeTwoPhaseQp_rho()
+        self.Q_invScaledVis = self.operator_constructor.initializeTwoPhaseInvScaledQp()
+        # TP PCD scaling options
+        self.density_scaling = density_scaling
+        self.numerical_viscosity = numerical_viscosity
+        self.lumped = lumped
+        self.num_chebyshev_its = num_chebyshev_its
+
+    def setUp(self, global_ksp):
+        import Comm
+        comm = Comm.get()
+        self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
+        self.operator_constructor.updateInvScaledAp()
+        self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
+                                                       lumped = self.lumped)
+        self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
+                                                                 lumped = self.lumped)
+
+        # ****** Sp for Ap *******
+        # TODO - This is included for a possible extension which exchanges Ap with Sp for short
+        #        time steps.
+        # self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
+        #                                                      self.operator_constructor.linear_smoother.isv)
+        # self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
+        #                                                      self.operator_constructor.linear_smoother.isp)
+        # self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        #                                                      self.operator_constructor.linear_smoother.isv)
+        # self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        #                                                      self.operator_constructor.linear_smoother.isp)
+
+        # dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
+        # self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
+        # A00_invBt = self.A00_inv.matMult(self.A01)
+        # self.Sp = self.A10.matMult(A00_invBt)
+        # self.Sp.scale(- 1. )
+        # self.Sp.axpy( 1. , self.A11)
+
+        # End ******** Sp for Ap ***********
+
+        
+        self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                              self.operator_constructor.linear_smoother.isp)
+
+        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                                self.operator_constructor.linear_smoother.isp)
+
+        self.Qp_rho = self.Q_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                              self.operator_constructor.linear_smoother.isp)
+
+        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                                self.operator_constructor.linear_smoother.isp)
+        
+        L_sizes = self.Qp_rho.size        
+        L_range = self.Qp_rho.owner_range
+        self.TP_PCDInv_shell = p4pyPETSc.Mat().create()
+        self.TP_PCDInv_shell.setSizes(L_sizes)
+        self.TP_PCDInv_shell.setType('python')
+        dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
+        self.matcontext_inv = TwoPhase_PCDInv_shell(self.Qp_invScaledVis,
+                                                    self.Qp_rho,
+                                                    self.Ap_invScaledRho,
+                                                    self.Np_rho,
+                                                    True,
+                                                    dt,
+                                                    num_chebyshev_its = self.num_chebyshev_its)
+        self.TP_PCDInv_shell.setPythonContext(self.matcontext_inv)
+        self.TP_PCDInv_shell.setUp()
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+
+    """
+    This class is derived from SchurPrecond and serves as the base
+    class for all NavierStokes preconditioners which use the Schur complement
+    method.    
+    """
+    def __init__(self,L,prefix=None,bdyNullSpace=False):
+        SchurPrecon.__init__(self,L,prefix)
+        self.operator_constructor = SchurOperatorConstructor(self,
+                                                             pde_type='navier_stokes')
+
+
+class NavierStokes_TwoPhasePCD(NavierStokesSchur):
+    """ Two-phase PCD Schur complement approximation class.
+         Details of this operator are in the forthcoming paper
+         'Preconditioners for Two-Phase Incompressible Navier-Stokes 
+         Flow', Bootland et. al. 2017.
+
+         Since the two-phase Navier-Stokes problem used in the MPRANS 
+         module of Proteus
+         has some additional features not include in the above paper,
+         a few additional flags and options are avaliable.
+
+         * density scaling - This flag allows the user to specify 
+           whether the advection and mass terms in the second term
+           of the PCD operator should use the actual density or the
+           scale with the number one.
+
+         * numerical viscosity - This flag specifies whether the 
+           additional viscosity introduced from shock capturing
+           stabilization should be included as part of the viscosity
+           coefficient.
+
+         * mass form - This flag allows the user to specify what form
+           the mass matrix takes, lumped (True) or full (False).
+
+    """
+    def __init__(self,
+                 L,
+                 prefix = None,
+                 bdyNullSpace = False,
+                 density_scaling = True,
+                 numerical_viscosity = True,
                  lumped = True):
         """
         Initialize the two-phase PCD preconditioning class.
@@ -1703,6 +1851,13 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
 
+        self._setSchurlog(global_ksp)
+        if self.bdyNullSpace == True:
+            nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                               vectors = (),
+                                               constant = True)
+            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
+            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
@@ -3697,15 +3852,6 @@ class ChebyshevSemiIteration(LinearSolver):
     A : :class: `p4pyPETSc.Mat`
         The linear system matrix
 
-    b : :class: `p4pyPETSc.Vec`
-        The righthand side vector
-
-    x : :class: `p4pyPETSc.Vec`
-        An initial guess for the solution
-
-    k : int
-        The desired number of iterations
-
     alpha : float
         A's smallest eigenvalue
 
@@ -3725,13 +3871,12 @@ class ChebyshevSemiIteration(LinearSolver):
     implementations.
     """
 
-    def __init__(self, A, b, x, k, alpha, beta, save_iterations = False):
-        # Save and initialize PETSc information
+    def __init__(self,
+                 A,
+                 alpha,
+                 beta,
+                 save_iterations = False):
         self.A_petsc = A
-        self.b_petsc = b
-        self.b_petsc_array = self.b_petsc.getArray()
-        self.x_petsc = x
-        self.x_petsc_array = self.x_petsc.getArray()
 
         # Initialize Linear Solver with superlu matrix
         num_rows = A.getSizes()[1][0]
@@ -3745,11 +3890,10 @@ class ChebyshevSemiIteration(LinearSolver):
                               self.rowptr)
         LinearSolver.__init__(self, A_superlu) 
 
-        self.r_petsc = self.b_petsc.copy()
+        self.r_petsc = p4pyPETSc.Vec().createWithArray(numpy.zeros(num_cols))
+        self.r_petsc.setType('mpi')
         self.r_petsc_array = self.r_petsc.getArray()
         
-        # Store other input values
-        self.k = k
         self.alpha = alpha
         self.beta = beta
         self.relax_parameter = (self.alpha + self.beta) / 2.
@@ -3758,15 +3902,9 @@ class ChebyshevSemiIteration(LinearSolver):
         self.diag.scale(self.relax_parameter)
         self.z = self.A_petsc.getDiagonal().copy()
 
-        # Initialize iteration info
-        self.x_k = x.copy()
-        self.x_k_array = self.x_k.getArray()
-        self.x_km1 = x.copy()
-        self.x_km1.zeroEntries()
-
         self.save_iterations = save_iterations
         if self.save_iterations:
-            self.iteration_results = [self.x_k.getArray().copy()]
+            self.iteration_results = []
 
     @classmethod
     def chebyshev_superlu_constructor(cls):
@@ -3775,20 +3913,42 @@ class ChebyshevSemiIteration(LinearSolver):
         """
         raise RuntimeError('This function is not implmented yet.')
         
-    def apply(self):
+    def apply(self, b, x, k=5):
         """ This function applies the Chebyshev-semi iteration.
+        
+        Parameters
+        ----------
+        b : :class: `p4pyPETSc.Vec`
+            The righthand side vector
+
+        x : :class: `p4pyPETSc.Vec`
+            An initial guess for the solution.  Note that the
+            solution will be returned in the vector too.
+
+        k : int
+            Number of iterations
 
         Returns
         -------
         x : :class:`p4pyPETSc.Vec`
             The result of the Chebyshev semi-iteration.
         """
-        for i in range(self.k):
+        self.x_k = x
+        self.x_k_array = self.x_k.getArray()
+        self.x_km1 = x.copy()
+        self.x_km1.zeroEntries()
+        if self.save_iterations:
+            self.iteration_results.append(self.x_k_array.copy())
+
+        # Since b maybe locked in some instances, we create a copy
+        b_copy = b.copy()
+        
+        for i in range(k):
             w = 1./(1-(self.rho**2)/4.)
             self.r_petsc_array.fill(0.)
             self.computeResidual(self.x_k_array,
                                  self.r_petsc_array,
-                                 self.b_petsc_array)
+                                 b_copy.getArray())
             # x_kp1 = w*(z + x_k - x_km1) + x_km1
             self.r_petsc.scale(-1)
             self.z.pointwiseDivide(self.r_petsc, self.diag)
@@ -3801,7 +3961,7 @@ class ChebyshevSemiIteration(LinearSolver):
             self.x_k_array = self.x_k.getArray()
             if self.save_iterations:
                 self.iteration_results.append(self.x_k.getArray().copy())
-        return self.x_k
+        x.setArray(self.x_k_array)
         
 # The implementation that is commented out here was adopted from
 # the 1996 text Iterative Solution Methods by Owe Axelsson starting
