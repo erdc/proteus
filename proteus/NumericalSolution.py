@@ -1024,7 +1024,7 @@ class NS_base:  # (HasTraits):
 
             p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
             #p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
-            p0.domain.PUMIMesh.reconstructFromProteus2("reconmodel.dmg","reconmodel.smb")
+            p0.domain.PUMIMesh.reconstructFromProteus2("marin_recon.dmg","marin_recon.smb")
         if (hasattr(p0.domain, 'PUMIMesh') and
             n0.adaptMesh and
             self.so.useOneMesh and
