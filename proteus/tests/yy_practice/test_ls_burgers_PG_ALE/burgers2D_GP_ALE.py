@@ -325,6 +325,7 @@ def getResidual(
 
                 dij[j] = max([fabs(cij[0] + cij[1]) * maximum_wave_speed(ui, uj, np.dot(cij, wj) / (cij[0] + cij[1] + 1e-8)),  # for Burgers equation
                               fabs(cji[0] + cji[1]) * maximum_wave_speed(uj, ui, np.dot(cji, wi) / (cji[0] + cji[1] + 1e-8))])  # for symmetry
+                dij[j]  *= 5
 
                 dii -= dij[j]
 
@@ -365,7 +366,8 @@ def P1_calculateMapping_element(nodes_coord, geo_basis, grad_geo_basis):
     # [npx2]=[np,3]x[3,2]
     x_eta_pts = np.dot(grad_geo_basis[:, :, 1], nodes_coord)
     for i in xrange(n_pts):
-        J[i] = np.array([x_ksi_pts[i][:2], x_eta_pts[i][:2]])
+        J[i] = np.array([[x_ksi_pts[i][0], x_eta_pts[i][0]],
+                         [x_ksi_pts[i][1], x_eta_pts[i][1]]])
         detJ[i] = x_ksi_pts[i][0] * x_eta_pts[i][1] - \
             x_ksi_pts[i][1] * x_eta_pts[i][0]
         invJ[i] = np.array([[x_eta_pts[i][1], -x_ksi_pts[i][1]],
