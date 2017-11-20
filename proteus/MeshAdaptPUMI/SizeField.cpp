@@ -347,7 +347,7 @@ static void scaleFormula(double phi, double hmin, double hmax,
 
 static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
                             apf::Vector3 const &curves,
-                            double lambda[3], double eps_u, apf::Vector3 &scale)
+                            double lambda[3], double eps_u, apf::Vector3 &scale,int nsd)
 //Function used to set the size scale vector for the anisotropic ERM size field configuration
 //Inputs:
 // phi is is the distance to the interface
@@ -375,7 +375,6 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
 */
   ///* useful
   
-  std::cout<<"WHAT ARE THE LAMBDAS "<<lambda[0]<<" "<<lambda[1]<<" "<<lambda[2]<<std::endl;
 /*
   scale[0] = h_dest*pow(lambda[1]/lambda[0],0.25);  
   scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
@@ -386,15 +385,16 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
   scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
   scale[2] = 1.0;
 */
-  scale[0] = hmin;//h_dest;  
-  scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
-  scale[2] = sqrt(lambda[0]/lambda[2])*scale[0];
-/*
-  scale[0] = 10.0*hmax;
-  scale[1] = hmax;  
-  scale[2] = 1.0;
-  std::cout<<"WHAT ARE THE scales "<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<std::endl;
-*/
+  if(nsd == 2){
+    scale[0] = h_dest;  
+    scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
+    scale[2] = 1.0;
+  }
+  else{
+    scale[0] = h_dest;  
+    scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
+    scale[2] = sqrt(lambda[0]/lambda[2])*scale[0];
+  }
 
 //3D
 /*
@@ -538,7 +538,7 @@ static apf::Field *getERMSizeFrames(apf::Field *hessians, apf::Field *gradphi, a
     assert(ssa[2].wm >= ssa[1].wm);
     assert(ssa[1].wm >= ssa[0].wm);
     double firstEigenvalue = ssa[2].wm;
-    assert(firstEigenvalue > 1e-16);
+    assert(firstEigenvalue > 1e-12);
     //frame[0] = dir;
     //if (firstEigenvalue > 1e-16)
     //{
@@ -737,7 +737,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   //Get the anisotropic size frame
   if (adapt_type_config == "anisotropic")
   {
-    //size_scale = apf::createLagrangeField(m, "proteus_size_scale", apf::VECTOR, 1);
     double eps_u = 0.002; //distance from the interface
 /*
     apf::Field *phif = m->findField("phi");
@@ -757,10 +756,21 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     //Set the size scale for vertices
     it = m->begin(0);
     apf::Vector3 scale;
-  std::cout<<"Flag2\n";
     while ((v = m->iterate(it)))
     {
-      double vtx_vol = 0;
+      double tempScale = apf::getScalar(size_iso, v, 0);
+      if (tempScale < hmin)
+        apf::setScalar(clipped_vtx, v, 0, -1);
+      else if (tempScale > hmax)
+        apf::setScalar(clipped_vtx, v, 0, 1);
+      else
+        apf::setScalar(clipped_vtx, v, 0, 0);
+      clamp(tempScale, hmin, hmax);
+      apf::setScalar(size_iso,v,0,tempScale);
+    }
+    gradeMesh();
+    it = m->begin(0);
+    while( (v = m->iterate(it)) ){
       double phi;// = apf::getScalar(phif, v, 0);
       apf::Vector3 curve;
       //apf::getVector(curves, v, 0, curve);
@@ -787,33 +797,24 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
       double lambda[3] = {ssa[2].wm, ssa[1].wm, ssa[0].wm};
 
-      if (apf::getScalar(size_iso, v, 0) < hmin)
-        apf::setScalar(clipped_vtx, v, 0, -1);
-      else if (apf::getScalar(size_iso, v, 0) > hmax)
-        apf::setScalar(clipped_vtx, v, 0, 1);
-      else
-        apf::setScalar(clipped_vtx, v, 0, 0);
 
-      scaleFormulaERM(phi, hmin, hmax, apf::getScalar(size_iso, v, 0), curve, lambda, eps_u, scale);
-      //scaleFormulaERM(phi, hmin, hmax, hmax, curve, lambda, eps_u, scale);
+      scaleFormulaERM(phi, hmin, hmax, apf::getScalar(size_iso, v, 0), curve, lambda, eps_u, scale,nsd);
       apf::setVector(size_scale, v, 0, scale);
     }
-  std::cout<<"Flag3\n";
     m->end(it);
     apf::synchronize(size_scale);
-
-/*
-  if(logging_config=="on"){
-    char namebuffer[20];
-    sprintf(namebuffer,"anisotropyPreAdapt_%i",nAdapt);
-    apf::writeVtkFiles(namebuffer, m);
-  }
-*/
 
     //apf::destroyField(gradphi);
     //apf::destroyField(grad2phi);
     //apf::destroyField(curves);
     //apf::destroyField(hess);
+
+    if(logging_config=="on"){
+      char namebuffer[20];
+      sprintf(namebuffer,"pumi_preadapt_aniso_%i",nAdapt);
+      apf::writeVtkFiles(namebuffer, m);
+    }
+
     apf::destroyField(metricf);
     apf::destroyField(frame_comps[0]);
     apf::destroyField(frame_comps[1]);
