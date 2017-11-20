@@ -1474,8 +1474,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.phiHat_dof = numpy.zeros(self.u[0].dof.shape,'d')
                 self.phin_dof = numpy.zeros(self.u[0].dof.shape,'d')
         
-        self.calculateResidual = self.vof.calculateResidual_MCorr_with_VOF3
-        self.calculateJacobian = self.vof.calculateJacobian_MCorr_with_VOF2
+        self.calculateResidual = self.vof.calculateResidual_MCorr_with_VOF4 #3
+        self.calculateJacobian = self.vof.calculateJacobian_MCorr_with_VOF4 #2
 
         self.calculateResidual(#element
             self.timeIntegration.dt,
@@ -1681,7 +1681,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.uL,
             self.coefficients.uR,
             self.phin_dof,
-            self.phiHat_dof)
+            self.phiHat_dof,
+            self.lumped_wx_tStar,
+            self.lumped_wy_tStar)
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
