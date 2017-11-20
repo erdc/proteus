@@ -273,12 +273,9 @@ class NS_base:  # (HasTraits):
                     if comm.isMaster() and p.genMesh:
                         tmesh.readFromPolyFile(p.domain.polyfile)
                         tmesh.writeToFile(p.domain.polyfile)
-                        logEvent("Converting to Proteus Mesh")
-                        mesh=tmesh.convertToProteusMesh(verbose=1)
                     comm.barrier()
-                    if p.genMesh:
-                        mesh = MeshTools.TriangularMesh()
-                        mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
+                    mesh = MeshTools.TriangularMesh()
+                    mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
                     mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
                                                                 nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                 parallelPartitioningType=n.parallelPartitioningType)
@@ -493,8 +490,6 @@ class NS_base:  # (HasTraits):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
-
-            
             if(n.useModel):
               logEvent("Converting Reconstructed PUMI mesh to Proteus")
               p = self.pList[0]
@@ -1229,7 +1224,7 @@ class NS_base:  # (HasTraits):
             if self.opts.hotStart:
                 logEvent("Setting initial conditions from hot start file for "+p.name)
                 tCount = int(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Name'])
-                self.ar[index].n_datasets = tCount+1
+                self.ar[index].n_datasets = tCount + 1
                 time = float(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Value'])
                 if len(self.ar[index].tree.getroot()[-1][-1]) > 1:
                     dt = time - float(self.ar[index].tree.getroot()[-1][-1][-2][0].attrib['Value'])
@@ -1244,7 +1239,7 @@ class NS_base:  # (HasTraits):
                         lm.timeIntegration.tLast = time
                         lm.timeIntegration.t = time
                         lm.timeIntegration.dt = dt
-                self.tCount = tCount+1
+                self.tCount = tCount
             elif p.initialConditions is not None:
                 logEvent("Setting initial conditions for "+p.name)
                 m.setInitialConditions(p.initialConditions,self.tnList[0])
@@ -1669,27 +1664,28 @@ class NS_base:  # (HasTraits):
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
         try:
-            quantDOFs = {}
-            quantDOFs[0] = model.levelModelList[-1].coefficients.phi_s
+            phi_s = {}
+            phi_s[0] = model.levelModelList[-1].coefficients.phi_s
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
                                                                    self.tnList[0],
                                                                    self.tCount,
-                                                                   quantDOFs,
+                                                                   phi_s,
                                                                    res_name_base='phi_s')
-            logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+            logEvent("Writing initial phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass  
 
         #For aux quantity of interest (MQL)        
         try:
-            quantDOFs = {}
-            quantDOFs[0] = model.levelModelList[-1].quantDOFs
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   quantDOFs,
-                                                                   res_name_base='quantDOFs_for_'+model.name)
-            logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                quantDOFs = {}
+                quantDOFs[0] = model.levelModelList[-1].quantDOFs
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='quantDOFs_for_'+model.name)
+                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass   
 
@@ -1787,29 +1783,29 @@ class NS_base:  # (HasTraits):
                                                                                     initialPhase=False,meshChanged=True)
 
         try:
-            quantDOFs = {}
-            try:
-                quantDOFs[0] = model.levelModelList[-1].coefficients.phi_s
-                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                       self.tnList[0],
-                                                                       self.tCount,
-                                                                       quantDOFs,
-                                                                       res_name_base='quantDOFs_for_'+model.name)
-                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
-            except:
-                pass
-            try:
+            phi_s = {}
+            phi_s[0] = model.levelModelList[-1].coefficients.phi_s
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   phi_s,
+                                                                   res_name_base='phi_s')
+            logEvent("Writing phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass
+        
+        try:
+            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                quantDOFs = {}
                 quantDOFs[0] = model.levelModelList[-1].quantDOFs
                 model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
                                                                        self.tnList[0],
                                                                        self.tCount,
                                                                        quantDOFs,
-                                                                       res_name_base='phi_s')
-                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
-            except:
-                pass
+                                                                       res_name_base='quantDOFs_for_'+model.name)        
+                logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
-            pass  
+            pass
 
         #Write bathymetry for Shallow water equations (MQL)
         try:

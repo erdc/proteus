@@ -334,6 +334,28 @@ namespace proteus
                                    int* csrColumnOffsets_eb_w_w,                                   
                                    int* elementFlags,
 				   int* boundaryFlags)=0;
+
+    virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
+                                          int* exteriorElementBoundariesArray,
+                                          int nInteriorElementBoundaries_global,
+                                          int* interiorElementBoundariesArray,
+                                          int* elementBoundaryElementsArray,
+                                          int* elementBoundaryLocalElementBoundariesArray,
+                                          double* mesh_dof,
+                                          double* mesh_velocity_dof,
+                                          double MOVING_DOMAIN,//0 or 1
+                                          int* mesh_l2g,
+                                          double* mesh_trial_trace_ref,
+                                          double* mesh_grad_trial_trace_ref,
+                                          double* normal_ref,
+                                          double* boundaryJac_ref,
+                                          int* vel_l2g,
+                                          double* u_dof,
+                                          double* v_dof,
+                                          double* w_dof,
+                                          double* vel_trial_trace_ref,
+                                          double* ebqe_velocity,
+                                          double* velocityAverage)=0;
     virtual void getTwoPhaseAdvectionOperator(double* mesh_trial_ref,
                                               double* mesh_grad_trial_ref,
                                               double* mesh_dof,
@@ -433,27 +455,6 @@ namespace proteus
                                                int* csrRowIndeces_w_w,
                                                int* csrColumnOffsets_w_w,
                                                double* mass_matrix)=0;
-    virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
-                                          int* exteriorElementBoundariesArray,
-                                          int nInteriorElementBoundaries_global,
-                                          int* interiorElementBoundariesArray,
-                                          int* elementBoundaryElementsArray,
-                                          int* elementBoundaryLocalElementBoundariesArray,
-                                          double* mesh_dof,
-                                          double* mesh_velocity_dof,
-                                          double MOVING_DOMAIN,//0 or 1
-                                          int* mesh_l2g,
-                                          double* mesh_trial_trace_ref,
-                                          double* mesh_grad_trial_trace_ref,
-                                          double* normal_ref,
-                                          double* boundaryJac_ref,
-                                          int* vel_l2g,
-                                          double* u_dof,
-                                          double* v_dof,
-                                          double* w_dof,
-                                          double* vel_trial_trace_ref,
-                                          double* ebqe_velocity,
-                                          double* velocityAverage)=0;
   };
   
   template<class CompKernelType,
@@ -796,25 +797,26 @@ namespace proteus
             mom_u_ham += rho*porosity*(u*grad_u[0]+v*grad_u[1]+w*grad_u[2]);
             dmom_u_ham_grad_u[0]=rho*porosity*u;
             dmom_u_ham_grad_u[1]=rho*porosity*v;
+            dmom_u_ham_grad_u[2]=rho*porosity*w;
             dmom_u_ham_u =rho*porosity*grad_u[0];
             dmom_u_ham_v =rho*porosity*grad_u[1];
             dmom_u_ham_w =rho*porosity*grad_u[2];
-            dmom_u_ham_grad_u[2] =rho*porosity*w;
   
             //v momentum Hamiltonian (advection)
             mom_v_ham += rho*porosity*(u*grad_v[0]+v*grad_v[1]+w*grad_v[2]);
             dmom_v_ham_grad_v[0]=rho*porosity*u;
             dmom_v_ham_grad_v[1]=rho*porosity*v;
+
+            dmom_v_ham_grad_v[2]=rho*porosity*w;
             dmom_v_ham_u =rho*porosity*grad_v[0];
             dmom_v_ham_v =rho*porosity*grad_v[1];
             dmom_v_ham_w =rho*porosity*grad_v[2];
-            dmom_v_ham_grad_v[2] =rho*porosity*w;
      
             /* //w momentum Hamiltonian (advection) */
             mom_w_ham += rho*porosity*(u*grad_w[0]+v*grad_w[1]+w*grad_w[2]);
-            dmom_w_ham_grad_w[0]=porosity*u;
-            dmom_w_ham_grad_w[1]=porosity*v;
-            dmom_w_ham_grad_w[2]=porosity*w;
+            dmom_w_ham_grad_w[0]=rho*porosity*u;
+            dmom_w_ham_grad_w[1]=rho*porosity*v;
+            dmom_w_ham_grad_w[2]=rho*porosity*w;
             dmom_w_ham_u =rho*porosity*grad_w[0];
             dmom_w_ham_v =rho*porosity*grad_w[1];
             dmom_w_ham_w =rho*porosity*grad_w[2];
@@ -953,165 +955,31 @@ namespace proteus
             dmom_w_ham_grad_p[0]=0.0;
             dmom_w_ham_grad_p[1]=0.0;
             dmom_w_ham_grad_p[2]=porosity/rho;
+
+	    //u momentum Hamiltonian (advection
+            dmom_u_ham_grad_u[0]=0.0;
+            dmom_u_ham_grad_u[1]=0.0;
+            dmom_u_ham_grad_u[2]=0.0;
+            dmom_u_ham_u =0.0;
+            dmom_u_ham_v =0.0;
+            dmom_u_ham_w =0.0;
+  
+            //v momentum Hamiltonian (advection)
+            dmom_v_ham_grad_v[0]=0.0;
+            dmom_v_ham_grad_v[1]=0.0;
+            dmom_v_ham_grad_v[2]=0.0;
+            dmom_v_ham_u =0.0;
+            dmom_v_ham_v =0.0;
+            dmom_v_ham_w =0.0;
+	    
+            //w momentum Hamiltonian (advection)
+            dmom_w_ham_grad_w[0]=0.0;
+            dmom_w_ham_grad_w[1]=0.0;
+            dmom_w_ham_grad_w[2]=0.0;
+            dmom_w_ham_u =0.0;
+            dmom_w_ham_v =0.0;
+            dmom_w_ham_w =0.0;
           }
-      }
-      inline
-        void evaluateTPAdvectionCoefficients(const double eps_rho,
-                                             const double rho_0,
-                                             const double rho_1,
-                                             const double useVF,
-                                             const double& vf,
-                                             const double& phi,
-                                             const double& u,
-                                             const double& v,
-                                             const double& w,
-                                             double dmass_adv_p[nSpace],
-                                             double dmom_u_adv_u[nSpace],
-                                             double dmom_v_adv_v[nSpace],
-                                             double dmom_w_adv_w[nSpace])
-      {
-        double H_rho, rho;
-        
-        H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-        
-        rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
-
-        dmass_adv_p[0] = rho*u;
-        dmass_adv_p[1] = rho*v;
-        dmass_adv_p[2] = rho*w;
-
-        dmom_u_adv_u[0] = rho*u;
-        dmom_u_adv_u[1] = rho*v;
-        dmom_u_adv_u[2] = rho*w;
-
-        dmom_v_adv_v[0] = rho*u;
-        dmom_v_adv_v[1] = rho*v;
-        dmom_v_adv_v[2] = rho*w;
-        
-        dmom_w_adv_w[0] = rho*u;
-        dmom_w_adv_w[1] = rho*v;
-        dmom_w_adv_w[2] = rho*w;
-      }                                     
-      inline
-        void evaluateTPInvViscosityMassCoefficients(const int use_numerical_viscosity,
-                                                    const double numerical_viscosity,
-                                                    const double eps_rho,
-                                                    const double eps_mu,
-                                                    const double rho_0,
-                                                    double nu_0,
-                                                    const double rho_1,
-                                                    double nu_1,
-                                                    const double useVF,
-                                                    const double& vf,
-                                                    const double& phi,
-                                                    const double& p,
-                                                    const double& u,
-                                                    const double& v,
-                                                    const double& w,
-                                                    double& mom_p_acc,
-                                                    double& dmom_p_acc_p,
-                                                    double& mom_u_acc,
-                                                    double& dmom_u_acc_u,
-                                                    double& mom_v_acc,
-                                                    double& dmom_v_acc_v,
-                                                    double& mom_w_acc,
-                                                    double& dmom_w_acc_w)
-      {
-        // This should be split off into a seperate function
-        double H_rho, H_mu, rho, nu, mu;
-        
-        H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-        H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-
-        rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
-        nu = nu_0*(1.0-H_mu) + nu_1*H_mu;
-        
-        mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu + use_numerical_viscosity*numerical_viscosity;
-        //mu = rho*nu;
-
-        mom_p_acc = p / mu;
-        dmom_p_acc_p = 1. / mu;
-
-        mom_u_acc = u / mu;
-        dmom_u_acc_u = 1. / mu;
-
-        mom_v_acc = v / mu;
-        dmom_v_acc_v = 1. / mu;
-
-        mom_w_acc = w / mu;
-        dmom_w_acc_w = 1. / mu;
-      }
-      inline
-        void evaluateTPDensityMassCoefficients(const double eps_rho,
-                                               const double rho_0,
-                                               const double rho_1,
-                                               const double useVF,
-                                               const double& vf,
-                                               const double& phi,
-                                               const double& p,
-                                               const double& u,
-                                               const double& v,
-                                               const double& w,
-                                               double& mom_p_acc,
-                                               double& dmom_p_acc_p,
-                                               double& mom_u_acc,
-                                               double& dmom_u_acc_u,
-                                               double& mom_v_acc,
-                                               double& dmom_v_acc_v,
-                                               double& mom_w_acc,
-                                               double& dmom_w_acc_w)
-      {
-        double H_rho, rho;
-        
-        H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-        
-        rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
-
-        mom_p_acc = p * rho;
-        dmom_p_acc_p = rho;
-
-        mom_u_acc = u * rho;
-        dmom_u_acc_u = rho;
-
-        mom_v_acc = v * rho;
-        dmom_v_acc_v = rho;
-        
-        mom_w_acc = w * rho;
-        dmom_w_acc_w = rho;
-      } 
-      inline
-        void evaluateTPInvDensityLaplaceCoefficients(const double eps_rho,
-                                                     const double rho_0,
-                                                     const double rho_1,
-                                                     const double useVF,
-                                                     const double& vf,
-                                                     const double& phi,
-                                                     double mom_p_diff_ten[nSpace],
-                                                     double mom_u_diff_ten[nSpace],
-                                                     double mom_v_diff_ten[nSpace],
-                                                     double mom_w_diff_ten[nSpace])
-      {
-        double H_rho, rho;
-
-        H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-
-        rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
-    
-        mom_p_diff_ten[0] = 1.0 / rho ;
-        mom_p_diff_ten[1] = 1.0 / rho ;
-        mom_p_diff_ten[2] = 1.0 / rho ;
-
-        mom_u_diff_ten[0] = 1.0 / rho ;
-        mom_u_diff_ten[1] = 1.0 / rho ;
-        mom_u_diff_ten[2] = 1.0 / rho ;
-
-        mom_v_diff_ten[0] = 1.0 / rho ;
-        mom_v_diff_ten[1] = 1.0 / rho ;
-        mom_v_diff_ten[2] = 1.0 / rho ;
-
-        mom_w_diff_ten[0] = 1.0 / rho ;
-        mom_w_diff_ten[1] = 1.0 / rho ;
-        mom_w_diff_ten[2] = 1.0 / rho ;
       }
       //VRANS specific
       inline
@@ -2659,16 +2527,13 @@ namespace proteus
                     Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]);
                     Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]);
                     //use the same advection adjoint for all three since we're approximating the linearized adjoint
-                    Lstar_u_u[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
-                    Lstar_v_v[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
-                    Lstar_w_w[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
                     Lstar_u_u[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);//cek COMP/INCOMP form have same adjoint
                     Lstar_v_v[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);//ditto
                     Lstar_w_w[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);//ditto
                     Lstar_p_u[i]=ck.Hamiltonian_adjoint(dmom_u_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
                     Lstar_p_v[i]=ck.Hamiltonian_adjoint(dmom_v_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
                     Lstar_p_w[i]=ck.Hamiltonian_adjoint(dmom_w_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
-                  
+		    
                     //VRANS account for drag terms, diagonal only here ... decide if need off diagonal terms too
                     Lstar_u_u[i]+=ck.Reaction_adjoint(dmom_u_source[0],vel_test_dV[i]);
                     Lstar_v_v[i]+=ck.Reaction_adjoint(dmom_v_source[1],vel_test_dV[i]);
@@ -5240,9 +5105,9 @@ namespace proteus
 
                 if (NONCONSERVATIVE_FORM)
                   {
-                    bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*z_ext*xt_ext;
-                    bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*z_ext*yt_ext;
-                    bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*z_ext*zt_ext;
+                    bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*w_ext*xt_ext;
+                    bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*w_ext*yt_ext;
+                    bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*w_ext*zt_ext;
                   }
                 else
                   {
@@ -5555,6 +5420,330 @@ namespace proteus
           }//ebNE
       }//computeJacobian
 
+      void calculateVelocityAverage(int nExteriorElementBoundaries_global,
+                                    int* exteriorElementBoundariesArray,
+                                    int nInteriorElementBoundaries_global,
+                                    int* interiorElementBoundariesArray,
+                                    int* elementBoundaryElementsArray,
+                                    int* elementBoundaryLocalElementBoundariesArray,
+                                    double* mesh_dof,
+                                    double* mesh_velocity_dof,
+                                    double MOVING_DOMAIN,//0 or 1
+                                    int* mesh_l2g,
+                                    double* mesh_trial_trace_ref,
+                                    double* mesh_grad_trial_trace_ref,
+                                    double* normal_ref,
+                                    double* boundaryJac_ref,
+                                    int* vel_l2g,
+                                    double* u_dof,
+                                    double* v_dof,
+                                    double* w_dof,
+                                    double* vel_trial_trace_ref,
+                                    double* ebqe_velocity,
+                                    double* velocityAverage)
+      {
+        int permutations[nQuadraturePoints_elementBoundary];
+        double xArray_left[nQuadraturePoints_elementBoundary*3],
+          xArray_right[nQuadraturePoints_elementBoundary*3];
+        for (int i=0;i<nQuadraturePoints_elementBoundary;i++)
+          permutations[i]=i;//just to initialize
+        for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+          {
+            register int ebN = exteriorElementBoundariesArray[ebNE];
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+              {
+                register int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace,
+                  ebNE_kb_nSpace = ebNE*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace;
+                velocityAverage[ebN_kb_nSpace+0]=ebqe_velocity[ebNE_kb_nSpace+0];
+                velocityAverage[ebN_kb_nSpace+1]=ebqe_velocity[ebNE_kb_nSpace+1];
+                velocityAverage[ebN_kb_nSpace+2]=ebqe_velocity[ebNE_kb_nSpace+2];
+              }//ebNE
+          }
+        for (int ebNI = 0; ebNI < nInteriorElementBoundaries_global; ebNI++)
+          {
+            register int ebN = interiorElementBoundariesArray[ebNI],
+              left_eN_global   = elementBoundaryElementsArray[ebN*2+0],
+              left_ebN_element  = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+              right_eN_global  = elementBoundaryElementsArray[ebN*2+1],
+              right_ebN_element = elementBoundaryLocalElementBoundariesArray[ebN*2+1],
+              left_eN_nDOF_trial_element = left_eN_global*nDOF_trial_element,
+              right_eN_nDOF_trial_element = right_eN_global*nDOF_trial_element;
+            double jac[nSpace*nSpace],
+              jacDet,
+              jacInv[nSpace*nSpace],
+              boundaryJac[nSpace*(nSpace-1)],
+              metricTensor[(nSpace-1)*(nSpace-1)],
+              metricTensorDetSqrt,
+              normal[3],
+              x,y,z,
+              xt,yt,zt,integralScaling;
+          
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+              {
+                ck.calculateMapping_elementBoundary(left_eN_global,
+                                                    left_ebN_element,
+                                                    kb,
+                                                    left_ebN_element*nQuadraturePoints_elementBoundary+kb,
+                                                    mesh_dof,
+                                                    mesh_l2g,
+                                                    mesh_trial_trace_ref,
+                                                    mesh_grad_trial_trace_ref,
+                                                    boundaryJac_ref,
+                                                    jac,
+                                                    jacDet,
+                                                    jacInv,
+                                                    boundaryJac,
+                                                    metricTensor,
+                                                    metricTensorDetSqrt,
+                                                    normal_ref,
+                                                    normal,
+                                                    x,y,z);
+                xArray_left[kb*3+0] = x;
+                xArray_left[kb*3+1] = y;
+                xArray_left[kb*3+2] = z;
+                ck.calculateMapping_elementBoundary(right_eN_global,
+                                                    right_ebN_element,
+                                                    kb,
+                                                    right_ebN_element*nQuadraturePoints_elementBoundary+kb,
+                                                    mesh_dof,
+                                                    mesh_l2g,
+                                                    mesh_trial_trace_ref,
+                                                    mesh_grad_trial_trace_ref,
+                                                    boundaryJac_ref,
+                                                    jac,
+                                                    jacDet,
+                                                    jacInv,
+                                                    boundaryJac,
+                                                    metricTensor,
+                                                    metricTensorDetSqrt,
+                                                    normal_ref,
+                                                    normal,
+                                                    x,y,z);
+                ck.calculateMappingVelocity_elementBoundary(left_eN_global,
+                                                            left_ebN_element,
+                                                            kb,
+                                                            left_ebN_element*nQuadraturePoints_elementBoundary+kb,
+                                                            mesh_velocity_dof,
+                                                            mesh_l2g,
+                                                            mesh_trial_trace_ref,
+                                                            xt,yt,zt,
+                                                            normal,
+                                                            boundaryJac,
+                                                            metricTensor,
+                                                            integralScaling);
+                xArray_right[kb*3+0] = x;
+                xArray_right[kb*3+1] = y;
+                xArray_right[kb*3+2] = z;
+              }
+            for  (int kb_left=0;kb_left<nQuadraturePoints_elementBoundary;kb_left++)
+              {
+                double errorNormMin = 1.0;
+                for  (int kb_right=0;kb_right<nQuadraturePoints_elementBoundary;kb_right++)
+                  {
+                    double errorNorm=0.0;
+                    for (int I=0;I<nSpace;I++)
+                      {
+                        errorNorm += fabs(xArray_left[kb_left*3+I]
+                                          -
+                                          xArray_right[kb_right*3+I]);
+                      }
+                    if (errorNorm < errorNormMin)
+                      {
+                        permutations[kb_right] = kb_left;
+                        errorNormMin = errorNorm;
+                      }
+                  }
+              }
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+              {
+                register int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace;
+                register double u_left=0.0,
+                  v_left=0.0,
+                  w_left=0.0,
+                  u_right=0.0,
+                  v_right=0.0,
+                  w_right=0.0;
+                register int left_kb = kb,
+                  right_kb = permutations[kb],
+                  left_ebN_element_kb_nDOF_test_element=(left_ebN_element*nQuadraturePoints_elementBoundary+left_kb)*nDOF_test_element,
+                  right_ebN_element_kb_nDOF_test_element=(right_ebN_element*nQuadraturePoints_elementBoundary+right_kb)*nDOF_test_element;
+                //
+                //calculate the velocity solution at quadrature points on left and right
+                //
+                ck.valFromDOF(u_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],u_left);
+                ck.valFromDOF(v_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],v_left);
+                ck.valFromDOF(w_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],w_left);
+                //
+                ck.valFromDOF(u_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],u_right);
+                ck.valFromDOF(v_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],v_right);
+                ck.valFromDOF(w_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],w_right);
+                //
+                velocityAverage[ebN_kb_nSpace+0]=0.5*(u_left + u_right);
+                velocityAverage[ebN_kb_nSpace+1]=0.5*(v_left + v_right);
+                velocityAverage[ebN_kb_nSpace+2]=0.5*(w_left + w_right);
+              }//ebNI
+          }
+      }
+
+      inline
+        void evaluateTPAdvectionCoefficients(const double eps_rho,
+                                             const double rho_0,
+                                             const double rho_1,
+                                             const double useVF,
+                                             const double& vf,
+                                             const double& phi,
+                                             const double& u,
+                                             const double& v,
+                                             const double& w,
+                                             double dmass_adv_p[nSpace],
+                                             double dmom_u_adv_u[nSpace],
+                                             double dmom_v_adv_v[nSpace],
+                                             double dmom_w_adv_w[nSpace])
+      {
+        double H_rho, rho;
+        
+        H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+        
+        rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
+
+        dmass_adv_p[0] = rho*u;
+        dmass_adv_p[1] = rho*v;
+        dmass_adv_p[2] = rho*w;
+
+        dmom_u_adv_u[0] = rho*u;
+        dmom_u_adv_u[1] = rho*v;
+        dmom_u_adv_u[2] = rho*w;
+
+        dmom_v_adv_v[0] = rho*u;
+        dmom_v_adv_v[1] = rho*v;
+        dmom_v_adv_v[2] = rho*w;
+        
+        dmom_w_adv_w[0] = rho*u;
+        dmom_w_adv_w[1] = rho*v;
+        dmom_w_adv_w[2] = rho*w;
+      }                                     
+      inline
+        void evaluateTPInvViscosityMassCoefficients(const int use_numerical_viscosity,
+                                                    const double numerical_viscosity,
+                                                    const double eps_rho,
+                                                    const double eps_mu,
+                                                    const double rho_0,
+                                                    double nu_0,
+                                                    const double rho_1,
+                                                    double nu_1,
+                                                    const double useVF,
+                                                    const double& vf,
+                                                    const double& phi,
+                                                    const double& p,
+                                                    const double& u,
+                                                    const double& v,
+                                                    const double& w,
+                                                    double& mom_p_acc,
+                                                    double& dmom_p_acc_p,
+                                                    double& mom_u_acc,
+                                                    double& dmom_u_acc_u,
+                                                    double& mom_v_acc,
+                                                    double& dmom_v_acc_v,
+                                                    double& mom_w_acc,
+                                                    double& dmom_w_acc_w)
+      {
+        // This should be split off into a seperate function
+        double H_rho, H_mu, rho, nu, mu;
+        
+        H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+        H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+
+        rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
+        nu = nu_0*(1.0-H_mu) + nu_1*H_mu;
+        
+        mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu + use_numerical_viscosity*numerical_viscosity;
+        //mu = rho*nu;
+
+        mom_p_acc = p / mu;
+        dmom_p_acc_p = 1. / mu;
+
+        mom_u_acc = u / mu;
+        dmom_u_acc_u = 1. / mu;
+
+        mom_v_acc = v / mu;
+        dmom_v_acc_v = 1. / mu;
+
+        mom_w_acc = w / mu;
+        dmom_w_acc_w = 1. / mu;
+      }
+      inline
+        void evaluateTPDensityMassCoefficients(const double eps_rho,
+                                               const double rho_0,
+                                               const double rho_1,
+                                               const double useVF,
+                                               const double& vf,
+                                               const double& phi,
+                                               const double& p,
+                                               const double& u,
+                                               const double& v,
+                                               const double& w,
+                                               double& mom_p_acc,
+                                               double& dmom_p_acc_p,
+                                               double& mom_u_acc,
+                                               double& dmom_u_acc_u,
+                                               double& mom_v_acc,
+                                               double& dmom_v_acc_v,
+                                               double& mom_w_acc,
+                                               double& dmom_w_acc_w)
+      {
+        double H_rho, rho;
+        
+        H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+        
+        rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
+
+        mom_p_acc = p * rho;
+        dmom_p_acc_p = rho;
+
+        mom_u_acc = u * rho;
+        dmom_u_acc_u = rho;
+
+        mom_v_acc = v * rho;
+        dmom_v_acc_v = rho;
+        
+        mom_w_acc = w * rho;
+        dmom_w_acc_w = rho;
+      } 
+      inline
+        void evaluateTPInvDensityLaplaceCoefficients(const double eps_rho,
+                                                     const double rho_0,
+                                                     const double rho_1,
+                                                     const double useVF,
+                                                     const double& vf,
+                                                     const double& phi,
+                                                     double mom_p_diff_ten[nSpace],
+                                                     double mom_u_diff_ten[nSpace],
+                                                     double mom_v_diff_ten[nSpace],
+                                                     double mom_w_diff_ten[nSpace])
+      {
+        double H_rho, rho;
+
+        H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+
+        rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
+    
+        mom_p_diff_ten[0] = 1.0 / rho ;
+        mom_p_diff_ten[1] = 1.0 / rho ;
+        mom_p_diff_ten[2] = 1.0 / rho ;
+
+        mom_u_diff_ten[0] = 1.0 / rho ;
+        mom_u_diff_ten[1] = 1.0 / rho ;
+        mom_u_diff_ten[2] = 1.0 / rho ;
+
+        mom_v_diff_ten[0] = 1.0 / rho ;
+        mom_v_diff_ten[1] = 1.0 / rho ;
+        mom_v_diff_ten[2] = 1.0 / rho ;
+
+        mom_w_diff_ten[0] = 1.0 / rho ;
+        mom_w_diff_ten[1] = 1.0 / rho ;
+        mom_w_diff_ten[2] = 1.0 / rho ;
+      }
+      
       void getTwoPhaseAdvectionOperator(double* mesh_trial_ref,
                                         double* mesh_grad_trial_ref,
                                         double* mesh_dof,
@@ -6099,170 +6288,6 @@ namespace proteus
 
       }
 
-      void calculateVelocityAverage(int nExteriorElementBoundaries_global,
-                                    int* exteriorElementBoundariesArray,
-                                    int nInteriorElementBoundaries_global,
-                                    int* interiorElementBoundariesArray,
-                                    int* elementBoundaryElementsArray,
-                                    int* elementBoundaryLocalElementBoundariesArray,
-                                    double* mesh_dof,
-                                    double* mesh_velocity_dof,
-                                    double MOVING_DOMAIN,//0 or 1
-                                    int* mesh_l2g,
-                                    double* mesh_trial_trace_ref,
-                                    double* mesh_grad_trial_trace_ref,
-                                    double* normal_ref,
-                                    double* boundaryJac_ref,
-                                    int* vel_l2g,
-                                    double* u_dof,
-                                    double* v_dof,
-                                    double* w_dof,
-                                    double* vel_trial_trace_ref,
-                                    double* ebqe_velocity,
-                                    double* velocityAverage)
-      {
-        int permutations[nQuadraturePoints_elementBoundary];
-        double xArray_left[nQuadraturePoints_elementBoundary*3],
-          xArray_right[nQuadraturePoints_elementBoundary*3];
-        for (int i=0;i<nQuadraturePoints_elementBoundary;i++)
-          permutations[i]=i;//just to initialize
-        for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
-          {
-            register int ebN = exteriorElementBoundariesArray[ebNE];
-            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
-              {
-                register int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace,
-                  ebNE_kb_nSpace = ebNE*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace;
-                velocityAverage[ebN_kb_nSpace+0]=ebqe_velocity[ebNE_kb_nSpace+0];
-                velocityAverage[ebN_kb_nSpace+1]=ebqe_velocity[ebNE_kb_nSpace+1];
-                velocityAverage[ebN_kb_nSpace+2]=ebqe_velocity[ebNE_kb_nSpace+2];
-              }//ebNE
-          }
-        for (int ebNI = 0; ebNI < nInteriorElementBoundaries_global; ebNI++)
-          {
-            register int ebN = interiorElementBoundariesArray[ebNI],
-              left_eN_global   = elementBoundaryElementsArray[ebN*2+0],
-              left_ebN_element  = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
-              right_eN_global  = elementBoundaryElementsArray[ebN*2+1],
-              right_ebN_element = elementBoundaryLocalElementBoundariesArray[ebN*2+1],
-              left_eN_nDOF_trial_element = left_eN_global*nDOF_trial_element,
-              right_eN_nDOF_trial_element = right_eN_global*nDOF_trial_element;
-            double jac[nSpace*nSpace],
-              jacDet,
-              jacInv[nSpace*nSpace],
-              boundaryJac[nSpace*(nSpace-1)],
-              metricTensor[(nSpace-1)*(nSpace-1)],
-              metricTensorDetSqrt,
-              normal[3],
-              x,y,z,
-              xt,yt,zt,integralScaling;
-          
-            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
-              {
-                ck.calculateMapping_elementBoundary(left_eN_global,
-                                                    left_ebN_element,
-                                                    kb,
-                                                    left_ebN_element*nQuadraturePoints_elementBoundary+kb,
-                                                    mesh_dof,
-                                                    mesh_l2g,
-                                                    mesh_trial_trace_ref,
-                                                    mesh_grad_trial_trace_ref,
-                                                    boundaryJac_ref,
-                                                    jac,
-                                                    jacDet,
-                                                    jacInv,
-                                                    boundaryJac,
-                                                    metricTensor,
-                                                    metricTensorDetSqrt,
-                                                    normal_ref,
-                                                    normal,
-                                                    x,y,z);
-                xArray_left[kb*3+0] = x;
-                xArray_left[kb*3+1] = y;
-                xArray_left[kb*3+2] = z;
-                ck.calculateMapping_elementBoundary(right_eN_global,
-                                                    right_ebN_element,
-                                                    kb,
-                                                    right_ebN_element*nQuadraturePoints_elementBoundary+kb,
-                                                    mesh_dof,
-                                                    mesh_l2g,
-                                                    mesh_trial_trace_ref,
-                                                    mesh_grad_trial_trace_ref,
-                                                    boundaryJac_ref,
-                                                    jac,
-                                                    jacDet,
-                                                    jacInv,
-                                                    boundaryJac,
-                                                    metricTensor,
-                                                    metricTensorDetSqrt,
-                                                    normal_ref,
-                                                    normal,
-                                                    x,y,z);
-                ck.calculateMappingVelocity_elementBoundary(left_eN_global,
-                                                            left_ebN_element,
-                                                            kb,
-                                                            left_ebN_element*nQuadraturePoints_elementBoundary+kb,
-                                                            mesh_velocity_dof,
-                                                            mesh_l2g,
-                                                            mesh_trial_trace_ref,
-                                                            xt,yt,zt,
-                                                            normal,
-                                                            boundaryJac,
-                                                            metricTensor,
-                                                            integralScaling);
-                xArray_right[kb*3+0] = x;
-                xArray_right[kb*3+1] = y;
-                xArray_right[kb*3+2] = z;
-              }
-            for  (int kb_left=0;kb_left<nQuadraturePoints_elementBoundary;kb_left++)
-              {
-                double errorNormMin = 1.0;
-                for  (int kb_right=0;kb_right<nQuadraturePoints_elementBoundary;kb_right++)
-                  {
-                    double errorNorm=0.0;
-                    for (int I=0;I<nSpace;I++)
-                      {
-                        errorNorm += fabs(xArray_left[kb_left*3+I]
-                                          -
-                                          xArray_right[kb_right*3+I]);
-                      }
-                    if (errorNorm < errorNormMin)
-                      {
-                        permutations[kb_right] = kb_left;
-                        errorNormMin = errorNorm;
-                      }
-                  }
-              }
-            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
-              {
-                register int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace;
-                register double u_left=0.0,
-                  v_left=0.0,
-                  w_left=0.0,
-                  u_right=0.0,
-                  v_right=0.0,
-                  w_right=0.0;
-                register int left_kb = kb,
-                  right_kb = permutations[kb],
-                  left_ebN_element_kb_nDOF_test_element=(left_ebN_element*nQuadraturePoints_elementBoundary+left_kb)*nDOF_test_element,
-                  right_ebN_element_kb_nDOF_test_element=(right_ebN_element*nQuadraturePoints_elementBoundary+right_kb)*nDOF_test_element;
-                //
-                //calculate the velocity solution at quadrature points on left and right
-                //
-                ck.valFromDOF(u_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],u_left);
-                ck.valFromDOF(v_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],v_left);
-                ck.valFromDOF(w_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],w_left);
-                //
-                ck.valFromDOF(u_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],u_right);
-                ck.valFromDOF(v_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],v_right);
-                ck.valFromDOF(w_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],w_right);
-                //
-                velocityAverage[ebN_kb_nSpace+0]=0.5*(u_left + u_right);
-                velocityAverage[ebN_kb_nSpace+1]=0.5*(v_left + v_right);
-                velocityAverage[ebN_kb_nSpace+2]=0.5*(w_left + w_right);
-              }//ebNI
-          }
-      }
     };//RANS2P
   
   inline RANS2P_base* newRANS2P(int nSpaceIn,

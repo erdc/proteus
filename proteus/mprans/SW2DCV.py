@@ -435,8 +435,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='SW2DCV',
                  reuse_trial_and_test_quadrature=True,
                  sd = True,
-                 movingDomain=False):
-
+                 movingDomain=False,
+                 bdyNullSpace=False):
+        self.bdyNullSpace=bdyNullSpace
         self.inf_norm_hu=[] #To test 1D well balancing
         self.firstCalculateResidualCall=True
         self.secondCallCalculateResidual=0

@@ -173,6 +173,7 @@ class NF_base:
                         p = None
                         if getPeriodicBoundaryConditions is not None and not parallelPeriodic:
                             p = getPeriodicBoundaryConditions[ci](x,materialFlag)
+                            self.isDOFBoundary[ci][ebNE,k]=gFlag #mql. if periodic BCs then set isDOFBoundary to 1
                         if p is not None:
                             pset.add(ptuple(p))
                             #self.isDOFBoundary[ci][ebNE,k]=1
@@ -199,6 +200,7 @@ class NF_base:
                         p = None
                         if getPeriodicBoundaryConditions is not None:
                             p = getPeriodicBoundaryConditions[ci](x)
+                            self.isDOFBoundary[ci][ebNE,k]=gFlag #mql. if periodic BCs then set isDOFBoundary to 1
                         if p is not None and not parallelPeriodic:
                             if self.periodicBoundaryConditionsDictList[ci].has_key(ptuple(p)):#.hash()):
                                 self.periodicBoundaryConditionsDictList[ci][ptuple(p)].append((ebNE,k))

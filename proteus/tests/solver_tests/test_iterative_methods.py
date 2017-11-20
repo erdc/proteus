@@ -33,11 +33,13 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
     def teardown_method(self,method):
         pass
 
+    @pytest.mark.LinearAlgebraTools
     def test_dense_numpy_2_petsc4py(self):
         A_petsc = LAT.dense_numpy_2_petsc4py(self.quad_mass_matrix)
         A_new = LAT.petsc4py_sparse_2_dense(A_petsc)
         assert np.linalg.norm(self.quad_mass_matrix - A_new) == 0
-            
+
+    @pytest.mark.LinearSolvers
     def test_chebyshev_iteration_1(self):
         '''  Tests the pcd_shell operators produce correct output. '''
         A = self.quad_mass_matrix
@@ -52,16 +54,15 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
         x0_petsc = p4pyPETSc.Vec().createWithArray(x0)
         b1_petsc = p4pyPETSc.Vec().createWithArray(b1)
         solver = LS.ChebyshevSemiIteration(A_petsc,
-                                           b1_petsc,
-                                           x0_petsc,
-                                           20,
                                            alpha,
-                                           beta)
-        solver.apply()
+                                           beta,
+                                           True)
+        solver.apply(b1_petsc, x0_petsc, 20)
         expected = np.load(os.path.join(self._scriptdir,'import_modules/sol_10.npy'))
-        actual = solver.x_k.getArray()
-        assert np.allclose(expected,actual)
-    
+        actual = x0_petsc
+        assert np.allclose(expected,actual.getArray())
+
+    @pytest.mark.LinearSolvers
     def test_chebyshev_iteration_2(self):
         '''  Tests the pcd_shell operators produce correct output. '''
         A = np.diag(1./np.diag(self.quad_mass_matrix)).dot(self.quad_mass_matrix)
@@ -76,13 +77,10 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
         x0_petsc = p4pyPETSc.Vec().createWithArray(x0)
         b1_petsc = p4pyPETSc.Vec().createWithArray(b1)
         solver = LS.ChebyshevSemiIteration(A_petsc,
-                                           b1_petsc,
-                                           x0_petsc,
-                                           20,
                                            alpha,
                                            beta,
                                            save_iterations=True)
-        solver.apply()
+        solver.apply(b1_petsc, x0_petsc, 20)
         expected = np.load(os.path.join(self._scriptdir,'import_modules/sol_20_lst.npy'))
         for i,item in enumerate(expected):
             assert np.allclose(item,solver.iteration_results[i],1e-12)
