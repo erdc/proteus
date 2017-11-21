@@ -262,9 +262,10 @@ class UnitSquareRotation(NCLS.Coefficients):
         because model.stepController.substeps cannot be used.  
         """
 
-        self.mesh.nodeArray[:] += self.model.timeIntegration.dt * \
-            self.mesh.nodeVelocityArray
-        print ">>>>>>>>>>>>>>>>>.moving mesh:", self.model.timeIntegration.dt
+#         self.mesh.nodeArray[:] += self.model.timeIntegration.dt * \
+#             self.mesh.nodeVelocityArray
+#         print ">>>>>>>>>>>>>>>>>.moving mesh:", self.model.timeIntegration.dt
+
         copyInstructions = {}
         return copyInstructions
 #
@@ -274,7 +275,8 @@ class UnitSquareRotation(NCLS.Coefficients):
 
     def calculateResidual(self, *args):
 
-        import burgers2D_GP_ALE as M
+        #         import burgers2D_GP_ALE as M
+        import burgers2D_GP_ALE_M2 as M
 
         M.getResidual(
             *args,
