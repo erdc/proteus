@@ -162,4 +162,4 @@ def get_mesh_velocity(node_coord,
 
     _mesh_velocity_at_node[:] = (_node_coord_smoothed_before - node_coord) / dt
 
-    #_mesh_velocity_at_node[:] = 0.0
+    _mesh_velocity_at_node[:] = 0.0

@@ -395,3 +395,4 @@ def get_ML(nodesArray, elementNodesArray, mesh_trial_ref, mesh_grad_trial_ref, _
 
         area = 0.5 * np.abs(detJ[0])
         _ML[elementNodesArray[e]] += area / 3.0
+    #end-loop-over-e
