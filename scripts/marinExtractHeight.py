@@ -32,7 +32,7 @@ parser.add_option("-a","--accuracy",
 if not paraview.servermanager.ActiveConnection:
     connection = paraview.servermanager.Connect()
 
-reader = servermanager.sources.XdmfReader(FileName=opts.filename)
+reader = servermanager.sources.XDMFReader(FileNames=opts.filename)
 reader.UpdatePipeline()
 timesteps = reader.TimestepValues
 
@@ -42,14 +42,14 @@ xloc = [2.724, 2.228,1.732, 0.582]
 
 lines=[]
 for x in xloc:
-    lines.append(LineSource(Point1=[x,0.5,0.0],Point2=[x,0.5,1.0],Resolution=opts.resolution))
+    lines.append(Line(Point1=[x,0.5,0.0],Point2=[x,0.5,1.0],Resolution=opts.resolution))
 
 probes=[]
 for line in lines:
-    probes.append(ProbePoint(Source=line,Input=reader))
+    probes.append(ProbeLocation(ProbeType=line,Input=reader))
 
 point=PointSource(Center=[0.0,0.5,0.0],NumberOfPoints=1)
-pprobe=ProbePoint(Source=point,Input=reader)
+pprobe=ProbeLocation(ProbeType=point,Input=reader)
 
 outfile = open("height.txt",'w')
 for time in timesteps:

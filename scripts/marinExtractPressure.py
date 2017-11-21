@@ -18,7 +18,7 @@ parser.add_option("-f","--filebase",
 if not paraview.servermanager.ActiveConnection:
     connection = paraview.servermanager.Connect()
 
-reader = servermanager.sources.XdmfReader(FileName=opts.filename)
+reader = servermanager.sources.XDMFReader(FileNames=opts.filename)
 reader.UpdatePipeline()
 timesteps = reader.TimestepValues
 
@@ -30,7 +30,7 @@ points.append(PointSource(Center=[2.4995,0.5255,0.161],NumberOfPoints=1))
 
 probes=[]
 for point in points:
-    probes.append(ProbePoint(Source=point,Input=reader))
+    probes.append(ProbeLocation(ProbeType=point,Input=reader))
 
 outfile = open("pressure.txt",'w')
 for time in timesteps:
