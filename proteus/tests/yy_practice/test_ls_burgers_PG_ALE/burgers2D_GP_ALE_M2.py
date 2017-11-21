@@ -278,7 +278,7 @@ def getResidual(
     mesh_dof[:] += 0.5 * dt * mesh_velocity_dof
 
     # get new lumped mass matrix
-    get_ML(mesh_dof, mesh_l2g, ML_new)
+    get_ML(mesh_dof, mesh_l2g, mesh_trial_ref, mesh_grad_trial_ref, ML_new)
 
     assert np.all(ML_new > 0.), "some element of ML is negative"
 
@@ -386,13 +386,12 @@ def maximum_wave_speed(uL, uR, w, n):
     return maximum_speed
 
 
-def get_ML(nodesArray, elementNodesArray, _ML):
+def get_ML(nodesArray, elementNodesArray, mesh_trial_ref, mesh_grad_trial_ref, _ML):
     _ML[:] = 0.0
 
-    for e in xrange(nElements_global):
+    for e in xrange(elementNodesArray.shape[0]):
         qpt, J, invJ, invJT, detJ = P1_calculateMapping_element(
-            mesh_dof[mesh_l2g[e]], mesh_trial_ref, mesh_grad_trial_ref)
+            nodesArray[elementNodesArray[e]], mesh_trial_ref, mesh_grad_trial_ref)
 
-        area = 0.5 * np.abs(detJ)
-        for i in range(3):
-            _ML[mesh_l2g[e]] += area / 3.0
+        area = 0.5 * np.abs(detJ[0])
+        _ML[elementNodesArray[e]] += area / 3.0
