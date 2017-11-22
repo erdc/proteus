@@ -3,7 +3,7 @@ from proteus import Context
 from proteus.default_n import nLevels
 
 ct = Context.Options([
-    ("T", 0.2, "Time interval [0, T]"),
+    ("T", 0.5, "Time interval [0, T]"),
     ("nDTout", 40, "Times to print out [0,T]"),
     ("checkMass", False, "Check mass or not"),
     ("cfl", 0.3, "Target CFL number"),
