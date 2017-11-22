@@ -16,7 +16,8 @@ ct = Context.Options([
      "method for Time integration: 'be', 'vbdf', 'flcbdf','rk' "),
     ("datafile", 'errorInfo.db', "Filename to save error information"),
     ("useHex", False, "use quadrilateral or not"),
-    ("stablization", 1, "Stabilization method: 0=SUPG, 1=EV, 2=FCT")
+    ("stablization", 1, "Stabilization method: 0=SUPG, 1=EV, 2=FCT"),
+    ("method",1,"Method used to solve ALE: 0=midified ML, 1=piecewise linear moving vertex")
 ], mutable=True)
 
 if ct.useHex:

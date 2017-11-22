@@ -9,7 +9,7 @@ dij = []
 Cx_T = []
 Cy_T = []
 ML_new = []
-
+node_coord = []
 
 def getResidual(
     # double, self.timeIntegration.dt
@@ -183,7 +183,7 @@ def getResidual(
         moving_function):
 
     # declare variables
-    global run_times, dij, Cx_T, Cy_T, ML_new
+    global run_times, dij, Cx_T, Cy_T, ML_new, node_coord
 
     Cx[:] = 0.0
     Cy[:] = 0.0
@@ -193,6 +193,8 @@ def getResidual(
         Cy_T = np.zeros_like(Cy, 'd')
         dij = np.zeros_like(Cx, 'd')
         ML_new = np.zeros_like(ML, 'd')
+        node_coord = np.zeros_like(mesh_dof, 'd')
+
     else:
         Cx_T[:] = 0.0
         Cy_T[:] = 0.0
@@ -200,12 +202,13 @@ def getResidual(
         ML_new[:] = 0.0
 
     # moving mesh for 0.5*dt
-    mesh_dof[:] += 0.5 * dt * mesh_velocity_dof
+    node_coord[:] = mesh_dof
+    node_coord[:] += 0.5 * dt * mesh_velocity_dof
 
     # Since the mesh is new
     for e in xrange(nElements_global):
         qpt, J, invJ, invJT, detJ = P1_calculateMapping_element(
-            mesh_dof[mesh_l2g[e]], mesh_trial_ref, mesh_grad_trial_ref)
+            node_coord[mesh_l2g[e]], mesh_trial_ref, mesh_grad_trial_ref)
 
         dV = np.abs(detJ) * dV_ref
 
@@ -232,7 +235,7 @@ def getResidual(
             vi = vi - wi
             ele_max_speed = max(
                 [np.sqrt(vi[0] * vi[0] + vi[1] * vi[1]), np.sqrt(wi[0] * wi[0] + wi[1] * wi[1]), ele_max_speed])
-        cfl[e, :] = ele_max_speed / elementDiameter[e]
+        cfl[e, :] = ele_max_speed / get_diameter(node_coord[mesh_l2g[e]])[1]
 
         # compute C matrix
         c_x = np.zeros((3, 3), 'd')
@@ -274,11 +277,9 @@ def getResidual(
     # end-of-loop-over-e
     #dij = np.zeros_like(Cx, 'd')
 
-    # moving mesh for 0.5*dt
-    mesh_dof[:] += 0.5 * dt * mesh_velocity_dof
-
-    # get new lumped mass matrix
-    get_ML(mesh_dof, mesh_l2g, mesh_trial_ref, mesh_grad_trial_ref, ML_new)
+    # moving mesh for another 0.5*dt to get new lumped mass matrix
+    node_coord[:] += 0.5 * dt * mesh_velocity_dof
+    get_ML(node_coord, mesh_l2g, mesh_trial_ref, mesh_grad_trial_ref, ML_new)
 
     assert np.all(ML_new > 0.), "some element of ML is negative"
 
@@ -303,8 +304,8 @@ def getResidual(
 
                 cij_norm = np.linalg.norm(cij)
                 cji_norm = np.linalg.norm(cji)
-                nij = cij / cij_norm
-                nji = cji / cji_norm
+                nij = cij / (cij_norm+1e-10)
+                nji = cji / (cji_norm+1e-10)
 
                 vj = velocity[dof_j, :-1]  # =[uj,uj]
                 vi = velocity[dof_i, :-1]  # =[ui,ui]
@@ -396,3 +397,19 @@ def get_ML(nodesArray, elementNodesArray, mesh_trial_ref, mesh_grad_trial_ref, _
         area = 0.5 * np.abs(detJ[0])
         _ML[elementNodesArray[e]] += area / 3.0
     #end-loop-over-e
+
+def get_diameter(element_nodes):
+    _hmax = 0.0
+    _hmin = 0.0
+    N = element_nodes.shape[0]
+    diff = element_nodes.reshape(N,1,3)-element_nodes
+    distance=(diff**2).sum(2)
+
+    _hmax = distance.max()
+
+    i = np.arange(N)
+    distance[i,i]=np.inf
+    
+    _hmin = distance.min()
+    return _hmax, _hmin
+    

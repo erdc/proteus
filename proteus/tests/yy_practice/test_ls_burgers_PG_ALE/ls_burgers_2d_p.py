@@ -237,9 +237,11 @@ class UnitSquareRotation(NCLS.Coefficients):
                              initial_area,
                              self.mesh.nodeVelocityArray)
 
-#         self.mesh.nodeVelocityArray[:] = analyticalSolution[0].mesh_velocity(
-#             self.mesh.nodeArray[:, 0], self.mesh.nodeArray[:, 1])
-
+        #Note that the mesh cannot be updated inside get_residual since is used 
+        #many more times for many other purpose.
+        self.mesh.nodeVelocityArray[:] = analyticalSolution[0].mesh_velocity(
+                 self.mesh.nodeArray[:, 0], self.mesh.nodeArray[:, 1])
+    
         copyInstructions = {}
         return copyInstructions
 #
