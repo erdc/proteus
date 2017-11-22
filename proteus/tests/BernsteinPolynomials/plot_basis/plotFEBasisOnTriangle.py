@@ -5,9 +5,6 @@ from proteus.FemTools import LinearOnCubeWithNodalBasis
 from proteus.FemTools import BernsteinOnCube
 from proteus.FemTools import BernsteinOnSimplex
 
-#psi = LagrangeOnCubeWithNodalBasis(nd=2)
-#psi = BernsteinOnCube(nd=2)
-#psi = LinearOnCubeWithNodalBasis(nd=2)
 #psi = QuadraticOnSimplexWithNodalBasis(nd=2)
 psi = BernsteinOnSimplex(nd=2)
 nDOFs_per_element=6
