@@ -6,21 +6,17 @@ reload(default_p)
 # PARAMETERS #
 ##############
 ct=Context.Options([
+    ("nd",2,"Number of dimensions"),
     ("pDegree",2,"Order of the polynomial approximation"),
     ("refinement",0,"Mesh refinement"),
-    ("useHex",True,"Use quads?"),
-    ("useBernstein",True,"Use Bernstein polynomials"),
+    ("useHex",False,"Use quads?"),
+    ("useBernstein",False,"Use Bernstein polynomials"),
     ("unstructured",False,"Use unstructured triangular mesh")
 ],mutable=True)
 
-#pDegree=2
-#refinement=1
-#useHex=True
-#useBernstein=True
-#xunstructured=False
-
 name = "poisson"
-nd = 2
+#assert ct.nd==2 or ct.nd==3, "Choose nd=2, or 3"
+nd = ct.nd
 initialConditions = None
 
 ##########
@@ -28,12 +24,17 @@ initialConditions = None
 ##########
 nn=(2**ct.refinement)*10+1
 he=1.0/(nn-1.0)
-box=Domain.RectangularDomain(L=(1.0,1.0),
-                             x=(0.0,0.0),
-                             name="box");
+if (nd==2):
+    box=Domain.RectangularDomain(L=(1.0,1.0),
+                                 x=(0.0,0.0),
+                                 name="box");
+else:
+    box=Domain.RectangularDomain(L=(1.0,1.0,1.0),
+                                 x=(0.0,0.0,0.0),
+                                 name="box");
 box.writePoly("box")
 if ct.unstructured:
-    assert useHex==False, "set useHex=False for unstructure meshes"
+    assert ct.useHex==False, "set useHex=False for unstructure meshes"
     domain=Domain.PlanarStraightLineGraphDomain(fileprefix="box")
     domain.boundaryTags = box.boundaryTags
     bt = domain.boundaryTags
@@ -49,33 +50,51 @@ class exact_soln:
     def __init__(self):
         pass
     def uOfXT(self,x,t):
-        return np.sin(2*pi*x[0])*np.sin(2*pi*x[1])
+        if (nd==2):
+            return np.sin(2*pi*x[0])*np.sin(2*pi*x[1])
+        else:
+            return np.sin(2*pi*x[0])*np.sin(2*pi*x[1])*np.sin(2*pi*x[2])
 
     def duOfXT(self,x,t):
-        return [2*pi*np.cos(2*pi*x[0])*np.sin(2*pi*x[1]),
-                2*pi*np.sin(2*pi*x[0])*np.cos(2*pi*x[1])]
+        if (nd==2):
+            return [2*pi*np.cos(2*pi*x[0])*np.sin(2*pi*x[1]),
+                    2*pi*np.sin(2*pi*x[0])*np.cos(2*pi*x[1])]
+        else:
+            return [2*pi*np.cos(2*pi*x[0])*np.sin(2*pi*x[1])*np.sin(2*pi*x[2]),
+                    2*pi*np.sin(2*pi*x[0])*np.cos(2*pi*x[1])*np.sin(2*pi*x[2]),
+                    2*pi*np.sin(2*pi*x[0])*np.sin(2*pi*x[1])*np.cos(2*pi*x[2])]
 analyticalSolution = {0:exact_soln()}
 
 #########################
 # DIFFUSION COEFFICIENT #
 #########################
 def A(x):
-    return numpy.array([[1.0,0.0],[0.0,1.0]],'d')
+    if (nd==2):
+        return numpy.array([[1.0,0.0],[0.0,1.0]],'d')
+    else:
+        return numpy.array([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]],'d')
 aOfX = {0:A}
 
 ##############
 # FORCE TERM #
 ##############
 def f(x):
-    return 8*pi**2*np.sin(2*pi*x[0])*np.sin(2*pi*x[1])
+    if (nd==2):
+        return 8*pi**2*np.sin(2*pi*x[0])*np.sin(2*pi*x[1])
+    else:
+        return 12*pi**2*np.sin(2*pi*x[0])*np.sin(2*pi*x[1])*np.sin(2*pi*x[2])
 fOfX = {0:f}
 
 #######################
 # BOUNDARY CONDITIONS #
 #######################
 def getDBC(x,flag):
-    if x[0] in [0.0,1.0] or x[1] in [0.0,1.0]:
-        return lambda x,t: 0.
+    if (nd==2):
+        if x[0] in [0.0,1.0] or x[1] in [0.0,1.0]:
+            return lambda x,t: 0.
+    else:
+        if x[0] in [0.0,1.0] or x[1] in [0.0,1.0] or x[2] in [0.0,1.0]:
+            return lambda x,t: 0.
 dirichletConditions = {0:getDBC}
 
 coefficients = TransportCoefficients.PoissonEquationCoefficients({0:A},{0:f},nc,nd,l2proj=[False])
