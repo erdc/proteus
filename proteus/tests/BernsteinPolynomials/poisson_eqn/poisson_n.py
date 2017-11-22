@@ -25,7 +25,10 @@ else:
     if ct.pDegree == 1:
         femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
     elif ct.pDegree == 2:
-        femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
+        if ct.useBernstein:
+            femSpaces = {0:C0_AffineBernsteinOnSimplex}
+        else:
+            femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
         print "pDegree = %s not recognized " % ct.pDegree_vof
     elementQuadrature = SimplexGaussQuadrature(nd,quad_order)
