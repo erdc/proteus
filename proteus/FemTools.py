@@ -1010,38 +1010,38 @@ class BernsteinOnSimplex(LocalFunctionSpace):
         if nd == 1:
             for i in range(nd+1): #0,1
                 self.basis.append(lambda  xi, i=i:
-                                  baryCoords['1d'][i](xi)*(2.0*baryCoords['1d'][i](xi)-1.0))
+                                  baryCoords['1d'][i](xi)**2.0)
                 self.basisTrace[0].append(lambda xBar, i=i:
                                         self.basis[i](self.referenceElement.boundaryMapList[0](xBar)))
                 self.basisTrace[1].append(lambda xBar, i=i:
                                         self.basis[i](self.referenceElement.boundaryMapList[1](xBar)))
                 self.gradientList.append(lambda xi, i=i:
-                                         (4.0*baryCoords['1d'][i](xi)-1.0)*baryGrads['1d'][i])
+                                         2.0*baryCoords['1d'][i](xi)*baryGrads['1d'][i])
                 self.basisGradients.append(lambda xi, i=i: self.gradientList[i](xi))
                 self.basisGradientsTrace[0].append(lambda xBar, i=i:
                                      self.gradientList[i](self.referenceElement.boundaryMapList[0](xBar)))
                 self.basisGradientsTrace[1].append(lambda xBar, i=i:
                                      self.gradientList[i](self.referenceElement.boundaryMapList[1](xBar)))
                 self.basisHessians.append(lambda xi, i=i:
-                                              4.0*numpy.outer(baryGrads['1d'][i],baryGrads['1d'][i]))
+                                          2.0*numpy.outer(baryGrads['1d'][i],baryGrads['1d'][i]))
             #end 0,1
             #2
-            self.basis.append(lambda xi: 4.0*baryCoords['1d'][0](xi)*baryCoords['1d'][1](xi))
+            self.basis.append(lambda xi: 2.0*baryCoords['1d'][0](xi)*baryCoords['1d'][1](xi))
             self.basisTrace[0].append(lambda xBar:
                                       self.basis[2](self.referenceElement.boundaryMapList[0](xBar)))
             self.basisTrace[1].append(lambda xBar:
                                       self.basis[2](self.referenceElement.boundaryMapList[1](xBar)))
             self.gradientList.append(lambda xi:
-                                     4.0*baryCoords['1d'][1](xi)*baryGrads['1d'][0]+
-                                     4.0*baryCoords['1d'][0](xi)*baryGrads['1d'][1])
+                                     2.0*baryCoords['1d'][1](xi)*baryGrads['1d'][0]+
+                                     2.0*baryCoords['1d'][0](xi)*baryGrads['1d'][1])
             self.basisGradients.append(lambda xi: self.gradientList[2](xi))
             self.basisGradientsTrace[0].append(lambda xBar:
                               self.gradientList[2](self.referenceElement.boundaryMapList[0](xBar)))
             self.basisGradientsTrace[1].append(lambda xBar:
                               self.gradientList[2](self.referenceElement.boundaryMapList[1](xBar)))
             self.basisHessians.append(lambda xi:
-                                          (4.0*numpy.outer(baryGrads['1d'][0],baryGrads['1d'][1])+
-                                           4.0*numpy.outer(baryGrads['1d'][1],baryGrads['1d'][0])))
+                                          (2.0*numpy.outer(baryGrads['1d'][0],baryGrads['1d'][1])+
+                                           2.0*numpy.outer(baryGrads['1d'][1],baryGrads['1d'][0])))
         elif nd == 2:
             #NOTE (mql): the formulas for the basis functions and its first derivatives are grl
             # with respect to the polynomial order. The Hessian is computed assuming order=2
