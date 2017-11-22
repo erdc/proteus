@@ -4,9 +4,9 @@ from proteus.FemTools import LagrangeOnCubeWithNodalBasis
 from proteus.FemTools import LinearOnCubeWithNodalBasis
 from proteus.FemTools import BernsteinOnCube
 
+#psi = LinearOnCubeWithNodalBasis(nd=2)
 #psi = LagrangeOnCubeWithNodalBasis(nd=2)
 psi = BernsteinOnCube(nd=2)
-#psi = LinearOnCubeWithNodalBasis(nd=2)
 nDOFs_per_element=9
 
 from mpl_toolkits.mplot3d import Axes3D
