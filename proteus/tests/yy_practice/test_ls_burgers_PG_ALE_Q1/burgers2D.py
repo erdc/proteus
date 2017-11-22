@@ -113,27 +113,27 @@ nDTout = ct.nDTout
 epsFactHeaviside = epsFactDirac = epsFact_vof = 1.5
 epsFactRedistance = 0.33
 epsFactDiffusion = 10.0
-#
-# if useMetrics:
-#     shockCapturingFactor_vof = 0.5
-#     shockCapturingFactor_ls = 0.5
-#     shockCapturingFactor_rd = 0.5
-#     lag_shockCapturing_vof = True
-#     lag_shockCapturing_ls = True
-#     lag_shockCapturing_rd = False
-# else:
-#     shockCapturingFactor_vof = 0.2
-#     shockCapturingFactor_ls = 0.2
-#     shockCapturingFactor_rd = 0.9
-#     lag_shockCapturing_vof = True
-#     lag_shockCapturing_ls = True
-#     lag_shockCapturing_rd = False
+
+if useMetrics:
+    shockCapturingFactor_vof = 0.5
+    shockCapturingFactor_ls = 0.5
+    shockCapturingFactor_rd = 0.5
+    lag_shockCapturing_vof = True
+    lag_shockCapturing_ls = True
+    lag_shockCapturing_rd = False
+else:
+    shockCapturingFactor_vof = 0.2
+    shockCapturingFactor_ls = 0.2
+    shockCapturingFactor_rd = 0.9
+    lag_shockCapturing_vof = True
+    lag_shockCapturing_ls = True
+    lag_shockCapturing_rd = False
 
 # # use absolute tolerances on al models
 # atolRedistance = max(1.0e-12, 0.1 * he)
 # atolConservation = max(1.0e-12, 0.001 * he**2)
 # atolVolumeOfFluid = max(1.0e-12, 0.001 * he**2)
-# atolLevelSet = max(1.0e-12, 0.001 * he**2)
+atolLevelSet = max(1.0e-12, 0.001 * he**2)
 # controls
 # rits is do a set number of iterations, r-true uses true residual, PETSc
 # default is preconditioned residual

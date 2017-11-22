@@ -112,6 +112,6 @@ maxLineSearches = 1
 
 #checkMass = True
 
-if not applyCorrection and checkMass:
-    auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryLS(
-        "rotation2dnc" + `lRefinement`)]
+# if not applyCorrection and checkMass:
+#     auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryLS(
+#         "rotation2dnc" + `lRefinement`)]
