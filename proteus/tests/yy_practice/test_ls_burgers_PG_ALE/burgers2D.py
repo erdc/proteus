@@ -3,7 +3,7 @@ from proteus import Context
 from proteus.default_n import nLevels
 
 ct = Context.Options([
-    ("T", 0.5, "Time interval [0, T]"),
+    ("T", 0.2, "Time interval [0, T]"),
     ("nDTout", 40, "Times to print out [0,T]"),
     ("checkMass", False, "Check mass or not"),
     ("cfl", 0.3, "Target CFL number"),
@@ -12,8 +12,7 @@ ct = Context.Options([
     ("unstructured", False, "unstructured mesh or not"),
     ("ncells", 32, "Specify initial mesh size by giving number of cells in each direction"),
     ("nLevels", 1, "number of refiments"),
-    ("timeIntegration_ls", 'be',
-     "method for Time integration: 'be', 'vbdf', 'flcbdf','rk' "),
+    ("timeIntegration_ls", 'be', "method for Time integration: 'be', 'vbdf', 'flcbdf','rk' "),
     ("datafile", 'errorInfo.db', "Filename to save error information"),
     ("useHex", False, "use quadrilateral or not"),
     ("stablization", 1, "Stabilization method: 0=SUPG, 1=EV, 2=FCT"),
