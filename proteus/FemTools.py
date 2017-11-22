@@ -932,36 +932,38 @@ class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
 
 class BernsteinOnSimplex(LocalFunctionSpace):
     """
-    Quadratic polynomials on the unit nd-simplex with the nodal basis.
+    Quadratic Bernstein polynomials on the unit nd-simplex.
 
-    Nodal basis functions on the reference nd-simplex (nd <=3) with
-    coordinates xi[0],xi[1],and xi[2]. The basis functions are
-    numbered according to
+    The basis functions are numbered according to
 
     .. math::
 
-    \psi &= \lambda_i(2\lambda_i-1)  0<= i<= d
-    \psi &= 4\lambda_j\lambda_k       0<= j < k <= d
+    \psi &= \lambda_i^2               0<= i<= d
+    \psi &= 2\lambda_j\lambda_k       0<= j < k <= d
 
     where :math:`\lambda_i` is the barycentric coordinate associated
-    with node i (i.e., it's 1 at node i and zero elsewhere)
+    with node i (i.e., it's 1 at node i and zero elsewhere). 
+    These can be generalized to:
+
+    \psi &= p!/(i!j!k!)\lambda_0^i\lambda_1^j\lambda_2^k, 0<=i,j,k<=order, i+j+k=order
 
     Gradients of shape functions are
 
     .. math::
 
-     \nabla \psi_i &= (4\lambda_i-1)\nabla\lambda_i   0<= i <= d
-     \nabla \psi_i &= 4\lambda_k\nabla\lambda_j + 4\lambda_j\nabla\lambda_k \mbox{for} 0 <= j < k <= d
+     \nabla \psi_i &= 2\lambda_i\nabla\lambda_i   0<= i <= d
+     \nabla \psi_i &= 2\lambda_k\nabla\lambda_j + 2\lambda_j\nabla\lambda_k \mbox{for} 0 <= j < k <= d
+
+    which again can be generalized via the general formula above.
 
     In 2d we have
 
     .. math::
 
-    \psi_i &= \lambda_i(2\lambda_i-1)  0<= i<= 2
-    \psi_3 &= 4\lambda_0\lambda_1
-    \psi_4 &= 4\lambda_1\lambda_2
-    \psi_5 &= 4\lambda_0\lambda_2
-
+    \psi_i &= \lambda_i^2  0<= i<= 2
+    \psi_3 &= 2\lambda_0\lambda_1
+    \psi_4 &= 2\lambda_1\lambda_2
+    \psi_5 &= 2\lambda_0\lambda_2
 
     2d numberings for :math:`\psi`
 
@@ -982,13 +984,13 @@ class BernsteinOnSimplex(LocalFunctionSpace):
 
     .. math::
 
-    \psi_i &= \lambda_i(2\lambda_i-1)  0<= i<= 3
-    \psi_4 &= 4\lambda_0\lambda_1
-    \psi_5 &= 4\lambda_1\lambda_2
-    \psi_6 &= 4\lambda_2\lambda_3
-    \psi_7 &= 4\lambda_0\lambda_2
-    \psi_8 &= 4\lambda_1\lambda_3
-    \psi_9 &= 4\lambda_0\lambda_3
+    \psi_i &= \lambda_i^2  0<= i<= 3
+    \psi_4 &= 2\lambda_0\lambda_1
+    \psi_5 &= 2\lambda_1\lambda_2
+    \psi_6 &= 2\lambda_2\lambda_3
+    \psi_7 &= 2\lambda_0\lambda_2
+    \psi_8 &= 2\lambda_1\lambda_3
+    \psi_9 &= 2\lambda_0\lambda_3
     """
     def __init__(self,nd=3):
         from RefUtils import baryCoords
@@ -1103,11 +1105,11 @@ class BernsteinOnSimplex(LocalFunctionSpace):
                                           2.0*numpy.outer(baryGrads['2d'][i+r],baryGrads['2d'][i]))
 
         elif nd == 3:
+            # NOTE (mql): the formulas are not general; i.e., I assume order=2
             nsofar=0
-            for i in range(nd+1):
+            for i in range(nd+1): #0,1,2,3
                 self.basis.append(lambda xi, i=i:
-                                  baryCoords['3d'][i](xi)*(2.0*baryCoords['3d'][i](xi)-1.0))
-
+                                  baryCoords['3d'][i](xi)**2.0)
                 self.basisTrace[0].append(lambda xBar, nsofar=nsofar:
                                  self.basis[nsofar](self.referenceElement.boundaryMapList[0](xBar)))
                 self.basisTrace[1].append(lambda xBar, nsofar=nsofar:
@@ -1117,8 +1119,7 @@ class BernsteinOnSimplex(LocalFunctionSpace):
                 self.basisTrace[3].append(lambda xBar, nsofar=nsofar:
                                  self.basis[nsofar](self.referenceElement.boundaryMapList[3](xBar)))
                 self.gradientList.append(lambda xi, i=i, nsofar=nsofar:
-                                         (4.0*baryCoords['3d'][i](xi)-1.0)*baryGrads['3d'][i])
-
+                                         2.0*baryCoords['3d'][i](xi)*baryGrads['3d'][i])
                 self.basisGradients.append(lambda xi, nsofar=nsofar:
                                            self.gradientList[nsofar](xi))
                 for ib in range(nd+1):
@@ -1126,7 +1127,7 @@ class BernsteinOnSimplex(LocalFunctionSpace):
                          self.gradientList[nsofar](self.referenceElement.boundaryMapList[ib](xBar)))
                 #end ib
                 self.basisHessians.append(lambda xi, i=i:
-                                          4.0*numpy.outer(baryGrads['3d'][i],baryGrads['3d'][i]))
+                                          2.0*numpy.outer(baryGrads['3d'][i],baryGrads['3d'][i]))
                 nsofar += 1
                 #end ib
             #end for nd+1
@@ -1136,7 +1137,7 @@ class BernsteinOnSimplex(LocalFunctionSpace):
             for r in range(1,nd+1): #1,2,3
                 for i in range(nd-r+1):
                     self.basis.append(lambda xi, i=i, r=r:
-                                      4.0*baryCoords['3d'][i](xi)*baryCoords['3d'][i+r](xi))
+                                      2.0*baryCoords['3d'][i](xi)*baryCoords['3d'][i+r](xi))
                     self.basisTrace[0].append(lambda xBar, nsofar=nsofar:
                          self.basis[nsofar](self.referenceElement.boundaryMapList[0](xBar)))
                     self.basisTrace[1].append(lambda xBar, nsofar=nsofar:
@@ -1146,8 +1147,8 @@ class BernsteinOnSimplex(LocalFunctionSpace):
                     self.basisTrace[3].append(lambda xBar, nsofar=nsofar:
                          self.basis[nsofar](self.referenceElement.boundaryMapList[3](xBar)))
                     self.gradientList.append(lambda xi, i=i, r=r:
-                                             4.0*baryCoords['3d'][i+r](xi)*baryGrads['3d'][i]+
-                                             4.0*baryCoords['3d'][i](xi)*baryGrads['3d'][i+r])
+                                             2.0*baryCoords['3d'][i+r](xi)*baryGrads['3d'][i]+
+                                             2.0*baryCoords['3d'][i](xi)*baryGrads['3d'][i+r])
                     self.basisGradients.append(lambda xi, nsofar=nsofar:
                                                self.gradientList[nsofar](xi))
                     for ib in range(nd+1):
@@ -1155,8 +1156,8 @@ class BernsteinOnSimplex(LocalFunctionSpace):
                              self.gradientList[nsofar](self.referenceElement.boundaryMapList[ib](xBar)))
                     #end ib
                     self.basisHessians.append(lambda xi, i=i, nsofar=nsofar, r=r:
-                                              4.0*numpy.outer(baryGrads['3d'][i],baryGrads['3d'][i+r])+
-                                              4.0*numpy.outer(baryGrads['3d'][i+r],baryGrads['3d'][i]))
+                                              2.0*numpy.outer(baryGrads['3d'][i],baryGrads['3d'][i+r])+
+                                              2.0*numpy.outer(baryGrads['3d'][i+r],baryGrads['3d'][i]))
                     nsofar += 1
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
