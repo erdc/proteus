@@ -55,14 +55,14 @@ class TestVOF():
         ns.calculateSolution('poisson')
         
         # COMPARE VS SAVED FILES #
-        #expected_path = 'comparison_files/vof_level_3_SUPG.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file('vof_level_3_SUPG.h5','r')
-        #assert np.allclose(expected.root.u_t2,
-        #                   actual.root.u_t2,
-        #                   atol=1e-10)
-        #expected.close()
-        #actual.close()
+        expected_path = 'comparison_files/'+self.so.name+'.h5' 
+        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        actual = tables.open_file(self.so.name+'.h5','r')                
+        assert np.allclose(expected.root.u0_t1,
+                           actual.root.u0_t1,
+                           atol=1e-10)
+        expected.close()
+        actual.close()
 
     def test_2D_simplex(self):
         poisson_p.ct.nd = 2
@@ -79,17 +79,14 @@ class TestVOF():
                                                opts)
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('poisson')
-        
+
         # COMPARE VS SAVED FILES #
-        #expected_path = 'comparison_files/vof_level_3_SUPG.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file('vof_level_3_SUPG.h5','r')
-        #assert np.allclose(expected.root.u_t2,
-        #                   actual.root.u_t2,
-        #                   atol=1e-10)
-        #expected.close()
-        #actual.close()        
-        
+        expected_path = 'comparison_files/'+self.so.name+'.h5' 
+        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        actual = tables.open_file(self.so.name+'.h5','r')        
+        assert np.allclose(expected.root.u0_t1,
+                           actual.root.u0_t1,
+                           atol=1e-10)
 
     def test_3D_hex(self):
         poisson_p.ct.nd = 3
@@ -107,6 +104,14 @@ class TestVOF():
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('poisson')
 
+        # COMPARE VS SAVED FILES #
+        expected_path = 'comparison_files/'+self.so.name+'.h5' 
+        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        actual = tables.open_file(self.so.name+'.h5','r')
+        assert np.allclose(expected.root.u0_t1,
+                           actual.root.u0_t1,
+                           atol=1e-10)
+        
     def test_3D_simplex(self):
         poisson_p.ct.nd = 3
         poisson_p.ct.useHex = False
@@ -122,3 +127,11 @@ class TestVOF():
                                                opts)
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('poisson')        
+
+        # COMPARE VS SAVED FILES #
+        expected_path = 'comparison_files/'+self.so.name+'.h5' 
+        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        actual = tables.open_file(self.so.name+'.h5','r')
+        assert np.allclose(expected.root.u0_t1,
+                           actual.root.u0_t1,
+                           atol=1e-10)        
