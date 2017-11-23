@@ -567,9 +567,51 @@ class BernsteinOnCube(LocalFunctionSpace):
 
     Bernstein basis functions on the reference nd-cube (nd <=3) with
     coordinates xi[0],xi[1],and xi[2]. 
-    The basis functions are numbered according to the nodes.
-    NOTE: The polynomials are defined for arbitrary order but the 
-    numbering and other things are just defined for second degree polynomials. 
+    The basis functions are numbered as follows:     
+    ##############
+    # *** 2D *** #
+    ##############
+    ###########
+    # Order=1 #
+    ###########
+    3--2
+    |  |
+    0--1
+    ###########
+    # Order=2 #
+    ###########
+    3-6-2
+    | | |
+    7-8-5
+    | | |
+    0-4-1
+    ###########
+    # Order=3 #
+    ###########
+    3--9--8--2
+    |  |  |  |
+    10-14-15-7
+    |  |  |  |
+    11-12-13-6
+    |  |  |  |
+    0--4--5--1
+    ###########
+    # Order=4 #
+    ###########
+    3--12-11-10-2
+    |  |  |  |  |
+    13-22-23-24-9
+    |  |  |  |  |
+    14-19-20-21-8
+    |  |  |  |  |
+    15-16-17-18-7
+    |  |  |  |  |
+    0--4--5--6--1
+
+    NOTE: *** The polynomials are defined for arbitrary order in 1D. 
+              This definition is carried to multi-D via tensor products. 
+          *** The numbering is defined for arbitrary order (via funMap) in 2D.
+          *** TODO: define hessians and higher order deriavtives 
     """
     from math import factorial 
 
@@ -589,16 +631,17 @@ class BernsteinOnCube(LocalFunctionSpace):
 
         self.quadrature = LobattoEdgeAlt(order=order)
         for i in range(order+1):
-            self.nodes.append(self.quadrature.points[i][0] )
-
+            self.nodes.append(self.quadrature.points[i][0])
         # Define 1D functions using definition via binomial coefficients
         self.fun=[]
         self.dfun=[]
-        #self.dfun2=[]
+        #self.dfun2=[] 
 
         for k in range(order+1):
-            self.fun.append(lambda x,n=order,k=k: self.nChooseK(n,k)*((x+1)/2.)**k*((1-x)/2.)**(n-k))
-            self.dfun.append(lambda x,n=order,k=k: -2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
+            self.fun.append(lambda x,n=order,k=k:
+                            self.nChooseK(n,k)*((x+1)/2.)**k*((1-x)/2.)**(n-k))
+            self.dfun.append(lambda x,n=order,k=k:
+                             -2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
             #self.dfun2.append(lambda x,n=order,k=k: ...)
 
         # Define multi-dimensional stuff
@@ -609,30 +652,57 @@ class BernsteinOnCube(LocalFunctionSpace):
             basisGradients = self.dfun
             funMap=[0,2,1]
         elif nd == 2:
+            #Define the basis and its gradient via tensor products
             for j in range(order+1):
                 for i in range(order+1):
                     basis.append(lambda xi,i=i,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
-                    basisGradients.append(lambda xi,i=i,j=j:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
-                                                                         self. fun[i](xi[0])*self.dfun[j](xi[1])]))
-            funMap=[0,7,3,  4,8,6,   1,5,2]
+                    basisGradients.append(lambda xi,i=i,j=j:
+                                          numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
+                                                       self. fun[i](xi[0])*self.dfun[j](xi[1])]))
+            #Define numbering for arbitrary order (see above)
+            funMap=np.zeros((order+1)**2,'i')
+            for i in range(order+1):
+                #auxiliary vector to construct ith column of funMap
+                vec=np.zeros(order+1)
+                # COMPUTE BOTTOM AND UPPER ROW OF funMap #
+                if (i==0): #left column
+                    vec[0]=0
+                    vec[order]=3
+                elif (i==order): #right column
+                    vec[0]=1
+                    vec[order]=2
+                else: #middle columns                    
+                    vec[0]=nd+1+i #bottom row
+                    vec[order]=nd+2*order+(order-1)-i #upper row
+                # COMPUTE MIDDLE ROWS OF funMap #
+                for k in range(1,order):
+                    if (i==0): #left column
+                        vec[order-k] = nd+3*order-2+k
+                    elif (i==order): #right column
+                        vec[k] = nd+order+k
+                    else: #middle columns
+                        vec[k] = (2*nd)*(order-1)+2*nd-1+i+(k-1)*(order-1)
+                #print vec
+                funMap[i*(order+1):(i+1)*(order+1)]=vec[:]
+                #print funMap
         elif nd == 3:
             for k in range(order+1):
                 for j in range(order+1):
                     for i in range(order+1):
-                        basis.append(
-                            lambda xi,i=i,j=j,k=k: self.fun[i](xi[0])*self.fun[j](xi[1])*self.fun[k](xi[2]))
-                        basisGradients.append(
-                            lambda xi,i=i,j=j,k=k: numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1])*self. fun[k](xi[2]),
-                                                                self. fun[i](xi[0])*self.dfun[j](xi[1])*self. fun[k](xi[2]),
-                                                                self. fun[i](xi[0])*self. fun[j](xi[1])*self.dfun[k](xi[2])]))
+                        basis.append(lambda xi,i=i,j=j,k=k:
+                                     self.fun[i](xi[0])*self.fun[j](xi[1])*self.fun[k](xi[2]))
+                        basisGradients.append(lambda xi,i=i,j=j,k=k:
+                         numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1])*self. fun[k](xi[2]),
+                                      self. fun[i](xi[0])*self.dfun[j](xi[1])*self. fun[k](xi[2]),
+                                      self. fun[i](xi[0])*self. fun[j](xi[1])*self.dfun[k](xi[2])]))
             funMap = [ 0, 8, 1,
-                      11,20, 9,
+                       11,20, 9,
                        3,10, 2,
-                      12,21,13,
-                      24,26,22,
-                      15,23,14,
+                       12,21,13,
+                       24,26,22,
+                       15,23,14,
                        4,16, 5,
-                      19,25,17,
+                       19,25,17,
                        7,18, 6]
 
         # Reorder local functions
