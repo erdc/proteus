@@ -6,8 +6,8 @@ from proteus.FemTools import BernsteinOnCube
 
 #psi = LinearOnCubeWithNodalBasis(nd=2)
 #psi = LagrangeOnCubeWithNodalBasis(nd=2)
-psi = BernsteinOnCube(nd=2)
-nDOFs_per_element=9
+psi = BernsteinOnCube(nd=2,order=4)
+nDOFs_per_element = len(psi.basis)
 
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -31,7 +31,8 @@ for i in range(nDOFs_per_element):
     plt.colorbar()
     plt.axis('tight')
     plt.savefig('2DView_basis_0'+str(i)+'.png')
-
+    plt.close()
+    
 #3D plot
 for i in range(nDOFs_per_element):
     fig = plt.figure()
@@ -42,4 +43,4 @@ for i in range(nDOFs_per_element):
     ax.plot_surface(xi,yi,zi, rstride=1, cstride=1, cmap=cm.RdBu, linewidth=0, antialiased=False)
     plt.axis('tight')
     plt.savefig('3DView_basis_0'+str(i)+'.png')    
-    
+    plt.close()
