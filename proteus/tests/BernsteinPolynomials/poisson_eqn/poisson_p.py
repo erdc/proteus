@@ -1,21 +1,9 @@
 from proteus import *
 from proteus.default_p import *
-reload(default_p)
-
-##############
-# PARAMETERS #
-##############
-ct=Context.Options([
-    ("nd",2,"Number of dimensions"),
-    ("pDegree",2,"Order of the polynomial approximation"),
-    ("refinement",0,"Mesh refinement"),
-    ("useHex",True,"Use quads?"),
-    ("useBernstein",True,"Use Bernstein polynomials"),
-    ("unstructured",False,"Use unstructured triangular mesh")
-],mutable=True)
+from parameters_for_poisson import *
 
 name = "poisson"
-#assert ct.nd==2 or ct.nd==3, "Choose nd=2, or 3"
+assert ct.nd==2 or ct.nd==3, "Choose nd=2, or 3"
 nd = ct.nd
 initialConditions = None
 
