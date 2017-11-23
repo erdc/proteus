@@ -641,7 +641,9 @@ class BernsteinOnCube(LocalFunctionSpace):
             self.fun.append(lambda x,n=order,k=k:
                             self.nChooseK(n,k)*((x+1)/2.)**k*((1-x)/2.)**(n-k))
             self.dfun.append(lambda x,n=order,k=k:
-                             -2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
+                             #-2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
+                             # Rule out the cases when 1-x or 1+x = 0. This is to avoid warnings due to division by zero
+                             0. if 1-x == 0. or 1+x == 0. else -2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
             #self.dfun2.append(lambda x,n=order,k=k: ...)
 
         # Define multi-dimensional stuff
@@ -1137,19 +1139,18 @@ class BernsteinOnSimplex(LocalFunctionSpace):
                     lambda xi, i=i:
                     math.factorial(2)/math.factorial(ijk[i][0])/math.factorial(ijk[i][1])/math.factorial(ijk[i][2])*
                     (
-                    (1. if ijk[i][0]==0 else baryCoords['2d'][0](xi)**ijk[i][0])*
-                    (1. if ijk[i][1]==0 else baryCoords['2d'][1](xi)**ijk[i][1])*
-                    ijk[i][2]*(1. if (ijk[i][2]-1)==0 else baryCoords['2d'][2](xi)**(ijk[i][2]-1))
+                    baryCoords['2d'][0](xi)**ijk[i][0]*
+                    baryCoords['2d'][1](xi)**ijk[i][1]*
+                    (0. if baryCoords['2d'][2](xi) == 0. else ijk[i][2]*baryCoords['2d'][2](xi)**(ijk[i][2]-1))
                         *baryGrads['2d'][2]+
-                    (1. if ijk[i][0]==0 else baryCoords['2d'][0](xi)**ijk[i][0])*
-                    ijk[i][1]*(1. if (ijk[i][1]-1)==0 else baryCoords['2d'][1](xi)**(ijk[i][1]-1))*
-                    (1. if ijk[i][2]==0 else baryCoords['2d'][2](xi)**ijk[i][2])
-                        *baryGrads['2d'][1]+                        
-                    ijk[i][0]*(1. if (ijk[i][0]-1)==0 else baryCoords['2d'][0](xi)**(ijk[i][0]-1))*
-                    (1. if ijk[i][1]==0 else baryCoords['2d'][1](xi)**ijk[i][1])*
-                    (1. if ijk[i][2]==0 else baryCoords['2d'][2](xi)**ijk[i][2])
-                        *baryGrads['2d'][0]
-                    ))
+                    baryCoords['2d'][0](xi)**ijk[i][0]*
+                    (0. if baryCoords['2d'][1](xi) == 0. else ijk[i][1]*baryCoords['2d'][1](xi)**(ijk[i][1]-1))*
+                    baryCoords['2d'][2](xi)**ijk[i][2]
+                        *baryGrads['2d'][1]+
+                    (0. if baryCoords['2d'][0](xi) == 0. else ijk[i][0]*baryCoords['2d'][0](xi)**(ijk[i][0]-1))*
+                    baryCoords['2d'][1](xi)**ijk[i][1]*
+                    baryCoords['2d'][2](xi)**ijk[i][2]
+                        *baryGrads['2d'][0]))
                 self.basisGradients.append(lambda xi, i=i: self.gradientList[i](xi))
                 self.basisGradientsTrace[0].append(lambda xBar, i=i:
                                                    self.gradientList[i](self.referenceElement.boundaryMapList[0](xBar)))
