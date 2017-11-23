@@ -10,10 +10,11 @@ Profiling.verbose=True
 import os
 import numpy as np
 import tables
-from . import (poisson_p,
+from . import (parameters_for_poisson,
+               poisson_p,
                poisson_n)
 
-class TestVOF():
+class TestBernstein():
 
     @classmethod
     def setup_class(cls):
@@ -25,12 +26,11 @@ class TestVOF():
     
     def setup_method(self,method):
         """Initialize the test problem. """
-        reload(poisson_p)
+        reload(parameters_for_poisson)
         self.pList = [poisson_p]
         self.nList = [poisson_n]        
         self.sList = [default_s]
         self.so = default_so
-        #self.so.tnList = self.nList[0].tnList
         self._scriptdir = os.path.dirname(__file__)                
         self.sim_names = []
         self.aux_names = []
@@ -39,11 +39,13 @@ class TestVOF():
         pass
     
     def test_2D_hex(self):
-        poisson_p.ct.nd = 2
-        poisson_p.ct.useHex = True
-
+        # Set parameters for this test 
+        parameters_for_poisson.ct.nd = 2
+        parameters_for_poisson.ct.useHex = True
+        # Reload _p and _n modules
         reload(poisson_p)
         reload(poisson_n)
+        # Update name
         self.so.name = "2D_"+self.pList[0].name+"_hex_degree2"
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
@@ -53,7 +55,6 @@ class TestVOF():
                                                opts)
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('poisson')
-        
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/'+self.so.name+'.h5' 
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
@@ -65,11 +66,13 @@ class TestVOF():
         actual.close()
 
     def test_2D_simplex(self):
-        poisson_p.ct.nd = 2
-        poisson_p.ct.useHex = False
-
+        # Set parameters for test 
+        parameters_for_poisson.ct.nd = 2
+        parameters_for_poisson.ct.useHex = False
+        # Reload _p and _n modules
         reload(poisson_p)
         reload(poisson_n)
+        # Update name 
         self.so.name = "2D_"+self.pList[0].name+"_simplex_degree2"
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
@@ -79,7 +82,6 @@ class TestVOF():
                                                opts)
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('poisson')
-
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/'+self.so.name+'.h5' 
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
@@ -89,11 +91,13 @@ class TestVOF():
                            atol=1e-10)
 
     def test_3D_hex(self):
-        poisson_p.ct.nd = 3
-        poisson_p.ct.useHex = True
-
+        # Set parameters for test 
+        parameters_for_poisson.ct.nd = 3
+        parameters_for_poisson.useHex = True
+        # Reload _p and _n modules
         reload(poisson_p)
         reload(poisson_n)
+        # Update name 
         self.so.name = "3D_"+self.pList[0].name+"_hex_degree2"
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
@@ -103,7 +107,6 @@ class TestVOF():
                                                opts)
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('poisson')
-
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/'+self.so.name+'.h5' 
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
@@ -113,11 +116,13 @@ class TestVOF():
                            atol=1e-10)
         
     def test_3D_simplex(self):
-        poisson_p.ct.nd = 3
-        poisson_p.ct.useHex = False
-
+        # Set parameters for test         
+        parameters_for_poisson.ct.nd = 3
+        parameters_for_poisson.ct.useHex = False
+        # Reload _p and _n modules
         reload(poisson_p)
         reload(poisson_n)
+        # Update name 
         self.so.name = "3D_"+self.pList[0].name+"_simplex_degree2"
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
@@ -127,7 +132,6 @@ class TestVOF():
                                                opts)
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('poisson')        
-
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/'+self.so.name+'.h5' 
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))

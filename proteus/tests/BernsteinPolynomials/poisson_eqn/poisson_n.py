@@ -1,5 +1,6 @@
 from proteus import *
 from proteus.default_n import *
+from parameters_for_poisson import *
 from poisson_p import *
 
 parallel = False
@@ -22,6 +23,8 @@ if ct.useHex:
     elementQuadrature = CubeGaussQuadrature(nd,quad_order)
     elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,quad_order)
 else:
+    hex=False
+    quad=False
     if ct.pDegree == 1:
         femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
     elif ct.pDegree == 2:
@@ -55,6 +58,3 @@ linearSolverConvergenceTest= 'r'
 
 linTolFac = 0.0 
 l_atol_res = 1.0e-12
-
-
-
