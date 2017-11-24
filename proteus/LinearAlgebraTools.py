@@ -725,6 +725,13 @@ class OperatorShell:
         pass
     def create(self,A):
         pass
+    def getSize(self):
+        """
+        Return the number of degrees of freedom for the operator.
+        """
+        raise NotImplementedError('You need to define a getSize' \
+                                  'method for your shell')
+
 
 class ProductOperatorShell(OperatorShell):
     """ A base class for shell operators that apply multiplcation.
@@ -746,11 +753,9 @@ class InvOperatorShell(OperatorShell):
     """
     def __init__(self):
         pass
-    def apply(self, A, x, y):
-        raise NotImplementedError('You need to define an apply' \
-                                  'function for your shell')
 
-    def _create_tmp_vec(self,size):
+    @staticmethod
+    def _create_tmp_vec(size):
         """ Creates an empty vector of given size.
 
         Arguments
@@ -767,7 +772,8 @@ class InvOperatorShell(OperatorShell):
         tmp.setSizes(size)
         return tmp
 
-    def _create_copy_vec(self,vec):
+    @staticmethod
+    def _create_copy_vec(vec):
         """ Creates a copy of a petsc4py vector.
 
         Parameters
@@ -783,11 +789,77 @@ class InvOperatorShell(OperatorShell):
         tmp = vec.copy()
         return tmp
 
+    def apply(self, A, x, y):
+        raise NotImplementedError('You need to define an apply' \
+                                  'method for your shell')
+
+    def create_petsc_ksp_obj(self,
+                             petsc_option_prefix,
+                             matrix_operator):
+        """ Create a PETSc4py KSP object.
+
+        Arguments
+        ---------
+        petsc_option_prefix : str
+            PETSc commandline option prefix.
+        matrix_operator : mat
+            PETSc matrix object for the ksp class.
+
+        Returns
+        -------
+        ksp_obj : PETSc ksp
+        """
+        ksp_obj = p4pyPETSc.KSP().create()
+        ksp_obj.setOperators(matrix_operator,
+                             matrix_operator)
+        ksp_obj.setOptionsPrefix(petsc_option_prefix)
+        ksp_obj.setFromOptions()
+
+        const_nullspace_str = ''.join([petsc_option_prefix,
+                                       'ksp_constant_null_space'])
+        if self.options.hasName(const_nullspace_str):
+            matrix_operator.setNullSpace(self.const_null_space)
+
+        ksp_obj.setUp()
+        return ksp_obj
+
     def _create_constant_nullspace(self):
         """Initialize a constant null space. """
         self.const_null_space = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
                                                              vectors = (),
                                                              constant = True)
+
+    def _set_dirichlet_idx_set(self):
+        """
+        Initialize an index set of non-Dirichlet degrees of freedom.
+
+        When the value of some degrees of freedom are known in
+        advance it can be helfpul to remove these degrees of
+        freedom from the inverse operator.  This function
+        creates a PETSc4py index set of unknown degrees of freedom.
+        """
+        # Assign number of unknowns
+        try:
+            num_known_dof = len(self.strong_dirichlet_DOF)
+        except AttributeError:
+            print "ERROR - strong_dirichlet_DOF have not been " \
+                  " assigned for this inverse operator object."
+            exit()
+        num_dof = self.getSize()
+        num_unknown_dof = num_dof - num_known_dof
+
+        # Use boolean mask to collect unknown DOF indices
+        self.dof_indices = numpy.arange(num_dof,
+                                        dtype = 'int32')
+        known_dof_mask = numpy.ones(num_dof,
+                                    dtype = bool)
+        known_dof_mask[self.strong_dirichlet_DOF] = False
+        self.unknown_dof_indices = self.dof_indices[known_dof_mask]
+
+        # Create PETSc4py index set of unknown DOF
+        self.unknown_dof_is = p4pyPETSc.IS()
+        self.unknown_dof_is.createGeneral(self.unknown_dof_indices,
+                                          comm=p4pyPETSc.COMM_WORLD)
 
     def _converged_trueRes(self,ksp,its,rnorm):
         """ Function handle to feed to ksp's setConvergenceTest  """
@@ -1086,7 +1158,8 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
                  Np_rho,
                  alpha = False,
                  delta_t = 0,
-                 num_chebyshev_its = 0):
+                 num_chebyshev_its = 0,
+                 strong_dirichlet_DOF = []):
         """ Initialize the two-phase PCD inverse operator.
 
         Parameters
@@ -1109,56 +1182,57 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         num_chebyshev_its : int
                 Number of chebyshev iteration steps to take. (0 indicates
                 the chebyshev semi iteration is not used)
+        strong_dirichlet_DOF : lst
+                List of DOF with known, strongly enforced values.
         """
         import LinearSolvers as LS
-        # ARB TODO : There should be an exception to ensure each of these
-        # matrices has non-zero elements along the diagonal.  I cannot
-        # think of a case where this would not be an error.
+
+        # Set attributes
         self.Qp_visc = Qp_visc
         self.Qp_dens = Qp_dens
         self.Ap_rho = Ap_rho
         self.Np_rho = Np_rho
         self.alpha = alpha
         self.delta_t = delta_t
-
         self.num_chebyshev_its = num_chebyshev_its
-        self._options = p4pyPETSc.Options()
+        self.strong_dirichlet_DOF = strong_dirichlet_DOF
+
+        self.options = p4pyPETSc.Options()
         self._create_constant_nullspace()
+        self._set_dirichlet_idx_set()
 
-        # Initialize mass matrix inverses.
-        self.kspQp_visc = p4pyPETSc.KSP().create()
-        self.kspQp_visc.setOperators(self.Qp_visc,self.Qp_visc)
-        self.kspQp_visc.setOptionsPrefix('innerTPPCDsolver_Qp_visc_')
-        self.kspQp_visc.setFromOptions()
-        self.kspQp_visc.setUp()
+        # Initialize operators for apply function
+        self.kspAp_rho = self.create_petsc_ksp_obj('innerTPPCDsolver_Ap_rho_',
+                                                    self.Ap_rho.getSubMatrix(self.unknown_dof_is,
+                                                                             self.unknown_dof_is))
 
-        self.kspQp_dens = p4pyPETSc.KSP().create()
-        self.kspQp_dens.setOperators(self.Qp_dens,self.Qp_dens)
-        self.kspQp_dens.setOptionsPrefix('innerTPPCDsolver_Qp_dens_')
-        self.kspQp_dens.setFromOptions()
-        self.kspQp_dens.setUp()
-
-        # Initialize Laplacian inverse.
-        self.kspAp_rho = p4pyPETSc.KSP().create()
-        self.kspAp_rho.setOperators(self.Ap_rho,self.Ap_rho)
-        self.kspAp_rho.setOptionsPrefix('innerTPPCDsolver_Ap_rho_')
-        self.kspAp_rho.setFromOptions()
-        if self._options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
-            self.Ap_rho.setNullSpace(self.const_null_space)
-        self.kspAp_rho.setUp()
-
+        self.Np_rho_reduced = self.Np_rho.getSubMatrix(self.unknown_dof_is,
+                                                       self.unknown_dof_is)
         if self.num_chebyshev_its:
-            self.Qp_visc = LS.ChebyshevSemiIteration(self.Qp_visc,
+            self.Qp_visc = LS.ChebyshevSemiIteration(self.Qp_visc.getSubMatrix(self.unknown_dof_is,
+                                                                               self.unknown_dof_is),
                                                      0.5,
                                                      2.0)
-            self.Qp_dens = LS.ChebyshevSemiIteration(self.Qp_dens,
+            self.Qp_dens = LS.ChebyshevSemiIteration(self.Qp_dens.getSubMatrix(self.unknown_dof_is,
+                                                                               self.unknown_dof_is),
                                                      0.5,
                                                      2.0)
+        else:
+            self.kspQp_visc = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_visc_',
+                                                        self.Qp_visc.getSubMatrix(self.unknown_dof_is,
+                                                                                  self.unknown_dof_is))
+            self.kspQp_dens = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_dens_',
+                                                        self.Qp_dens.getSubMatrix(self.unknown_dof_is,
+                                                                                  self.unknown_dof_is))
+
+    def getSize(self):
+        """ Return the total number of DOF for the shell problem. """
+        return self.Ap_rho.getSizes()[0][0]
 
     def apply(self,A,x,y):
         """
-        Applies the two-phase pressure-convection-diffusion
-        preconditioner.
+        Applies the two-phase pressure-convection-diffusion 
+        Schur complement approximation.
 
         Parameters
         ----------
@@ -1171,32 +1245,43 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         -------
         y : petsc4py vector
             Result of operator acting on x.
+
+        Notes
+        -----
+        When strong Dirichlet conditions are enforced on the pressure,
+        the PCD operator is applied to the set of unknowns that do not
+        have Dirichlet boundary conditions.  At the end, the solution
+        is then loaded into the original y-vector.
         """
-        tmp1 = self._create_copy_vec(x)
-        tmp2 = self._create_copy_vec(x)
-        tmp3 = self._create_copy_vec(x)
+        x_tmp = x.getSubVector(self.unknown_dof_is)
+        y_tmp = y.getSubVector(self.unknown_dof_is)
+        tmp1 = self._create_copy_vec(x_tmp)
+        tmp2 = self._create_copy_vec(x_tmp)
+        tmp3 = self._create_copy_vec(x_tmp)
 
         if self.num_chebyshev_its:
-            self.Qp_visc.apply(x,
-                               y,
+            self.Qp_visc.apply(x_tmp,
+                               y_tmp,
                                self.num_chebyshev_its)
-            self.Qp_dens.apply(x,
+            self.Qp_dens.apply(x_tmp,
                                tmp1,
                                self.num_chebyshev_its)
         else:
-            self.kspQp_visc.solve(x,y)
-            self.kspQp_dens.solve(x,tmp1)
+            self.kspQp_visc.solve(x_tmp,y_tmp)
+            self.kspQp_dens.solve(x_tmp,tmp1)
 
-        self.Np_rho.mult(tmp1,tmp2)
+        self.Np_rho_reduced.mult(tmp1,tmp2)
 
         if self.alpha is True:
-            tmp2.axpy(1./self.delta_t,x)
+            tmp2.axpy(1./self.delta_t,x_tmp)
 
-        if self._options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
+        if self.options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
             self.const_null_space.remove(tmp2)
 
         self.kspAp_rho.solve(tmp2, tmp3)
-        y.axpy(1.,tmp3)
+
+        y_tmp.axpy(1.,tmp3)
+        y.setValues(self.unknown_dof_is.getIndices(),y_tmp)
 
 def l2Norm(x):
     """

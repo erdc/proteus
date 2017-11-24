@@ -1651,6 +1651,11 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.numerical_viscosity = numerical_viscosity
         self.lumped = lumped
         self.num_chebyshev_its = num_chebyshev_its
+        # Strong Dirichlet Pressure DOF
+        try:
+            self.strongPressureDOF = L.pde.dirichletConditionsForceDOF[0].DOFBoundaryPointDict.keys()
+        except KeyError:
+            self.strongPressureDOF = []
 
     def setUp(self, global_ksp):
         import Comm
@@ -1682,8 +1687,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         # self.Sp.axpy( 1. , self.A11)
 
         # End ******** Sp for Ap ***********
-
-        
         self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
                                               self.operator_constructor.linear_smoother.isp)
 
@@ -1708,7 +1711,8 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                                                     self.Np_rho,
                                                     True,
                                                     dt,
-                                                    num_chebyshev_its = self.num_chebyshev_its)
+                                                    num_chebyshev_its = self.num_chebyshev_its,
+                                                    strong_dirichlet_DOF = self.strongPressureDOF)
         self.TP_PCDInv_shell.setPythonContext(self.matcontext_inv)
         self.TP_PCDInv_shell.setUp()
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
