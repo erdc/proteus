@@ -251,7 +251,6 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type','boomeramg')
 
         dirichlet_nodes = [3, 12, 15, 21, 33]
-
         TPPCD_shell = LAT.TwoPhase_PCDInv_shell(Qp_visc,
                                                 Qp_dens,
                                                 Ap_rho,
@@ -275,7 +274,6 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir,
                                                        'import_modules/tppcd_y_dirichlet_dof'))
         assert np.allclose(y_vec.getArray(),true_solu.getArray())
-
 
 def test_tmp_vec_creation():
     A = LAT.InvOperatorShell._create_tmp_vec(4)
@@ -306,5 +304,7 @@ def test_create_petsc_ksp_obj(create_simple_petsc_matrix):
     assert np.array_equal(InvOpShell.unknown_dof_is.getIndices(),
                           np.array([0,2]))
 
+=======
+>>>>>>> Modifies the two-phase pcd to allow Dirichlet pressure conditions.
 if __name__ == '__main__':
     pass

@@ -732,7 +732,6 @@ class OperatorShell:
         raise NotImplementedError('You need to define a getSize ' \
                                   'method for your shell')
 
-
 class ProductOperatorShell(OperatorShell):
     """ A base class for shell operators that apply multiplcation.
 
@@ -1230,7 +1229,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
 
     def apply(self,A,x,y):
         """
-        Applies the two-phase pressure-convection-diffusion
+        Applies the two-phase pressure-convection-diffusion 
         Schur complement approximation.
 
         Parameters
