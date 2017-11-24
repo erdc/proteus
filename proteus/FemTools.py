@@ -608,10 +608,12 @@ class BernsteinOnCube(LocalFunctionSpace):
     |  |  |  |  |
     0--4--5--6--1
 
-    NOTE: *** The polynomials are defined for arbitrary order in 1D. 
-              This definition is carried to multi-D via tensor products. 
-          *** The numbering is defined for arbitrary order (via funMap) in 2D.
-          *** TODO: define hessians and higher order deriavtives 
+    NOTE (mql): *** The polynomials are defined for arbitrary order in 1D. 
+                    This definition is carried to multi-D via tensor products. 
+                *** The numbering is defined for arbitrary order (via funMap) in 2D.
+                *** TODO: Generalize numbering for 1D and 3D. 
+                *** TODO: The quad rule Lobatto edge alt must be generalized. 
+                *** TODO: define hessians and higher order deriavtives 
     """
     from math import factorial 
 
@@ -4545,6 +4547,7 @@ class C0_AffineBernsteinOnCube(ParametricFiniteElementSpace):
         self.order = order
         localGeometricSpace= LinearOnCubeWithNodalBasis(nd)
         #todo fix these interpolation conditions to work on Cube
+        
         if self.order==2:
             localFunctionSpace = BernsteinOnCube(nd,order=2)
             interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)

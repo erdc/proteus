@@ -50,7 +50,7 @@ class GaussEdge(Q_base):
     Gaussian Quadrature on the unit interval.
     """
     def __init__(self,order=1):
-        #mql. Compute points and weigths for Gauss Quad of order 5,..., 9
+        #mql. Compute points and weigths for Gauss Quad with n=5,...,9
         #mql. TODO: we should generalize this to any order.
         #mql. Why are the points not in order? 
         [p6,w6]=numpy.polynomial.legendre.leggauss(6); p6=0.5*(p6+1); w6=0.5*w6
