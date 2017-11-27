@@ -45,7 +45,7 @@ install:
 - ls $SSL_CERT_DIR
 
 script:
-    - py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/air-water-vv/a048e9fb07e16cd0c27080ffff3607254fe9e0bb/Tests/ --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus
+    - py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/air-water-vv/Tests/ --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus
 
 notifications:
   email:
