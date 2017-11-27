@@ -136,11 +136,13 @@ class Coefficients(TC_base):
         if self.fluidModel.KILL_PRESSURE_TERM is False and self.fluidModel.coefficients.CORRECT_VELOCITY is True:
             assert self.INTEGRATE_BY_PARTS_DIV_U, "INTEGRATE_BY_PARTS the div(U) must be set to true to correct the velocity"
             alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
+            q_vos = self.fluidModel.coefficients.q_vos
+            ebqe_vos = self.fluidModel.coefficients.ebqe_vos
             for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
-                self.fluidModel.q[('velocity',0)][...,i] -= (1.0-self.model.q_vos)*self.model.q['a']*self.model.q[('grad(u)',0)][...,i]
-                self.fluidModel.ebqe[('velocity',0)][...,i] = (1.0-self.model.ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
-                self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q_vos*self.model.q['a']*self.model.q[('grad(u)',0)][...,i]
-                self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = self.model.ebqe_vos*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
+                self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * (1.0 - q_vos) / self.rho_f_min / alphaBDF 
+                self.fluidModel.ebqe[('velocity',0)][...,i] = (1.0-ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
+                self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * (q_vos) / self.rho_s_min / alphaBDF
+                self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
             self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
             self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
             if self.sedModelIndex is not None:
@@ -184,10 +186,11 @@ class Coefficients(TC_base):
         #a is really a scalar diffusion but defining it as diagonal tensor
         #if we push phase momentum interchange (drag) to correction
         #then a may become a full  tensor
-        c['a_f'] = 1.0/(self.rho_f_min*alphaBDF)
-        c['a_s'] = 1.0/(self.rho_s_min*alphaBDF)
-        a_penalty = ((1.0-vos)*self.rho_f_min + vos*self.rho_s_min)*alphaBDF
-        c[('a',0,0)][...,0] = 1./a_penalty 
+        c['a_f'] = (1.0-vos)/(self.rho_f_min*alphaBDF)
+        c['a_s'] = (vos)/(self.rho_s_min*alphaBDF)
+        #a_penalty = (1.0-vos)*self.rho_f_min*alphaBDF + vos*self.rho_s_min*alphaBDF
+        #c[('a',0,0)][...,0] = 1./a_penalty 
+        c[('a',0,0)][...,0] = c['a_f'] + c['a_s'] 
         #c[('a',0,0)][...,0] = ((1.0-vos)*self.rho_f_min + vos*self.rho_s_min)*alphaBDF
         #c[('a',0,0)][...,0] = (self.rho_f_min/(1.0-vos) + self.rho_s_min/vos)*alphaBDF
         #c[('a',0,0)][...,0] = (1.0-vos)*c['a_f'] + vos*c['a_s']
