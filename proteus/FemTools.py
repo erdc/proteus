@@ -1911,6 +1911,7 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
     from RefUtils import q2quadrilateralLocalBoundaryLookup
     from RefUtils import q2hexahedronLocalBoundaryLookup
     from math import fmod
+
     def __init__(self,referenceElement):
         from RefUtils import fact
         from RefUtils import q2refNodes
@@ -1968,6 +1969,79 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
         interpolationValues = finiteElementFunction.dof
 
 #end interp conditions
+
+#######################################################################################
+# ****************************** THIS IS EXPERIMENTAL ******************************* #
+#######################################################################################
+class QubicLagrangeCubeNodalInterpolationConditions(InterpolationConditions):
+    """
+    Obtains the DOF from the function values at vertices and
+    midpoints of edges (whole element is considered an edge in 1d)
+    """
+    from RefUtils import q2quadrilateralLocalBoundaryLookup
+    from RefUtils import q2hexahedronLocalBoundaryLookup
+    from math import fmod
+
+    def __init__(self,referenceElement):
+        from RefUtils import fact
+        from RefUtils import q3refNodes
+        sdim  = referenceElement.dim
+        if sdim==2:
+            self.nInterpNodes = 4*4
+        elif sdim==3:
+            self.nInterpNodes = 4*4*4
+        InterpolationConditions.__init__(self,self.nInterpNodes,referenceElement)
+        self.quadraturePointArray = numpy.zeros((self.nInterpNodes,3),'d')
+        #self.nQuadraturePoints = len(self.quadraturePointArray)
+        if sdim==2:
+            for k in range(self.nInterpNodes):
+                for I in range(sdim):
+                    self.quadraturePointArray[k,I] = q3refNodes[1][k,I]
+        elif sdim==3:
+            for k in range(self.nInterpNodes):
+                for I in range(sdim):
+                    self.quadraturePointArray[k,I] = q3refNodes[2][k,I]
+        self.nQuadraturePoints = len(self.quadraturePointArray)
+        self.nQuadraturePoints = self.quadraturePointArray.shape[0]
+        for i in range(self.nQuadraturePoints):
+            self.functionals.append(lambda f,i=i: f(self.quadraturePointArray[i,:]))
+            self.functionalsQuadrature.append(lambda fList, i=i: fList[i])
+        #end for
+        #for c based projection from interpolation conditions
+        self.functionals_quadrature_map = numpy.arange(len(self.functionalsQuadrature),dtype='i')
+   #end init
+    def definedOnLocalElementBoundary(self,k,ebN_local):
+        if self.referenceElement.dim == 1:
+            if k <= self.referenceElement.dim:
+                return k != ebN_local
+        elif self.referenceElement.dim == 2:
+            return ebN_local in self.q2quadrilateralLocalBoundaryLookup[k]
+        elif self.referenceElement.dim == 3:
+            return ebN_local in self.q2hexahedronLocalBoundaryLookup[k]
+        else:
+            return False
+    def quadrature2Node_element(self,k):
+        if k <= self.referenceElement.dim**2:
+                return k
+        else:
+            return None
+    def projectFiniteElementFunctionFromInterpolationConditions_opt(self,finiteElementFunction,interpolationValues):
+        """
+        Allow the interpolation conditions to control projection of a (global) finite element function from
+        an array of interpolation values in order to take advantage of specific structure, otherwise
+        can just use functionals interface
+        """
+        cfemIntegrals.projectFromNodalInterpolationConditions(finiteElementFunction.dim_dof,
+                                                              finiteElementFunction.femSpace.dofMap.l2g,
+                                                              self.functionals_quadrature_map,
+                                                              interpolationValues,
+                                                              finiteElementFunction.dof)
+        interpolationValues = finiteElementFunction.dof
+
+#end interp conditions
+######################################################################################
+# ****************************** END OF EXPERIMENTAL ******************************* #
+######################################################################################
 
 class FaceBarycenterInterpolationConditions(InterpolationConditions):
     """
@@ -4598,6 +4672,67 @@ class C0_AffineBernsteinOnCube(ParametricFiniteElementSpace):
 # TODO - migrate Q1 to an instance of BernsteinCubeFactor
 #Q1 = C0_AffineLinearOnCubeWithNodalBasis
 #Q2 = BernsteinCubeFactory(2)
+
+#######################################################################################
+# ****************************** THIS IS EXPERIMENTAL ******************************* #
+#######################################################################################
+class C0_AffineQ3BernsteinOnCube(ParametricFiniteElementSpace):
+    """
+    Bernstein CG space of order 3.
+    Globally C0
+    Each geometric element is the image of the reference simplex under
+    a linear affine mapping. The Bernstein basis is used on the reference simplex.
+    """
+    def __init__(self,mesh,nd=3,order=3):
+        self.order = order
+        localGeometricSpace= LinearOnCubeWithNodalBasis(nd)
+        #todo fix these interpolation conditions to work on Cube
+        if self.order==3:
+            localFunctionSpace = BernsteinOnCube(nd,order=order)
+            interpolationConditions = QubicLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        #elif self.order==1:
+            #localFunctionSpace = LagrangeOnCubeWithNodalBasis(nd,order=1)
+            #interpolationConditions = CubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        #else:
+        #    raise NotImplementedError ("Lagrange factory only implemented for Q2"
+        #                               "elements so far. For Q1 use C0_AffineLinearOnCubeWithNodalBasis.")
+
+        ParametricFiniteElementSpace.__init__(self,
+                                              ReferenceFiniteElement(localFunctionSpace,
+                                                                     interpolationConditions),
+                                              AffineMaps(mesh,
+                                                         localGeometricSpace.referenceElement,
+                                                         LinearOnCubeWithNodalBasis(nd)),
+                                              QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd))
+
+        print localFunctionSpace.dim
+        print interpolationConditions.quadraturePointArray.size
+        print len(localFunctionSpace.basis)
+        for i in range(localFunctionSpace.dim):
+            for j in range(localFunctionSpace.dim):
+                x_j = interpolationConditions.quadraturePointArray[j]
+                psi_ij = localFunctionSpace.basis[i](x_j)
+                #print i,j,x_j,psi_ij
+        #for archiving
+        import Archiver
+        self.XdmfWriter=Archiver.XdmfWriter()
+
+    def writeMeshXdmf(self,ar,name,t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0):
+        if self.order == 2:
+            return self.XdmfWriter.writeMeshXdmf_C0Q2Lagrange(ar,name,mesh=self.mesh,spaceDim=self.nSpace_global,
+                                                              dofMap=self.dofMap,t=t,init=init,meshChanged=meshChanged,
+                                                              arGrid=arGrid,tCount=tCount)
+        else:
+            raise NotImplementedError ("Lagrange factory only implemented for Q2"
+                                       "elements so far. For Q1 use C0_AffineLinearOnCubeWithNodalBasis.")
+
+    def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
+        self.XdmfWriter.writeFunctionXdmf_C0P2Lagrange(ar,u,tCount=tCount,init=init)
+    def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
+        self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"c0p2_Lagrange",tCount=tCount,init=init)
+######################################################################################
+# ****************************** END OF EXPERIMENTAL ******************************* #
+######################################################################################
 
 class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpace):
     def __init__(self,mesh,nd=3,k=0):
