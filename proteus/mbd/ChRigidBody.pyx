@@ -95,6 +95,10 @@ cdef extern from "ChRigidBody.h":
                                                 shared_ptr[ch.ChMesh] mesh,
                                                 ch.ChVector position,
                                                 ch.ChVector dimensions)
+    void cppAttachNodeToNode(cppMultiSegmentedCable* cable1,
+                          int node1,
+                          cppMultiSegmentedCable* cable2,
+                          int node2) 
 
 
 cdef extern from "ChRigidBody.h":
@@ -2060,27 +2064,36 @@ cdef class ProtChMoorings:
         """
         deref(self.thisptr.cables[segment_nb]).setAddedMassCoefficients(tangential, normal)
 
-    def setNodesPosition(self):
+    def setNodesPosition(self, double[:,:] pos=None):
         """Builds the nodes of the cable.
 
         (!) Must be called after setNodesPositionFunction()
         """
         cdef ch.ChVector[double] vec
-        for i in range(self.thisptr.cables.size()):
-            deref(self.thisptr.cables[i]).mvecs.clear()
-            L0 = deref(self.thisptr.cables[i]).L0
-            L = deref(self.thisptr.cables[i]).length
-            nb_elems = deref(self.thisptr.cables[i]).nb_elems
-            if self.beam_type == "CableANCF" or self.beam_type == "BeamEuler":
-                nb_nodes = nb_elems+1
-            else:
-                print("set element type")
-                sys.exit()
-            ds = L/(nb_nodes-1)
-            for j in range(nb_nodes):
-                x, y, z = self.nodes_function(L0+ds*j)
-                vec = ch.ChVector[double](x, y, z)
-                deref(self.thisptr.cables[i]).mvecs.push_back(vec)
+        if pos is None:
+            for i in range(self.thisptr.cables.size()):
+                deref(self.thisptr.cables[i]).mvecs.clear()
+                L0 = deref(self.thisptr.cables[i]).L0
+                L = deref(self.thisptr.cables[i]).length
+                nb_elems = deref(self.thisptr.cables[i]).nb_elems
+                if self.beam_type == "CableANCF" or self.beam_type == "BeamEuler":
+                    nb_nodes = nb_elems+1
+                else:
+                    print("set element type")
+                    sys.exit()
+                ds = L/(nb_nodes-1)
+                for j in range(nb_nodes):
+                    x, y, z = self.nodes_function(L0+ds*j)
+                    vec = ch.ChVector[double](x, y, z)
+                    deref(self.thisptr.cables[i]).mvecs.push_back(vec)
+        else:
+            for i in range(self.thisptr.cables.size()):
+                deref(self.thisptr.cables[i]).mvecs.clear()
+                nb_nodes = len(pos[i])
+                for j in range(len(pos[i])):
+                    x, y, z = pos[i][j]
+                    vec = ch.ChVector[double](x, y, z)
+                    deref(self.thisptr.cables[i]).mvecs.push_back(vec)
         self.buildNodes()
 
     def buildNodes(self):
@@ -2393,3 +2406,5 @@ def getLocalElement(femSpace, coords, node):
     return None
 
 
+cpdef void attachNodeToNode(ProtChMoorings cable1, int node1, ProtChMoorings cable2, int node2):
+    cppAttachNodeToNode(cable1.thisptr, node1, cable2.thisptr, node2)
