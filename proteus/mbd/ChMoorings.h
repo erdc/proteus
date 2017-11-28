@@ -546,6 +546,7 @@ void cppCable::buildNodes(bool last_node=true) {
 
 void cppCable::buildNodesBeamEuler(bool last_node) {
 	nodesRot.clear();
+    nb_nodes = 0;
 	ChVector<> dir;  // direction of node
 	/* ChQuaternion<> quat;  // direction of node */
 	std::shared_ptr<ChNodeFEAxyzrot> node;
@@ -555,6 +556,7 @@ void cppCable::buildNodesBeamEuler(bool last_node) {
   /* quat = Q_from_AngAxis(dir, 0.); */
 	node = std::make_shared<ChNodeFEAxyzrot>(ChFrame<>(mvecs[0]));
 	nodesRot.push_back(node);
+    nb_nodes = nb_nodes+1;
 	// other nodes
 	for (int i = 1; i < mvecs.size() - 1; ++i) {
 		dir = mvecs[i + 1] - mvecs[i - 1];
@@ -562,6 +564,7 @@ void cppCable::buildNodesBeamEuler(bool last_node) {
     /* quat = Q_from_AngAxis(dir, 0.); */
 		node = std::make_shared<ChNodeFEAxyzrot>(ChFrame<>( mvecs[i] ));
 		nodesRot.push_back(node);
+        nb_nodes = nb_nodes+1;
 	}  // last node
     if (last_node == true) {
         nb_nodes = nb_elems+1;
@@ -570,14 +573,17 @@ void cppCable::buildNodesBeamEuler(bool last_node) {
     /* quat = Q_from_AngAxis(dir, 0.); */
         node = std::make_shared<ChNodeFEAxyzrot>(ChFrame<>(mvecs[mvecs.size() - 1]));
         nodesRot.push_back(node);
+        nb_nodes = nb_nodes+1;
+        nb_elems = nb_nodes-1;
     }
     else {
-        nb_nodes = nb_elems;
+        nb_elems = nb_nodes;
     }
 }
 
 void cppCable::buildNodesCableANCF(bool last_node) {
 	nodes.clear();
+    nb_nodes = 0;
 	ChVector<> dir;  // direction of node
 	ChVector<> norm1; // normal of node direction
 	ChVector<> norm2; // normal of node direction and norm1
@@ -589,12 +595,14 @@ void cppCable::buildNodesCableANCF(bool last_node) {
 	dir.Normalize();
 	node = std::make_shared<ChNodeFEAxyzDD>(mvecs[0], dir, ref);
 	nodes.push_back(node);
+    nb_nodes = nb_nodes+1;
 	// other nodes
 	for (int i = 1; i < mvecs.size() - 1; ++i) {
 		dir = mvecs[i + 1] - mvecs[i - 1];
 		dir.Normalize();
 		node = std::make_shared<ChNodeFEAxyzDD>(mvecs[i], dir, ref);
 		nodes.push_back(node);
+        nb_nodes = nb_nodes+1;
 	}  // last node
     if (last_node == true) {\
         nb_nodes = nb_elems+1;
@@ -602,9 +610,11 @@ void cppCable::buildNodesCableANCF(bool last_node) {
         dir.Normalize();
         node = std::make_shared<ChNodeFEAxyzDD>(mvecs[mvecs.size() - 1], dir, ref);
         nodes.push_back(node);
+        nb_nodes = nb_nodes+1;
+        nb_elems = nb_nodes-1;
     }
     else {
-        nb_nodes = nb_elems;
+        nb_elems = nb_nodes;
     }
 }
 
@@ -972,3 +982,11 @@ cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ChSystemSMC& system,
 /*     F.PasteVector(ChVector<>(0, (((1 + U) / 2) * Fy_max), 0), 0, 0);  // load, force part; hardwired for brevity */
 /*     F.PasteVector(ChVector<>(0, 0, 0), 3, 0);  // load, torque part; hardwired for brevity */
 /*   } */
+
+void cppAttachNodeToNode(cppMultiSegmentedCable* cable1, int node1, cppMultiSegmentedCable* cable2, int node2) {
+  auto con1 = std::make_shared<ChLinkPointPoint>();
+  auto nodeA = cable1->nodes[node1];
+  auto nodeB = cable2->nodes[node2];
+  con1->Initialize(nodeA, nodeB);
+  cable1->system.Add(con1);
+}
