@@ -184,7 +184,7 @@ namespace proteus
 	    {
 	      if (nDOF_mesh_trial_elementIn == nDOF_trial_elementIn)//iso-parametric
 		{
-		  if (nDOF_mesh_trial_elementIn == 3)
+		  if (nDOF_mesh_trial_elementIn == 3) //simplices
 		    {
 		      if (nQuadraturePoints_elementIn == 1)
 		      	{
@@ -251,7 +251,7 @@ namespace proteus
 		      else
 			NO_INSTANCE
 		    }
-                  else  if(nDOF_mesh_trial_elementIn == 4)
+                  else  if(nDOF_mesh_trial_elementIn == 4) //Hexes
                     {
                       if (nQuadraturePoints_elementIn == 4)
                         {
@@ -260,15 +260,22 @@ namespace proteus
                           else
                             NO_INSTANCE
                         }
-                      else
-                        NO_INSTANCE
+                      else if (nQuadraturePoints_elementIn == 9) //order=1. n_quad=3^nd
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 3)
+			    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,4,4>,2,9,4,4,4,3>());
+			  else		      
+			    NO_INSTANCE
+			}
+		      else
+			NO_INSTANCE
                     }
 		  else
 		    NO_INSTANCE
 		}
-	      else if (nDOF_mesh_trial_elementIn == 3)
+	      else if (nDOF_mesh_trial_elementIn == 3) // Simplices 
 		{
-		  if (nDOF_trial_elementIn == 6)
+		  if (nDOF_trial_elementIn == 6) //2nd order polynomials
 		    {
 		      if (nQuadraturePoints_elementIn == 1)
 		      	{
@@ -313,9 +320,26 @@ namespace proteus
 		  else
 		    NO_INSTANCE
 		}
-	      else
-		NO_INSTANCE
-	    }	  		      
+	      else // Hexes
+		{
+		  if (nDOF_trial_elementIn == 9) //2nd order polynomials
+		    {
+		      if (nQuadraturePoints_elementIn == 25) //n_quad=(2*order+1)^2
+			{
+		          if (nQuadraturePoints_elementBoundaryIn == 5) 
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,25,4,9,9,5>());
+			    }
+			  else
+			    NO_INSTANCE
+		        }
+		      else //higher quad rules
+			NO_INSTANCE
+		    }
+		  else //higher-order polynomials
+		    NO_INSTANCE
+		}
+	    }
 	}
       else
         {
