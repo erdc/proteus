@@ -98,7 +98,7 @@ cdef extern from "ChRigidBody.h":
     void cppAttachNodeToNode(cppMultiSegmentedCable* cable1,
                           int node1,
                           cppMultiSegmentedCable* cable2,
-                          int node2) 
+                          int node2)
 
 
 cdef extern from "ChRigidBody.h":
@@ -2064,7 +2064,7 @@ cdef class ProtChMoorings:
         """
         deref(self.thisptr.cables[segment_nb]).setAddedMassCoefficients(tangential, normal)
 
-    def setNodesPosition(self, double[:,:] pos=None):
+    def setNodesPosition(self, double[:,:,:] pos=None):
         """Builds the nodes of the cable.
 
         (!) Must be called after setNodesPositionFunction()
