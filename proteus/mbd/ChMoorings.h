@@ -567,7 +567,6 @@ void cppCable::buildNodesBeamEuler(bool last_node) {
         nb_nodes = nb_nodes+1;
 	}  // last node
     if (last_node == true) {
-        nb_nodes = nb_elems+1;
         dir = mvecs[nb_nodes - 1] - mvecs[nb_nodes - 2];
         dir.Normalize();
     /* quat = Q_from_AngAxis(dir, 0.); */
@@ -605,7 +604,6 @@ void cppCable::buildNodesCableANCF(bool last_node) {
         nb_nodes = nb_nodes+1;
 	}  // last node
     if (last_node == true) {\
-        nb_nodes = nb_elems+1;
         dir = mvecs[nb_nodes - 1] - mvecs[nb_nodes - 2];
         dir.Normalize();
         node = std::make_shared<ChNodeFEAxyzDD>(mvecs[mvecs.size() - 1], dir, ref);
