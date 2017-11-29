@@ -80,6 +80,7 @@ class cppRigidBody {
                                    double stiffness,
                                    double damping,
                                    double rest_length);
+  void addPrismaticLinkX(double* pris1);
   void setName(std::string name);
   void setPrescribedMotionPoly(double coeff1);
   void setPrescribedMotionSine(double a, double f);
@@ -410,6 +411,20 @@ void cppRigidBody::addSpring(double stiffness,
   spring->Set_SpringK(stiffness);
   spring->Set_SpringR(damping);
   system->system.AddLink(spring);
+}
+
+void cppRigidBody::addPrismaticLinkX(double* pris1)
+{
+  auto mybod2 = std::make_shared<ChBody>();
+  mybod2->SetName("PRIS1");
+  mybod2->SetPos(ChVector<>(pris1[0], pris1[1], pris1[2]));
+  mybod2->SetMass(0.00001);
+  mybod2->SetBodyFixed(true);
+  system->system.AddBody(mybod2);
+  auto mylink1 = std::make_shared<ChLinkLockPrismatic>();
+  auto mycoordsys1 = ChCoordsys<>(mybod2->GetPos(),Q_from_AngAxis(CH_C_PI/2., VECT_Y));//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+  mylink1->Initialize(mybod2, body, mycoordsys1);
+  system->system.AddLink(mylink1);
 }
 
 void cppRigidBody::addPrismaticLinksWithSpring(double* pris1,

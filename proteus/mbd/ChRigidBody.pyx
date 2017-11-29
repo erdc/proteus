@@ -153,6 +153,7 @@ cdef extern from "ChRigidBody.h":
                                          double stiffness,
                                          double damping,
                                          double rest_length);
+        void addPrismaticLinkX(double* pris1);
         void setRotation(double* quat)
         void setPosition(double* pos)
         void setConstraints(double* free_x, double* free_r)
@@ -1202,6 +1203,8 @@ cdef class ProtChBody:
                                                  stiffness,
                                                  damping,
                                                  rest_length)
+    def addPrismaticLinkX(self, double[:] pris1):
+        self.thisptr.addPrismaticLinkX(&pris1[0]);
 
     def setName(self, string name):
         """Sets name of body (used for csv file)
