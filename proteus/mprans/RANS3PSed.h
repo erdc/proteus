@@ -78,6 +78,8 @@ namespace proteus
 				   double nu_0,
 				   double rho_1,
 				   double nu_1,
+				   double rho_s,
+				   double nu_s,
 				   double smagorinskyConstant,
 				   int turbulenceClosureModel,
 				   double Ct_sge,
@@ -251,6 +253,8 @@ namespace proteus
 				   double nu_0,
 				   double rho_1,
 				   double nu_1,
+			       double rho_s,
+		    	   double nu_s, 
 				   double smagorinskyConstant,
 				   int turbulenceClosureModel,
 				   double Ct_sge,
@@ -522,6 +526,8 @@ namespace proteus
 			      double nu_0,
 			      const double rho_1,
 			      double nu_1,
+			      const double rho_s,
+			      double nu_s,
 			      const double h_e,
 			      const double smagorinskyConstant,
 			      const int turbulenceClosureModel,
@@ -625,11 +631,17 @@ namespace proteus
 	  }
 	}
       
-      rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
+      //gco: we need to use only rho_s and nu_s for solving RANS
+      // we need fluid rho and nu for turbulence
+      // we need fluid rho and nu for momentum interface
+      rho = rho_s;
+      //rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
       nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
-      nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+      nu = nu_s;
+      //nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       nu += nu_t;
-      mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+      //mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+      mu = rho_s*nu_s;
 
       //printf("grad_p[1] sed --> %3.2f\n", grad_p[1]);
 
@@ -827,7 +839,7 @@ namespace proteus
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-      viscosity = mu;//nu;
+      viscosity = nu;//mu;
       uc = sqrt(u*u+v*v*+w*w); 
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
@@ -1477,6 +1489,8 @@ namespace proteus
 			   double nu_0,
 			   double rho_1,
 			   double nu_1,
+               double rho_s,
+               double nu_s,
 			   double smagorinskyConstant,
 			   int turbulenceClosureModel,
 			   double Ct_sge,
@@ -1799,6 +1813,8 @@ namespace proteus
 				   nu_0,
 				   rho_1,
 				   nu_1,
+				   rho_s,
+				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,
@@ -2435,6 +2451,8 @@ namespace proteus
 				   nu_0,
 				   rho_1,
 				   nu_1,
+				   rho_s,
+				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,
@@ -2509,6 +2527,8 @@ namespace proteus
 				   nu_0,
 				   rho_1,
 				   nu_1,
+				   rho_s,
+				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,
@@ -3096,7 +3116,9 @@ namespace proteus
 			   double rho_0,
 			   double nu_0,
 			   double rho_1,
-			   double nu_1,
+			   double nu_1, 
+			   double rho_s,
+			   double nu_s, 
 			   double smagorinskyConstant,
 			   int turbulenceClosureModel,
 			   double Ct_sge,
@@ -3451,6 +3473,8 @@ namespace proteus
 				   nu_0,
 				   rho_1,
 				   nu_1,
+				   rho_s,
+				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,
@@ -4169,6 +4193,8 @@ namespace proteus
 				   nu_0,
 				   rho_1,
 				   nu_1,
+				   rho_s,
+				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,
@@ -4243,6 +4269,8 @@ namespace proteus
 				   nu_0,
 				   rho_1,
 				   nu_1,
+				   rho_s,
+				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,

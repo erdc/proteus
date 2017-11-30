@@ -138,6 +138,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  sigma=72.8,
                  rho_0=998.2, nu_0=1.004e-6,
                  rho_1=1.205, nu_1=1.500e-5,
+                 rho_s=2600.0, nu_s=1.004e-6,
                  g=[0.0, 0.0, -9.8],
                  nd=3,
                  ME_model=5,
@@ -253,6 +254,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nu = nu_0
         self.rho_1 = rho_1
         self.nu_1 = nu_1
+        self.rho_s = rho_s
+        self.nu_s = nu_s
         self.g = numpy.array(g)
         self.nd = nd
         #
@@ -1843,6 +1846,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.nu_0,
             self.coefficients.rho_1,
             self.coefficients.nu_1,
+            self.coefficients.rho_s,
+            self.coefficients.nu_s,
             self.coefficients.smagorinskyConstant,
             self.coefficients.turbulenceClosureModel,
             self.Ct_sge,
@@ -2070,6 +2075,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.nu_0,
             self.coefficients.rho_1,
             self.coefficients.nu_1,
+            self.coefficients.rho_s,
+            self.coefficients.nu_s,
             self.coefficients.smagorinskyConstant,
             self.coefficients.turbulenceClosureModel,
             self.Ct_sge,
