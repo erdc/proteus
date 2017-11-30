@@ -95,11 +95,14 @@ cdef extern from "ChRigidBody.h":
                                                 shared_ptr[ch.ChMesh] mesh,
                                                 ch.ChVector position,
                                                 ch.ChVector dimensions)
-    void cppAttachNodeToNode(cppMultiSegmentedCable* cable1,
-                          int node1,
-                          cppMultiSegmentedCable* cable2,
-                          int node2)
-
+    void cppAttachNodeToNodeFEAxyzD(cppMultiSegmentedCable* cable1,
+                                    int node1,
+                                    cppMultiSegmentedCable* cable2,
+                                    int node2)
+    void cppAttachNodeToNodeFEAxyzrot(cppMultiSegmentedCable* cable1,
+                                      int node1,
+                                      cppMultiSegmentedCable* cable2,
+                                      int node2)
 
 cdef extern from "ChRigidBody.h":
     cdef cppclass cppSystem:
@@ -695,7 +698,6 @@ cdef class ProtChBody:
             else:
                 # actual force applied to body
                 if self.ProtChSystem.prediction == "backwardEuler":
-                    print("ah")
                     F_bar = self.F_prot
                     M_bar = self.M_prot
                 if self.ProtChSystem.prediction == "forwardEuler":
@@ -787,8 +789,6 @@ cdef class ProtChBody:
 
     def prediction(self):
         comm = Comm.get().comm.tompi4py()
-
-
         cdef ch.ChVector h_body_vec
         h_body_vec = self.thisptr.hxyz(<double*> self.position_last.data, 0.)
         #print("MY BODY DISP: ", h_body_vec.x(), h_body_vec.y(), h_body_vec.z())
@@ -1739,6 +1739,7 @@ cdef class ProtChMoorings:
       int nodes_nb # number of nodes
       np.ndarray nb_elems
       double[:] _record_etas
+      bool initialized
     def __cinit__(self,
                   ProtChSystem system,
                   Mesh mesh,
@@ -1782,6 +1783,7 @@ cdef class ProtChMoorings:
         self.external_forces_from_ns = True
         self.external_forces_manual = False
         self._record_etas=np.array([0.])
+        self.initialised = False
 
     def setName(self, string name):
         """Sets name of cable, used for csv file
@@ -1900,7 +1902,7 @@ cdef class ProtChMoorings:
         """
         cdef ch.ChVector T
         if self.thisptr.constraint_back:
-            T = deref(self.thisptr.constraint_back).GetReactionOnNode()
+            T = deref(self.thisptr.constraint_back).Get_react_force()
             return pych.ChVector_to_npArray(T)
         else:
             return np.zeros(3)
@@ -1911,7 +1913,7 @@ cdef class ProtChMoorings:
         """
         cdef ch.ChVector T
         if self.thisptr.constraint_front:
-            T = deref(self.thisptr.constraint_front).GetReactionOnNode()
+            T = deref(self.thisptr.constraint_front).Get_react_force()
             return pych.ChVector_to_npArray(T)
         else:
             return np.zeros(3)
@@ -1947,6 +1949,9 @@ cdef class ProtChMoorings:
     def poststep(self):
         """Records values
         """
+        if self.initialized is False:
+            self.initialized = True
+        
         comm = Comm.get().comm.tompi4py()
         if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
             self._recordValues()
@@ -2161,7 +2166,7 @@ cdef class ProtChMoorings:
             Array of nodes acceleration.
         """
         if self.beam_type == 'BeamEuler':
-            pos = np.zeros(( self.thisptr.nodesRot.size(),3 ))
+            pos = np.zeros((self.nodes_nb,3 ))
             for i in range(self.thisptr.nodesRot.size()):
                 vec = deref(self.thisptr.nodesRot[i]).GetPos_dtdt()
                 pos[i] = [vec.x(), vec.y(), vec.z()]
@@ -2175,7 +2180,7 @@ cdef class ProtChMoorings:
 
     def getDragForces(self):
         cdef ch.ChVector Fd
-        drag = np.zeros(( self.thisptr.nodes.size(),3 ))
+        drag = np.zeros((self.nodes_nb,3 ))
         for i in range(self.thisptr.forces_drag.size()):
             Fd = self.thisptr.forces_drag[i]
             drag[i] = [Fd.x(), Fd.y(), Fd.z()]
@@ -2183,7 +2188,7 @@ cdef class ProtChMoorings:
 
     def getAddedMassForces(self):
         cdef ch.ChVector Fd
-        drag = np.zeros(( self.thisptr.nodes.size(),3 ))
+        drag = np.zeros((self.nodes_nb,3 ))
         for i in range(self.thisptr.forces_addedmass.size()):
             Fd = self.thisptr.forces_addedmass[i]
             drag[i] = [Fd.x(), Fd.y(), Fd.z()]
@@ -2410,4 +2415,7 @@ def getLocalElement(femSpace, coords, node):
 
 
 cpdef void attachNodeToNode(ProtChMoorings cable1, int node1, ProtChMoorings cable2, int node2):
-    cppAttachNodeToNode(cable1.thisptr, node1, cable2.thisptr, node2)
+    if cable1.beam_type == "CableANCF":
+        cppAttachNodeToNodeFEAxyzD(cable1.thisptr, node1, cable2.thisptr, node2)
+    elif cable1.beam_type == "BeamEuler":
+        cppAttachNodeToNodeFEAxyzrot(cable1.thisptr, node1, cable2.thisptr, node2)

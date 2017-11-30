@@ -224,14 +224,23 @@ cdef extern from "ChMoorings.h":
         void AddNode(shared_ptr[ChNodeFEAxyzrot] mnode, const double point_radius=0.001)
         void AddAllNodes(const double point_radius)
 
-    cdef cppclass ChLinkPointFrame:
+    cdef cppclass ChLinkBase:
+        ChVector Get_react_force()
+    
+    cdef cppclass ChLink(ChLinkBase)
+    
+    cdef cppclass ChLinkMate(ChLink)
+    
+    cdef cppclass ChLinkMateGeneric(ChLinkMate)
+        
+    cdef cppclass ChLinkPointFrame(ChLinkBase):
         int Initialize(shared_ptr[ChNodeFEAxyz] node, shared_ptr[ChBodyFrame] body, ChVector* pos)
         ChVector GetReactionOnNode()
         ChVector GetReactionOnBody()
         #virtual 
         #int Initialize(shared_ptr[ChNodeFEAxyz] node, shared_ptr[ChBodyFrame] body, ChVector[double] *pos=0)
 
-    cdef cppclass ChLinkPointPoint:
+    cdef cppclass ChLinkPointPoint(ChLinkBase):
         #virtual 
         ChLinkPointPoint()
         int Initialize(shared_ptr[ChNodeFEAxyz] anodeA, shared_ptr[ChNodeFEAxyz] anodeB)
