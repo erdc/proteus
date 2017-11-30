@@ -385,6 +385,7 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
   scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
   scale[2] = 1.0;
 */
+/*
   if(nsd == 2){
     scale[0] = h_dest;  
     scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
@@ -395,13 +396,20 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
     scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
     scale[2] = sqrt(lambda[0]/lambda[2])*scale[0];
   }
+*/
 
 //3D
-/*
-  scale[0] = h_dest * pow((lambda[1] * lambda[2]) / (lambda[0] * lambda[0]), 1.0 / 6.0);
-  scale[1] = sqrt(lambda[0] / lambda[1]) * scale[0];
-  scale[2] = sqrt(lambda[0] / lambda[2]) * scale[0];
-*/
+
+  if(nsd == 2){
+    scale[0] = h_dest * pow((lambda[1] ) / (lambda[0]), 1.0 / 4.0);
+    scale[1] = sqrt(lambda[0] / lambda[1]) * scale[0];
+    scale[2] = 1.0;
+  }
+  else{
+    scale[0] = h_dest * pow((lambda[1] * lambda[2]) / (lambda[0] * lambda[0]), 1.0 / 6.0);
+    scale[1] = sqrt(lambda[0] / lambda[1]) * scale[0];
+    scale[2] = sqrt(lambda[0] / lambda[2]) * scale[0];
+  }
   //*/
   /*
     if(fabs(phi)<epsilon){
@@ -656,14 +664,10 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 //High level function that obtains the size scales and the size frames for ERM-based adapt and uses the computed total error
 {
 
-  std::cout<<"Flag0.0\n";
   freeField(size_frame);
-  std::cout<<"Flag0.1\n";
   freeField(size_scale);
-  std::cout<<"Flag0.2\n";
   freeField(size_iso);
 
-  std::cout<<"Flag0\n";
   //Initialize fields and needed types/variables
   apf::Mesh *m = apf::getMesh(err_reg);
   apf::MeshIterator *it;
@@ -732,7 +736,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     averageToEntity(size_iso_reg, size_iso, v);
   }
   m->end(it);
-  std::cout<<"Flag1\n";
 
   //Get the anisotropic size frame
   if (adapt_type_config == "anisotropic")
@@ -751,7 +754,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     //apf::Field* metricf = computeMetricField(gradphi,grad2phi,size_iso,eps_u);
     apf::Field *metricf = computeMetricField(gradSpeed, grad2Speed, size_iso, eps_u);
     apf::Field *frame_comps[3] = {apf::createLagrangeField(m, "frame_0", apf::VECTOR, 1), apf::createLagrangeField(m, "frame_1", apf::VECTOR, 1), apf::createLagrangeField(m, "frame_2", apf::VECTOR, 1)};
-    getERMSizeFrames(metricf, gradSpeed, frame_comps);
+    //getERMSizeFrames(metricf, gradSpeed, frame_comps);
 
     //Set the size scale for vertices
     it = m->begin(0);
@@ -768,7 +771,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       clamp(tempScale, hmin, hmax);
       apf::setScalar(size_iso,v,0,tempScale);
     }
-    gradeMesh();
+    //gradeMesh();
     it = m->begin(0);
     while( (v = m->iterate(it)) ){
       double phi;// = apf::getScalar(phif, v, 0);
@@ -800,6 +803,23 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
       scaleFormulaERM(phi, hmin, hmax, apf::getScalar(size_iso, v, 0), curve, lambda, eps_u, scale,nsd);
       apf::setVector(size_scale, v, 0, scale);
+      //get frames
+
+      apf::Matrix3x3 frame(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+
+      //get eigen values and eigenvectors from hessian
+      double firstEigenvalue = ssa[2].wm;
+      assert(firstEigenvalue > 1e-12);
+      frame[0] = ssa[2].v;
+      frame[1] = ssa[1].v;
+      frame[2] = ssa[0].v;
+    
+      //normalize eigenvectors
+      for (int i = 0; i < 3; ++i)
+        frame[i] = frame[i].normalize();
+      frame = apf::transpose(frame);
+      apf::setMatrix(size_frame, v, 0, frame);
+
     }
     m->end(it);
     apf::synchronize(size_scale);
