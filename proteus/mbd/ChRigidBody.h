@@ -103,7 +103,7 @@ gravity(gravity)
   system.SetSolverWarmStarting(true);  // this helps a lot to speedup convergence in this class of problems
   system.SetMaxItersSolverSpeed(100); // max iteration for iterative solvers
   system.SetMaxItersSolverStab(100); // max iteration for stabilization (iterative solvers)
-  system.SetTolForce(1e-13);
+  system.SetTolForce(1e-10);
   //system.SetMaxItersSolverSpeed(100);  
   //system.SetMaxItersSolverStab(100);  
   //system.SetTolForce(1e-14); // default: 0.001
