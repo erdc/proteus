@@ -489,7 +489,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.q_dvos_dt[:] = 0.0
                 self.ebqe_vos = modelList[self.VOF_model].coefficients.ebqe_vos
         if self.SED_model is not None:
-            self.rho_s = modelList[self.SED_model].coefficients.rho_0
+            self.rho_s = modelList[self.SED_model].coefficients.rho_s
             self.q_velocity_solid = modelList[self.SED_model].q[('velocity',0)]
             self.ebqe_velocity_solid = modelList[self.SED_model].ebqe[('velocity',0)]
         else:
