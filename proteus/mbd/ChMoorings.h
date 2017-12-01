@@ -635,6 +635,7 @@ void cppCable::buildNodesCableANCF(bool last_node) {
     node = std::make_shared<ChNodeFEAxyzD>(mvecs[mvecs.size()-1], dir);
     nodes.push_back(node);
     nb_nodes = nodes.size();
+    nb_elems = nb_nodes-1;
   }
   else {
     nb_nodes = nodes.size();
