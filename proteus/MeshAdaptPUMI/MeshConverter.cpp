@@ -1262,16 +1262,10 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
 int MeshAdaptPUMIDrvr::reconstructFromProteus2(Mesh& mesh,int* isModelVert,int* bFaces){
 
     isReconstructed = 2;
-/*
-    std::cout<<"isModelVert 2 "<<isModelVert[1]<<" 500 "<<isModelVert[499]<<std::endl;
-    std::cout<<"nBFaces " <<nBFaces<<std::endl;
-    std::cout<<"bFaces "<<bFaces[5]<<" "<<bFaces[6]<<" "<<bFaces[7]<<" "<<bFaces[8]<<" "<<bFaces[9]<<std::endl;
-*/
     int nBFaces = mesh.nExteriorElementBoundaries_global;
     bool isModelVert_bool[mesh.nNodes_global];
     for(int i=0;i<mesh.nNodes_global;i++){
       isModelVert_bool[i] = isModelVert[i] != 0;
-      //std::cout<<i<<" "<<isModelVert_bool[i]<<std::endl;
     }
     int bFaces_2D[nBFaces][5];
     for(int i=0;i<nBFaces;i++){
@@ -1282,9 +1276,6 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus2(Mesh& mesh,int* isModelVert,int* 
       bFaces_2D[i][3] = bFaces[idx+3];
       bFaces_2D[i][4] = bFaces[idx+4];
     }
-
-    //std::cout<<"bFaces_2D "<< bFaces_2D[1][0]<<" "<<bFaces_2D[1][1]<<" "<<bFaces_2D[1][2]<<" "<<bFaces_2D[1][3]<<" "<<bFaces_2D[1][4]<<std::endl;
-
 
     apf::GlobalToVert outMap;
 
@@ -1304,14 +1295,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus2(Mesh& mesh,int* isModelVert,int* 
       counter++;
     }
 
-    std::cout<<"Test map "<< bFaces_2D[1][1]<<" "<<globalToRegion[bFaces_2D[1][1]]<<std::endl;
-    apf::Downward facesAdjToRegion;
-    m->getDownward(globalToRegion[bFaces_2D[1][1]],2,facesAdjToRegion);
-    std::cout<<"Downward "<<facesAdjToRegion[0]<<" "<<facesAdjToRegion[1]<<std::endl;
-    //std::abort();
-
     apf::deriveMdlFromManifold(m,isModelVert_bool,nBFaces,bFaces_2D,outMap,globalToRegion);
-    //m = apf::loadMdsMesh(testModel, testMesh);
     m->writeNative("Reconstructed.smb");
     gmi_write_dmg(m->getModel(),"Reconstructed.dmg");
     std::cout<<"Finished Reconstruction, terminating program. Rerun with PUMI workflow\n";
