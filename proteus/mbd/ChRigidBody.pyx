@@ -43,6 +43,7 @@ cdef extern from "ChRigidBody.h":
         double length
         int nb_elems
         vector[ch.ChVector] mvecs
+        vector[ch.ChVector] mvecs_tangents
         void buildNodes()
         void buildMaterials()
         void buildElements()
@@ -1722,6 +1723,7 @@ cdef class ProtChMoorings:
       object Mesh
       int nd
       object nodes_function
+      object nodes_function_tangent
       object fluid_velocity_function
       ProtChBody body_front
       ProtChBody body_back
@@ -1783,7 +1785,6 @@ cdef class ProtChMoorings:
         self.external_forces_from_ns = True
         self.external_forces_manual = False
         self._record_etas=np.array([0.])
-        self.initialised = False
 
     def setName(self, string name):
         """Sets name of cable, used for csv file
@@ -1956,16 +1957,20 @@ cdef class ProtChMoorings:
         if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
             self._recordValues()
 
-    def setNodesPositionFunction(self, function):
+    def setNodesPositionFunction(self, function_position, function_tangent=None):
         """Function to build nodes
 
         Parameters
         ----------
-        function:
+        function_position:
             Must be a function taking one argument (e.g. distance
             along cable) and returning 3 arguments (x, y, z) coords.
+        function_position: Optional
+            Must be a function taking one argument (e.g. distance
+            along cable) and returning 3 arguments (x, y, z) tangents at coords.
         """
-        self.nodes_function = function
+        self.nodes_function = function_position
+        self.nodes_function_tangent = function_tangent
 
     def setFluidVelocityFunction(self, function):
         """Function to build nodes
@@ -2072,13 +2077,13 @@ cdef class ProtChMoorings:
         """
         deref(self.thisptr.cables[segment_nb]).setAddedMassCoefficients(tangential, normal)
 
-    def setNodesPosition(self, double[:,:,:] pos=None):
+    def setNodesPosition(self, double[:,:,:] positions=None, tangents=None):
         """Builds the nodes of the cable.
 
         (!) Must be called after setNodesPositionFunction()
         """
         cdef ch.ChVector[double] vec
-        if pos is None:
+        if positions is None:
             for i in range(self.thisptr.cables.size()):
                 deref(self.thisptr.cables[i]).mvecs.clear()
                 L0 = deref(self.thisptr.cables[i]).L0
@@ -2097,11 +2102,35 @@ cdef class ProtChMoorings:
         else:
             for i in range(self.thisptr.cables.size()):
                 deref(self.thisptr.cables[i]).mvecs.clear()
-                nb_nodes = len(pos[i])
-                for j in range(len(pos[i])):
-                    x, y, z = pos[i][j]
+                nb_nodes = len(positions[i])
+                for j in range(len(positions[i])):
+                    x, y, z = positions[i][j]
                     vec = ch.ChVector[double](x, y, z)
                     deref(self.thisptr.cables[i]).mvecs.push_back(vec)
+        if tangents is None:
+            for i in range(self.thisptr.cables.size()):
+                deref(self.thisptr.cables[i]).mvecs_tangents.clear()
+                L0 = deref(self.thisptr.cables[i]).L0
+                L = deref(self.thisptr.cables[i]).length
+                nb_elems = deref(self.thisptr.cables[i]).nb_elems
+                if self.beam_type == "CableANCF" or self.beam_type == "BeamEuler":
+                    nb_nodes = nb_elems+1
+                else:
+                    print("set element type")
+                    sys.exit()
+                ds = L/(nb_nodes-1)
+                for j in range(nb_nodes):
+                    x, y, z = self.nodes_function_tangent(L0+ds*j)
+                    vec = ch.ChVector[double](x, y, z)
+                    deref(self.thisptr.cables[i]).mvecs_tangents.push_back(vec)
+        else:
+            for i in range(self.thisptr.cables.size()):
+                deref(self.thisptr.cables[i]).mvecs_tangents.clear()
+                nb_nodes = len(tangents[i])
+                for j in range(len(tangents[i])):
+                    x, y, z = tangents[i][j]
+                    vec = ch.ChVector[double](x, y, z)
+                    deref(self.thisptr.cables[i]).mvecs_tangents.push_back(vec)
         self.buildNodes()
 
     def buildNodes(self):
