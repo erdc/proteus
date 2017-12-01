@@ -349,6 +349,12 @@ class NS_base:  # (HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.PUMIDomain):
+                import sys
+                if(comm.size()>1 and p.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
+                  sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
+                if comm.size() > 1 and n.conservativeFlux != None:
+                    sys.exit("ERROR: Element based partitions don't have a functioning conservative flux calculation. Set conservativeFlux to None in twp_navier_stokes")
+
                 #ibaned: PUMI conversion #1
                 if p.domain.nd == 3:
                   mesh = MeshTools.TetrahedralMesh()
@@ -498,41 +504,34 @@ class NS_base:  # (HasTraits):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
-
-            
-            if(n.useModel):
-              logEvent("Converting Reconstructed PUMI mesh to Proteus")
+            if (n.useModel) and not isinstance(p.domain,Domain.PUMIDomain) :
+              logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
               p = self.pList[0]
               n = self.nList[0]
               p.domain.PUMIMesh=n.MeshAdaptMesh
               p.domain.hasModel = n.useModel
            
-              #p.domain.PUMIMesh.reconstructFromProteus2("reconmodel.dmg","reconmodel.smb")
-              p.domain.PUMIMesh.reconstructFromProteus2("marin_recon.dmg","marin_recon.smb")
-              logEvent("Converting to PUMI")
-              mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
-                  p.domain.regList,
-                  parallel = comm.size() > 1, dim = p.domain.nd)
-              if p.domain.nd == 3:
-                mlMesh = MeshTools.MultilevelTetrahedralMesh(
-                    0,0,0,skipInit=True,
-                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                    parallelPartitioningType=n.parallelPartitioningType)
-              if p.domain.nd == 2:
-                mlMesh = MeshTools.MultilevelTriangularMesh(
-                    0,0,0,skipInit=True,
-                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                    parallelPartitioningType=n.parallelPartitioningType)
-              logEvent("Generating %i-level mesh from PUMI mesh" % (n.nLevels,))
-              if comm.size()==1:
-                mlMesh.generateFromExistingCoarseMesh(
-                    mesh,n.nLevels,
-                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                    parallelPartitioningType=n.parallelPartitioningType)
-              else:
-                mlMesh.generatePartitionedMeshFromPUMI(
-                    mesh,n.nLevels,
-                    nLayersOfOverlap=n.nLayersOfOverlapForParallel)
+              from scipy import spatial
+              meshVertexTree = spatial.cKDTree(mesh.nodeArray)
+              meshVertex2Model= [0]*mesh.nNodes_owned
+              for idx,vertex in enumerate(self.pList[0].domain.vertices):
+                if(self.pList[0].nd==2 and len(vertex) == 2): #there might be a smarter way to do this
+                  vertex.append(0.0) #need to make a 3D coordinate
+                closestVertex = meshVertexTree.query(vertex)
+                meshVertex2Model[closestVertex[1]] = 1
+
+              isModelVert = numpy.asarray(meshVertex2Model).astype("i")
+              
+              meshBoundaryConnectivity = numpy.zeros((mesh.nExteriorElementBoundaries_global,5),dtype=numpy.int32)
+              for elementBdyIdx in range(len(mesh.exteriorElementBoundariesArray)):
+                exteriorIdx = mesh.exteriorElementBoundariesArray[elementBdyIdx]
+                meshBoundaryConnectivity[elementBdyIdx][0] =  mesh.elementBoundaryMaterialTypes[exteriorIdx]
+                meshBoundaryConnectivity[elementBdyIdx][1] = mesh.elementBoundaryElementsArray[exteriorIdx][0]
+                meshBoundaryConnectivity[elementBdyIdx][2] = mesh.elementBoundaryNodesArray[exteriorIdx][0]
+                meshBoundaryConnectivity[elementBdyIdx][3] = mesh.elementBoundaryNodesArray[exteriorIdx][1]
+                meshBoundaryConnectivity[elementBdyIdx][4] = mesh.elementBoundaryNodesArray[exteriorIdx][2]
+              
+              p.domain.PUMIMesh.reconstructFromProteus2(mesh.cmesh,isModelVert,meshBoundaryConnectivity)
   
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
