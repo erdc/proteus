@@ -24,7 +24,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int loadModelAndMesh(char *, char*)
         int getSimmetrixBC()
         int reconstructFromProteus(Mesh&,Mesh&,int)
-        int reconstructFromProteus2(char*,char*)
+        int reconstructFromProteus2(Mesh&,int*,int*)
         int constructFromSerialPUMIMesh(Mesh&)
         int constructFromParallelPUMIMesh(Mesh&, Mesh&)
         int updateMaterialArrays(Mesh&,int, int, int)
@@ -69,8 +69,11 @@ cdef class MeshAdaptPUMI:
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         cdef CMesh* global_cmesh_ptr = <CMesh*>global_cmesh
         return self.thisptr.reconstructFromProteus(cmesh_ptr.mesh,global_cmesh_ptr.mesh,hasModel)
-    def reconstructFromProteus2(self,testModel,testMesh):
-        return self.thisptr.reconstructFromProteus2(testModel,testMesh)
+    def reconstructFromProteus2(self,cmesh,np.ndarray[int,ndim=1,mode="c"] isModelVert,
+                                np.ndarray[int,ndim=2,mode="c"] bFaces):
+        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
+        isModelVert = np.ascontiguousarray(isModelVert)
+        return self.thisptr.reconstructFromProteus2(cmesh_ptr.mesh,&isModelVert[0], <int *> bFaces.data)
     def constructFromSerialPUMIMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.constructFromSerialPUMIMesh(cmesh_ptr.mesh)
