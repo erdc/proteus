@@ -675,8 +675,10 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   apf::MeshElement *element;
   apf::MeshEntity *reg;
   size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
-  size_scale = apf::createLagrangeField(m, "proteus_size_scale", apf::VECTOR, 1);
-  size_frame = apf::createLagrangeField(m, "proteus_size_frame", apf::MATRIX, 1);
+  if (adapt_type_config == "anisotropic"){
+    size_scale = apf::createLagrangeField(m, "proteus_size_scale", apf::VECTOR, 1);
+    size_frame = apf::createLagrangeField(m, "proteus_size_frame", apf::MATRIX, 1);
+  }
   apf::Field *size_iso_reg = apf::createField(m, "iso_size", apf::SCALAR, apf::getConstant(nsd));
   apf::Field *clipped_vtx = apf::createLagrangeField(m, "iso_clipped", apf::SCALAR, 1);
 
