@@ -1311,6 +1311,8 @@ cdef class ProtChSystem:
         """Attaches Proteus model to auxiliary variable
         """
         self.model = model
+        levelModel = self.model.levelModelList[-1]
+        levelModel.ProtChBody = ProtChBody
         return self
 
     def attachAuxiliaryVariables(self,avDict):

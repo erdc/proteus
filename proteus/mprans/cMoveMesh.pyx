@@ -1,12 +1,21 @@
 import numpy
 cimport numpy
 from proteus import *
-from proteus.Transport import *
 from proteus.Transport import OneLevelTransport
 
 cdef extern from "MoveMesh.h" namespace "proteus":
     cdef cppclass MoveMesh_base:
-        void calculateResidual(double* mesh_trial_ref,
+        void calculateResidual(double* detJ_last_view,
+                               double* detJ0_view,
+                               double* E_view,
+                               double* dilation_view,
+                               double* dilation_last_view,
+                               double* distortion_view,
+                               double* distortion_last_view,
+                               double* distortion0_view,
+                               double* body_pos,
+                               int checkDistance,
+                               double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
                                int* mesh_l2g,
@@ -53,7 +62,17 @@ cdef extern from "MoveMesh.h" namespace "proteus":
                                double* ebqe_bc_stressFlux_v_ext,
                                double* ebqe_bc_stressFlux_w_ext)
 			       
-        void calculateJacobian(double* mesh_trial_ref,
+        void calculateJacobian(double* detJ_last_view,
+                               double* detJ0_view,
+                               double* E_view,
+                               double* dilation_view,
+                               double* dilation_last_view,
+                               double* distortion_view,
+                               double* distortion_last_view,
+                               double* distortion0_view,
+                               double* body_pos,
+                               int checkDistance,
+                               double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
                                int* mesh_l2g,
@@ -138,6 +157,16 @@ cdef class cMoveMesh_base:
     def __dealloc__(self):
         del self.thisptr
     def calculateResidual(self,
+                          double[:] detJ_last_view,
+                          double[:] detJ0_view,
+                          double[:,:] E_view,
+                          double[:,:] dilation_view,
+                          double[:,:] dilation_last_view,
+                          double[:,:] distortion_view,
+                          double[:,:] distortion_last_view,
+                          double[:,:] distortion0_view,
+                          double[:] body_pos,
+                          int checkDistance,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
@@ -184,7 +213,17 @@ cdef class cMoveMesh_base:
                           numpy.ndarray ebqe_bc_stressFlux_u_ext,
                           numpy.ndarray ebqe_bc_stressFlux_v_ext,
                           numpy.ndarray ebqe_bc_stressFlux_w_ext):
-        self.thisptr.calculateResidual(<double*>mesh_trial_ref.data,
+        self.thisptr.calculateResidual(&detJ_last_view[0],
+                                       &detJ0_view[0],
+                                       &E_view[0,0],
+                                       &dilation_view[0,0],
+                                       &dilation_last_view[0,0],
+                                       &distortion_view[0,0],
+                                       &distortion_last_view[0,0],
+                                       &distortion0_view[0,0],
+                                       &body_pos[0],
+                                       <int>checkDistance,
+                                       <double*>mesh_trial_ref.data,
                                         <double*>mesh_grad_trial_ref.data,
                                         <double*>mesh_dof.data,
                                         <int*>mesh_l2g.data,
@@ -231,6 +270,16 @@ cdef class cMoveMesh_base:
                                         <double*>ebqe_bc_stressFlux_v_ext.data,
                                         <double*>ebqe_bc_stressFlux_w_ext.data)
     def calculateJacobian(self,
+                          double[:] detJ_last_view,
+                          double[:] detJ0_view,
+                          double[:,:] E_view,
+                          double[:,:] dilation_view,
+                          double[:,:] dilation_last_view,
+                          double[:,:] distortion_view,
+                          double[:,:] distortion_last_view,
+                          double[:,:] distortion0_view,
+                          double[:] body_pos,
+                          int checkDistance,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
@@ -287,7 +336,17 @@ cdef class cMoveMesh_base:
                           numpy.ndarray csrColumnOffsets_eb_w_w):
         cdef numpy.ndarray rowptr,colind,globalJacobian_a
         (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
-        self.thisptr.calculateJacobian(<double*>mesh_trial_ref.data,
+        self.thisptr.calculateJacobian(&detJ_last_view[0],
+                                       &detJ0_view[0],
+                                       &E_view[0,0],
+                                       &dilation_view[0,0],
+                                       &dilation_last_view[0,0],
+                                       &distortion_view[0,0],
+                                       &distortion_last_view[0,0],
+                                       &distortion0_view[0,0],
+                                       &body_pos[0],
+                                       <int>checkDistance,
+                                       <double*>mesh_trial_ref.data,
                                         <double*>mesh_grad_trial_ref.data,
                                         <double*>mesh_dof.data,
                                         <int*>mesh_l2g.data,
