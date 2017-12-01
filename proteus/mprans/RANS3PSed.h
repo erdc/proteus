@@ -634,12 +634,15 @@ namespace proteus
       //gco: we need to use only rho_s and nu_s for solving RANS
       // we need fluid rho and nu for turbulence
       // we need fluid rho and nu for momentum interface
+      
       rho = rho_s;
       //rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
+      
       nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
       nu = nu_s;
       //nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       nu += nu_t;
+      
       //mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
       mu = rho_s*nu_s;
 
@@ -839,7 +842,7 @@ namespace proteus
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-      viscosity = nu;//mu;
+      viscosity = nu;//mu; gco check
       uc = sqrt(u*u+v*v*+w*w); 
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);

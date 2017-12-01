@@ -1390,7 +1390,7 @@ namespace proteus
         nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-        viscosity = mu;
+        viscosity = nu;//mu; gco check
         uc = sqrt(u*u+v*v*+w*w); 
         duc_du = u/(uc+1.0e-12);
         duc_dv = v/(uc+1.0e-12);
