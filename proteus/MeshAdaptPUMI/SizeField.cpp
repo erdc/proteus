@@ -347,7 +347,7 @@ static void scaleFormula(double phi, double hmin, double hmax,
 
 static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
                             apf::Vector3 const &curves,
-                            double lambda[3], double eps_u, apf::Vector3 &scale,int nsd)
+                            double lambda[3], double eps_u, apf::Vector3 &scale,int nsd,double maxAspect)
 //Function used to set the size scale vector for the anisotropic ERM size field configuration
 //Inputs:
 // phi is is the distance to the interface
@@ -406,9 +406,21 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
     scale[2] = 1.0;
   }
   else{
+/*
     scale[0] = h_dest * pow((lambda[1] * lambda[2]) / (lambda[0] * lambda[0]), 1.0 / 6.0);
     scale[1] = sqrt(lambda[0] / lambda[1]) * scale[0];
     scale[2] = sqrt(lambda[0] / lambda[2]) * scale[0];
+*/
+    scale[0] = h_dest;
+    scale[1] = sqrt(lambda[0] / lambda[1]) * scale[0];
+    scale[2] = sqrt(lambda[0] / lambda[2]) * scale[0];
+    if(scale[1]/scale[0] > maxAspect)
+      scale[1] = maxAspect*scale[0];
+    if(scale[2]/scale[0] > maxAspect)
+      scale[2] = maxAspect*scale[0];
+    if(scale[1]/scale[0] > maxAspect || scale[2]/scale[0] > maxAspect){
+      std::cout<<"Scales reached maximum aspect ratio\n";
+    }
   }
   //*/
   /*
@@ -742,6 +754,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   //Get the anisotropic size frame
   if (adapt_type_config == "anisotropic")
   {
+    if(comm_rank==0)
+      std::cout<<"Entering anisotropic loop to compute size scales and frames\n";
     double eps_u = 0.002; //distance from the interface
 /*
     apf::Field *phif = m->findField("phi");
@@ -802,8 +816,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
       double lambda[3] = {ssa[2].wm, ssa[1].wm, ssa[0].wm};
 
+      scaleFormulaERM(phi, hmin, hmax, apf::getScalar(size_iso, v, 0), curve, lambda, eps_u, scale,nsd,maxAspect);
 
-      scaleFormulaERM(phi, hmin, hmax, apf::getScalar(size_iso, v, 0), curve, lambda, eps_u, scale,nsd);
       apf::setVector(size_scale, v, 0, scale);
       //get frames
 
