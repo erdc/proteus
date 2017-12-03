@@ -719,7 +719,94 @@ class BernsteinOnCube(LocalFunctionSpace):
             self.basisGradients.append(basisGradients[invMap[i]])
         # Get boundary data
         self.defineTraceFunctions()
-        
+
+#######################################################
+### ********** THIS PART IS EXPERIMENTAL ********** ###
+#######################################################
+class LinearOnQuadraticCube(LocalFunctionSpace):
+    """
+    Linear basis on a reference 'quadratic' cube 
+
+    ##############
+    # *** 2D *** #
+    ##############
+    ###########
+    # Order=2 #
+    ###########
+    3-6-2
+    | | |
+    7-8-5
+    | | |
+    0-4-1
+    """
+    from math import factorial 
+
+    def nChooseK(self,n,k):
+        return factorial(n)/factorial(k)/factorial(n-k)
+    
+    def __init__(self,nd=3, order=2):
+        self.referenceElement = ReferenceCube(nd)
+        LocalFunctionSpace.__init__(self,(order+1)**nd,self.referenceElement)
+        self.gradientList=[]
+        self.order = order
+
+        # Generate equi distance nodes for generation of basis
+        # Should use Gauss Labatto points
+
+        self.nodes=[]
+
+        self.quadrature = LobattoEdgeAlt(order=order)
+        for i in range(order+1):
+            self.nodes.append(self.quadrature.points[i][0])
+        # Define 1D functions using definition via binomial coefficients
+        self.fun=[]
+        self.dfun=[]
+        #self.dfun2=[] 
+
+        #basis functions
+        self.fun.append(lambda x,n=order,k=0: -x if x<=0 else 0.)
+        self.fun.append(lambda x,n=order,k=1: x+1. if x<=0 else -x+1.)
+        self.fun.append(lambda x,n=order,k=2: 0. if x<=0 else x)
+
+        #grad of basis functions
+        self.dfun.append(lambda x,n=order,k=0: -1. if x<0 else (0. if x > 0 else -0.5))
+        self.dfun.append(lambda x,n=order,k=1: 1. if x<0 else (-1. if x > 0 else 0.))
+        self.dfun.append(lambda x,n=order,k=2: 0. if x<0 else (1. if x > 0 else 0.5))
+
+        # Define multi-dimensional stuff
+        basis= []
+        basisGradients = []
+        if nd == 1:
+            basis = self.fun
+            basisGradients = self.dfun
+            funMap=[0,2,1]
+        elif nd == 2:
+            #Define the basis and its gradient via tensor products
+            for j in range(order+1):
+                for i in range(order+1):
+                    basis.append(lambda xi,i=i,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
+                    basisGradients.append(lambda xi,i=i,j=j:
+                                          numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
+                                                       self. fun[i](xi[0])*self.dfun[j](xi[1])]))
+            #Define numbering for arbitrary order (see above)
+            funMap=[0,7,3,  4,8,6,   1,5,2]            
+        elif nd == 3:
+            raise NotImplementedError
+
+        # Reorder local functions
+        invMap=numpy.zeros((self.dim),'i')
+        for i in range(self.dim):
+            invMap[funMap[i]] = i
+
+        for i in range(self.dim):
+            self.basis.append(basis[invMap[i]])
+            self.basisGradients.append(basisGradients[invMap[i]])
+        # Get boundary data
+        self.defineTraceFunctions()
+######################################################
+### ********** END OF EXPERIMENTAL PART ********** ###
+######################################################
+
 class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
     """
     Quadratic polynomials on the unit nd-simplex with the nodal basis.
@@ -4676,6 +4763,41 @@ class C0_AffineBernsteinOnCube(ParametricFiniteElementSpace):
 #######################################################################################
 # ****************************** THIS IS EXPERIMENTAL ******************************* #
 #######################################################################################
+class C0_AffineLinearOnQuadraticCube(C0_AffineLagrangeOnCubeWithNodalBasis):
+#class C0_AffineLinearOnQuadraticCube(ParametricFiniteElementSpace):
+    """
+    Linear on Quadratice Cube FE Space. It is basically linear FE Space
+    Globally C0
+    Each geometric element is the image of the reference simplex under
+    a linear affine mapping. The Bernstein basis is used on the reference simplex.
+    """
+    def __init__(self,mesh,nd=3,order=2):
+        self.order = order
+        localGeometricSpace= LinearOnCubeWithNodalBasis(nd)
+        #todo fix these interpolation conditions to work on Cube        
+        if self.order==2:
+            localFunctionSpace = LinearOnQuadraticCube(nd,order=2)
+            interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        else:
+            raise NotImplementedError ("Lagrange factory only implemented for Q2"
+                                       "elements so far. For Q1 use C0_AffineLinearOnCubeWithNodalBasis.")
+        ParametricFiniteElementSpace.__init__(self,
+                                              ReferenceFiniteElement(localFunctionSpace,
+                                                                     interpolationConditions),
+                                              AffineMaps(mesh,
+                                                         localGeometricSpace.referenceElement,
+                                                         LinearOnCubeWithNodalBasis(nd)),
+                                              QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd))
+
+        for i in range(localFunctionSpace.dim):
+            for j in range(localFunctionSpace.dim):
+                x_j = interpolationConditions.quadraturePointArray[j]
+                psi_ij = localFunctionSpace.basis[i](x_j)
+                #print i,j,x_j,psi_ij
+        #for archiving
+        import Archiver
+        self.XdmfWriter=Archiver.XdmfWriter()
+
 class C0_AffineQ3BernsteinOnCube(ParametricFiniteElementSpace):
     """
     Bernstein CG space of order 3.

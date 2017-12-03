@@ -1591,7 +1591,6 @@ class OneLevelTransport(NonlinearEquation):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         import PostProcessingTools
-#        import pdb ; pdb.set_trace()
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
@@ -6126,6 +6125,11 @@ class MultilevelTransport:
         if numerics.numericalFluxType is None:
             numerics.numericalFluxType = NumericalFlux.StrongDirichletFactory(problem.fluxBoundaryConditions)
         self.OneLevelTransportType=OneLevelTransportType
+        #mql. auxiliary spaces
+        self.auxSpaceTypeDict = None
+        if 'auxSpaces' in dir(numerics):
+            self.auxSpaceTypeDict = numerics.auxSpaces
+            
         phiSpaces = None
         if 'phiSpaces' in dir(numerics):
             phiSpaces = numerics.phiSpaces
@@ -6196,6 +6200,7 @@ class MultilevelTransport:
         self.jacobianList=[]
         self.par_jacobianList=[]
         self.uDictList=[]
+        self.auxDictList=[]
         self.uList=[]
         self.duList=[]
         self.rList=[]
@@ -6205,6 +6210,7 @@ class MultilevelTransport:
         self.trialSpaceDictList=[]
         self.trialSpaceListDict={}
         self.testSpaceDictList=[]
+        self.auxSpaceDictList=[] #mql
         self.bcDictList=[]
         self.bcListDict={}
         self.levelModelList=[]
@@ -6224,12 +6230,21 @@ class MultilevelTransport:
         for mesh in mlMesh.meshList:
             sdmesh = mesh.subdomainMesh
             memory()
+            
             logEvent("Generating Trial Space",level=2)
             trialSpaceDict = dict([ (cj,TrialSpaceType(sdmesh,nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.iteritems()])
             self.trialSpaceDictList.append(trialSpaceDict)
             logEvent("Generating Test Space",level=2)
             testSpaceDict = dict([(ci,TestSpaceType(sdmesh,nd)) for (ci,TestSpaceType) in TestSpaceTypeDict.iteritems()])
             self.testSpaceDictList.append(testSpaceDict)
+            #mql. auxiliary spaces
+            if self.auxSpaceTypeDict is not None:
+                logEvent("Generating auxiliary spaces",level=2)
+                auxSpaceDict = dict([(ci,auxSpaceType(sdmesh,nd))
+                                     for (ci,auxSpaceType) in self.auxSpaceTypeDict.iteritems()])
+                self.auxSpaceDictList.append(auxSpaceDict)
+            else:
+                logEvent("No auxiliary spaces",level=2)
             logEvent("Allocating u",level=2)
             uDict = dict([(cj,FiniteElementFunction(trialSpace,name=coefficients.variableNames[cj])) for (cj,trialSpace) in trialSpaceDict.iteritems()])
             #11/11/09 allow FiniteElementFunction to communicate uknowns across procs
@@ -6240,6 +6255,14 @@ class MultilevelTransport:
             phiSpaceDict = dict([ (cj,PhiSpaceType(sdmesh,nd)) for (cj,PhiSpaceType) in PhiSpaceTypeDict.iteritems()])
             self.phiSpaceDictList.append(phiSpaceDict)
             phiDict = dict([(cj,FiniteElementFunction(phiSpace)) for (cj,phiSpace) in phiSpaceDict.iteritems()])
+            #mql. auxDict
+            if self.auxSpaceTypeDict is not None:
+                logEvent("Allocating aux")
+                auxDict = dict([(cj,FiniteElementFunction(auxSpace,name=coefficients.variableNames[cj])) for (cj,auxSpace) in auxSpaceDict.iteritems()])
+                for cj in auxDict.keys():
+                    auxDict[cj].setupParallelCommunication()
+                self.auxDictList.append(auxDict)
+            ## end of auxDict ##
             #need to communicate phi if nonlinear potential and there is spatial dependence in potential function
             for cj in phiDict.keys():
                 phiDict[cj].setupParallelCommunication()
@@ -6354,31 +6377,59 @@ class MultilevelTransport:
             logEvent("Initializing OneLevelTransport",level=2)
             uDict[0].femSpace.mesh.nLayersOfOverlap = mesh.nLayersOfOverlap
             uDict[0].femSpace.mesh.parallelPartitioningType = mesh.parallelPartitioningType
-            transport=self.OneLevelTransportType(uDict,
-                                            phiDict,
-                                            testSpaceDict,
-                                            matType,
-                                            dirichletConditionsDict,
-                                            dirichletConditionsSetterDict,
-                                            copy.deepcopy(coefficients),
-                                            quadratureDict,
-                                            elementBoundaryQuadratureDict,
-                                            fluxBoundaryConditionsDict,
-                                            advectiveFluxBoundaryConditionsSetterDict,
-                                            diffusiveFluxBoundaryConditionsSetterDictDict,
-                                            stressFluxBoundaryConditionsSetterDict,
-                                            copy.deepcopy(stabilization),
-                                            copy.deepcopy(shockCapturing),
-                                            conservativeFlux,
-                                            numericalFluxType,
-                                            TimeIntegrationClass,
-                                            massLumping,
-                                            reactionLumping,
-                                            options,
-                                            self.name + str(len(self.levelModelList)),
-                                            sd=useSparseDiffusion,
-                                            movingDomain=movingDomain,
-                                            bdyNullSpace=bdyNullSpace)
+            if self.auxSpaceTypeDict is None:
+                transport=self.OneLevelTransportType(uDict,
+                                                     phiDict,
+                                                     testSpaceDict,
+                                                     matType,
+                                                     dirichletConditionsDict,
+                                                     dirichletConditionsSetterDict,
+                                                     copy.deepcopy(coefficients),
+                                                     quadratureDict,
+                                                     elementBoundaryQuadratureDict,
+                                                     fluxBoundaryConditionsDict,
+                                                     advectiveFluxBoundaryConditionsSetterDict,
+                                                     diffusiveFluxBoundaryConditionsSetterDictDict,
+                                                     stressFluxBoundaryConditionsSetterDict,
+                                                     copy.deepcopy(stabilization),
+                                                     copy.deepcopy(shockCapturing),
+                                                     conservativeFlux,
+                                                     numericalFluxType,
+                                                     TimeIntegrationClass,
+                                                     massLumping,
+                                                     reactionLumping,
+                                                     options,
+                                                     self.name + str(len(self.levelModelList)),
+                                                     sd=useSparseDiffusion,
+                                                     movingDomain=movingDomain,
+                                                     bdyNullSpace=bdyNullSpace)
+            else:
+                transport=self.OneLevelTransportType(uDict,
+                                                     phiDict,
+                                                     auxDict,
+                                                     testSpaceDict,
+                                                     matType,
+                                                     dirichletConditionsDict,
+                                                     dirichletConditionsSetterDict,
+                                                     copy.deepcopy(coefficients),
+                                                     quadratureDict,
+                                                     elementBoundaryQuadratureDict,
+                                                     fluxBoundaryConditionsDict,
+                                                     advectiveFluxBoundaryConditionsSetterDict,
+                                                     diffusiveFluxBoundaryConditionsSetterDictDict,
+                                                     stressFluxBoundaryConditionsSetterDict,
+                                                     copy.deepcopy(stabilization),
+                                                     copy.deepcopy(shockCapturing),
+                                                     conservativeFlux,
+                                                     numericalFluxType,
+                                                     TimeIntegrationClass,
+                                                     massLumping,
+                                                     reactionLumping,
+                                                     options,
+                                                     self.name + str(len(self.levelModelList)),
+                                                     sd=useSparseDiffusion,
+                                                     movingDomain=movingDomain,
+                                                     bdyNullSpace=bdyNullSpace)
             self.offsetListList.append(transport.offset)
             self.strideListList.append(transport.stride)
             memory()

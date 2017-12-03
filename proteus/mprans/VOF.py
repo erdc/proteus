@@ -437,10 +437,24 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # SAVE OLD SOLUTION #
 	self.model.u_dof_old[:] = self.model.u[0].dof
 
+        # COMPUTE BLENDING FUNCTION (if given by user) #
+        if self.model.hasBlendingFunction:
+            self.model.updateBlendingFunction()
+
+        # COMPUTE THE EXACT SOLUTION
+        if self.model.hasExactSolution:
+            self.model.updateExactSolution()
+            
+        if self.model.hasForceFieldAsFunction:
+            self.model.updateForceFieldAsFunction()
+            
         # COMPUTE NEW VELOCITY (if given by user) # 
         if self.model.hasVelocityFieldAsFunction:
             self.model.updateVelocityFieldAsFunction()
 
+        if self.model.hasForceFieldAsFunction:
+            self.model.updateForceFieldAsFunction()
+            
         if self.checkMass:
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV_last'],
                                                     self.model.q[('m',0)],
@@ -521,6 +535,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def __init__(self,
                  uDict,
                  phiDict,
+                 auxDict,
                  testSpaceDict,
                  matType,
                  dofBoundaryConditionsDict,
@@ -545,7 +560,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  sd = True,
                  movingDomain=False,
                  bdyNullSpace=False):
-
+        
         self.auxiliaryCallCalculateResidual=False
         #
         #set the objects describing the method and boundary conditions
@@ -563,6 +578,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.testIsTrial=True
         self.phiTrialIsTrial=True
         self.u = uDict
+        self.aux = auxDict
         self.ua = {}#analytical solutions
         self.phi  = phiDict
         self.dphi={}
@@ -629,7 +645,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	#
         #calculate some dimensions
         #
-        self.nSpace_global    = self.u[0].femSpace.nSpace_global #assume same space dim for all variables
+        self.nSpace_global    = self.u[0].femSpace.nSpace_global #assume same space dim for all variables    
+        
         self.nDOF_trial_element     = [u_j.femSpace.max_nDOF_element for  u_j in self.u.values()]
         self.nDOF_phi_trial_element     = [phi_k.femSpace.max_nDOF_element for  phi_k in self.phi.values()]
         self.n_phi_ip_element = [phi_k.femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints for  phi_k in self.phi.values()]
@@ -643,7 +660,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #build the quadrature point dictionaries from the input (this
         #is just for convenience so that the input doesn't have to be
         #complete)
-        #
+        #    
         elementQuadratureDict={}
         elemQuadIsDict = isinstance(elementQuadrature,dict)
         if elemQuadIsDict: #set terms manually
@@ -761,10 +778,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('advectiveFlux_bc',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.ebqe[('advectiveFlux',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         # mql. Allow the user to provide functions to define the velocity field
+        #Velocity field
         self.hasVelocityFieldAsFunction = False
         if ('velocityFieldAsFunction') in dir (options): 
             self.velocityFieldAsFunction = options.velocityFieldAsFunction
             self.hasVelocityFieldAsFunction = True
+
+        #Blending function 
+        self.hasBlendingFunction = False
+        if ('blendingFunction') in dir (options):
+            self.blendingFunction = options.blendingFunction
+            self.hasBlendingFunction = True
+
+        #Exact solution 
+        self.hasExactSolution = False
+        if ('exactSolution') in dir(options):
+            self.exactSolution = options.exactSolution
+            self.hasExactSolution = True
+        self.q['uExact'] = numpy.zeros((self.mesh.nElements_global,
+                                        self.nQuadraturePoints_element),'d')
+        
+        #Force field
+        self.hasForceFieldAsFunction = False
+        if ('forceFieldAsFunction') in dir(options):
+            self.forceFieldAsFunction = options.forceFieldAsFunction
+            self.hasForceFieldAsFunction = True
+        self.q['force'] = numpy.zeros((self.mesh.nElements_global,
+                                           self.nQuadraturePoints_element),'d')
 
         self.points_elementBoundaryQuadrature= set()
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
@@ -796,7 +836,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         del self.internalNodes
         self.internalNodes = None
         logEvent("Updating local to global mappings",2)
-        self.updateLocal2Global()
+        self.updateLocal2Global()        
         logEvent("Building time integration object",2)
         logEvent(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
         #mwf for interpolating subgrid error for gradients etc
@@ -809,6 +849,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
         logEvent("Calculating numerical quadrature formulas",2)
+
         self.calculateQuadrature()
         self.setupFieldStrides()
 
@@ -840,6 +881,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.max_u_bc=None
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFss2 = numpy.zeros(self.u[0].dof.shape,'d')
+        
+        self.blendingFunctionDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+        # mql. get Q2mesh_dof. This has the location of all DOFs in the Q2 mesh
+        self.Q2mesh_dof = numpy.zeros((self.u[0].dof.size,3),'d')
+        for eN in range(self.mesh.nElements_global):
+            for i in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
+                gi = self.offset[0]+self.stride[0]*self.u[0].femSpace.dofMap.l2g[eN,i]
+                self.Q2mesh_dof[gi][0] = self.u[0].femSpace.interpolationPoints[eN,i,0]
+                self.Q2mesh_dof[gi][1] = self.u[0].femSpace.interpolationPoints[eN,i,1]
+                self.Q2mesh_dof[gi][2] = self.u[0].femSpace.interpolationPoints[eN,i,2]
 
         comm = Comm.get()
         self.comm=comm
@@ -902,6 +954,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #TODO how to handle redistancing calls for calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         compKernelFlag=0
+
         self.vof = cVOF_base(self.nSpace_global,
                              self.nQuadraturePoints_element,
                              self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -910,7 +963,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                              self.nElementBoundaryQuadraturePoints_elementBoundary,
                              compKernelFlag)
 
-        self.forceStrongConditions=False
+        self.forceStrongConditions=self.coefficients.forceStrongConditions
         if self.forceStrongConditions:
             self.dirichletConditionsForceDOF = DOFBoundaryConditions(self.u[0].femSpace,dofBoundaryConditionsSetterDict[0],weakDirichletConditions=False)
 
@@ -946,6 +999,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def calculateCoefficients(self):
         pass
 
+    def updateBlendingFunction(self):
+        x = numpy.zeros(self.u[0].dof.shape,'d')
+        y = numpy.zeros(self.u[0].dof.shape,'d')
+        z = numpy.zeros(self.u[0].dof.shape,'d')
+        for eN in range(self.mesh.nElements_global):
+            for i in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
+                gi = self.offset[0]+self.stride[0]*self.u[0].femSpace.dofMap.l2g[eN,i]
+                x[gi] = self.u[0].femSpace.interpolationPoints[eN,i,0]
+                y[gi] = self.u[0].femSpace.interpolationPoints[eN,i,1]
+                z[gi] = self.u[0].femSpace.interpolationPoints[eN,i,2]
+            
+        X = {0:x,
+             1:y,
+             2:z}
+        t = self.timeIntegration.t
+        
+        self.blendingFunctionDOFs[:] = self.blendingFunction[0](X,t)
+        self.quantDOFs[:] = self.blendingFunctionDOFs
+
     def updateVelocityFieldAsFunction(self):
         X = {0:self.q[('x')][:,:,0],
              1:self.q[('x')][:,:,1],
@@ -963,8 +1035,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.ebqe_v[...,0] = self.velocityFieldAsFunction[0](ebqe_X,t)
         self.coefficients.ebqe_v[...,1] = self.velocityFieldAsFunction[1](ebqe_X,t)
         if (self.nSpace_global==3):
-            self.coefficients.ebqe_v[...,2] = self.velocityFieldAsFunction[2](ebqe_X,t)
+            self.coefficients.ebqe_v[...,2] = self.velocityFieldAsFunction[2](ebqe_X,t)            
 
+    def updateForceFieldAsFunction(self):
+        X = {0:self.q[('x')][:,:,0],
+             1:self.q[('x')][:,:,1],
+             2:self.q[('x')][:,:,2]}
+        t = self.timeIntegration.t
+        self.q['force'][:] = self.forceFieldAsFunction[0](X,t)
+
+    def updateExactSolution(self):
+        X = {0:self.q[('x')][:,:,0],
+             1:self.q[('x')][:,:,1],
+             2:self.q[('x')][:,:,2]}
+        t = self.timeIntegration.t
+        self.q['uExact'][:] = self.exactSolution[0](X,t)
+        
     def calculateElementResidual(self):
         if self.globalResidualDummy is not None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
@@ -975,12 +1061,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-        
+
         if self.coefficients.porosity_dof is None: 
             self.coefficients.porosity_dof = numpy.ones(self.u[0].dof.shape,'d')
         if self.u_dof_old is None:
             # Pass initial condition to u_dof_old
             self.u_dof_old = numpy.copy(self.u[0].dof)
+
         ########################
         ### COMPUTE C MATRIX ###
         ########################
@@ -1042,7 +1129,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             cfemIntegrals.calculateWeightedShapeGradients(self.elementQuadratureWeights[('u',0)],
                                                           self.q['abs(det(J))'],
                                                           self.q[('grad(w)',0)],
-                                                          self.q[('grad(w)*dV_f',0)])
+                                                          self.q[('grad(w)*dV_f',0)])            
             ##########################
             ### LUMPED MASS MATRIX ###
             ##########################
@@ -1071,11 +1158,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       self.csrColumnOffsets[(0,0)],
                                                                       elementMassMatrix,
                                                                       self.MC_global)
+
+            diamD2 = numpy.sum(self.q['abs(det(J))'][:]*self.elementQuadratureWeights[('u',0)])
             self.ML = np.zeros((self.nFreeDOF_global[0],),'d')
             for i in range(self.nFreeDOF_global[0]):
                 self.ML[i] = self.MC_a[rowptr[i]:rowptr[i+1]].sum()
-            np.testing.assert_almost_equal(self.ML.sum(), 
-                                           self.mesh.volume, 
+            np.testing.assert_almost_equal(self.ML.sum(),
+                                           diamD2,
+                                           #self.mesh.volume, 
                                            err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
             for d in range(self.nSpace_global): #spatial dimensions
                 #C matrices
@@ -1131,7 +1221,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                           self.csrColumnOffsets[(0,0)],
                                                                           self.cterm_transpose[d],
                                                                           self.cterm_global_transpose[d])
-                
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
         if (self.nSpace_global==3):
@@ -1182,8 +1271,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag',0)][t[0],t[1]] = 1
 
         if self.forceStrongConditions:
-              for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
-                  self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+            for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
+                self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
 
         degree_polynomial = 1
         try:
@@ -1198,6 +1287,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.calculateResidual = self.vof.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.vof.calculateMassMatrix
 
+        self.calculateResidual = self.vof.calculateResidual_blending_spaces
+        self.calculateJacobian = self.vof.calculateJacobian_blending_spaces
+
+
+        #print self.u[0].femSpace.elementMaps.psi.shape #mesh_trial_ref
+        #print self.mesh.nodeArray.shape #mesh_dof
+        #print self.Q2mesh_dof.shape
+        #print self.mesh.elementNodesArray.shape
+        #print self.u[0].femSpace.dofMap.l2g.shape
+        #input("stop")
         self.calculateResidual(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1241,6 +1340,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u',0)],
+            self.q[('grad(u)',0)],
             self.timeIntegration.beta_bdf[0],
             self.q['dV'],
             self.q['dV_last'],
@@ -1296,8 +1396,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dt_times_dC_minus_dL, 
             self.min_u_bc,
             self.max_u_bc,
+            self.q['force'],
+            self.q['uExact'],
+            self.blendingFunctionDOFs, #alpha
+            self.aux[0].femSpace.psi,
+            self.aux[0].femSpace.grad_psi,
             self.quantDOFs)
-        
+
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
@@ -1381,7 +1486,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag',0)],
             self.ebqe[('advectiveFlux_bc',0)],
             self.csrColumnOffsets_eb[(0,0)], 
-            self.coefficients.LUMPED_MASS_MATRIX)
+            self.coefficients.LUMPED_MASS_MATRIX,
+            self.blendingFunctionDOFs, #alpha
+            self.aux[0].femSpace.psi,
+            self.aux[0].femSpace.grad_psi)
+        
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
             scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
@@ -1407,6 +1516,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
                                                  self.q['x'])
+
         self.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
@@ -1417,6 +1527,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stabilization.initializeTimeIntegration(self.timeIntegration)
         if self.shockCapturing is not None:
             self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
+
+        #mql. compute shape function of aux FE space
+        self.aux[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
+        self.aux[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
     def calculateElementBoundaryQuadrature(self):
         pass
     def calculateExteriorElementBoundaryQuadrature(self):

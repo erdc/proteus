@@ -181,7 +181,8 @@ class NS_base:  # (HasTraits):
 
                     if not hasattr(n,'quad'):
                         n.quad = False
-
+                        
+                    #input("STOP TO CREATE AUXILIARY MESH")
                     if (n.quad):
                         mlMesh = MeshTools.MultilevelQuadrilateralMesh(nnx,nny,1,
                                                                        p.domain.x[0], p.domain.x[1], 0.0,
@@ -857,7 +858,7 @@ class NS_base:  # (HasTraits):
         logEvent("Evaluating residuals and time integration")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-                lm.timeTerm=True
+                lm.timeTerm=True                
                 lm.getResidual(lu,lr)
                 lm.timeIntegration.initializeTimeHistory(resetFromDOF=True)
                 lm.initializeTimeHistory()
@@ -1213,6 +1214,7 @@ class NS_base:  # (HasTraits):
                 #calculate the coefficients, any explicit-in-time
                 #terms will be wrong
                 lm.getResidual(lu,lr)
+
         for p,n,m,simOutput in spinup:
             logEvent("Attaching models to model "+p.name)
             m.attachModels(self.modelList)
@@ -1620,6 +1622,19 @@ class NS_base:  # (HasTraits):
         except:
             pass
 
+        try:
+            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                quantDOFs = {}
+                quantDOFs[0] = model.levelModelList[-1].quantDOFs2
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='quantDOFs2_for_'+model.name)
+                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass        
+
         #Write bathymetry for Shallow water equations (MQL)
         try:
             bathymetry = {}
@@ -1737,6 +1752,19 @@ class NS_base:  # (HasTraits):
                 logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass
+
+        try:
+            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                quantDOFs = {}
+                quantDOFs[0] = model.levelModelList[-1].quantDOFs2
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='quantDOFs2_for_'+model.name)
+                logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass        
 
         #Write bathymetry for Shallow water equations (MQL)
         try:

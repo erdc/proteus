@@ -182,7 +182,7 @@ namespace proteus
 	{
 	  if (nSpaceIn == 2)
 	    {
-	      if (nDOF_mesh_trial_elementIn == nDOF_trial_elementIn)//iso-parametric
+	      if (nDOF_mesh_trial_elementIn == nDOF_trial_elementIn)//iso-parametric (linear spaces)
 		{
 		  if (nDOF_mesh_trial_elementIn == 3) //simplices
 		    {
@@ -267,59 +267,67 @@ namespace proteus
 			  else		      
 			    NO_INSTANCE
 			}
+		      else if (nQuadraturePoints_elementIn == 16) //order=1. using nquad=(2*order+2)^nd
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 4)
+			    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,4,4>,2,16,4,4,4,4>());
+			  else
+			    NO_INSTANCE
+			}
 		      else
 			NO_INSTANCE
                     }
 		  else
 		    NO_INSTANCE
 		}
-	      else if (nDOF_mesh_trial_elementIn == 3) // Simplices 
-		{
-		  if (nDOF_trial_elementIn == 6) //2nd order polynomials
-		    {
-		      if (nQuadraturePoints_elementIn == 1)
-		      	{
-		      	  if (nQuadraturePoints_elementBoundaryIn == 1)
-		      	    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,1,3,6,6,1>());
-		      	  else
-		      	    NO_INSTANCE
-		      	}
-		      else if (nQuadraturePoints_elementIn == 3)
-		      	{
-		      	  if (nQuadraturePoints_elementBoundaryIn == 2)
-		      	    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,3,3,6,6,2>());
-		      	  else
-		      	    NO_INSTANCE
-		      	}
-		      else if (nQuadraturePoints_elementIn == 4)
-		      	{
-		      	  if (nQuadraturePoints_elementBoundaryIn == 3)
-		      	    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,4,3,6,6,3>());
-		      	  else
-		      	    NO_INSTANCE
-		      	}
-		      else if (nQuadraturePoints_elementIn == 6)
-		      	{
-		      	  if (nQuadraturePoints_elementBoundaryIn == 4)
-		      	    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,6,3,6,6,4>());
-		      	  else
-		      	    NO_INSTANCE
-		      	}
-		      else if (nQuadraturePoints_elementIn == 7)
-		      	{
-		      	  if (nQuadraturePoints_elementBoundaryIn == 5)
-		      	    {
-		      	      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,7,3,6,6,5>());
-		      	    }
-		      	  else
-		      	    NO_INSTANCE
-		      	}
-		      else
-			NO_INSTANCE
-		    }
-		  else
-		    NO_INSTANCE
-		}
+	      else // higher-order spaces. Higher than one
+		if (nDOF_mesh_trial_elementIn == 3) // Simplices 
+		  {
+		    if (nDOF_trial_elementIn == 6) //2nd order polynomials
+		      {
+			if (nQuadraturePoints_elementIn == 1)
+			  {
+			    if (nQuadraturePoints_elementBoundaryIn == 1)
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,1,3,6,6,1>());
+			    else
+			      NO_INSTANCE
+			  }
+			else if (nQuadraturePoints_elementIn == 3)
+			  {
+			    if (nQuadraturePoints_elementBoundaryIn == 2)
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,3,3,6,6,2>());
+			    else
+			      NO_INSTANCE
+			  }
+			else if (nQuadraturePoints_elementIn == 4)
+			  {
+			    if (nQuadraturePoints_elementBoundaryIn == 3)
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,4,3,6,6,3>());
+			    else
+			      NO_INSTANCE
+			  }
+			else if (nQuadraturePoints_elementIn == 6)
+			  {
+			    if (nQuadraturePoints_elementBoundaryIn == 4)
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,6,3,6,6,4>());
+			    else
+			      NO_INSTANCE
+			  }
+			else if (nQuadraturePoints_elementIn == 7)
+			  {
+			    if (nQuadraturePoints_elementBoundaryIn == 5)
+			      {
+				return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,7,3,6,6,5>());
+			      }
+			    else
+			      NO_INSTANCE
+			  }
+			else
+			  NO_INSTANCE
+		      }
+		    else
+		      NO_INSTANCE
+		  }
 	      else // Hexes
 		{
 		  if (nDOF_trial_elementIn == 9) //2nd order polynomials
@@ -333,7 +341,25 @@ namespace proteus
 			  else
 			    NO_INSTANCE
 		        }
-		      else //higher quad rules
+		      else if (nQuadraturePoints_elementIn == 36) //order=2. use n_quad=(2*order+2)^nd
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 6) 
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,36,4,9,9,6>());
+			    }
+			  else
+			    NO_INSTANCE
+			}
+		      else if (nQuadraturePoints_elementIn == 64) //order=2. use n_quad=(2*(order+1)+2)^nd
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 8) 
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,64,4,9,9,8>());			      
+			    }
+			  else
+			    NO_INSTANCE
+			}
+		      else //other quad rules
 			NO_INSTANCE
 		    }
 		  else //higher-order polynomials
