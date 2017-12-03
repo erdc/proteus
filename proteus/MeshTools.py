@@ -1071,11 +1071,14 @@ class Mesh:
             self.nodeStarOffsets = np.zeros((self.nNodes_global+1,),'i')
             lenNodeStarArray=0
             for nN in range(1,self.nNodes_global+1):
-                self.nodeStarOffsets[nN] = self.nodeStarOffsets[nN-1] + len(self.nodeStarList[nN])
-            self.nodeStarArray = np.array((self.nodeStarOffsets[-1],),'i')
-            for nN in range(self.nNodes_global):
-                for nN_star,offset in enumerate(range(self.nodeStarOffsets[nN],self.nodeStarOffsets[nN+1])):
-                    self.nodeStarArray[offset] = self.nodeStarList[nN][nN_star]
+                self.nodeStarOffsets[nN] = self.nodeStarOffsets[nN-1] + len(self.nodeStarList[nN-1])
+            #self.nodeStarArray = np.array((self.nodeStarOffsets[-1],),'i')
+            #for nN in range(self.nNodes_global):
+            #    for nN_star,offset in enumerate(range(self.nodeStarOffsets[nN],self.nodeStarOffsets[nN+1])):
+            #        self.nodeStarArray[offset] = self.nodeStarList[nN][nN_star]
+	    #	    print self.nodeStarArray
+	    import itertools
+	    self.nodeStarArray =np.fromiter(itertools.chain.from_iterable(self.nodeStarList),'i')
             del self.nodeStarList
     def buildArraysFromLists(self):
         #nodes
@@ -4904,10 +4907,13 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                     self.meshList[0].nodeNumbering_subdomain2global.itemset(node,node)
                 for element in range(self.meshList[0].nElements_global):
                     self.meshList[0].elementNumbering_subdomain2global.itemset(element,element)
+		
+		self.meshList[0].buildNodeStarArrays()
                 for l in range(1,refinementLevels):
                     self.refine()
                     self.meshList[l].subdomainMesh = self.meshList[l]
                     logEvent(self.meshList[-1].meshInfo())
+		    self.meshList[l].buildNodeStarArrays()
                 self.buildArrayLists()
 
     def refine(self):

@@ -222,12 +222,12 @@ class UnitSquareRotation(NCLS.Coefficients):
 
         analyticalSolution[0].t = self.model.timeIntegration.tLast
 
-        import get_Mesh_velocity_1 as MV
+        import get_Mesh_velocity_Q1 as MV
 
         self.mesh.nodeVelocityArray[:] = 0.0
         self.mesh.nodeVelocityArray[:, 0] = self.q_v[:, 0]
         self.mesh.nodeVelocityArray[:, 1] = self.q_v[:, 1]
-
+        
         MV.get_mesh_velocity(self.mesh.nodeArray,
                              self.mesh.nodeStarOffsets,
                              self.mesh.nodeStarArray,
@@ -280,8 +280,13 @@ class UnitSquareRotation(NCLS.Coefficients):
     def calculateResidual(self, *args):
 
         #         import burgers2D_GP_ALE as M
-        import burgers2D_GP_ALE_M2 as M
+        import burgers2D_GP_ALE_Q1_M2 as M
 
+        M.element_map = self.model.u[0].femSpace.elementMaps
+        
+        import pdb
+        pdb.set_trace()
+        
         M.getResidual(
             *args,
             ad_function=analyticalSolution[0].advection_function,

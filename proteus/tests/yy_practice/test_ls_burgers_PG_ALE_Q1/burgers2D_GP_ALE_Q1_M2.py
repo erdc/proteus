@@ -10,6 +10,8 @@ Cx_T = []
 Cy_T = []
 ML_new = []
 node_coord = []
+element_map = None
+
 
 def getResidual(
     # double, self.timeIntegration.dt

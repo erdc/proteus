@@ -20,26 +20,30 @@ def get_angle(x1, x2, x3):
         pdb.set_trace()
         print z1, z2, x1, x2, x3
 
-    return cmath.phase(z2)
+    # abs since we do not know the orientation
+    return abs(cmath.phase(z2))
 
-
-def get_angle_area(e_nodes):
+def get_triangle_area(e_nodes):
     detJ = (e_nodes[1][0] - e_nodes[0][0]) * (e_nodes[2][1] -
                                               e_nodes[0][1]) - (e_nodes[1][1] - e_nodes[0][1]) * (e_nodes[2][0] -
                                                                                                   e_nodes[0][0])
-    # since the orientation is clockwise
-    area = -0.5 * detJ
-
-    if area < 0.0:
-        import pdb
-        pdb.set_trace()
-        print e_nodes, area
-
-    a1 = get_angle(e_nodes[2], e_nodes[0], e_nodes[1])
+    area = 0.5*abs(detJ)
+    
+    return area
+    
+def get_angle_area(e_nodes):
+    
+    # one 
+    area = get_triangle_area(e_nodes[[0,1,2],:])+get_triangle_area(e_nodes[[0,2,3],:])
+        
+    # use for-loop starting from -1
+    a1 = get_angle(e_nodes[3], e_nodes[0], e_nodes[1])
     a2 = get_angle(e_nodes[0], e_nodes[1], e_nodes[2])
-    a3 = get_angle(e_nodes[1], e_nodes[2], e_nodes[0])
-    min_angle = min([a1, a2, a3])
-    max_angle = max([a1, a2, a3])
+    a3 = get_angle(e_nodes[1], e_nodes[2], e_nodes[3])
+    a4 = get_angle(e_nodes[2], e_nodes[3], e_nodes[0])
+    
+    min_angle = min([a1, a2, a3, a4])
+    max_angle = max([a1, a2, a3, a4])
 
     return min_angle, max_angle, area
 
@@ -100,6 +104,7 @@ def get_mesh_velocity(node_coord,
     # Lagrangian mesh
     _node_coord_lagrange = np.copy(node_coord)
     _node_coord_lagrange += dt * _mesh_velocity_at_node
+
 
     _node_coord_smoothed_before = np.copy(_node_coord_lagrange)
     _node_coord_smoothed_after = np.copy(_node_coord_lagrange)

@@ -104,10 +104,10 @@ T = ct.T
 # number of output time steps
 nDTout = ct.nDTout
 # mass correction
-# applyCorrection = False
-# applyRedistancing = False
-# redist_Newton = False
-# onlyVOF = False  # True
+applyCorrection = False
+applyRedistancing = False
+redist_Newton = False
+onlyVOF = False  # True
 # smoothing factors
 # eps
 epsFactHeaviside = epsFactDirac = epsFact_vof = 1.5
