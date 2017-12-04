@@ -594,12 +594,13 @@ void cppCable::buildNodesBeamEuler(bool last_node) {
   ChVector<> ref = ChVector<>(1.,0.,0.);
   ChQuaternion<> frame_quat;
   for (int i = 0; i < mvecs.size() - 1; ++i) {
-    dir = mvecs_tangents[mvecs.size()-1];
+    dir = mvecs_tangents[i];
     dir.Normalize();
     double ang = acos(dir^ref);  // inner product
     auto axis = ref%dir; // cross product
     frame_quat.Q_from_AngAxis(ang, axis);
-    node = std::make_shared<ChNodeFEAxyzrot>(ChFrame<>(mvecs[i], frame_quat));
+    node = std::make_shared<ChNodeFEAxyzrot>(ChFrame<>(mvecs[i],
+                                                       frame_quat));
     nodesRot.push_back(node);
   }  // last node
   if (last_node == true) {
@@ -626,12 +627,14 @@ void cppCable::buildNodesCableANCF(bool last_node) {
   ChVector<> dir;  // direction of node
   ChCoordsys<> coordsys;  // coordinate system of node
   for (int i = 0; i < mvecs.size() - 1; ++i) {
-    dir = mvecs_tangents[i].Normalize();
+    dir = mvecs_tangents[i];
+    dir.Normalize();
     node = std::make_shared<ChNodeFEAxyzD>(mvecs[i], dir);
     nodes.push_back(node);
   }  // last node
   if (last_node == true) {
-    dir = mvecs_tangents[mvecs_tangents.size()-1].Normalize();
+    dir = mvecs_tangents[mvecs_tangents.size()-1];
+    dir.Normalize();
     node = std::make_shared<ChNodeFEAxyzD>(mvecs[mvecs.size()-1], dir);
     nodes.push_back(node);
     nb_nodes = nodes.size();
