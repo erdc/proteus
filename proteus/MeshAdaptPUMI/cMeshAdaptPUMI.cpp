@@ -422,7 +422,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   in->shouldFixShape = true;
-  in->shouldForceAdaptation = true;
   double mass_before = getTotalMass();
 
   double t1 = PCU_Time();
