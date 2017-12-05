@@ -639,9 +639,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.q_vos,
                 self.q_dragAlpha,
                 self.q_dragBeta)
-            #convert from porosity to volume of sediment
-            self.q_vos -= 1.0
-            self.q_vos *= -1.0
         else:
             # TODO make loops faster
             if self.porosityTypes is not None:
@@ -677,9 +674,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebq_vos,
                 self.ebq_dragAlpha,
                 self.ebq_dragBeta)
-            #convert from porosity to volume of sediment
-            self.ebq_vos -= 1.0
-            self.ebq_vos *= -1.0
         # TODO which mean to use or leave discontinuous
         # TODO make loops faster
         if self.porosityTypes is not None:
@@ -777,9 +771,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebqe_vos,
                 self.ebqe_dragAlpha,
                 self.ebqe_dragBeta)
-            #convert from porosity to volume of sediment
-            self.ebqe_vos -= 1.0
-            self.ebqe_vos *= -1.0
         else:
             if self.porosityTypes is not None:
                 for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
@@ -2315,7 +2306,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.epsFact_solid,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
-            self.coefficients.q_vos,
+            self.coefficients.q_vos,#sed fraction - gco check
             self.coefficients.q_dvos_dt,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,
@@ -2397,7 +2388,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.bc_ebqe_phi,
             self.coefficients.ebqe_n,
             self.coefficients.ebqe_kappa,
-            self.coefficients.ebqe_vos,
+            self.coefficients.ebqe_vos,#sed fraction - gco check
             self.coefficients.ebqe_turb_var[0],
             self.coefficients.ebqe_turb_var[1],
             self.pressureModel.numericalFlux.isDOFBoundary[0],
@@ -2621,7 +2612,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.epsFact_solid,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
-            self.coefficients.q_vos,
+            self.coefficients.q_vos,#sed fraction - gco check
             self.coefficients.q_dvos_dt,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,

@@ -86,7 +86,7 @@ namespace proteus
                                    double C_b,
                                    const double* eps_solid,
                                    const double* q_velocity_fluid,
-                                   const double* q_vos,
+                                   const double* q_vos,//sed fraction - gco check
                                    const double* q_dvos_dt,
                                    const double* q_dragAlpha,
                                    const double* q_dragBeta,
@@ -162,7 +162,7 @@ namespace proteus
                                    double* bc_ebqe_phi_ext,
                                    double* ebqe_normal_phi_ext,
                                    double* ebqe_kappa_phi_ext,
-                                   const double* ebqe_vos_ext,
+                                   const double* ebqe_vos_ext,//sed fraction - gco check
                                    const double* ebqe_turb_var_0,
                                    const double* ebqe_turb_var_1,
                                    int* isDOFBoundary_p,
@@ -262,7 +262,7 @@ namespace proteus
                                    //VRANS
                                    const double* eps_solid,
                                    const double* q_velocity_fluid,
-                                   const double* q_vos,
+                                   const double* q_vos,//sed fraction - gco check
                                    const double* q_dvos_dt,
                                    const double* q_dragAlpha,
                                    const double* q_dragBeta,
@@ -323,7 +323,7 @@ namespace proteus
                                    double *ebqe_normal_phi_ext,
                                    double *ebqe_kappa_phi_ext,
                                    //VRANS
-                                   const double* ebqe_vos_ext,
+                                   const double* ebqe_vos_ext,//sed fraction - gco check
                                    const double* ebqe_turb_var_0,
                                    const double* ebqe_turb_var_1,
                                    //VRANS end                                     
@@ -637,8 +637,6 @@ namespace proteus
         //mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
         mu = rho_s*nu_s;
 
-        //printf("grad_p[1] sed2d --> %3.2f\n", grad_p[1]);
-
         eddy_viscosity = nu_t*rho;
         // mass (volume accumulation)
         //..hardwired
@@ -725,20 +723,20 @@ namespace proteus
         /* dmom_w_adv_w[2]=0.0; */
       
         //u momentum diffusion tensor
-        mom_uu_diff_ten[0] = vos*2.0*mu;
-        mom_uu_diff_ten[1] = vos*mu;
+        mom_uu_diff_ten[0] =0.0;//  vos*2.0*mu;
+        mom_uu_diff_ten[1] =0.0;//  vos*mu;
         /* mom_uu_diff_ten[2] = vos*nu; */
   
-        mom_uv_diff_ten[0]= vos*mu;
+        mom_uv_diff_ten[0]=0.0;//  vos*mu;
   
         /* mom_uw_diff_ten[0]=vos*nu; */
   
         //v momentum diffusion tensor
-        mom_vv_diff_ten[0] = vos*mu;
-        mom_vv_diff_ten[1] = vos*2.0*mu;
+        mom_vv_diff_ten[0] =0.0;//  vos*mu;
+        mom_vv_diff_ten[1] =0.0;//  vos*2.0*mu;
         /* mom_vv_diff_ten[2] = vos*mu; */
   
-        mom_vu_diff_ten[0]= vos*mu;
+        mom_vu_diff_ten[0]=0.0;//  vos*mu;
   
         /* mom_vw_diff_ten[0]=vos*mu; */
   
@@ -828,41 +826,71 @@ namespace proteus
 					   double dmom_v_source[nSpace],
 					   double dmom_w_source[nSpace])
     {
-      double rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
+      double rhoFluid, muFluid,nuFluid,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
-      nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
-      rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
-      mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-      viscosity = nu;//mu; gco check
+      nuFluid  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+      rhoFluid  = rho_0*(1.0-H_mu)+rho_1*H_mu;
+      muFluid  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+      //gco kinematic viscosity used, in sedclosure betaterm is multiplied by fluidDensity
+      viscosity = nuFluid;//mu; gco check
+      //phi_s is sediment fraction in this case - gco check
       uc = sqrt(u*u+v*v*+w*w); 
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
       double solid_velocity[3]={uStar,vStar,wStar}, fluid_velocity[3]={u_f,v_f,w_f};
-      double new_beta = closure.betaCoeff(1.0-phi_s,
-                                          rho,
+      double new_beta = closure.betaCoeff(phi_s,
+                                          rhoFluid,
                                           fluid_velocity,
                                           solid_velocity,
                                           viscosity);
-      //new_beta/=rho;
+      //new_beta/=rhoFluid;
       //std::cout<<"total "<<(1.0-phi_s)*new_beta<<std::endl;
-      mom_u_source += (1.0 - phi_s)*new_beta*(u-u_f);
-      mom_v_source += (1.0 - phi_s)*new_beta*(v-v_f);
+      mom_u_source += (phi_s)*new_beta*(u-u_f);
+      mom_v_source += (phi_s)*new_beta*(v-v_f);
       /* mom_w_source += phi_s*new_beta*(w-w_s); */
 
-      dmom_u_source[0] = (1.0 - phi_s)*new_beta;
+      dmom_u_source[0] = (phi_s)*new_beta;
       dmom_u_source[1] = 0.0;
       /* dmom_u_source[2] = 0.0; */
       
       dmom_v_source[0] = 0.0;
-      dmom_v_source[1] = (1.0 - phi_s)*new_beta;
+      dmom_v_source[1] = (phi_s)*new_beta;
       /*dmom_v_source[2] = 0.0;*/
 
       /*      dmom_w_source[0] = 0.0;
       dmom_w_source[1] = 0.0;
-      dmom_w_source[2] = (1.0 - phi_s)*new_beta;*/
+      dmom_w_source[2] = (phi_s)*new_beta;*/
     }
 
+    inline
+        void updateParticlePressure(const double phi_s,
+                                    double& mom_u_source,
+                                    double& mom_v_source,
+                                    double& mom_w_source,
+                                    double dmom_u_source[nSpace],
+                                    double dmom_v_source[nSpace],
+                                    double dmom_w_source[nSpace])
+    {
+      double p_sf = closure.p_friction(phi_s);
+
+      mom_u_source += p_sf;
+      mom_v_source += p_sf;
+      //mom_w_source += p_sf;
+
+      dmom_u_source[0] += 0.0;
+      dmom_u_source[1] += 0.0;
+      //dmom_u_source[2] += 0.0;
+
+      dmom_v_source[0] += 0.0;
+      dmom_v_source[1] += 0.0;
+      //dmom_v_source[2] += 0.0;
+
+      //dmom_w_source[0] += 0.0;
+      //dmom_w_source[1] += 0.0;
+      //dmom_w_source[2] += 0.0;
+
+    }  
 
 
       inline
@@ -1499,7 +1527,7 @@ namespace proteus
                              //VRANS
                              const double* eps_solid,
                              const double* q_velocity_fluid,
-                             const double* q_vos,
+                             const double* q_vos,//sed fraction - gco check
                              const double* q_dvos_dt,
                              const double* q_dragAlpha,
                              const double* q_dragBeta,
@@ -1556,7 +1584,7 @@ namespace proteus
                              double* ebqe_normal_phi_ext,
                              double* ebqe_kappa_phi_ext,
                              //VRANS
-                             const double* ebqe_vos_ext,
+                             const double* ebqe_vos_ext,//sed fraction - gco check
                              const double* ebqe_turb_var_0,
                              const double* ebqe_turb_var_1,
                              //VRANS end
@@ -1794,7 +1822,7 @@ namespace proteus
                 mesh_volume_conservation_element += (alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity)*dV;
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
                 //VRANS
-                vos      = q_vos[eN_k];
+                vos      = q_vos[eN_k];//sed fraction - gco check
                 //meanGrainSize = q_meanGrain[eN_k]; 
                 //
                 q_x[eN_k_3d+0]=x;
@@ -1882,6 +1910,7 @@ namespace proteus
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not?
+
                 updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
                                                   /* nonlinearDragFactor, */
                                                   /* vos, */
@@ -1904,7 +1933,7 @@ namespace proteus
                                                   q_velocity_sge[eN_k_nSpace+1],
                                                   q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used
                                                   eps_solid[elementFlags[eN]],
-                                                  1.0 - vos,
+                                                  vos,
                                                   q_velocity_fluid[eN_k_nSpace+0],
                                                   q_velocity_fluid[eN_k_nSpace+1],
                                                   q_velocity_fluid[eN_k_nSpace+1],//cek hack, should not be used
@@ -1914,7 +1943,13 @@ namespace proteus
                                                   dmom_u_source,
                                                   dmom_v_source,
                                                   dmom_w_source);
-
+                updateParticlePressure(vos,
+						mom_u_source,
+						mom_v_source,
+						mom_w_source,
+						dmom_u_source,
+						dmom_v_source,
+						dmom_w_source);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -2448,7 +2483,7 @@ namespace proteus
                 bc_v_ext = isDOFBoundary_v[ebNE_kb]*(ebqe_bc_v_ext[ebNE_kb] + MOVING_DOMAIN*yt_ext) + (1-isDOFBoundary_v[ebNE_kb])*v_ext;
                 /* bc_w_ext = isDOFBoundary_w[ebNE_kb]*(ebqe_bc_w_ext[ebNE_kb] + MOVING_DOMAIN*zt_ext) + (1-isDOFBoundary_w[ebNE_kb])*w_ext; */
                 //VRANS
-                vos_ext = ebqe_vos_ext[ebNE_kb];
+                vos_ext = ebqe_vos_ext[ebNE_kb];//sed fraction - gco check
                 //
                 //calculate the pde coefficients using the solution and the boundary values for the solution 
                 // 
@@ -3137,7 +3172,7 @@ namespace proteus
                              //VRANS
                              const double* eps_solid,
                              const double* q_velocity_fluid,
-                             const double* q_vos,
+                             const double* q_vos,//sed fraction - gco check
                              const double* q_dvos_dt,
                              const double* q_dragAlpha,
                              const double* q_dragBeta,
@@ -3199,7 +3234,7 @@ namespace proteus
                              double* ebqe_normal_phi_ext,
                              double* ebqe_kappa_phi_ext,
                              //VRANS
-                             const double* ebqe_vos_ext,
+                             const double* ebqe_vos_ext,//sed fraction - gco check
                              const double* ebqe_turb_var_0,
                              const double* ebqe_turb_var_1,
                              //
@@ -3467,7 +3502,7 @@ namespace proteus
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
                 //
                 //VRANS
-                vos = q_vos[eN_k];
+                vos = q_vos[eN_k];//sed fraction - gco check
                 //
                 //
                 //calculate pde coefficients and derivatives at quadrature points
@@ -3552,6 +3587,7 @@ namespace proteus
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not
+
                 updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
                                                   /* nonlinearDragFactor, */
                                                   /* vos, */
@@ -3574,7 +3610,7 @@ namespace proteus
                                                   q_velocity_sge[eN_k_nSpace+1],
                                                   q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used
                                                   eps_solid[elementFlags[eN]],
-                                                  1.0 - vos,
+                                                  vos,
                                                   q_velocity_fluid[eN_k_nSpace+0],
                                                   q_velocity_fluid[eN_k_nSpace+1],
                                                   q_velocity_fluid[eN_k_nSpace+1],//cek hack, should not be used
@@ -3584,6 +3620,13 @@ namespace proteus
                                                   dmom_u_source,
                                                   dmom_v_source,
                                                   dmom_w_source);
+                updateParticlePressure(vos,
+						mom_u_source,
+						mom_v_source,
+						mom_w_source,
+						dmom_u_source,
+						dmom_v_source,
+						dmom_w_source);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -4201,7 +4244,7 @@ namespace proteus
                 bc_v_ext = isDOFBoundary_v[ebNE_kb]*(ebqe_bc_v_ext[ebNE_kb] + MOVING_DOMAIN*yt_ext) + (1-isDOFBoundary_v[ebNE_kb])*v_ext;
                 /* bc_w_ext = isDOFBoundary_w[ebNE_kb]*(ebqe_bc_w_ext[ebNE_kb] + MOVING_DOMAIN*zt_ext) + (1-isDOFBoundary_w[ebNE_kb])*w_ext; */
                 //VRANS
-                vos_ext = ebqe_vos_ext[ebNE_kb];
+                vos_ext = ebqe_vos_ext[ebNE_kb];//sed fraction - gco check
                 // 
                 //calculate the internal and external trace of the pde coefficients 
                 // 

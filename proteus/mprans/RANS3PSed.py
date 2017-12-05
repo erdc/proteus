@@ -249,9 +249,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sigma = sigma
         self.rho_0 = rho_0
         self.nu_0 = nu_0
-        # cek for debugging using single phase test problems
-        self.rho = rho_0
-        self.nu = nu_0
         self.rho_1 = rho_1
         self.nu_1 = nu_1
         self.rho_s = rho_s

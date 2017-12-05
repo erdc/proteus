@@ -108,7 +108,7 @@ namespace proteus
                                    const double* eps_solid,
                                    const double* phi_solid,
                                    const double* q_velocity_solid,
-                                   const double* q_vos,
+                                   const double* q_vos,//sed fraction - gco check
                                    const double* q_dvos_dt,
                                    const double* q_dragAlpha,
                                    const double* q_dragBeta,
@@ -190,7 +190,7 @@ namespace proteus
                                    double* bc_ebqe_phi_ext,
                                    double* ebqe_normal_phi_ext,
                                    double* ebqe_kappa_phi_ext,
-                                   const double* ebqe_vos_ext,
+                                   const double* ebqe_vos_ext,//sed fraction - gco check
                                    const double* ebqe_turb_var_0,
                                    const double* ebqe_turb_var_1,
                                    int* isDOFBoundary_p,
@@ -344,7 +344,7 @@ namespace proteus
                                    const double *eps_solid,
                                    const double *phi_solid,
                                    const double *q_velocity_solid,
-                                   const double *q_vos,
+                                   const double *q_vos,//sed fraction - gco check
                                    const double *q_dvos_dt,
                                    const double *q_dragAlpha,
                                    const double *q_dragBeta,
@@ -405,7 +405,7 @@ namespace proteus
                                    double *ebqe_normal_phi_ext,
                                    double *ebqe_kappa_phi_ext,
                                    //VRANS
-                                   const double *ebqe_vos_ext,
+                                   const double *ebqe_vos_ext,//sed fraction - gco check
                                    const double *ebqe_turb_var_0,
                                    const double *ebqe_turb_var_1,
                                    //VRANS end
@@ -526,7 +526,7 @@ namespace proteus
                                                      const double* eps_solid,
                                                      const double* phi_solid,
                                                      const double* q_velocity_solid,
-                                                     const double* q_vos,
+                                                     const double* q_vos,//sed fraction - gco check
                                                      const double* q_dvos_dt,
                                                      const double* q_dragAlpha,
                                                      const double* q_dragBeta,
@@ -608,7 +608,7 @@ namespace proteus
                                                      double* bc_ebqe_phi_ext,
                                                      double* ebqe_normal_phi_ext,
                                                      double* ebqe_kappa_phi_ext,
-                                                     const double* ebqe_vos_ext,
+                                                     const double* ebqe_vos_ext,//sed fraction - gco check
                                                      const double* ebqe_turb_var_0,
                                                      const double* ebqe_turb_var_1,
                                                      int* isDOFBoundary_p,
@@ -762,7 +762,7 @@ namespace proteus
                                                      const double* eps_solid,
                                                      const double* phi_solid,
                                                      const double* q_velocity_solid,
-                                                     const double* q_vos,
+                                                     const double* q_vos,//sed fraction - gco check
                                                      const double* q_dvos_dt,
                                                      const double* q_dragAlpha,
                                                      const double* q_dragBeta,
@@ -823,7 +823,7 @@ namespace proteus
                                                      double* ebqe_normal_phi_ext,
                                                      double* ebqe_kappa_phi_ext,
                                                      //VRANS
-                                                     const double* ebqe_vos_ext,
+                                                     const double* ebqe_vos_ext,//sed fraction - gco check
                                                      const double* ebqe_turb_var_0,
                                                      const double* ebqe_turb_var_1,
                                                      //VRANS end                                           
@@ -1172,6 +1172,8 @@ namespace proteus
 
         rhoSave = rho;
         nuSave = nu;
+
+        printf("porosity fluid phase --> %.9f \n", porosity);
       
         eddy_viscosity = nu_t*rho; // mql. CHECK. Most changes about not divide by rho are here
 
@@ -1391,6 +1393,8 @@ namespace proteus
         rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
         viscosity = nu;//mu; gco check
+        //phi_s is porosity in this case
+        printf("phi_s momentum interface --> %.9f \n", phi_s);
         uc = sqrt(u*u+v*v*+w*w); 
         duc_du = u/(uc+1.0e-12);
         duc_dv = v/(uc+1.0e-12);
@@ -2202,7 +2206,7 @@ namespace proteus
                              const double* eps_solid,
                              const double* phi_solid,
                              const double* q_velocity_solid,
-                             const double* q_vos,
+                             const double* q_vos,//sed fraction - gco check
                              const double* q_dvos_dt,
                              const double* q_dragAlpha,
                              const double* q_dragBeta,
@@ -2265,7 +2269,7 @@ namespace proteus
                              double* ebqe_normal_phi_ext,
                              double* ebqe_kappa_phi_ext,
                              //VRANS
-                             const double* ebqe_vos_ext,
+                             const double* ebqe_vos_ext,//sed fraction - gco check
                              const double* ebqe_turb_var_0,
                              const double* ebqe_turb_var_1,
                              //VRANS end
@@ -2562,7 +2566,7 @@ namespace proteus
                 mesh_volume_conservation_element += (alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity)*dV;
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
                 //VRANS
-                porosity      = 1.0 - q_vos[eN_k];
+                porosity      = 1.0 - q_vos[eN_k];// porosity - gco check
                 //meanGrainSize = q_meanGrain[eN_k]; 
                 //
                 q_x[eN_k_3d+0]=x;
@@ -4014,7 +4018,7 @@ namespace proteus
                              const double* eps_solid,
                              const double* phi_solid,
                              const double* q_velocity_solid,
-                             const double* q_vos,
+                             const double* q_vos,//sed fraction - gco check
                              const double* q_dvos_dt,
                              const double* q_dragAlpha,
                              const double* q_dragBeta,
@@ -4076,7 +4080,7 @@ namespace proteus
                              double* ebqe_normal_phi_ext,
                              double* ebqe_kappa_phi_ext,
                              //VRANS
-                             const double* ebqe_vos_ext,
+                             const double* ebqe_vos_ext,//sed fraction - gco check
                              const double* ebqe_turb_var_0,
                              const double* ebqe_turb_var_1,
                              //
@@ -4368,7 +4372,7 @@ namespace proteus
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
                 //
                 //VRANS
-                porosity = 1.0 - q_vos[eN_k];
+                porosity = 1.0 - q_vos[eN_k];// porosity - gco check
                 //
                 //
                 //calculate pde coefficients and derivatives at quadrature points
@@ -5830,7 +5834,7 @@ namespace proteus
                                                const double* eps_solid,
                                                const double* phi_solid,
                                                const double* q_velocity_solid,
-                                               const double* q_vos,
+                                               const double* q_vos,//sed fraction - gco check
                                                const double* q_dvos_dt,
                                                const double* q_dragAlpha,
                                                const double* q_dragBeta,
@@ -5893,7 +5897,7 @@ namespace proteus
                                                double* ebqe_normal_phi_ext,
                                                double* ebqe_kappa_phi_ext,
                                                //VRANS
-                                               const double* ebqe_vos_ext,
+                                               const double* ebqe_vos_ext,//sed fraction - gco check
                                                const double* ebqe_turb_var_0,
                                                const double* ebqe_turb_var_1,
                                                //VRANS end
@@ -6382,7 +6386,7 @@ namespace proteus
                 mesh_volume_conservation_element += (alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity)*dV;
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
                 //VRANS
-                porosity      = 1.0 - q_vos[eN_k];
+                porosity      = 1.0 - q_vos[eN_k];//porosity - gco check 
                 //meanGrainSize = q_meanGrain[eN_k]; 
                 //
                 q_x[eN_k_3d+0]=x;
@@ -7934,7 +7938,7 @@ namespace proteus
                                                const double* eps_solid,
                                                const double* phi_solid,
                                                const double* q_velocity_solid,
-                                               const double* q_vos,
+                                               const double* q_vos,//sed fraction - gco check
                                                const double* q_dvos_dt,
                                                const double* q_dragAlpha,
                                                const double* q_dragBeta,
@@ -8292,7 +8296,7 @@ namespace proteus
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
                 //
                 //VRANS
-                porosity = 1.0 - q_vos[eN_k];
+                porosity = 1.0 - q_vos[eN_k];// porosity - gco check
                 //
                 //
                 //calculate pde coefficients and derivatives at quadrature points
