@@ -1176,8 +1176,6 @@ namespace proteus
         rhoSave = rho;
         nuSave = nu;
 
-        printf("porosity fluid phase --> %.9f", porosity);
-
         eddy_viscosity = nu_t*rho; // mql. CHECK. Most changes about not divide by rho are here
         // mass (volume accumulation)
         //..hardwired
@@ -1192,8 +1190,6 @@ namespace proteus
 
         double phi_s_effect = (phi_s > 0.0) ? 1.0 : 0.0;
   
-        //printf("grad_p[1] fluid --> %3.2f\n", grad_p[1]);
-
         //u momentum accumulation
         mom_u_acc=phi_s_effect*u;//trick for non-conservative form
         dmom_u_acc_u=rho*phi_s_effect*porosity;
@@ -1392,7 +1388,6 @@ namespace proteus
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
         viscosity = nu;//mu; gco check
         // phi_s is porosity in this case - gco check
-        printf("phi_s momentum interface --> %.9f", phi_s);
         uc = sqrt(u*u+v*v*+w*w); 
         duc_du = u/(uc+1.0e-12);
         duc_dv = v/(uc+1.0e-12);
