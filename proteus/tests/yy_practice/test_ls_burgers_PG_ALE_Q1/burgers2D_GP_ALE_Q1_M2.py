@@ -11,7 +11,7 @@ Cy_T = []
 ML_new = []
 node_coord = []
 element_map = None
-
+lm = [] #: levelmodel
 
 def getResidual(
     # double, self.timeIntegration.dt
