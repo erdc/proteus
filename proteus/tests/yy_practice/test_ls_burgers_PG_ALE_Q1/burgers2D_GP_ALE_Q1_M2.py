@@ -9,7 +9,7 @@ dij = []
 Cx_T = []
 Cy_T = []
 ML_new = []
-node_coord = []
+node_coord = None
 fes = None
 lm = None #: levelmodel
 q = None
@@ -226,6 +226,8 @@ def getResidual(
             geo_grad_phi[k,i] = lm.u[0].femSpace.elementMaps.localFunctionSpace.basisGradients[i](qpt[k])
     
     
+    cfl[:] = 1.0
+    
     for it, weight_cii_at_ti in enumerate(quad_for_cij['weight']):
         # moving mesh
         node_coord[:] = mesh_dof
@@ -233,10 +235,14 @@ def getResidual(
         
         #: use node_coord
         cfemIntegrals.parametricMaps_getJacobianValues(geo_grad_phi, mesh_l2g, node_coord, J, detJ, invJ)#:different order of invJ2, det2
-        if  quad_for_cij['point'][it] == 0:
-            assert np.array_equal(q['J'],J), "something wrong"
-            assert np.array_equal(q['inverse(J)'],invJ), "something wrong"
-            assert np.array_equal(q['det(J)'],detJ), "something wrong"
+        if  quad_for_cij['point'][it] == 0.0:
+            error_J = np.max(np.abs(q['J']-J)) 
+            assert error_J<1e-9, "J: something wrong"
+            
+            error_invJ = np.max(np.abs(q['inverse(J)']-invJ)) 
+            assert error_invJ<1e-9, "invJ: something wrong"
+            error_detJ = np.max(np.abs(q['det(J)']-detJ)) 
+            assert error_detJ<1e-9, "detJ: something wrong"
     
         
         
@@ -244,11 +250,11 @@ def getResidual(
         lm.u[0].femSpace.getBasisGradientValues(qpt,invJ,v_grad_basis)
     
         w_basis = v_basis
-        w_grad_basis = v_grad_basis
+        w_grad_basis = v_grad_basis#:depends on new mesh
     
         for e in xrange(nElements_global):
     
-            dV = np.abs(detJ[e]) * dV_ref
+            dV = np.abs(detJ[e]) * dV_ref#: broadcast
     
             # Computer cell cfl number
             ele_max_speed = 1e-10
@@ -259,19 +265,21 @@ def getResidual(
                 vi = vi - wi
                 ele_max_speed = max(
                     [np.sqrt(vi[0] * vi[0] + vi[1] * vi[1]), np.sqrt(wi[0] * wi[0] + wi[1] * wi[1]), ele_max_speed])
-            cfl[e, :] = ele_max_speed / get_diameter(node_coord[mesh_l2g[e]])[1]
+            cfl[e, :] = np.minimum(cfl[e,:], ele_max_speed / get_diameter(node_coord[mesh_l2g[e]])[1])#: elementwise minimum
     
-            # compute C matrix
+            # compute C matrix at time it
             c_x   = np.zeros((n_dofs, n_dofs), 'd')
             c_y   = np.zeros((n_dofs, n_dofs), 'd')
+            ct_x   = np.zeros((n_dofs, n_dofs), 'd')
+            ct_y   = np.zeros((n_dofs, n_dofs), 'd')
             
             for i in range(n_dofs):
                 for j in range(n_dofs):
                     for k in range(n_pts):
-                        c_x[i, j] += v_basis[e, k, i] * \
-                            v_grad_basis[e, k, j, 0] * dV[k]
-                        c_y[i, j] += v_basis[e, k, i] * \
-                            v_grad_basis[e, k, j, 1] * dV[k]
+                        c_x[i, j] += v_basis[e, k, i] * v_grad_basis[e, k, j, 0] * dV[k]
+                        c_y[i, j] += v_basis[e, k, i] * v_grad_basis[e, k, j, 1] * dV[k]
+                        ct_x[i, j] += v_basis[e, k, j] * v_grad_basis[e, k, i, 0] * dV[k]
+                        ct_y[i, j] += v_basis[e, k, j] * v_grad_basis[e, k, i, 1] * dV[k]
                     # end-of-loop-over-k
     
                     Cx[csrRowIndeces_CellLoops[e, i]
@@ -283,10 +291,10 @@ def getResidual(
     
                     Cx_T[csrRowIndeces_CellLoops[e, i]
                          +
-                         csrColumnOffsets_CellLoops[e, i, j]] += c_x[j, i]*quad_for_cij['weight'][it]
+                         csrColumnOffsets_CellLoops[e, i, j]] += ct_x[i, j]*quad_for_cij['weight'][it]
                     Cy_T[csrRowIndeces_CellLoops[e, i]
                          +
-                         csrColumnOffsets_CellLoops[e, i, j]] += c_y[j, i]*quad_for_cij['weight'][it]
+                         csrColumnOffsets_CellLoops[e, i, j]] += ct_y[i, j]*quad_for_cij['weight'][it]
     
                 # end-loop-j
             # end-loop-i
@@ -294,8 +302,11 @@ def getResidual(
     # end-loop-it
     #dij = np.zeros_like(Cx, 'd')
 
-    #: get new lumped mass matrix since the last node_coord is the new mesh
-    get_ML(mesh_l2g, dV, detJ, ML_new)
+    #: get new lumped mass matrix
+    node_coord[:] = mesh_dof
+    node_coord[:] += dt * mesh_velocity_dof #: assume the velocity is the same; note dt; 
+    cfemIntegrals.parametricMaps_getJacobianValues(geo_grad_phi, mesh_l2g, node_coord, J, detJ, invJ)#:different order of invJ2, det2
+    get_ML(mesh_l2g, v_basis, dV, detJ, ML_new)
 
     assert np.all(ML_new > 0.), "some element of ML is negative"
 
@@ -377,13 +388,22 @@ def maximum_wave_speed(uL, uR, w, n):
     return maximum_speed
 
 
-def get_ML(elementNodesArray, dV, detJ, _ML):
+def get_ML(elementNodesArray, v_basis, dV_ref, detJ, _ML):
     _ML[:] = 0.0
-
-    for e in xrange(elementNodesArray.shape[0]):
-        area = np.dot(np.abs(detJ[e]),dV)
-        _ML[elementNodesArray[e]] += area / 3.0
-    #end-loop-over-e
+    
+    n_ele = elementNodesArray.shape[0]
+    n_dof = elementNodesArray.shape[1]
+    n_pt  = dV_ref.shape[0]
+    ele_ML = np.zeros((n_dof,),'d')
+    
+    for e in xrange(n_ele):
+        ele_ML[:] = 0.0
+        for i in xrange(n_dof):
+            for k in xrange(n_dof):
+                ele_ML[i] += v_basis[e,k,i]*dV_ref[k]*np.abs(detJ[e,k])
+            #end-loop-i
+            _ML[elementNodesArray[e,i]] = ele_ML[i]
+    #end-loop-e
 
 def get_diameter(element_nodes):
     _hmax = 0.0

@@ -42,26 +42,28 @@ def get_angle_area(e_nodes):
     a3 = get_angle(e_nodes[1], e_nodes[2], e_nodes[3])
     a4 = get_angle(e_nodes[2], e_nodes[3], e_nodes[0])
     
-    min_angle = min([a1, a2, a3, a4])
-    max_angle = max([a1, a2, a3, a4])
+    if not abs(a1+a2+a3+a4 - 2*np.pi) < 1e-10:
+        min_angle, max_angle = -1, -1
+    else:
+        min_angle = min([a1, a2, a3, a4])
+        max_angle = max([a1, a2, a3, a4])
 
     return min_angle, max_angle, area
 
 
 def get_mesh_info(node_coord, element_nodes):
 
+    print element_nodes[83]
+    print node_coord[element_nodes[83]]
+    
     min_angle, max_angle, min_area = math.pi, 0, 1000
 
     for e in xrange(element_nodes.shape[0]):
-        e_min_angle, e_max_angle, e_area = get_angle_area(
-            node_coord[element_nodes[e]])
-        # print e, e_min_angle, e_max_angle, e_area
-
-        if e_min_angle < 0.0 or e_area < 0.0 or e_max_angle < 0.0:
-            print "element is ", e
-            print node_coord[element_nodes[e]]
-            return e_min_angle, e_max_angle, e_area
-
+        e_min_angle, e_max_angle, e_area = get_angle_area(node_coord[element_nodes[e]])
+        #: those are all positive
+        if e_max_angle < 0.0:
+            break
+        
         min_angle = min([e_min_angle, min_angle])
         max_angle = max([e_max_angle, max_angle])
         min_area = min([e_area, min_area])
@@ -100,18 +102,20 @@ def get_mesh_velocity(node_coord,
                       dt,
                       initial_area,
                       _mesh_velocity_at_node):
+    
+    _mesh_velocity_at_node[:] = 0.0
+    return 
+ 
     global smoothing_times, min_area_in_previous_step, max_angle_in_previous_step, min_angle_in_previous_step
     # Lagrangian mesh
     _node_coord_lagrange = np.copy(node_coord)
     _node_coord_lagrange += dt * _mesh_velocity_at_node
-
-
+    
     _node_coord_smoothed_before = np.copy(_node_coord_lagrange)
     _node_coord_smoothed_after = np.copy(_node_coord_lagrange)
 
     # mesh info
-    _min_angle, _max_angle, _min_area = get_mesh_info(
-        _node_coord_smoothed_before, element_nodes)
+    _min_angle, _max_angle, _min_area = get_mesh_info(_node_coord_smoothed_before, element_nodes)
 
     print _min_angle, _max_angle, _min_area
 
@@ -127,6 +131,7 @@ def get_mesh_velocity(node_coord,
             # assume previous mesh is regular
             _node_coord_smoothed_after[:] = node_coord
         elif _min_area < 0.8 * min_area_in_previous_step or _max_angle > 1.2 * max_angle_in_previous_step or _min_angle < 0.8 * min_area_in_previous_step or math.pi - 0.3 < _max_angle or _min_angle < 0.3:
+            print _min_area, _max_angle, _min_angle
             N = 4
         else:
             N = 2
@@ -147,8 +152,7 @@ def get_mesh_velocity(node_coord,
         _node_coord_smoothed_before *= 0.5
         _node_coord_smoothed_before += 0.5 * _node_coord_smoothed_after
 
-        _min_angle, _max_angle, _min_area = get_mesh_info(
-            _node_coord_smoothed_before, element_nodes)
+        _min_angle, _max_angle, _min_area = get_mesh_info(_node_coord_smoothed_before, element_nodes)
 
         # Give good check rule to avoid dead loop
         if _min_area > 0.4 * min_area_in_previous_step and math.pi - 0.2 > _max_angle or _min_angle > 0.2:
@@ -166,5 +170,3 @@ def get_mesh_velocity(node_coord,
     #_mesh_velocity_at_node[:] = _node_coord_lagrange
 
     _mesh_velocity_at_node[:] = (_node_coord_smoothed_before - node_coord) / dt
-
-    #_mesh_velocity_at_node[:] = 0.0
