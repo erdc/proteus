@@ -10,8 +10,11 @@ Cx_T = []
 Cy_T = []
 ML_new = []
 node_coord = []
-element_map = None
-lm = [] #: levelmodel
+fes = None
+lm = None #: levelmodel
+q = None
+
+quad_for_cij = {'weight':[1.0/6, 4.0/6, 1.0/6], 'point':[0.0,0.5,1.0]}
 
 def getResidual(
     # double, self.timeIntegration.dt
@@ -203,85 +206,96 @@ def getResidual(
         dij[:] = 0.0
         ML_new[:] = 0.0
 
-    # moving mesh for 0.5*dt
-    node_coord[:] = mesh_dof
-    node_coord[:] += 0.5 * dt * mesh_velocity_dof
+    
+    qpt = lm.elementQuadraturePoints
+    n_pts = qpt.shape[0]
+    n_eles = lm.mesh.nElements_global
+    nd = lm.nSpace_global
+    
+    J    = np.zeros((n_eles,n_pts,nd,nd),'d')
+    invJ = np.zeros((n_eles,n_pts,nd,nd),'d')
+    detJ = np.zeros((n_eles,n_pts),'d')
+    
+    n_dofs = lm.u[0].femSpace.max_nDOF_element
+    v_basis      = np.zeros((n_eles,n_pts,n_dofs),'d')
+    v_grad_basis = np.zeros((n_eles,n_pts,n_dofs,nd),'d')
 
-    # Since the mesh is new
-    for e in xrange(nElements_global):
-        qpt, J, invJ, invJT, detJ = P1_calculateMapping_element(
-            node_coord[mesh_l2g[e]], mesh_trial_ref, mesh_grad_trial_ref)
-
-        dV = np.abs(detJ) * dV_ref
-
-        n_pts = len(dV)
-
-#             u = np.dot(u_trial_ref, u_dof[u_l2g[e]])
-#             ux = np.dot(u_grad_trial_ref[:, :, 0], u_dof[u_l2g[e]])
-#             uy = np.dot(u_grad_trial_ref[:, :, 1], u_dof[u_l2g[e]])
-
-        v_basis = u_trial_ref
-        v_grad_basis = [np.dot(u_grad_trial_ref[k, :, :], invJ[k, :, :])
-                        for k in xrange(n_pts)]
-
-        w_basis = u_test_ref
-        w_grad_basis = [np.dot(u_grad_test_ref[k, :, :], invJ[k, :, :])
-                        for k in xrange(n_pts)]
-
-        # Computer cell cfl number
-        ele_max_speed = 1e-10
-        for i in range(3):
-            dof_i = u_l2g[e, i]
-            vi = velocity[dof_i][:-1]
-            wi = mesh_velocity_dof[dof_i][:-1]
-            vi = vi - wi
-            ele_max_speed = max(
-                [np.sqrt(vi[0] * vi[0] + vi[1] * vi[1]), np.sqrt(wi[0] * wi[0] + wi[1] * wi[1]), ele_max_speed])
-        cfl[e, :] = ele_max_speed / get_diameter(node_coord[mesh_l2g[e]])[1]
-
-        # compute C matrix
-        c_x = np.zeros((3, 3), 'd')
-        c_y = np.zeros((3, 3), 'd')
-
-        dij_e = np.zeros((3, 3), 'd')
-        for i in range(3):
-            for j in range(3):
-                for k in range(n_pts):
-                    c_x[i, j] += v_basis[k, i] * \
-                        v_grad_basis[k][j, 0] * dV[k]
-                    c_y[i, j] += v_basis[k, i] * \
-                        v_grad_basis[k][j, 1] * dV[k]
-#                     c_x[i, j] += v_basis[k, i] * v_basis[k, j] * dV[k]
-#                     c_y[i, j] += v_basis[k, j] * v_basis[k, i] * dV[k]
-                    dij_e[i, j] += np.dot(v_grad_basis[k][j, :],
-                                          v_grad_basis[k][i, :]) * dV[k]
-                # end-of-loop-over-k
-
-                Cx[csrRowIndeces_CellLoops[e, i]
-                   +
-                   csrColumnOffsets_CellLoops[e, i, j]] += c_x[i, j]
-                Cy[csrRowIndeces_CellLoops[e, i]
-                   +
-                   csrColumnOffsets_CellLoops[e, i, j]] += c_y[i, j]
-
-                Cx_T[csrRowIndeces_CellLoops[e, i]
-                     +
-                     csrColumnOffsets_CellLoops[e, i, j]] += c_x[j, i]
-                Cy_T[csrRowIndeces_CellLoops[e, i]
-                     +
-                     csrColumnOffsets_CellLoops[e, i, j]] += c_y[j, i]
-
-                dij[csrRowIndeces_CellLoops[e, i]
-                    +
-                    csrColumnOffsets_CellLoops[e, i, j]] += 0.1 * elementDiameter[e] * dij_e[i, j]
-            # end-of-loop-over-j
-        # end-of-loop-over-i
-    # end-of-loop-over-e
+    geo_grad_phi = np.zeros((n_pts, n_dofs, nd),'d')
+    for k in range(n_pts):
+        for i in range(n_dofs):
+            geo_grad_phi[k,i] = lm.u[0].femSpace.elementMaps.localFunctionSpace.basisGradients[i](qpt[k])
+    
+    
+    for it, weight_cii_at_ti in enumerate(quad_for_cij['weight']):
+        # moving mesh
+        node_coord[:] = mesh_dof
+        node_coord[:] += quad_for_cij['point'][it]* dt * mesh_velocity_dof #: assume the velocity is the same; note dt; 
+        
+        #: use node_coord
+        cfemIntegrals.parametricMaps_getJacobianValues(geo_grad_phi, mesh_l2g, node_coord, J, detJ, invJ)#:different order of invJ2, det2
+        if  quad_for_cij['point'][it] == 0:
+            assert np.array_equal(q['J'],J), "something wrong"
+            assert np.array_equal(q['inverse(J)'],invJ), "something wrong"
+            assert np.array_equal(q['det(J)'],detJ), "something wrong"
+    
+        
+        
+        lm.u[0].femSpace.getBasisValues(qpt,v_basis) #: In fact, it is independent of mesh motion
+        lm.u[0].femSpace.getBasisGradientValues(qpt,invJ,v_grad_basis)
+    
+        w_basis = v_basis
+        w_grad_basis = v_grad_basis
+    
+        for e in xrange(nElements_global):
+    
+            dV = np.abs(detJ[e]) * dV_ref
+    
+            # Computer cell cfl number
+            ele_max_speed = 1e-10
+            for i in range(n_dofs):
+                dof_i = u_l2g[e, i]
+                vi = velocity[dof_i][:-1]
+                wi = mesh_velocity_dof[dof_i][:-1]
+                vi = vi - wi
+                ele_max_speed = max(
+                    [np.sqrt(vi[0] * vi[0] + vi[1] * vi[1]), np.sqrt(wi[0] * wi[0] + wi[1] * wi[1]), ele_max_speed])
+            cfl[e, :] = ele_max_speed / get_diameter(node_coord[mesh_l2g[e]])[1]
+    
+            # compute C matrix
+            c_x   = np.zeros((n_dofs, n_dofs), 'd')
+            c_y   = np.zeros((n_dofs, n_dofs), 'd')
+            
+            for i in range(n_dofs):
+                for j in range(n_dofs):
+                    for k in range(n_pts):
+                        c_x[i, j] += v_basis[e, k, i] * \
+                            v_grad_basis[e, k, j, 0] * dV[k]
+                        c_y[i, j] += v_basis[e, k, i] * \
+                            v_grad_basis[e, k, j, 1] * dV[k]
+                    # end-of-loop-over-k
+    
+                    Cx[csrRowIndeces_CellLoops[e, i]
+                       +
+                       csrColumnOffsets_CellLoops[e, i, j]] += c_x[i, j]*quad_for_cij['weight'][it]
+                    Cy[csrRowIndeces_CellLoops[e, i]
+                       +
+                       csrColumnOffsets_CellLoops[e, i, j]] += c_y[i, j]*quad_for_cij['weight'][it]
+    
+                    Cx_T[csrRowIndeces_CellLoops[e, i]
+                         +
+                         csrColumnOffsets_CellLoops[e, i, j]] += c_x[j, i]*quad_for_cij['weight'][it]
+                    Cy_T[csrRowIndeces_CellLoops[e, i]
+                         +
+                         csrColumnOffsets_CellLoops[e, i, j]] += c_y[j, i]*quad_for_cij['weight'][it]
+    
+                # end-loop-j
+            # end-loop-i
+        # end-loop-e
+    # end-loop-it
     #dij = np.zeros_like(Cx, 'd')
 
-    # moving mesh for another 0.5*dt to get new lumped mass matrix
-    node_coord[:] += 0.5 * dt * mesh_velocity_dof
-    get_ML(node_coord, mesh_l2g, mesh_trial_ref, mesh_grad_trial_ref, ML_new)
+    #: get new lumped mass matrix since the last node_coord is the new mesh
+    get_ML(mesh_l2g, dV, detJ, ML_new)
 
     assert np.all(ML_new > 0.), "some element of ML is negative"
 
@@ -351,32 +365,6 @@ def getResidual(
             [edge_based_cfl[dof_i],  2.0 * fabs(dii) / ML[dof_i]])
     # end-of-loop-over-dof_i
 
-
-def P1_calculateMapping_element(nodes_coord, geo_basis, grad_geo_basis):
-    n_pts = geo_basis.shape[0]
-    J = np.zeros((n_pts, 2, 2), 'd')
-    invJ = np.zeros((n_pts, 2, 2), 'd')
-    invJT = np.zeros((n_pts, 2, 2), 'd')
-    detJ = np.zeros((n_pts,), 'd')
-
-    quad_pts = np.dot(geo_basis, nodes_coord)  # [npx2]=[np,3]x[3,2]
-    # [npx2]=[np,3]x[3,2]
-    x_ksi_pts = np.dot(grad_geo_basis[:, :, 0], nodes_coord)
-    # [npx2]=[np,3]x[3,2]
-    x_eta_pts = np.dot(grad_geo_basis[:, :, 1], nodes_coord)
-    for i in xrange(n_pts):
-        J[i] = np.array([[x_ksi_pts[i][0], x_eta_pts[i][0]],
-                         [x_ksi_pts[i][1], x_eta_pts[i][1]]])
-        detJ[i] = x_ksi_pts[i][0] * x_eta_pts[i][1] - \
-            x_ksi_pts[i][1] * x_eta_pts[i][0]
-        invJ[i] = np.array([[x_eta_pts[i][1], -x_ksi_pts[i][1]],
-                            [-x_eta_pts[i][0], x_ksi_pts[i][0]]]) / detJ[i]
-        invJT[i] = np.array([[x_eta_pts[i][1], -x_eta_pts[i][0]],
-                             [-x_ksi_pts[i][1], x_ksi_pts[i][0]]]) / detJ[i]
-
-    return quad_pts, J, invJ, invJT, detJ
-
-
 def maximum_wave_speed(uL, uR, w, n):
 
     maximum_speed = 0.0
@@ -389,14 +377,11 @@ def maximum_wave_speed(uL, uR, w, n):
     return maximum_speed
 
 
-def get_ML(nodesArray, elementNodesArray, mesh_trial_ref, mesh_grad_trial_ref, _ML):
+def get_ML(elementNodesArray, dV, detJ, _ML):
     _ML[:] = 0.0
 
     for e in xrange(elementNodesArray.shape[0]):
-        qpt, J, invJ, invJT, detJ = P1_calculateMapping_element(
-            nodesArray[elementNodesArray[e]], mesh_trial_ref, mesh_grad_trial_ref)
-
-        area = 0.5 * np.abs(detJ[0])
+        area = np.dot(np.abs(detJ[e]),dV)
         _ML[elementNodesArray[e]] += area / 3.0
     #end-loop-over-e
 

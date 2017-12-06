@@ -282,11 +282,8 @@ class UnitSquareRotation(NCLS.Coefficients):
         #         import burgers2D_GP_ALE as M
         import burgers2D_GP_ALE_Q1_M2 as M
         M.lm = self.model
-        M.element_map = self.model.u[0].femSpace.elementMaps
-        
-
-        
-        self.test_element_map(M.element_map)
+        M.fes = self.model.u[0].femSpace
+        M.q = self.model.q
         
         M.getResidual(
             *args,
@@ -296,19 +293,7 @@ class UnitSquareRotation(NCLS.Coefficients):
         # Dirichlete BC
         args[49][self.dirichlet_bc_dofs['dof']
                  ] = self.dirichlet_bc_dofs['value']
-
         
-    def test_element_map(self,element_map):
-        x_ref = np.array([[0,0,0]],'d')
-        print element_map.psi
-        element_map.getBasisValuesRef(x_ref)
-        print element_map.psi
-        x = np.zeros((10000,3),'d')
-                
-        import pdb
-        pdb.set_trace()
-        element_map.getValues(x_ref,x)
-        print x_ref,x
         
 if applyRedistancing:
     RD_model = 1
