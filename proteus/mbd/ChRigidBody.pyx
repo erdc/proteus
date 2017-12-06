@@ -2290,8 +2290,8 @@ cdef class ProtChMoorings:
                 y = comm.bcast(y, self.ProtChSystem.chrono_processor)
                 z = comm.bcast(z, self.ProtChSystem.chrono_processor)
             coords = np.array([x, y, z])
+            vel_arr = np.zeros(3)
             if self.ProtChSystem.model is not None and self.external_forces_from_ns is True:
-                vel_arr = np.zeros(3)
                 vel_grad_arr = np.zeros(3)
                 xi, el, rank = self.ProtChSystem.findElementContainingCoords(coords[:self.nd])
                 comm.barrier()
@@ -2299,27 +2299,33 @@ cdef class ProtChMoorings:
                     vel_arr[:] = self.ProtChSystem.getFluidVelocityLocalCoords(xi, el, rank)
                 else:  # means node is outside domain
                     if self.fluid_velocity_function is not None:
-                        self.fluid_velocity_function(coords, self.ProtChSystem.t)
-                    vel_arr[:] = 0.
+                        vel_arr[:] = self.fluid_velocity_function(coords, self.ProtChSystem.t)
+                    else:
+                        vel_arr[:] = 0.
                 comm.barrier()
-                self.fluid_velocity_array[i] = vel_arr
-                vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
-                fluid_velocity.push_back(vel)
-                if self.fluid_velocity_function is not None and fluid_velocity_array is None:
-                    vel_arr = self.fluid_velocity_function(coords, self.ProtChSystem.t)
-                    vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
+            else:
+                if self.fluid_velocity_function is not None:
+                    vel_arr[:] = self.fluid_velocity_function(coords, self.ProtChSystem.t)
                 else:
-                    vel = ch.ChVector[double](self.fluid_velocity_array[i][0], self.fluid_velocity_array[i][1], self.fluid_velocity_array[i][2])
-                fluid_velocity.push_back(vel)
-                self.fluid_acceleration_array[i] = (self.fluid_velocity_array[i]-self.fluid_velocity_array_previous[i])/self.ProtChSystem.proteus_dt
-                # acc = du/dt+u.grad(u)
-                #vel_grad_arr[:] = self.ProtChSystem.getFluidVelocityGradientLocalCoords(xi, el, rank)
-                #acc_arr = (vel_arr-fluid_velocity_array_previous[i])/dt+vel_arr*vel_grad_arr
-                #arr[:self.nd] = self.ProtChSystem.findFluidVelocityAtCoords(coords[:self.nd])
-                acc = ch.ChVector[double](self.fluid_acceleration_array[i][0], self.fluid_acceleration_array[i][1], self.fluid_acceleration_array[i][2])
-                fluid_acceleration.push_back(acc)
-                dens = self.fluid_density_array[i]
-                fluid_density.push_back(dens)
+                    vel_arr[:] = 0
+            self.fluid_velocity_array[i] = vel_arr
+            vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
+            fluid_velocity.push_back(vel)
+            if self.fluid_velocity_function is not None and fluid_velocity_array is None:
+                vel_arr = self.fluid_velocity_function(coords, self.ProtChSystem.t)
+                vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
+            else:
+                vel = ch.ChVector[double](self.fluid_velocity_array[i][0], self.fluid_velocity_array[i][1], self.fluid_velocity_array[i][2])
+            fluid_velocity.push_back(vel)
+            self.fluid_acceleration_array[i] = (self.fluid_velocity_array[i]-self.fluid_velocity_array_previous[i])/self.ProtChSystem.proteus_dt
+            # acc = du/dt+u.grad(u)
+            #vel_grad_arr[:] = self.ProtChSystem.getFluidVelocityGradientLocalCoords(xi, el, rank)
+            #acc_arr = (vel_arr-fluid_velocity_array_previous[i])/dt+vel_arr*vel_grad_arr
+            #arr[:self.nd] = self.ProtChSystem.findFluidVelocityAtCoords(coords[:self.nd])
+            acc = ch.ChVector[double](self.fluid_acceleration_array[i][0], self.fluid_acceleration_array[i][1], self.fluid_acceleration_array[i][2])
+            fluid_acceleration.push_back(acc)
+            dens = self.fluid_density_array[i]
+            fluid_density.push_back(dens)
         self.thisptr.setFluidAccelerationAtNodes(fluid_acceleration)
         self.thisptr.setFluidVelocityAtNodes(fluid_velocity)
         self.thisptr.setFluidDensityAtNodes(fluid_density)
