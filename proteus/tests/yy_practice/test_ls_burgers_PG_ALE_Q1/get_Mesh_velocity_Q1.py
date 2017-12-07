@@ -10,6 +10,9 @@ min_angle_in_previous_step = math.pi * 0.25
 max_angle_in_previous_step = math.pi * 0.5
 
 
+FIX_BC_DOF = True
+
+
 def get_angle(x1, x2, x3):
     z1 = complex(x1[0] - x2[0], x1[1] - x2[1])
     z2 = complex(x3[0] - x2[0], x3[1] - x2[1])
@@ -77,7 +80,7 @@ def get_smoothed_coord(_old_coord, node_star_offset,
 
     for _ in range(N):
         for i in xrange(_old_coord.shape[0]):
-            if i not in fixed_node_index:
+            if (not FIX_BC_DOF) or (FIX_BC_DOF and i not in fixed_node_index) :
                 n_neightbor = 0
                 star_center = np.zeros((3,), 'd')
                 for j in range(node_star_offset[i], node_star_offset[i + 1]):

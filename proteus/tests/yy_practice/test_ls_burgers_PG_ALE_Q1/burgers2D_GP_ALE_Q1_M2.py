@@ -263,12 +263,15 @@ def getResidual(
             ele_max_speed = 1e-10
             for i in range(n_dofs):
                 dof_i = u_l2g[e, i]
-                vi = velocity[dof_i][:-1]
+                vi = velocity[dof_i][:-1] #:2D
                 wi = mesh_velocity_dof[dof_i][:-1]
                 vi = vi - wi
                 ele_max_speed = max(
                     [np.sqrt(vi[0] * vi[0] + vi[1] * vi[1]), np.sqrt(wi[0] * wi[0] + wi[1] * wi[1]), ele_max_speed])
-            cfl[e, :] = np.minimum(cfl[e,:], ele_max_speed / get_diameter(node_coord[mesh_l2g[e]])[1])#: elementwise minimum
+            #end-loop-i    
+
+            #: this is corount number; bigger is safer
+            cfl[e, :] = np.maximum(cfl[e,:], ele_max_speed / get_diameter(node_coord[mesh_l2g[e]])[1])#: elementwise maximum
     
             # compute C matrix at time it
             c_x   = np.zeros((n_dofs, n_dofs), 'd')
