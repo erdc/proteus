@@ -139,23 +139,41 @@ class UnitSquareRotation(NCLS.Coefficients):
         self.dirichlet_bc_dofs = {'dof': [],
                                   'xyz': [], 'label': [], 'value': []}
 
-        for eN in range(mesh.nElements_global):
-            for k in range(fes.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
-                i = fes.referenceFiniteElement.interpolationConditions.quadrature2DOF_element(
-                    k)
-                dofN = fes.dofMap.l2g[eN, i]
-                x = fes.interpolationPoints[eN, k]
-                for ebN_element in range(mesh.nElementBoundaries_element):
-                    if fes.referenceFiniteElement.interpolationConditions.definedOnLocalElementBoundary(k, ebN_element) == True:
-                        ebN = mesh.elementBoundariesArray[eN, ebN_element]
-                        materialFlag = mesh.elementBoundaryMaterialTypes[ebN]
-                        if materialFlag in [1, 2, 3, 4]:
-                            self.dirichlet_bc_dofs['dof'].append(dofN)
-                            self.dirichlet_bc_dofs['xyz'].append(x)
-                            self.dirichlet_bc_dofs['label'].append(
-                                materialFlag)
-                            self.dirichlet_bc_dofs['value'].append(0)
+                
 
+        
+        #: this code does not work for structured quadrilateral mesh; Use trisdent's method to specify the material label
+#         for eN in range(mesh.nElements_global):
+#             for k in range(fes.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+#                 i = fes.referenceFiniteElement.interpolationConditions.quadrature2DOF_element(
+#                     k)
+#                 dofN = fes.dofMap.l2g[eN, i]
+#                 x = fes.interpolationPoints[eN, k]
+#                 for ebN_element in range(mesh.nElementBoundaries_element):
+#                     if fes.referenceFiniteElement.interpolationConditions.definedOnLocalElementBoundary(k, ebN_element) == True:
+#                         ebN = mesh.elementBoundariesArray[eN, ebN_element]
+#                         materialFlag = mesh.elementBoundaryMaterialTypes[ebN]
+#                         if materialFlag in [1, 2, 3, 4]:
+#                             self.dirichlet_bc_dofs['dof'].append(dofN)
+#                             self.dirichlet_bc_dofs['xyz'].append(x)
+#                             self.dirichlet_bc_dofs['label'].append(
+#                                 materialFlag)
+#                             self.dirichlet_bc_dofs['value'].append(0)
+        
+        L = -0.2
+        R = 1.8
+        D = -0.2
+        U = 1.8
+        
+        for eN in range(mesh.nElements_global):
+            for i in range(mesh.nNodes_element):
+                node_xyz = mesh.nodeArray[mesh.elementNodesArray[eN,i]]
+                if node_xyz[0]<L+1e-6 or node_xyz[1]<D+1e-6 or node_xyz[0]>R-1e-6 or node_xyz[1]>U-1e-6:
+                    self.dirichlet_bc_dofs['dof'].append(mesh.elementNodesArray[eN,i])
+                    self.dirichlet_bc_dofs['xyz'].append(node_xyz)
+                    self.dirichlet_bc_dofs['label'].append(1)
+                    self.dirichlet_bc_dofs['value'].append(0)
+                    
         self.dirichlet_bc_dofs['dof'] = numpy.asarray(
             self.dirichlet_bc_dofs['dof'], 'i')
         self.dirichlet_bc_dofs['xyz'] = numpy.asarray(
@@ -194,6 +212,9 @@ class UnitSquareRotation(NCLS.Coefficients):
             self.rdModel = self.model
 
         self.save_dirichlet_dofs()
+
+
+
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,
@@ -225,17 +246,17 @@ class UnitSquareRotation(NCLS.Coefficients):
         import get_Mesh_velocity_Q1 as MV
 
         self.mesh.nodeVelocityArray[:] = 0.0
-#         self.mesh.nodeVelocityArray[:, 0] = self.q_v[:, 0]
-#         self.mesh.nodeVelocityArray[:, 1] = self.q_v[:, 1]
-#         
-#         MV.get_mesh_velocity(self.mesh.nodeArray,
-#                              self.mesh.nodeStarOffsets,
-#                              self.mesh.nodeStarArray,
-#                              self.mesh.elementNodesArray,
-#                              self.dirichlet_bc_dofs['dof'],
-#                              self.model.timeIntegration.dt,
-#                              initial_area,
-#                              self.mesh.nodeVelocityArray)
+        self.mesh.nodeVelocityArray[:, 0] = self.q_v[:, 0]
+        self.mesh.nodeVelocityArray[:, 1] = self.q_v[:, 1]
+         
+        MV.get_mesh_velocity(self.mesh.nodeArray,
+                             self.mesh.nodeStarOffsets,
+                             self.mesh.nodeStarArray,
+                             self.mesh.elementNodesArray,
+                             self.dirichlet_bc_dofs['dof'],
+                             self.model.timeIntegration.dt,
+                             initial_area,
+                             self.mesh.nodeVelocityArray)
 
         #self.mesh.nodeVelocityArray[:] = analyticalSolution[0].mesh_velocity(
         #         self.mesh.nodeArray[:, 0], self.mesh.nodeArray[:, 1])

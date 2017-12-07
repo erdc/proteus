@@ -14,7 +14,7 @@ fes = None
 lm = None #: levelmodel
 q = None
 
-quad_for_cij = {'weight':[1.0/6, 4.0/6, 1.0/6], 'point':[0.0,0.5,1.0]}
+quad_for_cij = {'weight':[1.0/6, 4.0/6, 1.0/6], 'point':[0.0,0.5,1.0]}#{'weight':[1.0], 'point':[1.0]}#
 
 def getResidual(
     # double, self.timeIntegration.dt
@@ -234,15 +234,18 @@ def getResidual(
         node_coord[:] += quad_for_cij['point'][it]* dt * mesh_velocity_dof #: assume the velocity is the same; note dt; 
         
         #: use node_coord
+        J[:]   =0.0
+        detJ[:]=0.0
+        invJ[:]=0.0
         cfemIntegrals.parametricMaps_getJacobianValues(geo_grad_phi, mesh_l2g, node_coord, J, detJ, invJ)#:different order of invJ2, det2
-        if  quad_for_cij['point'][it] == 0.0:
-            error_J = np.max(np.abs(q['J']-J)) 
-            assert error_J<1e-9, "J: something wrong"
-            
-            error_invJ = np.max(np.abs(q['inverse(J)']-invJ)) 
-            assert error_invJ<1e-9, "invJ: something wrong"
-            error_detJ = np.max(np.abs(q['det(J)']-detJ)) 
-            assert error_detJ<1e-9, "detJ: something wrong"
+#         if  quad_for_cij['point'][it] == 0.0:
+#             error_J = np.max(np.abs(q['J']-J)) 
+#             assert error_J<1e-9, "J: something wrong"
+#             
+#             error_invJ = np.max(np.abs(q['inverse(J)']-invJ)) 
+#             assert error_invJ<1e-9, "invJ: something wrong"
+#             error_detJ = np.max(np.abs(q['det(J)']-detJ)) 
+#             assert error_detJ<1e-9, "detJ: something wrong"
     
         
         
@@ -305,8 +308,12 @@ def getResidual(
     #: get new lumped mass matrix
     node_coord[:] = mesh_dof
     node_coord[:] += dt * mesh_velocity_dof #: assume the velocity is the same; note dt; 
+    J[:]   =0.0
+    detJ[:]=0.0
+    invJ[:]=0.0
     cfemIntegrals.parametricMaps_getJacobianValues(geo_grad_phi, mesh_l2g, node_coord, J, detJ, invJ)#:different order of invJ2, det2
-    get_ML(mesh_l2g, v_basis, dV, detJ, ML_new)
+    lm.u[0].femSpace.getBasisValues(qpt,v_basis)
+    get_ML(mesh_l2g, v_basis, dV_ref, detJ, ML_new)#: v_basis is independent of mesh
 
     assert np.all(ML_new > 0.), "some element of ML is negative"
 
@@ -317,6 +324,7 @@ def getResidual(
 
     edge_based_cfl[:] = 0.0
 
+    # compute dij and compute solution and save the solution into residual
     for dof_i in xrange(numDOFs):  # Serious error: numDOFs=nnz-1
 
         dii = 0.0
@@ -399,13 +407,17 @@ def get_ML(elementNodesArray, v_basis, dV_ref, detJ, _ML):
     for e in xrange(n_ele):
         ele_ML[:] = 0.0
         for i in xrange(n_dof):
-            for k in xrange(n_dof):
+            for k in xrange(n_pt):
                 ele_ML[i] += v_basis[e,k,i]*dV_ref[k]*np.abs(detJ[e,k])
             #end-loop-i
-            _ML[elementNodesArray[e,i]] = ele_ML[i]
+            _ML[elementNodesArray[e,i]] += ele_ML[i] #: Serious error: forget += for assembling
     #end-loop-e
 
 def get_diameter(element_nodes):
+    """
+        can be used for any convex polygon
+    """
+    
     _hmax = 0.0
     _hmin = 0.0
     N = element_nodes.shape[0]

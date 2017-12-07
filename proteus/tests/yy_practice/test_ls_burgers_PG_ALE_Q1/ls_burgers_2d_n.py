@@ -15,6 +15,7 @@ if ct.useHex:
         femSpaces = {0: C0_AffineLagrangeOnCubeWithNodalBasis}
     else:
         print "pDegree_ls = %s not recognized " % pDegree_ls
+        
     elementQuadrature = CubeGaussQuadrature(nd, rotation_quad_order)
     elementBoundaryQuadrature = CubeGaussQuadrature(
         nd - 1, rotation_quad_order)
