@@ -73,16 +73,22 @@ multilevelNonlinearSolver = Newton
 # else:
 #     raise RuntimeError
 
+use_SSP = False
 
-# timeIntegration = NCLS.RKEV  # SSP33
-# timeOrder = 1
-# nStagesTime = timeOrder
-# stepController = Min_dt_RKcontroller  # since substeps are substages
+if use_SSP:
+    # This method does not work since two solutions are on the difference mesh and cannot combines together.
+    # It shows the advantage of non-conservative 
+    timeIntegration = NCLS.RKEV  # SSP33
+    timeOrder = 2
+    nStagesTime = timeOrder
+    stepController = Min_dt_RKcontroller  # since substeps are substages
+else:
+    timeIntegration = BackwardEuler_cfl
+    stepController = Min_dt_cfl_controller
 
-timeIntegration = BackwardEuler_cfl
+
 # Serious error: it is not levelNonlinearSolverType
 levelNonlinearSolver = ExplicitLumpedMassMatrix
-stepController = Min_dt_cfl_controller
 
 
 nonlinearSolverConvergenceTest = 'rits'

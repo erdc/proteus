@@ -10,7 +10,7 @@ ct = Context.Options([
     ("parallel", False, "Use PETSc or not"),
     ("linearSmoother", False, "Use linear smoother or not"),
     ("unstructured", False, "unstructured mesh or not"),
-    ("ncells", 32, "Specify initial mesh size by giving number of cells in each direction"),
+    ("ncells", 64, "Specify initial mesh size by giving number of cells in each direction"),
     ("nLevels", 1, "number of refiments"),
     ("timeIntegration_ls", 'be',
      "method for Time integration: 'be', 'vbdf', 'flcbdf','rk' "),

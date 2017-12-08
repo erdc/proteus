@@ -322,6 +322,7 @@ def getResidual(
 
     # update solution
     run_times += 1
+    logEvent("------------------------------------------------------get Residual is caled again %d" % (run_times,), 1)
 
     globalResidual[:] = 0.0
 
