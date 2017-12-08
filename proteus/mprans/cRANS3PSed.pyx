@@ -196,6 +196,7 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * vel_grad_trial_ref,
                                double * vel_test_ref,
                                double * vel_grad_test_ref,
+				               #element boundary
                                double * mesh_trial_trace_ref,
                                double * mesh_grad_trial_trace_ref,
                                double * dS_ref,
@@ -209,6 +210,7 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * vel_grad_test_trace_ref,
                                double * normal_ref,
                                double * boundaryJac_ref,
+                               #physics
                                double eb_adjoint_sigma,
                                double * elementDiameter,
                                double * nodeDiametersArray,
@@ -253,8 +255,7 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * phi,
                                double * normal_phi,
                                double * kappa_phi,
-                               double * q_mom_u_acc_beta_bdf, double * \
-                               q_mom_v_acc_beta_bdf, double * q_mom_w_acc_beta_bdf,
+                               double * q_mom_u_acc_beta_bdf,                               double *  q_mom_v_acc_beta_bdf, double * q_mom_w_acc_beta_bdf,
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,

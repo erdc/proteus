@@ -71,6 +71,8 @@ class BC_RANS(BC_Base):
         self.pInc_dirichlet = BoundaryCondition() # pressure increment
         self.pInit_advective = BoundaryCondition() 
         self.pInc_advective = BoundaryCondition() 
+        self.pInit_diffusive = BoundaryCondition() 
+        self.pInc_diffusive = BoundaryCondition() 
 
     def reset(self):
         """
@@ -163,9 +165,18 @@ class BC_RANS(BC_Base):
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(0.)          
-        self.p_advective.setConstantBC(0.)
+        self.us_dirichlet.setConstantBC(0.)
+        self.vs_dirichlet.setConstantBC(0.)
+        self.ws_dirichlet.setConstantBC(0.)
+        self.k_dirichlet.setConstantBC(0.)           
+        self.p_advective.setConstantBC(0.)         
+        self.pInit_advective.setConstantBC(0.)          
+        self.pInc_advective.setConstantBC(0.)
         self.vof_advective.setConstantBC(0.)
+        self.vos_advective.setConstantBC(0.)
+        self.pInit_diffusive.setConstantBC(0.)          
+        self.pInc_diffusive.setConstantBC(0.)
+        self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)  
 
     def setFreeSlip(self):
@@ -176,13 +187,25 @@ class BC_RANS(BC_Base):
         self.BC_type = 'FreeSlip'
         self.k_dirichlet.setConstantBC(0.)         
         self.p_advective.setConstantBC(0.)
+        self.pInit_advective.setConstantBC(0.)          
+        self.pInc_advective.setConstantBC(0.)
         self.u_advective.setConstantBC(0.)
         self.v_advective.setConstantBC(0.)
         self.w_advective.setConstantBC(0.)
+        self.us_advective.setConstantBC(0.)
+        self.vs_advective.setConstantBC(0.)
+        self.ws_advective.setConstantBC(0.)
         self.vof_advective.setConstantBC(0.)
+        self.vos_advective.setConstantBC(0.)
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
+        self.us_diffusive.setConstantBC(0.)
+        self.vs_diffusive.setConstantBC(0.)
+        self.ws_diffusive.setConstantBC(0.)
+        self.pInit_diffusive.setConstantBC(0.)          
+        self.pInc_diffusive.setConstantBC(0.)
+        self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)  
 
     def setAtmosphere(self, orientation=None, vof_air=1.):

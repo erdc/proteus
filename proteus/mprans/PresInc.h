@@ -548,7 +548,7 @@ namespace proteus
                 bc_u_ext=0.0,
                 adv_flux_ext=0.0,
                 diff_flux_ext=0.0,
-                a_ext,
+                a_ext=0.0,
                 f_ext[nSpace],
       		grad_u_ext[nSpace],
       		jac_ext[nSpace*nSpace],

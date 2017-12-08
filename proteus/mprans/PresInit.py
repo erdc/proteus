@@ -176,8 +176,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False):  # ,
-        self.useConstantH = coefficients.useConstantH
+                 movingDomain=False,
+                 bdyNullSpace=False): 
+        self.bdyNullSpace=bdyNullSpace
+        self.useConstantH = False#coefficients.useConstantH
         from proteus import Comm
         #
         # set the objects describing the method and boundary conditions
@@ -394,7 +396,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe = {}
         self.phi_ip = {}
         # mesh
-        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
         self.q[('u', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[

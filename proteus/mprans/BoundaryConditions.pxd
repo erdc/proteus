@@ -66,6 +66,8 @@ cdef class BC_RANS(BC_Base):
         cdef BoundaryCondition pInc_dirichlet
         cdef BoundaryCondition pInit_advective
         cdef BoundaryCondition pInc_advective
+        cdef BoundaryCondition pInit_diffusive
+        cdef BoundaryCondition pInc_diffusive
 
 
         # functions
