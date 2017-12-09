@@ -173,6 +173,7 @@ class NF_base:
                         p = None
                         if getPeriodicBoundaryConditions is not None and not parallelPeriodic:
                             p = getPeriodicBoundaryConditions[ci](x,materialFlag)
+                            self.isDOFBoundary[ci][ebNE,k]=gFlag #mql. if periodic BCs then set isDOFBoundary to 1
                         if p is not None:
                             pset.add(ptuple(p))
                             #self.isDOFBoundary[ci][ebNE,k]=1
@@ -199,6 +200,7 @@ class NF_base:
                         p = None
                         if getPeriodicBoundaryConditions is not None:
                             p = getPeriodicBoundaryConditions[ci](x)
+                            self.isDOFBoundary[ci][ebNE,k]=gFlag #mql. if periodic BCs then set isDOFBoundary to 1
                         if p is not None and not parallelPeriodic:
                             if self.periodicBoundaryConditionsDictList[ci].has_key(ptuple(p)):#.hash()):
                                 self.periodicBoundaryConditionsDictList[ci][ptuple(p)].append((ebNE,k))
@@ -1266,10 +1268,12 @@ class Advection_DiagonalUpwind_IIPG_exterior(NF_base):
     hasInterior=False
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
-                 getDiffusiveFluxBoundaryConditions):
+                 getDiffusiveFluxBoundaryConditions,
+                 getPeriodicBoundaryConditions=None):
         NF_base.__init__(self,vt,getPointwiseBoundaryConditions,
-                 getAdvectiveFluxBoundaryConditions,
-                 getDiffusiveFluxBoundaryConditions)
+                         getAdvectiveFluxBoundaryConditions,
+                         getDiffusiveFluxBoundaryConditions,
+                         getPeriodicBoundaryConditions)
         self.hasInterior=False
     def setDirichletValues(self,ebqe):
         for ci in range(self.nc):

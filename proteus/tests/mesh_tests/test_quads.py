@@ -13,8 +13,7 @@ import stokes_2d_n
 import pytest
 import inspect
 
-pytestmark = pytest.mark.meshtest
-
+@pytest.mark.MeshTools
 def test_mesh_build():
     """  Test mesh generation and refinment """
     nnx = 4
@@ -37,6 +36,9 @@ def test_mesh_build():
     assert mlMesh.meshList[0].nElements_global == (nnx-1)*(nny-1), 'Mesh generator has built incorrect number of quads'
     assert mlMesh.meshList[1].nElements_global == 4*(nnx-1)*(nny-1), 'Mesh generator has built incorrect number of quads'
 
+@pytest.mark.modelTest
+@pytest.mark.moderateTest
+@pytest.mark.MeshTools
 class Test2DStokesOnQuads():
     """ Runs a 2D Poiseulle Stokes problem on Quads with TH elements """
 

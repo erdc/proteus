@@ -306,7 +306,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False):  # ,
+                 movingDomain=False,
+                 bdyNullSpace=False):
+        self.bdyNullSpace=bdyNullSpace
         self.useConstantH = coefficients.useConstantH
         from proteus import Comm
         #

@@ -39,6 +39,7 @@ namespace proteus
                                    double* u_dof,
                                    double alphaBDF,
                                    double* q_vf,
+				   double* q_divU,
                                    double* q_vs,
                                    double* q_vos,
                                    double rho_s,
@@ -63,7 +64,8 @@ namespace proteus
 				   int nExteriorElementBoundaries_global,
 				   int* exteriorElementBoundariesArray,
 				   int* elementBoundaryElementsArray,
-				   int* elementBoundaryLocalElementBoundariesArray)=0;
+				   int* elementBoundaryLocalElementBoundariesArray, 
+				   int INTEGRATE_BY_PARTS_DIV_U)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -166,7 +168,7 @@ namespace proteus
 					double& flux)
     {
       if(isFluxBoundary == 1)
-	{
+	{ 
 	  flux = bc_flux;
 	}
       else if(isDOFBoundary == 1)
@@ -228,6 +230,7 @@ namespace proteus
 					 double* u_dof,
                                          double alphaBDF,
                                          double* q_vf,
+					 double* q_divU,
                                          double* q_vs,
                                          double* q_vos,
                                          double rho_s,
@@ -250,7 +253,9 @@ namespace proteus
 					 int* elementBoundaryElementsArray,
 					 int* elementBoundaryLocalElementBoundariesArray,
 					 double* element_u,
-					 int eN)
+					 int eN, 
+					 double compatibility_condition, 
+					 int INTEGRATE_BY_PARTS_DIV_U)
     {
       for (int i=0;i<nDOF_test_element;i++)
 	{
@@ -324,9 +329,10 @@ namespace proteus
 	      //register int eN_k_i=eN_k*nDOF_test_element+i;
 	      //register int eN_k_i_nSpace = eN_k_i*nSpace;
 	      register int  i_nSpace=i*nSpace;
-	      
-	      elementResidual_u[i] += ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]) + 
-		ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]);
+	      elementResidual_u[i] += 
+		(INTEGRATE_BY_PARTS_DIV_U == 1 ? ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]) : q_divU[eN_k]*u_test_dV[i]) 
+		+ compatibility_condition*u_test_dV[i] // mql: to make the system solvable if int(div(u))!=0
+		+ ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]);
 	    }//i
 	  //
 	  //save momentum for time history and velocity for subgrid error
@@ -367,6 +373,7 @@ namespace proteus
 			   double* u_dof,
                            double alphaBDF,
                            double* q_vf,
+			   double* q_divU,
                            double* q_vs,
                            double* q_vos,
                            double rho_s,
@@ -391,8 +398,38 @@ namespace proteus
 			   int nExteriorElementBoundaries_global,
 			   int* exteriorElementBoundariesArray,
 			   int* elementBoundaryElementsArray,
-			   int* elementBoundaryLocalElementBoundariesArray)
+			   int* elementBoundaryLocalElementBoundariesArray,
+			   int INTEGRATE_BY_PARTS_DIV_U)
     {
+      double compatibility_condition=0.;
+      // COMPUTE COMPATIBILITY CONSTANT 
+      // mql: Modify the rhs (by adding a constant) so that the Poission system is solvable (assume diffusive flux = 0).
+      // Note that this is equivalent to consider a (not known) diffusive flux != 0 s.t. the system is solvable.
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      register int eN_k = eN*nQuadraturePoints_element+k;
+	      register double 
+		jac[nSpace*nSpace],
+		jacDet,
+		jacInv[nSpace*nSpace],
+		dV,x,y,z;
+	      ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,
+					  x,y,z);
+	      //get the physical integration weight
+	      dV = fabs(jacDet)*dV_ref[k];
+	      compatibility_condition -= q_divU[eN_k]*dV;
+	    }
+	}
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -435,6 +472,7 @@ namespace proteus
 				   u_dof,
                                    alphaBDF,
                                    q_vf,
+				   q_divU,
                                    q_vs,
                                    q_vos,
                                    rho_s,
@@ -457,14 +495,15 @@ namespace proteus
 				   elementBoundaryElementsArray,
 				   elementBoundaryLocalElementBoundariesArray,
 				   element_u,
-				   eN);
+				   eN, 
+				   compatibility_condition, 
+				   INTEGRATE_BY_PARTS_DIV_U);
 	  //
 	  //load element into global residual and save element residual
 	  //
 	  for(int i=0;i<nDOF_test_element;i++) 
 	    { 
-	      register int eN_i=eN*nDOF_test_element+i;
-          
+	      register int eN_i=eN*nDOF_test_element+i;          
 	      globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
 	    }//i
 	}//elements
@@ -576,7 +615,7 @@ namespace proteus
 	      // 
 	      exteriorNumericalAdvectiveFlux(normal,
 					     f_ext,
-					     adv_flux_ext);
+					     adv_flux_ext); //=f.normal = [(1-vos)*vf + vos*vs].normal
               exteriorNumericalDiffusiveFlux(isDOFBoundary[ebNE_kb],
                                              isFluxBoundary[ebNE_kb],
                                              normal,
@@ -587,11 +626,13 @@ namespace proteus
                                              bc_diff_flux[ebNE_kb],
                                              penalty,
                                              diff_flux_ext);
-              if(isFluxBoundary[ebNE_kb] == 1)
-                {
-                  adv_flux_ext = 0.0;
-                  diff_flux_ext = 0.0;
-                }
+	      if (isDOFBoundary[ebNE_kb] != 1)
+		diff_flux_ext = 0.0; // mql: don't consider diffusive flux unless Dirichlet BC
+	      //if(isFluxBoundary[ebNE_kb] == 1)	      
+	      //{
+	      //  adv_flux_ext = 0.0;
+	      //  diff_flux_ext = 0.0;
+	      //}
 	      ebqe_adv_flux[ebNE_kb] = adv_flux_ext;
 	      ebqe_diff_flux[ebNE_kb] = diff_flux_ext;
 	      //
@@ -599,18 +640,18 @@ namespace proteus
 	      //
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
-		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(adv_flux_ext,u_test_dS[i])
-                    + 
-                    ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i])
-		    +
-                    ck.ExteriorElementBoundaryScalarDiffusionAdjoint(isDOFBoundary[ebNE_kb],
-                                                                     isFluxBoundary[ebNE_kb],
-                                                                     1.0,
-                                                                     u_ext,
-                                                                     bc_u_ext,
-                                                                     normal,
-                                                                     a_ext,
-                                                                     &u_grad_test_dS[i*nSpace]);
+		  elementResidual_u[i] += 
+		    (INTEGRATE_BY_PARTS_DIV_U == 1 ? ck.ExteriorElementBoundaryFlux(adv_flux_ext,u_test_dS[i]) : 0.)
+		    + ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]) // mql: just != 0 if Dirichlet BC
+		    + ck.ExteriorElementBoundaryScalarDiffusionAdjoint(isDOFBoundary[ebNE_kb],
+								       0, // mql: if Dirichlet BCs, then the flux BCs don't matter
+								       //isFluxBoundary[ebNE_kb],
+								       1.0,
+								       u_ext,
+								       bc_u_ext,
+								       normal,
+								       a_ext,
+								       &u_grad_test_dS[i*nSpace]);
 		}//i
 	    }//kb
 	  //
@@ -619,8 +660,7 @@ namespace proteus
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
 	      int eN_i = eN*nDOF_test_element+i;
-
-	      globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+	      globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i]; 
 	    }//i
 	}//ebNE
     }
@@ -738,11 +778,13 @@ namespace proteus
 		  //int eN_k_j=eN_k*nDOF_trial_element+j;
 		  //int eN_k_j_nSpace = eN_k_j*nSpace;
 		  int j_nSpace = j*nSpace;		  
-		  elementJacobian_u_u[i*nDOF_trial_element+j] += ck.NumericalDiffusionJacobian(a,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); 
+		  elementJacobian_u_u[i*nDOF_trial_element+j] += 
+		    ck.NumericalDiffusionJacobian(a,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); 
 		}//j
 	    }//i
 	}//k
     }
+
     void calculateJacobian(//element
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
@@ -841,7 +883,6 @@ namespace proteus
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
 		  int eN_i_j = eN_i*nDOF_trial_element+j;
-
 		  globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
 		}//j
 	    }//i
@@ -956,21 +997,24 @@ namespace proteus
                         ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j,
                         j_nSpace = j*nSpace;		  
 
-		      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += ExteriorNumericalDiffusiveFluxJacobian(isDOFBoundary[ebNE_kb],
-                                                                                                                                           isFluxBoundary[ebNE_kb],
-                                                                                                                                           normal,
-                                                                                                                                           a_ext,
-                                                                                                                                           u_trial_trace_ref[ebN_local_kb_j],
-                                                                                                                                           &u_grad_trial_trace[j_nSpace],
-                                                                                                                                           penalty)*u_test_dS[i]
+		      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += 
+			ExteriorNumericalDiffusiveFluxJacobian(isDOFBoundary[ebNE_kb],
+							       isFluxBoundary[ebNE_kb],
+							       normal,
+							       a_ext,
+							       u_trial_trace_ref[ebN_local_kb_j],
+							       &u_grad_trial_trace[j_nSpace],
+							       penalty)*u_test_dS[i]
                         +
-		        ck.ExteriorElementBoundaryScalarDiffusionAdjointJacobian(isDOFBoundary[ebNE_kb],
-                                                                                 isFluxBoundary[ebNE_kb],
-                                                                                 1.0,
-                                                                                 u_trial_trace_ref[ebN_local_kb_j],
-                                                                                 normal,
-                                                                                 a_ext,
-                                                                                 &u_grad_test_dS[i*nSpace]);
+		        ck.ExteriorElementBoundaryScalarDiffusionAdjointJacobian
+			(isDOFBoundary[ebNE_kb],
+			 //isFluxBoundary[ebNE_kb],
+			 0, // mql: if Dirichlet BCs, then the flux BCs don't matte
+			 1.0,
+			 u_trial_trace_ref[ebN_local_kb_j],
+			 normal,
+			 a_ext,
+			 &u_grad_test_dS[i*nSpace]);		      
 		    }//j
 		}//i
 	    }//kb
