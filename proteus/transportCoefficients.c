@@ -2436,7 +2436,7 @@ void TwophaseNavierStokes_LS_SO_2D_Evaluate(const int nPoints,
       //v momentum accumulation
       mom_v_acc[k]=v[k];
       dmom_v_acc_v[k]=1.0;
-      
+
       //mass advective flux
       mass_adv[k*2+0]=u[k];
       mass_adv[k*2+1]=v[k];
@@ -2678,6 +2678,8 @@ void TwophaseNavierStokes_ST_LS_SO_2D_Evaluate(const int nPoints,
       dmom_v_ham_grad_p[k*2+1]=1.0/rho;
     }
 }
+
+
 void TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(const int nPoints,
                                                   const double eps_rho,
                                                   const double eps_mu,
@@ -2731,6 +2733,7 @@ void TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(const int nPoints,
       rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+
       //u momentum accumulation
       mom_u_acc[k]=u[k];
       dmom_u_acc_u[k]=1.0;
@@ -2775,10 +2778,15 @@ void TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(const int nPoints,
       mom_vu_diff_ten[k] = nu;
 
       //momentum sources
+      /* printf("rho = %.2f\n",rho); */
+      /* printf("mom_u_source = %f\n",mom_u_source[k]); */
+      /* printf("mom_v_source = %f\n",mom_u_source[k]); */
+      /* printf("d_mu = %f\n" , d_mu); */
+      /* printf("sigma = %f\n " , sigma); */
+      
       norm_n = sqrt(n[k*2+0]*n[k*2+0]+n[k*2+1]*n[k*2+1]);
       mom_u_source[k] = -g[0] - d_mu*sigma*kappa[k]*n[k*2+0]/(rho*(norm_n+1.0e-8));
       mom_v_source[k] = -g[1] - d_mu*sigma*kappa[k]*n[k*2+1]/(rho*(norm_n+1.0e-8));
-      
       //u momentum Hamiltonian (pressure)
 
       mom_u_ham[k] = grad_p[k*2+0]/rho;
@@ -12675,4 +12683,96 @@ void Mass_3D_Evaluate(const int nPoints,
     mom_w_acc[k] = w[k];
     dmom_w_acc_w[k] = 1.0;
   }
+}
+
+void TwoPhaseInvScaledLaplace_2D_Evaluate(const int nPoints,
+                                         const double eps,
+                                         const double rho_0,
+                                         const double nu_0,
+                                         const double rho_1,
+                                         const double nu_1,
+                                         const double* phi,
+                                         double *mom_p_diff_ten,
+                                         double *mom_u_diff_ten,
+                                         double *mom_v_diff_ten)
+{
+  int k;
+  double rho,nu,mu,H;
+  
+  for (k=0; k<nPoints; k++)
+    {
+      H = smoothedHeaviside(eps,phi[k]);
+      rho = rho_0*(1.0-H) + rho_1*H;
+      nu = nu_0*(1.0-H) + nu_1*H;
+      mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
+      
+      mom_p_diff_ten[k*2+0] = 1.0 / rho;
+      mom_p_diff_ten[k*2+1] = 1.0 / rho;
+
+      mom_u_diff_ten[k*2+0] = 1.0 / rho;
+      mom_u_diff_ten[k*2+1] = 1.0 / rho;
+
+      mom_v_diff_ten[k*2+0] = 1.0 / rho;
+      mom_v_diff_ten[k*2+1] = 1.0 / rho;
+    } 
+}
+
+void TwoPhaseAdvection_2D_Evaluate(const int nPoints,
+                                  const double eps,
+                                  const double rho_0,
+                                  const double nu_0,
+                                  const double rho_1,
+                                  const double nu_1,
+                                  const double *phi,
+                                  const double *p,
+                                  const double *u,
+                                  const double *v,
+                                  double *mass_adv,
+                                  double *dmass_adv_p,
+                                  double *dmass_adv_u,
+                                  double *dmass_adv_v,
+                                  double *mom_u_adv,
+                                  double *dmom_u_adv_u,
+                                  double *dmom_u_adv_v,
+                                  double *mom_v_adv,
+                                  double *dmom_v_adv_u,
+                                  double *dmom_v_adv_v)
+{
+  int k;
+  double rho, nu, mu, H;
+  
+  for (k=0;k<nPoints;k++)
+    {
+      H = smoothedHeaviside(eps,phi[k]);
+      rho = rho_0*(1.0-H) + rho_1*H;
+      nu = nu_0*(1.0-H) + nu_1*H;
+      mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
+
+      //mass advective flux
+      mass_adv[k*2+0]=rho*u[k]*p[k];
+      mass_adv[k*2+1]=rho*v[k]*p[k];
+      
+      dmass_adv_p[k*2+0] = rho*u[k];
+      dmass_adv_p[k*2+1] = rho*v[k];
+      // ARB - NOTE TO SELF...Why arent these derivatives p[k]?
+      // Possible error to investigate.
+      dmass_adv_u[k*2+0]= 0.0;
+      dmass_adv_v[k*2+1]= 0.0;
+      
+      mom_u_adv[k*2+0] = rho*u[k]*u[k];
+      mom_u_adv[k*2+1] = rho*u[k]*v[k];
+      
+      dmom_u_adv_u[k*2+0] = rho*2.0*u[k];
+      dmom_u_adv_u[k*2+1] = rho*v[k];
+      
+      dmom_u_adv_v[k*2+1] = rho*u[k];
+      
+      mom_v_adv[k*2+0] = rho*v[k]*u[k];
+      mom_v_adv[k*2+1] = rho*v[k]*v[k];
+  
+      dmom_v_adv_u[k*2+0] = rho*v[k];
+
+      dmom_v_adv_v[k*2+0] = rho*u[k];
+      dmom_v_adv_v[k*2+1] = rho*2.0*v[k];
+    }
 }

@@ -13,6 +13,8 @@ from proteus import AuxiliaryVariables
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
 from proteus import WaveTools as wt
+from proteus.Profiling import logEvent
+from math import cos, sin, sqrt, atan2, acos, asin
 
 class BC_RANS(BC_Base):
     """
@@ -90,6 +92,8 @@ class BC_RANS(BC_Base):
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
+        self.k_diffusive.setConstantBC(0.)
+        self.dissipation_diffusive.setConstantBC(0.)
 
     def setTank(self, b_or=None):
         if b_or is None:
@@ -131,18 +135,18 @@ class BC_RANS(BC_Base):
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(0.0)          
+        self.k_dirichlet.setConstantBC(0.)          
         self.p_advective.setConstantBC(0.)
         self.vof_advective.setConstantBC(0.)
-        self.dissipation_diffusive.setConstantBC(0.0)  
-        
+        self.dissipation_diffusive.setConstantBC(0.)  
+
     def setFreeSlip(self):
         """
         Sets free slip conditions at the boundary
         """
         self.reset()
         self.BC_type = 'FreeSlip'
-        self.k_dirichlet.setConstantBC(0.0)         
+        self.k_dirichlet.setConstantBC(0.)         
         self.p_advective.setConstantBC(0.)
         self.u_advective.setConstantBC(0.)
         self.v_advective.setConstantBC(0.)
@@ -151,13 +155,12 @@ class BC_RANS(BC_Base):
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
-        self.dissipation_diffusive.setConstantBC(0.0)  
-        
+        self.dissipation_diffusive.setConstantBC(0.)  
+
     def setAtmosphere(self, orientation=None, vof_air=1.):
         """
         Sets atmosphere boundary conditions (water can come out)
         (!) pressure dirichlet set to 0 for this BC
-
         Parameters
         ----------
         orientation: Optional[array_like]
@@ -252,6 +255,48 @@ class BC_RANS(BC_Base):
         self.dissipation_advective.resetBC()        
         self.k_diffusive.setConstantBC(0.) 
         self.dissipation_diffusive.setConstantBC(0.) 
+
+    def setWallFunction(self, wall, shearStress=False):
+        """
+        Sets turbulent boundaries for wall treatment.        
+        Calculation made on nodes outside the viscous sublayer and based
+        on assumption on the velocity profile close to the wall in order to
+        impose the wall shear stress.
+
+        Parameters
+        ----------
+        wall: wall object.
+            BoundaryConditions class to be attached for setting up
+            all the turbulent parameters. 
+        shearStress: True/False.     
+            At the moment version with shearStress=False is the only one that
+            returns good results.
+            Keep it False at the moment!
+            - When True, the wall function prescribes diffusive boundaries
+              for velocity and kappa. It's like imposing the shear stress.
+            - If False, the wall function prescribes dirichlet conditions.
+
+        """      
+        
+        self.reset()
+
+        wf = wall
+        self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
+        self.vof_advective.setConstantBC(0.)
+        self.p_advective.setConstantBC(0.)
+        if shearStress:
+            #self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)
+            self.k_advective.setConstantBC(0.)
+            self.u_diffusive.uOfXT = lambda x, t: wf.get_u_diffusive(x, t)
+            self.v_diffusive.uOfXT = lambda x, t: wf.get_v_diffusive(x, t)
+            self.w_diffusive.uOfXT = lambda x, t: wf.get_w_diffusive(x, t)
+            self.k_diffusive.setConstantBC(0.)
+        else:
+            self.u_dirichlet.uOfXT = lambda x, t: wf.get_u_dirichlet(x, t)
+            self.v_dirichlet.uOfXT = lambda x, t: wf.get_v_dirichlet(x, t)
+            self.w_dirichlet.uOfXT = lambda x, t: wf.get_w_dirichlet(x, t)
+            self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)       
+
 
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
@@ -379,7 +424,6 @@ class BC_RANS(BC_Base):
         """
         Imposes a velocity profile lower than the sea level and an open
         boundary for higher than the sealevel.
-
         Parameters
         ----------
         U: list.
@@ -406,7 +450,6 @@ class BC_RANS(BC_Base):
             Air K inflow value for turbulent model imposed at the boundary.
         dissipationInflowAir: float (optional).
             Air dissipation inflow value for turbulent model imposed at the boundary.            
-
         Below the seawater level, the condition returns the _dirichlet and
         p_advective condition according to the inflow velocity.
         Above the sea water level, the condition returns the gravity as zero,
@@ -502,7 +545,9 @@ class BC_RANS(BC_Base):
     def setHydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
                                               refLevel, smoothing, U=None, Uwind=None,
                                               pRef=0.0, vert_axis=None,
-                                              air=1.0, water=0.0):
+                                              air=1.0, water=0.0,
+                                              kInflow=None, dissipationInflow=None,
+                                              kInflowAir=None, dissipationInflowAir=None):
         """
         Returns the pressure and vof profile based on the known depth.
         If the boundary is aligned with one of the main axes, sets the tangential
@@ -529,16 +574,10 @@ class BC_RANS(BC_Base):
             phi_top = refLevel - seaLevel
             phi = x[vert_axis] - seaLevel
             return p_top - g[vert_axis]*(rhoDown*(phi_top - phi) + \
-                         (rhoUp -rhoDown) * \
-                         (smoothedHeaviside_integral(smoothing,phi_top)
-                          -
-                          smoothedHeaviside_integral(smoothing,phi)))
-            # if x[vert_axis] < seaLevel:
-            #     a0 = pRef-rhoUp*g[vert_axis]*(refLevel-seaLevel)-rhoDown*g[vert_axis]*seaLevel
-            #     a1 = rhoDown*g[vert_axis]
-            #     return a0 + a1*x[vert_axis]
-            # else:
-            #     return pRef
+                    (rhoUp -rhoDown) * \
+                    (smoothedHeaviside_integral(smoothing,phi_top)
+                     -
+                     smoothedHeaviside_integral(smoothing,phi)))
 
         def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
             phi = x[vert_axis] - seaLevel
@@ -550,21 +589,34 @@ class BC_RANS(BC_Base):
                 H = 0.
             return H*air + (1-H)*water     
 
-        self.u_dirichlet.resetBC() 
-        self.v_dirichlet.resetBC() 
-        self.w_dirichlet.resetBC() 
+        def inlet_k_dirichlet(x, t):
+            phi = x[vert_axis] - seaLevel
+            if phi <= 0.:
+                H = 0.0
+            elif 0 < phi <= smoothing:
+                H = smoothedHeaviside(smoothing/2., phi-smoothing/2.)
+            else:
+                H = 1.0
+            return H*kInflowAir + (1-H)*kInflow        
+
+        def inlet_dissipation_dirichlet(x, t):
+            phi = x[vert_axis] - seaLevel
+            if phi <= 0.:
+                H = 0.0
+            elif 0 < phi <= smoothing:
+                H = smoothedHeaviside(smoothing/2., phi-smoothing/2.)
+            else:
+                H = 1.0
+            return H*dissipationInflowAir + (1-H)*dissipationInflow  
+
         self.u_dirichlet.setConstantBC(0.)
-        self.u_diffusive.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
-        self.k_dirichlet.resetBC() 
-        self.dissipation_dirichlet.resetBC()         
-        self.k_advective.resetBC()
-        self.dissipation_advective.resetBC()        
-        self.k_diffusive.setConstantBC(0.0) 
-        self.dissipation_diffusive.setConstantBC(0.0)
+        self.u_diffusive.setConstantBC(0.) 
+        self.k_diffusive.setConstantBC(0.) 
+        self.dissipation_diffusive.setConstantBC(0.)
 
         if U is not None:            
             def get_inlet_ux_dirichlet(i):
@@ -583,10 +635,19 @@ class BC_RANS(BC_Base):
                 Uwind = np.zeros(3)
             U = np.array(U)
             Uwind = np.array(Uwind)
-
             self.u_dirichlet.uOfXT = get_inlet_ux_dirichlet(0)
             self.v_dirichlet.uOfXT = get_inlet_ux_dirichlet(1)
-            self.w_dirichlet.uOfXT = get_inlet_ux_dirichlet(2) 
+            self.w_dirichlet.uOfXT = get_inlet_ux_dirichlet(2)
+            self.u_diffusive.resetBC()
+        
+        if kInflow is not None:
+            self.k_dirichlet.uOfXT = inlet_k_dirichlet
+            self.k_advective.resetBC()
+            self.k_diffusive.resetBC()
+        if dissipationInflow is not None:
+            self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
+            self.dissipation_advective.resetBC()
+            self.dissipation_diffusive.resetBC()     
 
 
 # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
@@ -804,8 +865,6 @@ class RelaxationZoneWaveGenerator():
                             x[0] = qx[eN, k, 0]
                             x[1] = qx[eN, k, 1]
                             x[2] = qx[eN, k, 2]
-                            #print qx.__array_interface__['data'] == m.q['x'].__array_interface__['data']
-                            #print x.__array_interface__['data'] == m.q['x'][eN, k].__array_interface__['data']
                             phi = zone.calculate_phi(x)
                             q_phi_solid[eN, k] = phi
                             u = zone.calculate_vel(x, t)
@@ -923,3 +982,447 @@ def __x_to_cpp(x):
     xx[1] = x[1]
     xx[2] = x[2]
     return xx
+
+
+
+import os
+import sys
+import csv
+import numpy as np
+from mpi4py import MPI
+from scipy import spatial
+from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
+from proteus import SpatialTools as st
+from collections import OrderedDict
+from proteus.mprans import BodyDynamics as bd
+
+
+class WallFunctions(AuxiliaryVariables.AV_base, object):
+    """
+    Auxiliary variable used to calculate attributes of an associated shape
+    class instance acting as a wall.
+    """
+
+    def __init__(self, turbModel, kWall, b_or, Y, Yplus, U0, nu=1.004e-6, Cmu=0.09, K=0.41, B=5.57):
+        """
+        Sets turbulent boundaries for wall treatment.        
+        Calculation made on nodes outside the viscous sublayer and based
+        on assumption on the velocity profile close to the wall in order to
+        impose the wall shear stress.
+
+        - k is assumed to be constant in the fully turbulent region close to the wall,
+        in this way kv = kp.
+        - dissipation is calculated.
+
+        Parameters
+        ----------
+        turbModel: string.
+            'ke' or 'kw', for switching between k-epsilon or k-omega models.
+        kWall: object.
+            Class kWall object for extracting kappa from the model.
+        Y: float.
+            size of the nearest element to the boundary.
+        Yplus: float.
+            size of the nearest element to the boundary in terms of wall unit.
+        U0: array_like.
+            stream velocity.
+        nu: float.
+            fluid viscosity.
+        Cmu: float.
+            turbulent viscosity constant.
+        K: float.
+            von Karman coefficient.
+        B: float.
+            roughness coefficient for walls.          
+        """      
+        self.turbModel = turbModel
+        self._b_or = b_or
+        self.Y = Y
+        self.Yplus = Yplus
+        self.U0 = U0
+        self.nu = nu
+        self.Cmu = Cmu
+        self.K = K
+        self.B = B
+        #_b_or is positive when points outward the domain
+        b0, b1, b2 = self._b_or
+        # normal unit vector is positive when points inward the domain
+        self.nV = (-self._b_or)/np.sqrt(np.sum([b0**2, b1**2, b2**2]))
+        # initialise variables
+        self.Ubound = np.zeros(3)
+        self.kappa = 1e-10
+        self.tau_rho = 0.
+        self.utAbs = 1e-10
+        self.ut = np.zeros(3)
+        self.x = np.zeros(3)
+        self.t = 0.
+        self.model = None
+        self.xi, self.element, self.rank = None, None, None
+        self.kWall = kWall
+
+    def attachModel(self, model, ar):
+        """
+        Attaches model to auxiliary variable
+        """
+        self.model = model
+        self.ar = ar
+        self.nd = model.levelModelList[0].nSpace_global
+        self.Closure_0_model = model.levelModelList[0].coefficients.Closure_0_model
+        self.Closure_1_model = model.levelModelList[0].coefficients.Closure_1_model
+        return self
+
+    def attachAuxiliaryVariables(self,avDict):
+        pass
+
+    def calculate_init(self):
+        pass
+
+    def calculate(self):
+        pass
+
+    def getLocalNearestNode(self, coords, kdtree):
+        """
+        Finds nearest node to coordinates (local)
+        Parameters
+        ----------
+        coords: array_like
+            coordinates from which to find nearest node
+        kdtree: scipy.spatial.cKDTree
+            instance of scipy kdtree
+        Returns
+        -------
+        node: int
+            nearest node index
+        distance: float
+            distance to nearest node
+        """
+        # determine local nearest node distance
+        distance, node = kdtree.query(coords)
+        return node, distance
+
+    def getLocalElement(self, femSpace, coords, node):
+        """
+        Given coordinates and its nearest node, determine if it is on a
+        local element.
+        Parameters
+        ----------
+        femSpace: object
+            finite element space
+        coords: array_like
+            coordinates from which to element
+        node: int
+            nearest node index
+        Returns
+        -------
+        eN: int or None
+            local index of element (None if not found)
+        """
+        patchBoundaryNodes=set()
+        checkedElements=[]
+        # nodeElementOffsets give the indices to get the elements sharing the node
+        statem1 = node+1 < len(femSpace.mesh.nodeElementOffsets)
+        for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+            eN = femSpace.mesh.nodeElementsArray[eOffset]
+            checkedElements.append(eN)
+            # union of set
+            patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
+            # evaluate the inverse map for element eN (global to local)
+            xi = femSpace.elementMaps.getInverseValue(eN, coords)
+            #J = femSpace.elementMaps.getJacobianValues(eN, )
+            # query whether xi lies within the reference element
+            if femSpace.elementMaps.referenceElement.onElement(xi):
+                return eN
+        # extra loop if case coords is in neighbour element
+        for node in patchBoundaryNodes:
+            for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+                eN = femSpace.mesh.nodeElementsArray[eOffset]
+                if eN not in checkedElements:
+                    checkedElements.append(eN)
+                    # evaluate the inverse map for element eN
+                    xi = femSpace.elementMaps.getInverseValue(eN, coords)
+                    # query whether xi lies within the reference element
+                    if femSpace.elementMaps.referenceElement.onElement(xi):
+                        return eN
+        # no elements found
+        return None
+
+    def findElementContainingCoords(self, coords):
+        """
+        Given global coordinates of a point, returns 
+        local coordinates and the owner of the point.
+
+        Parameters
+        ----------
+        coords: array_like
+            global coordinates to look for
+        Returns
+        -------
+        xi:
+            local coordinates 
+        eN: int
+            (local) element number
+        rank: int
+            processor rank containing element
+        """
+        comm = Comm.get().comm.tompi4py()
+        xi = owning_proc = element = rank = None  # initialised as None
+        self.xi, self.element, self.rank = xi, element, rank
+        # get nearest node on each processor
+        #comm.barrier()
+        self.u = self.model.levelModelList[0].u    
+        self.femSpace_velocity = self.u[1].femSpace
+        nodes_kdtree = spatial.cKDTree(self.model.levelModelList[0].mesh.nodeArray)
+        nearest_node, nearest_node_distance = self.getLocalNearestNode(coords, nodes_kdtree)
+        # look for element containing coords on each processor (if it exists)
+        local_element = self.getLocalElement(self.femSpace_velocity, coords, nearest_node)
+        if local_element:
+            xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
+            rank = comm.rank
+        else:
+            xi = None
+            rank = None
+        #rank = comm.allreduce(rank, op=MPI.MAX)
+        return xi, local_element, rank
+
+    def getFluidVelocityLocalCoords(self, xi, element, rank):
+        """
+        Given local details, returns velocity field at those coordinates.
+
+        Parameters
+        ----------
+        xi: 
+            local coords in element
+        element: int
+            element number (local to processor 'rank')
+        rank: int
+            rank of processor owning the element
+        """
+        comm = Comm.get().comm.tompi4py()
+        if comm.rank == rank:
+            u = self.u[1].getValue(element, xi)
+            v = self.u[2].getValue(element, xi)
+            if self.nd > 2:
+                w = self.u[3].getValue(element, xi)
+            if self.nd <= 2:
+                w = 0.
+        else:
+            u = v = w = None
+        return u, v, w
+
+    def setYplusNormalDirection(self, x, t, relax=1.0):
+        """
+        Return the point at y+ distance in normal
+        direction from the boundary.
+        """
+        # near wall point
+        nP = ( relax*self.Y*(self.nV) ) + x
+        return nP
+
+    def extractVelocity(self, x, t):
+        """
+        Extraction of the velocity at y+ distance from the boundary.
+        """
+        coords = self.setYplusNormalDirection(x,t)
+        xi, element, rank = self.findElementContainingCoords(coords)
+        if rank is not None:
+            u, v, w = self.getFluidVelocityLocalCoords(xi, element, rank)
+        else:
+            relax=0.5
+            while rank is None:
+                coords_relax = self.setYplusNormalDirection(x,t, relax)
+                xi, element, rank = self.findElementContainingCoords(coords_relax)
+                relax*=0.5
+            #just use the element containing the boundary quadrature point to interpolate to the y+ point
+            u, v, w = self.getFluidVelocityLocalCoords(self.femSpace_velocity.elementMaps.getInverseValue(element, coords),
+                                                       element,
+                                                       rank)
+        self.xi, self.element, self.rank = xi, element, rank
+        return u, v, w
+        
+    def tangentialVelocity(self, x, t, uInit=None):
+        """
+        Given the velocity, calculates its
+        tangential component to the wall.
+
+        Parameters
+        ----------
+        uInit: True/False.
+            Switch for initializing the module.
+            True only during the first time step.
+        """
+        if uInit is True or self.model is None:
+            u0, u1, u2 = self.U0
+        else:
+            u0, u1, u2 = self.extractVelocity(x,t) 
+        self.meanV = np.array([u0, u1, u2]) 
+        # projection of u vector over an ortoganal plane to b_or
+        self.tanU = self.meanV - self.meanV*(self.nV**2)
+        # tangential unit vector
+        self.tV = self.tanU/np.sqrt(np.sum(self.tanU**2))
+
+    def getVariables(self, x, t):
+        """
+        Calculates velocity, gradient of the velocity and
+        kappa according with wall functions theory (see
+        S. B. Pope pg 442-443).
+        """
+        comm = Comm.get().comm.tompi4py() 
+        # Extraction of kappa 
+        self.kappa = self.kWall.getKappa(x, t, self.xi, self.element, self.rank)
+        # Calculation of nominal friction velocity based on kappa
+        self.utStar = (self.kappa**0.5) * (self.Cmu**0.25)
+        self.Ystar = self.Y * self.utStar / self.nu
+        # Absolute value of the extracted velocity at y+ location.
+        Up = np.sqrt(np.sum(self.tanU**2))
+        # viscous layer
+        if self.Ystar < 11.225:
+            logEvent('Prescribed near-wall point outside log-law region!') 
+            sys.exit(1)
+        # log-law layer
+        else: 
+            # Wall function theory from S.B. Pope, page 442-443
+            E = np.exp(self.B*self.K)
+            self.Ustar = self.utStar*np.log(E*self.Ystar)/self.K
+            self.utAbs = self.utStar*np.sqrt(Up/self.Ustar)
+            # Velocity vector and velocity gradient multiplied by the tangential vector unit
+            self.gradU = ( self.utAbs/(self.K*self.Y) ) * self.tV     
+            # Linear approximation for velocity at the wall (using the gradU of the logLaw)
+            self.uDir = self.tanU - (self.gradU*self.Y)
+
+    def get_u_dirichlet(self, x, t):
+        if t>0.: uInit = False
+        else: uInit = True
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t) 
+        return self.uDir[0]
+
+    def get_v_dirichlet(self, x, t):
+        if t>0.: uInit = False
+        else: uInit = True
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t) 
+        return self.uDir[1]
+
+    def get_w_dirichlet(self, x, t):
+        if t>0.: uInit = False
+        else: uInit = True
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t) 
+        return self.uDir[2]
+
+    def get_k_dirichlet(self, x, t):
+        if t>0.: uInit = False
+        else: uInit = True
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t) 
+        return self.kappa
+
+    def get_dissipation_dirichlet(self, x, t):
+        if t>0.: uInit = False
+        else: uInit = True
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)  
+        d = 0.
+        if self.turbModel == 'ke': 
+            d = (self.utStar**3)/(self.K*self.Y)
+        elif self.turbModel == 'kw' and self.kappa>0.: 
+            d = np.sqrt(self.kappa) / (self.K*self.Y*(self.Cmu**0.25))
+        return d 
+
+    def get_u_diffusive(self, x, t):
+        if t>0.: uInit = False
+        else: uInit = True
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)    
+        gradU = self.gradU[0]
+        return gradU 
+
+    def get_v_diffusive(self, x, t):
+        if t>0.: uInit = False
+        else: uInit = True
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)
+        gradU = self.gradU[1]
+        return gradU 
+
+    def get_w_diffusive(self, x, t):
+        if t>0.: uInit = False
+        else: uInit = True
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)      
+        gradU = self.gradU[2]
+        return gradU
+
+
+class kWall(AuxiliaryVariables.AV_base, object):
+    """
+    Auxiliary variable used to calculate attributes of an associated shape
+    class instance acting as a wall for the k variable.
+    """
+
+    def __init__(self, Y, Yplus, b_or, nu=1.004e-6, Cmu=0.09):
+        """
+        Sets turbulent boundaries for wall treatment.
+        """      
+        self.kappa = 1e-10
+        self.Y = Y
+        self.Yplus = Yplus
+        self._b_or = b_or
+        self.nu = nu
+        self.model = None
+        self.Cmu = Cmu
+        
+    def attachModel(self, model, ar):
+        """
+        Attaches model to auxiliary variable
+        """
+        self.model = model
+        self.ar = ar
+        self.nd = model.levelModelList[0].nSpace_global
+        return self
+
+    def attachAuxiliaryVariables(self,avDict):
+        pass
+
+    def calculate_init(self):
+        pass
+
+    def calculate(self):
+        pass
+
+    def getFluidKappaLocalCoords(self, xi, element, rank):
+        """
+        
+        Parameters
+        ----------
+        xi: 
+            local coords in element
+        element: int
+            element number (local to processor 'rank')
+        rank: int
+            rank of processor owning the element
+        """
+        comm = Comm.get().comm.tompi4py()
+        # solution of the selected model
+        self.u = self.model.levelModelList[0].u    
+        #self.femSpace_kappa = self.u[0].femSpace
+        if comm.rank == rank:
+            kappa = self.u[0].getValue(element, xi)
+        else:
+            kappa = None
+        return kappa
+
+    def kappaNearWall(self, xi, element, rank, kInit=None):
+        if kInit is True or self.model is None:
+            self.ut = self.Yplus * self.nu / self.Y
+            self.kappa = (self.ut**2) / np.sqrt(self.Cmu)
+        else:
+            self.kappa = self.getFluidKappaLocalCoords(xi, element, rank)
+
+    def getKappa(self, x, t, xi, element, rank):
+        if t>0.: kInit = False
+        else: kInit = True
+        self.kappaNearWall(xi, element, rank, kInit)
+        #logEvent('kappa --> %s' % self.kappa) 
+        #logEvent('t --> %s' % t) 
+        return abs(self.kappa)
