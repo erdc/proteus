@@ -4844,6 +4844,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
         self.meshList.append(TriangularMesh())
         childrenDict = self.meshList[-1].refine(self.meshList[-2])
         self.elementChildren.append(childrenDict)
+        
     def computeGeometricInfo(self):
         for m in self.meshList:
             m.computeGeometricInfo()
@@ -6267,7 +6268,7 @@ def genMeshWithTetgen(polyfile,
    nbase : int
 
    Returns
-    -------
+   --------
    mesh : :class:`proteus.MeshTools.TetrahedralMesh`
        Simplex mesh
    """
@@ -6282,10 +6283,6 @@ def genMeshWithTetgen(polyfile,
    mesh.generateFromTetgenFiles(polyfile,
                                 base=nbase)
    return mesh
-
-
-from proteus import default_n as dn
-from proteus import default_p as dp
 
 class MeshOptions:
     """

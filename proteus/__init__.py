@@ -9,7 +9,7 @@ except ImportError:
     import pkgutil
     __path__ = pkgutil.extend_path(__path__, __name__)
 
-__version__ = '1.3.3.dev0'
+__version__ = '1.4.0.dev0'
 
 __all__ = ["Archiver",
            "Domain",

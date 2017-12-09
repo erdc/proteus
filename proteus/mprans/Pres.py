@@ -30,7 +30,7 @@ class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_exterior):
                                                                   getDiffusiveFluxBoundaryConditions)
         
 class Coefficients(TC_base):
-    r"""
+    """
     The coefficients for pressure solution
 
     Update is given by
@@ -55,7 +55,9 @@ class Coefficients(TC_base):
                          advection = {0:{0:'constant'}})# div  (\mu velocity)
         self.modelIndex = modelIndex
         self.fluidModelIndex = fluidModelIndex
-        self.pressureIncrementModelIndex = pressureIncrementModelIndex
+        self.pressureIncrementModelIndex = pressureIncrementModelIndex 
+        if pressureIncrementModelIndex is None:
+            assert useRotationalForm == False, "The rotational form must be de-activated if there is no model for press increment"
         self.useRotationalForm = useRotationalForm
     def attachModels(self,modelList):
         self.model = modelList[self.modelIndex]
@@ -79,8 +81,10 @@ class Coefficients(TC_base):
             self.model.elementBoundaryQuadraturePoints)
         self.model.u[0].femSpace.getBasisGradientValuesTraceRef(
             self.model.elementBoundaryQuadraturePoints)
-        self.pressureIncrementModel = modelList[
-            self.pressureIncrementModelIndex]
+        if self.pressureIncrementModelIndex is not None: 
+            #mql. Allow the pressure model to not have pressure increment (handy for conv of momentum equation)
+            self.pressureIncrementModel = modelList[
+                self.pressureIncrementModelIndex]
         self.fluidModel = modelList[
             self.fluidModelIndex]
     def initializeMesh(self,mesh):
@@ -137,12 +141,27 @@ class Coefficients(TC_base):
         """
         self.model.q[('u_last',0)][:] = self.model.q[('u',0)]
         self.model.ebqe[('u_last',0)][:] = self.model.ebqe[('u',0)]
-        self.model.q_p_sharp[:] = self.model.q[('u',0)] + self.pressureIncrementModel.q[('u',0)]
-        self.model.ebqe_p_sharp[:] = self.model.ebqe[('u',0)] + self.pressureIncrementModel.ebqe[('u',0)]
-        self.model.q_grad_p_sharp[:] = self.model.q[('grad(u)',0)] + self.pressureIncrementModel.q[('grad(u)',0)]
-        self.model.ebqe_grad_p_sharp[:] = self.model.ebqe[('grad(u)',0)] + self.pressureIncrementModel.ebqe[('grad(u)',0)]
+        if self.pressureIncrementModelIndex is None: 
+            self.model.q_p_sharp[:] = self.model.q[('u',0)] 
+            self.model.ebqe_p_sharp[:] = self.model.ebqe[('u',0)] 
+            self.model.q_grad_p_sharp[:] = self.model.q[('grad(u)',0)] 
+            self.model.ebqe_grad_p_sharp[:] = self.model.ebqe[('grad(u)',0)] 
+        else:
+            # compute q_p_sharp to be use by RANS on next time step. 
+            # At this time step: q_p_sharp = p^(n+2) ~ (1+r)*p^(n+1)-r*pn = pn + (1+r)*pressureIncrement 
+            if (firstStep or self.fluidModel.timeIntegration.timeOrder==1):
+                r=1
+            else:
+                r = self.fluidModel.timeIntegration.dt/self.fluidModel.timeIntegration.dt_history[0]
+            self.model.q_p_sharp[:] = self.model.q[('u',0)] + r*self.pressureIncrementModel.q[('u',0)]
+            self.model.ebqe_p_sharp[:] = self.model.ebqe[('u',0)] + r*self.pressureIncrementModel.ebqe[('u',0)]
+            self.model.q_grad_p_sharp[:] = self.model.q[('grad(u)',0)] + r*self.pressureIncrementModel.q[('grad(u)',0)]
+            self.model.ebqe_grad_p_sharp[:] = self.model.ebqe[('grad(u)',0)] + r*self.pressureIncrementModel.ebqe[('grad(u)',0)]
+
+        self.fluidModel.q['p'][:] = self.model.q_p_sharp      
         copyInstructions = {}
         return copyInstructions
+
     def evaluate(self,t,c):
         self.evaluatePressure(t,c)
     def evaluatePressure(self,t,c):
@@ -152,16 +171,22 @@ class Coefficients(TC_base):
         # precompute the shapes to extract things we need from self.c_name[] dictionaries
         u_shape = c[('u',0)].shape
         grad_shape = c[('grad(u)',0)].shape
-        if u_shape == self.pressureIncrementModel.q[('u',0)].shape:
-            phi = self.pressureIncrementModel.q[('u',0)]
-            rho = self.fluidModel.coefficients.q_rho
-            nu = self.fluidModel.coefficients.q_nu
-            velocity = self.fluidModel.q[('velocity',0)]
-        elif u_shape == self.pressureIncrementModel.ebqe[('u',0)].shape:
-            phi = self.pressureIncrementModel.ebqe[('u',0)]
-            rho = self.fluidModel.coefficients.ebqe_rho
-            nu = self.fluidModel.coefficients.ebqe_nu
-            velocity = self.fluidModel.ebqe[('velocity',0)]
+        if self.pressureIncrementModelIndex is None:
+            #mql. This is to allow the pressure model to exist without increment. 
+            # This is handy for studying convergence of only momentum equation.
+            # NOTE: We assume the useRotationalForm = False. This is to avoid solving a system
+            phi = numpy.zeros(c[('r',0)][:].shape,'d')            
+        else:
+            if u_shape == self.pressureIncrementModel.q[('u',0)].shape:
+                phi = self.pressureIncrementModel.q[('u',0)]
+                rho = self.fluidModel.coefficients.q_rho
+                nu = self.fluidModel.coefficients.q_nu
+                velocity = self.fluidModel.q[('velocity',0)]
+            elif u_shape == self.pressureIncrementModel.ebqe[('u',0)].shape:
+                phi = self.pressureIncrementModel.ebqe[('u',0)]
+                rho = self.fluidModel.coefficients.ebqe_rho
+                nu = self.fluidModel.coefficients.ebqe_nu
+                velocity = self.fluidModel.ebqe[('velocity',0)]
         # current and previous pressure values
         p = c[('u',0)]
         p_last = c[('u_last',0)]
@@ -204,7 +229,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False):
+                 movingDomain=False,
+                 bdyNullSpace=False):
+        self.bdyNullSpace=bdyNullSpace
         from proteus import Comm
         #
         # set the objects describing the method and boundary conditions
@@ -592,7 +619,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             u[self.offset[0]+self.stride[0]*dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN],self.timeIntegration.t)#load the BC valu        # Load the unknowns into the finite element dof
         self.setUnknowns(u)
 
+        if self.coefficients.pressureIncrementModelIndex is not None: 
+            coefficients_pressureIncrementModel_q_u = self.coefficients.pressureIncrementModel.q[('u',0)]
+        else:
+            coefficients_pressureIncrementModel_q_u = numpy.zeros(self.q[('u',0)].shape,'d')
         # no flux boundary conditions
+
         self.pres.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -620,9 +652,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('u', 0)],
             self.q[('grad(u)', 0)],
             self.q[('u_last',0)],
-            self.coefficients.pressureIncrementModel.q[('u',0)],
-            self.coefficients.q_massFlux,
-            self.coefficients.ebqe_massFlux,
+            coefficients_pressureIncrementModel_q_u,
+            self.coefficients.q_massFlux*(1. if self.coefficients.useRotationalForm==True else 0.),
+            self.coefficients.ebqe_massFlux*(1. if self.coefficients.useRotationalForm==True else 0.),
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
             self.offset[0], self.stride[0],
