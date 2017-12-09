@@ -8,7 +8,9 @@ from proteus import LinearAlgebraTools
 from petsc4py import PETSc as p4pyPETSc
 import numpy
 import os, sys
+import pytest
 
+@pytest.mark.LinearAlgebraTools
 def test_superlu_2_dense():
     """ Tests the superlu wrapper to dense matrix function. """
 
@@ -33,6 +35,7 @@ def test_superlu_2_dense():
                                                 'sparse_mat_1.txt'))
     assert numpy.allclose(dense_mat,comparison_mat)
 
+@pytest.mark.LinearAlgebraTools
 def test_sparse_2_dense():
     '''
     This function tests the petsc4py_sparse_2_dense function in the
@@ -51,6 +54,7 @@ def test_sparse_2_dense():
                                                 'sparse_mat_1.txt'))
     assert numpy.allclose(dense_mat,comparison_mat)
 
+@pytest.mark.LinearAlgebraTools
 def test_superlu_2_petsc():
     """ Tests the function superlu_2_petsc4py """
     vals    = numpy.array([10.,-2.,3.,9.,3.,7.,8.,7.,3.,

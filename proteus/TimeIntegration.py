@@ -82,6 +82,7 @@ class TI_base:
                                          #this capability out of
                                          #TimeIntegration
         self.provides_initialGuess = False #does this method compute its own initialGuess for new solution
+        self.isSSP=False
         self.alpha_bdf = 0.0
         self.beta_bdf  = {}
         self.m_tmp  = {}
@@ -354,6 +355,19 @@ class BackwardEuler_cfl(BackwardEuler):
         """
         if 'runCFL' in dir(nOptions):
             self.runCFL = nOptions.runCFL
+
+class SSP(BackwardEuler_cfl):
+    def __init__(self,transport,runCFL=0.9,integrateInterpolationPoints=False):
+        BackwardEuler.__init__(self,transport,integrateInterpolationPoints=integrateInterpolationPoints)
+        self.runCFL=runCFL
+        self.dtLast=None
+        self.dtRatioMax = 2.0
+        self.cfl = {}
+        for ci in range(self.nc):
+            if transport.q.has_key(('cfl',ci)):
+                self.cfl[ci] = transport.q[('cfl',ci)]
+        self.isAdaptive=True
+        self.isSSP=True
 
 class FLCBDF(TI_base):
     import flcbdfWrappers

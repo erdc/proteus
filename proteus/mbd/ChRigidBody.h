@@ -23,6 +23,7 @@ class cppSystem {
   void setGravity(double* gravity);
   void setDirectory(std::string dir);
   void setTimestepperType(std::string tstype, bool verbose);
+  void setCollisionEnvelopeMargin(double envelope, double margin);
 };
 
 
@@ -48,6 +49,8 @@ class cppRigidBody {
   ChVector<> F_last;
   ChVector<> M;
   ChVector<> M_last;
+  std::shared_ptr<ChLinkLockLock> lock_motion;  // lock for prescribed motion
+  double lock_motion_t_max;  // max time up to which lock motion is used
   double mass;
   double mooring_restlength;
   std::shared_ptr<ChLinkSpring> spring;
@@ -79,6 +82,10 @@ class cppRigidBody {
   void setName(std::string name);
   void setPrescribedMotionPoly(double coeff1);
   void setPrescribedMotionSine(double a, double f);
+  void setPrescribedMotionCustom(std::vector<double> t, std::vector<double> x,
+                                 std::vector<double> y, std::vector<double> z,
+                                 std::vector<double> ang, std::vector<double> ang2,
+                                 std::vector<double> ang3, double t_max);
 };
 
 cppSystem::cppSystem(double* gravity):
@@ -104,7 +111,6 @@ gravity(gravity)
   if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system.GetTimestepper())) {
     mystepper->SetAlpha(-0.2);
   }
-  //system.SetTimestepper(std::make_shared<ChTimestepperEulerImplicitLinearized>());  // default: fast, 1st order
 }
 
 void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
@@ -196,6 +202,8 @@ cppRigidBody::cppRigidBody(cppSystem* system):
   pos = body->GetPos();
   pos_last = body->GetPos();
   body->SetMass(mass);
+  free_x = {1., 1., 1.};
+  free_r = {1., 1., 1.};
 }
 
 
@@ -210,6 +218,12 @@ ChVector<double> cppRigidBody::hxyz(double* x, double t)
   ChVector<double> local = ChTransform<double>::TransformParentToLocal(xx, pos_last, rotq_last);
   ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local, pos, rotq);
   return xNew - xx;
+}
+
+
+void cppSystem::setCollisionEnvelopeMargin(double envelope, double margin) {
+  collision::ChCollisionModel::SetDefaultSuggestedEnvelope(envelope);
+  collision::ChCollisionModel::SetDefaultSuggestedMargin(margin);
 }
 
 double cppRigidBody::hx(double* x, double t)
@@ -288,6 +302,78 @@ void cppRigidBody::poststep()
   angvel = body->GetWvel_loc();
   F = body->Get_Xforce();
   M = body->Get_Xtorque();
+  if (lock_motion_t_max > 0) {
+    double t = system->system.GetChTime();
+    if (lock_motion_t_max < t && lock_motion->IsDisabled() == false) {
+      lock_motion->SetDisabled(true);
+    }
+  }
+}
+
+void cppRigidBody::setPrescribedMotionCustom(std::vector<double> t,
+                                             std::vector<double> x,
+                                             std::vector<double> y,
+                                             std::vector<double> z,
+                                             std::vector<double> ang,
+                                             std::vector<double> ang2,
+                                             std::vector<double> ang3,
+                                             double t_max) {
+  auto fixed_body = std::make_shared<ChBody>();
+  fixed_body->SetPos(body->GetPos());
+  fixed_body->SetBodyFixed(true);
+  system->system.Add(fixed_body);
+  lock_motion = std::make_shared<ChLinkLockLock>();
+  lock_motion_t_max = t_max;
+  lock_motion->Initialize(body, fixed_body, fixed_body->GetCoord());
+  system->system.Add(lock_motion);
+  if (x.size() > 0) {
+    auto forced_motion = std::make_shared<ChFunction_Recorder>();
+    for (int i = 0; i < x.size(); i++) {
+      forced_motion->AddPoint(t[i], x[i]);
+    }
+    std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+    lock_motion->SetMotion_X(forced_ptr);
+  }
+  if (y.size() > 0) {
+    auto forced_motion = std::make_shared<ChFunction_Recorder>();
+    for (int i = 0; i < y.size(); i++) {
+      forced_motion->AddPoint(t[i], y[i]);
+    }
+    std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+    lock_motion->SetMotion_Y(forced_ptr);
+  }
+  if (z.size() > 0) {
+    auto forced_motion = std::make_shared<ChFunction_Recorder>();
+    for (int i = 0; i < z.size(); i++) {
+      forced_motion->AddPoint(t[i], z[i]);
+    }
+    std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+    lock_motion->SetMotion_Z(forced_ptr);
+  }
+  if (ang.size() > 0) {
+    auto forced_motion = std::make_shared<ChFunction_Recorder>();
+    for (int i = 0; i < ang.size(); i++) {
+      forced_motion->AddPoint(t[i], ang[i]);
+    }
+    std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+    lock_motion->SetMotion_ang(forced_ptr);
+  }
+  if (ang2.size() > 0) {
+    auto forced_motion = std::make_shared<ChFunction_Recorder>();
+    for (int i = 0; i < ang2.size(); i++) {
+      forced_motion->AddPoint(t[i], ang2[i]);
+    }
+    std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+    lock_motion->SetMotion_ang2(forced_ptr);
+  }
+  if (ang3.size() > 0) {
+    auto forced_motion = std::make_shared<ChFunction_Recorder>();
+    for (int i = 0; i < ang3.size(); i++) {
+      forced_motion->AddPoint(t[i], ang3[i]);
+    }
+    std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+    lock_motion->SetMotion_ang3(forced_ptr);
+  }
 }
 
 void cppRigidBody::setPrescribedMotionPoly(double coeff1) {

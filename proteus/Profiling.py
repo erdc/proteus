@@ -256,7 +256,7 @@ def ProfilingDtor():
         logEvent(
             "Proteus.Profiling never initialized. Doing it at exit.")
         procID = 0
-        openLog("proteus_default.log",level=11,logLocation=".")
+        openLog("proteus_default.log",level=11,logLocation="/tmp")
     closeLog()
 
 
