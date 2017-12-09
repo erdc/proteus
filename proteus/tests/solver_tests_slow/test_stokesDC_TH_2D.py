@@ -93,7 +93,6 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
         L2 = actual_log.get_ksp_resid_it_info(plot_lst)
         assert L1 == L2
 
-
     def test_02_FullRun(self):
         self._setPETSc_LU()
         self._runTest()
