@@ -72,7 +72,6 @@ namespace proteus
 	  		else
 	  		  NO_INSTANCE
 	  	      else
-			
 	  		NO_INSTANCE
 	  	    }
 	  	  else if (nDOF_mesh_trial_elementIn == 10)
