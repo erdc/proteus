@@ -99,7 +99,7 @@ class AR_base:
                 self.dataItemFormat="HDF"
             elif self.hasTables and not useTextArchive:
                 self.hdfFilename=filename+str(self.rank)+".h5"
-                self.hdfFile=tables.openFile(os.path.join(self.dataDir,
+                self.hdfFile=tables.open_file(os.path.join(self.dataDir,
                                                           self.hdfFilename),
                                              mode = "a",
                                              title = filename+" Data")
@@ -143,13 +143,13 @@ class AR_base:
                 self.dataItemFormat="HDF"
             elif self.hasTables and not useTextArchive:
                 self.hdfFilename=filename+str(self.rank)+".h5"
-                self.hdfFile=tables.openFile(os.path.join(self.dataDir,
+                self.hdfFile=tables.open_file(os.path.join(self.dataDir,
                                                           self.hdfFilename),
                                              mode = "r",
                                              title = filename+" Data")
                 try:
                     # The "global" extension is hardcoded in collect.py
-                    self.hdfFileGlb=tables.openFile(os.path.join(self.dataDir,
+                    self.hdfFileGlb=tables.open_file(os.path.join(self.dataDir,
                                                                  filename+"global.h5"),
                                                     mode = "r",
                                                     title = filename+" Data")
@@ -192,7 +192,7 @@ class AR_base:
                 self.comm.barrier()
             elif self.hasTables and not useTextArchive:
                 self.hdfFilename=filename+str(self.rank)+".h5"
-                self.hdfFile=tables.openFile(os.path.join(self.dataDir,
+                self.hdfFile=tables.open_file(os.path.join(self.dataDir,
                                                           self.hdfFilename),
                                              mode = "w",
                                              title = filename+" Data")
@@ -356,9 +356,12 @@ class AR_base:
                     dataset_name = TemporalGridCollection.attrib['Name']+"_"+ \
                                    `self.n_datasets`
                     dataset_name = dataset_name.replace(" ","_")
-                    xml_data  = self.hdfFile.create_dataset(name  = dataset_name,
-                                                            shape = (1,),
-                                                            dtype = '|S'+`max_grid_string_len`)
+                    try:
+                        xml_data  = self.hdfFile.create_dataset(name  = dataset_name,
+                                                                shape = (1,),
+                                                                dtype = '|S'+`max_grid_string_len`)
+                    except:
+                        xml_data = self.hdfFile[dataset_name]
                     if self.comm.isMaster():
                         xml_data[0] = tostring(GridLocal)
         self.n_datasets += 1
@@ -409,9 +412,15 @@ class AR_base:
             if i == self.comm.rank():
                 dataset[:] = data
     def create_dataset_sync(self,name,offsets,data):
-        dataset = self.hdfFile.create_dataset(name  = name,
-                                              shape = tuple([offsets[-1]]+list(data.shape[1:])),
-                                              dtype = data.dtype)
+        try:
+            dataset = self.hdfFile.create_dataset(name  = name,
+                                                  shape = tuple([offsets[-1]]+list(data.shape[1:])),
+                                                  dtype = data.dtype)
+        except:
+            try:
+                dataset = self.hdfFile[name]
+            except Exception as e:
+                raise e
         dataset[offsets[self.comm.rank()]:offsets[self.comm.rank()+1]] = data
 
 XdmfArchive=AR_base
