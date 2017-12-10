@@ -32,7 +32,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         if self.lag:
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             logEvent("VOF.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
             self.numDiff_last=[]
@@ -85,7 +85,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         maxCFL = 1.0e-6
         maxCFL = max(maxCFL,globalMax(self.cfl.max()))
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
         self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
@@ -259,7 +259,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  uL=0.0, 
                  uR=1.0,
                  # FOR ARTIFICIAL COMPRESSION
-                 cK=1.0):
+                 cK=1.0,
+                 # OUTPUT quantDOFs
+                 outputQuantDOFs = False):
 
         self.useMetrics = useMetrics
         self.variableNames=['vof']
@@ -308,6 +310,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.cK=cK
         self.forceStrongConditions=forceStrongConditions
         self.cE=cE
+        self.outputQuantDOFs=outputQuantDOFs
 
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
@@ -328,7 +331,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_phi = numpy.zeros(self.model.ebqe[('u',0)].shape,'d')#cek hack, we don't need this
         #flow model
         #print "flow model index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))        
-
         if self.flowModelIndex is not None:
             if modelList[self.flowModelIndex].q.has_key(('velocity',0)):
                 self.q_v = modelList[self.flowModelIndex].q[('velocity',0)]
@@ -393,7 +395,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.q_porosity = numpy.ones(modelList[self.modelIndex].q[('u',0)].shape,'d')
             self.porosity_dof = numpy.ones(modelList[self.modelIndex].u[0].dof.shape,'d')
 
-            if self.setParamsFunc != None:
+            if self.setParamsFunc is not None:
                 self.setParamsFunc(modelList[self.modelIndex].q['x'],self.q_porosity)
             #
         #
@@ -402,7 +404,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         elif modelList[self.modelIndex].ebq.has_key(('u',0)):
             self.ebq_porosity = numpy.ones(modelList[self.modelIndex].ebq[('u',0)].shape,
                                            'd')
-            if self.setParamsFunc != None:
+            if self.setParamsFunc is not None:
                 self.setParamsFunc(modelList[self.modelIndex].ebq['x'],self.ebq_porosity)
             #
         #
@@ -411,23 +413,23 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.ebqe_porosity = numpy.ones(modelList[self.LS_modelIndex].ebqe[('u',0)].shape,
                                             'd')
-            if self.setParamsFunc != None:
+            if self.setParamsFunc is not None:
                 self.setParamsFunc(modelList[self.LS_modelIndex].ebqe['x'],self.ebqe_porosity)
             #
         #
     def initializeElementQuadrature(self,t,cq):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
         #VRANS
         self.q_porosity = numpy.ones(cq[('u',0)].shape,'d')
 
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebq_v = numpy.ones(cebq[('f',0)].shape,'d')
         #VRANS
         self.ebq_porosity = numpy.ones(cebq[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebqe_v = numpy.ones(cebqe[('f',0)].shape,'d')
         #VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
@@ -483,7 +485,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             v = self.ebqe_v
             phi = self.ebqe_phi
             porosity  = self.ebq_porosity
-        elif ((self.ebq_v != None and self.ebq_phi != None) and c[('f',0)].shape == self.ebq_v.shape):
+        elif ((self.ebq_v is not None and self.ebq_phi is not None) and c[('f',0)].shape == self.ebq_v.shape):
             v = self.ebq_v
             phi = self.ebq_phi
             porosity  = self.ebq_porosity
@@ -491,7 +493,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             v=None
             phi=None
             porosity=None
-        if v != None:
+        if v is not None:
             # self.VOFCoefficientsEvaluate(self.eps,
             #                              v,
             #                              phi,
@@ -589,7 +591,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization != None:
+	if self.stabilization is not None:
 	    for ci in range(self.nc):
 		if coefficients.mass.has_key(ci):
 		    for flag in coefficients.mass[ci].values():
@@ -619,8 +621,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
-                                                 (numericalFluxType != None) or
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or
+                                                 (numericalFluxType is not None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -653,7 +655,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[I] = elementQuadrature
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(I):
@@ -662,7 +664,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature['default']
                 else:
                     elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(('numDiff',ci,ci)):
@@ -760,8 +762,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('advectiveFlux',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         # mql. Allow the user to provide functions to define the velocity field
         self.hasVelocityFieldAsFunction = False
-        if ('velocityField') in dir (options): 
-            self.velocityField = options.velocityField
+        if ('velocityFieldAsFunction') in dir (options): 
+            self.velocityFieldAsFunction = options.velocityFieldAsFunction
             self.hasVelocityFieldAsFunction = True
 
         self.points_elementBoundaryQuadrature= set()
@@ -803,14 +805,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
              self.timeIntegration = TimeIntegrationClass(self)
 
-        if options != None:
+        if options is not None:
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
         logEvent("Calculating numerical quadrature formulas",2)
         self.calculateQuadrature()
         self.setupFieldStrides()
 
-        # mql. Some ASSERTS to restrict the combination of the methods        
+        # mql. Some ASSERTS to restrict the combination of the methods
+        if self.coefficients.STABILIZATION_TYPE>0:
+            assert self.timeIntegration.isSSP==True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within VOF model"
+            cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver==ExplicitLumpedMassMatrix or options.levelNonlinearSolver==ExplicitConsistentMassMatrixForVOF)
+            assert cond, "If STABILIZATION_TYPE>0, use levelNonlinearSolver=ExplicitLumpedMassMatrix or ExplicitConsistentMassMatrixForVOF"
+        if 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix:
+            assert self.coefficients.LUMPED_MASS_MATRIX, "If levelNonlinearSolver=ExplicitLumpedMassMatrix, use LUMPED_MASS_MATRIX=True"
         if self.coefficients.LUMPED_MASS_MATRIX==True:
             cond = self.coefficients.STABILIZATION_TYPE==2 
             assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
@@ -836,11 +844,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
-            assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
+            assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
-        if numericalFluxType != None:
-            if options == None or options.periodicDirichletConditions == None:
+        if numericalFluxType is not None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,
@@ -911,7 +919,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN=1.0
         else:
             self.MOVING_DOMAIN=0.0
-        if self.mesh.nodeVelocityArray==None:
+        if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
@@ -943,22 +951,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              1:self.q[('x')][:,:,1],
              2:self.q[('x')][:,:,2]}
         t = self.timeIntegration.t
-        self.coefficients.q_v[...,0] = self.velocityField[0](X,t)
-        self.coefficients.q_v[...,1] = self.velocityField[1](X,t)
+        self.coefficients.q_v[...,0] = self.velocityFieldAsFunction[0](X,t)
+        self.coefficients.q_v[...,1] = self.velocityFieldAsFunction[1](X,t)
         if (self.nSpace_global==3):
-            self.coefficients.q_v[...,2] = self.velocityField[2](X,t)
+            self.coefficients.q_v[...,2] = self.velocityFieldAsFunction[2](X,t)
 
         # BOUNDARY
         ebqe_X = {0:self.ebqe['x'][:,:,0],
                   1:self.ebqe['x'][:,:,1],
                   2:self.ebqe['x'][:,:,2]}
-        self.coefficients.ebqe_v[...,0] = self.velocityField[0](ebqe_X,t)
-        self.coefficients.ebqe_v[...,1] = self.velocityField[1](ebqe_X,t)
+        self.coefficients.ebqe_v[...,0] = self.velocityFieldAsFunction[0](ebqe_X,t)
+        self.coefficients.ebqe_v[...,1] = self.velocityFieldAsFunction[1](ebqe_X,t)
         if (self.nSpace_global==3):
-            self.coefficients.ebqe_v[...,2] = self.velocityField[2](ebqe_X,t)
+            self.coefficients.ebqe_v[...,2] = self.velocityFieldAsFunction[2](ebqe_X,t)
 
     def calculateElementResidual(self):
-        if self.globalResidualDummy != None:
+        if self.globalResidualDummy is not None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
 
     def getResidual(self,u,r):
@@ -1127,13 +1135,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
         if (self.nSpace_global==3):
-            Cz = self.cterm_global[2].getCSRrepresentation()
+            rowptr, colind, Cz = self.cterm_global[2].getCSRrepresentation()
         else:
             Cz = numpy.zeros(Cx.shape,'d')
         rowptr, colind, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
         if (self.nSpace_global==3):
-            CTz = self.cterm_global_transpose[2].getCSRrepresentation()
+            rowptr, colind, CTz = self.cterm_global_transpose[2].getCSRrepresentation()
         else:
             CTz = numpy.zeros(CTx.shape,'d')
 
@@ -1306,7 +1314,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Global residual",level=9,data=r)
         
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy == None:
+        if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
 
     def getJacobian(self,jacobian):
@@ -1404,10 +1412,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
-        if self.stabilization != None:
+        if self.stabilization is not None:
             self.stabilization.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
             self.stabilization.initializeTimeIntegration(self.timeIntegration)
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
     def calculateElementBoundaryQuadrature(self):
         pass
