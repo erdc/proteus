@@ -1898,9 +1898,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.velocityPostProcessor.vpp_algorithms[ci].updateConservationJacobian[cj] = True
         self.q['velocityError'][:]=self.q[('velocity',0)]
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
-        self.q[('cfl',0)][:] = np.sqrt(self.q[('velocity',0)][...,0]*self.q[('velocity',0)][...,0] +
-                                       self.q[('velocity',0)][...,1]*self.q[('velocity',0)][...,1] +
-                                       self.q[('velocity',0)][...,2]*self.q[('velocity',0)][...,2])/self.elementDiameter[:,np.newaxis]
+        if  self.coefficients.nd ==3:
+            self.q[('cfl',0)][:] = np.sqrt(self.q[('velocity',0)][...,0]*self.q[('velocity',0)][...,0] +
+                                           self.q[('velocity',0)][...,1]*self.q[('velocity',0)][...,1] +
+                                           self.q[('velocity',0)][...,2]*self.q[('velocity',0)][...,2])/self.elementDiameter[:,np.newaxis]
+        else:
+            self.q[('cfl',0)][:] = np.sqrt(self.q[('velocity',0)][...,0]*self.q[('velocity',0)][...,0] +
+                                           self.q[('velocity',0)][...,1]*self.q[('velocity',0)][...,1])/self.elementDiameter[:,np.newaxis]
         self.q['velocityError']-=self.q[('velocity',0)]
 
     def updateAfterMeshMotion(self):
