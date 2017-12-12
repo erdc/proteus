@@ -210,10 +210,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             else:
                 self.q_v = modelList[self.flowModelIndex].q[('f', 0)]
                 self.ebqe_v = modelList[self.flowModelIndex].ebqe[('f', 0)]
-            if modelList[self.flowModelIndex].ebq.has_key(('velocity', 0)):
-                self.ebq_v = modelList[
-                    self.flowModelIndex].ebq[
-                    ('velocity', 0)]
+            if modelList[self.SED_model].ebq.has_key(('velocity', 0)):
+                self.ebq_v = modelList[self.SED_model].ebq[('velocity', 0)]
             else:
                 if modelList[self.flowModelIndex].ebq.has_key(('f', 0)):
                     self.ebq_v = modelList[self.flowModelIndex].ebq[('f', 0)]
