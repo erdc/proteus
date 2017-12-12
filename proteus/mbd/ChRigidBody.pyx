@@ -27,7 +27,7 @@ from proteus.mbd cimport pyChronoCore as pych
 from proteus.mprans import BodyDynamics as bd
 
 
-cdef extern from "ChMoorings.h":
+cdef extern from "ChRigidBody.h":
     cdef cppclass cppMesh:
         shared_ptr[ch.ChMesh] mesh
         void SetAutomaticGravity(bool val)
@@ -43,6 +43,7 @@ cdef extern from "ChMoorings.h":
         double length
         int nb_elems
         vector[ch.ChVector] mvecs
+        vector[ch.ChVector] mvecs_tangents
         void buildNodes()
         void buildMaterials()
         void buildElements()
@@ -95,14 +96,20 @@ cdef extern from "ChMoorings.h":
                                                 shared_ptr[ch.ChMesh] mesh,
                                                 ch.ChVector position,
                                                 ch.ChVector dimensions)
-
+    void cppAttachNodeToNodeFEAxyzD(cppMultiSegmentedCable* cable1,
+                                    int node1,
+                                    cppMultiSegmentedCable* cable2,
+                                    int node2)
+    void cppAttachNodeToNodeFEAxyzrot(cppMultiSegmentedCable* cable1,
+                                      int node1,
+                                      cppMultiSegmentedCable* cable2,
+                                      int node2)
 
 cdef extern from "ChRigidBody.h":
     cdef cppclass cppSystem:
         ch.ChSystemSMC system
         void DoStepDynamics(dt)
         void step(double proteus_dt, int n_substeps)
-        void recordBodyList()
         void setChTimeStep(double dt)
         void setGravity(double* gravity)
         void setDirectory(string directory)
@@ -150,6 +157,7 @@ cdef extern from "ChRigidBody.h":
                                          double stiffness,
                                          double damping,
                                          double rest_length);
+        void addPrismaticLinkX(double* pris1);
         void setRotation(double* quat)
         void setPosition(double* pos)
         void setConstraints(double* free_x, double* free_r)
@@ -744,6 +752,7 @@ cdef class ProtChBody:
             self.thisptr.setPosition(<double*> new_x.data)
         self.thisptr.poststep()
         self.getValues()
+
         comm = Comm.get().comm.tompi4py()
         cdef ch.ChQuaternion rotq
         cdef ch.ChQuaternion rotq_last
@@ -781,20 +790,20 @@ cdef class ProtChBody:
 
     def prediction(self):
         comm = Comm.get().comm.tompi4py()
-
-
         cdef ch.ChVector h_body_vec
         h_body_vec = self.thisptr.hxyz(<double*> self.position_last.data, 0.)
         #print("MY BODY DISP: ", h_body_vec.x(), h_body_vec.y(), h_body_vec.z())
-        # if self.ProtChSystem.model is not None:
-        #     try:
-        #         dt = self.ProtChSystem.model.levelModelList[-1].dt_last
-        #     except:
-        #         dt = 0.
-        #         print("$$$$$$$$$$$$$ ERROR")
+        if self.ProtChSystem.model is not None:
+            try:
+                dt = self.ProtChSystem.proteus_dt
+                dt_next = self.ProtChSystem.proteus_dt_next
+            except:
+                dt = 0.
+                dt_next = 0.
+                print("$$$$$$$$$$$$$ ERROR")
         # else:
         #     dt = self.ProtChSystem.dt_fluid
-        # dt_half = dt/2.
+        # dt_half = self.ProtChSystem
         # # if self.ProtChSystem.scheme == "ISS":
         # self.h_predict_last = self.h_predict
         # self.h_ang_predict_last = self.h_ang_predict
@@ -808,22 +817,6 @@ cdef class ProtChBody:
         #                              +self.ang_velocity[1]**2
         #                              +self.ang_velocity[2]**2)*dt_half
         # self.h_ang_vel_predict = self.ang_velocity
-        # self.adams_vel[1:] = self.adams_vel[:-1]
-        # self.adams_vel[0] = self.velocity
-        # av = self.adams_vel
-        # adams_bashforth = False
-        # if adams_bashforth == True:
-        #     if np.linalg.norm(av[4]) != 0:
-        #         Profiling.logEvent("$$$$$$$$$$$$$$$$$$$$$$$ ADAMS")
-        #         h = 0+dt_half*(1901./720.*av[0] - 1387./360.*av[1] + 109./20.*av[2] - 637./360.*av[3] + 251./720.*av[4])
-        #     elif np.linalg.norm(av[3]) != 0:
-        #         h = 0+dt_half*(55./24.*av[0] - 59./24.*av[1] + 37./24.*av[2] - 3./8.*av[3])
-        #     elif np.linalg.norm(av[2]) != 0:
-        #         h = 0+dt_half*(23./12.*av[0] - 4./3.*av[1] + 5./12.*av[2])
-        #     elif np.linalg.norm(av[1]) != 0:
-        #         h = 0+dt_half*(3./2.*av[0] - 1./2.*av[1])
-        #     else:
-        #         h = 0+dt_half*av[0]
         #     # else:
         #     #     nsteps = max(int(dt_half/self.ProtChSystem.chrono_dt), 1)
         #     #     if nsteps < self.ProtChSystem.min_nb_steps:
@@ -1211,6 +1204,8 @@ cdef class ProtChBody:
                                                  stiffness,
                                                  damping,
                                                  rest_length)
+    def addPrismaticLinkX(self, double[:] pris1):
+        self.thisptr.addPrismaticLinkX(&pris1[0]);
 
     def setName(self, string name):
         """Sets name of body (used for csv file)
@@ -1352,7 +1347,14 @@ cdef class ProtChSystem:
                             +' with dt='+str(self.dt)
                             +'('+str(nb_steps)+' substeps)')
             if comm.rank == self.chrono_processor and dt > 0:
-                self.thisptr.step(<double> self.dt, n_substeps=nb_steps)
+                dt_substep = self.dt/nb_steps
+                for i in range(nb_steps):
+                    self.thisptr.step(<double> dt_substep, 1)
+                    # tri: hack to update forces on cables
+                    for s in self.subcomponents:
+                        if type(s) is ProtChMoorings:
+                            # update forces keeping same fluid vel/acc
+                            s.updateForces()
             t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
             Profiling.logEvent('Solved Chrono system to t='+str(t))
             if self.scheme == "ISS":
@@ -1373,7 +1375,7 @@ cdef class ProtChSystem:
         if self.model is not None:
             try:
                 self.proteus_dt = self.model.levelModelList[-1].dt_last
-                self.proteus_dt_next = self.model.levelModelList[-1].dt_last  # BAD PREDICTION
+                self.proteus_dt_next = self.model.levelModelList[-1].dt
                 self.t = t = self.model.stepController.t_model_last
             except:
                 self.proteus_dt = self.dt_init
@@ -1422,10 +1424,8 @@ cdef class ProtChSystem:
         for s in self.subcomponents:
             s.calculate_init()
         Profiling.logEvent("Setup initial"+str(self.next_sample))
-        print("Setup initial")
         self.thisptr.system.SetupInitial()
         Profiling.logEvent("Finished init"+str(self.next_sample))
-        print("Finished init")
         for s in self.subcomponents:
             s.poststep()
 
@@ -1475,15 +1475,6 @@ cdef class ProtChSystem:
             class instance of subcomponent
         """
         self.subcomponents += [subcomponent]
-
-    def recordBodyList(self):
-        comm = Comm.get().comm.tompi4py()
-        if self.parallel_mode is True:
-            if comm.rank == self.chrono_processor:
-                self.thisptr.recordBodyList()
-        else:
-            if comm.rank == 0:
-                self.thisptr.recordBodyList()
 
     def findElementContainingCoords(self, coords):
         """
@@ -1732,6 +1723,7 @@ cdef class ProtChMoorings:
       object Mesh
       int nd
       object nodes_function
+      object nodes_function_tangent
       object fluid_velocity_function
       ProtChBody body_front
       ProtChBody body_back
@@ -1749,6 +1741,7 @@ cdef class ProtChMoorings:
       int nodes_nb # number of nodes
       np.ndarray nb_elems
       double[:] _record_etas
+      bool initialized
     def __cinit__(self,
                   ProtChSystem system,
                   Mesh mesh,
@@ -1789,7 +1782,7 @@ cdef class ProtChMoorings:
         self.nodes_function = lambda s: (s, s, s)
         self.nodes_built = False
         self.name = 'record_moorings'
-        self.external_forces_from_ns = False
+        self.external_forces_from_ns = True
         self.external_forces_manual = False
         self._record_etas=np.array([0.])
 
@@ -1910,7 +1903,7 @@ cdef class ProtChMoorings:
         """
         cdef ch.ChVector T
         if self.thisptr.constraint_back:
-            T = deref(self.thisptr.constraint_back).GetReactionOnNode()
+            T = deref(self.thisptr.constraint_back).Get_react_force()
             return pych.ChVector_to_npArray(T)
         else:
             return np.zeros(3)
@@ -1921,7 +1914,7 @@ cdef class ProtChMoorings:
         """
         cdef ch.ChVector T
         if self.thisptr.constraint_front:
-            T = deref(self.thisptr.constraint_front).GetReactionOnNode()
+            T = deref(self.thisptr.constraint_front).Get_react_force()
             return pych.ChVector_to_npArray(T)
         else:
             return np.zeros(3)
@@ -1957,20 +1950,27 @@ cdef class ProtChMoorings:
     def poststep(self):
         """Records values
         """
+        if self.initialized is False:
+            self.initialized = True
+        
         comm = Comm.get().comm.tompi4py()
         if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
             self._recordValues()
 
-    def setNodesPositionFunction(self, function):
+    def setNodesPositionFunction(self, function_position, function_tangent=None):
         """Function to build nodes
 
         Parameters
         ----------
-        function:
+        function_position:
             Must be a function taking one argument (e.g. distance
             along cable) and returning 3 arguments (x, y, z) coords.
+        function_position: Optional
+            Must be a function taking one argument (e.g. distance
+            along cable) and returning 3 arguments (x, y, z) tangents at coords.
         """
-        self.nodes_function = function
+        self.nodes_function = function_position
+        self.nodes_function_tangent = function_tangent
 
     def setFluidVelocityFunction(self, function):
         """Function to build nodes
@@ -2077,27 +2077,60 @@ cdef class ProtChMoorings:
         """
         deref(self.thisptr.cables[segment_nb]).setAddedMassCoefficients(tangential, normal)
 
-    def setNodesPosition(self):
+    def setNodesPosition(self, double[:,:,:] positions=None, tangents=None):
         """Builds the nodes of the cable.
 
         (!) Must be called after setNodesPositionFunction()
         """
         cdef ch.ChVector[double] vec
-        for i in range(self.thisptr.cables.size()):
-            deref(self.thisptr.cables[i]).mvecs.clear()
-            L0 = deref(self.thisptr.cables[i]).L0
-            L = deref(self.thisptr.cables[i]).length
-            nb_elems = deref(self.thisptr.cables[i]).nb_elems
-            if self.beam_type == "CableANCF" or self.beam_type == "BeamEuler":
-                nb_nodes = nb_elems+1
-            else:
-                print("set element type")
-                sys.exit()
-            ds = L/(nb_nodes-1)
-            for j in range(nb_nodes):
-                x, y, z = self.nodes_function(L0+ds*j)
-                vec = ch.ChVector[double](x, y, z)
-                deref(self.thisptr.cables[i]).mvecs.push_back(vec)
+        if positions is None:
+            for i in range(self.thisptr.cables.size()):
+                deref(self.thisptr.cables[i]).mvecs.clear()
+                L0 = deref(self.thisptr.cables[i]).L0
+                L = deref(self.thisptr.cables[i]).length
+                nb_elems = deref(self.thisptr.cables[i]).nb_elems
+                if self.beam_type == "CableANCF" or self.beam_type == "BeamEuler":
+                    nb_nodes = nb_elems+1
+                else:
+                    print("set element type")
+                    sys.exit()
+                ds = L/(nb_nodes-1)
+                for j in range(nb_nodes):
+                    x, y, z = self.nodes_function(L0+ds*j)
+                    vec = ch.ChVector[double](x, y, z)
+                    deref(self.thisptr.cables[i]).mvecs.push_back(vec)
+        else:
+            for i in range(self.thisptr.cables.size()):
+                deref(self.thisptr.cables[i]).mvecs.clear()
+                nb_nodes = len(positions[i])
+                for j in range(len(positions[i])):
+                    x, y, z = positions[i][j]
+                    vec = ch.ChVector[double](x, y, z)
+                    deref(self.thisptr.cables[i]).mvecs.push_back(vec)
+        if tangents is None:
+            for i in range(self.thisptr.cables.size()):
+                deref(self.thisptr.cables[i]).mvecs_tangents.clear()
+                L0 = deref(self.thisptr.cables[i]).L0
+                L = deref(self.thisptr.cables[i]).length
+                nb_elems = deref(self.thisptr.cables[i]).nb_elems
+                if self.beam_type == "CableANCF" or self.beam_type == "BeamEuler":
+                    nb_nodes = nb_elems+1
+                else:
+                    print("set element type")
+                    sys.exit()
+                ds = L/(nb_nodes-1)
+                for j in range(nb_nodes):
+                    x, y, z = self.nodes_function_tangent(L0+ds*j)
+                    vec = ch.ChVector[double](x, y, z)
+                    deref(self.thisptr.cables[i]).mvecs_tangents.push_back(vec)
+        else:
+            for i in range(self.thisptr.cables.size()):
+                deref(self.thisptr.cables[i]).mvecs_tangents.clear()
+                nb_nodes = len(tangents[i])
+                for j in range(len(tangents[i])):
+                    x, y, z = tangents[i][j]
+                    vec = ch.ChVector[double](x, y, z)
+                    deref(self.thisptr.cables[i]).mvecs_tangents.push_back(vec)
         self.buildNodes()
 
     def buildNodes(self):
@@ -2162,7 +2195,7 @@ cdef class ProtChMoorings:
             Array of nodes acceleration.
         """
         if self.beam_type == 'BeamEuler':
-            pos = np.zeros(( self.thisptr.nodesRot.size(),3 ))
+            pos = np.zeros((self.nodes_nb,3 ))
             for i in range(self.thisptr.nodesRot.size()):
                 vec = deref(self.thisptr.nodesRot[i]).GetPos_dtdt()
                 pos[i] = [vec.x(), vec.y(), vec.z()]
@@ -2176,7 +2209,7 @@ cdef class ProtChMoorings:
 
     def getDragForces(self):
         cdef ch.ChVector Fd
-        drag = np.zeros(( self.thisptr.nodes.size(),3 ))
+        drag = np.zeros((self.nodes_nb,3 ))
         for i in range(self.thisptr.forces_drag.size()):
             Fd = self.thisptr.forces_drag[i]
             drag[i] = [Fd.x(), Fd.y(), Fd.z()]
@@ -2184,7 +2217,7 @@ cdef class ProtChMoorings:
 
     def getAddedMassForces(self):
         cdef ch.ChVector Fd
-        drag = np.zeros(( self.thisptr.nodes.size(),3 ))
+        drag = np.zeros((self.nodes_nb,3 ))
         for i in range(self.thisptr.forces_addedmass.size()):
             Fd = self.thisptr.forces_addedmass[i]
             drag[i] = [Fd.x(), Fd.y(), Fd.z()]
@@ -2240,7 +2273,6 @@ cdef class ProtChMoorings:
         cdef vector[double] fluid_density
         cdef double dens
         comm = Comm.get().comm.tompi4py()
-        # Profiling.logEvent("STARTING LOOP ")
         if self.beam_type == "BeamEuler":
             nb_nodes = self.thisptr.nodesRot.size()
         else:
@@ -2258,52 +2290,56 @@ cdef class ProtChMoorings:
                 y = comm.bcast(y, self.ProtChSystem.chrono_processor)
                 z = comm.bcast(z, self.ProtChSystem.chrono_processor)
             coords = np.array([x, y, z])
+            vel_arr = np.zeros(3)
             if self.ProtChSystem.model is not None and self.external_forces_from_ns is True:
-                vel_arr = np.zeros(3)
                 vel_grad_arr = np.zeros(3)
                 xi, el, rank = self.ProtChSystem.findElementContainingCoords(coords[:self.nd])
-                # print("NODE ", i, xi, el, rank)
-                #log Profiling.logEvent("Got ELEMENT")
                 comm.barrier()
                 if rank is not None:
                     vel_arr[:] = self.ProtChSystem.getFluidVelocityLocalCoords(xi, el, rank)
                 else:  # means node is outside domain
                     if self.fluid_velocity_function is not None:
-                        self.fluid_velocity_function(coords, self.ProtChSystem.t)
-                    vel_arr[:] = 0.
-                # print("VEL ", i, vel_arr)
+                        vel_arr[:] = self.fluid_velocity_function(coords, self.ProtChSystem.t)
+                    else:
+                        vel_arr[:] = 0.
                 comm.barrier()
-                #log Profiling.logEvent("Got VELOCITY")
-                #vel_grad_arr[:] = self.ProtChSystem.getFluidVelocityGradientLocalCoords(xi, el, rank)
-                # acc = du/dt+u.grad(u)
-                #acc_arr = (vel_arr-fluid_velocity_array_previous[i])/dt+vel_arr*vel_grad_arr
-                #arr[:self.nd] = self.ProtChSystem.findFluidVelocityAtCoords(coords[:self.nd])
-                self.fluid_velocity_array[i] = vel_arr
-                vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
-                fluid_velocity.push_back(vel)
             else:
-                if self.fluid_velocity_function is not None and fluid_velocity_array is None and False:
-                    vel_arr = self.fluid_velocity_function(coords, self.ProtChSystem.t)
-                    vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
+                if self.fluid_velocity_function is not None:
+                    vel_arr[:] = self.fluid_velocity_function(coords, self.ProtChSystem.t)
                 else:
-                    vel = ch.ChVector[double](self.fluid_velocity_array[i][0], self.fluid_velocity_array[i][1], self.fluid_velocity_array[i][2])
-                fluid_velocity.push_back(vel)
-                acc = ch.ChVector[double](self.fluid_acceleration_array[i][0], self.fluid_acceleration_array[i][1], self.fluid_acceleration_array[i][2])
-                fluid_acceleration.push_back(acc)
-                dens = self.fluid_density_array[i]
-                fluid_density.push_back(dens)
-        # Profiling.logEvent("FINISHED LOOP "+str(i))
+                    vel_arr[:] = 0
+            self.fluid_velocity_array[i] = vel_arr
+            vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
+            fluid_velocity.push_back(vel)
+            if self.fluid_velocity_function is not None and fluid_velocity_array is None:
+                vel_arr = self.fluid_velocity_function(coords, self.ProtChSystem.t)
+                vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
+            else:
+                vel = ch.ChVector[double](self.fluid_velocity_array[i][0], self.fluid_velocity_array[i][1], self.fluid_velocity_array[i][2])
+            fluid_velocity.push_back(vel)
+            self.fluid_acceleration_array[i] = (self.fluid_velocity_array[i]-self.fluid_velocity_array_previous[i])/self.ProtChSystem.proteus_dt
+            # acc = du/dt+u.grad(u)
+            #vel_grad_arr[:] = self.ProtChSystem.getFluidVelocityGradientLocalCoords(xi, el, rank)
+            #acc_arr = (vel_arr-fluid_velocity_array_previous[i])/dt+vel_arr*vel_grad_arr
+            #arr[:self.nd] = self.ProtChSystem.findFluidVelocityAtCoords(coords[:self.nd])
+            acc = ch.ChVector[double](self.fluid_acceleration_array[i][0], self.fluid_acceleration_array[i][1], self.fluid_acceleration_array[i][2])
+            fluid_acceleration.push_back(acc)
+            dens = self.fluid_density_array[i]
+            fluid_density.push_back(dens)
         self.thisptr.setFluidAccelerationAtNodes(fluid_acceleration)
         self.thisptr.setFluidVelocityAtNodes(fluid_velocity)
         self.thisptr.setFluidDensityAtNodes(fluid_density)
-            # update drag forces
+        self.updateForces()
+
+    def updateForces(self):
+        # update drag forces
         self.thisptr.updateDragForces()
+        # update added mass forces
         self.thisptr.updateAddedMassForces()
-        self.thisptr.applyForces()
         # update buoyancy forces
         # self.thisptr.updateBuoyancyForces()
-        # update added mass forces
-        # self.thisptr.updateAddedMassForces()
+        # apply forces
+        self.thisptr.applyForces()
 
     def setFluidDensityAtNodes(self, np.ndarray density_array):
         cdef vector[double] fluid_density
@@ -2412,3 +2448,9 @@ def getLocalElement(femSpace, coords, node):
     # no elements found
     return None
 
+
+cpdef void attachNodeToNode(ProtChMoorings cable1, int node1, ProtChMoorings cable2, int node2):
+    if cable1.beam_type == "CableANCF":
+        cppAttachNodeToNodeFEAxyzD(cable1.thisptr, node1, cable2.thisptr, node2)
+    elif cable1.beam_type == "BeamEuler":
+        cppAttachNodeToNodeFEAxyzrot(cable1.thisptr, node1, cable2.thisptr, node2)

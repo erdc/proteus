@@ -100,6 +100,7 @@ distclean: clean
 	-rm -rf ${PROTEUS_PREFIX}
 	-rm -rf build proteus/*.pyc proteus/*.so proteus/*.a proteus/MeshAdaptPUMI/*.so
 	-rm -rf build proteus/mprans/*.pyc proteus/mprans/*.so proteus/mprans/*.a
+	-rm -rf build proteus/mbd/*.pyc proteus/mbd/*.so proteus/mbd/*.a
 
 update:
 	@echo "Manually trying to update all repositories"
