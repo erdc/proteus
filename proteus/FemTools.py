@@ -723,6 +723,137 @@ class BernsteinOnCube(LocalFunctionSpace):
 #######################################################
 ### ********** THIS PART IS EXPERIMENTAL ********** ###
 #######################################################
+class LinearOnQuadraticSimplex(LocalFunctionSpace):
+    """
+    2d numberings for :math:`\psi`
+
+      2
+      |\
+      | \
+      |  \
+      5   4
+      |    \
+      |     \
+      0---3--1
+
+    """
+    def __init__(self,nd=3):
+        from RefUtils import baryCoords
+        from RefUtils import fact
+        from RefUtils import baryGrads
+        from RefUtils import p2refNodes
+
+        self.referenceElement = ReferenceSimplex(nd)
+        LocalFunctionSpace.__init__(self,fact(nd+2)/(2*fact(nd)),
+                                    self.referenceElement)
+        self.gradientList=[]
+        self.basisHessians=[]
+        self.nonzeroHessians=True
+        for ebN in self.referenceElement.range_nElementBoundaries:
+            self.basisTrace.append([])
+            self.basisGradientsTrace.append([])
+        if nd == 1:
+            raise NotImplementedError
+        elif nd == 2:
+            #i=0
+            self.basis.append(lambda xi, i=0:
+                              1-2*xi[0]-2*xi[1]
+                              if xi[0]<=0.5 and xi[1]<=0.5 and xi[1]<=-xi[0]+0.5 else 0.)
+            self.basisTrace[0].append(lambda xBar, i=0:
+                                      self.basis[i](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisTrace[1].append(lambda xBar, i=0:
+                                      self.basis[i](self.referenceElement.boundaryMapList[1](xBar)))
+            #i=1
+            self.basis.append(lambda xi, i=1: 2*(xi[0]-0.5) if xi[0]>=0.5 else 0.)
+            self.basisTrace[0].append(lambda xBar, i=1:
+                                      self.basis[i](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisTrace[1].append(lambda xBar, i=1:
+                                      self.basis[i](self.referenceElement.boundaryMapList[1](xBar)))
+            #i=2
+            self.basis.append(lambda xi, i=2: 2*(xi[1]-0.5) if xi[1]>=0.5 else 0.)
+            self.basisTrace[0].append(lambda xBar, i=2:
+                                      self.basis[i](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisTrace[1].append(lambda xBar, i=2:
+                                      self.basis[i](self.referenceElement.boundaryMapList[1](xBar)))
+            #i=3
+            self.basis.append(lambda xi, i=3: 2*(xi[0]-xi[1])
+                              if xi[0]<=0.5 and xi[1]<=0.5 and xi[1]<=xi[0] else 0.)
+            self.basisTrace[0].append(lambda xBar, i=3:
+                                      self.basis[i](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisTrace[1].append(lambda xBar, i=3:
+                                      self.basis[i](self.referenceElement.boundaryMapList[1](xBar)))
+            #i=4
+            self.basis.append(lambda xi, i=4: 2*xi[0] if xi[1]>=xi[0] else 2*xi[1])
+            self.basisTrace[0].append(lambda xBar, i=4:
+                                      self.basis[i](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisTrace[1].append(lambda xBar, i=4:
+                                      self.basis[i](self.referenceElement.boundaryMapList[1](xBar)))
+            #i=5
+            self.basis.append(lambda xi, i=5: 2*(xi[1]-xi[0])
+                              if xi[0]<=0.5 and xi[1]<=0.5 and xi[1]>=xi[0] else 0.)
+            self.basisTrace[0].append(lambda xBar, i=5:
+                                      self.basis[i](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisTrace[1].append(lambda xBar, i=5:
+                                      self.basis[i](self.referenceElement.boundaryMapList[1](xBar)))
+            #############
+            # Gradients #
+            #############        
+            i=0
+            self.gradientList.append(lambda xi, i=i: [-2.,-2.]
+                                     if xi[0]<=0.5 and xi[1]<=0.5 and xi[1]<=-xi[0]+0.5 else [0.,0.])
+            self.basisGradients.append(lambda xi, i=i: self.gradientList[i](xi))
+            self.basisGradientsTrace[0].append(lambda xBar, i=i:
+                                               self.gradientList[i](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisGradientsTrace[1].append(lambda xBar, i=i:
+                                               self.gradientList[i](self.referenceElement.boundaryMapList[1](xBar)))
+            i=1
+            self.gradientList.append(lambda xi, i=i: [2.,0.] if xi[0]>=0.5 else [0.,0.])
+            self.basisGradients.append(lambda xi, i=i: self.gradientList[i](xi))
+            self.basisGradientsTrace[0].append(lambda xBar, i=i:
+                                               self.gradientList[i](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisGradientsTrace[1].append(lambda xBar, i=i:
+                                               self.gradientList[i](self.referenceElement.boundaryMapList[1](xBar)))
+            i=2
+            self.gradientList.append(lambda xi, i=i: [0.,2.] if xi[1]>=0.5 else [0.,0.])
+            self.basisGradients.append(lambda xi, i=i: self.gradientList[i](xi))
+            self.basisGradientsTrace[0].append(lambda xBar, i=i:
+                                               self.gradientList[i](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisGradientsTrace[1].append(lambda xBar, i=i:
+                                               self.gradientList[i](self.referenceElement.boundaryMapList[1](xBar)))
+            i=3
+            self.gradientList.append(lambda xi, i=i: [2.,-2.]
+                                     if xi[0]<=0.5 and xi[1]<=0.5 and xi[1]<=xi[0] else [0.,0.])
+            self.basisGradients.append(lambda xi, i=i: self.gradientList[i](xi))
+            self.basisGradientsTrace[0].append(lambda xBar, i=i:
+                                               self.gradientList[i](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisGradientsTrace[1].append(lambda xBar, i=i:
+                                               self.gradientList[i](self.referenceElement.boundaryMapList[1](xBar)))
+            i=4
+            self.gradientList.append(lambda xi, i=i: [2.,0.] if xi[1]>=xi[0] else [0.,2.])
+            self.basisGradients.append(lambda xi, i=i: self.gradientList[i](xi))
+            self.basisGradientsTrace[0].append(lambda xBar, i=i:
+                                               self.gradientList[i](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisGradientsTrace[1].append(lambda xBar, i=i:
+                                               self.gradientList[i](self.referenceElement.boundaryMapList[1](xBar)))
+            i=5
+            self.gradientList.append(lambda xi, i=i: [-2.,2.]
+                                     if xi[0]<=0.5 and xi[1]<=0.5 and xi[1]>=xi[0] else [0.,0.])
+            self.basisGradients.append(lambda xi, i=i: self.gradientList[i](xi))
+            self.basisGradientsTrace[0].append(lambda xBar, i=i:
+                                               self.gradientList[i](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisGradientsTrace[1].append(lambda xBar, i=i:
+                                               self.gradientList[i](self.referenceElement.boundaryMapList[1](xBar)))            
+            # Hessians
+            self.basisHessians.append(lambda xi, i=0: numpy.outer([0.,0.],[0.,0.]))
+            self.basisHessians.append(lambda xi, i=1: numpy.outer([0.,0.],[0.,0.]))
+            self.basisHessians.append(lambda xi, i=2: numpy.outer([0.,0.],[0.,0.]))
+            self.basisHessians.append(lambda xi, i=3: numpy.outer([0.,0.],[0.,0.]))
+            self.basisHessians.append(lambda xi, i=4: numpy.outer([0.,0.],[0.,0.]))
+            self.basisHessians.append(lambda xi, i=5: numpy.outer([0.,0.],[0.,0.]))
+
+        elif nd == 3:
+            raise NotImplementedError
+                    
 class LinearOnQuadraticCube(LocalFunctionSpace):
     """
     Linear basis on a reference 'quadratic' cube 
@@ -5837,6 +5968,28 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
 
 P2 = C0_AffineQuadraticOnSimplexWithNodalBasis
 
+############################
+### THIS IS EXPERIMENTAL ###
+############################
+class C0_AffineLinearOnQuadraticSimplex(C0_AffineQuadraticOnSimplexWithNodalBasis):
+    def __init__(self,mesh,nd=3):
+        self.order = 2
+        #localFunctionSpace = QuadraticOnSimplexWithNodalBasis(nd)
+        localFunctionSpace = LinearOnQuadraticSimplex(nd)
+        localGeometricSpace= LinearOnSimplexWithNodalBasis(nd)
+        interpolationConditions = QuadraticLagrangeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        ParametricFiniteElementSpace.__init__(self,
+                                              ReferenceFiniteElement(localFunctionSpace,
+                                                                     interpolationConditions),
+                                              AffineMaps(mesh,
+                                                         localGeometricSpace.referenceElement,
+                                                         LinearOnSimplexWithNodalBasis(nd)),
+                                              QuadraticLagrangeDOFMap(mesh,localFunctionSpace,nd))
+        
+        #for archiving
+        import Archiver
+        self.XdmfWriter=Archiver.XdmfWriter()
+        
 class C0_AffineBernsteinOnSimplex(C0_AffineQuadraticOnSimplexWithNodalBasis):
     """
     A quadratic C0 space with Bernstein basis.
