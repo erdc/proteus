@@ -136,8 +136,8 @@ class Coefficients(TC_base):
         if self.fluidModel.KILL_PRESSURE_TERM is False and self.fluidModel.coefficients.CORRECT_VELOCITY is True:
             assert self.INTEGRATE_BY_PARTS_DIV_U, "INTEGRATE_BY_PARTS the div(U) must be set to true to correct the velocity"
             alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
-            q_vos = self.sedModel.coefficients.q_vos
-            ebqe_vos = self.sedModel.coefficients.ebqe_vos
+            q_vos = self.model.q_vos
+            ebqe_vos = self.model.ebqe_vos
             q_a = 1.0/(q_vos*self.rho_s_min + (1.0-q_vos)*self.rho_f_min)/alphaBDF
             ebqe_a = 1.0/(ebqe_vos*self.rho_s_min + (1.0-ebqe_vos)*self.rho_f_min)/alphaBDF
             for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
@@ -791,15 +791,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.fluidModel.timeIntegration.alpha_bdf,
             self.coefficients.fluidModel.q[('velocity',0)],
             self.coefficients.fluidModel.q['divU'],
-            self.coefficients.sedModel.q[('velocity',0)],
-            self.coefficients.sedModel.coefficients.q_vos,
-            self.coefficients.sedModel.coefficients.rho_s,
+            self.coefficients.fluidModel.coefficients.q_velocity_solid,
+            self.coefficients.fluidModel.coefficients.q_vos,
+            self.coefficients.fluidModel.coefficients.rho_s,
             self.coefficients.fluidModel.coefficients.q_rho,
             self.coefficients.rho_s_min,
             self.coefficients.rho_f_min,
             self.coefficients.fluidModel.ebqe[('velocity',0)],
-            self.coefficients.sedModel.ebqe[('velocity',0)],
-            self.coefficients.sedModel.coefficients.ebqe_vos,
+            self.coefficients.fluidModel.coefficients.ebqe_velocity_solid,
+            self.coefficients.fluidModel.coefficients.ebqe_vos,
             self.coefficients.fluidModel.coefficients.ebqe_rho,
             self.q[('u', 0)],
             self.q[('grad(u)', 0)],
@@ -859,15 +859,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].dof,
             self.coefficients.fluidModel.timeIntegration.alpha_bdf,
             self.coefficients.fluidModel.q[('velocity',0)],
-            self.coefficients.sedModel.q[('velocity',0)],
-            self.coefficients.sedModel.coefficients.q_vos,
-            self.coefficients.sedModel.coefficients.rho_s,
+            self.coefficients.fluidModel.coefficients.q_velocity_solid,
+            self.coefficients.fluidModel.coefficients.q_vos,
+            self.coefficients.fluidModel.coefficients.rho_s,
             self.coefficients.fluidModel.coefficients.q_rho,
             self.coefficients.rho_s_min,
             self.coefficients.rho_f_min,
             self.coefficients.fluidModel.ebqe[('velocity',0)],
-            self.coefficients.sedModel.ebqe[('velocity',0)],
-            self.coefficients.sedModel.coefficients.ebqe_vos,
+            self.coefficients.fluidModel.coefficients.ebqe_velocity_solid,
+            self.coefficients.fluidModel.coefficients.ebqe_vos,
             self.coefficients.fluidModel.coefficients.ebqe_rho,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
             jacobian,
