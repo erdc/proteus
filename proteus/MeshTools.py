@@ -1059,11 +1059,11 @@ class Mesh:
         self.hasGeometricInfo = False
         logEvent(memory("buildFromCNoArrays","MeshTools"),level=4)
     def buildNodeStarArrays(self):
+        import itertools
         if self.nodeStarArray is None:
             self.nodeStarList=[]
             for n in range(self.nNodes_global):
                 self.nodeStarList.append(set())
-	        import itertools
             for i_ele in range(self.nElements_global): #: is this OK for parallel mesh?
                 for n1,n2 in itertools.permutations(self.elementNodesArray[i_ele],2):#: works for combination of triangle and quadrilateral 
                     #: if n1<self.nNodes_global: #: Saving only locally owned node is not enough; should include ghost node
@@ -1072,7 +1072,6 @@ class Mesh:
             lenNodeStarArray=0
             for nN in range(1,self.nNodes_global+1):
                 self.nodeStarOffsets[nN] = self.nodeStarOffsets[nN-1] + len(self.nodeStarList[nN-1])
-	        
             self.nodeStarArray =np.fromiter(itertools.chain.from_iterable(self.nodeStarList),'i')
             del self.nodeStarList
     def buildArraysFromLists(self):
