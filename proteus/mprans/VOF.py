@@ -434,6 +434,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
     def preStep(self,t,firstStep=False):
+        #print "PRE STEP"
+        #print sum(1.0*(self.model.u[0].dof > 1.0))
+        #print self.model.u[0].dof.min(),self.model.u[0].dof.max()
+        
         # SAVE OLD SOLUTION #
 	self.model.u_dof_old[:] = self.model.u[0].dof
 
@@ -441,9 +445,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.model.hasBlendingFunction:
             self.model.updateBlendingFunction()
 
-        # COMPUTE THE EXACT SOLUTION
-        if self.model.hasExactSolution:
-            self.model.updateExactSolution()
+        # COMPUTE THE Alpha function
+        if self.model.hasAlphaFunction:
+            self.model.updateAlphaFunction()
             
         if self.model.hasForceFieldAsFunction:
             self.model.updateForceFieldAsFunction()
@@ -467,6 +471,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
+        print "POST STEP"
+        print sum(1.0*(self.model.u[0].dof > 1.0))
+        print self.model.u[0].dof.min(),self.model.u[0].dof.max()
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.checkMass:
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
@@ -791,13 +798,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.hasBlendingFunction = True
 
         #Exact solution 
-        self.hasExactSolution = False
-        if ('exactSolution') in dir(options):
-            self.exactSolution = options.exactSolution
-            self.hasExactSolution = True
-        self.q['uExact'] = numpy.zeros((self.mesh.nElements_global,
-                                        self.nQuadraturePoints_element),'d')
-        
+        self.hasAlphaFunction = False
+        if ('alphaFunction') in dir(options):
+            assert ('alphaGradient') in dir(options), 'provide alpha gradient'
+            self.alphaFunction = options.alphaFunction
+            self.alphaGradient = options.alphaGradient
+            self.hasAlphaFunction = True
+        self.q['alpha_value'] = numpy.zeros((self.mesh.nElements_global,
+                                             self.nQuadraturePoints_element),'d')
+        self.q['gradx_alpha'] = numpy.zeros((self.mesh.nElements_global,
+                                             self.nQuadraturePoints_element),'d')
+        self.q['grady_alpha'] = numpy.zeros((self.mesh.nElements_global,
+                                             self.nQuadraturePoints_element),'d')
         #Force field
         self.hasForceFieldAsFunction = False
         if ('forceFieldAsFunction') in dir(options):
@@ -881,7 +893,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.max_u_bc=None
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
-        self.quantDOFss2 = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFs2 = numpy.zeros(self.u[0].dof.shape,'d')
         
         self.blendingFunctionDOFs = numpy.zeros(self.u[0].dof.shape,'d')
         # mql. get Q2mesh_dof. This has the location of all DOFs in the Q2 mesh
@@ -1000,23 +1012,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
 
     def updateBlendingFunction(self):
-        x = numpy.zeros(self.u[0].dof.shape,'d')
-        y = numpy.zeros(self.u[0].dof.shape,'d')
-        z = numpy.zeros(self.u[0].dof.shape,'d')
+        self.x = numpy.zeros(self.u[0].dof.shape,'d')
+        self.y = numpy.zeros(self.u[0].dof.shape,'d')
+        self.z = numpy.zeros(self.u[0].dof.shape,'d')
         for eN in range(self.mesh.nElements_global):
             for i in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
                 gi = self.offset[0]+self.stride[0]*self.u[0].femSpace.dofMap.l2g[eN,i]
-                x[gi] = self.u[0].femSpace.interpolationPoints[eN,i,0]
-                y[gi] = self.u[0].femSpace.interpolationPoints[eN,i,1]
-                z[gi] = self.u[0].femSpace.interpolationPoints[eN,i,2]
+                self.x[gi] = self.u[0].femSpace.interpolationPoints[eN,i,0]
+                self.y[gi] = self.u[0].femSpace.interpolationPoints[eN,i,1]
+                self.z[gi] = self.u[0].femSpace.interpolationPoints[eN,i,2]
             
-        X = {0:x,
-             1:y,
-             2:z}
+        X = {0:self.x,
+             1:self.y,
+             2:self.z}
         t = self.timeIntegration.t
         
         self.blendingFunctionDOFs[:] = self.blendingFunction[0](X,t)
-        self.quantDOFs[:] = self.blendingFunctionDOFs
+        self.quantDOFs[:] = self.blendingFunctionDOFs            
 
     def updateVelocityFieldAsFunction(self):
         X = {0:self.q[('x')][:,:,0],
@@ -1044,13 +1056,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         t = self.timeIntegration.t
         self.q['force'][:] = self.forceFieldAsFunction[0](X,t)
 
-    def updateExactSolution(self):
+    def updateAlphaFunction(self):
         X = {0:self.q[('x')][:,:,0],
              1:self.q[('x')][:,:,1],
              2:self.q[('x')][:,:,2]}
         t = self.timeIntegration.t
-        self.q['uExact'][:] = self.exactSolution[0](X,t)
-        
+        self.q['alpha_value'][:] = self.alphaFunction[0](X,t)
+        self.q['gradx_alpha'][:] = self.alphaGradient[0](X,t)
+        self.q['grady_alpha'][:] = self.alphaGradient[1](X,t)
+
     def calculateElementResidual(self):
         if self.globalResidualDummy is not None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
@@ -1397,7 +1411,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.min_u_bc,
             self.max_u_bc,
             self.q['force'],
-            self.q['uExact'],
+            self.q['alpha_value'],
+            self.q['gradx_alpha'],
+            self.q['grady_alpha'],
             self.blendingFunctionDOFs, #alpha
             self.aux[0].femSpace.psi,
             self.aux[0].femSpace.grad_psi,
@@ -1432,6 +1448,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         except:
             pass
 
+        rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
         self.calculateJacobian(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1472,6 +1489,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('cfl',0)],
             self.shockCapturing.numDiff_last[0],
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
+            len(rowptr)-1, #num of DOFs
+            rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
+            colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
             jacobian,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
@@ -1487,9 +1507,28 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc',0)],
             self.csrColumnOffsets_eb[(0,0)], 
             self.coefficients.LUMPED_MASS_MATRIX,
+            self.q['alpha_value'],
+            self.q['gradx_alpha'],
+            self.q['grady_alpha'],
             self.blendingFunctionDOFs, #alpha
             self.aux[0].femSpace.psi,
             self.aux[0].femSpace.grad_psi)
+
+        # CHECKING IF THE MATRIX IS AN M-MATRIX BEFORE STRONG BCs#
+        self.quantDOFs[:]=0
+        rowptr, colind, J = jacobian.getCSRrepresentation()
+        ij=0
+        for i in range(len(rowptr)-1):            
+            for offset in range(rowptr[i],rowptr[i+1]):
+                j = colind[offset]
+                #if i==j and J[ij] <= 0.:
+                #    print "BAD DIAGONAL ENTRY: ", J[ij]
+                if i!=j and J[ij] > 0.:
+                    #import pdb; pdb.set_trace()
+                #    print "BAD NON-DIAGONAL ENTRY: ", J[ij]
+                    self.quantDOFs[i] = 1
+                # update ij
+                ij+=1
         
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
@@ -1506,6 +1545,28 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
+
+        # CHECKING IF THE MATRIX IS AN M-MATRIX AFTER STRONG BCs#
+        self.quantDOFs2[:]=0
+        rowptr, colind, J = jacobian.getCSRrepresentation()
+        ij=0
+        for i in range(len(rowptr)-1):
+            rowsum = 0
+            for offset in range(rowptr[i],rowptr[i+1]):
+                j = colind[offset]
+                #if i==j and J[ij] <= 0.:
+                #    print "BAD DIAGONAL ENTRY: ", J[ij]
+                if i!=j and J[ij] > 0.:
+                    #import pdb; pdb.set_trace()
+                #    print "BAD NON-DIAGONAL ENTRY: ", J[ij]
+                    self.quantDOFs2[i] = 1
+                # check row sum
+                rowsum += J[ij]
+                # update ij
+                ij+=1
+            #print rowsum
+            #self.quantDOFs[i] = rowsum
+            
         return jacobian
     def calculateElementQuadrature(self):
         """

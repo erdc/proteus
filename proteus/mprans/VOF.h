@@ -143,7 +143,9 @@ namespace proteus
 				   double* max_u_bc,
 				   // FOR BLENDING SPACES
 				   double* force,
-				   double* uExact,
+				   double* alpha_value,
+				   double* gradx_alpha,
+				   double* grady_alpha,
 				   double* alpha_dof,
 				   double* aux_test_ref,
 				   double* aux_grad_test_ref,
@@ -251,7 +253,9 @@ namespace proteus
 						     double* max_u_bc,
 						     // FOR BLENDING SPACES
 						     double* force,
-						     double* uExact,
+						     double* alpha_value,
+						     double* gradx_alpha,
+						     double* grady_alpha,
 						     double* alpha_dof,
 						     double* aux_test_ref,
 						     double* aux_grad_test_ref,
@@ -358,7 +362,9 @@ namespace proteus
 						     double* max_u_bc,
 						     // FOR BLENDING SPACES
 						     double* force,
-						     double* uExact,
+						     double* alpha_value,
+						     double* gradx_alpha,
+						     double* grady_alpha,
 						     double* alpha_dof,
 						     double* aux_test_ref,
 						     double* aux_grad_test_ref,
@@ -405,6 +411,9 @@ namespace proteus
 				   double* cfl,
 				   double* q_numDiff_u_last, 
 				   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				   int numDOFs,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops,
 				   double* globalJacobian,
 				   int nExteriorElementBoundaries_global,
 				   int* exteriorElementBoundariesArray,
@@ -421,6 +430,9 @@ namespace proteus
 				   int* csrColumnOffsets_eb_u_u,
 				   int LUMPED_MASS_MATRIX,
 				   // FOR BLENDING SPACES
+				   double* alpha_value,
+				   double* gradx_alpha,
+				   double* grady_alpha,
 				   double* alpha_dof,
 				   double* aux_test_ref,
 				   double* aux_grad_test_ref
@@ -466,6 +478,9 @@ namespace proteus
 				   double* cfl,
 				   double* q_numDiff_u_last, 
 				   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				   int numDOFs,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops,
 				   double* globalJacobian,
 				   int nExteriorElementBoundaries_global,
 				   int* exteriorElementBoundariesArray,
@@ -482,6 +497,9 @@ namespace proteus
 				   int* csrColumnOffsets_eb_u_u,
 				   int LUMPED_MASS_MATRIX,
 				   // FOR BLENDING SPACES
+				   double* alpha_value,
+				   double* gradx_alpha,
+				   double* grady_alpha,
 				   double* alpha_dof,
 				   double* aux_test_ref,
 				   double* aux_grad_test_ref
@@ -527,6 +545,9 @@ namespace proteus
 				     double* cfl,
 				     double* q_numDiff_u_last, 
 				     int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				     int numDOFs,
+				     int* csrRowIndeces_DofLoops,
+				     int* csrColumnOffsets_DofLoops,
 				     double* globalJacobian,
 				     int nExteriorElementBoundaries_global,
 				     int* exteriorElementBoundariesArray,
@@ -543,6 +564,9 @@ namespace proteus
 				     int* csrColumnOffsets_eb_u_u,
 				     int LUMPED_MASS_MATRIX,
 				     // FOR BLENDING SPACES
+				     double* alpha_value,
+				     double* gradx_alpha,
+				     double* grady_alpha,
 				     double* alpha_dof,
 				     double* aux_test_ref,
 				     double* aux_grad_test_ref
@@ -582,6 +606,28 @@ namespace proteus
 	df[I] = v[I]*porosity;
       }
     }
+
+    inline void Mult(const double mat[nSpace*nSpace],
+		     const double vec[nSpace],
+		     double *mat_times_vector)
+    {	
+      for (int I=0; I<nSpace; I++)
+	{
+	  mat_times_vector[I] = 0.; 
+	  for (int J=0; J<nSpace; J++)
+	    mat_times_vector[I] += mat[I*nSpace+J] * vec[J];
+	  //std::cout << mat_times_vector[I] << std::endl;
+	}
+    }
+
+    inline double Dot(const double vec1[nSpace],
+		      const double vec2[nSpace])
+    {
+      double dot = 0;
+      for (int I=0; I<nSpace; I++)
+	dot += vec1[I]*vec2[I];
+      return dot;
+    }    
 
     inline
     void calculateCFL(const double& elementDiameter,
@@ -946,7 +992,9 @@ namespace proteus
 			   double* max_u_bc,
 			   // FOR BLENDING SPACES
 			   double* force,
-			   double* uExact,
+			   double* alpha_value,
+			   double* gradx_alpha,
+			   double* grady_alpha,
 			   double* alpha_dof,
 			   double* aux_test_ref,
 			   double* aux_grad_test_ref,
@@ -1448,7 +1496,9 @@ namespace proteus
 					     double* max_u_bc,
 					     // FOR BLENDING SPACES
 					     double* force,
-					     double* uExact,
+					     double* alpha_value,
+					     double* gradx_alpha,
+					     double* grady_alpha,
 					     double* alpha_dof,
 					     double* aux_test_ref,
 					     double* aux_grad_test_ref,
@@ -2080,7 +2130,9 @@ namespace proteus
 			   double* max_u_bc,
 			   // FOR BLENDING SPACES
 			   double* force,
-			   double* uExact,
+			   double* alpha_value,
+			   double* gradx_alpha,
+			   double* grady_alpha,
 			   double* alpha_dof,
 			   double* aux_test_ref,
 			   double* aux_grad_test_ref,
@@ -2120,10 +2172,12 @@ namespace proteus
 	    blended_grad_test_ref[nQuadraturePoints_element*nDOF_trial_element*nSpace];
 	  for  (int k=0;k<nQuadraturePoints_element;k++)
 	    {
+	      register int eN_k = eN*nQuadraturePoints_element+k, eN_k_nSpace = eN_k*nSpace;
 	      int counter = k*nDOF_trial_element*nSpace;
 	      int eN_nDOF_trial_element = eN*nDOF_trial_element;
 	      // COMPUTE ALPHA AND ITS GRADIENT AT CURRENT QUAD POINT // 
-	      double alpha=0, grad_alpha[nSpace],
+	      double
+		alpha=0, grad_alpha[nSpace], grad_alpha_referenceElement[nSpace],
 		aux_grad_phi[nDOF_trial_element*nSpace],
 		jac[nSpace*nSpace],jacDet,jacInv[nSpace*nSpace],x,y,z;
 	      // compute jacInv
@@ -2135,30 +2189,22 @@ namespace proteus
 					  mesh_grad_trial_ref,
 					  jac,jacDet,jacInv,
 					  x,y,z);
-	      // compute alpha via linear space
-	      //ck.gradTrialFromRef(&aux_grad_test_ref[k*nDOF_trial_element*nSpace],
-	      //		  jacInv,aux_grad_phi); //assume trial=test space	      
-	      //ck.valFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element],
-	      //	    &aux_test_ref[k*nDOF_trial_element],alpha);
-
-	      // compute alpha via high order space
-	      ck.gradTrialFromRef(&u_grad_test_ref[k*nDOF_trial_element*nSpace],
-				  jacInv,aux_grad_phi); //assume trial=test space	    
+	      // COMPUTE ALPHA VIA LINEAR SPACE //
+	      ck.gradTrialFromRef(&aux_grad_test_ref[k*nDOF_trial_element*nSpace],
+				  jacInv,aux_grad_phi); //assume trial=test space	      
 	      ck.valFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element],
-			    &u_test_ref[k*nDOF_trial_element],alpha);
+			    &aux_test_ref[k*nDOF_trial_element],alpha);
 
-	      
+	      // COMPUTE ALPHA VIA HIGH ORDER SPACE //
+	      //ck.gradTrialFromRef(&u_grad_test_ref[k*nDOF_trial_element*nSpace],
+	      //		  jacInv,aux_grad_phi); //assume trial=test space	    
+	      //ck.valFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element],
+	      //	    &u_test_ref[k*nDOF_trial_element],alpha);
+
+	      // compute grad_alpha from DOFs
 	      ck.gradFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element],
-			     aux_grad_phi,grad_alpha);
-
-	      //std::cout << x << "\t"
-	      //	<< y << "\t"
-	      //	<< alpha
-	      //	<< std::endl;
-	      //std::cout << alpha << "\t"
-	      //	<< grad_alpha[0] << ", "
-	      //	<< grad_alpha[1] << "\t" 
-	      //	<< std::endl;
+			     aux_grad_phi,grad_alpha); //This grad_alpha is NOT at the ref element
+	      Mult(jac,grad_alpha,grad_alpha_referenceElement);
 	      
 	      // Loop in local shape functions
 	      for(int i=0;i<nDOF_test_element;i++)
@@ -2167,34 +2213,21 @@ namespace proteus
 		  double phiL_i = aux_test_ref[k*nDOF_trial_element+i];
 		  blended_test_ref[k*nDOF_trial_element+i] = alpha*phiH_i + (1.0-alpha)*phiL_i;
 
-		  //std::cout << phiH_i << "\t"  
-		  //	    << phiL_i << "\t" 
-		  //	    << blended_test_ref[k*nDOF_trial_element+i]
-		  //	    << std::endl;
-
 		  for (int I=0;I<nSpace;I++)
-		    {		      
+		    {
 		      double grad_phiH_i = u_grad_test_ref[counter];
 		      double grad_phiL_i = aux_grad_test_ref[counter];
 		      
-		      //std::cout << "k=" << k << "\t" 
-		      //	<< "i=" << i << "\t"
-		      //	<< "I=" << I << "\t"
-		      //	<< "counter=" << counter << "\t\t"
-		      //	<< "alpha=" << alpha << "\t"
-		      //	<< "grad_phiHi=" << grad_phiH_i << "\t"
-		      //	<< "grad_phiLi=" << grad_phiL_i 
-		      //	<< std::endl;
-
 		      blended_grad_test_ref[counter] = 
 			alpha*grad_phiH_i + (1-alpha)*grad_phiL_i
-			+ grad_alpha[I]*(phiH_i-phiL_i);
-		      
+			+ grad_alpha_referenceElement[I]*(phiH_i-phiL_i);
+
 		      // update counter
 		      counter++;
 		    }
 		}
-	    }
+	    } //k
+	  //abort();
 
 	  ////////////////////////////////////////////////////////////////
 	  // END OF COMPUTING BLENDING SHAPE FUNCTIONS FOR CURRENT CELL //
@@ -2208,6 +2241,7 @@ namespace proteus
 		eN_k_nSpace = eN_k*nSpace,
 		eN_nDOF_trial_element = eN*nDOF_trial_element;
 	      register double
+		forceViaInterpolation=0.0, grad_forceViaInterpolation[nSpace],
 		u=0.0,
 		grad_u[nSpace],
 		jac[nSpace*nSpace],
@@ -2237,7 +2271,10 @@ namespace proteus
 					  jac,
 					  jacDet,
 					  jacInv,
-					  x,y,z);	      
+					  x,y,z);
+	      
+	      //std::cout << "k=" << k << "\t"
+	      //	<< x << "," << y << std::endl;
 	      //get the physical integration weight
 	      dV = fabs(jacDet)*dV_ref[k];
 	      //get the trial(or test) function gradients
@@ -2245,7 +2282,8 @@ namespace proteus
 				  jacInv,u_grad_trial);
 	      //get the solution
 	      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],
-			    &blended_test_ref[k*nDOF_trial_element],u);
+			    &blended_test_ref[k*nDOF_trial_element],u);	      
+
 	      // NORMAL SPACES
 	      //ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
 	      //		  jacInv,u_grad_trial);
@@ -2281,8 +2319,11 @@ namespace proteus
 		  elementResidual_u[i] +=
 		    ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace])
 		    - force[eN_k]*u_test_dV[i];
+		    //- forceViaInterpolation*u_test_dV[i];
+		    //- grad_forceViaInterpolation[0]*u_test_dV[i];
 		}//i
 	    }
+	  //abort();
 	  //
 	  //load element into global residual and save element residual
 	  //
@@ -2517,6 +2558,9 @@ namespace proteus
 			   double* cfl,
 			   double* q_numDiff_u_last, 
 			   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+			   int numDOFs,
+			   int* csrRowIndeces_DofLoops,
+			   int* csrColumnOffsets_DofLoops,
 			   double* globalJacobian,
 			   int nExteriorElementBoundaries_global,
 			   int* exteriorElementBoundariesArray,
@@ -2533,6 +2577,9 @@ namespace proteus
 			   int* csrColumnOffsets_eb_u_u,
 			   int LUMPED_MASS_MATRIX,
 			   // FOR BLENDING SPACES
+			   double* alpha_value,
+			   double* gradx_alpha,
+			   double* grady_alpha,
 			   double* alpha_dof,
 			   double* aux_test_ref,
 			   double* aux_grad_test_ref)
@@ -2969,6 +3016,9 @@ namespace proteus
 			   double* cfl,
 			   double* q_numDiff_u_last, 
 			   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+			   int numDOFs,
+			   int* csrRowIndeces_DofLoops,
+			   int* csrColumnOffsets_DofLoops,
 			   double* globalJacobian,
 			   int nExteriorElementBoundaries_global,
 			   int* exteriorElementBoundariesArray,
@@ -2985,6 +3035,9 @@ namespace proteus
 			   int* csrColumnOffsets_eb_u_u,
 			   int LUMPED_MASS_MATRIX,
 			   // FOR BLENDING SPACES
+			   double* alpha_value,
+			   double* gradx_alpha,
+			   double* grady_alpha,
 			   double* alpha_dof,
 			   double* aux_test_ref,
 			   double* aux_grad_test_ref)
@@ -3010,10 +3063,12 @@ namespace proteus
 	    blended_grad_test_ref[nQuadraturePoints_element*nDOF_trial_element*nSpace];
 	  for  (int k=0;k<nQuadraturePoints_element;k++)
 	    {
+	      register int eN_k = eN*nQuadraturePoints_element+k, eN_k_nSpace = eN_k*nSpace;
 	      int counter = k*nDOF_trial_element*nSpace;
 	      int eN_nDOF_trial_element = eN*nDOF_trial_element;
 	      // COMPUTE ALPHA AND ITS GRADIENT AT CURRENT QUAD POINT // 
-	      double alpha=0, grad_alpha[nSpace],
+	      double
+		alpha=0, grad_alpha[nSpace], grad_alpha_referenceElement[nSpace],
 		aux_grad_phi[nDOF_trial_element*nSpace],
 		jac[nSpace*nSpace],jacDet,jacInv[nSpace*nSpace],x,y,z;
 	      // compute jacInv
@@ -3025,37 +3080,38 @@ namespace proteus
 					  mesh_grad_trial_ref,
 					  jac,jacDet,jacInv,
 					  x,y,z);
-	      // COMPUTE ALPHA VIA LINEAR SPACE
-	      //ck.gradTrialFromRef(&aux_grad_test_ref[k*nDOF_trial_element*nSpace],
-	      //		  jacInv,aux_grad_phi); //assume trial=test space
-	      //ck.valFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element],
-	      //	    &aux_test_ref[k*nDOF_trial_element],alpha);
-
-	      // COMPUTE ALPHA VIA HIGH ORDER SPACE
-	      ck.gradTrialFromRef(&u_grad_test_ref[k*nDOF_trial_element*nSpace],
-				  jacInv,aux_grad_phi); //assume trial=test space	    
+	      // COMPUTE ALPHA VIA LINEAR SPACE //
+	      ck.gradTrialFromRef(&aux_grad_test_ref[k*nDOF_trial_element*nSpace],
+				  jacInv,aux_grad_phi); //assume trial=test space
 	      ck.valFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element],
-			    &u_test_ref[k*nDOF_trial_element],alpha);
+			    &aux_test_ref[k*nDOF_trial_element],alpha);
 
-	      // compute grad_alpha
+	      // COMPUTE ALPHA VIA HIGH ORDER SPACE //
+	      //ck.gradTrialFromRef(&u_grad_test_ref[k*nDOF_trial_element*nSpace],
+	      //		  jacInv,aux_grad_phi); //assume trial=test space	    
+	      //ck.valFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element],
+	      //	    &u_test_ref[k*nDOF_trial_element],alpha);
+
+	      // compute grad_alpha from DOFs
 	      ck.gradFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element],
-			     aux_grad_phi,grad_alpha);
-
+			     aux_grad_phi,grad_alpha); //This grad_alpha is NOT at the ref element
+	      Mult(jac,grad_alpha,grad_alpha_referenceElement); // grad_alpha at the ref element
+	      
 	      // Loop in local shape functions
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
 		  double phiH_i = u_test_ref[k*nDOF_trial_element+i];
 		  double phiL_i = aux_test_ref[k*nDOF_trial_element+i];
 		  blended_test_ref[k*nDOF_trial_element+i] = alpha*phiH_i + (1.0-alpha)*phiL_i;
-
+ 
 		  for (int I=0;I<nSpace;I++)
-		    {		      
+		    {
 		      double grad_phiH_i = u_grad_test_ref[counter];
 		      double grad_phiL_i = aux_grad_test_ref[counter];
 		      
 		      blended_grad_test_ref[counter] =
 			alpha*grad_phiH_i + (1-alpha)*grad_phiL_i
-			+ grad_alpha[I]*(phiH_i-phiL_i);
+			+ grad_alpha_referenceElement[I]*(phiH_i-phiL_i);
 		      
 		      // update counter
 		      counter++;
@@ -3120,6 +3176,16 @@ namespace proteus
 			ck.NumericalDiffusion(1.0,
 					      &u_grad_trial[j_nSpace],
 					      &u_grad_test_dV[i_nSpace]);
+
+		      //double Aij = ck.NumericalDiffusion(1.0,&u_grad_trial[j_nSpace],
+		      //				 &u_grad_test_dV[i_nSpace]);
+		      //if (i==j and Aij<=0.)
+		      //std::cout << Aij << std::endl;
+		      //if (i!=j and Aij>0)
+		      //std::cout << Aij << "\t" 
+		      //	  << (u_grad_trial[j_nSpace+0]*u_grad_trial[i_nSpace+0]
+		      //	      + u_grad_trial[j_nSpace+1]*u_grad_trial[i_nSpace+1])*dV
+		      //	  << std::endl;
 		    }//j
 		}//i
 	    }//k
@@ -3136,6 +3202,23 @@ namespace proteus
 		}//j
 	    }//i
 	}//elements
+
+      //int ij=0;
+      //for (int i=0; i<numDOFs; i++)
+      //{
+      //  std::cout << "******************************************" << std::endl;
+      //  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+      //    { // First loop in j (sparsity pattern)
+      //      int j = csrColumnOffsets_DofLoops[offset];
+      //      if (i==j)
+      //	std::cout << "i=j: " << globalJacobian[ij] << std::endl;
+      //      else
+      //	std::cout << "i!=j: " << globalJacobian[ij] << std::endl;
+	      
+	      //update ij
+      //      ij++;
+      //    }
+      //}
       //
       //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
       //
@@ -3365,6 +3448,9 @@ namespace proteus
 			     double* cfl,
 			     double* q_numDiff_u_last, 
 			     int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+			     int numDOFs,
+			     int* csrRowIndeces_DofLoops,
+			     int* csrColumnOffsets_DofLoops,
 			     double* globalJacobian,
 			     int nExteriorElementBoundaries_global,
 			     int* exteriorElementBoundariesArray,
@@ -3381,6 +3467,9 @@ namespace proteus
 			     int* csrColumnOffsets_eb_u_u,
 			     int LUMPED_MASS_MATRIX,
 			     // FOR BLENDING SPACES
+			     double* alpha_value,
+			     double* gradx_alpha,
+			     double* grady_alpha,
 			     double* alpha_dof,
 			     double* aux_test_ref,
 			     double* aux_grad_test_ref)
