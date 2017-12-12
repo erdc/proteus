@@ -138,12 +138,13 @@ class Coefficients(TC_base):
             alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
             q_vos = self.sedModel.coefficients.q_vos
             ebqe_vos = self.sedModel.coefficients.ebqe_vos
+            q_a = 1.0/(q_vos*self.rho_s_min + (1.0-q_vos)*self.rho_f_min)/alphaBDF
+            ebqe_a = 1.0/(ebqe_vos*self.rho_s_min + (1.0-ebqe_vos)*self.rho_f_min)/alphaBDF
             for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
-                self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * (1.0 - q_vos) / self.rho_f_min / alphaBDF 
+                self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * (1.0 - q_vos) * q_a 
                 self.fluidModel.ebqe[('velocity',0)][...,i] = (1.0-ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
-                self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * (q_vos) / self.rho_s_min / alphaBDF
-                self.fluidModel.coefficients.ebqe_velocity_solid[...,i] -= self.model.ebqe[('grad(u)',0)][...,i] * (ebqe_vos) / self.rho_s_min / alphaBDF 
-                #self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
+                self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * (q_vos) * q_a
+                self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
             self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
             self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
             if self.sedModelIndex is not None:
@@ -151,8 +152,8 @@ class Coefficients(TC_base):
                 self.sedModel.ebqe[('velocity',0)] = self.fluidModel.coefficients.ebqe_velocity_solid
                 self.sedModel.stabilization.v_last[:] = self.sedModel.q[('velocity',0)]
                 self.sedModel.coefficients.ebqe_velocity_last[:] = self.sedModel.ebqe[('velocity',0)]
-                #assert(self.fluidModel.coefficients.q_velocity_solid is self.sedModel.q[('velocity',0)])
-                #assert(self.fluidModel.coefficients.ebqe_velocity_solid is self.sedModel.ebqe[('velocity',0)])
+                assert(self.fluidModel.coefficients.q_velocity_solid is self.sedModel.q[('velocity',0)])
+                assert(self.fluidModel.coefficients.ebqe_velocity_solid is self.sedModel.ebqe[('velocity',0)])
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):
@@ -189,9 +190,9 @@ class Coefficients(TC_base):
         #a is really a scalar diffusion but defining it as diagonal tensor
         #if we push phase momentum interchange (drag) to correction
         #then a may become a full  tensor
-        c['a_f'] = (1.0-vos)/(self.rho_f_min*alphaBDF)
-        c['a_s'] = (vos)/(self.rho_s_min*alphaBDF)
-        #a_penalty = (1.0-vos)*self.rho_f_min*alphaBDF + vos*self.rho_s_min*alphaBDF
+        a_penalty = (1.0-vos)*self.rho_f_min*alphaBDF + vos*self.rho_s_min*alphaBDF
+        c['a_f'] = (1.0-vos)/a_penalty
+        c['a_s'] = (vos)/a_penalty
         #c[('a',0,0)][...,0] = 1./a_penalty 
         c[('a',0,0)][...,0] = c['a_f'] + c['a_s'] 
         #c[('a',0,0)][...,0] = ((1.0-vos)*self.rho_f_min + vos*self.rho_s_min)*alphaBDF
