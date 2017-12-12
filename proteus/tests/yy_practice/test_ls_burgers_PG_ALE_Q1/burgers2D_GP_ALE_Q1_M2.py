@@ -15,6 +15,7 @@ lm = None #: levelmodel
 q = None
 
 quad_for_cij = {'weight':[1.0/6, 4.0/6, 1.0/6], 'point':[0.0,0.5,1.0]}#{'weight':[1.0], 'point':[1.0]}#
+#quad_for_cij = {'weight':[1.0], 'point':[0.5]}
 
 def getResidual(
     # double, self.timeIntegration.dt
