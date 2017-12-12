@@ -2,11 +2,13 @@ import proteus
 from proteus.FemTools import QuadraticOnSimplexWithNodalBasis
 from proteus.FemTools import LagrangeOnCubeWithNodalBasis
 from proteus.FemTools import LinearOnCubeWithNodalBasis
+from proteus.FemTools import LinearOnQuadraticSimplex
 from proteus.FemTools import BernsteinOnCube
 from proteus.FemTools import BernsteinOnSimplex
 
 #psi = QuadraticOnSimplexWithNodalBasis(nd=2)
-psi = BernsteinOnSimplex(nd=2)
+#psi = BernsteinOnSimplex(nd=2)
+psi = LinearOnQuadraticSimplex(nd=2)
 nDOFs_per_element=6
 
 from mpl_toolkits.mplot3d import Axes3D
