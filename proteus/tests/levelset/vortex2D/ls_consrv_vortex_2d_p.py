@@ -16,7 +16,8 @@ coefficients = MCorr.Coefficients(applyCorrection=applyCorrection,
                                   VOFModel_index=2,
                                   checkMass=checkMass,
                                   nd=nd,
-                                  useMetrics=useMetrics)
+                                  useMetrics=useMetrics,
+                                  mass_correction_reference=mass_correction_reference)
 
 class zero_phi:
     def __init__(self):
