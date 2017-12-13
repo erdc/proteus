@@ -2,7 +2,6 @@ import numpy
 cimport numpy
 from proteus import *
 from proteus.Transport import *
-from proteus.Transport import OneLevelTransport
 
 cdef extern from "MCorr.h" namespace "proteus":
     cdef cppclass MCorr_base:
@@ -92,8 +91,9 @@ cdef extern from "MCorr.h" namespace "proteus":
 				       double* ebqe_phi,
 				       double* ebqe_normal_phi,
                                        double* q_H,
-                                       double* q_H_old,
+                                       double* q_phi_old,
                                        double* q_v,
+                                       int mass_correction_reference,
                                        double* q_u,
 				       double* q_n,
 				       double* ebqe_u,
@@ -623,8 +623,9 @@ cdef class cMCorr_base:
 			 numpy.ndarray ebqe_phi,
 			 numpy.ndarray ebqe_normal_phi,
                          numpy.ndarray q_H,
-                         numpy.ndarray q_H_old,
+                         numpy.ndarray q_phi_old,
                          numpy.ndarray q_v,
+                         int mass_correction_reference,
                          numpy.ndarray q_u,
 			 numpy.ndarray q_n,
 			 numpy.ndarray ebqe_u,
@@ -671,8 +672,9 @@ cdef class cMCorr_base:
 				       <double*> ebqe_phi.data,
 				       <double*> ebqe_normal_phi.data,				       
                                        <double*> q_H.data,
-                                       <double*> q_H_old.data,
+                                       <double*> q_phi_old.data,
                                        <double*> q_v.data,
+                                       mass_correction_reference,
                                        <double*> q_u.data,
 			               <double*> q_n.data,				       
 				       <double*> ebqe_u.data,
