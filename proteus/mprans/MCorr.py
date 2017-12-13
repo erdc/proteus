@@ -21,7 +21,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  useConstantH=False,
                  # mql. For edge based stabilization methods
                  useQuadraticRegularization=False,
-                 edgeBasedStabilizationMethods=False):
+                 edgeBasedStabilizationMethods=False,
+                 mass_correction_reference=0):
 
         self.useQuadraticRegularization=useQuadraticRegularization
         self.edgeBasedStabilizationMethods=edgeBasedStabilizationMethods                 
@@ -30,6 +31,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sd=sd
         self.checkMass=checkMass
         self.variableNames=['phiCorr']
+        self.mass_correction_reference=mass_correction_reference
+        
         nc=1
         mass={}
         advection={}
@@ -83,7 +86,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #level set
         self.lsModel = modelList[self.levelSetModelIndex]
         self.q_u_ls  = modelList[self.levelSetModelIndex].q[('u',0)]
-	self.q_n_ls  = modelList[self.levelSetModelIndex].q[('grad(u)',0)]
+        self.q_n_ls  = modelList[self.levelSetModelIndex].q[('grad(u)',0)]
 
         self.ebqe_u_ls = modelList[self.levelSetModelIndex].ebqe[('u',0)]
         self.ebqe_n_ls = modelList[self.levelSetModelIndex].ebqe[('grad(u)',0)]
@@ -102,6 +105,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebq_H_vof = modelList[self.VOFModelIndex].ebq[('u',0)]
         else:
             self.ebq_H_vof = None
+
+        #: YY
+        self.q_H_phi_old = numpy.zeros_like(modelList[self.VOFModelIndex].q[('u',0)])
+        self.q_v = modelList[self.VOFModelIndex].coefficients.q_v
+        self.dt = modelList[self.VOFModelIndex].timeIntegration.dt
+
         #correction
         self.massCorrModel = modelList[self.me_model]
         self.massCorrModel.setMassQuadrature()
@@ -574,6 +583,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
+
     #mwf these are getting called by redistancing classes,
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MassMatrix.getCSRrepresentation()
@@ -607,9 +617,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #Load the unknowns into the finite element dof
         self.setUnknowns(u)
 
-
+        if self.coefficients.mass_correction_reference==0:
         #no flux boundary conditions
-        self.mcorr.calculateResidual(#element
+            self.mcorr.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -631,7 +641,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             #physics
             self.mesh.nElements_global,
-	    self.coefficients.useMetrics,
+            self.coefficients.useMetrics,
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
@@ -656,6 +666,59 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
+        elif self.coefficients.mass_correction_reference==1:
+            self.mcorr.calculateResidual_explicit_comp_quad(#element
+            self.coefficients.dt,
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            #element boundary
+            self.u[0].femSpace.elementMaps.psi_trace,
+            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.elementBoundaryQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
+            #physics
+            self.mesh.nElements_global,
+            self.coefficients.useMetrics,
+            self.coefficients.epsFactHeaviside,
+            self.coefficients.epsFactDirac,
+            self.coefficients.epsFactDiffusion,
+            self.u[0].femSpace.dofMap.l2g,
+            self.elementDiameter,#self.mesh.elementDiametersArray,
+            self.mesh.nodeDiametersArray,
+            self.u[0].dof,
+            self.coefficients.q_u_ls,
+            self.coefficients.q_n_ls,
+            self.coefficients.ebqe_u_ls,
+            self.coefficients.ebqe_n_ls,
+            self.coefficients.q_H_vof,#:H_epsilon(phi^{n+1})
+            self.coefficients.q_H_phi_old,#:YY:H_epsilon(phi^n)
+            self.coefficients.q_v,#:velocity field
+            self.q[('u',0)],
+            self.q[('grad(u)',0)],
+            self.ebqe[('u',0)],
+            self.ebqe[('grad(u)',0)],
+            self.q[('r',0)],
+            self.coefficients.q_porosity,
+            self.offset[0],self.stride[0],
+            r,
+            self.mesh.nExteriorElementBoundaries_global,
+            self.mesh.exteriorElementBoundariesArray,
+            self.mesh.elementBoundaryElementsArray,
+            self.mesh.elementBoundaryLocalElementBoundariesArray)
+        else:
+            assert 0,"*****Use proper mass_correction_reference number*****"
         logEvent("Global residual",level=9,data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         logEvent("   Mass Conservation Error: ",level=3,data=self.coefficients.massConservationError)
@@ -1137,7 +1200,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             #physics
             self.mesh.nElements_global,
-	    self.coefficients.useMetrics,
+            self.coefficients.useMetrics,
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
@@ -1163,7 +1226,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.vofModel.u[0].dof)
-
+        
+        #: YY: since self.coefficients.q_H_vof is modified after solving vof model
+        if self.coefficients.mass_correction_reference>0:
+            self.coefficients.q_H_phi_old[:] = self.coefficients.q_H_vof
+            
     def calculateSolutionAtQuadrature(self):
         pass
     def updateAfterMeshMotion(self):

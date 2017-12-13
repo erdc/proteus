@@ -15,7 +15,7 @@ timeIntegration_vof = "vbdf"#vbdf,be,flcbdf,rk
 timeIntegration_ls = "vbdf"#vbdf,be,flcbdf,rk
 timeOrder = 2
 
-runCFL = 0.3#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
+runCFL = 0.33#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 #
 #spatial approximation orders
 cDegree_ls=0 #0 -- CG. -1 -- DG
@@ -28,18 +28,21 @@ useMetrics=1.0
 #spatial quadrature orders
 #2*max(pDegree_vof,pDegree_ls)+1
 if pDegree_ls == 2:
-    vortex_quad_order =4
+    vortex_quad_order = 4
 else:
     vortex_quad_order = 3
 
+# mass correction
+mass_correction_reference = 1 #: 0=H(phi^{n+1}) 1=explicit given 2=implicit given
+
 #sub-element edge size, used to create composite quadrature rule
-hk = 0.2
+hk = 0.5
 
 #parallel partitioning info
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 #spatial mesh
-lRefinement=1
+lRefinement=3
 #tag simulation name to level of refinement
 #soname="vortexcgp2_bdf2_mc"+`lRefinement`
 nn=nnx=nny=(2**lRefinement)*10+1
@@ -89,7 +92,7 @@ else:
 
 #use absolute tolerances on al models
 atolRedistance = max(1.0e-12,0.1*he)
-atolConservation = max(1.0e-12,0.001*he**2)
+atolConservation = max(1.0e-12,0.001*he**2)#1.0e-12#
 atolVolumeOfFluid= max(1.0e-12,0.001*he**2)
 atolLevelSet     = max(1.0e-12,0.001*he**2)
 #controls
@@ -106,4 +109,4 @@ if useHex:
     hex=True
     soname="vortex_c0q"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`
 else:
-    soname="vortex_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="vortex_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`+`hk`
