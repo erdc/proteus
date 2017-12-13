@@ -105,8 +105,9 @@ namespace proteus
     				   double* ebqe_phi,
     				   double* ebqe_normal_phi,
     				   double* q_H,
-				   double* q_H_old,///YY
+				   double* q_phi_old,///YY
 				   double* q_v,///YY
+				   int mass_correction_reference,///YY
     				   double* q_u,
     				   double* q_n,
     				   double* ebqe_u,
@@ -565,8 +566,9 @@ namespace proteus
     			      const double& epsDirac,
     			      const double& phi,
     			      const double& H,
-			      const double& H_old,///YY
+			      const double& phi_old,///YY
 				  const double v[nSpace],///YY
+				  const double& mass_correction_reference,///YY
     			      const double& u,
     			      const double& porosity,
     			      double& r,
@@ -574,12 +576,16 @@ namespace proteus
 				  double f[nSpace],
 				  double df[nSpace])
     {
-          r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_old;
+    		  register double H_phi_old = porosity*smoothedHeaviside(epsHeaviside, phi_old);
+    		  if(mass_correction_reference==0)
+    			  r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H;
+    		  else
+    			  r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
           dr = porosity*smoothedDirac(epsDirac,phi+u);
           for (int I=0; I < nSpace; I++)
           {
-        	  	  f[I] = v[I]*porosity*u;
-        	  	  df[I] = v[I]*porosity;
+        	  	  f[I] = v[I]*porosity*H_phi_old;
+        	  	  df[I] = 0;//0 for explicit case; v[I]*porosity*H_phi_old;
           }
     }
     void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
@@ -1076,8 +1082,9 @@ namespace proteus
 					 double* ebqe_phi,
 					 double* ebqe_normal_phi,
 					 double* q_H,
-					 double* q_H_old,///YY
+					 double* q_phi_old,///YY
 					 double* q_v,///YY
+					 int mass_correction_reference,///YY
 					 double* q_u,
 					 double* q_n,
 					 double* ebqe_u,
@@ -1177,8 +1184,9 @@ namespace proteus
 			       epsDirac,
 			       q_phi[eN_k],
 			       q_H[eN_k],
-				   q_H_old[eN_k],///YY
+				   q_phi_old[eN_k],///YY
 				   &q_v[eN_k_nSpace],
+				   mass_correction_reference,
 			       u,
 			       q_porosity[eN_k],
 			       r,
@@ -1195,7 +1203,7 @@ namespace proteus
 	      register int  i_nSpace=i*nSpace;
 
 	      elementResidual_u[i] += ck.Reaction_weak(r,u_test_dV[i]) +///YY
-	    		 dt*ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])+///YY
+	    		 (mass_correction_reference>0?1:0)*dt*ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])+///YY
 		ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]);
 	    }//i
 	  //
@@ -1251,8 +1259,9 @@ namespace proteus
     			   double* ebqe_phi,
     			   double* ebqe_normal_phi,
     			   double* q_H,
-			   double* q_H_old,///YY
+			   double* q_phi_old,///YY
 			   double* q_v,///YY
+			   int mass_correction_reference,
     			   double* q_u,
     			   double* q_n,
     			   double* ebqe_u,
@@ -1319,8 +1328,9 @@ namespace proteus
     				   ebqe_phi,
     				   ebqe_normal_phi,
     				   q_H,
-				   q_H_old,
+				   q_phi_old,
 				   q_v,
+				   mass_correction_reference,
     				   q_u,
     				   q_n,
     				   ebqe_u,
