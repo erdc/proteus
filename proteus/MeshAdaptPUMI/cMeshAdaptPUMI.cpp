@@ -406,11 +406,18 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
 
+  apf::Field* adaptSize  = apf::createFieldOn(m, "adapt_size", apf::VECTOR);
+  apf::Field* adaptFrame = apf::createFieldOn(m, "adapt_frame", apf::MATRIX);
+
+  apf::copyData(adaptSize, size_scale);
+  apf::copyData(adaptFrame, size_frame);
+
   /// Adapt the mesh
   assert(size_iso || (size_scale && size_frame));
   ma::Input* in;
   if(adapt_type_config=="anisotropic" || size_field_config== "interface")
-    in = ma::configure(m, size_scale, size_frame);
+    //in = ma::configure(m, size_scale, size_frame);
+    in = ma::configure(m, adaptSize, adaptFrame);
   else{
     in = ma::configure(m, size_iso);
   }
@@ -422,8 +429,10 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   in->shouldFixShape = true;
+  in->shouldForceAdaptation = false;
+  in->goodQuality = 0.05;
   double mass_before = getTotalMass();
-
+  
   double t1 = PCU_Time();
   //ma::adapt(in);
   ma::adaptVerbose(in);
