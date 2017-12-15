@@ -318,9 +318,9 @@ class ShapeRANS(Shape):
         dragAlpha: float
             Darcy-type coefficient
         dragBeta: float
-            Forchheimer-type coefficient 
+            Forchheimer-type coefficient
         porosity: float
-            Porosity 
+            Porosity
         """
         self._attachAuxiliaryVariable('RelaxZones')
         if isinstance(flags, int):
@@ -353,7 +353,7 @@ Sphere.__bases__ = (ShapeRANS,)
 Cylinder.__bases__ = (ShapeRANS,)
 CustomShape.__bases__ = (ShapeRANS,)
 ShapeSTL.__bases__ = (ShapeRANS,)
-Circle.__bases__ = (ShapeRANS,)  
+Circle.__bases__ = (ShapeRANS,)
 
 # adding extra functionality to predefined shapes
 
@@ -782,7 +782,7 @@ class Tank3D(ShapeRANS):
 
     def setAbsorptionZones(self, dragAlpha,allSponge=False,
                            y_n=False, y_p=False,
-                           x_n=False, x_p=False, 
+                           x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-, y+, y-) to absorption zones
@@ -1214,7 +1214,7 @@ class Tank2D(ShapeRANS):
         ----------
         dragAlpha: float
             Relaxation zone coefficient
-        smoothing:  
+        smoothing:
             Smoothing distance
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
@@ -1327,14 +1327,14 @@ class TankWithObstacles2D(Tank2D):
     from_0: Optional[bool]
         If True (default), the tank extends from the origin to positive x, y, z
     hole: Optional[bool]
-        If True (default), the obstacle of the tank is just an open hole at the 
+        If True (default), the obstacle of the tank is just an open hole at the
         bottom of the tank. If False, a segment at the bottom of the obstacle is
         created to close the hole.
     obstacle_regions: Optional[array_like]
-        To use only if hole=False.(x,y) coordinates of a point inside the 
-        obstacle in order to fill the obstacle with what should be inside 
+        To use only if hole=False.(x,y) coordinates of a point inside the
+        obstacle in order to fill the obstacle with what should be inside
         (for example a porous material).
-        
+
     """
     def __init__(self, domain, dim=(0., 0.),
                  obstacles = None, special_boundaries = None,
@@ -1359,7 +1359,7 @@ class TankWithObstacles2D(Tank2D):
 
         self.corners = {'x-y-': False, 'x+y-': False,
                         'x+y+': False, 'x-y+': False}
-                        
+
         self.hole = hole
         self.obstacle_regions = obstacle_regions
         super(TankWithObstacles2D, self).__init__(domain, dim, coords, from_0)
@@ -1371,7 +1371,7 @@ class TankWithObstacles2D(Tank2D):
                 self.boundaryTags[boundary] = len(self.boundaryTags) + 1
                 self.BC[boundary] = self.BC_class(shape=self, name=boundary)
                 self.BC_list += [self.BC[boundary]]
-	# add boundaryTags
+        # add boundaryTags
         self.obstacle_flags = []
         max_flag = 0
         for tag, flag in self.boundaryTags.iteritems():
@@ -1387,7 +1387,7 @@ class TankWithObstacles2D(Tank2D):
             flag += 1
         if self.hole is False:
             assert len(self.obstacles) == len(self.obstacle_regions), 'must have same number of regions as obstacles'
-            
+
     def _resetEdgesFromVertices(self, vertices):
         """
         Resets self.x0, self.x1, self.y0, self.y1 based on the actual shape.
@@ -1676,10 +1676,10 @@ class TankWithObstacles2D(Tank2D):
 
             else:
                 if vertexFlags[start] in self.obstacle_flags:
-		    if vertexFlags[end] == vertexFlags[start]:
-		        return [vertexFlags[start], ]
-		    else:
-		        return [self.boundaryTags['y-'], ]
+                    if vertexFlags[end] == vertexFlags[start]:
+                        return [vertexFlags[start], ]
+                    else:
+                        return [self.boundaryTags['y-'], ]
                 elif vertexFlags[start] == self.boundaryTags['x+']:
                     if vertexFlags[end] == self.boundaryTags['x-']:
                         return [self.boundaryTags['y+'], ]
@@ -1767,19 +1767,19 @@ class TankWithObstacles2D(Tank2D):
         return segments, segmentFlags
 
     def _constructRegions(self, vertices, vertexFlags, segments, segmentFlags):
-    
+
         ind_region = 0
         self.regionIndice = {}
         regions = []
         regionFlags = []
-        
+
         if self.hole is False:
             for i, region in enumerate(self.obstacle_regions):
                 regions = [[region[0], region[1]]]
                 ind_region += 1
                 regionFlags = [ind_region,]
                 self.regionIndice['obstacle'+str(i+1)] = ind_region-1
-            
+
         if True in self.corners.values():
             regions += self._getCornerRegion()
         else:
@@ -1943,7 +1943,7 @@ class TankWithObstacles2D(Tank2D):
                                                  porosity=porosity)
 
     def setGenerationZones(self,  dragAlpha, smoothing, waves=None,
-                           wind_speed=(0., 0., 0.), x_n=False, x_p=False, 
+                           wind_speed=(0., 0., 0.), x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-) to generation zones

@@ -38,7 +38,7 @@ def AddTimestep(Beam_x,
            f.write(`count` + ' ')
            count += 1
        f.write('\n')
-    
+
     f.write('\t\t\t\t\t</DataItem>\n'
             + '\t\t\t\t</Topology>\n'
             + '\t\t\t\t<Geometry GeometryType="XYZ">\n'
@@ -54,7 +54,7 @@ def AddTimestep(Beam_x,
             + '\t</Domain>\n'
             + '</Xdmf>\n')
     f.close()
-            
+
 def Archive_parallel(Beam_x,
                      Beam_y,
                      Beam_z,
@@ -98,7 +98,7 @@ def Archive_parallel(Beam_x,
     f.write('\t\t</Grid>\n'
             + '\t</Domain>\n'
             + '</Xdmf>\n')
-    
+
     f.close()
 
 def Archive_time_step(Beam_x,
@@ -126,7 +126,7 @@ def Archive_time_step(Beam_x,
            f.write(`count` + ' ')
            count += 1
        f.write('\n')
-    
+
     f.write('\t\t\t\t\t</DataItem>\n'
             + '\t\t\t\t</Topology>\n'
             + '\t\t\t\t<Geometry GeometryType="XYZ">\n'
