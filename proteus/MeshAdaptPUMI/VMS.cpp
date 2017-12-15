@@ -283,6 +283,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
   } //end loop over elements
 
     std::cout<<std::scientific<<std::setprecision(15)<<std::cout<<"Total Error L2 "<<sqrt(VMSerrTotalL2)<<" H1 "<<sqrt(VMSerrTotalH1)<<std::endl;
+  total_error = sqrt(VMSerrTotalH1);
 } //end function
 
 double get_nu_err(struct Inputs info){
