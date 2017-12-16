@@ -45,8 +45,8 @@ class Coefficients(TC_base):
                  rho_s_min=998.0,
                  nd=2,
                  modelIndex = None,
-                 fluidModelIndex = None, 
-                 fixNullSpace=False, 
+                 fluidModelIndex = None,
+                 fixNullSpace=False,
                  INTEGRATE_BY_PARTS_DIV_U=True):
         """Construct a coefficients object
 
@@ -55,7 +55,7 @@ class Coefficients(TC_base):
         """
         self.fixNullSpace=fixNullSpace
         self.INTEGRATE_BY_PARTS_DIV_U=INTEGRATE_BY_PARTS_DIV_U
-        assert(nd in [2,3])        
+        assert(nd in [2,3])
         self.nd = nd
         if self.nd == 2:
             sdInfo    = {(0,0):(np.array([0,1,2],dtype='i'),
@@ -152,7 +152,7 @@ class Coefficients(TC_base):
             vos = self.fluidModel.coefficients.ebqe_vos
             rho_s = self.fluidModel.coefficients.rho_s
             rho_f = self.fluidModel.coefficients.ebqe_rho
-        
+
         assert rho_s >= self.rho_s_min, "solid density out of bounds"
         assert (rho_f >= self.rho_f_min).all(), "fluid density out of bounds"
         for i in range(vs.shape[-1]):
@@ -718,8 +718,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 0].diffusiveFluxBoundaryConditionsDictDict[0].iteritems():
             self.ebqe[('diffusiveFlux_bc',0,0)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
             self.ebqe[('diffusiveFlux_bc_flag',0,0)][t[0],t[1]] = 1
-            
-        if self.coefficients.fixNullSpace:        
+
+        if self.coefficients.fixNullSpace:
             self.u[0].dof[0] = 0
         self.presinc.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
@@ -773,7 +773,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray, 
+            self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.INTEGRATE_BY_PARTS_DIV_U)
 
         if self.coefficients.fixNullSpace:

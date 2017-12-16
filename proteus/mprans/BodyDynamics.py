@@ -40,24 +40,24 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         self.i_end = None  # will be retrieved from setValues() of Domain
         self.It = self.Shape.It
         self.record_dict = OrderedDict()
-        
-        # variables        
+
+        # variables
         self.position = np.zeros(3)
         self.last_position = np.array([0., 0., 0.])
         self.velocity = np.zeros(3, 'd')
         self.last_velocity = np.zeros(3, 'd')
         self.acceleration = np.zeros(3, 'd')
         self.last_acceleration = np.zeros(3, 'd')
-        
+
         self.rotation = np.eye(3)
-        self.last_rotation = np.eye(3)        
+        self.last_rotation = np.eye(3)
         self.ang_disp = np.zeros(3, 'd')
         self.last_ang_disp = np.zeros(3, 'd')
         self.ang_vel = np.zeros(3, 'd')
         self.last_ang_vel = np.zeros(3, 'd')
         self.ang_acc = np.zeros(3, 'd')
         self.last_ang_acc = np.zeros(3, 'd')
-        
+
         self.F = np.zeros(3, 'd')
         self.M = np.zeros(3, 'd')
         self.last_F = np.zeros(3, 'd')
@@ -65,7 +65,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         self.ang = 0.
         self.barycenter = self.Shape.barycenter
         self.mass = 0.
-        
+
         self.pivot = np.zeros(3)
         self.last_pivot = np.zeros(3)
         self.init_barycenter = self.Shape.barycenter.copy()
@@ -78,7 +78,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         self.last_ux = 0.0
         self.last_uy = 0.0
         self.last_uz = 0.0
-        
+
         # gravity
         if 'RigidBody' not in shape.auxiliaryVariables:
             shape._attachAuxiliaryVariable('RigidBody', self)
@@ -140,11 +140,11 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         self.last_position[:] = self.position
         self.last_velocity[:] = self.velocity
         self.last_acceleration[:] = self.acceleration
-        
+
         self.last_rotation[:] = self.rotation
         self.last_rotation_euler[:] = self.rotation_euler
         self.last_ang_disp[:] = self.ang_disp
-        self.last_ang_vel[:] = self.ang_vel        
+        self.last_ang_vel[:] = self.ang_vel
         self.last_ang_acc[:] = self.ang_acc
 
         self.last_F[:] = self.F
@@ -262,7 +262,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         dt_sub = dt/float(self.substeps)
 
     ### Forward_Euler
-        if self.scheme == 'Forward_Euler':        
+        if self.scheme == 'Forward_Euler':
             for i in range(self.substeps):
                 self.h[:], self.velocity[:] = forward_euler(p0=self.h, v0=self.velocity,
                                                             a=self.acceleration, dt=dt_sub)
@@ -294,8 +294,8 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             # final values
             self.h[:] = np.array([self.ux - ux0, self.uy - uy0, self.uz - uz0])
             self.velocity = np.array([vx, vy, vz])
-            self.acceleration = np.array([ax, ay, az])       
-                        
+            self.acceleration = np.array([ax, ay, az])
+
         return self.h
 
 
@@ -305,7 +305,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         dt_sub = dt/float(self.substeps)
 
     ### Forward_Euler
-        if self.scheme == 'Forward_Euler':  
+        if self.scheme == 'Forward_Euler':
             for i in range(self.substeps):
                 # rotation
                 self.ang_disp, self.ang_vel[:] = forward_euler(p0=self.ang_disp, v0=self.ang_vel,
@@ -331,14 +331,14 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             vrz0 = self.last_ang_vel[2]                             # angular velocity
             arz0 = (Mp[2] - Crot*vrz0 - Krot*rz0) / inertia         # angular acceleration
 
-            # solving numerical scheme            
+            # solving numerical scheme
             rz, vrz, arz = runge_kutta(u0=rz0, v0=vrz0, a0=arz0, dt=dt_sub, substeps=self.substeps, F=Mp[2], K=Krot, C=Crot, m=inertia, velCheck=False)
 
             # final values
             self.ang_disp[2] = rz - atan2(self.last_rotation[0, 1], self.last_rotation[0, 0])
             self.ang_vel[2] = vrz
             self.ang_acc[2] = arz
-            
+
         return self.ang_disp
 
     def setSprings(self, springs, Kx, Ky, Krot, Cx, Cy, Crot, Kz=0.0, Cz=0.0 ):
@@ -382,7 +382,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         pivot: array
         """
         self.pivot = pivot
-    
+
 
     def setNumericalScheme(self, scheme):
         """
@@ -392,12 +392,12 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         ----------
         scheme: string
             If Runge_Kutta, runge kutta scheme is applied.
-	    If Forward_Euler, forward euler scheme is applied.
-	    """
+            If Forward_Euler, forward euler scheme is applied.
+            """
         self.scheme = scheme
 
 
-    def inputMotion(self, InputMotion=False, pivot=None, 
+    def inputMotion(self, InputMotion=False, pivot=None,
                           At=[0., 0., 0], Tt=[0., 0., 0],
                           Ar=[0., 0., 0], Tr=[0., 0., 0]):
         """
@@ -417,7 +417,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             Amplitude of rotational motion
         Tr: list
             Period of rotational motion
-	    """     
+            """
         self.InputMotion = InputMotion
         if pivot is None:
             self.pivot = self.Shape.barycenter
@@ -432,8 +432,8 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
     def imposeSinusoidalMotion(self):
         """
         Motion is imposed rather than calculated.
-	    """   
-        
+            """
+
         t = self.model.stepController.t_model_last
         Tra = np.array([0.,0.,0.])
         Rot = np.array([0.,0.,0.])
@@ -450,11 +450,11 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             else:
                 Wr = 2.*3.14/Tr
             Dt = At*sin(Wt*t)
-            Dr = Ar*sin(Wr*t)            
+            Dr = Ar*sin(Wr*t)
         # motion update
             Tra[ii] = Dt - (self.last_position[ii] - self.init_barycenter[ii])
             Rot[ii] = Dr - (self.last_rotation_euler[ii])
-        
+
         return Tra, Rot
 
 
@@ -480,7 +480,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             self.h[:] = self.getDisplacement(dt)
             # Rotational motion calculation
             self.ang_disp[:] = self.getAngularDisplacement(dt)
-            
+
         # translate
         self.Shape.translate(self.h[:nd])
         # rotate
@@ -497,7 +497,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             self.rotation_matrix[:] = np.eye(3)
         self.barycenter[:] = self.Shape.barycenter
         self.position[:] = self.Shape.barycenter
-        
+
 
     def setConstraints(self, free_x, free_r):
         """
@@ -772,7 +772,7 @@ class CaissonBody(RigidBody):
         self.uxEl = 0.0
         self.last_uxEl = 0.0
         self.uxPl = 0.0
-        self.last_uxPl = 0.0 
+        self.last_uxPl = 0.0
         self.EL, self.last_EL, self.PL, self.last_PL= 0.0, 0.0, 0.0, 0.0
 
 
@@ -828,7 +828,7 @@ class CaissonBody(RigidBody):
         self.last_uxPl = self.uxPl
         self.last_EL = self.EL
         self.last_PL = self.PL
-                
+
 
     def step(self, dt, substeps=20):
         """
@@ -1010,8 +1010,8 @@ class CaissonBody(RigidBody):
         ----------
         scheme: string
             If Runge_Kutta, runge kutta scheme is applied.
-	    If Central_Difference, central difference scheme is applied.
-	    """
+            If Central_Difference, central difference scheme is applied.
+            """
         self.scheme = scheme
 
 
@@ -1060,13 +1060,13 @@ class CaissonBody(RigidBody):
             Ky = self.Ky
             Cx = self.Cx
             Cy = self.Cy
-            
+
             # initial condition on displacement, velocity and acceleration
             ux0 = self.last_uxEl                                                          # x-axis displacement
-            uy0 = self.last_position[1] - self.init_barycenter[1]                         # y-axis displacement            
+            uy0 = self.last_position[1] - self.init_barycenter[1]                         # y-axis displacement
             vx0 = self.last_velocity[0]                                                   # x-axis velocity
             vy0 = self.last_velocity[1]                                                   # y-axis velocity
-            
+
 
             # calculation on the vertical direction for frictional force
             # solving numerical scheme
@@ -1075,8 +1075,8 @@ class CaissonBody(RigidBody):
                 uy, vy, ay = runge_kutta(u0=uy0, v0=vy0, a0=ay0,
                                          dt=dt_sub, substeps=substeps,
                                          F=Fv, K=Ky, C=Cy, m=mass, velCheck=False)
-            
-            # Frictional force            
+
+            # Frictional force
             #self.PL=0.0
             #self.EL=0.0
             reactionx = -(Kx*ux0)
@@ -1101,7 +1101,7 @@ class CaissonBody(RigidBody):
                 self.EL=0.0
                 self.PL=1.0
                 Fh=Fx+Ftan
-                self.sliding=True                
+                self.sliding=True
             else:
                 # caisson experiences vibration motion and elastic displacements
                 self.EL=1.0
@@ -1116,11 +1116,11 @@ class CaissonBody(RigidBody):
                 ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0,
                                          dt=dt_sub, substeps=substeps,
                                          F=Fh, K=Kx, C=Cx, m=mass, velCheck=True)
-                    
-	        
+
+
             # When horizontal velocity changes sign, 0-condition is passed
             # Loop must start from static case again
-            
+
             if (vx0*vx) < 0.0 and self.sliding == True:
                 self.sliding = False
 
@@ -1133,7 +1133,7 @@ class CaissonBody(RigidBody):
             self.uxPl = dx*self.PL + self.last_uxPl   # updating plastic displacement
 
             # final values
-            self.h[0] = dx 
+            self.h[0] = dx
             self.h[1] = dy
             self.velocity[0] = vx
             self.velocity[1] = vy
@@ -1147,7 +1147,7 @@ class CaissonBody(RigidBody):
         #--- Friction module, static case
             if self.sliding ==False:
                 sign=sign_static
-                m=self.m_static                
+                m=self.m_static
         #--- Friction module, dynamic case
             else :
                 sign=sign_dynamic
@@ -1226,7 +1226,7 @@ class CaissonBody(RigidBody):
             # solving numerical scheme
             if self.scheme == 'Runge_Kutta':
                 rz, vrz, arz = runge_kutta(u0=rz0, v0=vrz0, a0=arz0, dt=dt_sub, substeps=substeps, F=Mp[2], K=Krot, C=Crot, m=inertia, velCheck=False)
-            
+
             # final values
             self.ang_disp[2] = rz - atan2(self.last_rotation[0, 1], self.last_rotation[0, 0])
             self.ang_vel[2] = vrz
@@ -1363,7 +1363,7 @@ class CaissonBody(RigidBody):
         else:
             self.record_filename = filename + '.csv'
         self.record_file = os.path.join(Profiling.logDir, self.record_filename)
-        
+
 
 
 class PaddleBody(RigidBody):
@@ -1453,7 +1453,7 @@ class PaddleBody(RigidBody):
             self.h[:] = self.getDisplacement(dt)
             # Rotational motion calculation
             self.ang_disp[:] = self.getAngularDisplacement(dt)
-        
+
         # translate
         self.Shape.translate(self.h[:nd])
         # rotate
@@ -1471,10 +1471,10 @@ class PaddleBody(RigidBody):
             self.rotation_matrix[:] = np.eye(3)
         self.barycenter[:] = self.Shape.barycenter
         self.position[:] = self.Shape.barycenter
-        
 
 
-    def inputMotion(self, InputMotion=False, pivot=None, 
+
+    def inputMotion(self, InputMotion=False, pivot=None,
                           At=[0., 0., 0], Tt=[0., 0., 0],
                           Ar=[0., 0., 0], Tr=[0., 0., 0]):
         """
@@ -1494,7 +1494,7 @@ class PaddleBody(RigidBody):
             Amplitude of rotational motion
         Tr: list
             Period of rotational motion
-	    """     
+            """
         self.InputMotion = InputMotion
         if pivot is None:
             self.pivot = self.Shape.barycenter
@@ -1512,8 +1512,8 @@ class PaddleBody(RigidBody):
     def imposeSinusoidalMotion(self):
         """
         Motion is imposed rather than calculated.
-	    """   
-        
+            """
+
         t = self.model.stepController.t_model_last
         Tra = np.array([0.,0.,0.])
         Rot = np.array([0.,0.,0.])
@@ -1530,12 +1530,12 @@ class PaddleBody(RigidBody):
             else:
                 Wr = 2.*3.14/Tr
             Dt = At*sin(Wt*t)
-            Dr = Ar*sin(Wr*t)            
+            Dr = Ar*sin(Wr*t)
         # motion update
             Tra[ii] = Dt - (self.last_position[ii] - self.init_barycenter[ii])
             Rot[ii] = Dr - (self.last_rotation_euler[ii])
-        
-        return Tra, Rot       
+
+        return Tra, Rot
 
 
 
@@ -1579,25 +1579,25 @@ def runge_kutta(u0, v0, a0, dt, substeps, F, K, C, m, velCheck):
     """
     for ii in range(substeps):
     # 1 step
-    	u1 = u0
+        u1 = u0
         v1 = v0
-    	a1 = a0
+        a1 = a0
     # 2 step
-    	u2 = u1 + v1*dt/2.
+        u2 = u1 + v1*dt/2.
         v2 = v1 + a1*dt/2.
-    	a2 = (F - C*v2 - K*u2) / m
+        a2 = (F - C*v2 - K*u2) / m
     # 3 step
-    	u3 = u1 + v2*dt/2.
-    	v3 = v1 + a2*dt/2.
-    	a3 = (F - C*v3 - K*u3) / m
+        u3 = u1 + v2*dt/2.
+        v3 = v1 + a2*dt/2.
+        a3 = (F - C*v3 - K*u3) / m
     # 4 step
-    	u4 = u1 + v3*dt
-    	v4 = v1 + a3*dt
-    	a4 = (F - C*v4 - K*u4) / m
+        u4 = u1 + v3*dt
+        v4 = v1 + a3*dt
+        a4 = (F - C*v4 - K*u4) / m
     # calculation
-    	u = u0 + (dt/6.)*( v1 + 2.*v2 + 2.*v3 + v4 )
-    	v = v0 + (dt/6.)*( a1 + 2.*a2 + 2.*a3 + a4 )
-    	a = (F - C*v - K*u) / m
+        u = u0 + (dt/6.)*( v1 + 2.*v2 + 2.*v3 + v4 )
+        v = v0 + (dt/6.)*( a1 + 2.*a2 + 2.*a3 + a4 )
+        a = (F - C*v - K*u) / m
     # velocity check
         if velCheck == True:
             # When velocity changes sign, it means that 0-condition is passed
@@ -1605,8 +1605,8 @@ def runge_kutta(u0, v0, a0, dt, substeps, F, K, C, m, velCheck):
             if (v0*v) < 0.0:
                 break
     # updating values for next substep
-    	u0 = u
-    	v0 = v
-    	a0 = a
+        u0 = u
+        v0 = v
+        a0 = a
     return u, v, a
 

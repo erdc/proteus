@@ -39,18 +39,18 @@ cdef extern from "Dissipation2D.h" namespace "proteus":
                                double rho_1,
                                int dissipation_model_flag,
                                #end diffusion
-			       double useMetrics, 
+                               double useMetrics,
                                double alphaBDF,
                                int lag_shockCapturing,
                                double shockCapturingDiffusion,
-		               double sc_uref, double sc_alpha,
-                               int* u_l2g, 
+                               double sc_uref, double sc_alpha,
+                               int* u_l2g,
                                double* elementDiameter,
-                               double* u_dof,double* u_dof_old,	
+                               double* u_dof,double* u_dof_old,
                                double* velocity,
                                double* phi_ls, #level set variable
                                double* q_kappa, #kinetic energy variable
-                               double* q_grad_kappa, 
+                               double* q_grad_kappa,
                                double* q_porosity, #VRANS
                                #velocity dof
                                double * velocity_dof_u,
@@ -62,10 +62,10 @@ cdef extern from "Dissipation2D.h" namespace "proteus":
                                double* q_grad_u,
                                double* q_m_betaBDF,
                                double* cfl,
-                               double* q_numDiff_u, 
+                               double* q_numDiff_u,
                                double* q_numDiff_u_last,
                                double* ebqe_penalty_ext,
-                               int offset_u, int stride_u, 
+                               int offset_u, int stride_u,
                                double* globalResidual,
                                int nExteriorElementBoundaries_global,
                                int* exteriorElementBoundariesArray,
@@ -116,26 +116,26 @@ cdef extern from "Dissipation2D.h" namespace "proteus":
                                double rho_1,
                                int dissipation_model_flag,
                                #end diffuion
-			       double useMetrics, 
+                               double useMetrics,
                                double alphaBDF,
                                int lag_shockCapturing,
                                double shockCapturingDiffusion,
                                int* u_l2g,
                                double* elementDiameter,
-                               double* u_dof, double* u_dof_old,	
+                               double* u_dof, double* u_dof_old,
                                double* velocity,
                                double* phi_ls, #level set variable
-                               double* q_kappa, #kinetic energy 
-                               double* q_grad_kappa, 
+                               double* q_kappa, #kinetic energy
+                               double* q_grad_kappa,
                                double* q_porosity, #VRANS
                                #velocity dof
                                double* velocity_dof_u,
                                double* velocity_dof_v,
                                double* velocity_dof_w,
                                #end velocity dof
-                               double* q_m_betaBDF, 
+                               double* q_m_betaBDF,
                                double* cfl,
-                               double* q_numDiff_u_last, 
+                               double* q_numDiff_u_last,
                                double* ebqe_penalty_ext,
                                int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                                double* globalJacobian,
@@ -152,7 +152,7 @@ cdef extern from "Dissipation2D.h" namespace "proteus":
                                double* ebqe_bc_diffusiveFlux_u_ext,
                                int* csrColumnOffsets_eb_u_u,
                                double* ebqe_phi,double epsFact,
-                               double* ebqe_kappa,#kinetic energy 
+                               double* ebqe_kappa,#kinetic energy
                                double* ebqe_porosity)#VRANS
     Dissipation2D_base* newDissipation2D(int nSpaceIn,
                        int nQuadraturePoints_elementIn,
@@ -215,19 +215,19 @@ cdef class cDissipation2D_base:
                          double rho_1,
                          int dissipation_model_flag,
                          #end diffusion
-			 double useMetrics, 
+                         double useMetrics,
                          double alphaBDF,
                          int lag_shockCapturing,
                          double shockCapturingDiffusion,
-			 double sc_uref, double sc_alpha,
-                         numpy.ndarray u_l2g, 
+                         double sc_uref, double sc_alpha,
+                         numpy.ndarray u_l2g,
                          numpy.ndarray elementDiameter,
                          numpy.ndarray u_dof,
                          numpy.ndarray u_dof_old,
                          numpy.ndarray velocity,
                          numpy.ndarray phi_ls, #level set variable
-                         numpy.ndarray q_kappa, #kinetic energy 
-                         numpy.ndarray q_grad_kappa, 
+                         numpy.ndarray q_kappa, #kinetic energy
+                         numpy.ndarray q_grad_kappa,
                          numpy.ndarray q_porosity, #VRANS
                          #velocity dof
                          numpy.ndarray velocity_dof_u,
@@ -239,10 +239,10 @@ cdef class cDissipation2D_base:
                          numpy.ndarray q_grad_u,
                          numpy.ndarray q_m_betaBDF,
                          numpy.ndarray cfl,
-                         numpy.ndarray q_numDiff_u, 
-                         numpy.ndarray q_numDiff_u_last, 
+                         numpy.ndarray q_numDiff_u,
+                         numpy.ndarray q_numDiff_u_last,
                          numpy.ndarray ebqe_penalty_ext,
-                         int offset_u, int stride_u, 
+                         int offset_u, int stride_u,
                          numpy.ndarray globalResidual,
                          int nExteriorElementBoundaries_global,
                          numpy.ndarray exteriorElementBoundariesArray,
@@ -256,7 +256,7 @@ cdef class cDissipation2D_base:
                          numpy.ndarray isDiffusiveFluxBoundary_u,
                          numpy.ndarray ebqe_bc_diffusiveFlux_u_ext,
                          numpy.ndarray ebqe_phi,double epsFact,
-                         numpy.ndarray ebqe_kappa,#kinetic energy 
+                         numpy.ndarray ebqe_kappa,#kinetic energy
                          numpy.ndarray ebqe_porosity,#VRANS
                          numpy.ndarray ebqe_u,
                          numpy.ndarray ebqe_flux):
@@ -293,20 +293,20 @@ cdef class cDissipation2D_base:
                                        rho_1,
                                        dissipation_model_flag,
                                        #end diffuion
-			               useMetrics, 
+                                       useMetrics,
                                        alphaBDF,
                                        lag_shockCapturing,
                                        shockCapturingDiffusion,
-			               sc_uref, sc_alpha,
-                                       <int*> u_l2g.data, 
+                                       sc_uref, sc_alpha,
+                                       <int*> u_l2g.data,
                                        <double*> elementDiameter.data,
                                        <double*> u_dof.data,
-				       <double*> u_dof_old.data,	
+                                       <double*> u_dof_old.data,
                                        <double*> velocity.data,
                                        <double*> phi_ls.data,
-                                       <double*> q_kappa.data,#kinetic energy 
-                                       <double*> q_grad_kappa.data,#kinetic energy 
-                                       <double*> q_porosity.data,#kinetic energy 
+                                       <double*> q_kappa.data,#kinetic energy
+                                       <double*> q_grad_kappa.data,#kinetic energy
+                                       <double*> q_porosity.data,#kinetic energy
                                        #velocity dof
                                        <double*> velocity_dof_u.data,
                                        <double*> velocity_dof_v.data,
@@ -317,10 +317,10 @@ cdef class cDissipation2D_base:
                                        <double*> q_grad_u.data,
                                        <double*> q_m_betaBDF.data,
                                        <double*> cfl.data,
-                                       <double*> q_numDiff_u.data, 
-                                       <double*> q_numDiff_u_last.data, 
+                                       <double*> q_numDiff_u.data,
+                                       <double*> q_numDiff_u_last.data,
                                        <double*> ebqe_penalty_ext.data,
-                                       offset_u, stride_u, 
+                                       offset_u, stride_u,
                                        <double*> globalResidual.data,
                                        nExteriorElementBoundaries_global,
                                        <int*> exteriorElementBoundariesArray.data,
@@ -373,26 +373,26 @@ cdef class cDissipation2D_base:
                          double rho_1,
                          int dissipation_model_flag,
                          #end diffusion
-			 double useMetrics, 
+                         double useMetrics,
                          double alphaBDF,
                          int lag_shockCapturing,
                          double shockCapturingDiffusion,
                          numpy.ndarray u_l2g,
                          numpy.ndarray elementDiameter,
-                         numpy.ndarray u_dof, numpy.ndarray u_dof_old, 
+                         numpy.ndarray u_dof, numpy.ndarray u_dof_old,
                          numpy.ndarray velocity,
                          numpy.ndarray phi_ls, #level set variable
-                         numpy.ndarray q_kappa, #kinetic energy 
-                         numpy.ndarray q_grad_kappa, #kinetic energy 
+                         numpy.ndarray q_kappa, #kinetic energy
+                         numpy.ndarray q_grad_kappa, #kinetic energy
                          numpy.ndarray q_porosity, #VRANS
                          #velocity dof
                          numpy.ndarray velocity_dof_u,
                          numpy.ndarray velocity_dof_v,
                          numpy.ndarray velocity_dof_w,
                          #end velocity dof
-                         numpy.ndarray q_m_betaBDF, 
+                         numpy.ndarray q_m_betaBDF,
                          numpy.ndarray cfl,
-                         numpy.ndarray q_numDiff_u_last, 
+                         numpy.ndarray q_numDiff_u_last,
                          numpy.ndarray ebqe_penalty_ext,
                          numpy.ndarray csrRowIndeces_u_u,numpy.ndarray csrColumnOffsets_u_u,
                          globalJacobian,
@@ -410,7 +410,7 @@ cdef class cDissipation2D_base:
                          numpy.ndarray csrColumnOffsets_eb_u_u,
                          numpy.ndarray ebqe_phi,
                          double epsFact,
-                         numpy.ndarray ebqe_kappa,#kinetic energy 
+                         numpy.ndarray ebqe_kappa,#kinetic energy
                          numpy.ndarray ebqe_porosity): #VRANS
 
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
@@ -448,13 +448,13 @@ cdef class cDissipation2D_base:
                                        rho_1,
                                        dissipation_model_flag,
                                        #end diffusion
-			               useMetrics, 
+                                       useMetrics,
                                        alphaBDF,
                                        lag_shockCapturing,
                                        shockCapturingDiffusion,
                                        <int*> u_l2g.data,
                                        <double*> elementDiameter.data,
-                                       <double*> u_dof.data, <double*> u_dof_old.data, 
+                                       <double*> u_dof.data, <double*> u_dof_old.data,
                                        <double*> velocity.data,
                                        <double*> phi_ls.data,
                                        <double*> q_kappa.data,
@@ -465,9 +465,9 @@ cdef class cDissipation2D_base:
                                        <double*> velocity_dof_v.data,
                                        <double*> velocity_dof_w.data,
                                        #end velocity dofs
-                                       <double*> q_m_betaBDF.data, 
+                                       <double*> q_m_betaBDF.data,
                                        <double*> cfl.data,
-                                       <double*> q_numDiff_u_last.data, 
+                                       <double*> q_numDiff_u_last.data,
                                        <double*> ebqe_penalty_ext.data,
                                        <int*> csrRowIndeces_u_u.data,<int*> csrColumnOffsets_u_u.data,
                                        <double*> globalJacobian_a.data,
@@ -482,7 +482,7 @@ cdef class cDissipation2D_base:
                                        <double*> ebqe_bc_advectiveFlux_u_ext.data,
                                        <int*> isDiffusiveFluxBoundary_u.data,
                                        <double*> ebqe_bc_diffusiveFlux_u_ext.data,
-                                       <int*> csrColumnOffsets_eb_u_u.data,                      
+                                       <int*> csrColumnOffsets_eb_u_u.data,
                                        <double*> ebqe_phi.data,epsFact,
                                        <double*> ebqe_kappa.data,
                                        <double*> ebqe_porosity.data)
