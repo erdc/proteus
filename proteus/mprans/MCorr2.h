@@ -12,7 +12,7 @@ namespace proteus
   {
   public:
     virtual ~MCorr_base(){}
-    virtual void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
+    virtual void FCTStepL2p(int NNZ, //number on non-zero entries on sparsity pattern
                          int numDOFs, //number of DOFs
                          double* lumped_mass_matrix, //lumped mass matrix (as vector)
                          double* solH, //DOFs of high order solution at tnp1
@@ -507,11 +507,11 @@ namespace proteus
                               double& r,
                               double& dr)
     {
-      r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H;
-      dr = porosity*smoothedDirac(epsDirac,phi+u);
+      r = porosity*smoothedHeaviside(epsHeaviside,H+u) - H; //CHANGE
+      dr = porosity*smoothedDirac(epsDirac,H+u); //CHANGE
     }
 
-    void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
+    void FCTStepL2p(int NNZ, //number on non-zero entries on sparsity pattern
                  int numDOFs, //number of DOFs
                  double* lumped_mass_matrix, //lumped mass matrix (as vector)
                  double* solH, //DOFs of high order solution at tnp1
@@ -726,6 +726,7 @@ namespace proteus
                                q_porosity[eN_k],
                                r,
                                dr);
+
           //
           //update element residual
           //
@@ -735,8 +736,9 @@ namespace proteus
               //register int eN_k_i_nSpace = eN_k_i*nSpace;
               register int  i_nSpace=i*nSpace;
 
-              elementResidual_u[i] += ck.Reaction_weak(r,u_test_dV[i]) +
-                ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]);
+              elementResidual_u[i] +=
+                ck.Reaction_weak(r,u_test_dV[i])
+                + ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]);
             }//i
           //
           //save momentum for time history and velocity for subgrid error

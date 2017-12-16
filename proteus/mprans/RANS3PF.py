@@ -135,7 +135,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def __init__(self,
                  CORRECT_VELOCITY=True,
-                 cMax=1.0, # For entropy viscosity (mql) 
+                 cMax=1.0, # For entropy viscosity (mql)
                  cE=1.0, # For entropy viscosity (mql)
                  epsFact=1.5,
                  sigma=72.8,
@@ -188,17 +188,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  set_vos=None,
                  set_sed_velocity=None,
                  aDarcy=150.0,
-		 betaForch=0.0,
-		 grain=0.0102,
-		 packFraction=0.2,
-		 packMargin=0.01,
-		 maxFraction=0.635,
-		 frFraction=0.57,
+                 betaForch=0.0,
+                 grain=0.0102,
+                 packFraction=0.2,
+                 packMargin=0.01,
+                 maxFraction=0.635,
+                 frFraction=0.57,
                  sigmaC=1.1,
                  C3e=1.2,
                  C4e=1.0,
                  eR=0.8,
- 		 fContact=0.02,
+                 fContact=0.02,
                  mContact=2.0,
                  nContact=5.0,
                  angFriction=pi/6.0,
@@ -212,7 +212,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_velocityList=[],
                  granular_sdf_Calc=None,
                  granular_vel_Calc=None
-		 ):
+                 ):
         self.CORRECT_VELOCITY=CORRECT_VELOCITY
         self.nParticles=nParticles
         self.particle_nitsche=particle_nitsche
@@ -282,7 +282,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.g = numpy.array(g)
         self.nd = nd
         #
-        # mql: for entropy viscosity 
+        # mql: for entropy viscosity
         self.cMax=cMax
         self.cE=cE
         #
@@ -435,8 +435,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 print ("Attaching particle i=", i)
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
-                        self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = self.granular_sdf_Calc(self.model.q['x'][eN,k],i)    
-                        self.particle_velocities[i,eN,k] = self.granular_vel_Calc(self.model.q['x'][eN,k],i)           
+                        self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = self.granular_sdf_Calc(self.model.q['x'][eN,k],i)
+                        self.particle_velocities[i,eN,k] = self.granular_vel_Calc(self.model.q['x'][eN,k],i)
                 #This is important to write the a field for the sdf in the domain which distinguishes solid particles
                 temp_1=np.minimum(abs(self.particle_signed_distances[i]),abs(self.phisField))
                 temp_2=np.minimum(self.particle_signed_distances[i],temp_1)
@@ -453,7 +453,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.model.q[('phis',i)] = self.particle_signed_distances[i]
                 self.model.q[('phis_vel',i)] = self.particle_velocities[i]
 
-	
+
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
             self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u',0)]
@@ -473,7 +473,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.q_vos[:] = 0.0
                 self.q_dvos_dt = self.q_vos.copy()
                 self.q_dvos_dt[:] = 0.0
-                self.ebqe_vos = modelList[self.ME_model].ebqe[('u',0)].copy() 
+                self.ebqe_vos = modelList[self.ME_model].ebqe[('u',0)].copy()
                 self.ebqe_vos[:] = 0.0
             else:
                 self.vos_dof = modelList[self.VOF_model].u[0].dof.copy()
@@ -944,7 +944,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         # Save old solutions
-        # solution at tnm1        
+        # solution at tnm1
         self.model.u_dof_old_old[:] = self.model.u_dof_old[:]
         self.model.v_dof_old_old[:] = self.model.v_dof_old[:]
         if (self.model.nSpace_global == 3):
@@ -956,19 +956,19 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.w_dof_old[:] = self.model.u[2].dof
         # Compute 2nd order extrapolation on velocity
         if (firstStep):
-            self.model.q[('velocityStar',0)][:] = self.model.q[('velocity',0)]        
+            self.model.q[('velocityStar',0)][:] = self.model.q[('velocity',0)]
         else:
-            if self.model.timeIntegration.timeOrder == 1: 
+            if self.model.timeIntegration.timeOrder == 1:
                 r = 1.
             else:
-                r = self.model.timeIntegration.dt/self.model.timeIntegration.dt_history[0] 
+                r = self.model.timeIntegration.dt/self.model.timeIntegration.dt_history[0]
             self.model.q[('velocityStar',0)][:] = (1+r)*self.model.q[('velocity',0)] - r*self.model.q[('velocityOld',0)]
-        self.model.q[('velocityOld',0)][:] = self.model.q[('velocity',0)]  
+        self.model.q[('velocityOld',0)][:] = self.model.q[('velocity',0)]
 
         # COMPUTE MATERIAL PARAMETERS AND FORCE TERMS AS FUNCTIONS (if provided)
         if self.model.hasMaterialParametersAsFunctions:
             self.model.updateMaterialParameters()
-        if self.model.hasForceTermsAsFunctions: 
+        if self.model.hasForceTermsAsFunctions:
             self.model.updateForceTerms()
 
         self.model.dt_last = self.model.timeIntegration.dt
@@ -998,7 +998,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         if ( abs(self.particle_signed_distances[i,eN,k]) < abs(self.phisField[eN,k]) ):
                             self.phisField[eN,k]=self.particle_signed_distances[i,eN,k]
 
-            self.model.q[('phis')] = self.phisField    
+            self.model.q[('phis')] = self.phisField
 
         else:
             for i,sdf,vel in zip(range(self.nParticles),
@@ -1015,8 +1015,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         self.particle_velocities[i,eN,k]=vel(t,self.model.q['x'][eN,k])
 
 
-         
-	if self.model.comm.isMaster():
+
+        if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
             self.forceHistory_p.flush()
@@ -1074,12 +1074,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # mql: Kill_pressure_term? This is for debugging and for convergence of momentum equations
         if ('KILL_PRESSURE_TERM') in dir(options):
             self.KILL_PRESSURE_TERM = options.KILL_PRESSURE_TERM
-        else: 
+        else:
             self.KILL_PRESSURE_TERM = False
         # mql: Use entropy viscosity?
         self.STABILIZATION_TYPE = 0 #0: SUPG, 1: EV via weak residual, 2: EV via strong residual
         if ('STABILIZATION_TYPE') in dir(options):
-            self.STABILIZATION_TYPE = options.STABILIZATION_TYPE 
+            self.STABILIZATION_TYPE = options.STABILIZATION_TYPE
         # mql: Check if materialParameters are declared. This is for convergence tests
         self.hasMaterialParametersAsFunctions = False
         if ('materialParameters') in dir(options):
@@ -1785,8 +1785,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe['dynamic_viscosity'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        # Initialize material parameters 
-        if self.hasMaterialParametersAsFunctions: 
+        # Initialize material parameters
+        if self.hasMaterialParametersAsFunctions:
             self.updateMaterialParameters()
         # mql: force terms
         self.q[('force', 0)] = numpy.zeros(
@@ -1939,17 +1939,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.nElementBoundaryQuadraturePoints_elementBoundary,
                 compKernelFlag,
                 self.coefficients.aDarcy,
-		self.coefficients.betaForch,
-		self.coefficients.grain,
-		self.coefficients.packFraction,
-		self.coefficients.packMargin,
-		self.coefficients.maxFraction,
-		self.coefficients.frFraction,
+                self.coefficients.betaForch,
+                self.coefficients.grain,
+                self.coefficients.packFraction,
+                self.coefficients.packMargin,
+                self.coefficients.maxFraction,
+                self.coefficients.frFraction,
                 self.coefficients.sigmaC,
                 self.coefficients.C3e,
                 self.coefficients.C4e,
                 self.coefficients.eR,
- 		self.coefficients.fContact,
+                self.coefficients.fContact,
                 self.coefficients.mContact,
                 self.coefficients.nContact,
                 self.coefficients.angFriction)
@@ -1964,21 +1964,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.nElementBoundaryQuadraturePoints_elementBoundary,
                 compKernelFlag,
                 self.coefficients.aDarcy,
-		self.coefficients.betaForch,
-		self.coefficients.grain,
-		self.coefficients.packFraction,
-		self.coefficients.packMargin,
-		self.coefficients.maxFraction,
-		self.coefficients.frFraction,
+                self.coefficients.betaForch,
+                self.coefficients.grain,
+                self.coefficients.packFraction,
+                self.coefficients.packMargin,
+                self.coefficients.maxFraction,
+                self.coefficients.frFraction,
                 self.coefficients.sigmaC,
                 self.coefficients.C3e,
                 self.coefficients.C4e,
                 self.coefficients.eR,
- 		self.coefficients.fContact,
+                self.coefficients.fContact,
                 self.coefficients.mContact,
                 self.coefficients.nContact,
                 self.coefficients.angFriction)
-        
+
 
         self.phisErrorNodal=self.u[0].dof.copy()
         self.velocityErrorNodal=self.u[0].dof.copy()
@@ -2001,7 +2001,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe['density'][:] = self.materialParameters['density'](ebqe_X,t)
         self.ebqe['dynamic_viscosity'][:] = self.materialParameters['dynamic_viscosity'](ebqe_X,t)
 
-    def updateForceTerms(self): 
+    def updateForceTerms(self):
         x = self.q[('x')][:,:,0]
         y = self.q[('x')][:,:,1]
         z = self.q[('x')][:,:,2]
@@ -2011,9 +2011,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         t = self.timeIntegration.t
         self.q[('force', 0)][:] = self.forceTerms[0](X,t)
         self.q[('force', 1)][:] = self.forceTerms[1](X,t)
-        try: 
+        try:
             self.q[('force', 2)][:] = self.forceTerms[2](X,t)
-        except: 
+        except:
             pass
 
     def getResidual(self, u, r):
@@ -2080,7 +2080,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         cj].DOFBoundaryConditionsDict.iteritems():
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                             dofN], self.timeIntegration.t)# + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
-                        
+
         if self.coefficients.set_vos:
             self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
             self.coefficients.set_vos(self.ebqe['x'],self.coefficients.ebqe_vos)
@@ -2098,7 +2098,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             colind_cMatrix = numpy.zeros(nnz_cMatrix,'i')
             #fill vector rowptr_cMatrix
             for i in range(1,rowptr_cMatrix.size):
-                rowptr_cMatrix[i] = rowptr_cMatrix[i-1]+(rowptr[self.nc*(i-1)+1]-rowptr[self.nc*(i-1)])/self.nc 
+                rowptr_cMatrix[i] = rowptr_cMatrix[i-1]+(rowptr[self.nc*(i-1)+1]-rowptr[self.nc*(i-1)])/self.nc
 
             #fill vector colind_cMatrix
             i_cMatrix=0 #ith row of cMatrix
@@ -2109,7 +2109,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         if (j%self.nc == 0):
                             colind_cMatrix[offset_cMatrix[j/self.nc]] = colind[offset]/self.nc
                     i_cMatrix+=1
-            # END OF SPARSITY PATTERN FOR C MATRICES 
+            # END OF SPARSITY PATTERN FOR C MATRICES
             di = numpy.zeros((self.mesh.nElements_global,
                               self.nQuadraturePoints_element,
                               self.nSpace_global),
@@ -2144,7 +2144,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  self.q['abs(det(J))'],
                                                  self.q[('w',0)],
                                                  self.q[('w*dV_m',0)])
-            #### GRADIENT OF TEST FUNCTIONS 
+            #### GRADIENT OF TEST FUNCTIONS
             self.q[('grad(w)',0)] = numpy.zeros((self.mesh.nElements_global,
                                                  self.nQuadraturePoints_element,
                                                  self.nDOF_test_element[0],
@@ -2188,11 +2188,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       self.csrColumnOffsets[(0,0)]/self.nc,
                                                                       elementMassMatrix,
                                                                       self.MC_global)
-            diamD2 = numpy.sum(self.q['abs(det(J))'][:]*self.elementQuadratureWeights[('u',0)])  
+            diamD2 = numpy.sum(self.q['abs(det(J))'][:]*self.elementQuadratureWeights[('u',0)])
             self.ML = np.zeros((self.nFreeDOF_global[0],),'d')
             for i in range(self.nFreeDOF_global[0]):
                 self.ML[i] = self.MC_a[rowptr_cMatrix[i]:rowptr_cMatrix[i+1]].sum()
-            np.testing.assert_almost_equal(self.ML.sum(), diamD2, 
+            np.testing.assert_almost_equal(self.ML.sum(), diamD2,
                                            err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
 
             # COMPUTE C-MATRICES #
@@ -2236,10 +2236,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if (self.STABILIZATION_TYPE == 1 or self.STABILIZATION_TYPE == 2):
             self.calculateResidual = self.rans3pf.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.rans3pf.calculateJacobian_entropy_viscosity
-        else: 
+        else:
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
-        
+
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2254,7 +2254,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
             self.pressureModel.q_p_sharp,
-            self.pressureModel.q_grad_p_sharp, 
+            self.pressureModel.q_grad_p_sharp,
             self.pressureModel.ebqe_p_sharp,
             self.pressureModel.ebqe_grad_p_sharp,
             #self.pressureModel.q[('u',0)],
@@ -2341,7 +2341,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[2],
             self.q['dV'],
             self.q['dV_last'],
-            self.q[('velocityStar',0)], #mql: use uStar=2*un-unm1 to achieve 2nd order accuracy             
+            self.q[('velocityStar',0)], #mql: use uStar=2*un-unm1 to achieve 2nd order accuracy
             self.coefficients.ebqe_velocity_last,
             self.q[('cfl', 0)],
             self.q[('numDiff', 0, 0)],
@@ -2437,45 +2437,45 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_nu,
             self.coefficients.ebqe_nu,
             self.coefficients.nParticles,
-	    self.coefficients.particle_epsFact,
-	    self.coefficients.particle_alpha,
-	    self.coefficients.particle_beta,
-	    self.coefficients.particle_penalty_constant,
-	    self.coefficients.particle_signed_distances,
-	    self.coefficients.particle_signed_distance_normals,
-	    self.coefficients.particle_velocities,
-	    self.coefficients.particle_centroids,
+            self.coefficients.particle_epsFact,
+            self.coefficients.particle_alpha,
+            self.coefficients.particle_beta,
+            self.coefficients.particle_penalty_constant,
+            self.coefficients.particle_signed_distances,
+            self.coefficients.particle_signed_distance_normals,
+            self.coefficients.particle_velocities,
+            self.coefficients.particle_centroids,
             self.coefficients.particle_netForces,
             self.coefficients.particle_netMoments,
             self.coefficients.particle_surfaceArea,
-            self.coefficients.particle_nitsche, 
+            self.coefficients.particle_nitsche,
             self.STABILIZATION_TYPE,
             self.elementQuadratureWeights[('u',0)].sum(),
-            self.coefficients.cMax, 
-            self.coefficients.cE, 
+            self.coefficients.cMax,
+            self.coefficients.cE,
             self.q[('force', 0)],
             self.q[('force', 1)],
-            self.q[('force', 2)], 
+            self.q[('force', 2)],
             self.KILL_PRESSURE_TERM,
-            self.timeIntegration.dt, 
+            self.timeIntegration.dt,
             self.entropyResidualAtCell,
             self.maxSpeed2AtCell,
             self.maxSpeed2AtCell.max(),
-            self.rhoAtCell, 
-            self.muAtCell, 
-            self.quantDOFs, 
+            self.rhoAtCell,
+            self.muAtCell,
+            self.quantDOFs,
             self.nFreeDOF_global[0],
             rowptr_cMatrix,
-            colind_cMatrix, 
-            self.ML, 
-            Cx, 
-            Cy, 
-            Cz, 
-            self.hasMaterialParametersAsFunctions, 
-            self.q['density'], 
-            self.q['dynamic_viscosity'], 
+            colind_cMatrix,
+            self.ML,
+            Cx,
+            Cy,
+            Cz,
+            self.hasMaterialParametersAsFunctions,
+            self.q['density'],
+            self.q['dynamic_viscosity'],
             self.ebqe['density'],
-            self.ebqe['dynamic_viscosity'],             
+            self.ebqe['dynamic_viscosity'],
             self.u[0].femSpace.order)
 
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
@@ -2637,7 +2637,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[2],
             self.q['dV'],
             self.q['dV_last'],
-            self.q[('velocityStar',0)], #mql: use uStar=2*un-unm1 to achieve 2nd order accuracy 
+            self.q[('velocityStar',0)], #mql: use uStar=2*un-unm1 to achieve 2nd order accuracy
             self.coefficients.ebqe_velocity_last,
             self.q[('cfl', 0)],
             self.shockCapturing.numDiff_last[0],
@@ -2743,19 +2743,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 2)],
             self.mesh.elementMaterialTypes,
             self.coefficients.nParticles,
-	    self.coefficients.particle_epsFact,
-	    self.coefficients.particle_alpha,
-	    self.coefficients.particle_beta,
-	    self.coefficients.particle_penalty_constant,
-	    self.coefficients.particle_signed_distances,
-	    self.coefficients.particle_signed_distance_normals,
-	    self.coefficients.particle_velocities,
-	    self.coefficients.particle_centroids,
-            self.coefficients.particle_nitsche, 
+            self.coefficients.particle_epsFact,
+            self.coefficients.particle_alpha,
+            self.coefficients.particle_beta,
+            self.coefficients.particle_penalty_constant,
+            self.coefficients.particle_signed_distances,
+            self.coefficients.particle_signed_distance_normals,
+            self.coefficients.particle_velocities,
+            self.coefficients.particle_centroids,
+            self.coefficients.particle_nitsche,
             self.KILL_PRESSURE_TERM,
-            self.hasMaterialParametersAsFunctions, 
-            self.q['density'], 
-            self.q['dynamic_viscosity'], 
+            self.hasMaterialParametersAsFunctions,
+            self.q['density'],
+            self.q['dynamic_viscosity'],
             self.ebqe['density'],
             self.ebqe['dynamic_viscosity'])
 
@@ -2974,7 +2974,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             ci].updateConservationJacobian[cj] = True
 
 
-        self.q['velocityError'][:]=self.q[('velocity',0)]                 
+        self.q['velocityError'][:]=self.q[('velocity',0)]
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
         self.q['velocityError']-=self.q[('velocity',0)]
         if self.q.has_key('phis') and self.coefficients.granular_sdf_Calc is not None:

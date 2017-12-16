@@ -22,7 +22,7 @@ class FEMTools:
         self.nlTol = nlTol
         self.useSparse = useSparse
         self.beamLocation=beamLocation
- 
+
 
     def structuredMesh(self):
         self.nNodes = 2*self.nElements+1
@@ -49,7 +49,7 @@ class FEMTools:
             self.w = (5.0/9.0, 8.0/9.0, 5.0/9.0)
             self.zeta = (-(3.0/5.0)**.5, 0.0, (3.0/5.0)**0.5)
             #self.quadSpacing = (self.zeta[0]+1.0, self.zeta[1]-self.zeta[0], self.zeta[2]-self.zeta[1],1.0-self.zeta[2])
-            
+
 
     def initializeCoords(self):
         self.x = np.zeros(self.nElements+1)
@@ -75,9 +75,9 @@ class FEMTools:
             self.vv=[np.outer(self.v[0],self.v[0]), np.outer(self.v[1],self.v[1]),np.outer(self.v[2],self.v[2])]
             self.dvdv=[np.outer(self.dv[0],self.dv[0]), np.outer(self.dv[1],self.dv[1]),np.outer(self.dv[2],self.dv[2])]
             self.vdv=[np.outer(self.v[0],self.dv[0]), np.outer(self.v[1],self.dv[1]),np.outer(self.v[2],self.dv[2])]
-            
-                       
-                
+
+
+
 
     def updateCoords(self):
         #import pdb
@@ -111,7 +111,7 @@ class FEMTools:
             self.x[i]+=self.beamLocation[0]
             self.y[i]+=self.beamLocation[1]
         return self.x[:],self.y[:],self.z[:]
-      
+
 
     def updateLoads(self,q1,q2,q3):
         self.q1=q1
@@ -146,12 +146,12 @@ class FEMTools:
         self.Q1*=-1.0*scale
         self.Q2*=-1.0*scale
         self.Q3*=-1.0*scale
-        
-                
-     
 
-           
-        
+
+
+
+
+
 
     def calculateGradient_Hessian(self):
         self.g = np.zeros(self.nDOF)
@@ -182,7 +182,7 @@ class FEMTools:
             Klpsipsi = np.zeros((3,3))
             Klpsiphi = np.zeros((3,3))
             Klphiphi = np.zeros((3,3))
-            
+
             for j in range(self.quadOrder):
                 theta = np.dot(self.v[j],theta_el)
                 psi = np.dot(self.v[j], psi_el)
@@ -193,8 +193,8 @@ class FEMTools:
                 Q1= np.dot(self.v[j],Q1_el)
                 Q2= np.dot(self.v[j],Q2_el)
                 Q3= np.dot(self.v[j],Q3_el)
- 
-                
+
+
                 st = math.sin(theta)
                 ct = math.cos(theta)
                 if abs(ct) < 1.0e-6:
@@ -207,7 +207,7 @@ class FEMTools:
                 gltheta += self.w[j]*(-Q1*st*math.sin(phi)-Q2*ct-Q3*st*math.cos(phi))*self.v[j]#self.w[j]*((Q1*ct*math.cos(psi) + Q2*ct*math.sin(psi) - Q3*st)*self.v[j])
                 #glpsi += self.w[j]*((-Q1*st*math.sin(psi) + Q2*st*math.cos(psi))*self.v[j])
                 glphi += self.w[j]*(Q1*ct*math.cos(phi)-Q3*ct*math.sin(phi))*self.v[j]
-                                      
+
 
                 Ksthetatheta += self.w[j]*(self.EI*self.dvdv[j] + (self.GJ-self.EI)*(2.0*ct*ct-1.0)*phid*phid*self.vv[j]+self.GJ*psid*phid*st*self.vv[j])#self.w[j]*(self.EI*self.dvdv[j] +((self.EI-self.GJ)*(2.0*ct*ct-1.0)-self.GJ*psid*phid*ct)*self.vv[j])
                 Ksthetapsi += -self.GJ*self.w[j]*phid*ct*self.vdv[j]#self.w[j]*((2.0*(self.EI-self.GJ)*phid*st*ct -self.GJ*phid*st)*self.vdv[j])
@@ -221,7 +221,7 @@ class FEMTools:
                 #Klpsipsi += self.w[j]*((-Q1*st*math.cos(psi) - Q2*st*math.sin(psi))*self.vv[j])
                 Klthetaphi +=self.w[j]*(-Q1*st*math.cos(phi)+Q3*st*math.sin(phi))*self.vv[j]
                 Klphiphi += self.w[j]*(-Q1*ct*math.sin(phi)-Q3*ct*math.cos(phi))*self.vv[j]
-                                   
+
             # import pdb
             # pdb.set_trace()
 
@@ -234,9 +234,9 @@ class FEMTools:
             self.K[i*6+1:i*6+9:3,i*6+2:i*6+9:3] += 2.0/self.h[i]*Kspsiphi + 0.5*self.h[i]*Klpsiphi
             self.K[i*6+2:i*6+9:3,i*6+1:i*6+9:3] += np.transpose(2.0/self.h[i]*Kspsiphi + 0.5*self.h[i]*Klpsiphi)
             self.K[i*6+2:i*6+9:3,i*6+2:i*6+9:3] += 2.0/self.h[i]*Ksphiphi + 0.5*self.h[i]*Klphiphi
-            
+
             self.g[i*6:i*6+9:3] += 2.0/self.h[i]*gstheta + 0.5*self.h[i]*gltheta
-            self.g[i*6+1:i*6+9:3] += 2.0/self.h[i]*gspsi + 0.5*self.h[i]*glpsi    
+            self.g[i*6+1:i*6+9:3] += 2.0/self.h[i]*gspsi + 0.5*self.h[i]*glpsi
             self.g[i*6+2:i*6+9:3] += 2.0/self.h[i]*gsphi + 0.5*self.h[i]*glphi
         #import pdb
         #pdb.set_trace()
@@ -248,7 +248,7 @@ class FEMTools:
         # Kondition = np.linalg.cond(self.K)
         #import pdb
         #pdb.set_trace()
-        
+
         # if self.useSparse:
         #     self.K=self.K.tocsr()
         #     self.Residual = spsolve(self.K,self.g)
@@ -279,7 +279,7 @@ class FEMTools:
         self.K = self.K[3::,3::]
         self.g = self.g[3::]
 
-  
+
 
     def reduceOrder(self):
         newg=self.g[:]
@@ -294,7 +294,7 @@ class FEMTools:
         Q1_quad =np.zeros(self.quadOrder*self.nElements)
         Q2_quad =np.zeros(self.quadOrder*self.nElements)
         Q3_quad =np.zeros(self.quadOrder*self.nElements)
-        
+
         for i in range(self.nElements):
             Q1_el = np.array([self.F1[2*i],self.F1[2*i+1],self.F1[2*i+2]])
             Q2_el = np.array([self.F2[2*i],self.F2[2*i+1],self.F2[2*i+2]])
@@ -305,7 +305,7 @@ class FEMTools:
             for j in range(self.quadOrder):
                 Q1_quad[self.quadOrder*i+j]+= np.dot(self.v[j],Q1_el)
                 Q2_quad[self.quadOrder*i+j]+= np.dot(self.v[j],Q2_el)
-                Q3_quad[self.quadOrder*i+j]+= np.dot(self.v[j],Q3_el)  
+                Q3_quad[self.quadOrder*i+j]+= np.dot(self.v[j],Q3_el)
                 x_quad[self.quadOrder*i+j]+= np.dot(self.v[j],x_el)
                 y_quad[self.quadOrder*i+j]+= np.dot(self.v[j],y_el)
                 z_quad[self.quadOrder*i+j]+= np.dot(self.v[j],z_el)
@@ -316,25 +316,25 @@ class FEMTools:
         x_quad =np.zeros(self.quadOrder*self.nElements)
         y_quad =np.zeros(self.quadOrder*self.nElements)
         z_quad =np.zeros(self.quadOrder*self.nElements)
-      
-        
+
+
         for i in range(self.nElements):
             x_el = np.array([self.x[i],0.5*(self.x[i+1]+self.x[i]),self.x[i+1]])
             y_el = np.array([self.y[i],0.5*(self.y[i+1]+self.y[i]),self.y[i+1]])
             z_el = np.array([self.z[i],0.5*(self.z[i+1]+self.z[i]),self.z[i+1]])
-            for j in range(self.quadOrder):  
+            for j in range(self.quadOrder):
                 x_quad[self.quadOrder*i+j]+= np.dot(self.v[j],x_el)
                 y_quad[self.quadOrder*i+j]+= np.dot(self.v[j],y_el)
                 z_quad[self.quadOrder*i+j]+= np.dot(self.v[j],z_el)
         weights = np.array(self.w)
         return x_quad[:], y_quad[:], z_quad[:]
-                         
-                   
-    
-            
-
-        
-        
 
 
-        
+
+
+
+
+
+
+
+

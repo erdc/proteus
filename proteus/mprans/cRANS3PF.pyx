@@ -1739,7 +1739,7 @@ cdef class RANS3PF:
                                        MATERIAL_PARAMETERS_AS_FUNCTION,
                                        < double * > density_as_function.data,
                                        < double * > dynamic_viscosity_as_function.data,
-                                       < double * > ebqe_density_as_function.data, 
+                                       < double * > ebqe_density_as_function.data,
                                        < double * > ebqe_dynamic_viscosity_as_function.data)
     def calculateResidual_entropy_viscosity(self,
                                             numpy.ndarray mesh_trial_ref,
@@ -2537,7 +2537,7 @@ cdef class RANS3PF:
                                                          MATERIAL_PARAMETERS_AS_FUNCTION,
                                                          < double * > density_as_function.data,
                                                          < double * > dynamic_viscosity_as_function.data,
-                                                         < double * > ebqe_density_as_function.data, 
+                                                         < double * > ebqe_density_as_function.data,
                                                          < double * > ebqe_dynamic_viscosity_as_function.data)
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
@@ -4280,7 +4280,7 @@ cdef class RANS3PF2D:
                                        MATERIAL_PARAMETERS_AS_FUNCTION,
                                        < double * > density_as_function.data,
                                        < double * > dynamic_viscosity_as_function.data,
-                                       < double * > ebqe_density_as_function.data, 
+                                       < double * > ebqe_density_as_function.data,
                                        < double * > ebqe_dynamic_viscosity_as_function.data)
     def calculateResidual_entropy_viscosity(self,
                                             numpy.ndarray mesh_trial_ref,
@@ -5079,7 +5079,7 @@ cdef class RANS3PF2D:
                                                          MATERIAL_PARAMETERS_AS_FUNCTION,
                                                          < double * > density_as_function.data,
                                                          < double * > dynamic_viscosity_as_function.data,
-                                                         < double * > ebqe_density_as_function.data, 
+                                                         < double * > ebqe_density_as_function.data,
                                                          < double * > ebqe_dynamic_viscosity_as_function.data)
 
     def calculateVelocityAverage(self,
