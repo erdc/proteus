@@ -48,7 +48,7 @@ class NumericalFlux(proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart)
         proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.__init__(self,vt,getPointwiseBoundaryConditions,
                                                                              getAdvectiveFluxBoundaryConditions,
                                                                              getDiffusiveFluxBoundaryConditions)
-        
+
 class RKEV(proteus.TimeIntegration.SSP):
     """
     Wrapper for SSPRK time integration using EV
@@ -59,7 +59,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.runCFL=runCFL
         self.dtLast=None
         self.isAdaptive=True
-        # About the cfl 
+        # About the cfl
         assert transport.coefficients.STABILIZATION_TYPE>0, "SSP method just works for edge based EV methods; i.e., STABILIZATION_TYPE>0"
         assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
         self.cfl = transport.edge_based_cfl
@@ -75,17 +75,17 @@ class RKEV(proteus.TimeIntegration.SSP):
              if transport.q.has_key(('m',ci)):
                 self.u_dof_last[ci] = transport.u[ci].dof.copy()
                 self.u_dof_stage[ci] = []
-                for k in range(self.nStages+1):                    
+                for k in range(self.nStages+1):
                     self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
 
-    def choose_dt(self):        
-        maxCFL = 1.0e-6        
+    def choose_dt(self):
+        maxCFL = 1.0e-6
         maxCFL = max(maxCFL,globalMax(self.cfl.max()))
         self.dt = self.runCFL/maxCFL
         if self.dtLast is None:
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
-        self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now        
+        self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
 
     def initialize_dt(self,t0,tOut,q):
         """
@@ -94,7 +94,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.tLast=t0
         self.choose_dt()
         self.t = t0+self.dt
- 
+
     def setCoefficients(self):
         """
         beta are all 1's here
@@ -102,7 +102,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         """
         self.alpha = numpy.zeros((self.nStages, self.nStages),'d')
         self.dcoefs = numpy.zeros((self.nStages),'d')
-        
+
     def updateStage(self):
         """
         Need to switch to use coefficients
@@ -159,14 +159,14 @@ class RKEV(proteus.TimeIntegration.SSP):
             assert self.timeOrder == 1
             for ci in range(self.nc):
                 self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
- 
+
     def initializeTimeHistory(self,resetFromDOF=True):
         """
         Push necessary information into time history arrays
         """
         for ci in range(self.nc):
             self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
- 
+
     def updateTimeHistory(self,resetFromDOF=False):
         """
         assumes successful step has been taken
@@ -204,9 +204,9 @@ class RKEV(proteus.TimeIntegration.SSP):
         for ci in range(self.nc):
              if self.transport.q.has_key(('m',ci)):
                 self.u_dof_stage[ci] = []
-                for k in range(self.nStages+1):                    
+                for k in range(self.nStages+1):
                     self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
-        self.substeps = [self.t for i in range(self.nStages)]            
+        self.substeps = [self.t for i in range(self.nStages)]
 
     def setFromOptions(self,nOptions):
         """
@@ -238,19 +238,19 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  sc_uref=1.0,
                  sc_beta=1.0,
                  waterline_interval=-1,
-                 movingDomain=False, 
+                 movingDomain=False,
                  # PARAMETERS FOR EV
-                 STABILIZATION_TYPE=0, 
+                 STABILIZATION_TYPE=0,
                  LUMPED_MASS_MATRIX=False,
                  ENTROPY_TYPE=1, #polynomial, u=0.5*u^2
-                 cE=1.0, 
+                 cE=1.0,
                  # COUPEZ AND REDISTANCING PARAMETERS
                  DO_SMOOTHING=False,
                  DO_REDISTANCING=False,
                  pure_redistancing=False,
                  COUPEZ=False,
                  SATURATED_LEVEL_SET=False,
-                 epsCoupez=0.1, 
+                 epsCoupez=0.1,
                  epsFactRedistancing=0.33, #For the signed distance function
                  redistancing_tolerance=0.1,
                  maxIter_redistancing=3,
@@ -371,7 +371,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # SAVE OLD SOLUTION #
         self.model.u_dof_old[:] = self.model.u[0].dof
 
-        # COMPUTE NEW VELOCITY (if given by user) # 
+        # COMPUTE NEW VELOCITY (if given by user) #
         if self.model.hasVelocityFieldAsFunction:
             self.model.updateVelocityFieldAsFunction()
 
@@ -499,7 +499,7 @@ class LevelModel(OneLevelTransport):
         self.reuse_test_trial_quadrature = reuse_trial_and_test_quadrature#True#False
         if self.reuse_test_trial_quadrature:
             for ci in range(1,coefficients.nc):
-                assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"            
+                assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         self.u_dof_old = None
 
         ## Simplicial Mesh
@@ -695,7 +695,7 @@ class LevelModel(OneLevelTransport):
         self.tensors_elementBoundaryQuadrature= set()
         # mql. Allow the user to provide functions to define the velocity field
         self.hasVelocityFieldAsFunction = False
-        if ('velocityField') in dir (options): 
+        if ('velocityField') in dir (options):
             self.velocityField = options.velocityField
             self.hasVelocityFieldAsFunction = True
         #
@@ -750,7 +750,7 @@ class LevelModel(OneLevelTransport):
             cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver==ExplicitLumpedMassMatrix or options.levelNonlinearSolver==ExplicitConsistentMassMatrixWithRedistancing)
             assert cond, "If STABILIZATION_TYPE>0, use levelNonlinearSolver=ExplicitLumpedMassMatrix or ExplicitConsistentMassMatrixWithRedistancing"
         if 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix:
-            assert self.coefficients.LUMPED_MASS_MATRIX, "If levelNonlinearSolver=ExplicitLumpedMassMatrix, use LUMPED_MASS_MATRIX=True"        
+            assert self.coefficients.LUMPED_MASS_MATRIX, "If levelNonlinearSolver=ExplicitLumpedMassMatrix, use LUMPED_MASS_MATRIX=True"
         if self.coefficients.LUMPED_MASS_MATRIX==True:
             cond = self.coefficients.STABILIZATION_TYPE==2
             assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
@@ -762,15 +762,15 @@ class LevelModel(OneLevelTransport):
             cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitConsistentMassMatrixWithRedistancing
             assert cond, "If DO_REDISTANCING=True, use: levelNonlinearSolver=ExplicitConsistentMassMatrixWithRedistancing"
             assert self.timeIntegration.isSSP, "If DO_REDISTANCING=True, use RKEV timeIntegration within NCLS. timeOrder=2 is recommended"
-        # END OF ASSERTS 
+        # END OF ASSERTS
 
         #Smoothing matrix
-        self.SmoothingMatrix=None #Mass-epsilon^2*Laplacian 
+        self.SmoothingMatrix=None #Mass-epsilon^2*Laplacian
         self.SmoothingMatrix_a = None
         self.SmoothingMatrix_sparseFactor=None
         self.Jacobian_sparseFactor=None
         self.uStar_dof = numpy.copy(self.u[0].dof)
-        # Mass matrices 
+        # Mass matrices
         self.ML=None #lumped mass matrix
         self.MC_global=None #consistent mass matrix
         # C-Matrices
@@ -895,7 +895,7 @@ class LevelModel(OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
 
-        #pdb.set_trace()        
+        #pdb.set_trace()
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
@@ -941,19 +941,19 @@ class LevelModel(OneLevelTransport):
             self.uStar_dof,
             self.offset[0],self.stride[0],
             r,
-            # PARAMETERS FOR EDGE VISCOSITY 
+            # PARAMETERS FOR EDGE VISCOSITY
             len(rowptr)-1,
             self.nnz,
             rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
             colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
             self.csrRowIndeces[(0,0)], #row indices (convenient for element loops)
             self.csrColumnOffsets[(0,0)], #column indices (convenient for element loops)
-            self.coefficients.lambda_coupez, 
+            self.coefficients.lambda_coupez,
             self.coefficients.epsCoupez,
             self.coefficients.epsFactRedistancing*self.mesh.h,
-            edge_based_cfl, 
+            edge_based_cfl,
             self.coefficients.SATURATED_LEVEL_SET,
-            Cx, 
+            Cx,
             Cy,
             Cz,
             self.ML)
@@ -974,14 +974,14 @@ class LevelModel(OneLevelTransport):
         import copy
         """
         Calculate the element residuals and add in to the global residual
-        """            
+        """
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
 
-        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()        
+        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
         self.ncls.calculateRhsSmoothing(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1059,7 +1059,7 @@ class LevelModel(OneLevelTransport):
                                                  self.q['abs(det(J))'],
                                                  self.q[('w',0)],
                                                  self.q[('w*dV_m',0)])
-            #### GRADIENT OF TEST FUNCTIONS 
+            #### GRADIENT OF TEST FUNCTIONS
             self.q[('grad(w)',0)] = np.zeros((self.mesh.nElements_global,
                                               self.nQuadraturePoints_element,
                                               self.nDOF_test_element[0],
@@ -1171,7 +1171,7 @@ class LevelModel(OneLevelTransport):
 
         if (self.coefficients.STABILIZATION_TYPE == 0): #SUPG
             self.calculateResidual = self.ncls.calculateResidual
-            self.calculateJacobian = self.ncls.calculateJacobian 
+            self.calculateJacobian = self.ncls.calculateJacobian
         else:
             self.calculateResidual = self.ncls.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.ncls.calculateMassMatrix
@@ -1236,8 +1236,8 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',0)],
-            self.ebqe[('u',0)], 
-            # PARAMETERS FOR EDGE VISCOSITY 
+            self.ebqe[('u',0)],
+            # PARAMETERS FOR EDGE VISCOSITY
             len(rowptr)-1,
             self.nnz,
             rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
@@ -1245,10 +1245,10 @@ class LevelModel(OneLevelTransport):
             self.csrRowIndeces[(0,0)], #row indices (convenient for element loops)
             self.csrColumnOffsets[(0,0)], #column indices (convenient for element loops)
             self.csrColumnOffsets_eb[(0, 0)], #indices for boundary terms
-            # PARAMETERS FOR 1st and 2nd ORDER MPP METHOD 
+            # PARAMETERS FOR 1st and 2nd ORDER MPP METHOD
             self.coefficients.LUMPED_MASS_MATRIX,
-            self.quantDOFs, 
-            self.coefficients.lambda_coupez, 
+            self.quantDOFs,
+            self.coefficients.lambda_coupez,
             self.coefficients.epsCoupez,
             self.coefficients.epsFactRedistancing*self.mesh.h,
             self.coefficients.COUPEZ,
@@ -1256,15 +1256,15 @@ class LevelModel(OneLevelTransport):
             Cx,
             Cy,
             Cz,
-            self.ML, 
-            self.coefficients.STABILIZATION_TYPE, 
+            self.ML,
+            self.coefficients.STABILIZATION_TYPE,
             self.coefficients.ENTROPY_TYPE,
             self.coefficients.cE)
 
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
-    
+
         if (self.auxiliaryCallCalculateResidual==False):
             edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
             cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
@@ -1353,9 +1353,9 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',0)],
-            self.csrColumnOffsets_eb[(0,0)], 
+            self.csrColumnOffsets_eb[(0,0)],
             self.mesh.h)
-        
+
     def getJacobian(self,jacobian):
         #import superluWrappers
         #import numpy
@@ -1418,7 +1418,7 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',0)],
-            self.csrColumnOffsets_eb[(0,0)], 
+            self.csrColumnOffsets_eb[(0,0)],
             self.coefficients.LUMPED_MASS_MATRIX)
 
         #Load the Dirichlet conditions directly into residual

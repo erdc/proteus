@@ -25,23 +25,23 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
         double notSoLarge_;
         double large_;
         cppHsuSedStress2D(
-		 double aDarcy, # darcy parameter for drag term. Default value from Ergun (1952) is 150
-		 double betaForch, # forchheimer parameter for drag term. Default value from Ergun (1952) is 1.75
-		 double grain, # Grain size, default assumed as d50
-		 double packFraction, #Critical volume fraction for switching the drag relation 0.2 by default, see Chen and Hsu 2014
-		 double packMargin, #
-		 double maxFraction,
-		 double frFraction,
+                 double aDarcy, # darcy parameter for drag term. Default value from Ergun (1952) is 150
+                 double betaForch, # forchheimer parameter for drag term. Default value from Ergun (1952) is 1.75
+                 double grain, # Grain size, default assumed as d50
+                 double packFraction, #Critical volume fraction for switching the drag relation 0.2 by default, see Chen and Hsu 2014
+                 double packMargin, #
+                 double maxFraction,
+                 double frFraction,
                  double sigmaC,
                  double C3e,
                  double C4e,
                  double eR,
- 		 double fContact,
+                 double fContact,
                  double mContact,
                  double nContact,
                  double angFriction
 
-		 )
+                 )
         double betaCoeff(
                             double sedF, # Sediment fraction
                             double rhoFluid,
@@ -111,51 +111,51 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                        double nuT_n)
 
         double psc(
-		      double sedF,
-		      double rhoSolid,
-		      double theta_n)
+                      double sedF,
+                      double rhoSolid,
+                      double theta_n)
         double psc_term(
-		      double sedF,
-		      double rhoSolid,
-		      double theta_np1,
+                      double sedF,
+                      double rhoSolid,
+                      double theta_np1,
                       double du_dx,
                       double dv_dy,
                       double dw_dz)
 
-        double dpsc_term_dtheta(	      double sedF,
-					      double rhoSolid,
-					      double du_dx,
-					      double dv_dy,
-					      double dw_dz)
+        double dpsc_term_dtheta(              double sedF,
+                                              double rhoSolid,
+                                              double du_dx,
+                                              double dv_dy,
+                                              double dw_dz)
 
-        double mu_sc(		      double sedF,
+        double mu_sc(                 double sedF,
                                       double rhoSolid,
                                       double theta )
-        double l_sc(		      double sedF,
+        double l_sc(                  double sedF,
                                       double rhoSolid,
                                       double theta )
 
         double tausc_term_theta(
-		      double sedF,
-		      double rhoSolid,
-		      double theta_n,
-		      double du_dx,
-		      double du_dy,
-		      double du_dz,
-		      double dv_dx,
-		      double dv_dy,
-		      double dv_dz,
-		      double dw_dx,
-		      double dw_dy,
-		      double dw_dz)
+                      double sedF,
+                      double rhoSolid,
+                      double theta_n,
+                      double du_dx,
+                      double du_dy,
+                      double du_dz,
+                      double dv_dx,
+                      double dv_dy,
+                      double dv_dz,
+                      double dw_dx,
+                      double dw_dy,
+                      double dw_dz)
 
         double  gamma_s(  double sedF,
-			     double rhoSolid,
-			     double theta_n,
-			     double theta_np1,
-			     double du_dx,
-			     double dv_dy,
-			     double dw_dz)
+                             double rhoSolid,
+                             double theta_n,
+                             double theta_np1,
+                             double du_dx,
+                             double dv_dy,
+                             double dw_dz)
 
         double  dgamma_s_dtheta(  double sedF,
                                   double rhoSolid,
@@ -164,29 +164,29 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                                   double dv_dy,
                                   double dw_dz)
         double  jint1(  double sedF,
-			   double rhoFluid,
-			   double rhoSolid,
-			   double* uFluid,
-			   double* uSolid,
-			   double kappa,
-			   double epsilon,
-			   double theta_n,
-			   double nu)
+                           double rhoFluid,
+                           double rhoSolid,
+                           double* uFluid,
+                           double* uSolid,
+                           double kappa,
+                           double epsilon,
+                           double theta_n,
+                           double nu)
 
         double  jint2(  double sedF,
-			   double rhoFluid,
-			   double rhoSolid,
-			   double* uFluid,
-			   double* uSolid,
-			   double theta,
-			   double nu)
+                           double rhoFluid,
+                           double rhoSolid,
+                           double* uFluid,
+                           double* uSolid,
+                           double theta,
+                           double nu)
 
         double  djint2_dtheta(  double sedF,
-			   double rhoFluid,
-			   double rhoSolid,
-			   double* uFluid,
-			   double* uSolid,
-			   double nu)
+                           double rhoFluid,
+                           double rhoSolid,
+                           double* uFluid,
+                           double* uSolid,
+                           double nu)
 
 
         double k_diff(double sedF, double rhoSolid,  double theta )
@@ -194,19 +194,19 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 
         double p_friction(double sedF)
         double mu_fr(double sedF,
-		      double du_dx,
-		      double du_dy,
-		      double du_dz,
-		      double dv_dx,
-		      double dv_dy,
-		      double dv_dz,
-		      double dw_dx,
-		      double dw_dy,
+                      double du_dx,
+                      double du_dy,
+                      double du_dz,
+                      double dv_dx,
+                      double dv_dy,
+                      double dv_dz,
+                      double dw_dx,
+                      double dw_dy,
                      double dw_dz)
 
         void  mIntFluid(double * mint2,
                             double sedF,         # Sediment fraction
-			   double rhoFluid,
+                           double rhoFluid,
                            double* uFluid_n,    #Fluid velocity
                             double* uSolid_n,    #Sediment velocity
                             double* uFluid_np1,  #Fluid
@@ -216,7 +216,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                            )
         void  mIntSolid(double * mint2,
                             double sedF,         # Sediment fraction
-			   double rhoFluid,
+                           double rhoFluid,
                             double* uFluid_n,    #Fluid velocity
                             double* uSolid_n,    #Sediment velocity
                             double* uFluid_np1,  #Fluid
@@ -227,7 +227,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 
         void  mIntgradC(double * mint2,
                             double sedF,         # Sediment fraction
- 			   double rhoFluid,
+                           double rhoFluid,
                            double* uFluid_n,    #Fluid velocity
                             double* uSolid_n,    #Sediment velocity
                             double nu,           #Kinematic viscosity
@@ -237,30 +237,30 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 
         double dmInt_duFluid(
                             double sedF, # Sediment fraction
-			   double rhoFluid,
+                           double rhoFluid,
                             double* uFluid_n, #Fluid velocity
                             double* uSolid_n, #Sediment velocity
                             double nu #Kinematic viscosity
                            )
         double dmInt_duSolid(
                             double sedF, # Sediment fraction
-			   double rhoFluid,
+                           double rhoFluid,
                             double* uFluid_n, #Fluid velocity
                             double* uSolid_n, #Sediment velocity
                             double nu #Kinematic viscosity
                            )
-        double p_s(		      double sedF,
-					      double rhoSolid,
-					      double theta,
-					      double du_dx,
-					      double du_dy,
-					      double du_dz,
-					      double dv_dx,
-					      double dv_dy,
-					      double dv_dz,
-					      double dw_dx,
-					      double dw_dy,
-					      double dw_dz)
+        double p_s(                   double sedF,
+                                              double rhoSolid,
+                                              double theta,
+                                              double du_dx,
+                                              double du_dy,
+                                              double du_dz,
+                                              double dv_dx,
+                                              double dv_dy,
+                                              double dv_dz,
+                                              double dw_dx,
+                                              double dw_dy,
+                                              double dw_dz)
 
 #define the way we want to present to Python
 cdef class HsuSedStress:
@@ -525,34 +525,34 @@ cdef class HsuSedStress:
         return self.thisptr.l_sc(sedF, rhoSolid, theta)
 
     def tausc_term_theta(self,
-		       sedF,
-		       rhoSolid,
-		       theta_n,
-		       du_dx,
-		       du_dy,
-		       du_dz,
-		       dv_dx,
-		       dv_dy,
-		       dv_dz,
-		       dw_dx,
-		       dw_dy,
-		       dw_dz):
+                       sedF,
+                       rhoSolid,
+                       theta_n,
+                       du_dx,
+                       du_dy,
+                       du_dz,
+                       dv_dx,
+                       dv_dy,
+                       dv_dz,
+                       dw_dx,
+                       dw_dy,
+                       dw_dz):
         return self.thisptr.tausc_term_theta(sedF,rhoSolid,theta_n,du_dx,du_dy,du_dz,dv_dx,dv_dy,dv_dz,dw_dx,dw_dy,dw_dz)
     def  gamma_s( self, sedF,
-			     rhoSolid,
-			     theta_n,
-			     theta_np1,
-			     du_dx,
-			     dv_dy,
-		             dw_dz):
+                             rhoSolid,
+                             theta_n,
+                             theta_np1,
+                             du_dx,
+                             dv_dy,
+                             dw_dz):
         return  self.thisptr.gamma_s( sedF, rhoSolid, theta_n, theta_np1,  du_dx, dv_dy, dw_dz)
 
     def  dgamma_s_dtheta( self, sedF,
-			     rhoSolid,
-			     theta_n,
-			     du_dx,
-			     dv_dy,
-		             dw_dz):
+                             rhoSolid,
+                             theta_n,
+                             du_dx,
+                             dv_dy,
+                             dw_dz):
         return  self.thisptr.dgamma_s_dtheta( sedF, rhoSolid, theta_n,  du_dx, dv_dy, dw_dz)
 
 
@@ -582,11 +582,11 @@ cdef class HsuSedStress:
                      nuT,
                      numpy.ndarray gradc
    ):
-	
+
 
 
         cython.declare(xx=cython.double[2])
-        for ii in range(2):	
+        for ii in range(2):
             xx[ii] = 0.
 
         self.thisptr.mIntFluid(xx, sedF,rhoFluid ,
@@ -615,7 +615,7 @@ cdef class HsuSedStress:
 
 
         cython.declare(xx=cython.double[2])
-        for ii in range(2):	
+        for ii in range(2):
             xx[ii] = 0.
 
         self.thisptr.mIntSolid(xx, sedF,rhoFluid ,
@@ -642,7 +642,7 @@ cdef class HsuSedStress:
 
 
         cython.declare(xx=cython.double[2])
-        for ii in range(2):	
+        for ii in range(2):
             xx[ii] = 0.
 
 

@@ -416,7 +416,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.q_vf[i, j] = smoothedHeaviside(self.epsFact*he,self.phaseFunction(pt))
             for i, quad_pts in enumerate(self.model.ebqe['x']):
                 for j, pt in enumerate(quad_pts):
-                    he = self.elementDiameter[i]    
+                    he = self.elementDiameter[i]
                     self.ebqe_phi[i, j] = self.phaseFunction(pt)
                     self.ebqe_vf[i, j] = smoothedHeaviside(self.epsFact*he,self.phaseFunction(pt))
 
@@ -808,33 +808,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization is not None:
-	    for ci in range(self.nc):
-		if coefficients.mass.has_key(ci):
-		    for flag in coefficients.mass[ci].values():
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  coefficients.advection.has_key(ci):
-		    for  flag  in coefficients.advection[ci].values():
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  coefficients.diffusion.has_key(ci):
-		    for diffusionDict in coefficients.diffusion[ci].values():
-			for  flag  in diffusionDict.values():
-			    if flag != 'constant':
-				self.stabilizationIsNonlinear=True
-		if  coefficients.potential.has_key(ci):
- 		    for flag in coefficients.potential[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if coefficients.reaction.has_key(ci):
-		    for flag in coefficients.reaction[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if coefficients.hamiltonian.has_key(ci):
-		    for flag in coefficients.hamiltonian[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
+        if self.stabilization is not None:
+            for ci in range(self.nc):
+                if coefficients.mass.has_key(ci):
+                    for flag in coefficients.mass[ci].values():
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  coefficients.advection.has_key(ci):
+                    for  flag  in coefficients.advection[ci].values():
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  coefficients.diffusion.has_key(ci):
+                    for diffusionDict in coefficients.diffusion[ci].values():
+                        for  flag  in diffusionDict.values():
+                            if flag != 'constant':
+                                self.stabilizationIsNonlinear=True
+                if  coefficients.potential.has_key(ci):
+                    for flag in coefficients.potential[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if coefficients.reaction.has_key(ci):
+                    for flag in coefficients.reaction[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if coefficients.hamiltonian.has_key(ci):
+                    for flag in coefficients.hamiltonian[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
@@ -843,7 +843,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
-	#
+        #
         #calculate some dimensions
         #
         self.nSpace_global    = self.u[0].femSpace.nSpace_global #assume same space dim for all variables
@@ -1146,15 +1146,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 (self.mesh.nElements_global,
                  self.nDOF_test_element[ci]),
                 'd')]
-	self.inflowBoundaryBC = {}
-	self.inflowBoundaryBC_values = {}
-	self.inflowFlux = {}
- 	for cj in range(self.nc):
- 	    self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
- 	    self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
- 	    self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.inflowBoundaryBC = {}
+        self.inflowBoundaryBC_values = {}
+        self.inflowFlux = {}
+        for cj in range(self.nc):
+            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
+            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
+            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.internalNodes = set(range(self.mesh.nNodes_global))
-	#identify the internal nodes this is ought to be in mesh
+        #identify the internal nodes this is ought to be in mesh
         ##\todo move this to mesh
         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -1354,7 +1354,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
                     else:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t) + self.MOVING_DOMAIN*self.mesh.nodeVelocityArray[dofN,cj-1]
-        
+
         self.rans2p.calculateResidual(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
@@ -1519,16 +1519,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.netMoments,
             self.q['velocityError'],
             self.velocityErrorNodal)
-	from proteus.flcbdfWrappers import globalSum
+        from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
             for I in range(3):
                 self.coefficients.netForces_p[i,I]  = globalSum(self.coefficients.netForces_p[i,I])
                 self.coefficients.netForces_v[i,I]  = globalSum(self.coefficients.netForces_v[i,I])
                 self.coefficients.netMoments[i,I] = globalSum(self.coefficients.netMoments[i,I])
-	if self.forceStrongConditions:#
-	    for cj in range(len(self.dirichletConditionsForceDOF)):#
-		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+        if self.forceStrongConditions:#
+            for cj in range(len(self.dirichletConditionsForceDOF)):#
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     if cj == 0:
                         r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
                     else:
@@ -1543,8 +1543,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
     def getJacobian(self,jacobian):
-	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-				       jacobian)
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       jacobian)
         if self.nSpace_global == 2:
             self.csrRowIndeces[(0,3)]  = self.csrRowIndeces[(0,2)]
             self.csrColumnOffsets[(0,3)] = self.csrColumnOffsets[(0,2)]
@@ -1905,7 +1905,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q['velocityError'][:]=self.q[('velocity',0)]
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
         self.q['velocityError']-=self.q[('velocity',0)]
-        
+
     def updateAfterMeshMotion(self):
         pass
 
@@ -1916,4 +1916,4 @@ def getErgunDrag(porosity, meanGrainSize,viscosity):
     if voidFrac > 1.0e-6:
         dragBeta = porosity*porosity*porosity*meanGrainSize*1.0e-2/voidFrac
     if (porosity > epsZero and meanGrainSize > epsZero):
-       	dragAlpha = viscosity*180.0*voidFrac*voidFrac/(meanGrainSize*meanGrainSize*porosity)
+        dragAlpha = viscosity*180.0*voidFrac*voidFrac/(meanGrainSize*meanGrainSize*porosity)

@@ -28,7 +28,7 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                double * u_dof,
                                double alphaBDF,
                                double * q_vf,
-			       double * q_divU,
+                               double * q_divU,
                                double * q_vs,
                                double * q_vos,
                                double rho_s,
@@ -53,8 +53,8 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                int nExteriorElementBoundaries_global,
                                int * exteriorElementBoundariesArray,
                                int * elementBoundaryElementsArray,
-                               int * elementBoundaryLocalElementBoundariesArray, 
-			       int INTEGRATE_BY_PARTS_DIV_U)
+                               int * elementBoundaryLocalElementBoundariesArray,
+                               int INTEGRATE_BY_PARTS_DIV_U)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -154,7 +154,7 @@ cdef class PresInc:
                           numpy.ndarray u_dof,
                           double alphaBDF,
                           numpy.ndarray q_vf,
-			  numpy.ndarray q_divU,
+                          numpy.ndarray q_divU,
                           numpy.ndarray q_vs,
                           numpy.ndarray q_vos,
                           double rho_s,
@@ -179,8 +179,8 @@ cdef class PresInc:
                           int nExteriorElementBoundaries_global,
                           numpy.ndarray exteriorElementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
-                          numpy.ndarray elementBoundaryLocalElementBoundariesArray, 
-			  int INTEGRATE_BY_PARTS_DIV_U):
+                          numpy.ndarray elementBoundaryLocalElementBoundariesArray,
+                          int INTEGRATE_BY_PARTS_DIV_U):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -206,7 +206,7 @@ cdef class PresInc:
                                        < double * > u_dof.data,
                                         alphaBDF,
                                        < double * > q_vf.data,
-				       < double * > q_divU.data,
+                                       < double * > q_divU.data,
                                        < double * > q_vs.data,
                                        < double * > q_vos.data,
                                         rho_s,
@@ -231,8 +231,8 @@ cdef class PresInc:
                                        nExteriorElementBoundaries_global,
                                        < int * > exteriorElementBoundariesArray.data,
                                        < int * > elementBoundaryElementsArray.data,
-                                       < int * > elementBoundaryLocalElementBoundariesArray.data, 
-				       INTEGRATE_BY_PARTS_DIV_U)
+                                       < int * > elementBoundaryLocalElementBoundariesArray.data,
+                                       INTEGRATE_BY_PARTS_DIV_U)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -274,9 +274,9 @@ cdef class PresInc:
                           numpy.ndarray csrColumnOffsets_u_u,
                           globalJacobian,
                           int nExteriorElementBoundaries_global,
-			  numpy.ndarray exteriorElementBoundariesArray,
-			  numpy.ndarray elementBoundaryElementsArray,
-			  numpy.ndarray elementBoundaryLocalElementBoundariesArray,
+                          numpy.ndarray exteriorElementBoundariesArray,
+                          numpy.ndarray elementBoundaryElementsArray,
+                          numpy.ndarray elementBoundaryLocalElementBoundariesArray,
                           numpy.ndarray csrColumnOffsets_eb_u_u):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
@@ -319,7 +319,7 @@ cdef class PresInc:
                                         < int * > csrColumnOffsets_u_u.data,
                                         < double * > globalJacobian_a.data,
                                         nExteriorElementBoundaries_global,
-				        < int* > exteriorElementBoundariesArray.data,
-				        < int* > elementBoundaryElementsArray.data,
-				        < int* > elementBoundaryLocalElementBoundariesArray.data,
+                                        < int* > exteriorElementBoundariesArray.data,
+                                        < int* > elementBoundaryElementsArray.data,
+                                        < int* > elementBoundaryLocalElementBoundariesArray.data,
                                         < int* > csrColumnOffsets_eb_u_u.data)
