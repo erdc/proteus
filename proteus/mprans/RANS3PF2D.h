@@ -487,7 +487,7 @@ namespace proteus
                                           double *vos_dof,
                                           double *vel_trial_trace_ref,
                                           double *ebqe_velocity,
-                                          double *velocityAverage) = 0;    
+                                          double *velocityAverage) = 0;
     virtual void calculateResidual_entropy_viscosity(
                                                      double* mesh_trial_ref,
                                                      double* mesh_grad_trial_ref,
@@ -9870,7 +9870,7 @@ namespace proteus
                   }//i
               }//kb
           }//ebNE
-      }//computeJacobian      
+      }//computeJacobian
     };//RANS3PF2D
 
   inline cppRANS3PF2D_base* newRANS3PF2D(int nSpaceIn,

@@ -387,7 +387,7 @@ namespace proteus
                                    double* q_porosity,
                                    int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                                    double* globalJacobian,
-				   double* globalLumpedMassMatrix)=0;
+                                   double* globalLumpedMassMatrix)=0;
     virtual void setMassQuadratureEdgeBasedStabilizationMethods(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -438,7 +438,7 @@ namespace proteus
                                    double* rhs_mass_correction,
                                    double* lumped_L2p_vof_mass_correction,
                                    double* lumped_mass_matrix,
-                                   int numDOFs)=0;    
+                                   int numDOFs)=0;
   };
 
   template<class CompKernelType,
@@ -1905,7 +1905,7 @@ namespace proteus
             }//k
         }//elements
     }
-    
+
     void setMassQuadrature(//element
                            double* mesh_trial_ref,
                            double* mesh_grad_trial_ref,
@@ -2245,7 +2245,7 @@ namespace proteus
             }//i
         }//k
     }
-    
+
     void calculateMassMatrix(//element
                            double* mesh_trial_ref,
                            double* mesh_grad_trial_ref,

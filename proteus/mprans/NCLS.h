@@ -459,7 +459,7 @@ namespace proteus
                                           double* ebqe_bc_u_ext,
                                           int* csrColumnOffsets_eb_u_u,
                                           double he
-                                          )=0;    
+                                          )=0;
   };
 
   template<class CompKernelType,
@@ -3056,7 +3056,7 @@ namespace proteus
                 }//j
             }//i
         }//elements
-    }//computeMassMatrix    
+    }//computeMassMatrix
   };//NCLS
 
   inline NCLS_base* newNCLS(int nSpaceIn,

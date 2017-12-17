@@ -297,7 +297,7 @@ namespace proteus
                                                      double* min_u_bc,
                                                      double* max_u_bc,
                                                      // AUX QUANTITIES OF INTEREST
-                                                     double* quantDOFs)=0;    
+                                                     double* quantDOFs)=0;
     virtual void calculateMassMatrix(//element
                                      double dt,
                                      double* mesh_trial_ref,
@@ -1595,7 +1595,7 @@ namespace proteus
           limited_solution[i] = solL[i] + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
         }
     }
-    
+
     void calculateResidual_entropy_viscosity(//element
                                              double dt,
                                              double* mesh_trial_ref,
@@ -2220,7 +2220,7 @@ namespace proteus
             globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term);
         }
     }
-    
+
     void calculateMassMatrix(//element
                              double dt,
                              double* mesh_trial_ref,

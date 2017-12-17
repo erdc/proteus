@@ -49,7 +49,7 @@ namespace proteus
                                double fContact,
                                double mContact,
                                double nContact,
-                               double angFriction) {}    
+                               double angFriction) {}
     virtual void calculateResidual(double *mesh_trial_ref,
                                    double *mesh_grad_trial_ref,
                                    double *mesh_dof,
@@ -487,7 +487,7 @@ namespace proteus
                                           double *vos_dof,
                                           double *vel_trial_trace_ref,
                                           double *ebqe_velocity,
-                                          double *velocityAverage) = 0;    
+                                          double *velocityAverage) = 0;
     virtual void calculateResidual_entropy_viscosity(
                                                      double* mesh_trial_ref,
                                                      double* mesh_grad_trial_ref,
@@ -5938,8 +5938,8 @@ namespace proteus
                 velocityAverage[ebN_kb_nSpace+2]=0.5*(w_left + w_right);
               }//ebNI
           }
-      }      
-      
+      }
+
       void calculateResidual_entropy_viscosity(//element
                                                double* mesh_trial_ref,
                                                double* mesh_grad_trial_ref,
