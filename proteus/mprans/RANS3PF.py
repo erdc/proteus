@@ -2592,10 +2592,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #     self.q['phisError']-=self.q[('phis')]
         #     self.q['velocityError']-=self.q[('velocity',0)]
         # else:#this needs to be fixed for the case that multiple bodies are present
-        self.q['phisError'][:]=self.q[('phis',0)]
+        #self.q['phisError'][:]=self.q[('phis',0)]
         self.q['velocityError'][:]=self.q[('velocity',0)]
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
-        self.q['phisError']-=self.q[('phis',0)]
+        #self.q['phisError']-=self.q[('phis',0)]
+        self.q['phisError'][:]=0.0
         self.q['velocityError']-=self.q[('velocity',0)]
 
 
