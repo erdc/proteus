@@ -25,7 +25,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  mass_correction_reference=0):
 
         self.useQuadraticRegularization=useQuadraticRegularization
-        self.edgeBasedStabilizationMethods=edgeBasedStabilizationMethods                 
+        self.edgeBasedStabilizationMethods=edgeBasedStabilizationMethods
         self.useConstantH=useConstantH
         self.useMetrics=useMetrics
         self.sd=sd
@@ -33,7 +33,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.variableNames=['phiCorr']
         assert mass_correction_reference<2,"*****Use proper mass_correction_reference number*****"
         self.mass_correction_reference=mass_correction_reference
-        
+
         nc=1
         mass={}
         advection={}
@@ -107,7 +107,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.ebq_H_vof = None
 
-        #: YY
         self.q_phi_old = numpy.zeros_like(modelList[self.levelSetModelIndex].q[('u',0)])
         self.q_v = modelList[self.VOFModelIndex].coefficients.q_v
         self.dt = modelList[self.VOFModelIndex].timeIntegration.dt
@@ -170,13 +169,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.lsModel.u[0].dof += self.massCorrModel.u[0].dof
             self.lsModel.q[('u',0)] += self.massCorrModel.q[('u',0)]
             self.lsModel.ebqe[('u',0)] += self.massCorrModel.ebqe[('u',0)]
-	    self.lsModel.q[('grad(u)',0)] += self.massCorrModel.q[('grad(u)',0)]
-	    self.lsModel.ebqe[('grad(u)',0)] += self.massCorrModel.ebqe[('grad(u)',0)]
+            self.lsModel.q[('grad(u)',0)] += self.massCorrModel.q[('grad(u)',0)]
+            self.lsModel.ebqe[('grad(u)',0)] += self.massCorrModel.ebqe[('grad(u)',0)]
             #vof
             if self.edgeBasedStabilizationMethods==False:
                 self.massCorrModel.setMassQuadrature()
             #else setMassQuadratureEdgeBasedStabilizationMethods is called within specialized nolinear solver
-            
+
             #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
             #####print "********************max VOF************************",max(self.vofModel.q[('u',0)].flat[:])
         if self.checkMass:
@@ -191,7 +190,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             logEvent("Phase 0 mass (consistent) after mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m',0)]),),level=2)
         copyInstructions = {}
         #get the waterline on the obstacle if option set in NCLS (boundary==7)
-	self.lsModel.computeWaterline(t)
+        self.lsModel.computeWaterline(t)
         return copyInstructions
     def evaluate(self,t,c):
         import math
@@ -311,33 +310,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization is not None:
-	    for ci in range(self.nc):
-		if coefficients.mass.has_key(ci):
-		    for flag in coefficients.mass[ci].values():
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  coefficients.advection.has_key(ci):
-		    for  flag  in coefficients.advection[ci].values():
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  coefficients.diffusion.has_key(ci):
-		    for diffusionDict in coefficients.diffusion[ci].values():
-			for  flag  in diffusionDict.values():
-			    if flag != 'constant':
-				self.stabilizationIsNonlinear=True
-		if  coefficients.potential.has_key(ci):
- 		    for flag in coefficients.potential[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if coefficients.reaction.has_key(ci):
-		    for flag in coefficients.reaction[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if coefficients.hamiltonian.has_key(ci):
-		    for flag in coefficients.hamiltonian[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
+        if self.stabilization is not None:
+            for ci in range(self.nc):
+                if coefficients.mass.has_key(ci):
+                    for flag in coefficients.mass[ci].values():
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  coefficients.advection.has_key(ci):
+                    for  flag  in coefficients.advection[ci].values():
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  coefficients.diffusion.has_key(ci):
+                    for diffusionDict in coefficients.diffusion[ci].values():
+                        for  flag  in diffusionDict.values():
+                            if flag != 'constant':
+                                self.stabilizationIsNonlinear=True
+                if  coefficients.potential.has_key(ci):
+                    for flag in coefficients.potential[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if coefficients.reaction.has_key(ci):
+                    for flag in coefficients.reaction[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if coefficients.hamiltonian.has_key(ci):
+                    for flag in coefficients.hamiltonian[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
@@ -346,7 +345,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
-	#
+        #
         #calculate some dimensions
         #
         self.nSpace_global    = self.u[0].femSpace.nSpace_global #assume same space dim for all variables
@@ -459,7 +458,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe={}
         self.phi_ip={}
         #mesh
-        #uncomment this to store q arrays, see calculateElementQuadrature below 
+        #uncomment this to store q arrays, see calculateElementQuadrature below
         #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
         self.q[('u',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('grad(u)',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
@@ -474,15 +473,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.vectors_elementBoundaryQuadrature= set()
         self.tensors_elementBoundaryQuadrature= set()
         logEvent(memory("element and element boundary Jacobians","OneLevelTransport"),level=4)
-	self.inflowBoundaryBC = {}
-	self.inflowBoundaryBC_values = {}
-	self.inflowFlux = {}
- 	for cj in range(self.nc):
- 	    self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
- 	    self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
- 	    self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.inflowBoundaryBC = {}
+        self.inflowBoundaryBC_values = {}
+        self.inflowFlux = {}
+        for cj in range(self.nc):
+            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
+            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
+            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.internalNodes = set(range(self.mesh.nNodes_global))
-	#identify the internal nodes this is ought to be in mesh
+        #identify the internal nodes this is ought to be in mesh
         ##\todo move this to mesh
         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -592,7 +591,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.limited_L2p_vof_mass_correction = numpy.zeros(self.LumpedMassMatrix.size,'d')
 
         self.mcorr.FCTStep(
-            self.nnz, #number of non zero entries 
+            self.nnz, #number of non zero entries
             len(rowptr)-1, #number of DOFs
             self.LumpedMassMatrix, #Lumped mass matrix
             self.L2p_vof_mass_correction, # high order projection
@@ -600,8 +599,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.limited_L2p_vof_mass_correction,
             rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
             colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
-            MassMatrix)        
-    
+            MassMatrix)
+
     def calculateCoefficients(self):
         pass
     def calculateElementResidual(self):
@@ -619,7 +618,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setUnknowns(u)
 
         #no flux boundary conditions
-        self.mcorr.calculateResidual_explicit_comp_quad(#element
+        self.mcorr.calculateResidual(#element
             self.coefficients.dt,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -655,9 +654,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_u_ls,
             self.coefficients.ebqe_n_ls,
             self.coefficients.q_H_vof,#:H_epsilon(phi^{n+1})
-            self.coefficients.q_phi_old,#:YY:phi^n
-            self.coefficients.q_v,#:YY:velocity field
-            self.coefficients.mass_correction_reference,#:YY
+            self.coefficients.q_phi_old,#:phi^n
+            self.coefficients.q_v,#:velocity field
+            self.coefficients.mass_correction_reference,
             self.q[('u',0)],
             self.q[('grad(u)',0)],
             self.ebqe[('u',0)],
@@ -670,7 +669,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
-            
+
         logEvent("Global residual",level=9,data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         logEvent("   Mass Conservation Error: ",level=3,data=self.coefficients.massConservationError)
@@ -728,11 +727,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
             self.coefficients.q_u_ls,
-			self.coefficients.q_n_ls,
+                        self.coefficients.q_n_ls,
             self.coefficients.q_H_vof,
             self.coefficients.q_porosity,
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-            self.MassMatrix, 
+            self.MassMatrix,
             self.LumpedMassMatrix)
 
     def getJacobian(self,jacobian):
@@ -767,7 +766,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
             self.coefficients.q_u_ls,
-			self.coefficients.q_n_ls,
+                        self.coefficients.q_n_ls,
             self.coefficients.q_H_vof,
             self.coefficients.q_porosity,
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
@@ -810,7 +809,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             #physics
             self.mesh.nElements_global,
-	    self.coefficients.useMetrics,
+            self.coefficients.useMetrics,
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
@@ -871,7 +870,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             #physics
             self.mesh.nElements_global,
-	    self.coefficients.useMetrics,
+            self.coefficients.useMetrics,
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
@@ -933,7 +932,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             #physics
             self.mesh.nElements_owned,
-	    self.coefficients.useMetrics,
+            self.coefficients.useMetrics,
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
@@ -1041,7 +1040,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             #physics
             self.mesh.nElements_owned,
-	    self.coefficients.useMetrics,
+            self.coefficients.useMetrics,
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
@@ -1074,9 +1073,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.rhs_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape,'d')
             self.lumped_L2p_vof_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape,'d')
             self.L2p_vof_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape,'d')
-        else: 
+        else:
             self.rhs_mass_correction.fill(0.0)
-        
+
         self.mcorr.setMassQuadratureEdgeBasedStabilizationMethods(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1099,7 +1098,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             #physics
             self.mesh.nElements_global,
-	    self.coefficients.useMetrics,
+            self.coefficients.useMetrics,
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
@@ -1124,11 +1123,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.rhs_mass_correction, # (MQL): compute rhs for L2 projection. 
-            self.lumped_L2p_vof_mass_correction, 
+            self.rhs_mass_correction, # (MQL): compute rhs for L2 projection.
+            self.lumped_L2p_vof_mass_correction,
             self.LumpedMassMatrix,
             self.lumped_L2p_vof_mass_correction.size)
-        
+
     def setMassQuadrature(self):
         self.mcorr.setMassQuadrature(#element
             self.u[0].femSpace.elementMaps.psi,
@@ -1178,11 +1177,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.vofModel.u[0].dof)
-        
+
         #: YY: since self.coefficients.q_H_vof is modified after solving vof model
         if self.coefficients.mass_correction_reference>0:
             self.coefficients.q_phi_old[:] = self.coefficients.q_u_ls
-            
+
     def calculateSolutionAtQuadrature(self):
         pass
     def updateAfterMeshMotion(self):
