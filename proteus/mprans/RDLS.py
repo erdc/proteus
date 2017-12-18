@@ -660,7 +660,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
-             self.timeIntegration = TimeIntegrationClass(self)
+            self.timeIntegration = TimeIntegrationClass(self)
 
         if options is not None:
             self.timeIntegration.setFromOptions(options)
@@ -751,7 +751,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                self.nElementBoundaryQuadraturePoints_elementBoundary,
                                compKernelFlag)
-        
+
     def calculateCoefficients(self):
         pass
     def calculateElementResidual(self):
@@ -866,8 +866,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #import superluWrappers
         #import numpy
         import pdb
-	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-				       jacobian)
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       jacobian)
         #for  now force time integration
         useTimeIntegration = 1
         if self.timeIntegration.__class__ == TimeIntegration.NoIntegration or not self.timeTerm:
@@ -940,7 +940,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
-        
+
         This function should be called only when the mesh changes.
         """
         #self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
@@ -967,7 +967,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         #get physical locations of element boundary quadrature points
         #
-	#assume all components live on the same mesh
+        #assume all components live on the same mesh
         self.u[0].femSpace.elementMaps.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
@@ -1065,4 +1065,4 @@ def setZeroLSweakDirichletBCsSimple(RDLSvt):
                                                                            RDLSvt.u[0].dof,
                                                                            RDLSvt.dofFlag_element,#temporary storage
                                                                            RDLSvt.weakDirichletConditionFlags)
-        
+

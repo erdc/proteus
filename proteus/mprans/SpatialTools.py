@@ -1224,7 +1224,7 @@ class TankWithObstacles2D(Tank2D):
         To use only if hole=False.(x,y) coordinates of a point inside the 
         obstacle in order to fill the obstacle with what should be inside 
         (for example a porous material).
-        
+
     """
     def __init__(self, domain, dim=(0., 0.),
                  obstacles = None, special_boundaries = None,
@@ -1249,7 +1249,7 @@ class TankWithObstacles2D(Tank2D):
 
         self.corners = {'x-y-': False, 'x+y-': False,
                         'x+y+': False, 'x-y+': False}
-                        
+
         self.hole = hole
         self.obstacle_regions = obstacle_regions
         super(TankWithObstacles2D, self).__init__(domain, dim, coords, from_0)
@@ -1261,7 +1261,7 @@ class TankWithObstacles2D(Tank2D):
                 self.boundaryTags[boundary] = len(self.boundaryTags) + 1
                 self.BC[boundary] = self.BC_class(shape=self, name=boundary)
                 self.BC_list += [self.BC[boundary]]
-	# add boundaryTags
+        # add boundaryTags
         self.obstacle_flags = []
         max_flag = 0
         for tag, flag in self.boundaryTags.iteritems():
@@ -1277,7 +1277,7 @@ class TankWithObstacles2D(Tank2D):
             flag += 1
         if self.hole is False:
             assert len(self.obstacles) == len(self.obstacle_regions), 'must have same number of regions as obstacles'
-            
+
     def _resetEdgesFromVertices(self, vertices):
         """
         Resets self.x0, self.x1, self.y0, self.y1 based on the actual shape.
@@ -1464,9 +1464,9 @@ class TankWithObstacles2D(Tank2D):
                 vertexFlags += [self.boundaryTags[start]
                                 for i in range(len(obstacle))]
             elif self.hole is False:
-                 vertices += obstacle
-                 vertexFlags += [self.boundaryTags['obstacle'+str(nb+1)]
-                                 for i in range(len(obstacle))]
+                vertices += obstacle
+                vertexFlags += [self.boundaryTags['obstacle'+str(nb+1)]
+                                for i in range(len(obstacle))]
 
             # ---- Paperwork ---- #
             former_end = end
@@ -1566,10 +1566,10 @@ class TankWithObstacles2D(Tank2D):
 
             else:
                 if vertexFlags[start] in self.obstacle_flags:
-		    if vertexFlags[end] == vertexFlags[start]:
-		        return [vertexFlags[start], ]
-		    else:
-		        return [self.boundaryTags['y-'], ]
+                    if vertexFlags[end] == vertexFlags[start]:
+                        return [vertexFlags[start], ]
+                    else:
+                        return [self.boundaryTags['y-'], ]
                 elif vertexFlags[start] == self.boundaryTags['x+']:
                     if vertexFlags[end] == self.boundaryTags['x-']:
                         return [self.boundaryTags['y+'], ]
@@ -1657,19 +1657,19 @@ class TankWithObstacles2D(Tank2D):
         return segments, segmentFlags
 
     def _constructRegions(self, vertices, vertexFlags, segments, segmentFlags):
-    
+
         ind_region = 0
         self.regionIndice = {}
         regions = []
         regionFlags = []
-        
+
         if self.hole is False:
             for i, region in enumerate(self.obstacle_regions):
                 regions = [[region[0], region[1]]]
                 ind_region += 1
                 regionFlags = [ind_region,]
                 self.regionIndice['obstacle'+str(i+1)] = ind_region-1
-            
+
         if True in self.corners.values():
             regions += self._getCornerRegion()
         else:
@@ -1932,7 +1932,7 @@ def assembleDomain(domain):
     domain.bc[0].setNonMaterial()  # set BC for boundary between processors
     assembleAuxiliaryVariables(domain)
     if(domain.name != "PUMIDomain"):
-      _generateMesh(domain)
+        _generateMesh(domain)
 
 
 def assembleAuxiliaryVariables(domain):

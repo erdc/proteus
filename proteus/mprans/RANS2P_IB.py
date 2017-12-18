@@ -146,7 +146,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                 self.deflectionHistory=open("deflectionHistory.txt", "w")
 
     def postStep(self,t,firstStep=False):
-        
+
         self.beamDrag=np.array([0.0,0.0,0.0])
         if not self.beamRigid:
             self.updateBeams(t)
@@ -170,7 +170,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
             #self.forceHistory_drag.flush()
             #self.velocityAverage.write("%21.16e %21.16e %21.16e  %21.16e\n" %tuple([t,self.vel_avg[0], self.vel_avg[1], self.vel_avg[2]]))
             #self.velocityAverage.flush()
-            
+
             if self.beamRigid==False:
                 self.deflectionHistory.write("%21.16e %21.16e %21.16e %21.16e\n" %tuple([t, self.avgHeight, self.avgDeflection, self.avgAngle]))
                 self.deflectionHistory.flush()
@@ -210,9 +210,9 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                         self.beamDrag[2]+= self.Beam_Solver[I].Q1[0]
         for i in range(3):
             self.beamDrag.flat[i] = globalSum(self.beamDrag.flat[i])
- 
-                                                                                                    
-                    
+
+
+
     def updateBeams(self,t):
         from proteus.flcbdfWrappers import globalSum
         self.beamDrag = np.array([0.0,0.0,0.0])
@@ -280,7 +280,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         self.beamDrag[0] = globalSum(self.beamDrag[0])
         self.beamDrag[1] = globalSum(self.beamDrag[1])
         self.beamDrag[2] = globalSum(self.beamDrag[2])
-                                     
+
         for i in range(self.nBeams*(self.nBeamElements+1)):
             self.xv.flat[i] = globalSum(self.xv.flat[i])
             self.yv.flat[i] = globalSum(self.yv.flat[i])
@@ -289,8 +289,8 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
             self.xq.flat[i] = globalSum(self.xq.flat[i])
             self.yq.flat[i] = globalSum(self.yq.flat[i])
             self.zq.flat[i] = globalSum(self.zq.flat[i])
-                
-        
+
+
         if self.nBeams > 0 and self.comm.isMaster():
             Archive_time_step(Beam_x=self.xv,
                               Beam_y=self.yv,
@@ -313,9 +313,9 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
             self.avgHeight = np.sum(self.zv[:,-1])/float(self.nBeams)
             self.avgDeflection = np.sum(np.abs(self.xv[:,-1]-self.xv[:,0]))/float(self.nBeams)
             self.avgAngle = np.sum(np.rad2deg(np.arctan((self.zv[:,-1]-self.zv[:,-2])/(self.xv[:,-1]-self.xv[:,-2]))))/float(self.nBeams)
-                
 
-                    
+
+
     def initializeBeams(self):
         comm = Comm.get()
         self.comm=comm
@@ -336,7 +336,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
 
         #element diameters
         self.Beam_h = np.zeros((self.nBeams, self.nBeamElements))
-        
+
         #eulerian coords for beam at quadrataure points
         self.xq=np.zeros((self.nBeams, self.nBeamElements,self.beam_quadOrder))
         self.yq=np.zeros((self.nBeams, self.nBeamElements,self.beam_quadOrder))
@@ -346,7 +346,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         self.dV_beam = np.zeros((self.nBeams, self.nBeamElements,self.beam_quadOrder))
 
         self.Beam_mesh=np.zeros((self.nBeams, self.nBeamElements+1))
-        
+
         self.Beam_Solver=[]
         boxCount=0
         for i in range(self.nBeams):
@@ -369,15 +369,15 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
             self.Beam_Solver[i].initializePhi()
             self.Beam_Solver[i].initializeCoords()
             if self.nd==3:
-		self.xv[i,:], self.yv[i,:], self.zv[i,:] = self.Beam_Solver[i].updateCoords()
+                self.xv[i,:], self.yv[i,:], self.zv[i,:] = self.Beam_Solver[i].updateCoords()
             elif self.nd==2:
-		self.zv[i,:], self.yv[i,:], self.xv[i,:] = self.Beam_Solver[i].updateCoords()
+                self.zv[i,:], self.yv[i,:], self.xv[i,:] = self.Beam_Solver[i].updateCoords()
                 self.xv[i,:]+= 0.2
             #self.xv[i,:], self.yv[i,:], self.zv[i,:] = self.Beam_Solver[i].updateCoords()
             for j in range(self.nBeamElements):
                 for k in range(self.beam_quadOrder):
                     self.dV_beam[i,j,k] = 0.5*self.Beam_h[i,j]*self.Beam_Solver[i].w[k]
-           
+
             if self.nd==3:
                 self.xq[i,:].flat[:], self.yq[i,:].flat[:], self.zq[i,:].flat[:] = self.Beam_Solver[i].getCoords_at_Quad()
             elif self.nd==2:
@@ -395,8 +395,8 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                                   tStep=self.tStep)
             self.tStep+=1
         print boxCount
-   
-        
+
+
     pass
 
 class LevelModel(proteus.mprans.RANS2P.LevelModel):
@@ -536,31 +536,31 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         #cek come back
         if self.stabilization is not None:
             for ci in range(self.nc):
-        	if coefficients.mass.has_key(ci):
-        	    for flag in coefficients.mass[ci].values():
-        		if flag == 'nonlinear':
-        		    self.stabilizationIsNonlinear=True
-        	if  coefficients.advection.has_key(ci):
-        	    for  flag  in coefficients.advection[ci].values():
-        		if flag == 'nonlinear':
-        		    self.stabilizationIsNonlinear=True
-        	if  coefficients.diffusion.has_key(ci):
-        	    for diffusionDict in coefficients.diffusion[ci].values():
-        		for  flag  in diffusionDict.values():
-        		    if flag != 'constant':
-        			self.stabilizationIsNonlinear=True
-        	if  coefficients.potential.has_key(ci):
-        	    for flag in coefficients.potential[ci].values():
-        		if  flag == 'nonlinear':
-        		    self.stabilizationIsNonlinear=True
-        	if coefficients.reaction.has_key(ci):
-        	    for flag in coefficients.reaction[ci].values():
-        		if  flag == 'nonlinear':
-        		    self.stabilizationIsNonlinear=True
-        	if coefficients.hamiltonian.has_key(ci):
-        	    for flag in coefficients.hamiltonian[ci].values():
-        		if  flag == 'nonlinear':
-        		    self.stabilizationIsNonlinear=True
+                if coefficients.mass.has_key(ci):
+                    for flag in coefficients.mass[ci].values():
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  coefficients.advection.has_key(ci):
+                    for  flag  in coefficients.advection[ci].values():
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  coefficients.diffusion.has_key(ci):
+                    for diffusionDict in coefficients.diffusion[ci].values():
+                        for  flag  in diffusionDict.values():
+                            if flag != 'constant':
+                                self.stabilizationIsNonlinear=True
+                if  coefficients.potential.has_key(ci):
+                    for flag in coefficients.potential[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if coefficients.reaction.has_key(ci):
+                    for flag in coefficients.reaction[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if coefficients.hamiltonian.has_key(ci):
+                    for flag in coefficients.hamiltonian[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
@@ -903,8 +903,8 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
-             self.timeIntegration = TimeIntegrationClass(self)
-           
+            self.timeIntegration = TimeIntegrationClass(self)
+
         if options is not None:
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
@@ -1032,7 +1032,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
                                        self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
                                        compKernelFlag)
-        
+
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -1077,7 +1077,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         self.r = r
         #self.beamStep()
         # self.coefficients.beamDrag=np.array([0.0,0.0,0.0])
-        
+
         # self.coefficients.updateBeamLoad()
         # print self.coefficients.beamDrag
         # import pdb
@@ -1242,17 +1242,17 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.coefficients.ebqe_dragBeam1,
             self.coefficients.ebqe_dragBeam2,
             self.coefficients.ebqe_dragBeam3)
-	from proteus.flcbdfWrappers import globalSum
+        from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
             for I in range(3):
                 self.coefficients.netForces_p[i,I]  = globalSum(self.coefficients.netForces_p[i,I]) 
                 self.coefficients.netForces_v[i,I]  = globalSum(self.coefficients.netForces_v[i,I]) 
                 self.coefficients.netMoments[i,I] = globalSum(self.coefficients.netMoments[i,I]) 
-	if self.forceStrongConditions:#
-	    for cj in range(len(self.dirichletConditionsForceDOF)):#
-		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
+        if self.forceStrongConditions:#
+            for cj in range(len(self.dirichletConditionsForceDOF)):#
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    r[self.offset[cj]+self.stride[cj]*dofN] = 0
         cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
         logEvent("Maximum CFL = " + str(cflMax),level=2)
         if self.stabilization:
@@ -1261,8 +1261,8 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
     def getJacobian(self,jacobian):
-	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-				       jacobian)
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       jacobian)
         if self.nSpace_global == 2:
             self.csrRowIndeces[(0,3)]  = self.csrRowIndeces[(0,2)]
             self.csrColumnOffsets[(0,3)] = self.csrColumnOffsets[(0,2)]
@@ -1285,7 +1285,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.csrColumnOffsets_eb[(3,1)] = self.csrColumnOffsets[(0,2)]
             self.csrColumnOffsets_eb[(3,2)] = self.csrColumnOffsets[(0,2)]
             self.csrColumnOffsets_eb[(3,3)] = self.csrColumnOffsets[(0,2)]
-  
+
         self.rans2p.calculateJacobian(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1671,7 +1671,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.coefficients.netBeamDrag)
         #import pdb
         #pdb.set_trace()
- 
+
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.nBeams):
             for j in range(self.coefficients.nBeamElements):
@@ -1685,4 +1685,4 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         self.coefficients.vel_avg=self.coefficients.vel_avg/0.1472
         self.coefficients.netBeamDrag[0] = globalSum(self.coefficients.netBeamDrag[0])
 
-        
+

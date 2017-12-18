@@ -52,7 +52,7 @@ cdef extern from "MoveMesh.h" namespace "proteus":
                                double* ebqe_bc_stressFlux_u_ext,
                                double* ebqe_bc_stressFlux_v_ext,
                                double* ebqe_bc_stressFlux_w_ext)
-			       
+
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -107,7 +107,7 @@ cdef extern from "MoveMesh.h" namespace "proteus":
                                int* csrColumnOffsets_eb_w_u,
                                int* csrColumnOffsets_eb_w_v,
                                int* csrColumnOffsets_eb_w_w)
-			       
+
 
 
     MoveMesh_base* newMoveMesh(int nSpaceIn,

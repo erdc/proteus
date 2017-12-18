@@ -117,7 +117,7 @@ Chaper 11 or k-omega (Wilcox 1998).
 # \Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
 # \ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
 #                                         1/2 (u_y + v_x)^2 \right]
-   
+
 # 4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
 #                                 1/2 (u_y + v_x)^2 \right]
 #           = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
@@ -142,7 +142,7 @@ Chaper 11 or k-omega (Wilcox 1998).
                  nd=3,
                  epsFact=0.01,useMetrics=0.0,sc_uref=1.0,sc_beta=1.0,default_kappa=1.0e-3):
         self.useMetrics = useMetrics
-	self.dissipation_model_flag = dissipation_model_flag #default K-Epsilon, 2 ==> K-Omega 1998, 3 --> K-Omega 1988
+        self.dissipation_model_flag = dissipation_model_flag #default K-Epsilon, 2 ==> K-Omega 1998, 3 --> K-Omega 1988
         self.variableNames=['epsilon']
         if self.dissipation_model_flag >= 2:
             self.variableNames=['omega']
@@ -184,21 +184,21 @@ Chaper 11 or k-omega (Wilcox 1998).
         self.RD_modelIndex=RD_model
         self.LS_modelIndex=LS_model
         self.kappa_modelIndex = kappa_model
-	self.sc_uref=sc_uref
-	self.sc_beta=sc_beta	
+        self.sc_uref=sc_uref
+        self.sc_beta=sc_beta	
         #for debugging model
         self.default_kappa = default_kappa
-	
+
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def attachModels(self,modelList):
         assert self.modelIndex is not None and self.modelIndex < len(modelList), "Dissipation: invalid index for self model allowed range: [0,%s]" % len(modelList)
         #self
         self.model = modelList[self.modelIndex]
-	
-	#self.u_old_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
-	self.u_old_dof = numpy.copy(self.model.u[0].dof)
-	
+
+        #self.u_old_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
+        self.u_old_dof = numpy.copy(self.model.u[0].dof)
+
         #redistanced level set
         if self.RD_modelIndex is not None:
             self.rdModel = modelList[self.RD_modelIndex]
@@ -274,7 +274,7 @@ Chaper 11 or k-omega (Wilcox 1998).
                 self.velocity_dof_w = numpy.zeros(self.model.u[0].dof.shape,'d')
             self.q_porosity = numpy.ones(self.q[('u',0)].shape,'d')
             self.ebqe_porosity = numpy.ones(self.ebqe[('u',0)].shape,'d')
-            
+
         #
         #assert self.kappa_modelIndex is not None and self.kappa_modelIndex < len(modelList), "Dissipation: invalid index for dissipation model allowed range: [0,%s]" % len(modelList) 
         if self.kappa_modelIndex is not None: #keep for debugging for now
@@ -288,7 +288,7 @@ Chaper 11 or k-omega (Wilcox 1998).
             self.q_kappa = numpy.zeros(self.model.q[('u',0)].shape,'d'); self.q_kappa.fill(self.default_kappa); 
             self.ebqe_kappa = numpy.zeros(self.model.ebqe[('u',0)].shape,'d'); self.ebqe_kappa.fill(self.default_kappa)
             self.q_grad_kappa = numpy.zeros(self.model.q[('grad(u)',0)].shape,'d'); 
-             
+
             if self.model.ebq.has_key(('u',0)):
                 self.ebq_kappa = numpy.zeros(self.model.ebq[('u',0)].shape,'d')
                 self.ebq_kappa.fill(self.default_kappa)
@@ -332,7 +332,7 @@ Chaper 11 or k-omega (Wilcox 1998).
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):    
-	self.u_old_dof = numpy.copy(self.model.u[0].dof)	 
+        self.u_old_dof = numpy.copy(self.model.u[0].dof)	 
         copyInstructions = {}
         return copyInstructions
     def updateToMovingDomain(self,t,c):
@@ -479,33 +479,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization is not None:
-	    for ci in range(self.nc):
-		if coefficients.mass.has_key(ci):
-		    for flag in coefficients.mass[ci].values():
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  coefficients.advection.has_key(ci):
-		    for  flag  in coefficients.advection[ci].values():
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  coefficients.diffusion.has_key(ci):
-		    for diffusionDict in coefficients.diffusion[ci].values():
-			for  flag  in diffusionDict.values():
-			    if flag != 'constant':
-				self.stabilizationIsNonlinear=True
-		if  coefficients.potential.has_key(ci):
- 		    for flag in coefficients.potential[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if coefficients.reaction.has_key(ci):
-		    for flag in coefficients.reaction[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if coefficients.hamiltonian.has_key(ci):
-		    for flag in coefficients.hamiltonian[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
+        if self.stabilization is not None:
+            for ci in range(self.nc):
+                if coefficients.mass.has_key(ci):
+                    for flag in coefficients.mass[ci].values():
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  coefficients.advection.has_key(ci):
+                    for  flag  in coefficients.advection[ci].values():
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  coefficients.diffusion.has_key(ci):
+                    for diffusionDict in coefficients.diffusion[ci].values():
+                        for  flag  in diffusionDict.values():
+                            if flag != 'constant':
+                                self.stabilizationIsNonlinear=True
+                if  coefficients.potential.has_key(ci):
+                    for flag in coefficients.potential[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if coefficients.reaction.has_key(ci):
+                    for flag in coefficients.reaction[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if coefficients.hamiltonian.has_key(ci):
+                    for flag in coefficients.hamiltonian[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
@@ -514,7 +514,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
-	#
+        #
         #calculate some dimensions
         #
         self.nSpace_global    = self.u[0].femSpace.nSpace_global #assume same space dim for all variables
@@ -658,15 +658,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
         self.tensors_elementBoundaryQuadrature= set()
-	self.inflowBoundaryBC = {}
-	self.inflowBoundaryBC_values = {}
-	self.inflowFlux = {}
- 	for cj in range(self.nc):
- 	    self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
- 	    self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
- 	    self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.inflowBoundaryBC = {}
+        self.inflowBoundaryBC_values = {}
+        self.inflowFlux = {}
+        for cj in range(self.nc):
+            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
+            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
+            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.internalNodes = set(range(self.mesh.nNodes_global))
-	#identify the internal nodes this is ought to be in mesh
+        #identify the internal nodes this is ought to be in mesh
         ##\todo move this to mesh
         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -691,8 +691,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
-             self.timeIntegration = TimeIntegrationClass(self)
-           
+            self.timeIntegration = TimeIntegrationClass(self)
+
         if options is not None:
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
@@ -753,7 +753,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if self.coefficients.advection.has_key(ci):
                     self.ebqe[('advectiveFlux_bc',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                     self.ebqe[('advectiveFlux_bc_flag',ci)][t[0],t[1]] = 1
-        
+
             for ck,diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.iteritems():
                 self.ebqe[('diffusiveFlux_bc_flag',ck,ci)] = numpy.zeros(self.ebqe[('diffusiveFlux_bc',ck,ci)].shape,'i')
                 for t,g in diffusiveFluxBoundaryConditionsDict.iteritems():
@@ -835,8 +835,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
         if self.forceStrongConditions:
-              for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
-                  self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+            for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
+                self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         #
         #mwf debug
         #import pdb
@@ -877,16 +877,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.rho_1,
             self.coefficients.dissipation_model_flag,
             #end diffusion
-	    self.coefficients.useMetrics, 
+            self.coefficients.useMetrics, 
             self.timeIntegration.alpha_bdf,
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
-	    self.coefficients.sc_uref, 
-	    self.coefficients.sc_beta,
+            self.coefficients.sc_uref, 
+            self.coefficients.sc_beta,
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.u[0].dof,
-	    self.coefficients.u_old_dof,
+            self.coefficients.u_old_dof,
             self.coefficients.q_v,
             self.coefficients.q_phi, #level set variable goes here
             self.coefficients.q_kappa, #dissipation rate variable
@@ -924,9 +924,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('u',0)],
             self.ebqe[('advectiveFlux',0)])
 
-	if self.forceStrongConditions:#
-	    for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
-                     r[dofN] = 0
+        if self.forceStrongConditions:#
+            for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
+                r[dofN] = 0
 
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
@@ -936,8 +936,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
-	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-				       jacobian)
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       jacobian)
         self.dissipation.calculateJacobian(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -973,7 +973,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.rho_1,
             self.coefficients.dissipation_model_flag,
             #end diffusion
-	    self.coefficients.useMetrics, 
+            self.coefficients.useMetrics, 
             self.timeIntegration.alpha_bdf,
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
@@ -1019,16 +1019,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.forceStrongConditions:
             scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
             for dofN in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.keys():
-                    global_dofN = dofN
-                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
-                        if (self.colind[i] == global_dofN):
+                global_dofN = dofN
+                for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
+                    if (self.colind[i] == global_dofN):
                             #print "RBLES forcing residual cj = %s dofN= %s global_dofN= %s was self.nzval[i]= %s now =%s " % (cj,dofN,global_dofN,self.nzval[i],scaling)
-                            self.nzval[i] = scaling
-                        else:
-                            self.nzval[i] = 0.0
-                            #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
-			    
-			    
+                        self.nzval[i] = scaling
+                    else:
+                        self.nzval[i] = 0.0
+                        #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
+
+
 
         logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
@@ -1038,7 +1038,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
-        
+
         This function should be called only when the mesh changes.
         """
         #self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
@@ -1065,7 +1065,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         #get physical locations of element boundary quadrature points
         #
-	#assume all components live on the same mesh
+        #assume all components live on the same mesh
         self.u[0].femSpace.elementMaps.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)

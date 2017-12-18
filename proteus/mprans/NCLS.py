@@ -48,7 +48,7 @@ class NumericalFlux(proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart)
         proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.__init__(self,vt,getPointwiseBoundaryConditions,
                                                                              getAdvectiveFluxBoundaryConditions,
                                                                              getDiffusiveFluxBoundaryConditions)
-        
+
 class RKEV(proteus.TimeIntegration.SSP):
     """
     Wrapper for SSPRK time integration using EV
@@ -72,7 +72,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         # per component stage values, list with array at each stage
         self.u_dof_stage = {}
         for ci in range(self.nc):
-             if transport.q.has_key(('m',ci)):
+            if transport.q.has_key(('m',ci)):
                 self.u_dof_last[ci] = transport.u[ci].dof.copy()
                 self.u_dof_stage[ci] = []
                 for k in range(self.nStages+1):                    
@@ -94,7 +94,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.tLast=t0
         self.choose_dt()
         self.t = t0+self.dt
- 
+
     def setCoefficients(self):
         """
         beta are all 1's here
@@ -102,7 +102,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         """
         self.alpha = numpy.zeros((self.nStages, self.nStages),'d')
         self.dcoefs = numpy.zeros((self.nStages),'d')
-        
+
     def updateStage(self):
         """
         Need to switch to use coefficients
@@ -159,14 +159,14 @@ class RKEV(proteus.TimeIntegration.SSP):
             assert self.timeOrder == 1
             for ci in range(self.nc):
                 self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
- 
+
     def initializeTimeHistory(self,resetFromDOF=True):
         """
         Push necessary information into time history arrays
         """
         for ci in range(self.nc):
             self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
- 
+
     def updateTimeHistory(self,resetFromDOF=False):
         """
         assumes successful step has been taken
@@ -202,7 +202,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         # per component stage values, list with array at each stage
         self.u_dof_stage = {}
         for ci in range(self.nc):
-             if self.transport.q.has_key(('m',ci)):
+            if self.transport.q.has_key(('m',ci)):
                 self.u_dof_stage[ci] = []
                 for k in range(self.nStages+1):                    
                     self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
@@ -731,7 +731,7 @@ class LevelModel(OneLevelTransport):
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
-             self.timeIntegration = TimeIntegrationClass(self)
+            self.timeIntegration = TimeIntegrationClass(self)
 
         if options is not None:
             self.timeIntegration.setFromOptions(options)
@@ -1151,8 +1151,8 @@ class LevelModel(OneLevelTransport):
         #flux boundary conditions, SHOULDN'T HAVE
 
         if self.forceStrongConditions:
-              for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
-                  self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+            for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
+                self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
 
         degree_polynomial = 1
         try:
@@ -1255,7 +1255,7 @@ class LevelModel(OneLevelTransport):
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
-    
+
         if (self.auxiliaryCallCalculateResidual==False):
             edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
             cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
@@ -1346,7 +1346,7 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.ebqe[('u',0)],
             self.csrColumnOffsets_eb[(0,0)], 
             self.mesh.h)
-        
+
     def getJacobian(self,jacobian):
         #import superluWrappers
         #import numpy
@@ -1416,14 +1416,14 @@ class LevelModel(OneLevelTransport):
         if self.forceStrongConditions:
             scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for dofN in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.keys():
-                    global_dofN = dofN
-                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
-                        if (self.colind[i] == global_dofN):
+                global_dofN = dofN
+                for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
+                    if (self.colind[i] == global_dofN):
                             #print "RBLES forcing residual cj = %s dofN= %s global_dofN= %s was self.nzval[i]= %s now =%s " % (cj,dofN,global_dofN,self.nzval[i],scaling)
-                            self.nzval[i] = scaling
-                        else:
-                            self.nzval[i] = 0.0
-                            #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
+                        self.nzval[i] = scaling
+                    else:
+                        self.nzval[i] = 0.0
+                        #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
 
 
         logEvent("Jacobian ",level=10,data=jacobian)
@@ -1485,67 +1485,67 @@ class LevelModel(OneLevelTransport):
     def computeWaterline(self, t):
         self.waterline_calls += 1
         if self.coefficients.waterline_interval > 0 and self.waterline_calls%self.coefficients.waterline_interval == 0:
-                self.waterline_npoints = numpy.zeros((1,),'i')
-                self.waterline_data    = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nSpace_global),'d')
-                self.ncls.calculateWaterline(#element
-                   self.waterline_npoints,
-                   self.waterline_data,
-                   self.u[0].femSpace.elementMaps.psi,
-                   self.u[0].femSpace.elementMaps.grad_psi,
-                   self.mesh.nodeArray,
-                   self.mesh.nodeVelocityArray,
-                   self.MOVING_DOMAIN,
-                   self.mesh.elementNodesArray,
-                   self.elementQuadratureWeights[('u',0)],
-                   self.u[0].femSpace.psi,
-                   self.u[0].femSpace.grad_psi,
-                   self.u[0].femSpace.psi,
-                   self.u[0].femSpace.grad_psi,
-            #element boundary
-                   self.u[0].femSpace.elementMaps.psi_trace,
-                   self.u[0].femSpace.elementMaps.grad_psi_trace,
-                   self.elementBoundaryQuadratureWeights[('u',0)],
-                   self.u[0].femSpace.psi_trace,
-                   self.u[0].femSpace.grad_psi_trace,
-                   self.u[0].femSpace.psi_trace,
-                   self.u[0].femSpace.grad_psi_trace,
-                   self.u[0].femSpace.elementMaps.boundaryNormals,
-                   self.u[0].femSpace.elementMaps.boundaryJacobians,
-            #physics
-                   self.mesh.nElements_global,
-                   self.coefficients.useMetrics,
-                   self.timeIntegration.alpha_bdf,#mwf was self.timeIntegration.dt,
-                   self.shockCapturing.lag,
-                   self.shockCapturing.shockCapturingFactor,
-                   self.coefficients.sc_uref,
-                   self.coefficients.sc_beta,
-                   self.u[0].femSpace.dofMap.l2g,
-                   self.mesh.elementDiametersArray,
-                   self.u[0].dof,
-                   self.u_dof_old,
-                   self.coefficients.q_v,
-                   self.timeIntegration.m_tmp[0],
-                   self.q[('u',0)],
-                   self.q[('grad(u)',0)],
-                   self.q[('dH_sge',0,0)],
-                   self.timeIntegration.beta_bdf[0],#mwf was self.timeIntegration.m_last[0],
-                   self.q[('cfl',0)],
-                   self.shockCapturing.numDiff[0],
-                   self.shockCapturing.numDiff_last[0],
-                   self.offset[0],self.stride[0],
-                   self.mesh.nExteriorElementBoundaries_global,
-                   self.mesh.exteriorElementBoundariesArray,
-                   self.mesh.elementBoundaryElementsArray,
-                   self.mesh.elementBoundaryLocalElementBoundariesArray,
-                   self.mesh.elementBoundaryMaterialTypes,
-                   self.coefficients.ebqe_v,
-                   self.numericalFlux.isDOFBoundary[0],
-                   self.numericalFlux.ebqe[('u',0)],
-                   self.ebqe[('u',0)])
-                from proteus import Comm
-                comm = Comm.get()
-                filename = os.path.join(self.coefficients.opts.dataDir,  "waterline." + str(comm.rank()) + "." + str(self.waterline_prints))
-                numpy.save(filename, self.waterline_data[0:self.waterline_npoints[0]])
-                self.waterline_prints += 1
+            self.waterline_npoints = numpy.zeros((1,),'i')
+            self.waterline_data    = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nSpace_global),'d')
+            self.ncls.calculateWaterline(#element
+               self.waterline_npoints,
+               self.waterline_data,
+               self.u[0].femSpace.elementMaps.psi,
+               self.u[0].femSpace.elementMaps.grad_psi,
+               self.mesh.nodeArray,
+               self.mesh.nodeVelocityArray,
+               self.MOVING_DOMAIN,
+               self.mesh.elementNodesArray,
+               self.elementQuadratureWeights[('u',0)],
+               self.u[0].femSpace.psi,
+               self.u[0].femSpace.grad_psi,
+               self.u[0].femSpace.psi,
+               self.u[0].femSpace.grad_psi,
+        #element boundary
+               self.u[0].femSpace.elementMaps.psi_trace,
+               self.u[0].femSpace.elementMaps.grad_psi_trace,
+               self.elementBoundaryQuadratureWeights[('u',0)],
+               self.u[0].femSpace.psi_trace,
+               self.u[0].femSpace.grad_psi_trace,
+               self.u[0].femSpace.psi_trace,
+               self.u[0].femSpace.grad_psi_trace,
+               self.u[0].femSpace.elementMaps.boundaryNormals,
+               self.u[0].femSpace.elementMaps.boundaryJacobians,
+        #physics
+               self.mesh.nElements_global,
+               self.coefficients.useMetrics,
+               self.timeIntegration.alpha_bdf,#mwf was self.timeIntegration.dt,
+               self.shockCapturing.lag,
+               self.shockCapturing.shockCapturingFactor,
+               self.coefficients.sc_uref,
+               self.coefficients.sc_beta,
+               self.u[0].femSpace.dofMap.l2g,
+               self.mesh.elementDiametersArray,
+               self.u[0].dof,
+               self.u_dof_old,
+               self.coefficients.q_v,
+               self.timeIntegration.m_tmp[0],
+               self.q[('u',0)],
+               self.q[('grad(u)',0)],
+               self.q[('dH_sge',0,0)],
+               self.timeIntegration.beta_bdf[0],#mwf was self.timeIntegration.m_last[0],
+               self.q[('cfl',0)],
+               self.shockCapturing.numDiff[0],
+               self.shockCapturing.numDiff_last[0],
+               self.offset[0],self.stride[0],
+               self.mesh.nExteriorElementBoundaries_global,
+               self.mesh.exteriorElementBoundariesArray,
+               self.mesh.elementBoundaryElementsArray,
+               self.mesh.elementBoundaryLocalElementBoundariesArray,
+               self.mesh.elementBoundaryMaterialTypes,
+               self.coefficients.ebqe_v,
+               self.numericalFlux.isDOFBoundary[0],
+               self.numericalFlux.ebqe[('u',0)],
+               self.ebqe[('u',0)])
+            from proteus import Comm
+            comm = Comm.get()
+            filename = os.path.join(self.coefficients.opts.dataDir,  "waterline." + str(comm.rank()) + "." + str(self.waterline_prints))
+            numpy.save(filename, self.waterline_data[0:self.waterline_npoints[0]])
+            self.waterline_prints += 1
     def updateAfterMeshMotion(self):
         pass

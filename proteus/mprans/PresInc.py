@@ -152,7 +152,7 @@ class Coefficients(TC_base):
             vos = self.fluidModel.coefficients.ebqe_vos
             rho_s = self.fluidModel.coefficients.rho_s
             rho_f = self.fluidModel.coefficients.ebqe_rho
-        
+
         assert rho_s >= self.rho_s_min, "solid density out of bounds"
         assert (rho_f >= self.rho_f_min).all(), "fluid density out of bounds"
         for i in range(vs.shape[-1]):
@@ -718,7 +718,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 0].diffusiveFluxBoundaryConditionsDictDict[0].iteritems():
             self.ebqe[('diffusiveFlux_bc',0,0)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
             self.ebqe[('diffusiveFlux_bc_flag',0,0)][t[0],t[1]] = 1
-            
+
         if self.coefficients.fixNullSpace:        
             self.u[0].dof[0] = 0
         self.presinc.calculateResidual(  # element

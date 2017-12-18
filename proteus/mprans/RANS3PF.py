@@ -188,17 +188,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  set_vos=None,
                  set_sed_velocity=None,
                  aDarcy=150.0,
-		 betaForch=0.0,
-		 grain=0.0102,
-		 packFraction=0.2,
-		 packMargin=0.01,
-		 maxFraction=0.635,
-		 frFraction=0.57,
+                 betaForch=0.0,
+                 grain=0.0102,
+                 packFraction=0.2,
+                 packMargin=0.01,
+                 maxFraction=0.635,
+                 frFraction=0.57,
                  sigmaC=1.1,
                  C3e=1.2,
                  C4e=1.0,
                  eR=0.8,
- 		 fContact=0.02,
+                 fContact=0.02,
                  mContact=2.0,
                  nContact=5.0,
                  angFriction=pi/6.0,
@@ -212,7 +212,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_velocityList=[],
                  granular_sdf_Calc=None,
                  granular_vel_Calc=None
-		 ):
+                 ):
         self.CORRECT_VELOCITY=CORRECT_VELOCITY
         self.nParticles=nParticles
         self.particle_nitsche=particle_nitsche
@@ -453,7 +453,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.model.q[('phis',i)] = self.particle_signed_distances[i]
                 self.model.q[('phis_vel',i)] = self.particle_velocities[i]
 
-	
+
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
             self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u',0)]
@@ -587,12 +587,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 for j in range(mesh.nodeArray.shape[0]):
                     sdf,sdNormals = self.granular_sdf_Calc(mesh.nodeArray[j,:],i)
                     if ( abs(sdf) < abs(self.phi_s[j]) ):
-                         self.phi_s[j]=sdf
+                        self.phi_s[j]=sdf
         else:
             for i,sdf in zip(range(self.nParticles),
                             self.particle_sdfList):
                 for j in range(mesh.nodeArray.shape[0]):
-                     self.phi_s[j],sdNormals=sdf(0,mesh.nodeArray[j,:])
+                    self.phi_s[j],sdNormals=sdf(0,mesh.nodeArray[j,:])
 
 
         # cek we eventually need to use the local element diameter
@@ -1015,8 +1015,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         self.particle_velocities[i,eN,k]=vel(t,self.model.q['x'][eN,k])
 
 
-         
-	if self.model.comm.isMaster():
+
+        if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
             self.forceHistory_p.flush()
@@ -1939,17 +1939,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.nElementBoundaryQuadraturePoints_elementBoundary,
                 compKernelFlag,
                 self.coefficients.aDarcy,
-		self.coefficients.betaForch,
-		self.coefficients.grain,
-		self.coefficients.packFraction,
-		self.coefficients.packMargin,
-		self.coefficients.maxFraction,
-		self.coefficients.frFraction,
+                self.coefficients.betaForch,
+                self.coefficients.grain,
+                self.coefficients.packFraction,
+                self.coefficients.packMargin,
+                self.coefficients.maxFraction,
+                self.coefficients.frFraction,
                 self.coefficients.sigmaC,
                 self.coefficients.C3e,
                 self.coefficients.C4e,
                 self.coefficients.eR,
- 		self.coefficients.fContact,
+                self.coefficients.fContact,
                 self.coefficients.mContact,
                 self.coefficients.nContact,
                 self.coefficients.angFriction)
@@ -1964,21 +1964,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.nElementBoundaryQuadraturePoints_elementBoundary,
                 compKernelFlag,
                 self.coefficients.aDarcy,
-		self.coefficients.betaForch,
-		self.coefficients.grain,
-		self.coefficients.packFraction,
-		self.coefficients.packMargin,
-		self.coefficients.maxFraction,
-		self.coefficients.frFraction,
+                self.coefficients.betaForch,
+                self.coefficients.grain,
+                self.coefficients.packFraction,
+                self.coefficients.packMargin,
+                self.coefficients.maxFraction,
+                self.coefficients.frFraction,
                 self.coefficients.sigmaC,
                 self.coefficients.C3e,
                 self.coefficients.C4e,
                 self.coefficients.eR,
- 		self.coefficients.fContact,
+                self.coefficients.fContact,
                 self.coefficients.mContact,
                 self.coefficients.nContact,
                 self.coefficients.angFriction)
-        
+
 
         self.phisErrorNodal=self.u[0].dof.copy()
         self.velocityErrorNodal=self.u[0].dof.copy()
@@ -2078,9 +2078,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[
                         cj].DOFBoundaryConditionsDict.iteritems():
-                        self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
-                            dofN], self.timeIntegration.t)# + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
-                        
+                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
+                        dofN], self.timeIntegration.t)# + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+
         if self.coefficients.set_vos:
             self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
             self.coefficients.set_vos(self.ebqe['x'],self.coefficients.ebqe_vos)
@@ -2239,7 +2239,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else: 
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
-        
+
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2437,14 +2437,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_nu,
             self.coefficients.ebqe_nu,
             self.coefficients.nParticles,
-	    self.coefficients.particle_epsFact,
-	    self.coefficients.particle_alpha,
-	    self.coefficients.particle_beta,
-	    self.coefficients.particle_penalty_constant,
-	    self.coefficients.particle_signed_distances,
-	    self.coefficients.particle_signed_distance_normals,
-	    self.coefficients.particle_velocities,
-	    self.coefficients.particle_centroids,
+            self.coefficients.particle_epsFact,
+            self.coefficients.particle_alpha,
+            self.coefficients.particle_beta,
+            self.coefficients.particle_penalty_constant,
+            self.coefficients.particle_signed_distances,
+            self.coefficients.particle_signed_distance_normals,
+            self.coefficients.particle_velocities,
+            self.coefficients.particle_centroids,
             self.coefficients.particle_netForces,
             self.coefficients.particle_netMoments,
             self.coefficients.particle_surfaceArea,
@@ -2743,14 +2743,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 2)],
             self.mesh.elementMaterialTypes,
             self.coefficients.nParticles,
-	    self.coefficients.particle_epsFact,
-	    self.coefficients.particle_alpha,
-	    self.coefficients.particle_beta,
-	    self.coefficients.particle_penalty_constant,
-	    self.coefficients.particle_signed_distances,
-	    self.coefficients.particle_signed_distance_normals,
-	    self.coefficients.particle_velocities,
-	    self.coefficients.particle_centroids,
+            self.coefficients.particle_epsFact,
+            self.coefficients.particle_alpha,
+            self.coefficients.particle_beta,
+            self.coefficients.particle_penalty_constant,
+            self.coefficients.particle_signed_distances,
+            self.coefficients.particle_signed_distance_normals,
+            self.coefficients.particle_velocities,
+            self.coefficients.particle_centroids,
             self.coefficients.particle_nitsche, 
             self.KILL_PRESSURE_TERM,
             self.hasMaterialParametersAsFunctions, 
