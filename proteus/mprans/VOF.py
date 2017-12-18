@@ -73,7 +73,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         # per component stage values, list with array at each stage
         self.u_dof_stage = {}
         for ci in range(self.nc):
-             if transport.q.has_key(('m',ci)):
+            if transport.q.has_key(('m',ci)):
                 self.u_dof_last[ci] = transport.u[ci].dof.copy()
                 self.u_dof_stage[ci] = []
                 for k in range(self.nStages+1):
@@ -208,7 +208,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         # per component stage values, list with array at each stage
         self.u_dof_stage = {}
         for ci in range(self.nc):
-             if self.transport.q.has_key(('m',ci)):
+            if self.transport.q.has_key(('m',ci)):
                 self.u_dof_stage[ci] = []
                 for k in range(self.nStages+1):
                     self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
@@ -803,7 +803,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
-             self.timeIntegration = TimeIntegrationClass(self)
+            self.timeIntegration = TimeIntegrationClass(self)
 
         if options is not None:
             self.timeIntegration.setFromOptions(options)
@@ -1182,8 +1182,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag',0)][t[0],t[1]] = 1
 
         if self.forceStrongConditions:
-              for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
-                  self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+            for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
+                self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
 
         degree_polynomial = 1
         try:
@@ -1386,14 +1386,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.forceStrongConditions:
             scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for dofN in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.keys():
-                    global_dofN = dofN
-                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
-                        if (self.colind[i] == global_dofN):
+                global_dofN = dofN
+                for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
+                    if (self.colind[i] == global_dofN):
                             #print "RBLES forcing residual cj = %s dofN= %s global_dofN= %s was self.nzval[i]= %s now =%s " % (cj,dofN,global_dofN,self.nzval[i],scaling)
-                            self.nzval[i] = scaling
-                        else:
-                            self.nzval[i] = 0.0
-                            #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
+                        self.nzval[i] = scaling
+                    else:
+                        self.nzval[i] = 0.0
+                        #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
         logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1

@@ -903,7 +903,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
-             self.timeIntegration = TimeIntegrationClass(self)
+            self.timeIntegration = TimeIntegrationClass(self)
 
         if options is not None:
             self.timeIntegration.setFromOptions(options)
@@ -1252,7 +1252,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         if self.forceStrongConditions:#
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
+                    r[self.offset[cj]+self.stride[cj]*dofN] = 0
         cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
         logEvent("Maximum CFL = " + str(cflMax),level=2)
         if self.stabilization:
