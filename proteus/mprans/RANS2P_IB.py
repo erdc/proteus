@@ -16,7 +16,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                  LS_model=None,
                  VF_model=None,
                  KN_model=None,
-                 Closure_0_model=None, #Turbulence closure model 
+                 Closure_0_model=None, #Turbulence closure model
                  Closure_1_model=None, #Second possible Turbulence closure model
                  epsFact_density=None,
                  stokes=False,
@@ -45,7 +45,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                  eb_adjoint_sigma=1.0,
                  eb_penalty_constant=10.0,
                  forceStrongDirichlet=False,
-                 turbulenceClosureModel=0, #0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega 
+                 turbulenceClosureModel=0, #0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega
                  smagorinskyConstant=0.1,
                  barycenters=None,
                  beamLocation = [],
@@ -71,7 +71,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                  LS_model=None,
                  VF_model=None,
                  KN_model=None,
-                 Closure_0_model=None, #Turbulence closure model 
+                 Closure_0_model=None, #Turbulence closure model
                  Closure_1_model=None, #Second possible Turbulence closure model
                  epsFact_density=None,
                  stokes=False,
@@ -100,7 +100,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                  eb_adjoint_sigma=1.0,
                  eb_penalty_constant=10.0,
                  forceStrongDirichlet=False,
-                 turbulenceClosureModel=0, #0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega 
+                 turbulenceClosureModel=0, #0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega
                  smagorinskyConstant=0.1,
                  barycenters=None)
         self.beamFilename = beamFilename
@@ -224,16 +224,16 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         yq_hold=np.copy(self.yq)
         zq_hold=np.copy(self.zq)
         for I in range(self.nBeams):
-            self.xv[I].flat = 0.0 
+            self.xv[I].flat = 0.0
             self.yv[I].flat = 0.0
             self.zv[I].flat = 0.0
-            self.xq[I].flat = 0.0 
+            self.xq[I].flat = 0.0
             self.yq[I].flat = 0.0
             self.zq[I].flat = 0.0
             if I%self.comm.size() == self.comm.rank():
                 if self.nd==3:
                     self.Beam_Solver[I].updateLoads(self.q1[I,:],self.q2[I,:], self.q3[I,:])
-                elif self.nd==2:                   
+                elif self.nd==2:
                     self.Beam_Solver[I].updateLoads(self.q3[I,:],self.q2[I,:], self.q1[I,:])
                 for j in range(loadSteps):
                     self.Beam_Solver[I].Phi.flat[:]=0.0
@@ -503,7 +503,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         self.lowmem=True
         self.timeTerm=True#allow turning off  the  time derivative
         self.testIsTrial=True
-        self.phiTrialIsTrial=True            
+        self.phiTrialIsTrial=True
         self.u = uDict
         self.Hess=False
         if isinstance(self.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
@@ -564,8 +564,8 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or 
-                                                 (numericalFluxType is not None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or
+                                                 (numericalFluxType is not None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -579,7 +579,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -634,7 +634,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys: 
+            for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -716,7 +716,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         self.ebqe[('velocity',1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         self.ebqe[('velocity',2)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         self.ebqe[('velocity',3)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
-        #VRANS start, defaults to RANS 
+        #VRANS start, defaults to RANS
         self.q[('r',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q['eddy_viscosity'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         #VRANS end
@@ -852,7 +852,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         logEvent("Dumping quadrature shapes for model %s" % self.name,level=9)
         logEvent("Element quadrature array (q)", level=9)
         for (k,v) in self.q.iteritems(): logEvent(str((k,v.shape)),level=9)
-        logEvent("Element boundary quadrature (ebq)",level=9) 
+        logEvent("Element boundary quadrature (ebq)",level=9)
         for (k,v) in self.ebq.iteritems(): logEvent(str((k,v.shape)),level=9)
         logEvent("Global element boundary quadrature (ebq_global)",level=9)
         for (k,v) in self.ebq_global.iteritems(): logEvent(str((k,v.shape)),level=9)
@@ -953,7 +953,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         logEvent("setting up post-processing")
         from proteus import PostProcessingTools
-        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
+        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         logEvent("initializing archiver")
@@ -1159,7 +1159,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.coefficients.q_vf,
             self.coefficients.q_phi,
             self.coefficients.q_n,
-            self.coefficients.q_kappa,            
+            self.coefficients.q_kappa,
             self.timeIntegration.m_tmp[1],
             self.timeIntegration.m_tmp[2],
             self.timeIntegration.m_tmp[3],
@@ -1169,8 +1169,8 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.timeIntegration.beta_bdf[3],
             self.stabilization.v_last,
             self.q[('cfl',0)],
-            self.q[('numDiff',1,1)], 
-            self.q[('numDiff',2,2)], 
+            self.q[('numDiff',1,1)],
+            self.q[('numDiff',2,2)],
             self.q[('numDiff',3,3)],
             self.shockCapturing.numDiff_last[1],
             self.shockCapturing.numDiff_last[2],
@@ -1246,9 +1246,9 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
             for I in range(3):
-                self.coefficients.netForces_p[i,I]  = globalSum(self.coefficients.netForces_p[i,I]) 
-                self.coefficients.netForces_v[i,I]  = globalSum(self.coefficients.netForces_v[i,I]) 
-                self.coefficients.netMoments[i,I] = globalSum(self.coefficients.netMoments[i,I]) 
+                self.coefficients.netForces_p[i,I]  = globalSum(self.coefficients.netForces_p[i,I])
+                self.coefficients.netForces_v[i,I]  = globalSum(self.coefficients.netForces_v[i,I])
+                self.coefficients.netMoments[i,I] = globalSum(self.coefficients.netMoments[i,I])
         if self.forceStrongConditions:#
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1463,7 +1463,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
-            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
+            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
                     global_dofN = self.offset[cj]+self.stride[cj]*dofN
@@ -1571,7 +1571,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.coefficients.q_vf,
             self.coefficients.q_phi,
             self.coefficients.q_n,
-            self.coefficients.q_kappa,            
+            self.coefficients.q_kappa,
             self.timeIntegration.m_tmp[1],
             self.timeIntegration.m_tmp[2],
             self.timeIntegration.m_tmp[3],
@@ -1581,8 +1581,8 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.timeIntegration.beta_bdf[3],
             self.stabilization.v_last,
             self.q[('cfl',0)],
-            self.q[('numDiff',1,1)], 
-            self.q[('numDiff',2,2)], 
+            self.q[('numDiff',1,1)],
+            self.q[('numDiff',2,2)],
             self.q[('numDiff',3,3)],
             self.shockCapturing.numDiff_last[1],
             self.shockCapturing.numDiff_last[2],

@@ -198,7 +198,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.lowmem=True
         self.timeTerm=True#allow turning off  the  time derivative
         self.testIsTrial=True
-        self.phiTrialIsTrial=True            
+        self.phiTrialIsTrial=True
         self.u = uDict
         self.Hess=False
         if isinstance(self.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
@@ -264,8 +264,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or 
-                                                 (numericalFluxType is not None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or
+                                                 (numericalFluxType is not None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -279,7 +279,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -334,7 +334,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys: 
+            for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -432,7 +432,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Dumping quadrature shapes for model %s" % self.name,level=9)
         logEvent("Element quadrature array (q)", level=9)
         for (k,v) in self.q.iteritems(): logEvent(str((k,v.shape)),level=9)
-        logEvent("Element boundary quadrature (ebq)",level=9) 
+        logEvent("Element boundary quadrature (ebq)",level=9)
         for (k,v) in self.ebq.iteritems(): logEvent(str((k,v.shape)),level=9)
         logEvent("Global element boundary quadrature (ebq_global)",level=9)
         for (k,v) in self.ebq_global.iteritems(): logEvent(str((k,v.shape)),level=9)
@@ -530,7 +530,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #use post processing tools to get conservative fluxes, None by default
         if self.postProcessing:
             self.q[('v',0)] = self.tmpvt.q[('v',0)]
-            self.ebq[('v',0)] = self.tmpvt.ebq[('v',0)]  
+            self.ebq[('v',0)] = self.tmpvt.ebq[('v',0)]
             self.ebq[('w',0)] = self.tmpvt.ebq[('w',0)]
             self.ebq['sqrt(det(g))'] = self.tmpvt.ebq['sqrt(det(g))']
             self.ebq['n'] = self.tmpvt.ebq['n']
@@ -540,7 +540,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebq_global['n'] = self.tmpvt.ebq_global['n']
             self.ebq_global['x'] = self.tmpvt.ebq_global['x']
         from proteus import PostProcessingTools
-        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
+        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         from proteus import Archiver
@@ -693,8 +693,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stabilization.v_last,
             self.q[('cfl',0)],
             self.q[('numDiff',0,0)],
-            self.q[('numDiff',1,1)], 
-            self.q[('numDiff',2,2)], 
+            self.q[('numDiff',1,1)],
+            self.q[('numDiff',2,2)],
             self.shockCapturing.numDiff_last[0],
             self.shockCapturing.numDiff_last[1],
             self.shockCapturing.numDiff_last[2],
@@ -869,7 +869,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
-            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
+            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
                     global_dofN = self.offset[cj]+self.stride[cj]*dofN
@@ -963,7 +963,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #         self.u[1].dof,
         #         self.u[2].dof,
         #         self.u[3].dof,
-        #         self.ebq[('v',0)], 
+        #         self.ebq[('v',0)],
         #         self.ebqe[('velocity',0)],
         #         self.ebq_global[('velocityAverage',0)])
         # self.sw2d.calculateVelocityAverage(self.mesh.nExteriorElementBoundaries_global,
@@ -1022,7 +1022,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # print "SW2D Force Faces",len(forceExtractionFaces)
 
-        # #force  = numpy.zeros(3,'d') 
+        # #force  = numpy.zeros(3,'d')
         # #moment = numpy.zeros(3,'d')
 
         # self.Ct_sge = 4.0
@@ -1095,8 +1095,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #     self.timeIntegration.beta_bdf[3],
         #     self.stabilization.v_last,
         #     self.q[('cfl',0)],
-        #     self.q[('numDiff',1,1)], 
-        #     self.q[('numDiff',2,2)], 
+        #     self.q[('numDiff',1,1)],
+        #     self.q[('numDiff',2,2)],
         #     self.q[('numDiff',3,3)],
         #     self.shockCapturing.numDiff_last[1],
         #     self.shockCapturing.numDiff_last[2],
@@ -1149,29 +1149,29 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #     self.ebq_global[('totalFlux',0)],
         #     self.elementResidual[0])
 
-        # #from mpi4py import MPI	
+        # #from mpi4py import MPI
         # #comm = MPI.COMM_WORLD
 
         # #tmp1 = numpy.zeros(3,'d')
-        # #tmp2 = numpy.zeros(3,'d')	         
-        # #comm.Allreduce(force,  tmp1, op=MPI.SUM)     
-        # #comm.Allreduce(moment, tmp2, op=MPI.SUM) 
+        # #tmp2 = numpy.zeros(3,'d')
+        # #comm.Allreduce(force,  tmp1, op=MPI.SUM)
+        # #comm.Allreduce(moment, tmp2, op=MPI.SUM)
         # #force  [:] = tmp1
         # #moment [:] = tmp2
 
         # from proteus.flcbdfWrappers import globalSum
         # for i in range(3):
-        # 	force[i]  = globalSum(force[i]) 
-        # 	moment[i] = globalSum(moment[i]) 
+        # 	force[i]  = globalSum(force[i])
+        # 	moment[i] = globalSum(moment[i])
 
         # #simport time
         # #time.sleep(1)
-        # ##comm.Barrier()	
+        # ##comm.Barrier()
         # ##if self.comm.rank() == 0:
         # #print cg
         # #print "Force and moment in sw2d getForce"
-        # #print force 
-        # #print moment 
+        # #print force
+        # #print moment
         # ##comm.Barrier()
         # #import time
         # #time.sleep(1)

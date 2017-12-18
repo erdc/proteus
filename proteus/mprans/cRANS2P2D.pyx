@@ -354,7 +354,7 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                           double* vel_trail_ref,
                                           double* vel_grad_trial_ref,
                                           double* elementDiameter,
-                                          double* nodeDiametersArray,                                 
+                                          double* nodeDiametersArray,
                                           int nElements_global,
                                           double useMetrics,
                                           double epsFact_rho,
@@ -370,7 +370,7 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                           double *phi,
                                           int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
                                           int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
-                                          int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,                    
+                                          int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
                                           double* advection_matrix)
         void getTwoPhaseInvScaledLaplaceOperator(double* mesh_trial_ref,
                                                  double* mesh_grad_trial_ref,
@@ -400,7 +400,7 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                                  int* sdInfo_v_v_rowptr, int* sdInfo_v_v_colind,
                                                  int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
                                                  int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
-                                                 int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,     
+                                                 int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
                                                  double* laplace_matrix)
         void getTwoPhaseScaledMassOperator(int scale_type,
                                            int use_numerical_viscosity,
@@ -1203,8 +1203,8 @@ cdef class cRANS2P2D_base:
                                                   <double*> phi.data,
                                                   <int*> csrRowIndeces_p_p.data, <int*> csrColumnOffsets_p_p.data,
                                                   <int*> csrRowIndeces_u_u.data, <int*> csrColumnOffsets_u_u.data,
-                                                  <int*> csrRowIndeces_v_v.data, <int*> csrColumnOffsets_v_v.data,                      
-                                                  <double*> advection_matrix_vals.data)  
+                                                  <int*> csrRowIndeces_v_v.data, <int*> csrColumnOffsets_v_v.data,
+                                                  <double*> advection_matrix_vals.data)
     def getTwoPhaseInvScaledLaplaceOperator(self,
                                             numpy.ndarray mesh_trial_ref,
                                             numpy.ndarray mesh_grad_trial_ref,
@@ -1263,10 +1263,10 @@ cdef class cRANS2P2D_base:
                                                          <double*> phi.data,
                                                          <int*> sdInfo_p_p_rowptr.data, <int*> sdInfo_p_p_colind.data,
                                                          <int*> sdInfo_u_u_rowptr.data, <int*> sdInfo_u_u_colind.data,
-                                                         <int*> sdInfo_v_v_rowptr.data, <int*> sdInfo_v_v_colind.data,                  
+                                                         <int*> sdInfo_v_v_rowptr.data, <int*> sdInfo_v_v_colind.data,
                                                          <int*> csrRowIndeces_p_p.data, <int*> csrColumnOffsets_p_p.data,
                                                          <int*> csrRowIndeces_u_u.data, <int*> csrColumnOffsets_u_u.data,
-                                                         <int*> csrRowIndeces_v_v.data, <int*> csrColumnOffsets_v_v.data,                       
+                                                         <int*> csrRowIndeces_v_v.data, <int*> csrColumnOffsets_v_v.data,
                                                          <double*> laplace_matrix_vals.data)
     def getTwoPhaseScaledMassOperator(self,
                                       int scale_type,
@@ -1335,5 +1335,5 @@ cdef class cRANS2P2D_base:
                                                    <double*> phi.data,
                                                    <int*> csrRowIndeces_p_p.data, <int*> csrColumnOffsets_p_p.data,
                                                    <int*> csrRowIndeces_u_u.data, <int*> csrColumnOffsets_u_u.data,
-                                                   <int*> csrRowIndeces_v_v.data, <int*> csrColumnOffsets_v_v.data,                             
+                                                   <int*> csrRowIndeces_v_v.data, <int*> csrColumnOffsets_v_v.data,
                                                    <double*> mass_matrix_vals.data)

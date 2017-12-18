@@ -88,7 +88,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
         self.runCFL=runCFL
         self.dtLast=None
         self.isAdaptive=True
-        # About the cfl 
+        # About the cfl
         assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
         self.edge_based_cfl = transport.edge_based_cfl
         self.cell_based_cfl = transport.q[('cfl',0)]
@@ -114,7 +114,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                 self.u_dof_last[ci] = transport.u[ci].dof.copy()
                 self.m_stage[ci] = []
                 self.u_dof_stage[ci] = []
-                for k in range(self.nStages+1):                    
+                for k in range(self.nStages+1):
                     self.m_stage[ci].append(transport.q[('m',ci)].copy())
                     self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
 
@@ -122,36 +122,36 @@ class RKEV(proteus.TimeIntegration.SSP33):
     #    self.dt = DTSET #  don't update t
     def choose_dt(self):
         maxCFL = 1.0e-6
-        # COMPUTE edge_based_cfl        
+        # COMPUTE edge_based_cfl
         rowptr_cMatrix, colind_cMatrix, Cx = self.transport.cterm_global[0].getCSRrepresentation()
-        rowptr_cMatrix, colind_cMatrix, Cy = self.transport.cterm_global[1].getCSRrepresentation()        
+        rowptr_cMatrix, colind_cMatrix, Cy = self.transport.cterm_global[1].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, CTx = self.transport.cterm_global_transpose[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, CTy = self.transport.cterm_global_transpose[1].getCSRrepresentation()
         numDOFsPerEqn = self.transport.u[0].dof.size
 
         adjusted_maxCFL = self.transport.sw2d.calculateEdgeBasedCFL(
-            self.transport.coefficients.g, 
+            self.transport.coefficients.g,
             numDOFsPerEqn,
             self.transport.ML,
-            self.transport.u[0].dof, 
-            self.transport.u[1].dof, 
+            self.transport.u[0].dof,
+            self.transport.u[1].dof,
             self.transport.u[2].dof,
             self.transport.coefficients.b.dof,
-            rowptr_cMatrix, 
-            colind_cMatrix, 
-            self.transport.hEps, 
-            self.transport.hReg, 
-            Cx, 
-            Cy, 
-            CTx, 
-            CTy, 
+            rowptr_cMatrix,
+            colind_cMatrix,
+            self.transport.hEps,
+            self.transport.hReg,
+            Cx,
+            Cy,
+            CTx,
+            CTy,
             self.transport.dLow,
             self.runCFL,
             self.transport.edge_based_cfl)
 
         maxCFL = max(maxCFL,max(adjusted_maxCFL, globalMax(self.edge_based_cfl.max())))
         # maxCFL = max(maxCFL,globalMax(self.cell_based_cfl.max()))
-        self.dt = self.runCFL/maxCFL            
+        self.dt = self.runCFL/maxCFL
         if self.dtLast is None:
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
@@ -196,7 +196,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
 
             elif self.lstage == 2:
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) 
+                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof)
                     self.u_dof_stage[ci][self.lstage] *= 1./4.
                     self.u_dof_stage[ci][self.lstage] += 3./4.*self.u_dof_last[ci]
                     self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
@@ -205,7 +205,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     #previous stage updated m_last to the stage value
                     #either have another temporary here or have the VOF code use m_stage
                     #instead of m_last
-                    self.m_stage[ci][self.lstage] += 3./4.*self.m_last_save[ci] 
+                    self.m_stage[ci][self.lstage] += 3./4.*self.m_last_save[ci]
                     #mwf TODO get rid of this
                     self.m_last[ci] = numpy.copy(self.m_stage[ci][self.lstage])
             elif self.lstage == 3:
@@ -284,10 +284,10 @@ class RKEV(proteus.TimeIntegration.SSP33):
             if self.transport.q.has_key(('m',ci)):
                 self.m_stage[ci] = []
                 self.u_dof_stage[ci] = []
-                for k in range(self.nStages+1):                    
+                for k in range(self.nStages+1):
                     self.m_stage[ci].append(self.transport.q[('m',ci)].copy())
                     self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
-        self.substeps = [self.t for i in range(self.nStages)]            
+        self.substeps = [self.t for i in range(self.nStages)]
     def setFromOptions(self,nOptions):
         """
         allow classes to set various numerical parameters
@@ -315,11 +315,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  movingDomain=False,
                  useRBLES=0.0,
                  useMetrics=0.0,
-                 modelIndex=0, 
+                 modelIndex=0,
                  cE=1.0,
-                 LUMPED_MASS_MATRIX=1, 
+                 LUMPED_MASS_MATRIX=1,
                  mannings=0.):
-        self.bathymetry = bathymetry 
+        self.bathymetry = bathymetry
         self.useRBLES=useRBLES
         self.useMetrics=useMetrics
         self.sd=sd
@@ -456,7 +456,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.lowmem=True
         self.timeTerm=True#allow turning off  the  time derivative
         self.testIsTrial=True
-        self.phiTrialIsTrial=True            
+        self.phiTrialIsTrial=True
         self.u = uDict
         self.Hess=False
         if isinstance(self.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
@@ -522,8 +522,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or 
-                                                 (numericalFluxType is not None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or
+                                                 (numericalFluxType is not None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -537,7 +537,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -592,7 +592,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys: 
+            for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -643,8 +643,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.dLow=None
         #Old DOFs
         #NOTE (Mql): It is important to link h_dof_old by reference with u[0].dof (and so on).
-        # This is because  I need the initial condition to be passed to them as well (before calling calculateResidual). 
-        # During preStep I change this and copy the values instead of keeping the reference. 
+        # This is because  I need the initial condition to be passed to them as well (before calling calculateResidual).
+        # During preStep I change this and copy the values instead of keeping the reference.
         self.h_dof_old_old = self.u[0].dof
         self.hu_dof_old_old = self.u[1].dof
         self.hv_dof_old_old = self.u[2].dof
@@ -710,7 +710,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Dumping quadrature shapes for model %s" % self.name,level=9)
         logEvent("Element quadrature array (q)", level=9)
         for (k,v) in self.q.iteritems(): logEvent(str((k,v.shape)),level=9)
-        logEvent("Element boundary quadrature (ebq)",level=9) 
+        logEvent("Element boundary quadrature (ebq)",level=9)
         for (k,v) in self.ebq.iteritems(): logEvent(str((k,v.shape)),level=9)
         logEvent("Global element boundary quadrature (ebq_global)",level=9)
         for (k,v) in self.ebq_global.iteritems(): logEvent(str((k,v.shape)),level=9)
@@ -784,7 +784,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.low_order_hvnp1=None
         self.dH_minus_dL=None
         self.muH_minus_muL=None
-        # NORMALS 
+        # NORMALS
         self.COMPUTE_NORMALS=1
         self.normalx=None
         self.normaly=None
@@ -834,7 +834,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #use post processing tools to get conservative fluxes, None by default
         if self.postProcessing:
             self.q[('v',0)] = self.tmpvt.q[('v',0)]
-            self.ebq[('v',0)] = self.tmpvt.ebq[('v',0)]  
+            self.ebq[('v',0)] = self.tmpvt.ebq[('v',0)]
             self.ebq[('w',0)] = self.tmpvt.ebq[('w',0)]
             self.ebq['sqrt(det(g))'] = self.tmpvt.ebq['sqrt(det(g))']
             self.ebq['n'] = self.tmpvt.ebq['n']
@@ -844,7 +844,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebq_global['n'] = self.tmpvt.ebq_global['n']
             self.ebq_global['x'] = self.tmpvt.ebq_global['x']
         from proteus import PostProcessingTools
-        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
+        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         from proteus import Archiver
@@ -912,27 +912,27 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         hIndex = index[0::3]
         huIndex = index[1::3]
         hvIndex = index[2::3]
-        # create limited solution 
+        # create limited solution
         limited_hnp1 = numpy.zeros(self.h_dof_old.shape)
         limited_hunp1 = numpy.zeros(self.h_dof_old.shape)
         limited_hvnp1 = numpy.zeros(self.h_dof_old.shape)
-        # Do some type of limitation 
+        # Do some type of limitation
 
-        self.sw2d.FCTStep(self.timeIntegration.dt, 
-                          self.nnz, #number of non zero entries 
+        self.sw2d.FCTStep(self.timeIntegration.dt,
+                          self.nnz, #number of non zero entries
                           len(rowptr)-1, #number of DOFs
                           self.ML, #Lumped mass matrix
                           self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage], #hn
                           self.timeIntegration.u_dof_stage[1][self.timeIntegration.lstage], #hun
                           self.timeIntegration.u_dof_stage[2][self.timeIntegration.lstage], #hvn
                           self.coefficients.b.dof,
-                          self.timeIntegration.u[hIndex], #high order solution 
+                          self.timeIntegration.u[hIndex], #high order solution
                           self.timeIntegration.u[huIndex],
                           self.timeIntegration.u[hvIndex],
-                          self.low_order_hnp1, # low order solution 
-                          self.low_order_hunp1, 
-                          self.low_order_hvnp1, 
-                          limited_hnp1, 
+                          self.low_order_hnp1, # low order solution
+                          self.low_order_hunp1,
+                          self.low_order_hvnp1,
+                          limited_hnp1,
                           limited_hunp1,
                           limited_hvnp1,
                           rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
@@ -940,7 +940,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           MassMatrix,
                           self.dH_minus_dL,
                           self.muH_minus_muL,
-                          self.hEps, 
+                          self.hEps,
                           self.hReg,
                           self.coefficients.LUMPED_MASS_MATRIX)
 
@@ -955,10 +955,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
 
         #COMPUTE hEps
-        if self.hEps is None: 
+        if self.hEps is None:
             eps=1E-14
             self.hEps = eps*self.u[0].dof.max()
-        #COMPUTE C MATRIX 
+        #COMPUTE C MATRIX
         if self.cterm_global is None:
             #since we only need cterm_global to persist, we can drop the other self.'s
             self.cterm={}
@@ -979,10 +979,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             nzval_cMatrix = numpy.zeros(nnz_cMatrix) #This is enough since the values are filled later
             rowptr_cMatrix = numpy.zeros(self.u[0].dof.size+1,'i') #NOTE that in particular rowptr_cMatrix[0]=0
             colind_cMatrix = numpy.zeros(nnz_cMatrix,'i')
-            #fill vector rowptr_cMatrix 
+            #fill vector rowptr_cMatrix
             for i in range(1,rowptr_cMatrix.size):
-                rowptr_cMatrix[i] = rowptr_cMatrix[i-1]+(rowptr[3*(i-1)+1]-rowptr[3*(i-1)])/3 
-                # = rowptr_cMatrix[i-1] + 1/3*(Number of columns of Jacobian's row 3*(i-1)=0, 3, 6, 9, 12, ... 3*(i-1), ..., 3*n-3)            
+                rowptr_cMatrix[i] = rowptr_cMatrix[i-1]+(rowptr[3*(i-1)+1]-rowptr[3*(i-1)])/3
+                # = rowptr_cMatrix[i-1] + 1/3*(Number of columns of Jacobian's row 3*(i-1)=0, 3, 6, 9, 12, ... 3*(i-1), ..., 3*n-3)
 
             #fill vector colind_cMatrix
             i_cMatrix=0 #ith row of cMatrix
@@ -991,9 +991,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     for j,offset in enumerate(range(rowptr[i],rowptr[i+1])):
                         offset_cMatrix = range(rowptr_cMatrix[i_cMatrix],rowptr_cMatrix[i_cMatrix+1])
                         if (j%3 == 0):
-                            colind_cMatrix[offset_cMatrix[j/3]] = colind[offset]/3 
+                            colind_cMatrix[offset_cMatrix[j/3]] = colind[offset]/3
                     i_cMatrix+=1
-            # END OF SPARSITY PATTERN FOR C MATRICES 
+            # END OF SPARSITY PATTERN FOR C MATRICES
 
             di = numpy.zeros((self.mesh.nElements_global,
                               self.nQuadraturePoints_element,
@@ -1029,7 +1029,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  self.q['abs(det(J))'],
                                                  self.q[('w',0)],
                                                  self.q[('w*dV_m',0)])
-            #### GRADIENT OF TEST FUNCTIONS 
+            #### GRADIENT OF TEST FUNCTIONS
             self.q[('grad(w)',0)] = numpy.zeros((self.mesh.nElements_global,
                                                  self.nQuadraturePoints_element,
                                                  self.nDOF_test_element[0],
@@ -1075,7 +1075,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       self.csrColumnOffsets[(0,0)]/3,
                                                                       elementMassMatrix,
                                                                       self.MC_global)
-            diamD2 = numpy.sum(self.q['abs(det(J))'][:]*self.elementQuadratureWeights[('u',0)])  
+            diamD2 = numpy.sum(self.q['abs(det(J))'][:]*self.elementQuadratureWeights[('u',0)])
             self.ML = np.zeros((self.nFreeDOF_global[0],),'d')
             self.hReg = np.zeros((self.nFreeDOF_global[0],),'d')
             for i in range(self.nFreeDOF_global[0]):
@@ -1126,8 +1126,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 di[:] = 0.0
                 di[...,d] = -1.0
                 cfemIntegrals.updateAdvectionJacobian_weak_lowmem(di,
-                                                                  self.q[('w',0)], 
-                                                                  self.q[('grad(w)*dV_f',0)], 
+                                                                  self.q[('w',0)],
+                                                                  self.q[('grad(w)*dV_f',0)],
                                                                   self.cterm_transpose[d]) # -int[(-di*grad(wi))*wj*dV]
                 cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
                                                                           self.l2g[0]['freeLocal'],
@@ -1137,7 +1137,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                           self.csrColumnOffsets[(0,0)]/3,
                                                                           self.cterm_transpose[d],
                                                                           self.cterm_global_transpose[d])
-        if self.boundaryIndex is None and self.normalx is not None: 
+        if self.boundaryIndex is None and self.normalx is not None:
             self.boundaryIndex = []
             for i in range(self.normalx.size):
                 if self.normalx[i] != 0 or self.normaly[i] != 0:
@@ -1151,7 +1151,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
         rowptr_cMatrix, colind_cMatrix, Cx = self.cterm_global[0].getCSRrepresentation()
-        rowptr_cMatrix, colind_cMatrix, Cy = self.cterm_global[1].getCSRrepresentation()        
+        rowptr_cMatrix, colind_cMatrix, Cy = self.cterm_global[1].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
         # This is dummy. I just care about the csr structure of the sparse matrix
@@ -1161,9 +1161,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.low_order_hunp1 = numpy.zeros(self.u[1].dof.shape,'d')
         self.low_order_hvnp1 = numpy.zeros(self.u[2].dof.shape,'d')
 
-        #Allocate space for dLow (for the first stage in the SSP method)        
-        if self.dLow is None: 
-            self.dLow = numpy.zeros(Cx.shape,'d')            
+        #Allocate space for dLow (for the first stage in the SSP method)
+        if self.dLow is None:
+            self.dLow = numpy.zeros(Cx.shape,'d')
 
         numDOFsPerEqn = self.u[0].dof.size #(mql): I am assuming all variables live on the same FE space
         numNonZeroEntries = len(Cx)
@@ -1190,7 +1190,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.Ct_sge = 4.0
         self.Cd_sge = 144.0
 
-        if self.reflectingBoundaryConditions and self.boundaryIndex is not None: 
+        if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
             self.forceStrongConditions=False
             for dummy, index in enumerate(self.boundaryIndex):
                 vx = self.u[1].dof[index]
@@ -1282,8 +1282,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stabilization.v_last,
             self.q[('cfl',0)],
             self.q[('numDiff',0,0)],
-            self.q[('numDiff',1,1)], 
-            self.q[('numDiff',2,2)], 
+            self.q[('numDiff',1,1)],
+            self.q[('numDiff',2,2)],
             self.shockCapturing.numDiff_last[0],
             self.shockCapturing.numDiff_last[1],
             self.shockCapturing.numDiff_last[2],
@@ -1327,36 +1327,36 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('velocity',0)],
             self.ebq_global[('totalFlux',0)],
             self.elementResidual[0],
-            Cx, 
-            Cy, 
-            CTx, 
+            Cx,
+            Cy,
+            CTx,
             CTy,
             numDOFsPerEqn,
             numNonZeroEntries,
             rowptr_cMatrix,
-            colind_cMatrix, 
-            self.ML, 
+            colind_cMatrix,
+            self.ML,
             self.timeIntegration.runCFL,
             self.hEps,
             self.hReg,
-            self.q[('u',0)], 
-            self.q[('u',1)], 
+            self.q[('u',0)],
+            self.q[('u',1)],
             self.q[('u',2)],
             self.low_order_hnp1,
             self.low_order_hunp1,
             self.low_order_hvnp1,
             self.dH_minus_dL,
             self.muH_minus_muL,
-            self.coefficients.cE, 
-            self.coefficients.LUMPED_MASS_MATRIX, 
-            self.timeIntegration.dt, 
+            self.coefficients.cE,
+            self.coefficients.LUMPED_MASS_MATRIX,
+            self.timeIntegration.dt,
             self.coefficients.mannings,
-            self.quantDOFs, 
-            self.secondCallCalculateResidual, 
-            self.COMPUTE_NORMALS, 
-            self.normalx, 
-            self.normaly, 
-            self.dLow, 
+            self.quantDOFs,
+            self.secondCallCalculateResidual,
+            self.COMPUTE_NORMALS,
+            self.normalx,
+            self.normaly,
+            self.dLow,
             self.timeIntegration.lstage)
 
         self.COMPUTE_NORMALS=0
@@ -1488,12 +1488,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(1,2)],
             self.csrColumnOffsets_eb[(2,0)],
             self.csrColumnOffsets_eb[(2,1)],
-            self.csrColumnOffsets_eb[(2,2)], 
+            self.csrColumnOffsets_eb[(2,2)],
             self.timeIntegration.dt)
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
-            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
+            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
                     global_dofN = self.offset[cj]+self.stride[cj]*dofN
@@ -1588,7 +1588,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #         self.u[1].dof,
         #         self.u[2].dof,
         #         self.u[3].dof,
-        #         self.ebq[('v',0)], 
+        #         self.ebq[('v',0)],
         #         self.ebqe[('velocity',0)],
         #         self.ebq_global[('velocityAverage',0)])
         # self.sw2d.calculateVelocityAverage(self.mesh.nExteriorElementBoundaries_global,
@@ -1647,7 +1647,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # print "SW2DCV Force Faces",len(forceExtractionFaces)
 
-        # #force  = numpy.zeros(3,'d') 
+        # #force  = numpy.zeros(3,'d')
         # #moment = numpy.zeros(3,'d')
 
         # self.Ct_sge = 4.0
@@ -1720,8 +1720,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #     self.timeIntegration.beta_bdf[3],
         #     self.stabilization.v_last,
         #     self.q[('cfl',0)],
-        #     self.q[('numDiff',1,1)], 
-        #     self.q[('numDiff',2,2)], 
+        #     self.q[('numDiff',1,1)],
+        #     self.q[('numDiff',2,2)],
         #     self.q[('numDiff',3,3)],
         #     self.shockCapturing.numDiff_last[1],
         #     self.shockCapturing.numDiff_last[2],
@@ -1774,29 +1774,29 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #     self.ebq_global[('totalFlux',0)],
         #     self.elementResidual[0])
 
-        # #from mpi4py import MPI	
+        # #from mpi4py import MPI
         # #comm = MPI.COMM_WORLD
 
         # #tmp1 = numpy.zeros(3,'d')
-        # #tmp2 = numpy.zeros(3,'d')	         
-        # #comm.Allreduce(force,  tmp1, op=MPI.SUM)     
-        # #comm.Allreduce(moment, tmp2, op=MPI.SUM) 
+        # #tmp2 = numpy.zeros(3,'d')
+        # #comm.Allreduce(force,  tmp1, op=MPI.SUM)
+        # #comm.Allreduce(moment, tmp2, op=MPI.SUM)
         # #force  [:] = tmp1
         # #moment [:] = tmp2
 
         # from proteus.flcbdfWrappers import globalSum
         # for i in range(3):
-        # 	force[i]  = globalSum(force[i]) 
-        # 	moment[i] = globalSum(moment[i]) 
+        # 	force[i]  = globalSum(force[i])
+        # 	moment[i] = globalSum(moment[i])
 
         # #simport time
         # #time.sleep(1)
-        # ##comm.Barrier()	
+        # ##comm.Barrier()
         # ##if self.comm.rank() == 0:
         # #print cg
         # #print "Force and moment in sw2d getForce"
-        # #print force 
-        # #print moment 
+        # #print force
+        # #print moment
         # ##comm.Barrier()
         # #import time
         # #time.sleep(1)
