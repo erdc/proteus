@@ -101,7 +101,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def initializeMesh(self,mesh):
         self.mesh = mesh
     def postStep(self,t,firstStep=False):
-    	self.model.postStep()
+        self.model.postStep()
         self.mesh.nodeArray[:,0]+=self.model.u[0].dof
         self.mesh.nodeVelocityArray[:,0]=self.model.u[0].dof
         self.model.u[0].dof[:] = 0.0
@@ -410,7 +410,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
-             self.timeIntegration = TimeIntegrationClass(self)
+            self.timeIntegration = TimeIntegrationClass(self)
 
         if options is not None:
             self.timeIntegration.setFromOptions(options)

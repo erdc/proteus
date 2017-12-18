@@ -227,7 +227,7 @@ class BC_RANS(BC_Base):
         It's a rough approximation for evalueting the near wall turbulence
         based on empirical assumptions.
         More sophisticated wall functions are recommended to be used.
-        
+
         Parameters
         ----------
         kVal: float.
@@ -277,7 +277,7 @@ class BC_RANS(BC_Base):
             - If False, the wall function prescribes dirichlet conditions.
 
         """      
-        
+
         self.reset()
 
         wf = wall
@@ -460,15 +460,15 @@ class BC_RANS(BC_Base):
         """
         self.reset()
         self.BC_type = 'TwoPhaseVelocityInlet'
-        
+
         if vert_axis is None:
             vert_axis = self.nd-1
         if Uwind is None:
             Uwind = np.zeros(3)
-            
+
         U = np.array(U)
         Uwind = np.array(Uwind)
-            
+
         def get_inlet_ux_dirichlet(i):
             def ux_dirichlet(x, t):
                 phi = x[vert_axis] - waterLevel
@@ -554,7 +554,7 @@ class BC_RANS(BC_Base):
         velocity components to zero as well.
         (!) This condition is best used for boundaries and gravity aligned with
             one of the main axes.
-        
+
         Parameters
         ----------        
         rhoUp: Phase density of the upper part.
@@ -639,7 +639,7 @@ class BC_RANS(BC_Base):
             self.v_dirichlet.uOfXT = get_inlet_ux_dirichlet(1)
             self.w_dirichlet.uOfXT = get_inlet_ux_dirichlet(2)
             self.u_diffusive.resetBC()
-        
+
         if kInflow is not None:
             self.k_dirichlet.uOfXT = inlet_k_dirichlet
             self.k_advective.resetBC()
@@ -1238,7 +1238,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
                                                        rank)
         self.xi, self.element, self.rank = xi, element, rank
         return u, v, w
-        
+
     def tangentialVelocity(self, x, t, uInit=None):
         """
         Given the velocity, calculates its
@@ -1371,7 +1371,7 @@ class kWall(AuxiliaryVariables.AV_base, object):
         self.nu = nu
         self.model = None
         self.Cmu = Cmu
-        
+
     def attachModel(self, model, ar):
         """
         Attaches model to auxiliary variable
@@ -1392,7 +1392,7 @@ class kWall(AuxiliaryVariables.AV_base, object):
 
     def getFluidKappaLocalCoords(self, xi, element, rank):
         """
-        
+
         Parameters
         ----------
         xi: 

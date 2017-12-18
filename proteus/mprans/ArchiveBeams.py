@@ -34,11 +34,11 @@ def AddTimestep(Beam_x,
             + '\t\t\t\t\t<DataItem Dimensions="' + `nBeams` +' ' + `Beam_x[0].size` + '" NumberType="Int" Precision="8" Format="XML">\n')
     count = 0
     for i in range(len(Beam_x)):
-       for j in range(Beam_x[i].size):
-           f.write(`count` + ' ')
-           count += 1
-       f.write('\n')
-    
+        for j in range(Beam_x[i].size):
+            f.write(`count` + ' ')
+            count += 1
+        f.write('\n')
+
     f.write('\t\t\t\t\t</DataItem>\n'
             + '\t\t\t\t</Topology>\n'
             + '\t\t\t\t<Geometry GeometryType="XYZ">\n'
@@ -54,7 +54,7 @@ def AddTimestep(Beam_x,
             + '\t</Domain>\n'
             + '</Xdmf>\n')
     f.close()
-            
+
 def Archive_parallel(Beam_x,
                      Beam_y,
                      Beam_z,
@@ -74,10 +74,10 @@ def Archive_parallel(Beam_x,
                 + '\t\t\t\t\t<DataItem Dimensions="' + `nBeams` +' ' + `Beam_x[k][0].size` + '" NumberType="Int" Precision="8" Format="XML">\n')
         count = 0
         for i in range(len(Beam_x[k])):
-           for j in range(Beam_x[k][i].size):
-               f.write(`count` + ' ')
-               count += 1
-           f.write('\n')
+            for j in range(Beam_x[k][i].size):
+                f.write(`count` + ' ')
+                count += 1
+            f.write('\n')
 
         f.write('<?xml version="1.0" ?>' + '\n'
                 + '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>' + '\n'
@@ -98,7 +98,7 @@ def Archive_parallel(Beam_x,
     f.write('\t\t</Grid>\n'
             + '\t</Domain>\n'
             + '</Xdmf>\n')
-    
+
     f.close()
 
 def Archive_time_step(Beam_x,
@@ -122,11 +122,11 @@ def Archive_time_step(Beam_x,
             + '\t\t\t\t\t<DataItem Dimensions="' + `nBeams` +' ' + `Beam_x[0].size` + '" NumberType="Int" Precision="8" Format="XML">\n')
     count = 0
     for i in range(len(Beam_x)):
-       for j in range(Beam_x[i].size):
-           f.write(`count` + ' ')
-           count += 1
-       f.write('\n')
-    
+        for j in range(Beam_x[i].size):
+            f.write(`count` + ' ')
+            count += 1
+        f.write('\n')
+
     f.write('\t\t\t\t\t</DataItem>\n'
             + '\t\t\t\t</Topology>\n'
             + '\t\t\t\t<Geometry GeometryType="XYZ">\n'

@@ -28,7 +28,7 @@ class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_exterior):
                                                                   vt,getPointwiseBoundaryConditions,
                                                                   getAdvectiveFluxBoundaryConditions,
                                                                   getDiffusiveFluxBoundaryConditions)
-        
+
 class Coefficients(TC_base):
     """
     The coefficients for pressure solution
