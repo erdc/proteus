@@ -353,7 +353,7 @@ Sphere.__bases__ = (ShapeRANS,)
 Cylinder.__bases__ = (ShapeRANS,)
 CustomShape.__bases__ = (ShapeRANS,)
 ShapeSTL.__bases__ = (ShapeRANS,)
-Circle.__bases__ = (ShapeRANS,)  
+Circle.__bases__ = (ShapeRANS,)
 
 # adding extra functionality to predefined shapes
 
@@ -550,7 +550,7 @@ class Tank3D(ShapeRANS):
                 facetFlags += [bt['wall']]
             else:
                 facetFlags += [bt['x+']]
-            volumes[0][0][-1] = f_i+3 
+            volumes[0][0][-1] = f_i+3
             volumes += [[[ f_i+i for i in range(6)]]]
         v_i += 4  # 2 vertices were added
         r_i += 1  # 1 region was added
@@ -584,7 +584,7 @@ class Tank3D(ShapeRANS):
                 facetFlags += [bt['wall']]
             else:
                 facetFlags += [bt['x-']]
-            volumes[0][0][-1] = f_i+3 
+            volumes[0][0][-1] = f_i+3
             volumes += [[[f_i+i for i in range(6)]]]
         v_i += 4
         r_i += 1
@@ -618,7 +618,7 @@ class Tank3D(ShapeRANS):
                 facetFlags += [bt['wall']]
             else:
                 facetFlags += [bt['y+']]
-            volumes[0][0][-1] = f_i+3 
+            volumes[0][0][-1] = f_i+3
             volumes += [[[f_i+i for i in range(6)]]]
         v_i += 4
         r_i += 1
@@ -652,7 +652,7 @@ class Tank3D(ShapeRANS):
                 facetFlags += [bt['wall']]
             else:
                 facetFlags += [bt['y+']]
-            volumes[0][0][-1] = f_i+3 
+            volumes[0][0][-1] = f_i+3
             volumes += [[[f_i+i for i in range(6)]]]
         v_i += 4
         r_i += 1
@@ -672,7 +672,7 @@ class Tank3D(ShapeRANS):
 
     def setAbsorptionZones(self, dragAlpha,allSponge=False,
                            y_n=False, y_p=False,
-                           x_n=False, x_p=False, 
+                           x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-, y+, y-) to absorption zones
@@ -1833,7 +1833,7 @@ class TankWithObstacles2D(Tank2D):
                                                  porosity=porosity)
 
     def setGenerationZones(self,  dragAlpha, smoothing, waves=None,
-                           wind_speed=(0., 0., 0.), x_n=False, x_p=False, 
+                           wind_speed=(0., 0., 0.), x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-) to generation zones

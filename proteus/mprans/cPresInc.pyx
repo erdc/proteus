@@ -53,7 +53,7 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                int nExteriorElementBoundaries_global,
                                int * exteriorElementBoundariesArray,
                                int * elementBoundaryElementsArray,
-                               int * elementBoundaryLocalElementBoundariesArray, 
+                               int * elementBoundaryLocalElementBoundariesArray,
                                int INTEGRATE_BY_PARTS_DIV_U)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -179,7 +179,7 @@ cdef class PresInc:
                           int nExteriorElementBoundaries_global,
                           numpy.ndarray exteriorElementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
-                          numpy.ndarray elementBoundaryLocalElementBoundariesArray, 
+                          numpy.ndarray elementBoundaryLocalElementBoundariesArray,
                           int INTEGRATE_BY_PARTS_DIV_U):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
@@ -231,7 +231,7 @@ cdef class PresInc:
                                        nExteriorElementBoundaries_global,
                                        < int * > exteriorElementBoundariesArray.data,
                                        < int * > elementBoundaryElementsArray.data,
-                                       < int * > elementBoundaryLocalElementBoundariesArray.data, 
+                                       < int * > elementBoundaryLocalElementBoundariesArray.data,
                                        INTEGRATE_BY_PARTS_DIV_U)
 
     def calculateJacobian(self,

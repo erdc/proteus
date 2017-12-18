@@ -74,7 +74,7 @@ Chaper 11 or k-omega (Wilcox 1998).
 #     kappa (intensity) computed independently and lagged in time
 
 #     \bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
-#     \vec v^{'}   = turbulent fluctuation 
+#     \vec v^{'}   = turbulent fluctuation
 
 #      assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
 
@@ -82,8 +82,8 @@ Chaper 11 or k-omega (Wilcox 1998).
 
 # \deld \bar{\vec v} = 0
 
-# \pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right) 
-#                -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p  
+# \pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+#                -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
 #                - \frac{1}{rho}\deld \ten{R} = 0
 
 # Reynolds stress term
@@ -98,11 +98,11 @@ Chaper 11 or k-omega (Wilcox 1998).
 
 # k-epsilon tranport equations
 
-# \pd{k}{t} + \deld (k\bar{\vec v}) 
+# \pd{k}{t} + \deld (k\bar{\vec v})
 #           - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
 #           - 4\nu_t \Pi_{D} + \epsilon = 0
 
-# \pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v}) 
+# \pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
 #           - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
 #           - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
 
@@ -115,10 +115,10 @@ Chaper 11 or k-omega (Wilcox 1998).
 
 
 # \Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
-# \ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
+# \ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
 #                                         1/2 (u_y + v_x)^2 \right]
 
-# 4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
+# 4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
 #                                 1/2 (u_y + v_x)^2 \right]
 #           = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
 
@@ -185,7 +185,7 @@ Chaper 11 or k-omega (Wilcox 1998).
         self.LS_modelIndex=LS_model
         self.kappa_modelIndex = kappa_model
         self.sc_uref=sc_uref
-        self.sc_beta=sc_beta	
+        self.sc_beta=sc_beta
         #for debugging model
         self.default_kappa = default_kappa
 
@@ -257,11 +257,11 @@ Chaper 11 or k-omega (Wilcox 1998).
                 self.velocity_dof_w = self.velocity_dof_v.copy()
             else:
                 self.velocity_dof_w = modelList[self.flowModelIndex].u[3].dof
-            if hasattr(modelList[self.flowModelIndex].coefficients,'q_porosity'): 
+            if hasattr(modelList[self.flowModelIndex].coefficients,'q_porosity'):
                 self.q_porosity = modelList[self.flowModelIndex].coefficients.q_porosity
             else:
                 self.q_porosity = numpy.ones(self.q[('u',0)].shape,'d')
-            if hasattr(modelList[self.flowModelIndex].coefficients,'ebqe_porosity'): 
+            if hasattr(modelList[self.flowModelIndex].coefficients,'ebqe_porosity'):
                 self.ebqe_porosity = modelList[self.flowModelIndex].coefficients.ebqe_porosity
             else:
                 self.ebqe_porosity = numpy.ones(self.ebqe[('u',0)].shape,'d')
@@ -276,7 +276,7 @@ Chaper 11 or k-omega (Wilcox 1998).
             self.ebqe_porosity = numpy.ones(self.ebqe[('u',0)].shape,'d')
 
         #
-        #assert self.kappa_modelIndex is not None and self.kappa_modelIndex < len(modelList), "Dissipation: invalid index for dissipation model allowed range: [0,%s]" % len(modelList) 
+        #assert self.kappa_modelIndex is not None and self.kappa_modelIndex < len(modelList), "Dissipation: invalid index for dissipation model allowed range: [0,%s]" % len(modelList)
         if self.kappa_modelIndex is not None: #keep for debugging for now
             #assume have q,ebqe always
             self.q_kappa = modelList[self.kappa_modelIndex].q[('u',0)]
@@ -285,9 +285,9 @@ Chaper 11 or k-omega (Wilcox 1998).
             if modelList[self.kappa_modelIndex].ebq.has_key(('u',0)):
                 self.ebq_kappa = modelList[self.kappa_modelIndex].ebq[('u',0)]
         else:
-            self.q_kappa = numpy.zeros(self.model.q[('u',0)].shape,'d'); self.q_kappa.fill(self.default_kappa); 
+            self.q_kappa = numpy.zeros(self.model.q[('u',0)].shape,'d'); self.q_kappa.fill(self.default_kappa);
             self.ebqe_kappa = numpy.zeros(self.model.ebqe[('u',0)].shape,'d'); self.ebqe_kappa.fill(self.default_kappa)
-            self.q_grad_kappa = numpy.zeros(self.model.q[('grad(u)',0)].shape,'d'); 
+            self.q_grad_kappa = numpy.zeros(self.model.q[('grad(u)',0)].shape,'d');
 
             if self.model.ebq.has_key(('u',0)):
                 self.ebq_kappa = numpy.zeros(self.model.ebq[('u',0)].shape,'d')
@@ -305,14 +305,14 @@ Chaper 11 or k-omega (Wilcox 1998).
                 self.q_grad_w = numpy.ones(cq[('grad(u)',0)].shape,'d')
         if self.kappa_modelIndex is None:
             self.q_kappa = numpy.ones(cq[('u',0)].shape,'d')
-            self.q_kappa.fill(self.default_kappa); 
+            self.q_kappa.fill(self.default_kappa);
             self.q_grad_kappa = numpy.zeros(cq[('grad(u)',0)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         if self.flowModelIndex is None:
             self.ebq_v = numpy.ones(cebq[('f',0)].shape,'d')
             self.ebq_grad_u = numpy.ones(cebq[('grad(u)',0)].shape,'d')
             self.ebq_grad_v = numpy.ones(cebq[('grad(u)',0)].shape,'d')
-            if self.nd == 2: 
+            if self.nd == 2:
                 self.ebq_grad_w = self.ebq_grad_v.copy()
             else:
                 self.ebq_grad_w = numpy.ones(cebq[('grad(u)',0)].shape,'d')
@@ -331,8 +331,8 @@ Chaper 11 or k-omega (Wilcox 1998).
     def preStep(self,t,firstStep=False):
         copyInstructions = {}
         return copyInstructions
-    def postStep(self,t,firstStep=False):    
-        self.u_old_dof = numpy.copy(self.model.u[0].dof)	 
+    def postStep(self,t,firstStep=False):
+        self.u_old_dof = numpy.copy(self.model.u[0].dof)
         copyInstructions = {}
         return copyInstructions
     def updateToMovingDomain(self,t,c):
@@ -340,7 +340,7 @@ Chaper 11 or k-omega (Wilcox 1998).
         pass
     def evaluate(self,t,c):
         #mwf debug
-        #print "Dissipationcoeficients eval t=%s " % t 
+        #print "Dissipationcoeficients eval t=%s " % t
         if c[('f',0)].shape == self.q_v.shape:
             v = self.q_v
             phi = self.q_phi
@@ -451,7 +451,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeTerm=True#allow turning off  the  time derivative
         #self.lowmem=False
         self.testIsTrial=True
-        self.phiTrialIsTrial=True            
+        self.phiTrialIsTrial=True
         self.u = uDict
         self.ua = {}#analytical solutions
         self.phi  = phiDict
@@ -509,8 +509,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or 
-                                                 (numericalFluxType is not None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or
+                                                 (numericalFluxType is not None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -524,7 +524,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -579,7 +579,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys: 
+            for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -640,7 +640,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('phi',0)] = self.q[('u',0)]
         self.q[('grad(phi)',0)] = self.q[('grad(u)',0)]
         self.q[('dphi',0,0)] = numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        #mass 
+        #mass
         self.q[('m',0)] = self.q[('u',0)]
         self.q[('m_last',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('m_tmp',0)] = self.q[('u',0)]
@@ -738,7 +738,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         from proteus import PostProcessingTools
-        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
+        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         from proteus import Archiver
@@ -798,7 +798,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.movingDomain=False
         self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray is None:
-            self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')        
+            self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
@@ -877,11 +877,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.rho_1,
             self.coefficients.dissipation_model_flag,
             #end diffusion
-            self.coefficients.useMetrics, 
+            self.coefficients.useMetrics,
             self.timeIntegration.alpha_bdf,
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
-            self.coefficients.sc_uref, 
+            self.coefficients.sc_uref,
             self.coefficients.sc_beta,
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
@@ -973,7 +973,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.rho_1,
             self.coefficients.dissipation_model_flag,
             #end diffusion
-            self.coefficients.useMetrics, 
+            self.coefficients.useMetrics,
             self.timeIntegration.alpha_bdf,
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
@@ -1017,7 +1017,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
-            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
+            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for dofN in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.keys():
                 global_dofN = dofN
                 for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):

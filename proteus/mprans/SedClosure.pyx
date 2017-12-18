@@ -586,7 +586,7 @@ cdef class HsuSedStress:
 
 
         cython.declare(xx=cython.double[2])
-        for ii in range(2):	
+        for ii in range(2):
             xx[ii] = 0.
 
         self.thisptr.mIntFluid(xx, sedF,rhoFluid ,
@@ -615,7 +615,7 @@ cdef class HsuSedStress:
 
 
         cython.declare(xx=cython.double[2])
-        for ii in range(2):	
+        for ii in range(2):
             xx[ii] = 0.
 
         self.thisptr.mIntSolid(xx, sedF,rhoFluid ,
@@ -642,7 +642,7 @@ cdef class HsuSedStress:
 
 
         cython.declare(xx=cython.double[2])
-        for ii in range(2):	
+        for ii in range(2):
             xx[ii] = 0.
 
 

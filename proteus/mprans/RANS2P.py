@@ -416,7 +416,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.q_vf[i, j] = smoothedHeaviside(self.epsFact*he,self.phaseFunction(pt))
             for i, quad_pts in enumerate(self.model.ebqe['x']):
                 for j, pt in enumerate(quad_pts):
-                    he = self.elementDiameter[i]    
+                    he = self.elementDiameter[i]
                     self.ebqe_phi[i, j] = self.phaseFunction(pt)
                     self.ebqe_vf[i, j] = smoothedHeaviside(self.epsFact*he,self.phaseFunction(pt))
 

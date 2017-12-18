@@ -236,7 +236,7 @@ class FEMTools:
             self.K[i*6+2:i*6+9:3,i*6+2:i*6+9:3] += 2.0/self.h[i]*Ksphiphi + 0.5*self.h[i]*Klphiphi
 
             self.g[i*6:i*6+9:3] += 2.0/self.h[i]*gstheta + 0.5*self.h[i]*gltheta
-            self.g[i*6+1:i*6+9:3] += 2.0/self.h[i]*gspsi + 0.5*self.h[i]*glpsi    
+            self.g[i*6+1:i*6+9:3] += 2.0/self.h[i]*gspsi + 0.5*self.h[i]*glpsi
             self.g[i*6+2:i*6+9:3] += 2.0/self.h[i]*gsphi + 0.5*self.h[i]*glphi
         #import pdb
         #pdb.set_trace()
@@ -305,7 +305,7 @@ class FEMTools:
             for j in range(self.quadOrder):
                 Q1_quad[self.quadOrder*i+j]+= np.dot(self.v[j],Q1_el)
                 Q2_quad[self.quadOrder*i+j]+= np.dot(self.v[j],Q2_el)
-                Q3_quad[self.quadOrder*i+j]+= np.dot(self.v[j],Q3_el)  
+                Q3_quad[self.quadOrder*i+j]+= np.dot(self.v[j],Q3_el)
                 x_quad[self.quadOrder*i+j]+= np.dot(self.v[j],x_el)
                 y_quad[self.quadOrder*i+j]+= np.dot(self.v[j],y_el)
                 z_quad[self.quadOrder*i+j]+= np.dot(self.v[j],z_el)
@@ -322,7 +322,7 @@ class FEMTools:
             x_el = np.array([self.x[i],0.5*(self.x[i+1]+self.x[i]),self.x[i+1]])
             y_el = np.array([self.y[i],0.5*(self.y[i+1]+self.y[i]),self.y[i+1]])
             z_el = np.array([self.z[i],0.5*(self.z[i+1]+self.z[i]),self.z[i+1]])
-            for j in range(self.quadOrder):  
+            for j in range(self.quadOrder):
                 x_quad[self.quadOrder*i+j]+= np.dot(self.v[j],x_el)
                 y_quad[self.quadOrder*i+j]+= np.dot(self.v[j],y_el)
                 z_quad[self.quadOrder*i+j]+= np.dot(self.v[j],z_el)
