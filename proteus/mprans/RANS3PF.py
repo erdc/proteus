@@ -587,12 +587,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 for j in range(mesh.nodeArray.shape[0]):
                     sdf,sdNormals = self.granular_sdf_Calc(mesh.nodeArray[j,:],i)
                     if ( abs(sdf) < abs(self.phi_s[j]) ):
-                         self.phi_s[j]=sdf
+                        self.phi_s[j]=sdf
         else:
             for i,sdf in zip(range(self.nParticles),
                             self.particle_sdfList):
                 for j in range(mesh.nodeArray.shape[0]):
-                     self.phi_s[j],sdNormals=sdf(0,mesh.nodeArray[j,:])
+                    self.phi_s[j],sdNormals=sdf(0,mesh.nodeArray[j,:])
 
 
         # cek we eventually need to use the local element diameter
@@ -2078,8 +2078,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[
                         cj].DOFBoundaryConditionsDict.iteritems():
-                        self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
-                            dofN], self.timeIntegration.t)# + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
+                        dofN], self.timeIntegration.t)# + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
 
         if self.coefficients.set_vos:
             self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)

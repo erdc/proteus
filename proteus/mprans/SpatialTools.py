@@ -1574,9 +1574,9 @@ class TankWithObstacles2D(Tank2D):
                 vertexFlags += [self.boundaryTags[start]
                                 for i in range(len(obstacle))]
             elif self.hole is False:
-                 vertices += obstacle
-                 vertexFlags += [self.boundaryTags['obstacle'+str(nb+1)]
-                                 for i in range(len(obstacle))]
+                vertices += obstacle
+                vertexFlags += [self.boundaryTags['obstacle'+str(nb+1)]
+                                for i in range(len(obstacle))]
 
             # ---- Paperwork ---- #
             former_end = end
@@ -2042,7 +2042,7 @@ def assembleDomain(domain):
     domain.bc[0].setNonMaterial()  # set BC for boundary between processors
     assembleAuxiliaryVariables(domain)
     if(domain.name != "PUMIDomain"):
-      _generateMesh(domain)
+        _generateMesh(domain)
 
 
 def assembleAuxiliaryVariables(domain):

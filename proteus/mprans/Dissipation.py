@@ -691,7 +691,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
-             self.timeIntegration = TimeIntegrationClass(self)
+            self.timeIntegration = TimeIntegrationClass(self)
 
         if options is not None:
             self.timeIntegration.setFromOptions(options)
@@ -835,8 +835,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
         if self.forceStrongConditions:
-              for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
-                  self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+            for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
+                self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         #
         #mwf debug
         #import pdb
@@ -926,7 +926,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
-                     r[dofN] = 0
+                r[dofN] = 0
 
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
@@ -1019,14 +1019,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.forceStrongConditions:
             scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for dofN in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.keys():
-                    global_dofN = dofN
-                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
-                        if (self.colind[i] == global_dofN):
+                global_dofN = dofN
+                for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
+                    if (self.colind[i] == global_dofN):
                             #print "RBLES forcing residual cj = %s dofN= %s global_dofN= %s was self.nzval[i]= %s now =%s " % (cj,dofN,global_dofN,self.nzval[i],scaling)
-                            self.nzval[i] = scaling
-                        else:
-                            self.nzval[i] = 0.0
-                            #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
+                        self.nzval[i] = scaling
+                    else:
+                        self.nzval[i] = 0.0
+                        #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
 
 
 
