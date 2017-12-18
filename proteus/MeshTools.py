@@ -4901,13 +4901,12 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                     self.meshList[0].nodeNumbering_subdomain2global.itemset(node,node)
                 for element in range(self.meshList[0].nElements_global):
                     self.meshList[0].elementNumbering_subdomain2global.itemset(element,element)
-		
 		self.meshList[0].buildNodeStarArrays()
                 for l in range(1,refinementLevels):
                     self.refine()
                     self.meshList[l].subdomainMesh = self.meshList[l]
                     logEvent(self.meshList[-1].meshInfo())
-		    self.meshList[l].buildNodeStarArrays()
+                    self.meshList[l].buildNodeStarArrays()
                 self.buildArrayLists()
 
     def refine(self):
