@@ -1,3 +1,4 @@
+# A type of -*- python -*- file
 import numpy
 cimport numpy
 
@@ -898,7 +899,6 @@ cdef class RANS3PF:
                   double mContact,
                   double nContact,
                   double angFriction):
-
         self.thisptr = newRANS3PF(nSpaceIn,
                                   nQuadraturePoints_elementIn,
                                   nDOF_mesh_trial_elementIn,
