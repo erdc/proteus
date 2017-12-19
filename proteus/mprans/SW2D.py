@@ -1203,8 +1203,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # from proteus.flcbdfWrappers import globalSum
         # for i in range(3):
-        # 	force[i]  = globalSum(force[i])
-        # 	moment[i] = globalSum(moment[i])
+        #       force[i]  = globalSum(force[i])
+        #       moment[i] = globalSum(moment[i])
 
         # #simport time
         # #time.sleep(1)

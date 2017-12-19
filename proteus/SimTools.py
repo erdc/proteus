@@ -43,6 +43,7 @@ class SimulationProcessor:
                     'dataDir' :'.',              #where file is located
                     'appendResults':False,       #append to existing data files?
                     'echo':False,                #print to screen
+                    'echoRelativeErrors':False,  #print to screen also relative errors
                     'components':[0],            #list of components to monitor
                     'errorQuantities':[None],    #quantities in which to estimate error
                     'errorNorms':[None],         #norms to use for error calc
@@ -779,8 +780,11 @@ class SimulationProcessor:
                             self.errorData[ci][il][kerr].append(err)
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
-                                logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
-                            #end if
+                                if self.flags['echoRelativeErrors']:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                else:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
+                                #end if
                         #if calcL2u
                         calcL1u = ('L1' in self.flags['errorNorms'] and
                                    'u' in self.flags['errorQuantities'])
@@ -804,13 +808,15 @@ class SimulationProcessor:
                                 err = Norms.L1errorSFEM(mFine.q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],uproj[ci][0:mFine.mesh.subdomainMesh.nElements_owned])
                                 exa = Norms.L1errorSFEM(mFine.q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],
                                                         numpy.zeros(udense[0:mFine.mesh.subdomainMesh.nElements_owned].shape,'d'))
-
                             kerr = 'error_'+'u'+'_'+'L1'
                             kexa = 'exact_'+'u'+'_'+'L1'
                             self.errorData[ci][il][kerr].append(err)
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
-                                logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
+                                if self.flags['echoRelativeErrors']:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                else:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)                                
                             #end if
                         #if calcL1u
                         calcLIu = ('LI' in self.flags['errorNorms'] and
@@ -837,7 +843,10 @@ class SimulationProcessor:
                             self.errorData[ci][il][kerr].append(err)
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
-                                logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
+                                if self.flags['echoRelativeErrors']:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                else:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                             #
                         #calcLIu
@@ -894,7 +903,10 @@ class SimulationProcessor:
                             self.errorData[ci][il][kerr].append(err)
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
-                                logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
+                                if self.flags['echoRelativeErrors']:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                else:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcH1u
                         calcH1semiU = ('H1semi' in self.flags['errorNorms'] and
@@ -928,7 +940,10 @@ class SimulationProcessor:
                             self.errorData[ci][il][kerr].append(err)
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
-                                logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
+                                if self.flags['echoRelativeErrors']:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                else:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcH1semiu
                         calcW11u = ('W11' in self.flags['errorNorms'] and
@@ -983,7 +998,10 @@ class SimulationProcessor:
                             self.errorData[ci][il][kerr].append(err)
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
-                                logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
+                                if self.flags['echoRelativeErrors']:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                else:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcW11u
                         calcW11semiU = ('W11semi' in self.flags['errorNorms'] and
@@ -1016,7 +1034,10 @@ class SimulationProcessor:
                             self.errorData[ci][il][kerr].append(err)
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
-                                logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
+                                if self.flags['echoRelativeErrors']:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                else:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcH1semiu
                         calcTVu = ('TV' in self.flags['errorNorms'] and
@@ -1053,7 +1074,10 @@ class SimulationProcessor:
                             self.errorData[ci][il][kerr].append(err)
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
-                                logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
+                                if self.flags['echoRelativeErrors']:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                else:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #end calcTV
                         ############### velocity specific calculations ###############
@@ -1090,7 +1114,10 @@ class SimulationProcessor:
                             self.errorData[ci][il][kerr].append(err)
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
-                                logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
+                                if self.flags['echoRelativeErrors']:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                else:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcL2vel
                         calcL1vel = ('L1' in self.flags['errorNorms'] and
@@ -1124,7 +1151,10 @@ class SimulationProcessor:
                             self.errorData[ci][il][kerr].append(err)
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
-                                logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
+                                if self.flags['echoRelativeErrors']:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                else:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcL2vel
 
@@ -1156,7 +1186,10 @@ class SimulationProcessor:
                             self.errorData[ci][il][kerr].append(err)
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
-                                logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
+                                if self.flags['echoRelativeErrors']:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                else:
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcLIvel
 
