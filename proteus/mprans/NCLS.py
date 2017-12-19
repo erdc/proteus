@@ -236,7 +236,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  epsFact=1.5,
                  useMetrics=0.0,
                  sc_uref=1.0,
-                 sc_beta=1.0,
+                 sc_beta=1.5,
                  waterline_interval=-1,
                  movingDomain=False, 
                  # PARAMETERS FOR EV

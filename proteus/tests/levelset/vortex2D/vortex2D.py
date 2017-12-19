@@ -76,8 +76,8 @@ epsFactRedistance=0.33
 epsFactDiffusion=10.0
 #
 if useMetrics:
-    shockCapturingFactor_vof=0.5
-    shockCapturingFactor_ls=0.5
+    shockCapturingFactor_vof=0.25
+    shockCapturingFactor_ls=0.25
     shockCapturingFactor_rd=0.5
     lag_shockCapturing_vof=True
     lag_shockCapturing_ls=True
@@ -91,10 +91,13 @@ else:
     lag_shockCapturing_rd=False
 
 #use absolute tolerances on al models
-atolRedistance = max(1.0e-12,0.1*he)
-atolConservation = max(1.0e-12,0.001*he**2)#1.0e-12#
-atolVolumeOfFluid= max(1.0e-12,0.001*he**2)
-atolLevelSet     = max(1.0e-12,0.001*he**2)
+atolRedistance = max(1.0e-12,0.01*he)
+#atolConservation = max(1.0e-12,0.001*he**2)#1.0e-12#
+#atolVolumeOfFluid= max(1.0e-12,0.001*he**2)
+#atolLevelSet     = max(1.0e-12,0.001*he**2)
+atolConservation = 1.0e-10
+atolVolumeOfFluid= 1.0e-10
+atolLevelSet     = 1.0e-10
 #controls
 linearSolverConvergenceTest = 'r-true' #rits is do a set number of iterations, r-true uses true residual, PETSc default is preconditioned residual
 #redist solver

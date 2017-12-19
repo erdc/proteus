@@ -245,7 +245,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  epsFact=0.0,
                  useMetrics=0.0,
                  sc_uref=1.0,
-                 sc_beta=1.0,
+                 sc_beta=1.5,
                  setParamsFunc=None,
                  movingDomain=False,
                  forceStrongConditions=0,

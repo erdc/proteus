@@ -108,8 +108,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebq_H_vof = None
 
         self.q_phi_old = modelList[self.levelSetModelIndex].q[('u',0)].copy()
-        self.q_v = modelList[self.VOFModelIndex].coefficients.q_v
-        self.dt = modelList[self.VOFModelIndex].timeIntegration.dt
 
         #correction
         self.massCorrModel = modelList[self.me_model]
@@ -171,11 +169,19 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.lsModel.ebqe[('u',0)] += self.massCorrModel.ebqe[('u',0)]
             self.lsModel.q[('grad(u)',0)] += self.massCorrModel.q[('grad(u)',0)]
             self.lsModel.ebqe[('grad(u)',0)] += self.massCorrModel.ebqe[('grad(u)',0)]
+            self.lsModel.timeIntegration.m_tmp[0][:] = self.lsModel.q[('u',0)]
             if self.mass_correction_reference>0:
                 self.q_phi_old[:] = self.lsModel.q[('u',0)]
             #vof
             if self.edgeBasedStabilizationMethods==False:
                 self.massCorrModel.setMassQuadrature()
+            #rdls
+            #self.rdModel.u[0].dof[:] = self.lsModel.u[0].dof
+            #self.rdModel.q[('u',0)][:] = self.lsModel.q[('u',0)]
+            #self.rdModel.ebqe[('u',0)][:] = self.lsModel.ebqe[('u',0)]
+            #self.rdModel.q[('grad(u)',0)][:] = self.lsModel.q[('grad(u)',0)]
+            #self.rdModel.ebqe[('grad(u)',0)][:] = self.lsModel.ebqe[('grad(u)',0)]
+            #self.rdModel.timeIntegration.m_tmp[0][:] = self.lsModel.q[('u',0)]
             #else setMassQuadratureEdgeBasedStabilizationMethods is called within specialized nolinear solver
 
             #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
