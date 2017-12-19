@@ -201,10 +201,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.ebqe_u0.flat[i]=self.u0.uOfXT(cebqe['x'].flat[3*i:3*(i+1)],0.)
     def preStep(self,t,firstStep=False):
         import pdb
-        #pdb.set_trace()
         if self.nModel is not None:
             logEvent("resetting signed distance level set to current level set",level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
+            self.rdModel.q[('u',0)][:] = self.nModel.q[('u',0)]
+            self.rdModel.ebqe[('u',0)][:] = self.nModel.ebqe[('u',0)]
+            self.rdModel.q[('grad(u)',0)][:] = self.nModel.q[('grad(u)',0)]
+            self.rdModel.ebqe[('grad(u)',0)][:] = self.nModel.ebqe[('grad(u)',0)]
             self.rdModel.calculateCoefficients()
             self.rdModel.calculateElementResidual()
             self.rdModel.timeIntegration.updateTimeHistory(resetFromDOF=True)

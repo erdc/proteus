@@ -36,7 +36,7 @@ else:
 mass_correction_reference = 1 #: 0=H(phi^{n+1}) 1=explicit given 2=implicit given
 
 #sub-element edge size, used to create composite quadrature rule
-hk = 1.0
+hk = 0.3
 
 #parallel partitioning info
 from proteus import MeshTools
@@ -73,7 +73,7 @@ onlyVOF=False#True
 #eps
 epsFactHeaviside=epsFactDirac=epsFact_vof=1.5*hk
 epsFactRedistance=0.33
-epsFactDiffusion=10.0*10
+epsFactDiffusion=10.0
 #
 if useMetrics:
     shockCapturingFactor_vof=0.5
