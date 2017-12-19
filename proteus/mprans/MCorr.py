@@ -107,7 +107,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.ebq_H_vof = None
 
-        self.q_phi_old = numpy.zeros_like(modelList[self.levelSetModelIndex].q[('u',0)])
+        self.q_phi_old = modelList[self.levelSetModelIndex].q[('u',0)].copy()
         self.q_v = modelList[self.VOFModelIndex].coefficients.q_v
         self.dt = modelList[self.VOFModelIndex].timeIntegration.dt
 
@@ -171,6 +171,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.lsModel.ebqe[('u',0)] += self.massCorrModel.ebqe[('u',0)]
             self.lsModel.q[('grad(u)',0)] += self.massCorrModel.q[('grad(u)',0)]
             self.lsModel.ebqe[('grad(u)',0)] += self.massCorrModel.ebqe[('grad(u)',0)]
+            if self.mass_correction_reference>0:
+                self.q_phi_old[:] = self.lsModel.q[('u',0)]
             #vof
             if self.edgeBasedStabilizationMethods==False:
                 self.massCorrModel.setMassQuadrature()
@@ -616,10 +618,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.setUnknowns(u)
-
         #no flux boundary conditions
         self.mcorr.calculateResidual(#element
-            self.coefficients.dt,
+            self.coefficients.vofModel.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -655,7 +656,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_n_ls,
             self.coefficients.q_H_vof,#:H_epsilon(phi^{n+1})
             self.coefficients.q_phi_old,#:phi^n
-            self.coefficients.q_v,#:velocity field
+            self.coefficients.vofModel.coefficients.q_v,#:velocity field
             self.coefficients.mass_correction_reference,
             self.q[('u',0)],
             self.q[('grad(u)',0)],
@@ -1178,12 +1179,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.vofModel.u[0].dof)
 
-        #: YY: since self.coefficients.q_H_vof is modified after solving vof model
-        if self.coefficients.mass_correction_reference>0:
-            self.coefficients.q_phi_old[:] = self.coefficients.q_u_ls
-
     def calculateSolutionAtQuadrature(self):
         pass
+        
     def updateAfterMeshMotion(self):
         pass
 
