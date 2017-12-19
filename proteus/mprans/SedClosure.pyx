@@ -122,18 +122,18 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
             double dv_dy,
             double dw_dz)
 
-        double dpsc_term_dtheta(	      double sedF,
-                                       double rhoSolid,
-                                       double du_dx,
-                                       double dv_dy,
-                                       double dw_dz)
+        double dpsc_term_dtheta(double sedF,
+                                double rhoSolid,
+                                double du_dx,
+                                double dv_dy,
+                                double dw_dz)
 
-        double mu_sc(		      double sedF,
-                             double rhoSolid,
-                             double theta)
-        double l_sc(		      double sedF,
-                            double rhoSolid,
-                            double theta)
+        double mu_sc(double sedF,
+                     double rhoSolid,
+                     double theta)
+        double l_sc(double sedF,
+                    double rhoSolid,
+                    double theta)
 
         double tausc_term_theta(
             double sedF,
@@ -247,18 +247,18 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
             double * uSolid_n,  # Sediment velocity
             double nu  # Kinematic viscosity
         )
-        double p_s(		      double sedF,
-                           double rhoSolid,
-                           double theta,
-                           double du_dx,
-                           double du_dy,
-                           double du_dz,
-                           double dv_dx,
-                           double dv_dy,
-                           double dv_dz,
-                           double dw_dx,
-                           double dw_dy,
-                           double dw_dz)
+        double p_s(double sedF,
+                   double rhoSolid,
+                   double theta,
+                   double du_dx,
+                   double du_dy,
+                   double du_dz,
+                   double dv_dx,
+                   double dv_dy,
+                   double dv_dz,
+                   double dw_dx,
+                   double dw_dy,
+                   double dw_dz)
 
 # define the way we want to present to Python
 cdef class HsuSedStress:

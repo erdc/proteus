@@ -1,3 +1,4 @@
+# A type of -*- python -*- file
 import proteus
 from proteus import Profiling
 import numpy

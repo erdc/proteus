@@ -35,9 +35,8 @@ cdef extern from "ChMoorings.h":
     cdef cppclass cppCable:
         ch.ChSystemSMC& system
         ch.ChMesh& mesh
-        vector[shared_ptr[ch.ChNodeFEAxyzDD]] nodes
+        vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
         vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
-        vector[shared_ptr[ch.ChElementBeamANCF]] elems
         vector[ch.ChVector] forces_drag
         vector[ch.ChVector] forces_addedmass
         double L0
@@ -57,9 +56,8 @@ cdef extern from "ChMoorings.h":
         ch.ChSystemSMC& system
         ch.ChMesh& mesh
         vector[shared_ptr[cppCable]] cables
-        vector[shared_ptr[ch.ChNodeFEAxyzDD]] nodes
+        vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
         vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
-        vector[shared_ptr[ch.ChElementBeamANCF]] elems
         shared_ptr[ch.ChLinkPointFrame] constraint_back
         shared_ptr[ch.ChLinkPointFrame] constraint_front
         vector[ch.ChVector] forces_drag
@@ -77,7 +75,7 @@ cdef extern from "ChMoorings.h":
         void setFluidAccelerationAtNodes(vector[ch.ChVector] fluid_acceleration)
         void setFluidDensityAtNodes(vector[double] dens)
         void setContactMaterial(shared_ptr[ch.ChMaterialSurfaceSMC] material)
-        ch.ChVector getTensionElement(int i)
+        ch.ChVector getTensionElement(int i, double eta)
     cppMultiSegmentedCable * newMoorings(ch.ChSystemSMC& system,
                                          shared_ptr[ch.ChMesh] mesh,
                                          vector[double] length,
@@ -109,6 +107,7 @@ cdef extern from "ChRigidBody.h":
         void setGravity(double* gravity)
         void setDirectory(string directory)
         void setTimestepperType(string tstype, bool verbose)
+        void setCollisionEnvelopeMargin(double envelope, double margin)
     cppSystem * newSystem(double* gravity)
     cdef cppclass cppRigidBody:
         shared_ptr[ch.ChBody] body
@@ -156,6 +155,10 @@ cdef extern from "ChRigidBody.h":
         void setConstraints(double* free_x, double* free_r)
         void setInertiaXX(double* inertia)
         void setName(string name)
+        void setPrescribedMotionCustom(vector[double] t, vector[double] x,
+                                       vector[double] y, vector[double] z,
+                                       vector[double] ang, vector[double] ang2,
+                                       vector[double] ang3, double t_max)
         void setPrescribedMotionPoly(double coeff1)
         void setPrescribedMotionSine(double a, double f)
 
@@ -341,8 +344,8 @@ cdef class ProtChBody:
         h = np.zeros(3)
         if self.predicted is False:
             self.prediction()
-        # if self.ProtChSystem.thisptr.system.GetChTime() > 0.0003: 
-        # if self.ProtChSystem.step_nb > self.ProtChSystem.step_start: 
+        # if self.ProtChSystem.thisptr.system.GetChTime() > 0.0003:
+        # if self.ProtChSystem.step_nb > self.ProtChSystem.step_start:
             # self.ChBody.SetBodyFixed(False)
         if self.ProtChSystem.scheme == "CSS":
             h_body_vec = self.thisptr.hxyz(<double*> x.data, t)
@@ -867,6 +870,70 @@ cdef class ProtChBody:
     def calculate(self):
         pass
 
+    def setPrescribedMotionCustom(self, double[:] t, double[:] x=None,
+                                  double[:] y=None, double[:] z=None,
+                                  double[:] ang=None, double[:] ang2=None,
+                                  double[:] ang3=None, double t_max=0):
+        """Sets custom prescribed motion for body.
+        Parameters must have the same length as the time array t
+
+        Parameters
+        ----------
+        t: array_like
+            time array
+        x: array_like
+            x coordinates of body
+        y: array_like
+            y coordinates of body
+        z: array_like
+            z coordinates of body
+        ang: array_like
+            rotation of body
+        ang2: array_like
+            rotation of body
+        ang3: array_like
+            rotation coordinates of body
+        t_max: double
+            prescribed motion is released when t > t_max.
+            if t_max=0, the prescribed motion is never released.
+        """
+        cdef vector[double] t_vec
+        cdef vector[double] x_vec
+        cdef vector[double] y_vec
+        cdef vector[double] z_vec
+        cdef vector[double] ang_vec
+        cdef vector[double] ang2_vec
+        cdef vector[double] ang3_vec
+        for tt in t:
+            t_vec.push_back(tt)
+        if x is not None:
+            assert len(x) == len(t), 'x and t should have the same length'
+            for xx in x:
+                x_vec.push_back(xx)
+        if y is not None:
+            assert len(y) == len(t), 'y and t should have the same length'
+            for yy in y:
+                y_vec.push_back(yy)
+        if z is not None:
+            assert len(z) == len(t), 'z and t should have the same length'
+            for zz in z:
+                z_vec.push_back(zz)
+        if ang is not None:
+            assert len(ang) == len(t), 'ang and t should have the same length'
+            for angang in ang:
+                ang_vec.push_back(angang)
+        if ang2 is not None:
+            assert len(ang2) == len(t), 'ang2 and t should have the same length'
+            for ang2ang2 in ang2:
+                ang2_vec.push_back(ang2ang2)
+        if ang3 is not None:
+            assert len(ang3) == len(t), 'ang3 and t should have the same length'
+            for ang3ang3 in ang3:
+                ang3_vec.push_back(ang3ang3)
+        self.thisptr.setPrescribedMotionCustom(t_vec, x_vec, y_vec, z_vec,
+                                               ang_vec, ang2_vec, ang3_vec,
+                                               t_max)
+
     def setPrescribedMotionSine(self, double a, double f):
         """Sets sinusoidal prescribed motion for body
 
@@ -1139,7 +1206,7 @@ cdef class ProtChBody:
         |
         pris2
         """
-        self.thisptr.addPrismaticLinksWithSpring(<double*> pris1.data, 
+        self.thisptr.addPrismaticLinksWithSpring(<double*> pris1.data,
                                                  <double*> pris2.data,
                                                  stiffness,
                                                  damping,
@@ -1165,7 +1232,6 @@ cdef class ProtChSystem:
     cdef double proteus_dt
     cdef double proteus_dt_last
     cdef double proteus_dt_next
-    cdef double chrono_dt
     cdef string directory
     cdef object u
     cdef int nd
@@ -1180,6 +1246,7 @@ cdef class ProtChSystem:
     cdef double dt_last
     cdef double t
     cdef public:
+        double chrono_dt
         bool build_kdtree
         bool parallel_mode
         int chrono_processor
@@ -1355,8 +1422,10 @@ cdef class ProtChSystem:
         for s in self.subcomponents:
             s.calculate_init()
         Profiling.logEvent("Setup initial"+str(self.next_sample))
+        print("Setup initial")
         self.thisptr.system.SetupInitial()
         Profiling.logEvent("Finished init"+str(self.next_sample))
+        print("Finished init")
         for s in self.subcomponents:
             s.poststep()
 
@@ -1426,7 +1495,7 @@ cdef class ProtChSystem:
         Returns
         -------
         xi:
-            local coordinates 
+            local coordinates
         eN: int
             (local) element number
         rank: int
@@ -1484,7 +1553,7 @@ cdef class ProtChSystem:
         """
         Parameters
         ----------
-        xi: 
+        xi:
             local coords in element
         element: int
             element number (local to processor 'rank')
@@ -1523,6 +1592,9 @@ cdef class ProtChSystem:
             # broadcast to all processors
             w_grad = comm.bcast(w_grad, rank)
         return u_grad, v_grad, w_grad
+
+    def setCollisionEnvelopeMargin(self, double envelope, double margin):
+        self.thisptr.setCollisionEnvelopeMargin(envelope, margin)
 
     # def findFluidVelocityAtCoords(self, coords):
     #     """Finds solution from NS for velocity of fluid at given coordinates
@@ -1676,6 +1748,7 @@ cdef class ProtChMoorings:
       string beam_type
       int nodes_nb # number of nodes
       np.ndarray nb_elems
+      double[:] _record_etas
     def __cinit__(self,
                   ProtChSystem system,
                   Mesh mesh,
@@ -1718,6 +1791,7 @@ cdef class ProtChMoorings:
         self.name = 'record_moorings'
         self.external_forces_from_ns = False
         self.external_forces_manual = False
+        self._record_etas=np.array([0.])
 
     def setName(self, string name):
         """Sets name of cable, used for csv file
@@ -1729,9 +1803,17 @@ cdef class ProtChMoorings:
         """
         self.name = name
 
+    def recordStrainEta(self, double[:] eta):
+        self._record_etas = eta
+
     def _recordValues(self):
         """Records values in csv files
         """
+        self.record_file = os.path.join(Profiling.logDir, self.name)
+        def record(record_file, row, mode='a'):
+            with open(record_file, mode) as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(row)
         t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
@@ -1743,76 +1825,88 @@ cdef class ProtChMoorings:
         else:
             t = t_chrono
         t_sim = Profiling.time()-Profiling.startTime
-        # Positions
-        self.record_file = os.path.join(Profiling.logDir, self.name+'_pos.csv')
         if t == 0:
-            headers = ['t', 't_ch', 't_sim']
+            header_x = []
             for i in range(self.thisptr.nodes.size()):
-                headers += ['x'+str(i), 'y'+str(i), 'z'+str(i)]
-            with open(self.record_file, 'w') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(headers)
-        row = [t, t_chrono, t_sim]
-        positions = self.getNodesPosition()
-        for pos in positions:
-            row += [pos[0], pos[1], pos[2]]
-        with open(self.record_file, 'a') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow(row)
-        # Fairlead / anchor tensions
-        self.record_file = os.path.join(Profiling.logDir, self.name+'_T.csv')
+                header_x += ['x'+str(i), 'y'+str(i), 'z'+str(i)]
+        # time
+        file_name = '_t.csv'
         if t == 0:
-            headers = ['t', 't_ch', 't_sim']
-            # for i in range(self.thisptr.nodes.size()):
-            #     headers += ['Tbx'+str(i), 'Tby'+str(i), 'Tbz'+str(i), 'Tfx'+str(i), 'Tfy'+str(i), 'Tfz'+str(i)]
-            headers += ['Tb0', 'Tb1', 'Tb2', 'Tf0', 'Tf1', 'Tf2']
-            with open(self.record_file, 'w') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(headers)
+            row = ['t', 't_ch', 't_sim']
+            record(self.record_file+file_name, row, 'w')
         row = [t, t_chrono, t_sim]
+        record(self.record_file+file_name, row)
+        # Positions
+        file_name = '_pos.csv'
+        if t == 0:
+            record(self.record_file+file_name, header_x, 'w')
+        positions = self.getNodesPosition()
+        row = (positions.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
+        # Velocity
+        file_name = '_posdt.csv'
+        if t == 0:
+            record(self.record_file+file_name, header_x, 'w')
+        velocities = self.getNodesVelocity()
+        row = (velocities.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
+        # Acceleration
+        file_name = '_posdtdt.csv'
+        if t == 0:
+            record(self.record_file+file_name, header_x, 'w')
+        accelerations = self.getNodesAcceleration()
+        row = (accelerations.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
+        # Fairlead / anchor tensions
+        file_name = '_T.csv'
+        if t == 0:
+            row = ['Tb0', 'Tb1', 'Tb2', 'Tf0', 'Tf1', 'Tf2']
+            record(self.record_file+file_name, row, 'w')
         Tb = self.getTensionBack()
         Tf = self.getTensionFront()
-        row += [Tb[0], Tb[1], Tb[2], Tf[0], Tf[1], Tf[2]]
-        with open(self.record_file, 'a') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow(row)
+        row = [Tb[0], Tb[1], Tb[2], Tf[0], Tf[1], Tf[2]]
+        record(self.record_file+file_name, row)
         # Tensions
-        self.record_file = os.path.join(Profiling.logDir, self.name+'_TT.csv')
-        if t == 0:
-            headers = ['t', 't_ch', 't_sim']
-            for i in range(self.thisptr.nodes.size()-1):
-                headers += ['Tx'+str(i), 'Ty'+str(i), 'Tz'+str(i)]
-            with open(self.record_file, 'w') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(headers)
-        if t > 0:
-            row = [t, t_chrono, t_sim]
-            tensions = self.getNodesTension()
-            for T in tensions:
-                row += [T[0], T[1], T[2]]
-            with open(self.record_file, 'a') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(row)
+        for i in range(len(self._record_etas)):
+            eta = self._record_etas[i]
+            file_name = '_strain'+str(eta)+'.csv'
+            if t == 0:
+                record(self.record_file+file_name, header_x[:-3], 'w')
+            tensions = self.getNodesTension(eta=eta)
+            row = (tensions.flatten('C')).tolist()
+            record(self.record_file+file_name, row)
         # Drag
-        self.record_file = os.path.join(Profiling.logDir, self.name+'_drag.csv')
+        file_name = '_drag.csv'
         if t == 0:
-            headers = ['t', 't_ch', 't_sim']
-            for i in range(self.thisptr.nodes.size()-1):
-                headers += ['Fx'+str(i), 'Fy'+str(i), 'Fz'+str(i)]
-            with open(self.record_file, 'w') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(headers)
-        if t > 0:
-            row = [t, t_chrono, t_sim]
-            forces = self.getDragForces()
-            for F in forces:
-                row += [F[0], F[1], F[2]]
-            with open(self.record_file, 'a') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(row)
+            record(self.record_file+file_name, header_x, 'w')
+        forces = self.getDragForces()
+        row = (forces.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
+        # Added mass
+        file_name = '_AM.csv'
+        if t == 0:
+            record(self.record_file+file_name, header_x, 'w')
+        forces = self.getAddedMassForces()
+        row = (forces.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
+        # Fluid Velocity
+        file_name = '_u.csv'
+        if t == 0:
+            record(self.record_file+file_name, header_x, 'w')
+        velocities = self.fluid_velocity_array
+        row = (velocities.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
+        # Fluid Acceleration
+        file_name = '_udt.csv'
+        if t == 0:
+            record(self.record_file+file_name, header_x, 'w')
+        accelerations = self.fluid_acceleration_array
+        row = (accelerations.flatten('C')).tolist()
+        record(self.record_file+file_name, row)
 
     def getTensionBack(self):
         """
+        Get Tension at the back of the cable
         """
         cdef ch.ChVector T
         if self.thisptr.constraint_back:
@@ -1823,6 +1917,7 @@ cdef class ProtChMoorings:
 
     def getTensionFront(self):
         """
+        Get Tension at the front of the cable
         """
         cdef ch.ChVector T
         if self.thisptr.constraint_front:
@@ -1938,31 +2033,21 @@ cdef class ProtChMoorings:
         assert self.nodes_built is True, 'call buildNodes() before calling this function'
         self.thisptr.attachFrontNodeToBody(body.thisptr.body)
 
-    def getElementMass(self, int i=0):
-        mass = deref(self.thisptr.elems[i]).GetMass()
-        return mass
-
-    def getTensionElement(self, int i=0):
+    def getTensionElement(self, int i=0, eta=0.):
         cdef ch.ChVector[double] F
-        F = self.thisptr.getTensionElement(i)
+        F = self.thisptr.getTensionElement(i, eta)
         return np.array([F.x(), F.y(), F.z()])
 
-    def getNodesTension(self):
+    def getNodesTension(self, eta=0.):
         cdef ch.ChVector[double] vec
         if self.beam_type == 'BeamEuler':
             T = np.zeros((self.thisptr.nodesRot.size()-1,3 ))
         else:
             T = np.zeros(( self.thisptr.nodes.size()-1,3 ))
         for i in range(np.sum(self.nb_elems)):
-            vec = self.thisptr.getTensionElement(i)
+            vec = self.thisptr.getTensionElement(i, eta)
             T[i] = [vec.x(), vec.y(), vec.z()]
         return T
-
-    def getLengthElems(self):
-        lengths = np.zeros(self.thisptr.elems.size())
-        for i in range(self.thisptr.elems.size()):
-            lengths[i] = deref(self.thisptr.elems[i]).GetLengthX()
-        return lengths
 
     def setDragCoefficients(self, double tangential, double normal, int segment_nb):
         """Sets drag coefficients of cable
@@ -2003,9 +2088,7 @@ cdef class ProtChMoorings:
             L0 = deref(self.thisptr.cables[i]).L0
             L = deref(self.thisptr.cables[i]).length
             nb_elems = deref(self.thisptr.cables[i]).nb_elems
-            if self.beam_type == "BeamANCF":
-                nb_nodes = nb_elems*2+1
-            elif self.beam_type == "CableANCF" or self.beam_type == "BeamEuler":
+            if self.beam_type == "CableANCF" or self.beam_type == "BeamEuler":
                 nb_nodes = nb_elems+1
             else:
                 print("set element type")
@@ -2022,7 +2105,7 @@ cdef class ProtChMoorings:
         self.nodes_built = True
         if self.beam_type == "BeamEuler":
             self.nodes_nb = self.thisptr.nodesRot.size()
-        elif self.beam_type == "CableANCF" or self.beam_type == "BeamANCF":
+        elif self.beam_type == "CableANCF":
             self.nodes_nb = self.thisptr.nodes.size()
         else:
             print("set element type")
@@ -2049,11 +2132,61 @@ cdef class ProtChMoorings:
                 pos[i] = [vec.x(), vec.y(), vec.z()]
             return pos
 
+    def getNodesVelocity(self):
+        """Gives array of nodes velocity
+
+        Returns
+        -------
+        pos: np.ndarray
+            Array of nodes velocity.
+        """
+        if self.beam_type == 'BeamEuler':
+            pos = np.zeros(( self.thisptr.nodesRot.size(),3 ))
+            for i in range(self.thisptr.nodesRot.size()):
+                vec = deref(self.thisptr.nodesRot[i]).GetPos_dt()
+                pos[i] = [vec.x(), vec.y(), vec.z()]
+            return pos
+        else:
+            pos = np.zeros(( self.thisptr.nodes.size(),3 ))
+            for i in range(self.thisptr.nodes.size()):
+                vec = deref(self.thisptr.nodes[i]).GetPos_dt()
+                pos[i] = [vec.x(), vec.y(), vec.z()]
+            return pos
+
+    def getNodesAcceleration(self):
+        """Gives array of nodes acceleration
+
+        Returns
+        -------
+        pos: np.ndarray
+            Array of nodes acceleration.
+        """
+        if self.beam_type == 'BeamEuler':
+            pos = np.zeros(( self.thisptr.nodesRot.size(),3 ))
+            for i in range(self.thisptr.nodesRot.size()):
+                vec = deref(self.thisptr.nodesRot[i]).GetPos_dtdt()
+                pos[i] = [vec.x(), vec.y(), vec.z()]
+            return pos
+        else:
+            pos = np.zeros(( self.thisptr.nodes.size(),3 ))
+            for i in range(self.thisptr.nodes.size()):
+                vec = deref(self.thisptr.nodes[i]).GetPos_dtdt()
+                pos[i] = [vec.x(), vec.y(), vec.z()]
+            return pos
+
     def getDragForces(self):
         cdef ch.ChVector Fd
         drag = np.zeros(( self.thisptr.nodes.size(),3 ))
         for i in range(self.thisptr.forces_drag.size()):
             Fd = self.thisptr.forces_drag[i]
+            drag[i] = [Fd.x(), Fd.y(), Fd.z()]
+        return drag
+
+    def getAddedMassForces(self):
+        cdef ch.ChVector Fd
+        drag = np.zeros(( self.thisptr.nodes.size(),3 ))
+        for i in range(self.thisptr.forces_addedmass.size()):
+            Fd = self.thisptr.forces_addedmass[i]
             drag[i] = [Fd.x(), Fd.y(), Fd.z()]
         return drag
 
@@ -2074,15 +2207,6 @@ cdef class ProtChMoorings:
             vec = deref(self.thisptr.nodes[i]).GetD()
             dire[i] = [vec.x(), vec.y(), vec.z()]
         return dire
-
-    def getNodesDD(self):
-        """(!) Only for BeamANCF
-        """
-        pos = np.zeros(( self.thisptr.nodes.size(),3 ))
-        for i in range(self.thisptr.nodes.size()):
-            vec = deref(self.thisptr.nodes[i]).GetDD()
-            pos[i] = [vec.x(), vec.y(), vec.z()]
-        return pos
 
     def setContactMaterial(self, pych.ChMaterialSurfaceSMC mat):
         """Sets contact material of the cable

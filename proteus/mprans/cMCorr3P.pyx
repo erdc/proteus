@@ -1,3 +1,4 @@
+# A type of -*- python -*- file
 import numpy
 cimport numpy
 

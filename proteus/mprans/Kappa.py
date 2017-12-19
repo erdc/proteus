@@ -3,9 +3,9 @@ from proteus.mprans.cKappa import *
 from proteus.mprans.cKappa2D import *
 
 """
-NOTES: 
+NOTES:
 
-Hardwired Numerics include:    
+Hardwired Numerics include:
 
 lagging all terms from Navier-Stokes, Epsilon equations same solution
 space for velocity from Navier-Stokes and Kappa equations
