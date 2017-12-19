@@ -51,7 +51,8 @@ if cDegree_ls==0:
         #elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
     if LevelModelType == RDLS.LevelModel:
-        subgridError = HamiltonJacobi_ASGS_opt(coefficients,nd,stabFlag='2',lag=False)
+        #subgridError = HamiltonJacobi_ASGS_opt(coefficients,nd,stabFlag='2',lag=False)
+        subgridError      = RDLS.SubgridError(coefficients,nd)
     else:
         subgridError = HamiltonJacobi_ASGS(coefficients,nd,stabFlag='2',lag=False)
     shockCapturing = RDLS.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_rd,lag=lag_shockCapturing_rd)
