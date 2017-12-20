@@ -1,3 +1,4 @@
+# A type of -*- python -*- file
 import numpy
 cimport numpy
 from proteus import *
@@ -1139,7 +1140,7 @@ cdef class cRANS2P_IB_base:
                                      < double * > vel_trial_trace_ref.data,
                                      < double * > vel_grad_trial_trace_ref.data,
                                      < double * > vel_test_trace_ref.data,
-                                     < double*> vel_grad_test_trace_ref.data,
+                                     < double * > vel_grad_test_trace_ref.data,
                                      < double * > normal_ref.data,
                                      < double * > boundaryJac_ref.data,
                                      eb_adjoint_sigma,
@@ -1468,7 +1469,7 @@ cdef class cRANS2P_IB_base:
                                         < double * > vel_trial_trace_ref.data,
                                         < double * > vel_grad_trial_trace_ref.data,
                                         < double * > vel_test_trace_ref.data,
-                                        < double*> vel_grad_test_trace_ref.data,
+                                        < double * > vel_grad_test_trace_ref.data,
                                         < double * > normal_ref.data,
                                         < double * > boundaryJac_ref.data,
                                         eb_adjoint_sigma,
@@ -1744,7 +1745,7 @@ cdef class cRANS2P_IB_base:
                                      < double * > vel_trial_trace_ref.data,
                                      < double * > vel_grad_trial_trace_ref.data,
                                      < double * > vel_test_trace_ref.data,
-                                     < double*> vel_grad_test_trace_ref.data,
+                                     < double * > vel_grad_test_trace_ref.data,
                                      < double * > normal_ref.data,
                                      < double * > boundaryJac_ref.data,
                                      < double * > elementDiameter.data,
@@ -1767,11 +1768,11 @@ cdef class cRANS2P_IB_base:
                                      Cd_sge,
                                      C_dc,
                                      C_b,
-                                     < int*> p_l2g.data,
-                                     < int*> vel_l2g.data,
-                                     < double*> p_dof.data,
-                                     < double*> u_dof.data,
-                                     < double*> v_dof.data,
+                                     < int * > p_l2g.data,
+                                     < int * > vel_l2g.data,
+                                     < double * > p_dof.data,
+                                     < double * > u_dof.data,
+                                     < double * > v_dof.data,
                                      < double * > w_dof.data,
                                      < double * > g.data,
                                      < double * > rho_init.data,

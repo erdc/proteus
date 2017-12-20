@@ -260,7 +260,7 @@ class BC_RANS(BC_Base):
 
     def setWallFunction(self, wall, shearStress=False):
         """
-        Sets turbulent boundaries for wall treatment.        
+        Sets turbulent boundaries for wall treatment.
         Calculation made on nodes outside the viscous sublayer and based
         on assumption on the velocity profile close to the wall in order to
         impose the wall shear stress.
@@ -269,8 +269,8 @@ class BC_RANS(BC_Base):
         ----------
         wall: wall object.
             BoundaryConditions class to be attached for setting up
-            all the turbulent parameters. 
-        shearStress: True/False.     
+            all the turbulent parameters.
+        shearStress: True/False.
             At the moment version with shearStress=False is the only one that
             returns good results.
             Keep it False at the moment!
@@ -372,7 +372,7 @@ class BC_RANS(BC_Base):
             VOF value of water (default is 0.)
 
         Below the sea water level: fluid velocity to wave speed.
-        Above the sea water level: fluid velocity set to wind speed 
+        Above the sea water level: fluid velocity set to wind speed
         (with smoothing).
         """
         self.reset()
@@ -435,16 +435,16 @@ class BC_RANS(BC_Base):
         U: list.
             Velocity vector at the global system.
         Uwind: list.
-            Air velocity vector at the global system.            
+            Air velocity vector at the global system.
         waterLevel: float.
             water level at global coordinate system.
         smoothing: float.
             range within smoothing function is valid.
             [3.0 times mesh element size can be a good value].
-        vert_axis: optional. 
+        vert_axis: optional.
             index of vertical in position vector, must always be
-            aligned with gravity, by default set to 1].      
-        air: optional. 
+            aligned with gravity, by default set to 1].
+        air: optional.
             Volume fraction for air (1.0 by default).
         water: optional.
             Volume fraction for water (0.0 by default).
@@ -455,7 +455,7 @@ class BC_RANS(BC_Base):
         kInflowAir: float (optional).
             Air K inflow value for turbulent model imposed at the boundary.
         dissipationInflowAir: float (optional).
-            Air dissipation inflow value for turbulent model imposed at the boundary.            
+            Air dissipation inflow value for turbulent model imposed at the boundary.
         Below the seawater level, the condition returns the _dirichlet and
         p_advective condition according to the inflow velocity.
         Above the sea water level, the condition returns the gravity as zero,
@@ -562,7 +562,7 @@ class BC_RANS(BC_Base):
             one of the main axes.
 
         Parameters
-        ----------        
+        ----------
         rhoUp: Phase density of the upper part.
         rhoDown: Phase density of the lower part.
         g: Gravitational acceleration vector.
@@ -1011,7 +1011,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
 
     def __init__(self, turbModel, kWall, b_or, Y, Yplus, U0, nu=1.004e-6, Cmu=0.09, K=0.41, B=5.57):
         """
-        Sets turbulent boundaries for wall treatment.        
+        Sets turbulent boundaries for wall treatment.
         Calculation made on nodes outside the viscous sublayer and based
         on assumption on the velocity profile close to the wall in order to
         impose the wall shear stress.
@@ -1039,7 +1039,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         K: float.
             von Karman coefficient.
         B: float.
-            roughness coefficient for walls.          
+            roughness coefficient for walls.
         """
         self.turbModel = turbModel
         self._b_or = b_or
@@ -1154,7 +1154,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
 
     def findElementContainingCoords(self, coords):
         """
-        Given global coordinates of a point, returns 
+        Given global coordinates of a point, returns
         local coordinates and the owner of the point.
 
         Parameters
@@ -1164,7 +1164,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         Returns
         -------
         xi:
-            local coordinates 
+            local coordinates
         eN: int
             (local) element number
         rank: int
@@ -1196,7 +1196,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
 
         Parameters
         ----------
-        xi: 
+        xi:
             local coords in element
         element: int
             element number (local to processor 'rank')
@@ -1417,7 +1417,7 @@ class kWall(AuxiliaryVariables.AV_base, object):
 
         Parameters
         ----------
-        xi: 
+        xi:
             local coords in element
         element: int
             element number (local to processor 'rank')

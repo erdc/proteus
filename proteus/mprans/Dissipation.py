@@ -10,7 +10,7 @@ Hardwired Numerics include:
 lagging all terms from Navier-Stokes, Kappa equations
 
 same solution space for velocity from Navier-Stokes and Dissipation
-equations     
+equations
 
 This can be removed by saving gradient calculations in N-S and lagging
 rather than passing degrees of freedom between models
@@ -75,7 +75,7 @@ class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIP
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """Basic k-epsilon model for incompressible flow from Hutter etal
-Chaper 11 or k-omega (Wilcox 1998). 
+Chaper 11 or k-omega (Wilcox 1998).
 
     """
 #     Solves for just dissipation variable (epsilon, or omega) assuming
