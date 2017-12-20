@@ -3187,12 +3187,21 @@ class ParametricFiniteElementSpace:
                                xiArray,
                                inverseJacobianArray,
                                grad_vArray):
-        ''' This function calculates the BasisGradientValues for calculations on the reference element
-            xiArray (input)               - a list of quadrature points (x,y,z) in 2D case, z = 0
-            inverseJacobianArray (input)  - values of the inverseJacobian matrix used in the affine transformation from 
-                                            the physical domain to the reference element
-            grad_vArray (output)          - gradient values of basis functions on reference triangle, adjusted for transformation
-                                            from physical domain
+        '''
+        This function calculates the BasisGradientValues for
+        calculations on the reference element.
+
+        Parameters
+        ----------
+        xiArray : input, :obj:`list` of :obj:`tuple`
+            A list of quadrature points (x,y,z) in 2D case, z = 0.
+        inverseJacobianArray : input, :obj:`numpy.array`
+            Values of the inverseJacobian matrix used in the affine
+            transformation from the physical domain to the reference
+            element.
+        grad_vArray : output, :obj:`numpy.array`
+            Gradient values of basis functions on reference triangle,
+            adjusted for transformation from physical domain.
         '''
         grad_vArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
@@ -6530,10 +6539,28 @@ class DOFBoundaryConditions_alt:
 
 
 
-class FluxBoundaryConditions:
-    """
-    A class for generating the list of element boundaries
-    where flux values are specified.
+class FluxBoundaryConditions(object):
+    """Generating class for the fluxBoundaryConditions dictionaries.
+
+    This class manages the generation of the advective, stress and
+    diffusive fluxBoundaryCondition dictionaries.  These dictionaries
+    store lists of functions that describe the flux conditions along
+    the finite element boundaries.
+
+    Attributes
+    ----------
+    advectiveFluxBoundaryConditionsDict : :obj:`dict`
+        Stores advective flux boundary conditions functions.
+    stressFluxBoundaryConditionsDict : :obj:`dict`
+        Stores stress flux boundary conditions functions.
+    diffusiveFluxBoundaryConditionsDictDict : :obj:`dict`
+        Stores diffusive flux boundary conditions functions.
+
+    Notes
+    -----
+    The boundary condition dictionaries all use the key convention
+    (ebNE,k) where ebNE is the global edge number and k is the local
+    quadrature point number.
     """
     def __init__(self,mesh,nElementBoundaryQuadraturePoints_elementBoundary,x,
                  getAdvectiveFluxBoundaryConditions=None,
