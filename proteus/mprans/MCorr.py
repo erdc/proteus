@@ -31,7 +31,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sd=sd
         self.checkMass=checkMass
         self.variableNames=['phiCorr']
-        assert mass_correction_reference<2,"*****Use proper mass_correction_reference number*****"
+        assert mass_correction_reference<3,"*****Use proper mass_correction_reference number*****"
         self.mass_correction_reference=mass_correction_reference
 
         nc=1
@@ -744,6 +744,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,jacobian)
         self.mcorr.calculateJacobian(#element
+            self.coefficients.vofModel.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -775,6 +776,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_u_ls,
                         self.coefficients.q_n_ls,
             self.coefficients.q_H_vof,
+            self.coefficients.q_phi_old,#:phi^n
+            self.coefficients.vofModel.coefficients.q_v,#:velocity field
+            self.coefficients.mass_correction_reference,
             self.coefficients.q_porosity,
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
             jacobian)
