@@ -110,7 +110,8 @@ namespace proteus
                                      int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                                      double* globalJacobian,
                                      double* globalLumpedMassMatrix)=0;
-    virtual void calculateJacobian(//element
+    virtual void calculateJacobian(//elem
+                                   double dt,
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
@@ -143,6 +144,9 @@ namespace proteus
                                    double* q_phi,
                                    double* q_normal_phi,
                                    double* q_H,
+		                           double* q_phi_old,///YY
+		                           double* q_v,///YY
+		                           int mass_correction_reference,
                                    double* q_porosity,
                                    int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                                    double* globalJacobian)=0;
@@ -517,20 +521,28 @@ namespace proteus
                                   double* f,
                                   double* df)
       {
-        register double H_phi_old = 0.0, H_phi = 0.0;
+        register double H_phi_old = 0.0, H_phi = 0.0, H_phi_u=0.0;
+        H_phi_old = porosity*smoothedHeaviside(epsHeaviside, phi_old);
+        H_phi = porosity*smoothedHeaviside(epsHeaviside, phi);
+        H_phi_u = porosity*smoothedHeaviside(epsHeaviside, phi+u);
+
         if(mass_correction_reference==0)
-          r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H;
-        else
-	  {
-	    H_phi_old = porosity*smoothedHeaviside(epsHeaviside, phi_old);
-	    r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
-	  }
+        	    r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H;
+        else if(mass_correction_reference==1)
+        	    r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
+        else if(mass_correction_reference==2)
+        	    r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
+
         dr = porosity*smoothedDirac(epsDirac,phi+u);
-	H_phi = porosity*smoothedHeaviside(epsHeaviside, phi);
+
         for (int I=0; I < nSpace; I++)
           {
-            if(f) f[I] = v[I]*porosity*H_phi;
-            if(df) df[I] = 0;//0 for explicit case; 
+            if(f)
+            	    if( mass_correction_reference==1)
+            	        f[I] = v[I]*porosity*H_phi;/// v is not NULL when mass_correction_reference=1 or 2
+            	    else if(mass_correction_reference==2)
+            	        f[I] = v[I]*porosity*H_phi_u;
+            if(df && mass_correction_reference==2)df[I] = v[I]*dr;//0 for explicit case;
           }
       }
       void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
@@ -679,7 +691,7 @@ namespace proteus
             //eN_nDOF_trial_element = eN*nDOF_trial_element;
             register double u=0.0,grad_u[nSpace],
               r=0.0,dr=0.0,
-              f[nSpace],df[nSpace],
+              f[nSpace],
               jac[nSpace*nSpace],
               jacDet,
               jacInv[nSpace*nSpace],
@@ -757,7 +769,7 @@ namespace proteus
                                  r,
                                  dr,
                                  f,
-                                 df);
+                                 NULL);
             //
             //update element residual
             //
@@ -767,8 +779,8 @@ namespace proteus
                 //register int eN_k_i_nSpace = eN_k_i*nSpace;
                 register int  i_nSpace=i*nSpace;
 
-                elementResidual_u[i] += ck.Reaction_weak(r,u_test_dV[i]) +///YY
-                  (mass_correction_reference>0?1:0)*dt*ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])+///YY
+                elementResidual_u[i] += ck.Reaction_weak(r,u_test_dV[i]) +
+                  (mass_correction_reference>0?1:0)*dt*ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])+///minus is inside
                   ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]);
               }//i
             //
@@ -1276,8 +1288,161 @@ namespace proteus
       //////////////////////////////////
       // END OF COMPUTING MASS MATRIX // (MQL)
       //////////////////////////////////
-
       inline void calculateElementJacobian(//element
+                                                 double* mesh_trial_ref,
+                                                 double* mesh_grad_trial_ref,
+                                                 double* mesh_dof,
+                                                 int* mesh_l2g,
+                                                 double* dV_ref,
+                                                 double* u_trial_ref,
+                                                 double* u_grad_trial_ref,
+                                                 double* u_test_ref,
+                                                 double* u_grad_test_ref,
+                                                 //element boundary
+                                                 double* mesh_trial_trace_ref,
+                                                 double* mesh_grad_trial_trace_ref,
+                                                 double* dS_ref,
+                                                 double* u_trial_trace_ref,
+                                                 double* u_grad_trial_trace_ref,
+                                                 double* u_test_trace_ref,
+                                                 double* u_grad_test_trace_ref,
+                                                 double* normal_ref,
+                                                 double* boundaryJac_ref,
+                                                 //physics
+                                                 int nElements_global,
+                                                 double useMetrics,
+                                                 double epsFactHeaviside,
+                                                 double epsFactDirac,
+                                                 double epsFactDiffusion,
+                                                 int* u_l2g,
+                                                 double* elementDiameter,
+                                                 double* nodeDiametersArray,
+                                                 double* u_dof,
+                                                 // double* u_trial,
+                                                 // double* u_grad_trial,
+                                                 // double* u_test_dV,
+                                                 // double* u_grad_test_dV,
+                                                 double* q_phi,
+                                                 double* q_normal_phi,
+                                                 double* q_H,
+                                                 double* q_porosity,
+                                                 double* elementJacobian_u_u,
+                                                 double* element_u,
+                                                 int eN)
+            {
+              for (int i=0;i<nDOF_test_element;i++)
+                for (int j=0;j<nDOF_trial_element;j++)
+                  {
+                    elementJacobian_u_u[i*nDOF_trial_element+j]=0.0;
+                  }
+              double epsHeaviside,epsDirac,epsDiffusion;
+              for  (int k=0;k<nQuadraturePoints_element;k++)
+                {
+                  int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
+                    eN_k_nSpace = eN_k*nSpace;
+                  //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
+
+                  //declare local storage
+                  register double u=0.0,
+                    grad_u[nSpace],
+                    r=0.0,dr=0.0,
+                    jac[nSpace*nSpace],
+                    jacDet,
+                    jacInv[nSpace*nSpace],
+                    u_grad_trial[nDOF_trial_element*nSpace],
+                    dV,
+                    u_test_dV[nDOF_test_element],
+                    u_grad_test_dV[nDOF_test_element*nSpace],
+                    x,y,z,
+                    G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
+                  //
+                  //calculate solution and gradients at quadrature points
+                  //
+                  ck.calculateMapping_element(eN,
+                                              k,
+                                              mesh_dof,
+                                              mesh_l2g,
+                                              mesh_trial_ref,
+                                              mesh_grad_trial_ref,
+                                              jac,
+                                              jacDet,
+                                              jacInv,
+                                              x,y,z);
+                  ck.calculateH_element(eN,
+                                        k,
+                                        nodeDiametersArray,
+                                        mesh_l2g,
+                                        mesh_trial_ref,
+                                        h_phi);
+                  //get the physical integration weight
+                  dV = fabs(jacDet)*dV_ref[k];
+                  ck.calculateG(jacInv,G,G_dd_G,tr_G);
+
+                  /* double dir[nSpace]; */
+                  /* double norm = 1.0e-8; */
+                  /* for (int I=0;I<nSpace;I++) */
+                  /*   norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
+                  /* norm = sqrt(norm); */
+                  /* for (int I=0;I<nSpace;I++) */
+                  /*   dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
+                  /* ck.calculateGScale(G,dir,h_phi); */
+
+
+                  //get the trial function gradients
+                  ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+                  //get the solution
+                  ck.valFromElementDOF(element_u,&u_trial_ref[k*nDOF_trial_element],u);
+                  //get the solution gradients
+                  ck.gradFromElementDOF(element_u,u_grad_trial,grad_u);
+                  //precalculate test function products with integration weights
+                  for (int j=0;j<nDOF_trial_element;j++)
+                    {
+                      u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+                      for (int I=0;I<nSpace;I++)
+                        {
+                          u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+                        }
+                    }
+                  //
+                  //calculate pde coefficients and derivatives at quadrature points
+                  //
+                  epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                  epsDirac    =epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                  epsDiffusion=epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                  //    *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                  evaluateCoefficients(epsHeaviside,
+                                       epsDirac,
+                                       q_phi[eN_k],
+                                       q_H[eN_k],
+                                       NULL,///phi^n
+                                       NULL,///velocity field
+                                       0,///label for mass reference
+                                       u,
+                                       q_porosity[eN_k],
+                                       r,
+                                       dr,
+                                       NULL,
+                                       NULL);
+                  for(int i=0;i<nDOF_test_element;i++)
+                    {
+                      //int eN_k_i=eN_k*nDOF_test_element+i;
+                      //int eN_k_i_nSpace=eN_k_i*nSpace;
+                      int i_nSpace=i*nSpace;
+                      for(int j=0;j<nDOF_trial_element;j++)
+                        {
+                          //int eN_k_j=eN_k*nDOF_trial_element+j;
+                          //int eN_k_j_nSpace = eN_k_j*nSpace;
+                          int j_nSpace = j*nSpace;
+                          elementJacobian_u_u[i*nDOF_trial_element+j] +=
+                            ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
+                            ck.NumericalDiffusionJacobian(epsDiffusion,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
+                        }//j
+                    }//i
+                }//k
+            }
+
+      inline void calculateElementJacobian_new(//element
+                                           double dt,
                                            double* mesh_trial_ref,
                                            double* mesh_grad_trial_ref,
                                            double* mesh_dof,
@@ -1314,6 +1479,9 @@ namespace proteus
                                            double* q_phi,
                                            double* q_normal_phi,
                                            double* q_H,
+                                           double* q_phi_old,///YY
+                                           double* q_v,///YY
+                                           int mass_correction_reference,
                                            double* q_porosity,
                                            double* elementJacobian_u_u,
                                            double* element_u,
@@ -1335,6 +1503,7 @@ namespace proteus
             register double u=0.0,
               grad_u[nSpace],
               r=0.0,dr=0.0,
+              df[nSpace],
               jac[nSpace*nSpace],
               jacDet,
               jacInv[nSpace*nSpace],
@@ -1403,15 +1572,15 @@ namespace proteus
                                  epsDirac,
                                  q_phi[eN_k],
                                  q_H[eN_k],
-                                 0.0,
-                                 NULL,
-                                 0,
+                                 q_phi_old[eN_k],///phi^n
+                                 &q_v[eN_k_nSpace],///velocity field
+                                 mass_correction_reference,///label for mass reference
                                  u,
                                  q_porosity[eN_k],
                                  r,
                                  dr,
                                  NULL,
-                                 NULL);
+                                 df);
             for(int i=0;i<nDOF_test_element;i++)
               {
                 //int eN_k_i=eN_k*nDOF_test_element+i;
@@ -1424,6 +1593,7 @@ namespace proteus
                     int j_nSpace = j*nSpace;
                     elementJacobian_u_u[i*nDOF_trial_element+j] +=
                       ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
+                      (mass_correction_reference==2?dt:0)*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace])+//minus is inside
                       ck.NumericalDiffusionJacobian(epsDiffusion,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
                   }//j
               }//i
@@ -1431,6 +1601,7 @@ namespace proteus
       }
 
       void calculateJacobian(//element
+    		  	  	  	  	  	double dt,
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
                              double* mesh_dof,
@@ -1467,6 +1638,9 @@ namespace proteus
                              double* q_phi,
                              double* q_normal_phi,
                              double* q_H,
+                             double* q_phi_old,///YY
+                             double* q_v,///YY
+                             int mass_correction_reference,
                              double* q_porosity,
                              int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                              double* globalJacobian)
@@ -1482,7 +1656,9 @@ namespace proteus
                 register int eN_j = eN*nDOF_trial_element+j;
                 element_u[j] = u_dof[u_l2g[eN_j]];
               }
-            calculateElementJacobian(mesh_trial_ref,
+            calculateElementJacobian_new(
+            							dt,
+            							mesh_trial_ref,
                                      mesh_grad_trial_ref,
                                      mesh_dof,
                                      mesh_l2g,
@@ -1512,6 +1688,9 @@ namespace proteus
                                      q_phi,
                                      q_normal_phi,
                                      q_H,
+									 q_phi_old,
+									 q_v,
+									 mass_correction_reference,
                                      q_porosity,
                                      elementJacobian_u_u,
                                      element_u,
