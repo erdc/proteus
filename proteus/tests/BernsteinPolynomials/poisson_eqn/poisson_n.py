@@ -6,7 +6,6 @@ from poisson_p import *
 parallel = False
 #0 there is no special treatment for time derivative
 timeIntegration = NoIntegration
-
 quad_order=2*ct.pDegree+1
 if ct.useHex:
     hex=True
@@ -37,8 +36,9 @@ else:
     elementQuadrature = SimplexGaussQuadrature(nd,quad_order)
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,quad_order)
 
-nLevels = 1 
 
+nLevels = 1 
+numericalFluxType=None
 subgridError = None
 shockCapturing = None
 

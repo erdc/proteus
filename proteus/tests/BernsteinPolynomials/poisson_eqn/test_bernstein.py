@@ -39,12 +39,15 @@ class TestBernstein():
         pass
     
     def test_2D_hex(self):
-        # Set parameters for this test 
+        # Set parameters for this test
         parameters_for_poisson.ct.nd = 2
         parameters_for_poisson.ct.useHex = True
         # Reload _p and _n modules
         reload(poisson_p)
         reload(poisson_n)
+        poisson_n.nnx=poisson_p.nn
+        poisson_n.nny=poisson_p.nn
+        poisson_n.nnz=1
         # Update name
         self.so.name = "2D_"+self.pList[0].name+"_hex_degree2"
         # NUMERICAL SOLUTION #
@@ -72,6 +75,9 @@ class TestBernstein():
         # Reload _p and _n modules
         reload(poisson_p)
         reload(poisson_n)
+        poisson_n.nnx=poisson_p.nn
+        poisson_n.nny=poisson_p.nn
+        poisson_n.nnz=1
         # Update name 
         self.so.name = "2D_"+self.pList[0].name+"_simplex_degree2"
         # NUMERICAL SOLUTION #
@@ -97,6 +103,9 @@ class TestBernstein():
         # Reload _p and _n modules
         reload(poisson_p)
         reload(poisson_n)
+        poisson_n.nnx=poisson_p.nn
+        poisson_n.nny=poisson_p.nn
+        poisson_n.nnz=poisson_p.nn
         # Update name 
         self.so.name = "3D_"+self.pList[0].name+"_hex_degree2"
         # NUMERICAL SOLUTION #
@@ -122,6 +131,9 @@ class TestBernstein():
         # Reload _p and _n modules
         reload(poisson_p)
         reload(poisson_n)
+        poisson_n.nnx=poisson_p.nn
+        poisson_n.nny=poisson_p.nn
+        poisson_n.nnz=poisson_p.nn
         # Update name 
         self.so.name = "3D_"+self.pList[0].name+"_simplex_degree2"
         # NUMERICAL SOLUTION #
