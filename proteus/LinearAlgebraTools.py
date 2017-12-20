@@ -19,7 +19,14 @@ from petsc4py import PETSc as p4pyPETSc
 from . import flcbdfWrappers
 
 def _petsc_view(obj, filename):
-    """Saves object to disk using a PETSc binary viewer.
+    """Saves petsc object to disk using a PETSc binary viewer.
+
+    Parameters
+    ----------
+    obj : PETSc obj
+        PETSc4py object to be saved (e.g. vector, matrix, etc)
+    filename : str
+        String with PETSc filename
     """
     viewer = p4pyPETSc.Viewer().createBinary(filename, 'w')
     viewer(obj)
@@ -46,7 +53,8 @@ def petsc_load_matrix(filename):
         viewer = p4pyPETSc.Viewer().createBinary(filename,'r')
         output = p4pyPETSc.Mat().load(viewer)
     except:
-        print("Either you've entered an invalid file name or your object is not a matrix (try petsc_load_vector).")
+        logEvent("Either you've entered an invalid file name or your object is not a matrix (try petsc_load_vector).")
+        output = None
     return output
 
 def petsc_load_vector(filename):
@@ -67,7 +75,8 @@ def petsc_load_vector(filename):
         viewer = p4pyPETSc.Viewer().createBinary(filename,'r')
         output = p4pyPETSc.Vec().load(viewer)
     except:
-        print("Either you've entered an invalid file name or your object is not a vector (try petsc_load_matrix).")
+        logEvent("Either you've entered an invalid file name or your object is not a vector (try petsc_load_matrix).")
+        output = None
     return output
 
 def csr_2_petsc(size,csr):
