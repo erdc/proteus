@@ -10,7 +10,8 @@ ct = Context.Options([
     ("lRefinement", 3, "Specify initial mesh size by giving number of cells in each direction"),
     ("applyCorrection", True, "apply mass correction or not"),
     ("applyRedistancing", True, "apply redkstancing or not"),
-    ("hk", 1.0, "the size of sub-triangles in the reference triangle used for comp quadrature rule")
+    ("hk", 1.0, "the size of sub-triangles in the reference triangle used for comp quadrature rule"),
+    ("massCorrectionReference", 2, "reference mass in MCorr")
 ], mutable=True)
 
 
@@ -49,7 +50,7 @@ else:
     vortex_quad_order = 3
 
 # YY: mass correction
-mass_correction_reference = 2 #: 0=H(phi^{n+1}) 1=explicit given 2=implicit given
+mass_correction_reference = ct.massCorrectionReference #: 0=H(phi^{n+1}) 1=explicit given 2=implicit given
 
 #sub-element edge size, used to create composite quadrature rule
 hk = ct.hk
@@ -128,4 +129,4 @@ if useHex:
     hex=True
     soname="vortex_c0q"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`
 else:
-    soname="vortex_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`+"_"+`ct.applyCorrection`+"_"+`ct.applyRedistancing`+"_"+`hk`
+    soname="vortex_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`+"_"+`ct.applyCorrection`+"_"+`ct.applyRedistancing`+"_"+`hk`+"_"+`mass_correction_reference`
