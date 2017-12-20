@@ -982,23 +982,23 @@ class MatrixInvShell(InvOperatorShell):
         self.ksp.solve(x,y)
 
 class SpInv_shell(InvOperatorShell):
-    r""" Shell class for the SIMPLE preconditioner that applies the
-    following action.
+    r""" Shell class for the SIMPLE preconditioner which applies the
+    following action:
 
     .. math::
-        \hat{S}_{p}^{-1} = (A_{11} - A_{01} \text{diag}(A_{00} A_{10})^{-1}
+        \hat{S}^{-1} = (A_{11} - A_{01} \text{diag}(A_{00}) A_{10})^{-1}
 
     where :math:`A_{ij}` are sub-blocks of the global saddle point system.
 
     Parameters
     ----------
-    A00 : :class:`p4pyPETSc.Mat`
+    A00: :class:`p4pyPETSc.Mat`
         The A00 block of the global saddle point system.
-    A01 : :class:`p4pyPETSc.Mat`
+    A01: :class:`p4pyPETSc.Mat`
         The A01 block of the global saddle point system.
-    A10 : :class:`p4pyPETSc.Mat`
+    A10: :class:`p4pyPETSc.Mat`
         The A10 block of the global saddle point system.
-    A11 : :class:`p4pyPETSc.Mat`
+    A11: :class:`p4pyPETSc.Mat`
         The A11 block of the global saddle point system.
     use_constant_null_space: bool
         Indicates whether a constant null space should be used.  See
@@ -1006,14 +1006,15 @@ class SpInv_shell(InvOperatorShell):
 
     Notes
     -----
-    For Stokes or Navier-Stokes systems, the :math:`S_{p}` operator
-    resembles a Laplcian matrix on the pressure.  As with other
-    Laplacian type operators, :math:`S_{p}` has a constant null space
-    that must be accounted for when applying the operator. As such,
-    this operator's default behavior is to use a constant null space.
-    Should a circumstance arise in which a constant null space is not
-    appropriate, it can be disabled with the use_constant_null_space
-    flag.
+    For Stokes or Navier-Stokes systems, the :math:`S` operator
+    resembles a Laplcian matrix on the pressure.  In cases where the
+    global saddle point system uses pure Dirichlet boundary
+    conditions, the :math:`S^{-1}` operator has a constant null
+    space.  Since most saddle-point simulations of interest do not
+    have pure Dirichlet conditions, the `constNullSpace` flag defaults
+    to false.  Having the null space set to false when the global
+    problem uses pure Dirichlet boundary conditions will likely result
+    in poor solver performance or failure.
     """
     def __init__(self, A00, A11, A01, A10, constNullSpace=True):
         self.A00 = A00
@@ -1041,12 +1042,12 @@ class SpInv_shell(InvOperatorShell):
         A : None
             Dummy argument for PETSc interface
         x : :class:`p4pyPETSc.Vec`
-            Vector to which :math:`S_{p}` is applied
+            Vector to which :math:`S` is applied
 
         Returns
         -------
         y : :class:`p4pyPETSc.Vec`
-            Result of :math:`S_{p}^{-1}x`
+            Result of :math:`S^{-1}x`
         """
         tmp1 = p4pyPETSc.Vec().create()
         tmp1 = x.copy()
