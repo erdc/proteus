@@ -1566,7 +1566,7 @@ namespace proteus
         nrm_df = sqrt(nrm_df);
 	if (density > 1.0e-8)
 	  cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
-	else:
+	else
 	  cfl = nrm_df/h;
       }
 
@@ -2392,7 +2392,6 @@ namespace proteus
               elementResidual_u[nDOF_test_element],
               elementResidual_v[nDOF_test_element],
               phisErrorElement[nDOF_test_element],
-
               //elementResidual_w[nDOF_test_element],
               eps_rho,eps_mu;
             const double* elementResidual_w(NULL);
@@ -2407,7 +2406,6 @@ namespace proteus
                 elementResidual_u[i]=0.0;
                 elementResidual_v[i]=0.0;
                 phisErrorElement[i]=0.0;
-
                 /* elementResidual_w[i]=0.0; */
               }//i
             //
@@ -3004,9 +3002,7 @@ namespace proteus
                 for(int i=0;i<nDOF_test_element;i++)
                   {
                     register int i_nSpace=i*nSpace;
-
                     phisErrorElement[i]+=std::abs(phisError[eN_k_nSpace+0])*p_test_dV[i];
-
                     /* std::cout<<"elemRes_mesh "<<mesh_vel[0]<<'\t'<<mesh_vel[2]<<'\t'<<p_test_dV[i]<<'\t'<<(q_dV_last[eN_k]/dV)<<'\t'<<dV<<std::endl; */
                     /* elementResidual_mesh[i] += ck.Reaction_weak(1.0,p_test_dV[i]) - */
                     /*   ck.Reaction_weak(1.0,p_test_dV[i]*q_dV_last[eN_k]/dV) - */
@@ -3068,7 +3064,6 @@ namespace proteus
               {
                 register int eN_i=eN*nDOF_test_element+i;
                 phisErrorNodal[vel_l2g[eN_i]]+= phisErrorElement[i];
-
                 /* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
                 /* mesh_volume_conservation_element_weak += elementResidual_mesh[i]; */
                 /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */

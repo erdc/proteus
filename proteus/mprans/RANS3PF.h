@@ -1478,7 +1478,6 @@ namespace proteus
       {
         double C,rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,D_s,phi_s,u_s,v_s,w_s,force_x,force_y,force_z,r_x,r_y,r_z;
         double* phi_s_normal;
-        double* vel;
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
         nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
@@ -1488,43 +1487,31 @@ namespace proteus
           {
             phi_s = particle_signed_distances[i*sd_offset];
             phi_s_normal = &particle_signed_distance_normals[i*sd_offset*nSpace];
-            vel=&particle_velocities[i*sd_offset*nSpace];
-            u_s = vel[0];//particle_velocities[i*3+0];
-            v_s = vel[1];//particle_velocities[i*3+1];
-            w_s = vel[2];//particle_velocities[i*3+2];
+            u_s = particle_velocities[i*3+0];
+            v_s = particle_velocities[i*3+1];
+            w_s = particle_velocities[i*3+2];
             H_s = smoothedHeaviside(eps_s, phi_s);
             D_s = smoothedDirac(eps_s, phi_s);
             double rel_vel_norm=sqrt((uStar-u_s)*(uStar-u_s)+
                                      (vStar-v_s)*(vStar-v_s)+
                                      (wStar-w_s)*(wStar-w_s));
-            double C_surf = (phi_s>0.0)?0.0:mu*penalty;
-            double C_vol = (phi_s>0.0)?0.0:(alpha + beta*rel_vel_norm);
-
-            // if (D_s>10)
-            // printf("RANS3PF i=%d, D_s=%f, H_s=%f,C_surf=%f,viscosity=%f,C_vol=%f,alpha=%f, beta=%f,rel_vel_norm=%f\n pos=%f,%f,%f\t V=%f,%f,%f\t V_s=%f,%f,%f\t\n",
-            //                            i, D_s, H_s, C_surf,nu, C_vol,alpha,beta,rel_vel_norm,
-            //                            x,y,z, u,v,w, u_s,v_s,w_s);
-
+            double C_surf = viscosity*penalty;
+            double C_vol = alpha + beta*rel_vel_norm;
             C += (D_s*C_surf + (1.0 - H_s)*C_vol);
-            force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1] + phi_s_normal[2]*grad_u[2]) + C_surf*rel_vel_norm*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
-            force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1] + phi_s_normal[2]*grad_u[2]) + C_surf*rel_vel_norm*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
-            force_z = dV*D_s*(p*phi_s_normal[2] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1] + phi_s_normal[2]*grad_u[2]) + C_surf*rel_vel_norm*(w-w_s)*rho) + dV*(1.0 - H_s)*C_vol*(w-w_s)*rho;
-
+            force_x = dV*D_s*(p*phi_s_normal[0] + C_surf*(u-u_s)*rho);
+            force_y = dV*D_s*(p*phi_s_normal[1] + C_surf*(v-v_s)*rho);
+            force_z = dV*D_s*(p*phi_s_normal[2] + C_surf*(w-w_s)*rho);
             //always 3D for particle centroids
             r_x = x - particle_centroids[i*3+0];
             r_y = y - particle_centroids[i*3+1];
             r_z = z - particle_centroids[i*3+2];
             //always 3D for particle forces
-            if (element_owned){
-              particle_netForces[i*3+0] += force_x;
-              particle_netForces[i*3+1] += force_y;
-              particle_netForces[i*3+2] += force_z;
-              particle_netMoments[i*3+0] += (r_y*force_z - r_z*force_y);
-              particle_netMoments[i*3+1] += (r_z*force_x - r_x*force_z);
-              particle_netMoments[i*3+2] += (r_x*force_y - r_y*force_x);
-            }
-
-
+            particle_netForces[i*3+0] += force_x;
+            particle_netForces[i*3+1] += force_y;
+            particle_netForces[i*3+2] += force_z;
+            particle_netMoments[i*3+0] += (r_y*force_z - r_z*force_y);
+            particle_netMoments[i*3+1] += (r_z*force_x - r_x*force_z);
+            particle_netMoments[i*3+2] += (r_x*force_y - r_y*force_x);
           }
         mom_u_source += C*(u-u_s);
         mom_v_source += C*(v-v_s);
@@ -3284,7 +3271,6 @@ namespace proteus
                 eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-
                 //compute shape and solution information
                 //shape
                 /* ck.gradTrialFromRef(&p_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,p_grad_trial_trace); */

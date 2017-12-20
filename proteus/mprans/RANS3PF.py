@@ -2991,7 +2991,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
 def getErgunDrag(porosity, meanGrainSize, viscosity):
-    # cek hack, this doesn't seem right
+    # cek hack, this d0oesn't seem right
     # cek todo look up correct Ergun model for alpha and beta
     voidFrac = 1.0 - porosity
     if voidFrac > 1.0e-6:

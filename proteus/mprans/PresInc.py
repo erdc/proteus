@@ -31,7 +31,7 @@ class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exter
 
 
 class Coefficients(TC_base):
-    r"""
+    """
     The coefficients for pressure increment solution
 
     Update is given by

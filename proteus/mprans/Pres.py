@@ -32,7 +32,7 @@ class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_exterior):
 
 
 class Coefficients(TC_base):
-    r"""
+    """
     The coefficients for pressure solution
 
     Update is given by
