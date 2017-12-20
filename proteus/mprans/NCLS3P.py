@@ -16,6 +16,7 @@ from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 import cNCLS3P
 
+
 class SubgridError(proteus.SubgridError.SGE_base):
 
     def __init__(self, coefficients, nd):
