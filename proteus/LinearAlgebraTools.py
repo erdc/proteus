@@ -426,8 +426,73 @@ class ParInfo_petsc4py:
         logEvent('comm.rank() = ' + `comm.rank()` + ' dim = ' + `cls.dim`)
         logEvent('comm.rank() = ' + `comm.rank()` + ' nzval_proteus2petsc = ' + `cls.nzval_proteus2petsc`)
 
+class PETScWrapper_Matrix(object):
+    """Proteus Wrapper for PETSc and PETSc4py Matrices.
+
+    Proteus makes extensive use of PETSc through the PETSc4py wrapper
+    classes.  In general, this works well; however, PETSc version
+    updates do not necessarily preserve API and function names.
+    This class is being introduced to make version updates easier
+    and to allow Proteus to run across multiple versions of PETSc.
+    Moreover, this class allows developers to add Matrix methods
+    to PETSc4py matrices for Proteus specific applications.
+
+    Arguments
+    ---------
+    PETSc_Mat : :class:`p4pyPETSc.Mat`
+        PETSc matrix object
+
+    Notes
+    -----
+    This wrapper is implemented as a simple pass-through.  This
+    approach has the advantage of not requiring the entire PETSc4PY
+    library be wrapped, while still providing the flexibility needed
+    to address the multiple PETSc version problem.  The downside
+    of this approach is that it requires an additional reference
+    (e.g. PETScWrapper_Matrix.PETsc_Mat.method() ) for PETSc matrix
+    functions that are not implemented with the wrapper.
+    """
+    def __init__(self,
+                 PETSc_Mat):
+        self.PETSc_Mat = PETSc_Mat
+
+    def getSubMatrix(self,
+                     idx_set_row,
+                     idx_set_col=None):
+        """Creates a new matrix using the prescribed PETSc index sets.
+
+        Parameters
+        ----------
+        idx_set_row : :class:`p4pyPETSc.IS`
+            PETSc row index set
+        idx_set_col : :class:`pypyPETSc.IS`
+            PETSc column index set
+
+        Returns
+        -------
+        mat : :class:`proteus.LinearAlgebraTools.PETScWrapper_Matrix`
+
+        Notes
+        -----
+        PETSc 3.8.0 updated the name of this method to createSubMatrix
+        from getSubMatrix.  There are a number of instances throughout
+        Proteus that use the getSubMatrix function name as well as
+        earlier PETSc versions.  This wrapper allows users to continue
+        using the getSubMatrix function handle.
+        """
+        petsc_version = p4pyPETSc.Sys.getVersion()
+        if petsc_version[1] >= 8:
+            return PETScWrapper_Matrix(self.PETSc_Mat.createSubMatrix(idx_set_row,
+                                                                      idx_set_col))
+        elif petsc_version[1] < 8:
+            return PETScWrapper_Matrix(self.PETSc_Mat.getSubMatrix(idx_set_row,
+                                                                   idx_set_col))
+
 class ParMat_petsc4py(p4pyPETSc.Mat):
-    """  Parallel matrix based on petsc4py's wrappers for PETSc. 
+    """  Parallel matrix based on petsc4py's wrappers for PETSc.
+
+    Parameters
+    ----------
     ghosted_csr_mat : :class:`proteus.superluWrappers.SparseMatrix`
         Primary CSR information for the ParMat.
     par_bs : int

@@ -2,6 +2,7 @@ from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
 import pytest
+from proteus import LinearAlgebraTools as LAT
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 
@@ -20,27 +21,27 @@ class MockMat():
 
     def __init__(self, n):
         from petsc4py import PETSc
-        A = PETSc.Mat().create()
-        A.setSizes(n)
-        A.setType('aij')
-        A.setUp()
-        A.assemblyBegin()
+        A = LAT.PETScWrapper_Matrix(PETSc.Mat().create())
+        A.PETSc_Mat.setSizes(n)
+        A.PETSc_Mat.setType('aij')
+        A.PETSc_Mat.setUp()
+        A.PETSc_Mat.assemblyBegin()
         for i in range(n):
-            A[i, i] = 1
+            A.PETSc_Mat[i, i] = 1
             if i + 1 < n:
-                A[i, i + 1] = i
-        A.assemblyEnd()
+                A.PETSc_Mat[i, i + 1] = i
+        A.PETSc_Mat.assemblyEnd()
         self.A = A
 
     def getCSRrepresentation(self):
-        return self.A.getValuesCSR()
+        return self.A.PETSc_Mat.getValuesCSR()
 
     def getSubMatCSRrepresentation(self, start, end):
         from petsc4py import PETSc
         ids = range(start, end)
         isg = PETSc.IS().createGeneral(ids)
         B = self.A.getSubMatrix(isg)
-        return B.getValuesCSR()
+        return B.PETSc_Mat.getValuesCSR()
 
 @pytest.mark.LinearAlgebraTools
 def test_vec_create():
