@@ -3,6 +3,8 @@
 #include <cmath>
 #include <valarray>
 #include <iostream>
+#include <vector>
+#include <set>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
@@ -107,6 +109,9 @@ namespace proteus
                                    double C_dc,
                                    double C_b,
                                    const double* eps_solid,
+                                   const double* ebq_global_phi_solid,
+                                   const double* ebq_global_grad_phi_solid,
+                                   const double* phi_solid_nodes,
                                    const double* phi_solid,
                                    const double* q_velocity_solid,
                                    const double* q_vos,
@@ -183,6 +188,7 @@ namespace proteus
                                    double *globalResidual,
                                    int nExteriorElementBoundaries_global,
                                    int* exteriorElementBoundariesArray,
+                                   int* elementBoundariesArray,
                                    int* elementBoundaryElementsArray,
                                    int* elementBoundaryLocalElementBoundariesArray,
                                    double* ebqe_vf_ext,
@@ -280,7 +286,8 @@ namespace proteus
                                    double* dynamic_viscosity_as_function,
                                    double* ebqe_density_as_function,
                                    double* ebqe_dynamic_viscosity_as_function,
-                                   double order_polynomial
+                                   double order_polynomial,
+                                   double* isActiveDOF
                                    )=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
@@ -343,6 +350,9 @@ namespace proteus
                                    double C_b,
                                    //VRANS
                                    const double *eps_solid,
+                                   const double *ebq_global_phi_solid,
+                                   const double *ebq_global_grad_phi_solid,
+                                   const double *phi_solid_nodes,
                                    const double *phi_solid,
                                    const double *q_velocity_solid,
                                    const double *q_vos,
@@ -397,6 +407,7 @@ namespace proteus
                                    double *globalJacobian,
                                    int nExteriorElementBoundaries_global,
                                    int *exteriorElementBoundariesArray,
+                                   int *elementBoundariesArray,
                                    int *elementBoundaryElementsArray,
                                    int *elementBoundaryLocalElementBoundariesArray,
                                    double *ebqe_vf_ext,
@@ -466,6 +477,28 @@ namespace proteus
                                    double* dynamic_viscosity_as_function,
                                    double* ebqe_density_as_function,
                                    double* ebqe_dynamic_viscosity_as_function)=0;
+    virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
+                                          int *exteriorElementBoundariesArray,
+                                          int nInteriorElementBoundaries_global,
+                                          int *interiorElementBoundariesArray,
+                                          int *elementBoundaryElementsArray,
+                                          int *elementBoundaryLocalElementBoundariesArray,
+                                          double *mesh_dof,
+                                          double *mesh_velocity_dof,
+                                          double MOVING_DOMAIN, //0 or 1
+                                          int *mesh_l2g,
+                                          double *mesh_trial_trace_ref,
+                                          double *mesh_grad_trial_trace_ref,
+                                          double *normal_ref,
+                                          double *boundaryJac_ref,
+                                          int *vel_l2g,
+                                          double *u_dof,
+                                          double *v_dof,
+                                          double *w_dof,
+                                          double *vos_dof,
+                                          double *vel_trial_trace_ref,
+                                          double *ebqe_velocity,
+                                          double *velocityAverage) = 0;
     virtual void calculateResidual_entropy_viscosity(
                                                      double* mesh_trial_ref,
                                                      double* mesh_grad_trial_ref,
@@ -884,28 +917,6 @@ namespace proteus
                                                      double* dynamic_viscosity_as_function,
                                                      double* ebqe_density_as_function,
                                                      double* ebqe_dynamic_viscosity_as_function)=0;
-    virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
-                                          int *exteriorElementBoundariesArray,
-                                          int nInteriorElementBoundaries_global,
-                                          int *interiorElementBoundariesArray,
-                                          int *elementBoundaryElementsArray,
-                                          int *elementBoundaryLocalElementBoundariesArray,
-                                          double *mesh_dof,
-                                          double *mesh_velocity_dof,
-                                          double MOVING_DOMAIN, //0 or 1
-                                          int *mesh_l2g,
-                                          double *mesh_trial_trace_ref,
-                                          double *mesh_grad_trial_trace_ref,
-                                          double *normal_ref,
-                                          double *boundaryJac_ref,
-                                          int *vel_l2g,
-                                          double *u_dof,
-                                          double *v_dof,
-                                          double *w_dof,
-                                          double *vos_dof,
-                                          double *vel_trial_trace_ref,
-                                          double *ebqe_velocity,
-                                          double *velocityAverage) = 0;
   };
 
   template<class CompKernelType,
@@ -1192,6 +1203,8 @@ namespace proteus
           }
 
         double phi_s_effect = (phi_s > 0.0) ? 1.0 : 0.0;
+        //cek hack
+        phi_s_effect=1.0;
 
         //u momentum accumulation
         mom_u_acc=phi_s_effect * u;//trick for non-conservative form
@@ -1521,31 +1534,31 @@ namespace proteus
                 particle_netMoments[i * 3 + 2] += (r_x * force_y - r_y * force_x);
               }
 
-            // These should be done inside to make sure the correct velocity of different particles are used
-            mom_u_source += C * (u - u_s);
-            mom_v_source += C * (v - v_s);
+            /* // These should be done inside to make sure the correct velocity of different particles are used */
+            /* mom_u_source += C * (u - u_s); */
+            /* mom_v_source += C * (v - v_s); */
 
-            dmom_u_source[0] += C;
-            dmom_v_source[1] += C;
+            /* dmom_u_source[0] += C; */
+            /* dmom_v_source[1] += C; */
 
-            //Nitsche terms
-            mom_u_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]);
-            dmom_u_ham_grad_u[0] -= D_s * porosity * nu * phi_s_normal[0];
-            dmom_u_ham_grad_u[1] -= D_s * porosity * nu * phi_s_normal[1];
+            /* //Nitsche terms */
+            /* mom_u_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]); */
+            /* dmom_u_ham_grad_u[0] -= D_s * porosity * nu * phi_s_normal[0]; */
+            /* dmom_u_ham_grad_u[1] -= D_s * porosity * nu * phi_s_normal[1]; */
 
-            mom_v_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]);
-            dmom_v_ham_grad_v[0] -= D_s * porosity * nu * phi_s_normal[0];
-            dmom_v_ham_grad_v[1] -= D_s * porosity * nu * phi_s_normal[1];
+            /* mom_v_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]); */
+            /* dmom_v_ham_grad_v[0] -= D_s * porosity * nu * phi_s_normal[0]; */
+            /* dmom_v_ham_grad_v[1] -= D_s * porosity * nu * phi_s_normal[1]; */
 
-            mom_u_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (u - u_s);
-            mom_u_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (u - u_s);
-            dmom_u_adv_u[0] += D_s * porosity * nu * phi_s_normal[0];
-            dmom_u_adv_u[1] += D_s * porosity * nu * phi_s_normal[1];
+            /* mom_u_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (u - u_s); */
+            /* mom_u_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (u - u_s); */
+            /* dmom_u_adv_u[0] += D_s * porosity * nu * phi_s_normal[0]; */
+            /* dmom_u_adv_u[1] += D_s * porosity * nu * phi_s_normal[1]; */
 
-            mom_v_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (v - v_s);
-            mom_v_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (v - v_s);
-            dmom_v_adv_v[0] += D_s * porosity * nu * phi_s_normal[0];
-            dmom_v_adv_v[1] += D_s * porosity * nu * phi_s_normal[1];
+            /* mom_v_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (v - v_s); */
+            /* mom_v_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (v - v_s); */
+            /* dmom_v_adv_v[0] += D_s * porosity * nu * phi_s_normal[0]; */
+            /* dmom_v_adv_v[1] += D_s * porosity * nu * phi_s_normal[1]; */
           }
       }
 
@@ -2209,6 +2222,9 @@ namespace proteus
                              double C_b,
                              //VRANS
                              const double* eps_solid,
+                             const double* ebq_global_phi_solid,
+                             const double* ebq_global_grad_phi_solid,
+                             const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
                              const double* q_vos,
@@ -2265,6 +2281,7 @@ namespace proteus
                              double* globalResidual,
                              int nExteriorElementBoundaries_global,
                              int* exteriorElementBoundariesArray,
+                             int* elementBoundariesArray,
                              int* elementBoundaryElementsArray,
                              int* elementBoundaryLocalElementBoundariesArray,
                              double* ebqe_vf_ext,
@@ -2364,7 +2381,8 @@ namespace proteus
                              double* dynamic_viscosity_as_function,
                              double* ebqe_density_as_function,
                              double* ebqe_dynamic_viscosity_as_function,
-                             double order_polynomial)
+                             double order_polynomial,
+                             double* isActiveDOF)
       {
         //
         //loop over elements to compute volume integrals and load them into element and global residual
@@ -2375,6 +2393,8 @@ namespace proteus
           mesh_volume_conservation_err_max_weak=0.0;
         double globalConservationError=0.0;
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
+        std::vector<int> surrogate_boundaries, surrogate_boundary_elements;
+        std::set<int> active_velocity_dof;
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
@@ -2396,6 +2416,50 @@ namespace proteus
                 elementResidual_v[i]=0.0;
                 /* elementResidual_w[i]=0.0; */
               }//i
+            //
+            //detect cut cells
+            //
+            int pos_counter=0;
+            double element_active;
+            for (int I=0;I<nDOF_mesh_trial_element;I++)
+              {
+                /* std::cout<<"eN,I,nN "<<eN<<','<<I<<','<<mesh_l2g[eN*nDOF_mesh_trial_element+I]<<" phi = "<<phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]<<std::endl; */
+                if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] >= 0)
+                  pos_counter++;
+              }
+            if (pos_counter == 2)
+              {
+                element_active=0.0;
+                //std::cout<<"Identified cut cell"<<std::endl;
+                int opp_node=-1;
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                  {
+                    if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] < 0)
+                      opp_node = I;
+                  }
+                assert(opp_node >=0);
+                assert(opp_node <nDOF_mesh_trial_element);
+                int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+                surrogate_boundaries.push_back(ebN);
+                //now find which element neighbor this element is
+                if (eN == elementBoundaryElementsArray[eN*2+0])
+                  surrogate_boundary_elements.push_back(1);
+                else
+                  surrogate_boundary_elements.push_back(0);
+              }
+            else if (pos_counter == 3)
+              {
+                element_active=1.0;
+                for (int i=0;i<nDOF_test_element;i++)
+                  {
+                    isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + i]]=1.0;
+                    isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + i]]=1.0;
+                  }
+              }
+            else
+              {
+                element_active=0.0;
+              }
             //
             //loop over quadrature points and compute integrands
             //
@@ -3054,8 +3118,8 @@ namespace proteus
                 /* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
                 /* mesh_volume_conservation_element_weak += elementResidual_mesh[i]; */
                 /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
-                globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=elementResidual_u[i];
-                globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
+                globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=element_active*elementResidual_u[i];
+                globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=element_active*elementResidual_v[i];
                 /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
               }//i
             /* mesh_volume_conservation += mesh_volume_conservation_element; */
@@ -3063,6 +3127,227 @@ namespace proteus
             /* mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element)); */
             /* mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak)); */
           }//elements
+        //
+        //loop over the surrogate boundaries in SB method and assembly into residual
+        //
+
+        // LEO Initialization of the force to 0
+        double Fx = 0.0;
+        double Fy = 0.0;
+        for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
+          {
+            register int ebN = surrogate_boundaries[ebN_s],
+              eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
+              ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
+              eN_nDOF_trial_element = eN*nDOF_trial_element;
+            register double elementResidual_mesh[nDOF_test_element],
+              elementResidual_p[nDOF_test_element],
+              elementResidual_u[nDOF_test_element],
+              elementResidual_v[nDOF_test_element],
+              //elementResidual_w[nDOF_test_element],
+              eps_rho,eps_mu;
+            const double* elementResidual_w(NULL);
+            //std::cout<<"Surrogate edge "<<ebN<<" element neighbor "<<eN<<" local element boundary "<<ebN_local<<std::endl;
+            for (int i=0;i<nDOF_test_element;i++)
+              {
+                elementResidual_mesh[i]=0.0;
+                elementResidual_p[i]=0.0;
+                elementResidual_u[i]=0.0;
+                elementResidual_v[i]=0.0;
+                /* elementResidual_w[i]=0.0; */
+              }
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+              {
+                register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
+                  /* ebNE_kb_nSpace = ebNE_kb*nSpace, */
+                  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+                register double
+                  u_ext=0.0,
+                  v_ext=0.0,
+                  bc_u_ext=0.0,
+                  bc_v_ext=0.0,
+                  grad_u_ext[nSpace],
+                  grad_v_ext[nSpace],
+                  jac_ext[nSpace*nSpace],
+                  jacDet_ext,
+                  jacInv_ext[nSpace*nSpace],
+                  boundaryJac[nSpace*(nSpace-1)],
+                  metricTensor[(nSpace-1)*(nSpace-1)],
+                  metricTensorDetSqrt,
+                  dS,p_test_dS[nDOF_test_element],vel_test_dS[nDOF_test_element],
+                  p_grad_trial_trace[nDOF_trial_element*nSpace],vel_grad_trial_trace[nDOF_trial_element*nSpace],
+                  vel_grad_test_dS[nDOF_trial_element*nSpace],
+                  normal[2],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
+                  G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty,
+                  force_x,force_y,force_z,force_p_x,force_p_y,force_p_z,force_v_x,force_v_y,force_v_z,r_x,r_y,r_z;
+                //compute information about mapping from reference element to physical element
+                ck.calculateMapping_elementBoundary(eN,
+                                                    ebN_local,
+                                                    kb,
+                                                    ebN_local_kb,
+                                                    mesh_dof,
+                                                    mesh_l2g,
+                                                    mesh_trial_trace_ref,
+                                                    mesh_grad_trial_trace_ref,
+                                                    boundaryJac_ref,
+                                                    jac_ext,
+                                                    jacDet_ext,
+                                                    jacInv_ext,
+                                                    boundaryJac,
+                                                    metricTensor,
+                                                    metricTensorDetSqrt,
+                                                    normal_ref,
+                                                    normal,
+                                                    x_ext,y_ext,z_ext);
+                ck.calculateMappingVelocity_elementBoundary(eN,
+                                                            ebN_local,
+                                                            kb,
+                                                            ebN_local_kb,
+                                                            mesh_velocity_dof,
+                                                            mesh_l2g,
+                                                            mesh_trial_trace_ref,
+                                                            xt_ext,yt_ext,zt_ext,
+                                                            normal,
+                                                            boundaryJac,
+                                                            metricTensor,
+                                                            integralScaling);
+                dS = metricTensorDetSqrt*dS_ref[kb];
+                //get the metric tensor
+                ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+                //compute shape and solution information
+                //shape
+                ck.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,vel_grad_trial_trace);
+                //solution and gradients
+                ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+                ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_ext);
+
+                ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
+                ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
+                //precalculate test function products with integration weights
+                for (int j=0;j<nDOF_trial_element;j++)
+                  {
+                    vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+                    for (int I=0;I<nSpace;I++)
+                      vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
+                  }
+                bc_u_ext = 0.0;//cek hack: this should be the solid velocity
+                bc_v_ext = 0.0;//cek hack:...
+                ck.calculateGScale(G,normal,h_penalty);
+                //
+                //update the element and global residual storage
+                //
+                //std::cout<<"phi_s(x) "<<ebq_global_phi_solid[ebN_kb]<<std::endl;
+                //std::cout<<"(grad_phi_s(x))_x "<<ebq_global_grad_phi_solid[ebN_kb*nSpace+0]<<std::endl;
+                //std::cout<<"(grad_phi_s(x))_y "<<ebq_global_grad_phi_solid[ebN_kb*nSpace+1]<<std::endl;
+
+                // LEO
+
+                double dist = ebq_global_phi_solid[ebN_kb];
+                double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
+                P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
+                P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
+                distance[0] = -P_normal[0]*dist;
+                distance[1] = -P_normal[1]*dist;
+                P_tangent[0] = -P_normal[1];
+                P_tangent[1] = P_normal[0];
+                double dx = distance[0];
+                double dy = distance[1];
+
+                double visco = nu_0*rho_0;
+                double Csb=10;
+                double C_adim = Csb*visco/h_penalty;
+                //std::cout << "C_adim "<< C_adim << std::endl;
+                double beta = 0.0;
+                double beta_adim = beta*h_penalty*visco;
+
+                for (int i=0;i<nDOF_test_element;i++)
+                  {
+                    int eN_i = eN*nDOF_test_element+i;
+                    //globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=
+                    //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*Csb*(u_ext - bc_u_ext)*dS/h_penalty;
+                    //globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=
+                    //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*Csb*(v_ext - bc_u_ext)*dS/h_penalty;
+
+                    int GlobPos_u = offset_u+stride_u*vel_l2g[eN_i];
+                    int GlobPos_v = offset_v+stride_v*vel_l2g[eN_i];
+                    double phi_i = vel_test_dS[i];
+                    double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
+                    double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
+
+                    double dd1 = dx*grad_u_ext[0] + dy*grad_v_ext[0];
+                    double dd2 = dx*grad_u_ext[1] + dy*grad_v_ext[1];
+                    double dt1 = P_tangent[0]*grad_u_ext[0] + P_tangent[1]*grad_v_ext[0];
+                    double dt2 = P_tangent[0]*grad_u_ext[1] + P_tangent[1]*grad_v_ext[1];
+
+                    // Classical Nitsche
+                    // C < w , u - uD > (1)
+                    globalResidual[GlobPos_u] += phi_i*C_adim*(u_ext - bc_u_ext);
+                    globalResidual[GlobPos_v] += phi_i*C_adim*(v_ext - bc_v_ext);
+
+                    // - < w , mu Gu.nt > (2)
+                    globalResidual[GlobPos_u] -= visco * phi_i*(normal[0]*grad_u_ext[0] + normal[1]*grad_v_ext[0]);
+                    globalResidual[GlobPos_v] -= visco * phi_i*(normal[0]*grad_u_ext[1] + normal[1]*grad_v_ext[1]);
+
+                    // - < mu Gw.nt , u - uD > (3)
+                    globalResidual[GlobPos_u] -= visco * (Gxphi_i*normal[0]*(u_ext - bc_u_ext) +
+                                                          Gyphi_i*normal[1]*(v_ext - bc_v_ext));
+                    globalResidual[GlobPos_v] -= visco * (Gxphi_i*normal[0]*(u_ext - bc_u_ext) +
+                                                          Gyphi_i*normal[1]*(v_ext - bc_v_ext));
+
+                    // second order Taylor expansion
+                    //
+                    // missing part of (1) :: C < w + Gw d , u + Gu d - ud >
+                    // C < Gw d , u - uD >
+                    globalResidual[GlobPos_u] += C_adim*dx*(Gxphi_i*(u_ext - bc_u_ext) + Gyphi_i*(v_ext - bc_v_ext));
+                    globalResidual[GlobPos_v] += C_adim*dy*(Gxphi_i*(u_ext - bc_u_ext) + Gyphi_i*(v_ext - bc_v_ext));
+
+                    // C < Gv d , Gu d >
+                    globalResidual[GlobPos_u] += C_adim*dx*(Gxphi_i*dd1 + Gyphi_i*dd2);
+                    globalResidual[GlobPos_v] += C_adim*dy*(Gxphi_i*dd1 + Gyphi_i*dd2);
+
+                    // C < v , Gu d >
+                    globalResidual[GlobPos_u] += C_adim*phi_i*dd1;
+                    globalResidual[GlobPos_v] += C_adim*phi_i*dd2;
+
+                    //
+                    // missing part of (3)
+                    // - < mu Gw.nt , Gu.d >
+                    globalResidual[GlobPos_u] -= visco*normal[0]*(Gxphi_i*dd1 + Gyphi_i*dd2);
+                    globalResidual[GlobPos_v] -= visco*normal[1]*(Gxphi_i*dd1 + Gyphi_i*dd2);
+
+                    // the penalization on the tangential derivative
+                    // B < Gw t , (Gu - GuD) t >
+                    globalResidual[GlobPos_u] += beta_adim*P_tangent[0]*(Gxphi_i*dt1 + Gyphi_i*dt2);
+                    globalResidual[GlobPos_v] += beta_adim*P_tangent[1]*(Gxphi_i*dt1 + Gyphi_i*dt2);
+
+                  }//i
+
+                //
+                // LEO Forces
+                //
+                double p_ext = 0. ; // !!!! TO CHANGE BY REAL VALUE !!!!
+                double nx = -normal[0] ; // need ext normal of the solid
+                double ny = -normal[1] ;
+                for ( int i = 0 ; i < nDOF_test_element ; i++ ) {
+                  int eN_i = eN*nDOF_test_element+i;
+                  double phi_i = vel_test_dS[i];
+                  double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
+                  double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
+
+                  double S_xx = 2*visco*grad_u_ext[0];
+                  double S_xy = visco*(grad_u_ext[0] + grad_v_ext[1]); // sym tensor -> S_yx = S_xy
+                  double S_yy = 2*visco*grad_v_ext[1];
+
+                  Fx -= p_ext*nx;
+                  Fx += S_xx*nx + S_xy*ny;
+                  Fy -= p_ext*ny;
+                  Fy += S_xy*nx + S_yy*ny;
+
+                } // i
+
+              }//kb
+          }//ebN_s
         //
         //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
         //
@@ -4023,6 +4308,9 @@ namespace proteus
                              double C_b,
                              //VRANS
                              const double* eps_solid,
+                             const double* ebq_global_phi_solid,
+                             const double* ebq_global_grad_phi_solid,
+                             const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
                              const double* q_vos,
@@ -4078,6 +4366,7 @@ namespace proteus
                              double* globalJacobian,
                              int nExteriorElementBoundaries_global,
                              int* exteriorElementBoundariesArray,
+                             int* elementBoundariesArray,
                              int* elementBoundaryElementsArray,
                              int* elementBoundaryLocalElementBoundariesArray,
                              double* ebqe_vf_ext,
@@ -4153,6 +4442,8 @@ namespace proteus
         //
         std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3), particle_netMoments(nParticles*3);
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
+        std::vector<int> surrogate_boundaries, surrogate_boundary_elements;
+        std::set<int> active_velocity_dof;
         for(int eN=0;eN<nElements_global;eN++)
           {
             register double eps_rho,eps_mu;
@@ -4193,6 +4484,45 @@ namespace proteus
                   elementJacobian_w_v[i][j]=0.0;
                   elementJacobian_w_w[i][j]=0.0;
                 }
+            //
+            //detect cut cells
+            //
+            int pos_counter=0;
+            double element_active;
+            for (int I=0;I<nDOF_mesh_trial_element;I++)
+              {
+                //std::cout<<"eN,I,nN "<<eN<<','<<I<<','<<mesh_l2g[eN*nDOF_mesh_trial_element+I]<<" phi = "<<phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]<<std::endl;
+                if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] >= 0)
+                  pos_counter++;
+              }
+            if (pos_counter == 2)
+              {
+                element_active=0.0;
+                //std::cout<<"Identified cut cell"<<std::endl;
+                int opp_node=-1;
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                  {
+                    if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] < 0)
+                      opp_node = I;
+                  }
+                assert(opp_node >=0);
+                assert(opp_node <nDOF_mesh_trial_element);
+                int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+                surrogate_boundaries.push_back(ebN);
+                //now find which element neighbor this element is
+                if (eN == elementBoundaryElementsArray[eN*2+0])
+                  surrogate_boundary_elements.push_back(1);
+                else
+                  surrogate_boundary_elements.push_back(0);
+              }
+            else if (pos_counter == 3)
+              {
+                element_active=1.0;
+              }
+            else
+              {
+                element_active=0.0;
+              }
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
@@ -4928,13 +5258,13 @@ namespace proteus
                     /* globalJacobian[csrRowIndeces_p_w[eN_i] + csrColumnOffsets_p_w[eN_i_j]] += elementJacobian_p_w[i][j]; */
 
                     /* globalJacobian[csrRowIndeces_u_p[eN_i] + csrColumnOffsets_u_p[eN_i_j]] += elementJacobian_u_p[i][j]; */
-                    globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
-                    globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_u_v[eN_i_j]] += elementJacobian_u_v[i][j];
+                    globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += element_active*elementJacobian_u_u[i][j];
+                    globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_u_v[eN_i_j]] += element_active*elementJacobian_u_v[i][j];
                     /* globalJacobian[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_u_w[eN_i_j]] += elementJacobian_u_w[i][j]; */
 
                     /* globalJacobian[csrRowIndeces_v_p[eN_i] + csrColumnOffsets_v_p[eN_i_j]] += elementJacobian_v_p[i][j]; */
-                    globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_v_u[eN_i_j]] += elementJacobian_v_u[i][j];
-                    globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += elementJacobian_v_v[i][j];
+                    globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_v_u[eN_i_j]] += element_active*elementJacobian_v_u[i][j];
+                    globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += element_active*elementJacobian_v_v[i][j];
                     /* globalJacobian[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_v_w[eN_i_j]] += elementJacobian_v_w[i][j]; */
 
                     /* globalJacobian[csrRowIndeces_w_p[eN_i] + csrColumnOffsets_w_p[eN_i_j]] += elementJacobian_w_p[i][j]; */
@@ -4944,6 +5274,240 @@ namespace proteus
                   }//j
               }//i
           }//elements
+        //
+        //loop over the surrogate boundaries in SB method and assembly into jacobian
+        //
+        for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
+          {
+            register int ebN = surrogate_boundaries[ebN_s],
+              eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
+              ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
+              eN_nDOF_trial_element = eN*nDOF_trial_element;
+            register double eps_rho,eps_mu;
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+              {
+                register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
+                  ebN_kb_nSpace = ebN_kb*nSpace,
+                  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+
+                register double u_ext=0.0,
+                  v_ext=0.0,
+                  bc_u_ext=0.0,
+                  bc_v_ext=0.0,
+                  grad_u_ext[nSpace],
+                  grad_v_ext[nSpace],
+                  jac_ext[nSpace*nSpace],
+                  jacDet_ext,
+                  jacInv_ext[nSpace*nSpace],
+                  boundaryJac[nSpace*(nSpace-1)],
+                  metricTensor[(nSpace-1)*(nSpace-1)],
+                  metricTensorDetSqrt,
+                  vel_grad_trial_trace[nDOF_trial_element*nSpace],
+                  dS,
+                  vel_test_dS[nDOF_test_element],
+                  normal[2],
+                  x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
+                  vel_grad_test_dS[nDOF_trial_element*nSpace],
+                  G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty;
+                ck.calculateMapping_elementBoundary(eN,
+                                                    ebN_local,
+                                                    kb,
+                                                    ebN_local_kb,
+                                                    mesh_dof,
+                                                    mesh_l2g,
+                                                    mesh_trial_trace_ref,
+                                                    mesh_grad_trial_trace_ref,
+                                                    boundaryJac_ref,
+                                                    jac_ext,
+                                                    jacDet_ext,
+                                                    jacInv_ext,
+                                                    boundaryJac,
+                                                    metricTensor,
+                                                    metricTensorDetSqrt,
+                                                    normal_ref,
+                                                    normal,
+                                                    x_ext,y_ext,z_ext);
+                ck.calculateMappingVelocity_elementBoundary(eN,
+                                                            ebN_local,
+                                                            kb,
+                                                            ebN_local_kb,
+                                                            mesh_velocity_dof,
+                                                            mesh_l2g,
+                                                            mesh_trial_trace_ref,
+                                                            xt_ext,yt_ext,zt_ext,
+                                                            normal,
+                                                            boundaryJac,
+                                                            metricTensor,
+                                                            integralScaling);
+                dS = metricTensorDetSqrt*dS_ref[kb];
+                ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+                //compute shape and solution information
+                //shape
+                ck.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,vel_grad_trial_trace);
+                //solution and gradients
+                ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+                ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_ext);
+
+                ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
+                ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
+                //precalculate test function products with integration weights
+                for (int j=0;j<nDOF_trial_element;j++)
+                  {
+                    vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+                    for (int I=0;I<nSpace;I++)
+                      vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
+                  }
+                //
+                //load the boundary values
+                //
+                bc_u_ext = 0.0;
+                bc_v_ext = 0.0;
+                ck.calculateGScale(G,normal,h_penalty);
+                penalty = h_penalty;
+                //
+                //update the global Jacobian from the flux Jacobian
+                //
+                // LEO
+                double dist = ebq_global_phi_solid[ebN_kb];
+                double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
+                P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
+                P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
+                distance[0] = -P_normal[0]*dist;
+                distance[1] = -P_normal[1]*dist;
+                P_tangent[0] = -P_normal[1];
+                P_tangent[1] = P_normal[0];
+                double dx = distance[0];
+                double dy = distance[1];
+                double tx = P_tangent[0] ; double ty = P_tangent[1];
+                double visco = nu_0*rho_0;
+                double Csb=10;
+                double C_adim = Csb*visco/h_penalty;
+                double beta = 0.0;
+                double beta_adim = beta*h_penalty*visco;
+
+                for (int i=0;i<nDOF_test_element;i++)
+                  {
+                    register int eN_i = eN*nDOF_test_element+i;
+                    double phi_i = vel_test_dS[i];
+                    double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
+                    double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
+
+                    for (int j=0;j<nDOF_trial_element;j++)
+                      {
+                        register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j,
+                          ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
+
+                        //globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                        //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*
+                        //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+j]*Csb*dS/h_penalty;
+                        //globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                        //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*
+                        //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+j]*Csb*dS/h_penalty;
+
+                        double phi_j = vel_test_dS[j]/dS;
+                        double Gxphi_j = vel_grad_test_dS[j*nSpace+0]/dS;
+                        double Gyphi_j = vel_grad_test_dS[j*nSpace+1]/dS;
+
+                        // Classical Nitsche
+                        // C < w , u - uD > (1)
+                        globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                          phi_i*phi_j*C_adim;
+                        globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                          phi_i*phi_j*C_adim;
+
+                        // - < w , mu Gu.nt > (2)
+                        // diag
+                        globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
+                          visco * phi_i * normal[0] * Gxphi_j ;
+                        globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
+                          visco * phi_i * normal[1] * Gyphi_j ;
+                        // extra diag
+                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+                          visco * phi_i * normal[1] * Gxphi_j ;
+                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+                          visco * phi_i * normal[0] * Gyphi_j ;
+
+                        // - < mu Gw.nt , u - uD > (3)
+                        // diag
+                        globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
+                          visco * Gxphi_i * normal[0] * phi_j;
+                        globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
+                          visco * Gyphi_i * normal[1] * phi_j;
+                        // extra diag
+                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+                          visco * Gyphi_i * normal[1] * phi_j;
+                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+                          visco * Gxphi_i * normal[0] * phi_j;
+
+                        // second order Taylor expansion
+                        // missing part of (1) :: C < w + Gw d , u + Gu d - ud >
+
+                        // C < Gw d , u - uD >
+                        // diag
+                        globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                          C_adim*dx*Gxphi_i*phi_j;
+                        globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                          C_adim*dy*Gyphi_i*phi_j;
+                        //extra diag
+                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+                          C_adim*dx*Gyphi_i*phi_j;
+                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+                          C_adim*dy*Gxphi_i*phi_j;
+
+                        // C < Gv d , Gu d >
+                        // diag
+                        globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                          C_adim*dx*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
+                        globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                          C_adim*dy*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
+                        // extra diag
+                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+                          C_adim*dx*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
+                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+                          C_adim*dy*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
+
+                        // C < v , Gu d >
+                        // diag
+                        globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                          C_adim*phi_i*dx*Gxphi_j;
+                        globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                          C_adim*phi_i*dy*Gyphi_j;
+                        // extra diag
+                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+                          C_adim*phi_i*dy*Gxphi_j;
+                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+                          C_adim*phi_i*dx*Gyphi_j;
+
+                        /* // missing part of (3) */
+                        // - < mu Gw.nt , Gu.d >
+                        globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
+                          visco*normal[0]*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
+                        globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
+                          visco*normal[1]*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
+                        // extra diag
+                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+                          visco*normal[0]*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
+                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+                          visco*normal[1]*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
+
+                        // the penalization on the tangential derivative
+                        // B < Gw t , (Gu - GuD) t >
+                        // diag
+                        globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                          beta_adim*tx*(Gxphi_i*tx*Gxphi_j + Gyphi_i*tx*Gyphi_j);
+                        globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                          beta_adim*ty*(Gxphi_i*ty*Gxphi_j + Gyphi_i*ty*Gyphi_j);
+                        // extra diag
+                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+                          beta_adim*tx*(Gxphi_i*ty*Gxphi_j + Gyphi_i*ty*Gyphi_j);
+                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+                          beta_adim*ty*(Gxphi_i*tx*Gxphi_j + Gyphi_i*tx*Gyphi_j);
+
+                      }//j
+                  }//i
+              }//kb
+          }//ebN_s
         //
         //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
         //
@@ -5775,6 +6339,179 @@ namespace proteus
               }//kb
           }//ebNE
       }//computeJacobian
+
+      void calculateVelocityAverage(int nExteriorElementBoundaries_global,
+                                    int* exteriorElementBoundariesArray,
+                                    int nInteriorElementBoundaries_global,
+                                    int* interiorElementBoundariesArray,
+                                    int* elementBoundaryElementsArray,
+                                    int* elementBoundaryLocalElementBoundariesArray,
+                                    double* mesh_dof,
+                                    double* mesh_velocity_dof,
+                                    double MOVING_DOMAIN,//0 or 1
+                                    int* mesh_l2g,
+                                    double* mesh_trial_trace_ref,
+                                    double* mesh_grad_trial_trace_ref,
+                                    double* normal_ref,
+                                    double* boundaryJac_ref,
+                                    int* vel_l2g,
+                                    double* u_dof,
+                                    double* v_dof,
+                                    double* w_dof,
+                                    double* vos_dof,
+                                    double* vel_trial_trace_ref,
+                                    double* ebqe_velocity,
+                                    double* velocityAverage)
+      {
+        int permutations[nQuadraturePoints_elementBoundary];
+        double xArray_left[nQuadraturePoints_elementBoundary*2],
+          xArray_right[nQuadraturePoints_elementBoundary*2];
+        for (int i=0;i<nQuadraturePoints_elementBoundary;i++)
+          permutations[i]=i;//just to initialize
+        for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+          {
+            register int ebN = exteriorElementBoundariesArray[ebNE];
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+              {
+                register int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace,
+                  ebNE_kb_nSpace = ebNE*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace;
+                velocityAverage[ebN_kb_nSpace+0]=ebqe_velocity[ebNE_kb_nSpace+0];
+                velocityAverage[ebN_kb_nSpace+1]=ebqe_velocity[ebNE_kb_nSpace+1];
+              }//ebNE
+          }
+        for (int ebNI = 0; ebNI < nInteriorElementBoundaries_global; ebNI++)
+          {
+            register int ebN = interiorElementBoundariesArray[ebNI],
+              left_eN_global   = elementBoundaryElementsArray[ebN*2+0],
+              left_ebN_element  = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+              right_eN_global  = elementBoundaryElementsArray[ebN*2+1],
+              right_ebN_element = elementBoundaryLocalElementBoundariesArray[ebN*2+1],
+              left_eN_nDOF_trial_element = left_eN_global*nDOF_trial_element,
+              right_eN_nDOF_trial_element = right_eN_global*nDOF_trial_element;
+            double jac[nSpace*nSpace],
+              jacDet,
+              jacInv[nSpace*nSpace],
+              boundaryJac[nSpace*(nSpace-1)],
+              metricTensor[(nSpace-1)*(nSpace-1)],
+              metricTensorDetSqrt,
+              normal[2],
+              x,y,z,
+              xt,yt,zt,integralScaling;
+
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+              {
+                ck.calculateMapping_elementBoundary(left_eN_global,
+                                                    left_ebN_element,
+                                                    kb,
+                                                    left_ebN_element*nQuadraturePoints_elementBoundary+kb,
+                                                    mesh_dof,
+                                                    mesh_l2g,
+                                                    mesh_trial_trace_ref,
+                                                    mesh_grad_trial_trace_ref,
+                                                    boundaryJac_ref,
+                                                    jac,
+                                                    jacDet,
+                                                    jacInv,
+                                                    boundaryJac,
+                                                    metricTensor,
+                                                    metricTensorDetSqrt,
+                                                    normal_ref,
+                                                    normal,
+                                                    x,y,z);
+                xArray_left[kb*2+0] = x;
+                xArray_left[kb*2+1] = y;
+                /* xArray_left[kb*3+2] = z; */
+                ck.calculateMapping_elementBoundary(right_eN_global,
+                                                    right_ebN_element,
+                                                    kb,
+                                                    right_ebN_element*nQuadraturePoints_elementBoundary+kb,
+                                                    mesh_dof,
+                                                    mesh_l2g,
+                                                    mesh_trial_trace_ref,
+                                                    mesh_grad_trial_trace_ref,
+                                                    boundaryJac_ref,
+                                                    jac,
+                                                    jacDet,
+                                                    jacInv,
+                                                    boundaryJac,
+                                                    metricTensor,
+                                                    metricTensorDetSqrt,
+                                                    normal_ref,
+                                                    normal,
+                                                    x,y,z);
+                ck.calculateMappingVelocity_elementBoundary(left_eN_global,
+                                                            left_ebN_element,
+                                                            kb,
+                                                            left_ebN_element*nQuadraturePoints_elementBoundary+kb,
+                                                            mesh_velocity_dof,
+                                                            mesh_l2g,
+                                                            mesh_trial_trace_ref,
+                                                            xt,yt,zt,
+                                                            normal,
+                                                            boundaryJac,
+                                                            metricTensor,
+                                                            integralScaling);
+                xArray_right[kb*2+0] = x;
+                xArray_right[kb*2+1] = y;
+                /* xArray_right[kb*3+2] = z; */
+              }
+            for  (int kb_left=0;kb_left<nQuadraturePoints_elementBoundary;kb_left++)
+              {
+                double errorNormMin = 1.0;
+                for  (int kb_right=0;kb_right<nQuadraturePoints_elementBoundary;kb_right++)
+                  {
+                    double errorNorm=0.0;
+                    for (int I=0;I<nSpace;I++)
+                      {
+                        errorNorm += fabs(xArray_left[kb_left*2+I]
+                                          -
+                                          xArray_right[kb_right*2+I]);
+                      }
+                    if (errorNorm < errorNormMin)
+                      {
+                        permutations[kb_right] = kb_left;
+                        errorNormMin = errorNorm;
+                      }
+                  }
+              }
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+              {
+                register int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace;
+                register double u_left=0.0,
+                  v_left=0.0,
+                  w_left=0.0,
+                  u_right=0.0,
+                  v_right=0.0,
+                  w_right=0.0,
+                  vos_left=0.0,
+                  vos_right=0.0,
+                  porosity_left=0.0,
+                  porosity_right=0.0;
+                register int left_kb = kb,
+                  right_kb = permutations[kb],
+                  left_ebN_element_kb_nDOF_test_element=(left_ebN_element*nQuadraturePoints_elementBoundary+left_kb)*nDOF_test_element,
+                  right_ebN_element_kb_nDOF_test_element=(right_ebN_element*nQuadraturePoints_elementBoundary+right_kb)*nDOF_test_element;
+                //
+                //calculate the velocity solution at quadrature points on left and right
+                //
+                ck.valFromDOF(vos_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],vos_left);
+                ck.valFromDOF(u_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],u_left);
+                ck.valFromDOF(v_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],v_left);
+                /* ck.valFromDOF(w_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],w_left); */
+                //
+                ck.valFromDOF(vos_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],vos_right);
+                ck.valFromDOF(u_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],u_right);
+                ck.valFromDOF(v_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],v_right);
+                /* ck.valFromDOF(w_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],w_right); */
+                //
+                /* porosity_left = 1.0 - vos_left; */
+                /* porosity_right = 1.0 - vos_right; */
+                velocityAverage[ebN_kb_nSpace+0]=0.5*(u_left + u_right);
+                velocityAverage[ebN_kb_nSpace+1]=0.5*(v_left + v_right);
+                /* velocityAverage[ebN_kb_nSpace+2]=0.5*(w_left + w_right); */
+              }//ebNI
+          }
+      }
 
       void calculateResidual_entropy_viscosity(//element
                                                double* mesh_trial_ref,
@@ -9698,179 +10435,6 @@ namespace proteus
               }//kb
           }//ebNE
       }//computeJacobian
-
-      void calculateVelocityAverage(int nExteriorElementBoundaries_global,
-                                    int* exteriorElementBoundariesArray,
-                                    int nInteriorElementBoundaries_global,
-                                    int* interiorElementBoundariesArray,
-                                    int* elementBoundaryElementsArray,
-                                    int* elementBoundaryLocalElementBoundariesArray,
-                                    double* mesh_dof,
-                                    double* mesh_velocity_dof,
-                                    double MOVING_DOMAIN,//0 or 1
-                                    int* mesh_l2g,
-                                    double* mesh_trial_trace_ref,
-                                    double* mesh_grad_trial_trace_ref,
-                                    double* normal_ref,
-                                    double* boundaryJac_ref,
-                                    int* vel_l2g,
-                                    double* u_dof,
-                                    double* v_dof,
-                                    double* w_dof,
-                                    double* vos_dof,
-                                    double* vel_trial_trace_ref,
-                                    double* ebqe_velocity,
-                                    double* velocityAverage)
-      {
-        int permutations[nQuadraturePoints_elementBoundary];
-        double xArray_left[nQuadraturePoints_elementBoundary*2],
-          xArray_right[nQuadraturePoints_elementBoundary*2];
-        for (int i=0;i<nQuadraturePoints_elementBoundary;i++)
-          permutations[i]=i;//just to initialize
-        for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
-          {
-            register int ebN = exteriorElementBoundariesArray[ebNE];
-            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
-              {
-                register int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace,
-                  ebNE_kb_nSpace = ebNE*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace;
-                velocityAverage[ebN_kb_nSpace+0]=ebqe_velocity[ebNE_kb_nSpace+0];
-                velocityAverage[ebN_kb_nSpace+1]=ebqe_velocity[ebNE_kb_nSpace+1];
-              }//ebNE
-          }
-        for (int ebNI = 0; ebNI < nInteriorElementBoundaries_global; ebNI++)
-          {
-            register int ebN = interiorElementBoundariesArray[ebNI],
-              left_eN_global   = elementBoundaryElementsArray[ebN*2+0],
-              left_ebN_element  = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
-              right_eN_global  = elementBoundaryElementsArray[ebN*2+1],
-              right_ebN_element = elementBoundaryLocalElementBoundariesArray[ebN*2+1],
-              left_eN_nDOF_trial_element = left_eN_global*nDOF_trial_element,
-              right_eN_nDOF_trial_element = right_eN_global*nDOF_trial_element;
-            double jac[nSpace*nSpace],
-              jacDet,
-              jacInv[nSpace*nSpace],
-              boundaryJac[nSpace*(nSpace-1)],
-              metricTensor[(nSpace-1)*(nSpace-1)],
-              metricTensorDetSqrt,
-              normal[2],
-              x,y,z,
-              xt,yt,zt,integralScaling;
-
-            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
-              {
-                ck.calculateMapping_elementBoundary(left_eN_global,
-                                                    left_ebN_element,
-                                                    kb,
-                                                    left_ebN_element*nQuadraturePoints_elementBoundary+kb,
-                                                    mesh_dof,
-                                                    mesh_l2g,
-                                                    mesh_trial_trace_ref,
-                                                    mesh_grad_trial_trace_ref,
-                                                    boundaryJac_ref,
-                                                    jac,
-                                                    jacDet,
-                                                    jacInv,
-                                                    boundaryJac,
-                                                    metricTensor,
-                                                    metricTensorDetSqrt,
-                                                    normal_ref,
-                                                    normal,
-                                                    x,y,z);
-                xArray_left[kb*2+0] = x;
-                xArray_left[kb*2+1] = y;
-                /* xArray_left[kb*3+2] = z; */
-                ck.calculateMapping_elementBoundary(right_eN_global,
-                                                    right_ebN_element,
-                                                    kb,
-                                                    right_ebN_element*nQuadraturePoints_elementBoundary+kb,
-                                                    mesh_dof,
-                                                    mesh_l2g,
-                                                    mesh_trial_trace_ref,
-                                                    mesh_grad_trial_trace_ref,
-                                                    boundaryJac_ref,
-                                                    jac,
-                                                    jacDet,
-                                                    jacInv,
-                                                    boundaryJac,
-                                                    metricTensor,
-                                                    metricTensorDetSqrt,
-                                                    normal_ref,
-                                                    normal,
-                                                    x,y,z);
-                ck.calculateMappingVelocity_elementBoundary(left_eN_global,
-                                                            left_ebN_element,
-                                                            kb,
-                                                            left_ebN_element*nQuadraturePoints_elementBoundary+kb,
-                                                            mesh_velocity_dof,
-                                                            mesh_l2g,
-                                                            mesh_trial_trace_ref,
-                                                            xt,yt,zt,
-                                                            normal,
-                                                            boundaryJac,
-                                                            metricTensor,
-                                                            integralScaling);
-                xArray_right[kb*2+0] = x;
-                xArray_right[kb*2+1] = y;
-                /* xArray_right[kb*3+2] = z; */
-              }
-            for  (int kb_left=0;kb_left<nQuadraturePoints_elementBoundary;kb_left++)
-              {
-                double errorNormMin = 1.0;
-                for  (int kb_right=0;kb_right<nQuadraturePoints_elementBoundary;kb_right++)
-                  {
-                    double errorNorm=0.0;
-                    for (int I=0;I<nSpace;I++)
-                      {
-                        errorNorm += fabs(xArray_left[kb_left*2+I]
-                                          -
-                                          xArray_right[kb_right*2+I]);
-                      }
-                    if (errorNorm < errorNormMin)
-                      {
-                        permutations[kb_right] = kb_left;
-                        errorNormMin = errorNorm;
-                      }
-                  }
-              }
-            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
-              {
-                register int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace;
-                register double u_left=0.0,
-                  v_left=0.0,
-                  w_left=0.0,
-                  u_right=0.0,
-                  v_right=0.0,
-                  w_right=0.0,
-                  vos_left=0.0,
-                  vos_right=0.0,
-                  porosity_left=0.0,
-                  porosity_right=0.0;
-                register int left_kb = kb,
-                  right_kb = permutations[kb],
-                  left_ebN_element_kb_nDOF_test_element=(left_ebN_element*nQuadraturePoints_elementBoundary+left_kb)*nDOF_test_element,
-                  right_ebN_element_kb_nDOF_test_element=(right_ebN_element*nQuadraturePoints_elementBoundary+right_kb)*nDOF_test_element;
-                //
-                //calculate the velocity solution at quadrature points on left and right
-                //
-                ck.valFromDOF(vos_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],vos_left);
-                ck.valFromDOF(u_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],u_left);
-                ck.valFromDOF(v_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],v_left);
-                /* ck.valFromDOF(w_dof,&vel_l2g[left_eN_nDOF_trial_element],&vel_trial_trace_ref[left_ebN_element_kb_nDOF_test_element],w_left); */
-                //
-                ck.valFromDOF(vos_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],vos_right);
-                ck.valFromDOF(u_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],u_right);
-                ck.valFromDOF(v_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],v_right);
-                /* ck.valFromDOF(w_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],w_right); */
-                //
-                /* porosity_left = 1.0 - vos_left; */
-                /* porosity_right = 1.0 - vos_right; */
-                velocityAverage[ebN_kb_nSpace+0]=0.5*(u_left + u_right);
-                velocityAverage[ebN_kb_nSpace+1]=0.5*(v_left + v_right);
-                /* velocityAverage[ebN_kb_nSpace+2]=0.5*(w_left + w_right); */
-              }//ebNI
-          }
-      }
     };//RANS3PF2D
 
   inline cppRANS3PF2D_base* newRANS3PF2D(int nSpaceIn,
