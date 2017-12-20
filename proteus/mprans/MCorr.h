@@ -542,6 +542,8 @@ namespace proteus
             	        f[I] = v[I]*porosity*H_phi;/// v is not NULL when mass_correction_reference=1 or 2
             	    else if(mass_correction_reference==2)
             	        f[I] = v[I]*porosity*H_phi_u;
+            	    else if(mass_correction_reference==3)
+            	        f[I] = v[I]*porosity*H_phi_old;
             if(df && mass_correction_reference==2)df[I] = v[I]*dr;//0 for explicit case;
           }
       }

@@ -31,7 +31,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sd=sd
         self.checkMass=checkMass
         self.variableNames=['phiCorr']
-        assert mass_correction_reference<3,"*****Use proper mass_correction_reference number*****"
+        assert mass_correction_reference<4,"*****Use proper mass_correction_reference number*****"
         self.mass_correction_reference=mass_correction_reference
 
         nc=1
