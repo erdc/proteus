@@ -17,7 +17,8 @@ coefficients = MCorr.Coefficients(applyCorrection=applyCorrection,
                                   checkMass=checkMass,
                                   nd=nd,
                                   useMetrics=useMetrics,
-                                  mass_correction_reference=mass_correction_reference)
+                                  mass_correction_reference=mass_correction_reference,
+                                  theta_time_discretization_mcorr = theta_time_discretization_mcorr)
 
 class zero_phi:
     def __init__(self):

@@ -11,7 +11,8 @@ ct = Context.Options([
     ("applyCorrection", True, "apply mass correction or not"),
     ("applyRedistancing", True, "apply redkstancing or not"),
     ("hk", 1.0, "the size of sub-triangles in the reference triangle used for comp quadrature rule"),
-    ("massCorrectionReference", 2, "reference mass in MCorr")
+    ("massCorrectionReference", 4, "reference mass in MCorr"),
+    ("thetaMCorr", 1.0, " >=0, <=1, e.g., 0.0=explicit, 0.5=Crank-Nicolson, 1.0=implicit")
 ], mutable=True)
 
 
@@ -49,8 +50,9 @@ if pDegree_ls == 2:
 else:
     vortex_quad_order = 3
 
-# YY: mass correction
-mass_correction_reference = ct.massCorrectionReference #: 0=H(phi^{n+1}) 1=explicit given 2=implicit given
+# mass correction
+mass_correction_reference = ct.massCorrectionReference #: 0=H(phi^{n+1}); 1=explicit-1; 2=implicit; 3=explicit-2; 4=theta method
+theta_time_discretization_mcorr = ct.thetaMCorr#: if mass_correction_reference==4
 
 #sub-element edge size, used to create composite quadrature rule
 hk = ct.hk
