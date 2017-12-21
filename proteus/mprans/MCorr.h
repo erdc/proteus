@@ -144,9 +144,9 @@ namespace proteus
                                    double* q_phi,
                                    double* q_normal_phi,
                                    double* q_H,
-		                           double* q_phi_old,///YY
-		                           double* q_v,///YY
-		                           int mass_correction_reference,
+                                   double* q_phi_old,///YY
+                                   double* q_v,///YY
+                                   int mass_correction_reference,
                                    double* q_porosity,
                                    int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                                    double* globalJacobian)=0;
@@ -527,23 +527,23 @@ namespace proteus
         H_phi_u = porosity*smoothedHeaviside(epsHeaviside, phi+u);
 
         if(mass_correction_reference==0)
-        	    r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H;
+                r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H;
         else if(mass_correction_reference==1)
-        	    r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
+                r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
         else if(mass_correction_reference==2)
-        	    r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
+                r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
 
         dr = porosity*smoothedDirac(epsDirac,phi+u);
 
         for (int I=0; I < nSpace; I++)
           {
             if(f)
-            	    if( mass_correction_reference==1)
-            	        f[I] = v[I]*porosity*H_phi;/// v is not NULL when mass_correction_reference=1 or 2
-            	    else if(mass_correction_reference==2)
-            	        f[I] = v[I]*porosity*H_phi_u;
-            	    else if(mass_correction_reference==3)
-            	        f[I] = v[I]*porosity*H_phi_old;
+                    if( mass_correction_reference==1)
+                        f[I] = v[I]*porosity*H_phi;/// v is not NULL when mass_correction_reference > 0
+                    else if(mass_correction_reference==2)
+                        f[I] = v[I]*porosity*H_phi_u;
+                    else if(mass_correction_reference==3)
+                        f[I] = v[I]*porosity*H_phi_old;
             if(df && mass_correction_reference==2)df[I] = v[I]*dr;//0 for explicit case;
           }
       }
@@ -1450,7 +1450,7 @@ namespace proteus
       }
 
       void calculateJacobian(//element
-    		  	  	  	  	  	double dt,
+                             double dt,
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
                              double* mesh_dof,
