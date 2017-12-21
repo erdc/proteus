@@ -1,6 +1,7 @@
 import proteus
 from proteus.mprans.cMCorr import *
 
+
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import levelSetConservationCoefficientsEvaluate
     from proteus.ctransportCoefficients import levelSetConservationCoefficientsEvaluate_sd
@@ -22,7 +23,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # mql. For edge based stabilization methods
                  useQuadraticRegularization=False,
                  edgeBasedStabilizationMethods=False,
-                 mass_correction_reference=0):
+                 mass_correction_reference=0,
+                 theta_time_discretization_mcorr=1):
 
         self.useQuadraticRegularization=useQuadraticRegularization
         self.edgeBasedStabilizationMethods=edgeBasedStabilizationMethods
@@ -31,8 +33,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sd=sd
         self.checkMass=checkMass
         self.variableNames=['phiCorr']
-        assert mass_correction_reference<4,"*****Use proper mass_correction_reference number*****"
+        
+        assert mass_correction_reference<5,"*****Use proper mass_correction_reference number*****"
         self.mass_correction_reference=mass_correction_reference
+        self.theta_time_discretization_mcorr=theta_time_discretization_mcorr
 
         nc=1
         mass={}
@@ -108,6 +112,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebq_H_vof = None
 
         self.q_phi_old = modelList[self.levelSetModelIndex].q[('u',0)].copy()
+        self.q_velocity_old = self.vofModel.coefficients.q_v.copy()#:previous velocity field; used in theta-method
 
         #correction
         self.massCorrModel = modelList[self.me_model]
@@ -172,6 +177,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.lsModel.timeIntegration.m_tmp[0][:] = self.lsModel.q[('u',0)]
             if self.mass_correction_reference>0:
                 self.q_phi_old[:] = self.lsModel.q[('u',0)]
+            if self.mass_correction_reference==4:#: when theta-method is used for time discretization
+                self.q_velocity_old[:] = self.vofModel.coefficients.q_v
             #vof
             if self.edgeBasedStabilizationMethods==False:
                 self.massCorrModel.setMassQuadrature()
@@ -664,6 +671,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_phi_old,#:phi^n
             self.coefficients.vofModel.coefficients.q_v,#:velocity field
             self.coefficients.mass_correction_reference,
+            self.coefficients.theta_time_discretization_mcorr,
+            self.coefficients.q_velocity_old,
             self.q[('u',0)],
             self.q[('grad(u)',0)],
             self.ebqe[('u',0)],
@@ -774,11 +783,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
             self.coefficients.q_u_ls,
-                        self.coefficients.q_n_ls,
+            self.coefficients.q_n_ls,
             self.coefficients.q_H_vof,
             self.coefficients.q_phi_old,#:phi^n
             self.coefficients.vofModel.coefficients.q_v,#:velocity field
             self.coefficients.mass_correction_reference,
+            self.coefficients.theta_time_discretization_mcorr,
+            self.coefficients.q_velocity_old,
             self.coefficients.q_porosity,
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
             jacobian)
