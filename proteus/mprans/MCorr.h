@@ -58,9 +58,11 @@ namespace proteus
                                    double* ebqe_phi,
                                    double* ebqe_normal_phi,
                                    double* q_H,
-                                   double* q_phi_old,///YY
-                                   double* q_v,///YY
-                                   int mass_correction_reference,///YY
+                                   double* q_phi_old,
+                                   double* q_v,
+                                   int mass_correction_reference,
+                                   double theta,
+                                   double* q_v_old,
                                    double* q_u,
                                    double* q_n,
                                    double* ebqe_u,
@@ -144,9 +146,11 @@ namespace proteus
                                    double* q_phi,
                                    double* q_normal_phi,
                                    double* q_H,
-                                   double* q_phi_old,///YY
-                                   double* q_v,///YY
+                                   double* q_phi_old,
+                                   double* q_v,
                                    int mass_correction_reference,
+                                   double theta,
+                                   double* q_v_old,
                                    double* q_porosity,
                                    int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                                    double* globalJacobian)=0;
@@ -514,6 +518,8 @@ namespace proteus
                                   const double& phi_old,///phi^n
                                   const double v[nSpace],///velocity field
                                   const int& mass_correction_reference,///label for mass reference
+                                  const double& theta,
+                                  const double v_old[nSpace],///velocity field at previous time
                                   const double& u,
                                   const double& porosity,
                                   double& r,
@@ -532,6 +538,10 @@ namespace proteus
                 r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
         else if(mass_correction_reference==2)
                 r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
+        else if(mass_correction_reference==3)
+                r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
+        else if(mass_correction_reference==4)
+                r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
 
         dr = porosity*smoothedDirac(epsDirac,phi+u);
 
@@ -544,7 +554,14 @@ namespace proteus
                         f[I] = v[I]*porosity*H_phi_u;
                     else if(mass_correction_reference==3)
                         f[I] = v[I]*porosity*H_phi_old;
-            if(df && mass_correction_reference==2)df[I] = v[I]*dr;//0 for explicit case;
+                    else if(mass_correction_reference==4)
+                        f[I] = (1-theta)*v_old[I]*H_phi_old+theta*v[I]*porosity*H_phi_u;
+
+            if(df)
+                    if(mass_correction_reference==2)
+                        df[I] = v[I]*dr;
+                    else if(mass_correction_reference==4)
+                        df[I] = theta*v[I]*dr;
           }
       }
       void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
@@ -663,7 +680,9 @@ namespace proteus
                                            double* q_H,
                                            double* q_phi_old,///phi^{n}
                                            double* q_v,///velocity field
-                                           int mass_correction_reference,///
+                                           int mass_correction_reference,
+                                           double theta,
+                                           double* q_v_old,///velocity field at previous time
                                            double* q_u,
                                            double* q_n,
                                            double* ebqe_u,
@@ -766,6 +785,8 @@ namespace proteus
                                  q_phi_old[eN_k],///phi^n
                                  &q_v[eN_k_nSpace],///velocity field
                                  mass_correction_reference,///label for mass reference
+                                 theta,
+                                 &q_v_old[eN_k_nSpace],///velocity field at previous time
                                  u,
                                  q_porosity[eN_k],
                                  r,
@@ -838,9 +859,11 @@ namespace proteus
                              double* ebqe_phi,
                              double* ebqe_normal_phi,
                              double* q_H,
-                             double* q_phi_old,///YY
-                             double* q_v,///YY
+                             double* q_phi_old,
+                             double* q_v,
                              int mass_correction_reference,
+                             double theta,
+                             double* q_v_old,
                              double* q_u,
                              double* q_n,
                              double* ebqe_u,
@@ -910,6 +933,8 @@ namespace proteus
                                      q_phi_old,
                                      q_v,
                                      mass_correction_reference,
+                                     theta,
+                                     q_v_old,
                                      q_u,
                                      q_n,
                                      ebqe_u,
@@ -1162,6 +1187,8 @@ namespace proteus
                                  0.0,
                                  NULL,
                                  0,
+                                 0,/// has no effect since mass_correction_refence = 0
+                                 NULL,
                                  u,
                                  q_porosity[eN_k],
                                  r,
@@ -1328,9 +1355,11 @@ namespace proteus
                                            double* q_phi,
                                            double* q_normal_phi,
                                            double* q_H,
-                                           double* q_phi_old,///YY
-                                           double* q_v,///YY
+                                           double* q_phi_old,
+                                           double* q_v,
                                            int mass_correction_reference,
+                                           double theta,
+                                           double* q_v_old,
                                            double* q_porosity,
                                            double* elementJacobian_u_u,
                                            double* element_u,
@@ -1424,6 +1453,8 @@ namespace proteus
                                  q_phi_old[eN_k],///phi^n
                                  &q_v[eN_k_nSpace],///velocity field
                                  mass_correction_reference,///label for mass reference
+                                 theta,
+                                 &q_v_old[eN_k_nSpace],
                                  u,
                                  q_porosity[eN_k],
                                  r,
@@ -1442,7 +1473,8 @@ namespace proteus
                     int j_nSpace = j*nSpace;
                     elementJacobian_u_u[i*nDOF_trial_element+j] +=
                       ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
-                      (mass_correction_reference==2?dt:0)*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace])+//minus is inside
+                      (mass_correction_reference==2||mass_correction_reference==4?dt:0)
+                      *ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace])+//minus is inside
                       ck.NumericalDiffusionJacobian(epsDiffusion,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
                   }//j
               }//i
@@ -1487,9 +1519,11 @@ namespace proteus
                              double* q_phi,
                              double* q_normal_phi,
                              double* q_H,
-                             double* q_phi_old,///YY
-                             double* q_v,///YY
+                             double* q_phi_old,
+                             double* q_v,
                              int mass_correction_reference,
+                             double theta,
+                             double* q_v_old,
                              double* q_porosity,
                              int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                              double* globalJacobian)
@@ -1540,6 +1574,8 @@ namespace proteus
                                      q_phi_old,
                                      q_v,
                                      mass_correction_reference,
+                                     theta,
+                                     q_v_old,
                                      q_porosity,
                                      elementJacobian_u_u,
                                      element_u,
@@ -1669,6 +1705,8 @@ namespace proteus
                                      NULL,
                                      NULL,
                                      0,
+                                     0,
+                                     NULL,
                                      q_u,
                                      q_n,
                                      ebqe_u,
@@ -1731,6 +1769,8 @@ namespace proteus
                                          NULL,
                                          NULL,
                                          0,
+                                         0,
+                                         NULL,
                                          q_porosity,
                                          elementJacobian_u_u,
                                          element_u,
@@ -1811,6 +1851,8 @@ namespace proteus
                                              NULL,
                                              NULL,
                                              0,
+                                             0,
+                                             NULL,
                                              q_u,
                                              q_n,
                                              ebqe_u,
@@ -1939,6 +1981,8 @@ namespace proteus
                                      NULL,
                                      NULL,
                                      0,
+                                     0,
+                                     NULL,
                                      q_u,
                                      q_n,
                                      ebqe_u,
@@ -2001,6 +2045,8 @@ namespace proteus
                                          NULL,
                                          NULL,
                                          0,
+                                         0.0,
+                                         NULL,
                                          q_porosity,
                                          elementJacobian_u_u,
                                          element_u,
@@ -2057,6 +2103,8 @@ namespace proteus
                                          NULL,
                                          NULL,
                                          0,
+                                         0,/// has no effect since mass_correction_refence = 0
+                                         NULL,
                                          q_u,
                                          q_n,
                                          ebqe_u,
@@ -2184,6 +2232,8 @@ namespace proteus
                                      NULL,
                                      NULL,
                                      0,
+                                     0,
+                                     NULL,
                                      q_u,
                                      q_n,
                                      ebqe_u,
@@ -2237,6 +2287,8 @@ namespace proteus
                                      NULL,
                                      NULL,
                                      0,
+                                     0,
+                                     NULL,
                                      q_porosity,
                                      elementJacobian_u_u,
                                      element_u,
