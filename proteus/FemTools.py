@@ -4523,7 +4523,7 @@ class C0_BernsteinOnCube(C0_AffineLinearOnSimplexWithNodalBasis):
     def __init__(self,mesh,nd=3,order=2):
         assert False, "Bernstein polynomials are not interpolatory. Remove this assert to use p2 Lagrange interpolatory conditions"
         localFunctionSpace = BernsteinOnCube(nd,order=2)
-        #todo fix these interpolation conditions to work on Cube
+        # NOTE: Bernstein polynomials ARE NOT INTERPOLATORY but we use them as control points to create a bezier curve. 
         interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
         ParametricFiniteElementSpace.__init__(self,
                                               ReferenceFiniteElement(localFunctionSpace,
@@ -4550,6 +4550,7 @@ class C0_AffineBernsteinOnCube(ParametricFiniteElementSpace):
         
         if self.order==2:
             localFunctionSpace = BernsteinOnCube(nd,order=2)
+            # NOTE: Bernstein polynomials ARE NOT INTERPOLATORY but we use them as control points to create a bezier curve.
             interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
         #elif self.order==1:
             #localFunctionSpace = LagrangeOnCubeWithNodalBasis(nd,order=1)
@@ -5593,6 +5594,7 @@ class C0_AffineBernsteinOnSimplex(C0_AffineQuadraticOnSimplexWithNodalBasis):
         self.order = 2
         localFunctionSpace = BernsteinOnSimplex(nd)
         localGeometricSpace= LinearOnSimplexWithNodalBasis(nd)
+        # NOTE: Bernstein polynomials ARE NOT INTERPOLATORY but we use them as control points to create a bezier curve.
         interpolationConditions = QuadraticLagrangeNodalInterpolationConditions(localFunctionSpace.referenceElement)
         ParametricFiniteElementSpace.__init__(self,
                                               ReferenceFiniteElement(localFunctionSpace,
