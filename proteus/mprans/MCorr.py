@@ -34,7 +34,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.checkMass=checkMass
         self.variableNames=['phiCorr']
         
-        assert mass_correction_reference<6,"*****Use proper mass_correction_reference number*****"
+        assert mass_correction_reference<5,"*****Use proper mass_correction_reference number*****"
         self.mass_correction_reference=mass_correction_reference
         self.theta_time_discretization_mcorr=theta_time_discretization_mcorr
 
@@ -116,8 +116,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
         #correction
         self.massCorrModel = modelList[self.me_model]
-        import pdb
-        pdb.set_trace()
         self.massCorrModel.setMassQuadrature()
         self.vofModel.q[('m_last',0)][:] = self.vofModel.q[('m',0)]
         if self.checkMass:
