@@ -12,7 +12,8 @@ ct = Context.Options([
     ("applyRedistancing", True, "apply redkstancing or not"),
     ("hk", 1.0, "the size of sub-triangles in the reference triangle used for comp quadrature rule"),
     ("massCorrectionReference", 4, "reference mass in MCorr"),
-    ("thetaMCorr", 1.0, " >=0, <=1, e.g., 0.0=explicit, 0.5=Crank-Nicolson, 1.0=implicit")
+    ("thetaMCorr", 0.5, " >=0, <=1, e.g., 0.0=explicit, 0.5=Crank-Nicolson, 1.0=implicit"),
+    ("degreeFE",1,"degree of Lagrangian polynomial on each element")
 ], mutable=True)
 
 
@@ -38,7 +39,7 @@ runCFL = ct.cfl#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 #spatial approximation orders
 cDegree_ls=0 #0 -- CG. -1 -- DG
 cDegree_vof=0
-pDegree_ls=1 #level set
+pDegree_ls=ct.degreeFE #level set
 pDegree_vof=pDegree_ls #volume of fluid should match ls for now
 useHex=False#True
 useMetrics=1.0
@@ -131,4 +132,4 @@ if useHex:
     hex=True
     soname="vortex_c0q"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`
 else:
-    soname="vortex_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`+"_"+`ct.applyCorrection`+"_"+`ct.applyRedistancing`+"_"+`hk`+"_"+`mass_correction_reference`
+    soname="vortex_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`+"_"+`ct.applyCorrection`+"_"+`ct.applyRedistancing`+"_"+`hk`+"_"+`mass_correction_reference`+"_"+`ct.thetaMCorr`
