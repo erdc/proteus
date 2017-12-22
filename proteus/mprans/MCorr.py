@@ -34,7 +34,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.checkMass=checkMass
         self.variableNames=['phiCorr']
         
-        assert mass_correction_reference<5,"*****Use proper mass_correction_reference number*****"
+        assert mass_correction_reference<6,"*****Use proper mass_correction_reference number*****"
         self.mass_correction_reference=mass_correction_reference
         self.theta_time_discretization_mcorr=theta_time_discretization_mcorr
 
@@ -116,6 +116,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
         #correction
         self.massCorrModel = modelList[self.me_model]
+        import pdb
+        pdb.set_trace()
         self.massCorrModel.setMassQuadrature()
         self.vofModel.q[('m_last',0)][:] = self.vofModel.q[('m',0)]
         if self.checkMass:
@@ -591,6 +593,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
         else:
             self.elementDiameter = self.mesh.elementDiametersArray
+
         self.mcorr = cMCorr_base(self.nSpace_global,
                                  self.nQuadraturePoints_element,
                                  self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
