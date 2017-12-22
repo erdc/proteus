@@ -2515,7 +2515,7 @@ namespace proteus
               {
                 int eN_i = eN*nDOF_trial_element + i;
                 int gi = phi_l2g[eN_i];
-                if(nDOF_mesh_trial_element==nDOF_trial_element)
+                if(nDOF_mesh_trial_element==nDOF_trial_element)//maybe this is not enough to say it is isoparametric.
                     epsHeaviside = epsFactHeaviside*nodeDiametersArray[mesh_l2g[eN_i]];//cek hack, only works if isoparametric, but we can fix by including interpolation points
                 else
                     epsHeaviside = epsFactHeaviside*elementDiameter[eN];
