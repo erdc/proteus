@@ -1459,7 +1459,7 @@ class Schur_Sp(SchurPrecon):
     prefix : str
     bdyNullSpace : bool
         Indicates the models boundary conditions create a global
-        null space. (see notes)
+        null space. (see Notes)
     constNullSpace : bool
         Indicates the operator Sp has a constant null space. 
         (see Notes)
@@ -1474,7 +1474,13 @@ class Schur_Sp(SchurPrecon):
     conditions.  In contrast, the constNullSpace flag refers to the 
     Sp operator which typically has a constant null space because of 
     its construction.  This flag will typically always be be set to 
-    True.  See the Sp_shell class for more details.
+    True.  See the SpInv_shell class for more details.
+
+    One drawback of this operator is that it must be constructed from
+    the component pieces.  For small problems this is okay,
+    but for large problems this process may not scale well and often
+    a pure Laplace operator will prove a more effective choice of
+    preconditioner.
     """
     def __init__(self,
                  L,
@@ -1498,16 +1504,16 @@ class Schur_Sp(SchurPrecon):
         self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
                                                              self.operator_constructor.linear_smoother.isp)
         L_sizes = self.operator_constructor.linear_smoother.isp.sizes
-        self.Sp_shell = p4pyPETSc.Mat().create()
-        self.Sp_shell.setSizes(L_sizes)
-        self.Sp_shell.setType('python')
-        self.matcontext_inv = Sp_shell(self.A00,
-                                       self.A11,
-                                       self.A01,
-                                       self.A10,
-                                       constNullSpace = self.constNullSpace)
-        self.Sp_shell.setPythonContext(self.matcontext_inv)
-        self.Sp_shell.setUp()
+        self.SpInv_shell = p4pyPETSc.Mat().create()
+        self.SpInv_shell.setSizes(L_sizes)
+        self.SpInv_shell.setType('python')
+        self.matcontext_inv = SpInv_shell(self.A00,
+                                          self.A11,
+                                          self.A01,
+                                          self.A10,
+                                          constNullSpace = self.constNullSpace)
+        self.SpInv_shell.setPythonContext(self.matcontext_inv)
+        self.SpInv_shell.setUp()
         # Set PETSc Schur operator
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
