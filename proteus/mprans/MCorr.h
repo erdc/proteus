@@ -532,9 +532,7 @@ namespace proteus
         H_phi = porosity*smoothedHeaviside(epsHeaviside, phi);
         H_phi_u = porosity*smoothedHeaviside(epsHeaviside, phi+u);
 
-        if(mass_correction_reference==0)
-                r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H;
-        else if(mass_correction_reference==1)
+        if(mass_correction_reference==1)
                 r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
         else if(mass_correction_reference==2)
                 r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
@@ -542,6 +540,8 @@ namespace proteus
                 r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
         else if(mass_correction_reference==4)
                 r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H_phi_old;
+        else//if(mass_correction_reference==0)
+                r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H;
 
         dr = porosity*smoothedDirac(epsDirac,phi+u);
 
@@ -2515,7 +2515,10 @@ namespace proteus
               {
                 int eN_i = eN*nDOF_trial_element + i;
                 int gi = phi_l2g[eN_i];
-                epsHeaviside = epsFactHeaviside*nodeDiametersArray[mesh_l2g[eN_i]];//cek hack, only works if isoparametric, but we can fix by including interpolation points
+                if(nDOF_mesh_trial_element==nDOF_trial_element)
+                    epsHeaviside = epsFactHeaviside*nodeDiametersArray[mesh_l2g[eN_i]];//cek hack, only works if isoparametric, but we can fix by including interpolation points
+                else
+                    epsHeaviside = epsFactHeaviside*elementDiameter[eN];
                 H_dof [gi] = smoothedHeaviside(epsHeaviside,phi_dof[gi]);//cek hack, only works if H and phi in same FEM space, but we can fix by passing in H_l2g
               }
           }//elements
