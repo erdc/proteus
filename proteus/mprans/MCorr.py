@@ -34,11 +34,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sd = sd
         self.checkMass = checkMass
         self.variableNames = ['phiCorr']
-
         assert mass_correction_reference < 5, "*****Use proper mass_correction_reference number*****"
         self.mass_correction_reference = mass_correction_reference
         self.theta_time_discretization_mcorr = theta_time_discretization_mcorr
-
         nc = 1
         mass = {}
         advection = {}
@@ -113,10 +111,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebq_H_vof = modelList[self.VOFModelIndex].ebq[('u', 0)]
         else:
             self.ebq_H_vof = None
-
         self.q_phi_old = modelList[self.levelSetModelIndex].q[('u', 0)].copy()
         self.q_velocity_old = self.vofModel.coefficients.q_v.copy()  # :previous velocity field; used in theta-method
-
         # correction
         self.massCorrModel = modelList[self.me_model]
         self.massCorrModel.setMassQuadrature()
@@ -197,6 +193,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #self.rdModel.q[('grad(u)',0)][:] = self.lsModel.q[('grad(u)',0)]
             #self.rdModel.ebqe[('grad(u)',0)][:] = self.lsModel.ebqe[('grad(u)',0)]
             #self.rdModel.timeIntegration.m_tmp[0][:] = self.lsModel.q[('u',0)]
+            # vof
+            if self.edgeBasedStabilizationMethods == False:
+                self.massCorrModel.setMassQuadrature()
             # else setMassQuadratureEdgeBasedStabilizationMethods is called within specialized nolinear solver
 
             #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
@@ -613,7 +612,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
 
-    # mwf these are getting called by redistancing classes,
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MassMatrix.getCSRrepresentation()
         if (self.limited_L2p_vof_mass_correction is None):
@@ -701,7 +699,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
-
         logEvent("Global residual", level=9, data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         logEvent("   Mass Conservation Error: ", level=3, data=self.coefficients.massConservationError)
