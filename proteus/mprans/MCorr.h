@@ -12,16 +12,6 @@ namespace proteus
   {
   public:
     virtual ~MCorr_base(){}
-    virtual void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
-                         int numDOFs, //number of DOFs
-                         double* lumped_mass_matrix, //lumped mass matrix (as vector)
-                         double* solH, //DOFs of high order solution at tnp1
-                         double* solL,
-                         double* limited_solution,
-                         int* csrRowIndeces_DofLoops, //csr row indeces
-                         int* csrColumnOffsets_DofLoops, //csr column offsets
-                         double* MassMatrix //mass matrix
-                         )=0;
     virtual void calculateResidual(//element
                                    double dt,
                                    double* mesh_trial_ref,
@@ -75,44 +65,7 @@ namespace proteus
                                    int* exteriorElementBoundariesArray,
                                    int* elementBoundaryElementsArray,
                                    int* elementBoundaryLocalElementBoundariesArray)=0;
-    virtual void calculateMassMatrix(//element (MQL)
-                                     double* mesh_trial_ref,
-                                     double* mesh_grad_trial_ref,
-                                     double* mesh_dof,
-                                     int* mesh_l2g,
-                                     double* dV_ref,
-                                     double* u_trial_ref,
-                                     double* u_grad_trial_ref,
-                                     double* u_test_ref,
-                                     double* u_grad_test_ref,
-                                     //element boundary
-                                     double* mesh_trial_trace_ref,
-                                     double* mesh_grad_trial_trace_ref,
-                                     double* dS_ref,
-                                     double* u_trial_trace_ref,
-                                     double* u_grad_trial_trace_ref,
-                                     double* u_test_trace_ref,
-                                     double* u_grad_test_trace_ref,
-                                     double* normal_ref,
-                                     double* boundaryJac_ref,
-                                     //physics
-                                     int nElements_global,
-                                     double useMetrics,
-                                     double epsFactHeaviside,
-                                     double epsFactDirac,
-                                     double epsFactDiffusion,
-                                     int* u_l2g,
-                                     double* elementDiameter,
-                                     double* nodeDiametersArray,
-                                     double* u_dof,
-                                     double* q_phi,
-                                     double* q_normal_phi,
-                                     double* q_H,
-                                     double* q_porosity,
-                                     int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                                     double* globalJacobian,
-                                     double* globalLumpedMassMatrix)=0;
-    virtual void calculateJacobian(//elem
+    virtual void calculateJacobian(//element
                                    double dt,
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -155,203 +108,203 @@ namespace proteus
                                    int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                                    double* globalJacobian)=0;
     virtual void elementSolve(//element
-                              double* mesh_trial_ref,
-                              double* mesh_grad_trial_ref,
-                              double* mesh_dof,
-                              int* mesh_l2g,
-                              double* dV_ref,
-                              double* u_trial_ref,
-                              double* u_grad_trial_ref,
-                              double* u_test_ref,
-                              double* u_grad_test_ref,
-                              //element boundary
-                              double* mesh_trial_trace_ref,
-                              double* mesh_grad_trial_trace_ref,
-                              double* dS_ref,
-                              double* u_trial_trace_ref,
-                              double* u_grad_trial_trace_ref,
-                              double* u_test_trace_ref,
-                              double* u_grad_test_trace_ref,
-                              double* normal_ref,
-                              double* boundaryJac_ref,
-                              //physics
-                              int nElements_global,
-                              double useMetrics,
-                              double epsFactHeaviside,
-                              double epsFactDirac,
-                              double epsFactDiffusion,
-                              int* u_l2g,
-                              double* elementDiameter,
-                              double* nodeDiametersArray,
-                              double* u_dof,
-                              double* q_phi,
-                              double* q_normal_phi,
-                              double* ebqe_phi,
-                              double* ebqe_normal_phi,
-                              double* q_H,
-                              double* q_u,
-                              double* q_n,
-                              double* ebqe_u,
-                              double* ebqe_n,
-                              double* q_r,
-                              double* q_porosity,
-                              int offset_u, int stride_u,
-                              double* globalResidual,
-                              int nExteriorElementBoundaries_global,
-                              int* exteriorElementBoundariesArray,
-                              int* elementBoundaryElementsArray,
-                              int* elementBoundaryLocalElementBoundariesArray,
-                              int maxIts,
-                              double atol)=0;
+			      double* mesh_trial_ref,
+			      double* mesh_grad_trial_ref,
+			      double* mesh_dof,
+			      int* mesh_l2g,
+			      double* dV_ref,
+			      double* u_trial_ref,
+			      double* u_grad_trial_ref,
+			      double* u_test_ref,
+			      double* u_grad_test_ref,
+			      //element boundary
+			      double* mesh_trial_trace_ref,
+			      double* mesh_grad_trial_trace_ref,
+			      double* dS_ref,
+			      double* u_trial_trace_ref,
+			      double* u_grad_trial_trace_ref,
+			      double* u_test_trace_ref,
+			      double* u_grad_test_trace_ref,
+			      double* normal_ref,
+			      double* boundaryJac_ref,
+			      //physics
+			      int nElements_global,
+			      double useMetrics,
+			      double epsFactHeaviside,
+			      double epsFactDirac,
+			      double epsFactDiffusion,
+			      int* u_l2g,
+			      double* elementDiameter,
+			      double* nodeDiametersArray,
+			      double* u_dof,
+			      double* q_phi,
+			      double* q_normal_phi,
+			      double* ebqe_phi,
+			      double* ebqe_normal_phi,
+			      double* q_H,
+			      double* q_u,
+			      double* q_n,
+			      double* ebqe_u,
+			      double* ebqe_n,
+			      double* q_r,
+			      double* q_porosity,
+			      int offset_u, int stride_u,
+			      double* globalResidual,
+			      int nExteriorElementBoundaries_global,
+			      int* exteriorElementBoundariesArray,
+			      int* elementBoundaryElementsArray,
+			      int* elementBoundaryLocalElementBoundariesArray,
+			      int maxIts,
+			      double atol)=0;
     virtual void elementConstantSolve(//element
-                                      double* mesh_trial_ref,
-                                      double* mesh_grad_trial_ref,
-                                      double* mesh_dof,
-                                      int* mesh_l2g,
-                                      double* dV_ref,
-                                      double* u_trial_ref,
-                                      double* u_grad_trial_ref,
-                                      double* u_test_ref,
-                                      double* u_grad_test_ref,
-                                      //element boundary
-                                      double* mesh_trial_trace_ref,
-                                      double* mesh_grad_trial_trace_ref,
-                                      double* dS_ref,
-                                      double* u_trial_trace_ref,
-                                      double* u_grad_trial_trace_ref,
-                                      double* u_test_trace_ref,
-                                      double* u_grad_test_trace_ref,
-                                      double* normal_ref,
-                                      double* boundaryJac_ref,
-                                      //physics
-                                      int nElements_global,
-                                      double useMetrics,
-                                      double epsFactHeaviside,
-                                      double epsFactDirac,
-                                      double epsFactDiffusion,
-                                      int* u_l2g,
-                                      double* elementDiameter,
-                                      double* nodeDiametersArray,
-                                      double* u_dof,
-                                      double* q_phi,
-                                      double* q_normal_phi,
-                                      double* ebqe_phi,
-                                      double* ebqe_normal_phi,
-                                      double* q_H,
-                                      double* q_u,
-                                      double* q_n,
-                                      double* ebqe_u,
-                                      double* ebqe_n,
-                                      double* q_r,
-                                      double* q_porosity,
-                                      int offset_u, int stride_u,
-                                      double* globalResidual,
-                                      int nExteriorElementBoundaries_global,
-                                      int* exteriorElementBoundariesArray,
-                                      int* elementBoundaryElementsArray,
-                                      int* elementBoundaryLocalElementBoundariesArray,
-                                      int maxIts,
-                                      double atol)=0;
+				      double* mesh_trial_ref,
+				      double* mesh_grad_trial_ref,
+				      double* mesh_dof,
+				      int* mesh_l2g,
+				      double* dV_ref,
+				      double* u_trial_ref,
+				      double* u_grad_trial_ref,
+				      double* u_test_ref,
+				      double* u_grad_test_ref,
+				      //element boundary
+				      double* mesh_trial_trace_ref,
+				      double* mesh_grad_trial_trace_ref,
+				      double* dS_ref,
+				      double* u_trial_trace_ref,
+				      double* u_grad_trial_trace_ref,
+				      double* u_test_trace_ref,
+				      double* u_grad_test_trace_ref,
+				      double* normal_ref,
+				      double* boundaryJac_ref,
+				      //physics
+				      int nElements_global,
+				      double useMetrics,
+				      double epsFactHeaviside,
+				      double epsFactDirac,
+				      double epsFactDiffusion,
+				      int* u_l2g,
+				      double* elementDiameter,
+				      double* nodeDiametersArray,
+				      double* u_dof,
+				      double* q_phi,
+				      double* q_normal_phi,
+				      double* ebqe_phi,
+				      double* ebqe_normal_phi,
+				      double* q_H,
+				      double* q_u,
+				      double* q_n,
+				      double* ebqe_u,
+				      double* ebqe_n,
+				      double* q_r,
+				      double* q_porosity,
+				      int offset_u, int stride_u,
+				      double* globalResidual,
+				      int nExteriorElementBoundaries_global,
+				      int* exteriorElementBoundariesArray,
+				      int* elementBoundaryElementsArray,
+				      int* elementBoundaryLocalElementBoundariesArray,
+				      int maxIts,
+				      double atol)=0;
     virtual void globalConstantRJ(//element
-                                  double* mesh_trial_ref,
-                                  double* mesh_grad_trial_ref,
-                                  double* mesh_dof,
-                                  int* mesh_l2g,
-                                  double* dV_ref,
-                                  double* u_trial_ref,
-                                  double* u_grad_trial_ref,
-                                  double* u_test_ref,
-                                  double* u_grad_test_ref,
-                                  //element boundary
-                                  double* mesh_trial_trace_ref,
-                                  double* mesh_grad_trial_trace_ref,
-                                  double* dS_ref,
-                                  double* u_trial_trace_ref,
-                                  double* u_grad_trial_trace_ref,
-                                  double* u_test_trace_ref,
-                                  double* u_grad_test_trace_ref,
-                                  double* normal_ref,
-                                  double* boundaryJac_ref,
-                                  //physics
-                                  int nElements_owned,
-                                  double useMetrics,
-                                  double epsFactHeaviside,
-                                  double epsFactDirac,
-                                  double epsFactDiffusion,
-                                  int* u_l2g,
-                                  double* elementDiameter,
-                                  double* nodeDiametersArray,
-                                  double* u_dof,
-                                  double* q_phi,
-                                  double* q_normal_phi,
-                                  double* ebqe_phi,
-                                  double* ebqe_normal_phi,
-                                  double* q_H,
-                                  double* q_u,
-                                  double* q_n,
-                                  double* ebqe_u,
-                                  double* ebqe_n,
-                                  double* q_r,
-                                  double* q_porosity,
-                                  int offset_u, int stride_u,
-                                  double* globalResidual,
-                                  int nExteriorElementBoundaries_global,
-                                  int* exteriorElementBoundariesArray,
-                                  int* elementBoundaryElementsArray,
-                                  int* elementBoundaryLocalElementBoundariesArray,
-                                  int maxIts,
-                                  double atol,
-                                  double constant_u,
-                                  double* constantResidual,
-                                  double* constantJacobian)=0;
+				  double* mesh_trial_ref,
+				  double* mesh_grad_trial_ref,
+				  double* mesh_dof,
+				  int* mesh_l2g,
+				  double* dV_ref,
+				  double* u_trial_ref,
+				  double* u_grad_trial_ref,
+				  double* u_test_ref,
+				  double* u_grad_test_ref,
+				  //element boundary
+				  double* mesh_trial_trace_ref,
+				  double* mesh_grad_trial_trace_ref,
+				  double* dS_ref,
+				  double* u_trial_trace_ref,
+				  double* u_grad_trial_trace_ref,
+				  double* u_test_trace_ref,
+				  double* u_grad_test_trace_ref,
+				  double* normal_ref,
+				  double* boundaryJac_ref,
+				  //physics
+				  int nElements_owned,
+				  double useMetrics,
+				  double epsFactHeaviside,
+				  double epsFactDirac,
+				  double epsFactDiffusion,
+				  int* u_l2g,
+				  double* elementDiameter,
+				  double* nodeDiametersArray,
+				  double* u_dof,
+				  double* q_phi,
+				  double* q_normal_phi,
+				  double* ebqe_phi,
+				  double* ebqe_normal_phi,
+				  double* q_H,
+				  double* q_u,
+				  double* q_n,
+				  double* ebqe_u,
+				  double* ebqe_n,
+				  double* q_r,
+				  double* q_porosity,
+				  int offset_u, int stride_u,
+				  double* globalResidual,
+				  int nExteriorElementBoundaries_global,
+				  int* exteriorElementBoundariesArray,
+				  int* elementBoundaryElementsArray,
+				  int* elementBoundaryLocalElementBoundariesArray,
+				  int maxIts,
+				  double atol,
+				  double constant_u,
+				  double* constantResidual,
+				  double* constantJacobian)=0;
     virtual void calculateMass(//element
-                               double* mesh_trial_ref,
-                               double* mesh_grad_trial_ref,
-                               double* mesh_dof,
-                               int* mesh_l2g,
-                               double* dV_ref,
-                               double* u_trial_ref,
-                               double* u_grad_trial_ref,
-                               double* u_test_ref,
-                               double* u_grad_test_ref,
-                               //element boundary
-                               double* mesh_trial_trace_ref,
-                               double* mesh_grad_trial_trace_ref,
-                               double* dS_ref,
-                               double* u_trial_trace_ref,
-                               double* u_grad_trial_trace_ref,
-                               double* u_test_trace_ref,
-                               double* u_grad_test_trace_ref,
-                               double* normal_ref,
-                               double* boundaryJac_ref,
-                               //physics
-                               int nElements_owned,
-                               double useMetrics,
-                               double epsFactHeaviside,
-                               double epsFactDirac,
-                               double epsFactDiffusion,
-                               int* u_l2g,
-                               double* elementDiameter,
-                               double* nodeDiametersArray,
-                               double* u_dof,
-                               double* q_phi,
-                               double* q_normal_phi,
-                               double* ebqe_phi,
-                               double* ebqe_normal_phi,
-                               double* q_H,
-                               double* q_u,
-                               double* q_n,
-                               double* ebqe_u,
-                               double* ebqe_n,
-                               double* q_r,
-                               double* q_porosity,
-                               int offset_u, int stride_u,
-                               double* globalResidual,
-                               int nExteriorElementBoundaries_global,
-                               int* exteriorElementBoundariesArray,
-                               int* elementBoundaryElementsArray,
-                               int* elementBoundaryLocalElementBoundariesArray,
-                               double* globalMass)=0;
+			       double* mesh_trial_ref,
+			       double* mesh_grad_trial_ref,
+			       double* mesh_dof,
+			       int* mesh_l2g,
+			       double* dV_ref,
+			       double* u_trial_ref,
+			       double* u_grad_trial_ref,
+			       double* u_test_ref,
+			       double* u_grad_test_ref,
+			       //element boundary
+			       double* mesh_trial_trace_ref,
+			       double* mesh_grad_trial_trace_ref,
+			       double* dS_ref,
+			       double* u_trial_trace_ref,
+			       double* u_grad_trial_trace_ref,
+			       double* u_test_trace_ref,
+			       double* u_grad_test_trace_ref,
+			       double* normal_ref,
+			       double* boundaryJac_ref,
+			       //physics
+			       int nElements_owned,
+			       double useMetrics,
+			       double epsFactHeaviside,
+			       double epsFactDirac,
+			       double epsFactDiffusion,
+			       int* u_l2g,
+			       double* elementDiameter,
+			       double* nodeDiametersArray,
+			       double* u_dof,
+			       double* q_phi,
+			       double* q_normal_phi,
+			       double* ebqe_phi,
+			       double* ebqe_normal_phi,
+			       double* q_H,
+			       double* q_u,
+			       double* q_n,
+			       double* ebqe_u,
+			       double* ebqe_n,
+			       double* q_r,
+			       double* q_porosity,
+			       int offset_u, int stride_u,
+			       double* globalResidual,
+			       int nExteriorElementBoundaries_global,
+			       int* exteriorElementBoundariesArray,
+			       int* elementBoundaryElementsArray,
+			       int* elementBoundaryLocalElementBoundariesArray,
+			       double* globalMass)=0;
     virtual void setMassQuadrature(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -400,57 +353,104 @@ namespace proteus
                                    int* elementBoundaryElementsArray,
                                    int* elementBoundaryLocalElementBoundariesArray,
                                    double* H_dof)=0;
+    virtual void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
+                         int numDOFs, //number of DOFs
+                         double* lumped_mass_matrix, //lumped mass matrix (as vector)
+                         double* solH, //DOFs of high order solution at tnp1
+                         double* solL,
+                         double* limited_solution,
+                         int* csrRowIndeces_DofLoops, //csr row indeces
+                         int* csrColumnOffsets_DofLoops, //csr column offsets
+                         double* MassMatrix //mass matrix
+                         )=0;
+    virtual void calculateMassMatrix(//element (MQL)
+				     double* mesh_trial_ref,
+				     double* mesh_grad_trial_ref,
+				     double* mesh_dof,
+				     int* mesh_l2g,
+				     double* dV_ref,
+				     double* u_trial_ref,
+				     double* u_grad_trial_ref,
+				     double* u_test_ref,
+				     double* u_grad_test_ref,
+				     //element boundary
+				     double* mesh_trial_trace_ref,
+				     double* mesh_grad_trial_trace_ref,
+				     double* dS_ref,
+				     double* u_trial_trace_ref,
+				     double* u_grad_trial_trace_ref,
+				     double* u_test_trace_ref,
+				     double* u_grad_test_trace_ref,
+				     double* normal_ref,
+				     double* boundaryJac_ref,
+				     //physics
+				     int nElements_global,
+				     double useMetrics,
+				     double epsFactHeaviside,
+				     double epsFactDirac,
+				     double epsFactDiffusion,
+				     int* u_l2g,
+				     double* elementDiameter,
+				     double* nodeDiametersArray,
+				     double* u_dof,
+				     double* q_phi,
+				     double* q_normal_phi,
+				     double* q_H,
+				     double* q_porosity,
+				     int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				     double* globalJacobian,
+				     double* globalLumpedMassMatrix)=0;
     virtual void setMassQuadratureEdgeBasedStabilizationMethods(//element
-                                                                double* mesh_trial_ref,
-                                                                double* mesh_grad_trial_ref,
-                                                                double* mesh_dof,
-                                                                int* mesh_l2g,
-                                                                double* dV_ref,
-                                                                double* u_trial_ref,
-                                                                double* u_grad_trial_ref,
-                                                                double* u_test_ref,
-                                                                double* u_grad_test_ref,
-                                                                //element boundary
-                                                                double* mesh_trial_trace_ref,
-                                                                double* mesh_grad_trial_trace_ref,
-                                                                double* dS_ref,
-                                                                double* u_trial_trace_ref,
-                                                                double* u_grad_trial_trace_ref,
-                                                                double* u_test_trace_ref,
-                                                                double* u_grad_test_trace_ref,
-                                                                double* normal_ref,
-                                                                double* boundaryJac_ref,
-                                                                //physics
-                                                                int nElements_global,
-                                                                double useMetrics,
-                                                                double epsFactHeaviside,
-                                                                double epsFactDirac,
-                                                                double epsFactDiffusion,
-                                                                int* phi_l2g,
-                                                                double* elementDiameter,
-                                                                double* nodeDiametersArray,
-                                                                double* phi_dof,
-                                                                double* q_phi,
-                                                                double* q_normal_phi,
-                                                                double* ebqe_phi,
-                                                                double* ebqe_normal_phi,
-                                                                double* q_H,
-                                                                double* q_u,
-                                                                double* q_n,
-                                                                double* ebqe_u,
-                                                                double* ebqe_n,
-                                                                double* q_r,
-                                                                double* q_porosity,
-                                                                int offset_u, int stride_u,
-                                                                double* globalResidual,
-                                                                int nExteriorElementBoundaries_global,
-                                                                int* exteriorElementBoundariesArray,
-                                                                int* elementBoundaryElementsArray,
-                                                                int* elementBoundaryLocalElementBoundariesArray,
-                                                                double* rhs_mass_correction,
-                                                                double* lumped_L2p_vof_mass_correction,
-                                                                double* lumped_mass_matrix,
-                                                                int numDOFs)=0;
+								double* mesh_trial_ref,
+								double* mesh_grad_trial_ref,
+								double* mesh_dof,
+								int* mesh_l2g,
+								double* dV_ref,
+								double* u_trial_ref,
+								double* u_grad_trial_ref,
+								double* u_test_ref,
+								double* u_grad_test_ref,
+								//element boundary
+								double* mesh_trial_trace_ref,
+								double* mesh_grad_trial_trace_ref,
+								double* dS_ref,
+								double* u_trial_trace_ref,
+								double* u_grad_trial_trace_ref,
+								double* u_test_trace_ref,
+								double* u_grad_test_trace_ref,
+								double* normal_ref,
+								double* boundaryJac_ref,
+								//physics
+								int nElements_global,
+								double useMetrics,
+								double epsFactHeaviside,
+								double epsFactDirac,
+								double epsFactDiffusion,
+								int* phi_l2g,
+								double* elementDiameter,
+								double* nodeDiametersArray,
+								double* phi_dof,
+								double* q_phi,
+								double* q_normal_phi,
+								double* ebqe_phi,
+								double* ebqe_normal_phi,
+								double* q_H,
+								double* q_u,
+								double* q_n,
+								double* ebqe_u,
+								double* ebqe_n,
+								double* q_r,
+								double* q_porosity,
+								int offset_u, int stride_u,
+								double* globalResidual,
+								int nExteriorElementBoundaries_global,
+								int* exteriorElementBoundariesArray,
+								int* elementBoundaryElementsArray,
+								int* elementBoundaryLocalElementBoundariesArray,
+								double* rhs_mass_correction,
+								double* lumped_L2p_vof_mass_correction,
+								double* lumped_mass_matrix,
+								int numDOFs)=0;
   };
 
   template<class CompKernelType,
@@ -465,51 +465,50 @@ namespace proteus
     public:
       CompKernelType ck;
     MCorr():ck()
-        {}
+	{}
       inline double smoothedHeaviside(double eps, double phi)
       {
-        double H;
-        if (phi > eps)
-          H=1.0;
-        else if (phi < -eps)
-          H=0.0;
-        else if (phi==0.0)
-          H=0.5;
-        else
-          H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
-        return H;
+	double H;
+	if (phi > eps)
+	  H=1.0;
+	else if (phi < -eps)
+	  H=0.0;
+	else if (phi==0.0)
+	  H=0.5;
+	else
+	  H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
+	return H;
       }
 
       inline double smoothedHeaviside_integral(double eps, double phi)
       {
-        double HI;
-        if (phi > eps)
-          {
-            HI= phi - eps +   0.5*(eps + 0.5*eps*eps/eps - eps*cos(M_PI*eps/eps)/(M_PI*M_PI)) - 0.5*((-eps) + 0.5*(-eps)*(-eps)/eps - eps*cos(M_PI*(-eps)/eps)/(M_PI*M_PI));
-          }
-        else if (phi < -eps)
-          {
-            HI=0.0;
-          }
-        else
-          {
-            HI = 0.5*(phi + 0.5*phi*phi/eps - eps*cos(M_PI*phi/eps)/(M_PI*M_PI)) - 0.5*((-eps) + 0.5*(-eps)*(-eps)/eps - eps*cos(M_PI*(-eps)/eps)/(M_PI*M_PI));
-          }
-        return HI;
+	double HI;
+	if (phi > eps)
+	  {
+	    HI= phi - eps +       0.5*(eps + 0.5*eps*eps/eps - eps*cos(M_PI*eps/eps)/(M_PI*M_PI)) - 0.5*((-eps) + 0.5*(-eps)*(-eps)/eps - eps*cos(M_PI*(-eps)/eps)/(M_PI*M_PI));
+	  }
+	else if (phi < -eps)
+	  {
+	    HI=0.0;
+	  }
+	else
+	  {
+	    HI = 0.5*(phi + 0.5*phi*phi/eps - eps*cos(M_PI*phi/eps)/(M_PI*M_PI)) - 0.5*((-eps) + 0.5*(-eps)*(-eps)/eps - eps*cos(M_PI*(-eps)/eps)/(M_PI*M_PI));
+	  }
+	return HI;
       }
 
       inline double smoothedDirac(double eps, double phi)
       {
-        double d;
-        if (phi > eps)
-          d=0.0;
-        else if (phi < -eps)
-          d=0.0;
-        else
-          d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
-        return d;
+	double d;
+	if (phi > eps)
+	  d=0.0;
+	else if (phi < -eps)
+	  d=0.0;
+	else
+	  d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
+	return d;
       }
-
       inline
         void evaluateCoefficients(const double& epsHeaviside,
                                   const double& epsDirac,
@@ -1050,273 +1049,7 @@ namespace proteus
               }//kb
           }//ebNE
       }
-      ///////////////////////////
-      // CALCULATE MASS MATRIX // (MQL)
-      ///////////////////////////
-      // copied from calculateElementJacobian. NOTE: there are some not necessary computations!!!
-      inline void calculateElementMassMatrix(//element
-                                             double* mesh_trial_ref,
-                                             double* mesh_grad_trial_ref,
-                                             double* mesh_dof,
-                                             int* mesh_l2g,
-                                             double* dV_ref,
-                                             double* u_trial_ref,
-                                             double* u_grad_trial_ref,
-                                             double* u_test_ref,
-                                             double* u_grad_test_ref,
-                                             //element boundary
-                                             double* mesh_trial_trace_ref,
-                                             double* mesh_grad_trial_trace_ref,
-                                             double* dS_ref,
-                                             double* u_trial_trace_ref,
-                                             double* u_grad_trial_trace_ref,
-                                             double* u_test_trace_ref,
-                                             double* u_grad_test_trace_ref,
-                                             double* normal_ref,
-                                             double* boundaryJac_ref,
-                                             //physics
-                                             int nElements_global,
-                                             double useMetrics,
-                                             double epsFactHeaviside,
-                                             double epsFactDirac,
-                                             double epsFactDiffusion,
-                                             int* u_l2g,
-                                             double* elementDiameter,
-                                             double* nodeDiametersArray,
-                                             double* u_dof,
-                                             // double* u_trial,
-                                             // double* u_grad_trial,
-                                             // double* u_test_dV,
-                                             // double* u_grad_test_dV,
-                                             double* q_phi,
-                                             double* q_normal_phi,
-                                             double* q_H,
-                                             double* q_porosity,
-                                             double* elementMassMatrix,
-                                             double* elementLumpedMassMatrix,
-                                             double* element_u,
-                                             int eN)
-      {
-        for (int i=0;i<nDOF_test_element;i++)
-          {
-            elementLumpedMassMatrix[i] = 0.0;
-            for (int j=0;j<nDOF_trial_element;j++)
-              {
-                elementMassMatrix[i*nDOF_trial_element+j]=0.0;
-              }
-          }
-        double epsHeaviside,epsDirac,epsDiffusion;
-        for  (int k=0;k<nQuadraturePoints_element;k++)
-          {
-            int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
-              eN_k_nSpace = eN_k*nSpace;
-            //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
-            //declare local storage
-            register double u=0.0,
-              grad_u[nSpace],
-              r=0.0,dr=0.0,
-              jac[nSpace*nSpace],
-              jacDet,
-              jacInv[nSpace*nSpace],
-              u_grad_trial[nDOF_trial_element*nSpace],
-              dV,
-              u_test_dV[nDOF_test_element],
-              u_grad_test_dV[nDOF_test_element*nSpace],
-              x,y,z,
-              G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
-            //
-            //calculate solution and gradients at quadrature points
-            //
-            ck.calculateMapping_element(eN,
-                                        k,
-                                        mesh_dof,
-                                        mesh_l2g,
-                                        mesh_trial_ref,
-                                        mesh_grad_trial_ref,
-                                        jac,
-                                        jacDet,
-                                        jacInv,
-                                        x,y,z);
-            ck.calculateH_element(eN,
-                                  k,
-                                  nodeDiametersArray,
-                                  mesh_l2g,
-                                  mesh_trial_ref,
-                                  h_phi);
-            //get the physical integration weight
-            dV = fabs(jacDet)*dV_ref[k];
-            ck.calculateG(jacInv,G,G_dd_G,tr_G);
-
-            /* double dir[nSpace]; */
-            /* double norm = 1.0e-8; */
-            /* for (int I=0;I<nSpace;I++) */
-            /*   norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
-            /* norm = sqrt(norm); */
-            /* for (int I=0;I<nSpace;I++) */
-            /*   dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
-            /* ck.calculateGScale(G,dir,h_phi); */
-
-
-            //get the trial function gradients
-            ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
-            //get the solution
-            ck.valFromElementDOF(element_u,&u_trial_ref[k*nDOF_trial_element],u);
-            //get the solution gradients
-            ck.gradFromElementDOF(element_u,u_grad_trial,grad_u);
-            //precalculate test function products with integration weights
-            for (int j=0;j<nDOF_trial_element;j++)
-              {
-                u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
-                for (int I=0;I<nSpace;I++)
-                  {
-                    u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
-                  }
-              }
-            //
-            //calculate pde coefficients and derivatives at quadrature points
-            //
-            epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-            epsDirac    =epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-            epsDiffusion=epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-            //    *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-            evaluateCoefficients(epsHeaviside,
-                                 epsDirac,
-                                 q_phi[eN_k],
-                                 q_H[eN_k],
-                                 0.0,
-                                 NULL,
-                                 0,
-                                 0,/// has no effect since mass_correction_refence = 0
-                                 NULL,
-                                 u,
-                                 q_porosity[eN_k],
-                                 r,
-                                 dr,
-                                 NULL,
-                                 NULL);
-            for(int i=0;i<nDOF_test_element;i++)
-              {
-                //int eN_k_i=eN_k*nDOF_test_element+i;
-                //int eN_k_i_nSpace=eN_k_i*nSpace;
-                elementLumpedMassMatrix[i] += u_test_dV[i];
-                for(int j=0;j<nDOF_trial_element;j++)
-                  {
-                    elementMassMatrix[i*nDOF_trial_element+j] += u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i];
-                  }//j
-              }//i
-          }//k
-      }
-
-      void calculateMassMatrix(//element
-                               double* mesh_trial_ref,
-                               double* mesh_grad_trial_ref,
-                               double* mesh_dof,
-                               int* mesh_l2g,
-                               double* dV_ref,
-                               double* u_trial_ref,
-                               double* u_grad_trial_ref,
-                               double* u_test_ref,
-                               double* u_grad_test_ref,
-                               //element boundary
-                               double* mesh_trial_trace_ref,
-                               double* mesh_grad_trial_trace_ref,
-                               double* dS_ref,
-                               double* u_trial_trace_ref,
-                               double* u_grad_trial_trace_ref,
-                               double* u_test_trace_ref,
-                               double* u_grad_test_trace_ref,
-                               double* normal_ref,
-                               double* boundaryJac_ref,
-                               //physics
-                               int nElements_global,
-                               double useMetrics,
-                               double epsFactHeaviside,
-                               double epsFactDirac,
-                               double epsFactDiffusion,
-                               int* u_l2g,
-                               double* elementDiameter,
-                               double* nodeDiametersArray,
-                               double* u_dof,
-                               // double* u_trial,
-                               // double* u_grad_trial,
-                               // double* u_test_dV,
-                               // double* u_grad_test_dV,
-                               double* q_phi,
-                               double* q_normal_phi,
-                               double* q_H,
-                               double* q_porosity,
-                               int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                               double* globalMassMatrix,
-                               double* globalLumpedMassMatrix)
-      {
-        //
-        //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
-        //
-        for(int eN=0;eN<nElements_global;eN++)
-          {
-            register double  elementMassMatrix[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element], elementLumpedMassMatrix[nDOF_trial_element];
-            for (int j=0;j<nDOF_trial_element;j++)
-              {
-                register int eN_j = eN*nDOF_trial_element+j;
-                element_u[j] = u_dof[u_l2g[eN_j]];
-              }
-            calculateElementMassMatrix(mesh_trial_ref,
-                                       mesh_grad_trial_ref,
-                                       mesh_dof,
-                                       mesh_l2g,
-                                       dV_ref,
-                                       u_trial_ref,
-                                       u_grad_trial_ref,
-                                       u_test_ref,
-                                       u_grad_test_ref,
-                                       mesh_trial_trace_ref,
-                                       mesh_grad_trial_trace_ref,
-                                       dS_ref,
-                                       u_trial_trace_ref,
-                                       u_grad_trial_trace_ref,
-                                       u_test_trace_ref,
-                                       u_grad_test_trace_ref,
-                                       normal_ref,
-                                       boundaryJac_ref,
-                                       nElements_global,
-                                       useMetrics,
-                                       epsFactHeaviside,
-                                       epsFactDirac,
-                                       epsFactDiffusion,
-                                       u_l2g,
-                                       elementDiameter,
-                                       nodeDiametersArray,
-                                       u_dof,
-                                       q_phi,
-                                       q_normal_phi,
-                                       q_H,
-                                       q_porosity,
-                                       elementMassMatrix,
-                                       elementLumpedMassMatrix,
-                                       element_u,
-                                       eN);
-            //
-            //load into element Jacobian into global Jacobian
-            //
-            for (int i=0;i<nDOF_test_element;i++)
-              {
-                int eN_i = eN*nDOF_test_element+i;
-                int gi = u_l2g[eN_i];
-                globalLumpedMassMatrix[gi] += elementLumpedMassMatrix[i];
-                for (int j=0;j<nDOF_trial_element;j++)
-                  {
-                    int eN_i_j = eN_i*nDOF_trial_element+j;
-                    globalMassMatrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] +=
-                      elementMassMatrix[i*nDOF_trial_element+j];
-                  }//j
-              }//i
-          }//elements
-      }//computeJacobian
-
-      //////////////////////////////////
-      // END OF COMPUTING MASS MATRIX // (MQL)
-      //////////////////////////////////
       inline void calculateElementJacobian(//element
                                            double dt,
                                            double* mesh_trial_ref,
@@ -1596,54 +1329,54 @@ namespace proteus
           }//elements
       }//computeJacobian
       void elementSolve(//element
-                        double* mesh_trial_ref,
-                        double* mesh_grad_trial_ref,
-                        double* mesh_dof,
-                        int* mesh_l2g,
-                        double* dV_ref,
-                        double* u_trial_ref,
-                        double* u_grad_trial_ref,
-                        double* u_test_ref,
-                        double* u_grad_test_ref,
-                        //element boundary
-                        double* mesh_trial_trace_ref,
-                        double* mesh_grad_trial_trace_ref,
-                        double* dS_ref,
-                        double* u_trial_trace_ref,
-                        double* u_grad_trial_trace_ref,
-                        double* u_test_trace_ref,
-                        double* u_grad_test_trace_ref,
-                        double* normal_ref,
-                        double* boundaryJac_ref,
-                        //physics
-                        int nElements_global,
-                        double useMetrics,
-                        double epsFactHeaviside,
-                        double epsFactDirac,
-                        double epsFactDiffusion,
-                        int* u_l2g,
-                        double* elementDiameter,
-                        double* nodeDiametersArray,
-                        double* u_dof,
-                        double* q_phi,
-                        double* q_normal_phi,
-                        double* ebqe_phi,
-                        double* ebqe_normal_phi,
-                        double* q_H,
-                        double* q_u,
-                        double* q_n,
-                        double* ebqe_u,
-                        double* ebqe_n,
-                        double* q_r,
-                        double* q_porosity,
-                        int offset_u, int stride_u,
-                        double* globalResidual,
-                        int nExteriorElementBoundaries_global,
-                        int* exteriorElementBoundariesArray,
-                        int* elementBoundaryElementsArray,
-                        int* elementBoundaryLocalElementBoundariesArray,
-                        int maxIts,
-                        double atol)
+			double* mesh_trial_ref,
+			double* mesh_grad_trial_ref,
+			double* mesh_dof,
+			int* mesh_l2g,
+			double* dV_ref,
+			double* u_trial_ref,
+			double* u_grad_trial_ref,
+			double* u_test_ref,
+			double* u_grad_test_ref,
+			//element boundary
+			double* mesh_trial_trace_ref,
+			double* mesh_grad_trial_trace_ref,
+			double* dS_ref,
+			double* u_trial_trace_ref,
+			double* u_grad_trial_trace_ref,
+			double* u_test_trace_ref,
+			double* u_grad_test_trace_ref,
+			double* normal_ref,
+			double* boundaryJac_ref,
+			//physics
+			int nElements_global,
+			double useMetrics,
+			double epsFactHeaviside,
+			double epsFactDirac,
+			double epsFactDiffusion,
+			int* u_l2g,
+			double* elementDiameter,
+			double* nodeDiametersArray,
+			double* u_dof,
+			double* q_phi,
+			double* q_normal_phi,
+			double* ebqe_phi,
+			double* ebqe_normal_phi,
+			double* q_H,
+			double* q_u,
+			double* q_n,
+			double* ebqe_u,
+			double* ebqe_n,
+			double* q_r,
+			double* q_porosity,
+			int offset_u, int stride_u,
+			double* globalResidual,
+			int nExteriorElementBoundaries_global,
+			int* exteriorElementBoundariesArray,
+			int* elementBoundaryElementsArray,
+			int* elementBoundaryLocalElementBoundariesArray,
+			int maxIts,
+			double atol)
       {
         //
         //loop over elements to compute volume integrals and load them into element and global residual
@@ -1885,54 +1618,54 @@ namespace proteus
           }//elements
       }
       void elementConstantSolve(//element
-                                double* mesh_trial_ref,
-                                double* mesh_grad_trial_ref,
-                                double* mesh_dof,
-                                int* mesh_l2g,
-                                double* dV_ref,
-                                double* u_trial_ref,
-                                double* u_grad_trial_ref,
-                                double* u_test_ref,
-                                double* u_grad_test_ref,
-                                //element boundary
-                                double* mesh_trial_trace_ref,
-                                double* mesh_grad_trial_trace_ref,
-                                double* dS_ref,
-                                double* u_trial_trace_ref,
-                                double* u_grad_trial_trace_ref,
-                                double* u_test_trace_ref,
-                                double* u_grad_test_trace_ref,
-                                double* normal_ref,
-                                double* boundaryJac_ref,
-                                //physics
-                                int nElements_global,
-                                double useMetrics,
-                                double epsFactHeaviside,
-                                double epsFactDirac,
-                                double epsFactDiffusion,
-                                int* u_l2g,
-                                double* elementDiameter,
-                                double* nodeDiametersArray,
-                                double* u_dof,
-                                double* q_phi,
-                                double* q_normal_phi,
-                                double* ebqe_phi,
-                                double* ebqe_normal_phi,
-                                double* q_H,
-                                double* q_u,
-                                double* q_n,
-                                double* ebqe_u,
-                                double* ebqe_n,
-                                double* q_r,
-                                double* q_porosity,
-                                int offset_u, int stride_u,
-                                double* globalResidual,
-                                int nExteriorElementBoundaries_global,
-                                int* exteriorElementBoundariesArray,
-                                int* elementBoundaryElementsArray,
-                                int* elementBoundaryLocalElementBoundariesArray,
-                                int maxIts,
-                                double atol)
+				double* mesh_trial_ref,
+				double* mesh_grad_trial_ref,
+				double* mesh_dof,
+				int* mesh_l2g,
+				double* dV_ref,
+				double* u_trial_ref,
+				double* u_grad_trial_ref,
+				double* u_test_ref,
+				double* u_grad_test_ref,
+				//element boundary
+				double* mesh_trial_trace_ref,
+				double* mesh_grad_trial_trace_ref,
+				double* dS_ref,
+				double* u_trial_trace_ref,
+				double* u_grad_trial_trace_ref,
+				double* u_test_trace_ref,
+				double* u_grad_test_trace_ref,
+				double* normal_ref,
+				double* boundaryJac_ref,
+				//physics
+				int nElements_global,
+				double useMetrics,
+				double epsFactHeaviside,
+				double epsFactDirac,
+				double epsFactDiffusion,
+				int* u_l2g,
+				double* elementDiameter,
+				double* nodeDiametersArray,
+				double* u_dof,
+				double* q_phi,
+				double* q_normal_phi,
+				double* ebqe_phi,
+				double* ebqe_normal_phi,
+				double* q_H,
+				double* q_u,
+				double* q_n,
+				double* ebqe_u,
+				double* ebqe_n,
+				double* q_r,
+				double* q_porosity,
+				int offset_u, int stride_u,
+				double* globalResidual,
+				int nExteriorElementBoundaries_global,
+				int* exteriorElementBoundariesArray,
+				int* elementBoundaryElementsArray,
+				int* elementBoundaryLocalElementBoundariesArray,
+				int maxIts,
+				double atol)
       {
         for(int eN=0;eN<nElements_global;eN++)
           {
@@ -2132,57 +1865,57 @@ namespace proteus
       }
 
       void globalConstantRJ(//element
-                            double* mesh_trial_ref,
-                            double* mesh_grad_trial_ref,
-                            double* mesh_dof,
-                            int* mesh_l2g,
-                            double* dV_ref,
-                            double* u_trial_ref,
-                            double* u_grad_trial_ref,
-                            double* u_test_ref,
-                            double* u_grad_test_ref,
-                            //element boundary
-                            double* mesh_trial_trace_ref,
-                            double* mesh_grad_trial_trace_ref,
-                            double* dS_ref,
-                            double* u_trial_trace_ref,
-                            double* u_grad_trial_trace_ref,
-                            double* u_test_trace_ref,
-                            double* u_grad_test_trace_ref,
-                            double* normal_ref,
-                            double* boundaryJac_ref,
-                            //physics
-                            int nElements_owned,
-                            double useMetrics,
-                            double epsFactHeaviside,
-                            double epsFactDirac,
-                            double epsFactDiffusion,
-                            int* u_l2g,
-                            double* elementDiameter,
-                            double* nodeDiametersArray,
-                            double* u_dof,
-                            double* q_phi,
-                            double* q_normal_phi,
-                            double* ebqe_phi,
-                            double* ebqe_normal_phi,
-                            double* q_H,
-                            double* q_u,
-                            double* q_n,
-                            double* ebqe_u,
-                            double* ebqe_n,
-                            double* q_r,
-                            double* q_porosity,
-                            int offset_u, int stride_u,
-                            double* globalResidual,
-                            int nExteriorElementBoundaries_global,
-                            int* exteriorElementBoundariesArray,
-                            int* elementBoundaryElementsArray,
-                            int* elementBoundaryLocalElementBoundariesArray,
-                            int maxIts,
-                            double atol,
-                            double constant_u,
-                            double* constantResidual,
-                            double* constantJacobian)
+			    double* mesh_trial_ref,
+			    double* mesh_grad_trial_ref,
+			    double* mesh_dof,
+			    int* mesh_l2g,
+			    double* dV_ref,
+			    double* u_trial_ref,
+			    double* u_grad_trial_ref,
+			    double* u_test_ref,
+			    double* u_grad_test_ref,
+			    //element boundary
+			    double* mesh_trial_trace_ref,
+			    double* mesh_grad_trial_trace_ref,
+			    double* dS_ref,
+			    double* u_trial_trace_ref,
+			    double* u_grad_trial_trace_ref,
+			    double* u_test_trace_ref,
+			    double* u_grad_test_trace_ref,
+			    double* normal_ref,
+			    double* boundaryJac_ref,
+			    //physics
+			    int nElements_owned,
+			    double useMetrics,
+			    double epsFactHeaviside,
+			    double epsFactDirac,
+			    double epsFactDiffusion,
+			    int* u_l2g,
+			    double* elementDiameter,
+			    double* nodeDiametersArray,
+			    double* u_dof,
+			    double* q_phi,
+			    double* q_normal_phi,
+			    double* ebqe_phi,
+			    double* ebqe_normal_phi,
+			    double* q_H,
+			    double* q_u,
+			    double* q_n,
+			    double* ebqe_u,
+			    double* ebqe_n,
+			    double* q_r,
+			    double* q_porosity,
+			    int offset_u, int stride_u,
+			    double* globalResidual,
+			    int nExteriorElementBoundaries_global,
+			    int* exteriorElementBoundariesArray,
+			    int* elementBoundaryElementsArray,
+			    int* elementBoundaryLocalElementBoundariesArray,
+			    int maxIts,
+			    double atol,
+			    double constant_u,
+			    double* constantResidual,
+			    double* constantJacobian)
       {
         register double element_u[nDOF_test_element],
           elementResidual_u[nDOF_test_element],
@@ -2304,109 +2037,110 @@ namespace proteus
       }
 
       void calculateMass(//element
-                         double* mesh_trial_ref,
-                         double* mesh_grad_trial_ref,
-                         double* mesh_dof,
-                         int* mesh_l2g,
-                         double* dV_ref,
-                         double* u_trial_ref,
-                         double* u_grad_trial_ref,
-                         double* u_test_ref,
-                         double* u_grad_test_ref,
-                         //element boundary
-                         double* mesh_trial_trace_ref,
-                         double* mesh_grad_trial_trace_ref,
-                         double* dS_ref,
-                         double* u_trial_trace_ref,
-                         double* u_grad_trial_trace_ref,
-                         double* u_test_trace_ref,
-                         double* u_grad_test_trace_ref,
-                         double* normal_ref,
-                         double* boundaryJac_ref,
-                         //physics
-                         int nElements_owned,
-                         double useMetrics,
-                         double epsFactHeaviside,
-                         double epsFactDirac,
-                         double epsFactDiffusion,
-                         int* u_l2g,
-                         double* elementDiameter,
-                         double* nodeDiametersArray,
-                         double* u_dof,
-                         double* q_phi,
-                         double* q_normal_phi,
-                         double* ebqe_phi,
-                         double* ebqe_normal_phi,
-                         double* q_H,
-                         double* q_u,
-                         double* q_n,
-                         double* ebqe_u,
-                         double* ebqe_n,
-                         double* q_r,
-                         double* q_porosity,
-                         int offset_u, int stride_u,
-                         double* globalResidual,
-                         int nExteriorElementBoundaries_global,
-                         int* exteriorElementBoundariesArray,
-                         int* elementBoundaryElementsArray,
-                         int* elementBoundaryLocalElementBoundariesArray,
-                         double* globalMass)
+			 double* mesh_trial_ref,
+			 double* mesh_grad_trial_ref,
+			 double* mesh_dof,
+			 int* mesh_l2g,
+			 double* dV_ref,
+			 double* u_trial_ref,
+			 double* u_grad_trial_ref,
+			 double* u_test_ref,
+			 double* u_grad_test_ref,
+			 //element boundary
+			 double* mesh_trial_trace_ref,
+			 double* mesh_grad_trial_trace_ref,
+			 double* dS_ref,
+			 double* u_trial_trace_ref,
+			 double* u_grad_trial_trace_ref,
+			 double* u_test_trace_ref,
+			 double* u_grad_test_trace_ref,
+			 double* normal_ref,
+			 double* boundaryJac_ref,
+			 //physics
+			 int nElements_owned,
+			 double useMetrics,
+			 double epsFactHeaviside,
+			 double epsFactDirac,
+			 double epsFactDiffusion,
+			 int* u_l2g,
+			 double* elementDiameter,
+			 double* nodeDiametersArray,
+			 double* u_dof,
+			 double* q_phi,
+			 double* q_normal_phi,
+			 double* ebqe_phi,
+			 double* ebqe_normal_phi,
+			 double* q_H,
+			 double* q_u,
+			 double* q_n,
+			 double* ebqe_u,
+			 double* ebqe_n,
+			 double* q_r,
+			 double* q_porosity,
+			 int offset_u, int stride_u,
+			 double* globalResidual,
+			 int nExteriorElementBoundaries_global,
+			 int* exteriorElementBoundariesArray,
+			 int* elementBoundaryElementsArray,
+			 int* elementBoundaryLocalElementBoundariesArray,
+			 double* globalMass)
       {
-        *globalMass = 0.0;
-        for(int eN=0;eN<nElements_owned;eN++)
-          {
-            double epsHeaviside;
-            //loop over quadrature points and compute integrands
-            for  (int k=0;k<nQuadraturePoints_element;k++)
-              {
-                //compute indeces and declare local storage
-                register int eN_k = eN*nQuadraturePoints_element+k,
-                  eN_k_nSpace = eN_k*nSpace;
-                //eN_nDOF_trial_element = eN*nDOF_trial_element;
-                //double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
-                double jac[nSpace*nSpace],
-                  jacDet,
-                  jacInv[nSpace*nSpace],
-                  //u_grad_trial[nDOF_trial_element*nSpace],
-                  //u_test_dV[nDOF_trial_element],
-                  //u_grad_test_dV[nDOF_test_element*nSpace],
-                  dV,x,y,z,
-                  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
-                //
-                //compute solution and gradients at quadrature points
-                //
-                ck.calculateMapping_element(eN,
-                                            k,
-                                            mesh_dof,
-                                            mesh_l2g,
-                                            mesh_trial_ref,
-                                            mesh_grad_trial_ref,
-                                            jac,
-                                            jacDet,
-                                            jacInv,
-                                            x,y,z);
-                ck.calculateH_element(eN,
-                                      k,
-                                      nodeDiametersArray,
-                                      mesh_l2g,
-                                      mesh_trial_ref,
-                                      h_phi);
-                //get the physical integration weight
-                dV = fabs(jacDet)*dV_ref[k];
-                ck.calculateG(jacInv,G,G_dd_G,tr_G);
-                /* double dir[nSpace]; */
-                /* double norm = 1.0e-8; */
-                /* for (int I=0;I<nSpace;I++) */
-                /*    norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
-                /* norm = sqrt(norm); */
-                /* for (int I=0;I<nSpace;I++) */
-                /*    dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
-                /* ck.calculateGScale(G,dir,h_phi); */
-                epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-                *globalMass += smoothedHeaviside(epsHeaviside,q_phi[eN_k])*dV;
-              }//k
-          }//elements
+	*globalMass = 0.0;
+	for(int eN=0;eN<nElements_owned;eN++)
+	  {
+	    double epsHeaviside;
+	    //loop over quadrature points and compute integrands
+	    for  (int k=0;k<nQuadraturePoints_element;k++)
+	      {
+		//compute indeces and declare local storage
+		register int eN_k = eN*nQuadraturePoints_element+k,
+		  eN_k_nSpace = eN_k*nSpace;
+		//eN_nDOF_trial_element = eN*nDOF_trial_element;
+		//double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
+		double jac[nSpace*nSpace],
+		  jacDet,
+		  jacInv[nSpace*nSpace],
+		  //u_grad_trial[nDOF_trial_element*nSpace],
+		  //u_test_dV[nDOF_trial_element],
+		  //u_grad_test_dV[nDOF_test_element*nSpace],
+		  dV,x,y,z,
+		  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
+		//
+		//compute solution and gradients at quadrature points
+		//
+		ck.calculateMapping_element(eN,
+					    k,
+					    mesh_dof,
+					    mesh_l2g,
+					    mesh_trial_ref,
+					    mesh_grad_trial_ref,
+					    jac,
+					    jacDet,
+					    jacInv,
+					    x,y,z);
+		ck.calculateH_element(eN,
+				      k,
+				      nodeDiametersArray,
+				      mesh_l2g,
+				      mesh_trial_ref,
+				      h_phi);
+		//get the physical integration weight
+		dV = fabs(jacDet)*dV_ref[k];
+		ck.calculateG(jacInv,G,G_dd_G,tr_G);
+		/* double dir[nSpace]; */
+		/* double norm = 1.0e-8; */
+		/* for (int I=0;I<nSpace;I++) */
+		/*        norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
+		/* norm = sqrt(norm); */
+		/* for (int I=0;I<nSpace;I++) */
+		/*        dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
+		/* ck.calculateGScale(G,dir,h_phi); */
+		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+		*globalMass += smoothedHeaviside(epsHeaviside,q_phi[eN_k])*dV;
+	      }//k
+	  }//elements
       }
+
       void setMassQuadrature(//element
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
@@ -2524,137 +2258,243 @@ namespace proteus
           }//elements
       }
 
-      void setMassQuadratureEdgeBasedStabilizationMethods(//element
-                                                          double* mesh_trial_ref,
-                                                          double* mesh_grad_trial_ref,
-                                                          double* mesh_dof,
-                                                          int* mesh_l2g,
-                                                          double* dV_ref,
-                                                          double* u_trial_ref,
-                                                          double* u_grad_trial_ref,
-                                                          double* u_test_ref,
-                                                          double* u_grad_test_ref,
-                                                          //element boundary
-                                                          double* mesh_trial_trace_ref,
-                                                          double* mesh_grad_trial_trace_ref,
-                                                          double* dS_ref,
-                                                          double* u_trial_trace_ref,
-                                                          double* u_grad_trial_trace_ref,
-                                                          double* u_test_trace_ref,
-                                                          double* u_grad_test_trace_ref,
-                                                          double* normal_ref,
-                                                          double* boundaryJac_ref,
-                                                          //physics
-                                                          int nElements_global,
-                                                          double useMetrics,
-                                                          double epsFactHeaviside,
-                                                          double epsFactDirac,
-                                                          double epsFactDiffusion,
-                                                          int* phi_l2g,
-                                                          double* elementDiameter,
-                                                          double* nodeDiametersArray,
-                                                          double* phi_dof,
-                                                          double* q_phi,
-                                                          double* q_normal_phi,
-                                                          double* ebqe_phi,
-                                                          double* ebqe_normal_phi,
-                                                          double* q_H,
-                                                          double* q_u,
-                                                          double* q_n,
-                                                          double* ebqe_u,
-                                                          double* ebqe_n,
-                                                          double* q_r,
-                                                          double* q_porosity,
-                                                          int offset_u, int stride_u,
-                                                          double* globalResidual,
-                                                          int nExteriorElementBoundaries_global,
-                                                          int* exteriorElementBoundariesArray,
-                                                          int* elementBoundaryElementsArray,
-                                                          int* elementBoundaryLocalElementBoundariesArray,
-                                                          double* rhs_mass_correction,
-                                                          double* lumped_L2p_vof_mass_correction,
-                                                          double* lumped_mass_matrix,
-                                                          int numDOFs)
+      void calculateMassMatrix(//element
+			       double* mesh_trial_ref,
+			       double* mesh_grad_trial_ref,
+			       double* mesh_dof,
+			       int* mesh_l2g,
+			       double* dV_ref,
+			       double* u_trial_ref,
+			       double* u_grad_trial_ref,
+			       double* u_test_ref,
+			       double* u_grad_test_ref,
+			       //element boundary
+			       double* mesh_trial_trace_ref,
+			       double* mesh_grad_trial_trace_ref,
+			       double* dS_ref,
+			       double* u_trial_trace_ref,
+			       double* u_grad_trial_trace_ref,
+			       double* u_test_trace_ref,
+			       double* u_grad_test_trace_ref,
+			       double* normal_ref,
+			       double* boundaryJac_ref,
+			       //physics
+			       int nElements_global,
+			       double useMetrics,
+			       double epsFactHeaviside,
+			       double epsFactDirac,
+			       double epsFactDiffusion,
+			       int* u_l2g,
+			       double* elementDiameter,
+			       double* nodeDiametersArray,
+			       double* u_dof,
+			       // double* u_trial,
+			       // double* u_grad_trial,
+			       // double* u_test_dV,
+			       // double* u_grad_test_dV,
+			       double* q_phi,
+			       double* q_normal_phi,
+			       double* q_H,
+			       double* q_porosity,
+			       int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+			       double* globalMassMatrix,
+			       double* globalLumpedMassMatrix)
       {
-        for(int eN=0;eN<nElements_global;eN++)
-          {
-            register double element_rhs_mass_correction[nDOF_test_element];
-            for (int i=0;i<nDOF_test_element;i++)
-              element_rhs_mass_correction[i] = 0.;
-            double epsHeaviside;
-            //loop over quadrature points and compute integrands
-            for  (int k=0;k<nQuadraturePoints_element;k++)
-              {
-                //compute indeces and declare local storage
-                register int eN_k = eN*nQuadraturePoints_element+k,
-                  eN_k_nSpace = eN_k*nSpace;
-                //eN_nDOF_trial_element = eN*nDOF_trial_element;
-                //register double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
-                register double jac[nSpace*nSpace],
-                  jacDet,
-                  jacInv[nSpace*nSpace],
-                  //u_grad_trial[nDOF_trial_element*nSpace],
-                  //u_test_dV[nDOF_trial_element],
-                  //u_grad_test_dV[nDOF_test_element*nSpace],
-                  dV,x,y,z,
-                  u_test_dV[nDOF_test_element],
-                  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
-                //
-                //compute solution and gradients at quadrature points
-                //
-                ck.calculateMapping_element(eN,
-                                            k,
-                                            mesh_dof,
-                                            mesh_l2g,
-                                            mesh_trial_ref,
-                                            mesh_grad_trial_ref,
-                                            jac,
-                                            jacDet,
-                                            jacInv,
-                                            x,y,z);
-                ck.calculateH_element(eN,
-                                      k,
-                                      nodeDiametersArray,
-                                      mesh_l2g,
-                                      mesh_trial_ref,
-                                      h_phi);
-                //get the physical integration weight
-                dV = fabs(jacDet)*dV_ref[k];
-                ck.calculateG(jacInv,G,G_dd_G,tr_G);
+	//
+	//loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
+	//
+	for(int eN=0;eN<nElements_global;eN++)
+	  {
+	    register double  elementMassMatrix[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element], elementLumpedMassMatrix[nDOF_trial_element];
+	    for (int j=0;j<nDOF_trial_element;j++)
+	      {
+		register int eN_j = eN*nDOF_trial_element+j;
+		element_u[j] = u_dof[u_l2g[eN_j]];
+	      }
+	    calculateElementMassMatrix(mesh_trial_ref,
+				       mesh_grad_trial_ref,
+				       mesh_dof,
+				       mesh_l2g,
+				       dV_ref,
+				       u_trial_ref,
+				       u_grad_trial_ref,
+				       u_test_ref,
+				       u_grad_test_ref,
+				       mesh_trial_trace_ref,
+				       mesh_grad_trial_trace_ref,
+				       dS_ref,
+				       u_trial_trace_ref,
+				       u_grad_trial_trace_ref,
+				       u_test_trace_ref,
+				       u_grad_test_trace_ref,
+				       normal_ref,
+				       boundaryJac_ref,
+				       nElements_global,
+				       useMetrics,
+				       epsFactHeaviside,
+				       epsFactDirac,
+				       epsFactDiffusion,
+				       u_l2g,
+				       elementDiameter,
+				       nodeDiametersArray,
+				       u_dof,
+				       q_phi,
+				       q_normal_phi,
+				       q_H,
+				       q_porosity,
+				       elementMassMatrix,
+				       elementLumpedMassMatrix,
+				       element_u,
+				       eN);
+	    //
+	    //load into element Jacobian into global Jacobian
+	    //
+	    for (int i=0;i<nDOF_test_element;i++)
+	      {
+		int eN_i = eN*nDOF_test_element+i;
+		int gi = u_l2g[eN_i];
+		globalLumpedMassMatrix[gi] += elementLumpedMassMatrix[i];
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    int eN_i_j = eN_i*nDOF_trial_element+j;
+		    globalMassMatrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] +=
+		      elementMassMatrix[i*nDOF_trial_element+j];
+		  }//j
+	      }//i
+	  }//elements
+      }//calculate mass matrix
 
-                // precalculate test function times integration weight
-                for (int j=0;j<nDOF_trial_element;j++)
-                  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+      void setMassQuadratureEdgeBasedStabilizationMethods(//element
+							  double* mesh_trial_ref,
+							  double* mesh_grad_trial_ref,
+							  double* mesh_dof,
+							  int* mesh_l2g,
+							  double* dV_ref,
+							  double* u_trial_ref,
+							  double* u_grad_trial_ref,
+							  double* u_test_ref,
+							  double* u_grad_test_ref,
+							  //element boundary
+							  double* mesh_trial_trace_ref,
+							  double* mesh_grad_trial_trace_ref,
+							  double* dS_ref,
+							  double* u_trial_trace_ref,
+							  double* u_grad_trial_trace_ref,
+							  double* u_test_trace_ref,
+							  double* u_grad_test_trace_ref,
+							  double* normal_ref,
+							  double* boundaryJac_ref,
+							  //physics
+							  int nElements_global,
+							  double useMetrics,
+							  double epsFactHeaviside,
+							  double epsFactDirac,
+							  double epsFactDiffusion,
+							  int* phi_l2g,
+							  double* elementDiameter,
+							  double* nodeDiametersArray,
+							  double* phi_dof,
+							  double* q_phi,
+							  double* q_normal_phi,
+							  double* ebqe_phi,
+							  double* ebqe_normal_phi,
+							  double* q_H,
+							  double* q_u,
+							  double* q_n,
+							  double* ebqe_u,
+							  double* ebqe_n,
+							  double* q_r,
+							  double* q_porosity,
+							  int offset_u, int stride_u,
+							  double* globalResidual,
+							  int nExteriorElementBoundaries_global,
+							  int* exteriorElementBoundariesArray,
+							  int* elementBoundaryElementsArray,
+							  int* elementBoundaryLocalElementBoundariesArray,
+							  double* rhs_mass_correction,
+							  double* lumped_L2p_vof_mass_correction,
+							  double* lumped_mass_matrix,
+							  int numDOFs)
+      {
+	for(int eN=0;eN<nElements_global;eN++)
+	  {
+	    register double element_rhs_mass_correction[nDOF_test_element];
+	    for (int i=0;i<nDOF_test_element;i++)
+	      element_rhs_mass_correction[i] = 0.;
+	    double epsHeaviside;
+	    //loop over quadrature points and compute integrands
+	    for  (int k=0;k<nQuadraturePoints_element;k++)
+	      {
+		//compute indeces and declare local storage
+		register int eN_k = eN*nQuadraturePoints_element+k,
+		  eN_k_nSpace = eN_k*nSpace;
+		//eN_nDOF_trial_element = eN*nDOF_trial_element;
+		//register double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
+		register double jac[nSpace*nSpace],
+		  jacDet,
+		  jacInv[nSpace*nSpace],
+		  //u_grad_trial[nDOF_trial_element*nSpace],
+		  //u_test_dV[nDOF_trial_element],
+		  //u_grad_test_dV[nDOF_test_element*nSpace],
+		  dV,x,y,z,
+		  u_test_dV[nDOF_test_element],
+		  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
+		//
+		//compute solution and gradients at quadrature points
+		//
+		ck.calculateMapping_element(eN,
+					    k,
+					    mesh_dof,
+					    mesh_l2g,
+					    mesh_trial_ref,
+					    mesh_grad_trial_ref,
+					    jac,
+					    jacDet,
+					    jacInv,
+					    x,y,z);
+		ck.calculateH_element(eN,
+				      k,
+				      nodeDiametersArray,
+				      mesh_l2g,
+				      mesh_trial_ref,
+				      h_phi);
+		//get the physical integration weight
+		dV = fabs(jacDet)*dV_ref[k];
+		ck.calculateG(jacInv,G,G_dd_G,tr_G);
 
-                /* double dir[nSpace]; */
-                /* double norm = 1.0e-8; */
-                /* for (int I=0;I<nSpace;I++) */
-                /*    norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
-                /* norm = sqrt(norm); */
-                /* for (int I=0;I<nSpace;I++) */
-                /*    dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
+		// precalculate test function times integration weight
+		for (int j=0;j<nDOF_trial_element;j++)
+		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
 
-                /* ck.calculateGScale(G,dir,h_phi); */
-                epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-                q_H[eN_k] = q_porosity[eN_k]*smoothedHeaviside(epsHeaviside,q_phi[eN_k]);
+		/* double dir[nSpace]; */
+		/* double norm = 1.0e-8; */
+		/* for (int I=0;I<nSpace;I++) */
+		/*        norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
+		/* norm = sqrt(norm); */
+		/* for (int I=0;I<nSpace;I++) */
+		/*        dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
 
-                for (int i=0;i<nDOF_trial_element;i++)
-                  element_rhs_mass_correction [i] += q_H[eN_k]*u_test_dV[i];
-              }//k
-            // distribute rhs for mass correction
-            for (int i=0;i<nDOF_trial_element;i++)
-              {
-                int eN_i = eN*nDOF_trial_element + i;
-                int gi = phi_l2g[eN_i];
-                rhs_mass_correction[gi] += element_rhs_mass_correction[i];
-              }
-          }//elements
-        // COMPUTE LUMPED L2 PROYJECTION
-        for (int i=0; i<numDOFs; i++)
-          {
-            double mi = lumped_mass_matrix[i];
-            lumped_L2p_vof_mass_correction[i] = 1./mi*rhs_mass_correction[i];
-          }
+		/* ck.calculateGScale(G,dir,h_phi); */
+		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+		q_H[eN_k] = q_porosity[eN_k]*smoothedHeaviside(epsHeaviside,q_phi[eN_k]);
+
+		for (int i=0;i<nDOF_trial_element;i++)
+		  element_rhs_mass_correction [i] += q_H[eN_k]*u_test_dV[i];
+	      }//k
+	    // distribute rhs for mass correction
+	    for (int i=0;i<nDOF_trial_element;i++)
+	      {
+		int eN_i = eN*nDOF_trial_element + i;
+		int gi = phi_l2g[eN_i];
+		rhs_mass_correction[gi] += element_rhs_mass_correction[i];
+	      }
+	  }//elements
+	// COMPUTE LUMPED L2 PROYJECTION
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double mi = lumped_mass_matrix[i];
+	    lumped_L2p_vof_mass_correction[i] = 1./mi*rhs_mass_correction[i];
+	  }
       }
     };//MCorr
 
