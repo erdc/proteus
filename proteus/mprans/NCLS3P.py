@@ -16,6 +16,7 @@ from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 import cNCLS3P
 
+
 class SubgridError(proteus.SubgridError.SGE_base):
 
     def __init__(self, coefficients, nd):
@@ -319,7 +320,7 @@ class LevelModel(OneLevelTransport):
                  sd=True,
                  movingDomain=False,
                  bdyNullSpace=False):
-        self.bdyNullSpace=bdyNullSpace
+        self.bdyNullSpace = bdyNullSpace
         #
         # set the objects describing the method and boundary conditions
         #
