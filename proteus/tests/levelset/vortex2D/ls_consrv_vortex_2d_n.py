@@ -4,9 +4,12 @@ from ls_consrv_vortex_2d_p import *
 from vortex2D import *
 
 
-timeIntegrator = ForwardIntegrator
-timeIntegration = NoIntegration
-stepController = MCorr.Newton_controller#need a tricked up controller that can fix the VOF model's initial conditions
+# timeIntegrator = ForwardIntegrator
+# timeIntegration = NoIntegration
+# stepController = MCorr.Newton_controller#need a tricked up controller that can fix the VOF model's initial conditions
+timeIntegration = BackwardEuler_cfl
+stepController = Min_dt_controller
+
 
 if cDegree_ls==0:
     if useHex:
@@ -66,10 +69,10 @@ fullNewtonFlag = True
 
 tolFac = 0.0
 
-nl_atol_res = atolConservation
+nl_atol_res = 1#atolConservation
 useEisenstatWalker = True
 
-maxNonlinearIts = 100
+maxNonlinearIts = 10
 maxLineSearches=0
 
 matrix = SparseMatrix

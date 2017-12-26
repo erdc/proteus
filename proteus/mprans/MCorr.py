@@ -38,7 +38,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.mass_correction_reference = mass_correction_reference
         self.theta_time_discretization_mcorr = theta_time_discretization_mcorr
         nc = 1
-        mass = {}
+        #mass = {}
+        mass = {0: {0: 'linear'}}#for time integration
         advection = {}
         hamiltonian = {}
         diffusion = {0: {0: {0: 'constant'}}}
@@ -489,9 +490,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('grad(u)', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         self.q[('r', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
 
+        self.q[('m', 0)] = self.q[('u', 0)]
+        self.q[('m_last', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('mt', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('m_tmp', 0)] = self.q[('u', 0)]
+
+
         self.ebqe[('u', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('grad(u)', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
                                                  self.nElementBoundaryQuadraturePoints_elementBoundary, self.nSpace_global), 'd')
+
 
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set([('u', ci) for ci in range(self.nc)])
@@ -644,7 +652,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         r.fill(0.0)
         # Load the unknowns into the finite element dof
+        self.timeIntegration.calculateCoefs()
+        self.timeIntegration.calculateU(u)
         self.setUnknowns(u)
+        
+        print self.timeIntegration.dt,self.coefficients.vofModel.timeIntegration.dt
+        
         # no flux boundary conditions
         self.mcorr.calculateResidual(  # element
             self.coefficients.vofModel.timeIntegration.dt,
@@ -687,6 +700,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.mass_correction_reference,
             self.coefficients.theta_time_discretization_mcorr,
             self.coefficients.q_velocity_old,
+            self.timeIntegration.alpha_bdf,
+            self.timeIntegration.beta_bdf[0],
+            self.timeIntegration.m_tmp[0],
             self.q[('u', 0)],
             self.q[('grad(u)', 0)],
             self.ebqe[('u', 0)],
@@ -803,6 +819,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.mass_correction_reference,
             self.coefficients.theta_time_discretization_mcorr,
             self.coefficients.q_velocity_old,
+            self.timeIntegration.alpha_bdf,
+            self.timeIntegration.beta_bdf[0],
             self.coefficients.q_porosity,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
             jacobian)
