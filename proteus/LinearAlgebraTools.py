@@ -848,10 +848,10 @@ class LSCInv_shell(InvOperatorShell):
         self.B = B
         self.Bt = Bt
         self.F = F
-    
+
         self._constructBQinvBt()
         self._options = p4pyPETSc.Options()
-        
+
         if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
             self._create_constant_nullspace()
             self.BQinvBt.setNullSpace(self.const_null_space)
@@ -912,14 +912,15 @@ class LSCInv_shell(InvOperatorShell):
         if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
             self.const_null_space.remove(x_tmp)
         self.kspBQinvBt.solve(tmp1,y)
-        
+        assert numpy.isnan(y.norm())==False, "Applying the schur complement \
+resulted in not-a-number."
+
     def _constructBQinvBt(self):
         """ Private method repsonsible for building BQinvBt """
         self.Qv_inv = petsc_create_diagonal_inv_matrix(self.Qv)
         QinvBt = self.Qv_inv.matMult(self.Bt)
         self.BQinvBt = self.B.matMult(QinvBt)
 
-    
 class MatrixShell(ProductOperatorShell):
     """ A shell class for a matrix. """
     def __init__(self,A):
@@ -1039,13 +1040,15 @@ class Sp_shell(InvOperatorShell):
         if self.constNullSpace:
             self.const_null_space.remove(tmp1)
         self.kspSp.solve(tmp1,y)
+        assert numpy.isnan(y.norm())==False, "Applying the schur complement \
+resulted in not-a-number."
+
 
     def _create_Sp(self):
         self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
         A00_invBt = self.A00_inv.matMult(self.A01)
         self.Sp = self.A10.matMult(A00_invBt)
         self.Sp.aypx(-1.,self.A11)
-    
 
 class TwoPhase_PCDInv_shell(InvOperatorShell):
     r""" Shell class for the two-phase PCD preconditioner.  The
@@ -1183,6 +1186,8 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
 
         self.kspAp_rho.solve(tmp2, tmp3)
         y.axpy(1.,tmp3)
+        assert numpy.isnan(y.norm())==False, "Applying the schur complement \
+resulted in not-a-number."
 
 def l2Norm(x):
     """
