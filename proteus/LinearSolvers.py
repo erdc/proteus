@@ -1438,7 +1438,11 @@ class ModelInfo(object):
 
 class SchurPrecon(KSP_Preconditioner):
     """ Base class for PETSc Schur complement preconditioners. """
-    def __init__(self,L,prefix=None,bdyNullSpace=False):
+    def __init__(self,
+                 L,
+                 prefix=None,
+                 bdyNullSpace=False,
+                 solver_info=None):
         """
         Initializes the Schur complement preconditioner for use with PETSc.
 
@@ -1452,12 +1456,33 @@ class SchurPrecon(KSP_Preconditioner):
             Prefix identifier for command line PETSc options.
         bdyNullSpace : bool
             Flag indicating whether boundary creates nullspace.
+        solver_info: :class:`ModelInfo`
         """
         self.PCType = 'schur'
         self.L = L
-        self._initializeIS(prefix)
+        self._initializePC(prefix)
+
+        if solver_info==None:
+            self._initialize_without_solver_info()
+        else:
+            self.model_info = solver_info
+
+        self._initializeIS()
         self.bdyNullSpace = bdyNullSpace
         self.pc.setFromOptions()
+
+    def _initialize_without_solver_info(self):
+        """
+        Initializes the ModelInfo needed to create a Schur Complement
+        preconditioner.
+        """
+        nc = self.L.pde.nc
+        if len(self.L.pde.u[0].dof) == len(self.L.pde.u[1].dof):
+            self.model_info = ModelInfo(nc,'interlaced')
+        else:
+            self.model_info = ModelInfo(nc,
+                                        'blocked',
+                                        self.L.pde.u[0].dof.size)
 
     def setUp(self,global_ksp):
         """
@@ -1503,53 +1528,42 @@ class SchurPrecon(KSP_Preconditioner):
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
-        
 
-    def _initializeIS(self,prefix):
-        """ Sets the index set (IP) for the pressure and velocity 
-        
+    def _initializePC(self,
+                      prefix):
+        r"""
+        Intiailizes the PETSc precondition.
+
         Parameters
         ----------
         prefix : str
             Prefix identifier for command line PETSc options.
         """
-        L_sizes = self.L.getSizes()
-        L_range = self.L.getOwnershipRange()
-        neqns = L_sizes[0][0]
-        nc = self.L.pde.nc
-        rank = p4pyPETSc.COMM_WORLD.rank
-        size = p4pyPETSc.COMM_WORLD.size
-        pSpace = self.L.pde.u[0].femSpace
-        pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
-        n_DOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
-        N_DOF_pressure = pressure_offsets[size]
-        if self.L.pde.stride[0] == 1:#assume end to end
-            self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+n_DOF_pressure,
-                                            dtype="i")
-            self.velocityDOF = numpy.arange(start=L_range[0]+n_DOF_pressure,
-                                            stop=L_range[0]+neqns,
-                                            step=1,
-                                            dtype="i")
-        else: #assume blocked
-            self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+neqns,
-                                            step=nc,
-                                            dtype="i")
-            velocityDOF = []
-            for start in range(1,nc):
-                velocityDOF.append(numpy.arange(start=L_range[0]+start,
-                                                stop=L_range[0]+neqns,
-                                                step=nc,
-                                                dtype="i"))
-            self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
         self.pc = p4pyPETSc.PC().create()
         self.pc.setOptionsPrefix(prefix)
         self.pc.setType('fieldsplit')
+
+    def _initializeIS(self):
+        r"""Sets the index set (IP) for the pressure and velocity
+
+        Notes
+        -----
+        Proteus orders unknown degrees of freedom for saddle point
+        problems as blocked or end-to-end. Blocked systems are used
+        for equal order finite element spaces (e.g. P1-P1).  In this
+        case, the degrees of freedom are interlaced (e.g. p[0], u[0],
+        v[0], p[1], u[1], v[1], ...).
+        """
+        L_sizes = self.L.getSizes()
+        L_range = self.L.getOwnershipRange()
+        neqns = L_sizes[0][0]
+        dof_arrays = self.model_info.dof_order_type.create_DOF_lists(L_range,
+                                                                     neqns,
+                                                                     self.model_info.nc)
         self.isp = p4pyPETSc.IS()
-        self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
+        self.isp.createGeneral(dof_arrays[1],comm=p4pyPETSc.COMM_WORLD)
         self.isv = p4pyPETSc.IS()
-        self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
+        self.isv.createGeneral(dof_arrays[0],comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
 
     def _converged_trueRes(self,ksp,its,rnorm):
@@ -1618,23 +1632,27 @@ class Schur_Sp(SchurPrecon):
     def __init__(self,
                  L,
                  prefix,
-                 bdyNullSpace=False):
-        SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
-        self.operator_constructor = SchurOperatorConstructor(self)
+                 bdyNullSpace=False,
+                 solver_info = None):
+        SchurPrecon.__init__(self,
+                             L,
+                             prefix,
+                             bdyNullSpace,
+                             solver_info=solver_info)
 
     def setUp(self,global_ksp):
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace is True:
             self._setConstantPressureNullSpace(global_ksp)
-        self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
-                                                             self.operator_constructor.linear_smoother.isv)
-        self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
-                                                             self.operator_constructor.linear_smoother.isp)
-        self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                             self.operator_constructor.linear_smoother.isv)
-        self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                             self.operator_constructor.linear_smoother.isp)
-        L_sizes = self.operator_constructor.linear_smoother.isp.sizes
+        self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
+                                                             self.isv)
+        self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
+                                                             self.isp)
+        self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.isp,
+                                                             self.isv)
+        self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.isp,
+                                                             self.isp)
+        L_sizes = self.isp.sizes
         self.SpInv_shell = p4pyPETSc.Mat().create()
         self.SpInv_shell.setSizes(L_sizes)
         self.SpInv_shell.setType('python')
