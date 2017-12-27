@@ -1299,6 +1299,143 @@ class petsc_LU(KSP_Preconditioner):
     def setUp(self,global_ksp=None):
         pass
 
+class DofOrderInfo(object):
+    """Base class for managing DOF ordering information"""
+    def __init__(self, dof_order_type):
+        self.dof_order_type = dof_order_type
+
+    def create_DOF_lists(self,
+                         ownership_range,
+                         num_equations,
+                         num_components):
+        """Virtual function with no implementation"""
+        raise NotImplementedError()
+
+class BlockedDofOrderType(DofOrderInfo):
+    """Manages the DOF for blocked velocity and pressure ordering.
+
+    Parameters
+    ----------
+    n_DOF_pressure : int
+        Number of pressure degrees of freedom.
+
+    Notes
+    -----
+    Blocked degree of freedom ordering occurs when all the pressure
+    unknowns appear first, followed by all the u-components of the
+    velocity and then all the v-components of the velocity etc.
+    """
+    def __init__(self, n_DOF_pressure):
+        DofOrderInfo.__init__(self,'blocked')
+        self.n_DOF_pressure = n_DOF_pressure
+
+    def create_DOF_lists(self,
+                         ownership_range,
+                         num_equations,
+                         num_components):
+        """Build blocked velocity and pressure DOF arrays.
+
+        Parameters
+        ----------
+        ownership_range: tuple
+            Local ownership range of DOF
+        num_equations: int
+            Number of local equations
+        num_components: int
+            Number of pressure and velocity components
+
+        Returns
+        -------
+        DOF_output : lst of arrays
+            This function returns a list of arrays with the DOF
+            order.  [velocityDOF, pressureDOF]
+        """
+        pressureDOF = numpy.arange(start=ownership_range[0],
+                                   stop=ownership_range[0]+self.n_DOF_pressure,
+                                   dtype="i")
+        velocityDOF = numpy.arange(start=ownership_range[0]+self.n_DOF_pressure,
+                                   stop=ownership_range[0]+num_equations,
+                                   step=1,
+                                   dtype="i")
+        return [velocityDOF, pressureDOF]
+
+class InterlacedDofOrderType(DofOrderInfo):
+    """Manages the DOF for interlaced velocity and pressure ordering.
+
+    Notes
+    -----
+    Interlaced degrees of occur when the degrees of freedom are
+    ordered as (p[0], u[0], v[0], p[1], u[1], ..., p[n], u[n], v[n]).
+    """
+    def __init__(self):
+        DofOrderInfo.__init__(self,'interlaced')
+    def create_DOF_lists(self,
+                         ownership_range,
+                         num_equations,
+                         num_components):
+        """Build interlaced velocity and pressure DOF arrays.
+
+        Parameters
+        ----------
+        ownership_range: tuple
+            Local ownership range of DOF
+        num_equations: int
+            Number of local equations
+        num_components: int
+            Number of pressure and velocity components
+
+        Returns
+        -------
+        DOF_output : lst of arrays
+            This function returns a list of arrays with the DOF
+            order.  [velocityDOF, pressureDOF]
+        """
+        pressureDOF = numpy.arange(start=ownership_range[0],
+                                   stop=ownership_range[0]+num_equations,
+                                   step=num_components,
+                                   dtype="i")
+        velocityDOF = []
+        for start in range(1,num_components):
+            velocityDOF.append(numpy.arange(start=ownership_range[0]+start,
+                                            stop=ownership_range[0]+num_equations,
+                                            step=num_components,
+                                            dtype="i"))
+        velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
+        return [velocityDOF, pressureDOF]
+
+class ModelInfo(object):
+    """
+    This class stores the model information needed to initialize a
+    Schur preconditioner class.
+
+    Parameters
+    ----------
+    num_components: int
+        The number of model components
+    dof_order_type: str
+        String variable with the dof_order_type ('blocked' or
+        'interlaced')
+    n_DOF_pressure: int
+        Number of pressure degrees of freedom (required for blocked
+        dof_order_type)
+    """
+    def __init__(self,
+                 num_components,
+                 dof_order_type,
+                 n_DOF_pressure=None):
+        self.nc = num_components
+        if dof_order_type=='blocked':
+            assert n_DOF_pressure!=None #ARB - add an error message
+            self.dof_order_type = BlockedDofOrderType(n_DOF_pressure)
+        if dof_order_type=='interlaced':
+            self.dof_order_type = InterlacedDofOrderType()
+
+    def set_dof_order_type(self, dof_order_type):
+        self.dof_order_type = dof_order_type
+
+    def set_nc(self,nc):
+        self.nc = nc
+
 class SchurPrecon(KSP_Preconditioner):
     """ Base class for PETSc Schur complement preconditioners. """
     def __init__(self,L,prefix=None,bdyNullSpace=False):
