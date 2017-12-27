@@ -573,7 +573,79 @@ namespace proteus
           df[I] = theta*v[I]*dr;
     }
     }
+    inline
+    void evaluateCoefficients_bdf(const double& epsHeaviside,
+                  const double& epsDirac,
+                  const double& phi,
+                  const double& H,
+                  const double& phi_old,///phi^n
+                  const double v[nSpace],///velocity field
+                  const int& mass_correction_reference,///label for mass reference
+                  const double& theta,
+                  const double v_old[nSpace],///velocity field at previous time
+                  const double& u,
+                  const double& porosity,
+                  const double& dt,
+                  const double& alphaBDF,
+                  const double& betaBDF,
+                  double& r,
+                  double& dr,
+                  double* f,
+                  double* df,
+                  double& m,
+                  double& dm)
+    {
+      register double H_phi_old = 0.0, H_phi = 0.0, H_phi_u=0.0, dH_phi_u=0.0,m_t=0.0,dm_t=0.0;
+      H_phi_old = porosity*smoothedHeaviside(epsHeaviside, phi_old);
+      H_phi = porosity*smoothedHeaviside(epsHeaviside, phi);
+      H_phi_u = porosity*smoothedHeaviside(epsHeaviside, phi+u);
+      dH_phi_u = porosity*smoothedDirac(epsDirac,phi+u);
 
+      m = H_phi_u;
+      dm= dH_phi_u;
+
+      if(mass_correction_reference==1)
+          r = H_phi_u - H_phi_old;
+      else if(mass_correction_reference==2)
+          r = H_phi_u - H_phi_old;
+      else if(mass_correction_reference==3)
+          r = H_phi_u - H_phi_old;
+      else if(mass_correction_reference==4)
+          r = H_phi_u - H_phi_old;
+      else//if(mass_correction_reference==0)
+          r = H_phi_u - H;
+
+      dr = dH_phi_u;
+
+//      //get r and dr for BDF schemes
+//      ck.bdf(alphaBDF,
+//              betaBDF,
+//              m,
+//              dm,
+//              m_t,
+//              dm_t);
+//      r = m_t*dt;
+//      dr= dm_t*dt;
+
+      for (int I=0; I < nSpace; I++)
+    {
+      if(f)
+        if( mass_correction_reference==1)
+          f[I] = v[I]*H_phi;/// v is not NULL when mass_correction_reference > 0
+        else if(mass_correction_reference==2)
+          f[I] = v[I]*H_phi_u;
+        else if(mass_correction_reference==3)
+          f[I] = v[I]*H_phi_old;
+        else if(mass_correction_reference==4)
+          f[I] = (1-theta)*v_old[I]*H_phi_old+theta*v[I]*H_phi_u;
+
+      if(df)
+        if(mass_correction_reference==2)
+          df[I] = v[I]*dH_phi_u;
+        else if(mass_correction_reference==4)
+          df[I] = theta*v[I]*dH_phi_u;
+    }
+    }
     inline
       void evaluateCoefficientsOrig(const double& epsHeaviside,
                     const double& epsDirac,
@@ -715,8 +787,6 @@ namespace proteus
           u_grad_test_dV[j*nSpace+I]  = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
         }
         }
-
-
 
       //
       //calculate pde coefficients at quadrature points
@@ -913,7 +983,7 @@ namespace proteus
       epsDirac     = epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
       epsDiffusion = epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
       // *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-      evaluateCoefficients(epsHeaviside,
+      evaluateCoefficients_bdf(epsHeaviside,
                    epsDirac,
                    q_phi[eN_k],
                    q_H[eN_k],
@@ -924,20 +994,15 @@ namespace proteus
                    &q_v_old[eN_k_nSpace],///velocity field at previous time
                    u,
                    q_porosity[eN_k],
+                   dt,
+                   alphaBDF,
+                   q_m_betaBDF[eN_k],
                    r,
                    dr,
                    f,
                    NULL,
                    m,
                    dm);
-
-      ck.bdf(alphaBDF,
-             q_m_betaBDF[eN_k],
-             m,
-             dm,
-             m_t,
-             dm_t);
-      m_t *= dt;//scalar with dt
       q_m[eN_k] = m;//used in TimeIntegration for next step
       //
       //update element residual
@@ -948,7 +1013,7 @@ namespace proteus
           //register int eN_k_i_nSpace = eN_k_i*nSpace;
           register int  i_nSpace=i*nSpace;
 
-          elementResidual_u[i] += ck.Mass_weak(m_t,u_test_dV[i]) +
+          elementResidual_u[i] += ck.Reaction_weak(r,u_test_dV[i]) +
         (mass_correction_reference>0?1:0)*dt*ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])+///minus is inside
         ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]);
         }//i
@@ -1503,7 +1568,7 @@ namespace proteus
       epsDirac    =epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
       epsDiffusion=epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
       //    *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-      evaluateCoefficients(epsHeaviside,
+      evaluateCoefficients_bdf(epsHeaviside,
                    epsDirac,
                    q_phi[eN_k],
                    q_H[eN_k],
@@ -1514,20 +1579,15 @@ namespace proteus
                    &q_v_old[eN_k_nSpace],
                    u,
                    q_porosity[eN_k],
+                   dt,
+                   alphaBDF,
+                   q_m_betaBDF[eN_k],
                    r,
                    dr,
                    NULL,
                    df,
                    m,
                    dm);
-
-      ck.bdf(alphaBDF,
-             q_m_betaBDF[eN_k],
-             m,
-             dm,
-             m_t,
-             dm_t);
-      dm_t *= dt;//scalar with dt
 
       for(int i=0;i<nDOF_test_element;i++)
         {
@@ -1540,7 +1600,7 @@ namespace proteus
           //int eN_k_j_nSpace = eN_k_j*nSpace;
           int j_nSpace = j*nSpace;
           elementJacobian_u_u[i*nDOF_trial_element+j] +=
-            ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +// or MassJacobian_weak ?
+            ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +// or MassJacobian_weak ?
             (mass_correction_reference==2||mass_correction_reference==4?dt:0)
             *ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace])+//minus is inside
             ck.NumericalDiffusionJacobian(epsDiffusion,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
