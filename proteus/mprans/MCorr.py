@@ -118,6 +118,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.massCorrModel = modelList[self.me_model]
         self.massCorrModel.setMassQuadrature()
         self.vofModel.q[('m_last', 0)][:] = self.vofModel.q[('m', 0)]
+
+        self.massCorrModel.q[('m_last', 0)][:] = self.q_H_vof#it is self.timeIntegration.m_last
+        self.massCorrModel.q[('m_tmp', 0)][:] = self.q_H_vof#it is self.timeIntegration.m_tmp
+
         if self.checkMass:
             self.m_tmp = copy.deepcopy(self.massCorrModel.q[('r', 0)])
             if self.checkMass:
@@ -655,9 +659,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
         self.setUnknowns(u)
-        
+
         print self.timeIntegration.dt,self.coefficients.vofModel.timeIntegration.dt
-        
+
         # no flux boundary conditions
         self.mcorr.calculateResidual(  # element
             self.coefficients.vofModel.timeIntegration.dt,
