@@ -1207,7 +1207,7 @@ namespace proteus
           int j_nSpace = j*nSpace;
           elementJacobian_u_u[i*nDOF_trial_element+j] +=
             ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +// or MassJacobian_weak ?
-            (mass_correction_reference==2||mass_correction_reference==4?dt:0)
+            (mass_correction_reference==2||mass_correction_reference==4||mass_correction_reference==5?dt:0)
             *ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace])+//minus is inside
             ck.NumericalDiffusionJacobian(epsDiffusion,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
         }//j

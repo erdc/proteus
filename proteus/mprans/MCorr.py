@@ -186,7 +186,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.lsModel.timeIntegration.m_tmp[0][:] = self.lsModel.q[('u', 0)]
             if self.mass_correction_reference > 0:
                 self.q_phi_old[:] = self.lsModel.q[('u', 0)]
-            if self.mass_correction_reference == 4:  # : when theta-method is used for time discretization
+            if self.mass_correction_reference == 4 or self.mass_correction_reference ==5:  # : when theta-method is used for time discretization
                 self.q_velocity_old[:] = self.vofModel.coefficients.q_v
             # vof
             if self.edgeBasedStabilizationMethods == False:
