@@ -1655,7 +1655,7 @@ class Schur_Sp(SchurPrecon):
                                           self.A11,
                                           self.A01,
                                           self.A10,
-                                          constNullSpace = self.constNullSpace)
+                                          constNullSpace = self.bdyNullSpace)
         self.SpInv_shell.setPythonContext(self.matcontext_inv)
         self.SpInv_shell.setUp()
         # Set PETSc Schur operator

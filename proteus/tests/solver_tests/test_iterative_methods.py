@@ -93,7 +93,8 @@ def initialize_petsc_options(request):
 def load_nse_cavity_matrix(request):
     """Loads a Navier-Stokes matrix drawn from the MPRANS module. """
     A = LAT.petsc_load_matrix(os.path.join
-                              (os.path.dirname(__file__),'NSE_cavity_matrix'))
+                              (os.path.dirname(__file__),
+                               'import_modules/NSE_cavity_matrix'))
     yield A
 
 @pytest.fixture()
@@ -104,7 +105,8 @@ def load_nse_step_matrix(request):
     boundary conditions, and weakly enforced Dirichlet conditions.
     """
     A = LAT.petsc_load_matrix(os.path.join
-                              (os.path.dirname(__file__),'NSE_step_no_slip'))
+                              (os.path.dirname(__file__),
+                               'import_modules/NSE_step_no_slip'))
     yield A
 
 @pytest.mark.LinearSolvers
