@@ -657,7 +657,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
-        self.timeIntegration.calculateU(u)
+#         self.timeIntegration.calculateU(u)
         self.setUnknowns(u)
 
         print self.timeIntegration.dt,self.coefficients.vofModel.timeIntegration.dt
