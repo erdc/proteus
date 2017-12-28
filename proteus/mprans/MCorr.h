@@ -526,65 +526,6 @@ namespace proteus
                   const double v_old[nSpace],///velocity field at previous time
                   const double& u,
                   const double& porosity,
-                  double& r,
-                  double& dr,
-                  double* f,
-                  double* df,
-                  double& m,
-                  double& dm)
-    {
-      register double H_phi_old = 0.0, H_phi = 0.0, H_phi_u=0.0;
-      H_phi_old = porosity*smoothedHeaviside(epsHeaviside, phi_old);
-      H_phi = porosity*smoothedHeaviside(epsHeaviside, phi);
-      H_phi_u = porosity*smoothedHeaviside(epsHeaviside, phi+u);
-
-      m = H_phi_u;
-      dm= 1.0;
-
-      if(mass_correction_reference==1)
-          r = H_phi_u - H_phi_old;
-      else if(mass_correction_reference==2)
-          r = H_phi_u - H_phi_old;
-      else if(mass_correction_reference==3)
-          r = H_phi_u - H_phi_old;
-      else if(mass_correction_reference==4)
-          r = H_phi_u - H_phi_old;
-      else//if(mass_correction_reference==0)
-          r = H_phi_u - H;
-
-      dr = porosity*smoothedDirac(epsDirac,phi+u);
-
-      for (int I=0; I < nSpace; I++)
-    {
-      if(f)
-        if( mass_correction_reference==1)
-          f[I] = v[I]*porosity*H_phi;/// v is not NULL when mass_correction_reference > 0
-        else if(mass_correction_reference==2)
-          f[I] = v[I]*porosity*H_phi_u;
-        else if(mass_correction_reference==3)
-          f[I] = v[I]*porosity*H_phi_old;
-        else if(mass_correction_reference==4)
-          f[I] = (1-theta)*v_old[I]*H_phi_old+theta*v[I]*porosity*H_phi_u;
-
-      if(df)
-        if(mass_correction_reference==2)
-          df[I] = v[I]*dr;
-        else if(mass_correction_reference==4)
-          df[I] = theta*v[I]*dr;
-    }
-    }
-    inline
-    void evaluateCoefficients_bdf(const double& epsHeaviside,
-                  const double& epsDirac,
-                  const double& phi,
-                  const double& H,
-                  const double& phi_old,///phi^n
-                  const double v[nSpace],///velocity field
-                  const int& mass_correction_reference,///label for mass reference
-                  const double& theta,
-                  const double v_old[nSpace],///velocity field at previous time
-                  const double& u,
-                  const double& porosity,
                   const double& dt,
                   const double& alphaBDF,
                   const double& betaBDF,
@@ -612,20 +553,26 @@ namespace proteus
           r = H_phi_u - H_phi_old;
       else if(mass_correction_reference==4)
           r = H_phi_u - H_phi_old;
+      else if(mass_correction_reference==5)
+      {
+          //get r for BDF schemes
+          ck.bdf(alphaBDF,
+                  betaBDF,
+                  m,
+                  dm,
+                  m_t,
+                  dm_t);
+          r = m_t*dt;
+      }
       else//if(mass_correction_reference==0)
           r = H_phi_u - H;
 
-      dr = dH_phi_u;
+      if (mass_correction_reference==5)
+          dr= dm_t*dt;
+      else
+          dr = dH_phi_u;
 
-//      //get r and dr for BDF schemes
-//      ck.bdf(alphaBDF,
-//              betaBDF,
-//              m,
-//              dm,
-//              m_t,
-//              dm_t);
-//      r = m_t*dt;
-//      dr= dm_t*dt;
+
 
       for (int I=0; I < nSpace; I++)
     {
@@ -636,16 +583,17 @@ namespace proteus
           f[I] = v[I]*H_phi_u;
         else if(mass_correction_reference==3)
           f[I] = v[I]*H_phi_old;
-        else if(mass_correction_reference==4)
+        else if(mass_correction_reference==4 || mass_correction_reference==5)
           f[I] = (1-theta)*v_old[I]*H_phi_old+theta*v[I]*H_phi_u;
 
       if(df)
         if(mass_correction_reference==2)
           df[I] = v[I]*dH_phi_u;
-        else if(mass_correction_reference==4)
+        else if(mass_correction_reference==4 || mass_correction_reference==5)
           df[I] = theta*v[I]*dH_phi_u;
     }
     }
+
     inline
       void evaluateCoefficientsOrig(const double& epsHeaviside,
                     const double& epsDirac,
@@ -806,6 +754,7 @@ namespace proteus
                    &q_v_old[eN_k_nSpace],///velocity field at previous time
                    u,
                    q_porosity[eN_k],
+                   0,0,0,
                    r,
                    dr,
                    f,
@@ -983,7 +932,7 @@ namespace proteus
       epsDirac     = epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
       epsDiffusion = epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
       // *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-      evaluateCoefficients_bdf(epsHeaviside,
+      evaluateCoefficients(epsHeaviside,
                    epsDirac,
                    q_phi[eN_k],
                    q_H[eN_k],
@@ -1409,6 +1358,7 @@ namespace proteus
                    &q_v_old[eN_k_nSpace],
                    u,
                    q_porosity[eN_k],
+                   0,0,0,
                    r,
                    dr,
                    NULL,
@@ -1568,7 +1518,7 @@ namespace proteus
       epsDirac    =epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
       epsDiffusion=epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
       //    *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-      evaluateCoefficients_bdf(epsHeaviside,
+      evaluateCoefficients(epsHeaviside,
                    epsDirac,
                    q_phi[eN_k],
                    q_H[eN_k],

@@ -34,7 +34,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sd = sd
         self.checkMass = checkMass
         self.variableNames = ['phiCorr']
-        assert mass_correction_reference < 5, "*****Use proper mass_correction_reference number*****"
+        assert mass_correction_reference < 6, "*****Use proper mass_correction_reference number*****"
         self.mass_correction_reference = mass_correction_reference
         self.theta_time_discretization_mcorr = theta_time_discretization_mcorr
         nc = 1
@@ -494,10 +494,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('grad(u)', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         self.q[('r', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
 
-        self.q[('m', 0)] = self.q[('u', 0)]
+        self.q[('m', 0)] = self.q[('u', 0)].copy()
         self.q[('m_last', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('mt', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('m_tmp', 0)] = self.q[('u', 0)]
+        self.q[('m_tmp', 0)] = self.q[('u', 0)].copy()
 
 
         self.ebqe[('u', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
@@ -661,7 +661,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setUnknowns(u)
 
         print self.timeIntegration.dt,self.coefficients.vofModel.timeIntegration.dt
-
+        print self.timeIntegration.alpha_bdf-1.0/self.timeIntegration.dt
+        
         # no flux boundary conditions
         self.mcorr.calculateResidual(  # element
             self.coefficients.vofModel.timeIntegration.dt,
@@ -726,6 +727,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape, 'd')
 
+        
     # GET MASS MATRIX # (MQL)
     def getMassMatrix(self):
         # NOTE. Both, the consistent and the lumped mass matrix must be init to zero

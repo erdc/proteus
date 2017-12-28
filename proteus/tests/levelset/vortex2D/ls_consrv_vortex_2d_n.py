@@ -69,10 +69,10 @@ fullNewtonFlag = True
 
 tolFac = 0.0
 
-nl_atol_res = 1#atolConservation
+nl_atol_res = atolConservation
 useEisenstatWalker = True
 
-maxNonlinearIts = 10
+maxNonlinearIts = 100
 maxLineSearches=0
 
 matrix = SparseMatrix
