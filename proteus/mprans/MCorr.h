@@ -467,7 +467,6 @@ namespace proteus
        int nQuadraturePoints_elementBoundary>
   class MCorr : public MCorr_base
   {
-      double diff_min,diff_max;
   public:
     CompKernelType ck;
     MCorr():ck()
@@ -546,9 +545,6 @@ namespace proteus
       m = H_phi_u;
       dm= dH_phi_u;
 
-      diff_min = fmin(diff_min, dt*betaBDF+H_phi_old);
-      diff_max = fmax(diff_max, dt*betaBDF+H_phi_old);
-
       if(mass_correction_reference==1)
           r = H_phi_u - H_phi_old;
       else if(mass_correction_reference==2)
@@ -567,7 +563,6 @@ namespace proteus
                   m_t,
                   dm_t);
           r = m_t*dt;
-
       }
       else//if(mass_correction_reference==0)
           r = H_phi_u - H;
@@ -578,8 +573,6 @@ namespace proteus
       }
       else
           dr = dH_phi_u;
-
-
 
       for (int I=0; I < nSpace; I++)
     {
@@ -874,8 +867,6 @@ namespace proteus
       //eN_j is the element trial function index
       //eN_k_j is the quadrature point index for a trial function
       //eN_k_i is the quadrature point index for a trial function
-        diff_min = 1e10;
-        diff_max = -1e10;
       for(int eN=0;eN<nElements_global;eN++)
     {
       //declare local storage for element residual and initialize
