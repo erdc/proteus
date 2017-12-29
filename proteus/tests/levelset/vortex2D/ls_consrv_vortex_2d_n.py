@@ -6,8 +6,16 @@ from vortex2D import *
 
 # timeIntegrator = ForwardIntegrator
 # timeIntegration = NoIntegration
-# stepController = MCorr.Newton_controller#need a tricked up controller that can fix the VOF model's initial conditions
-timeIntegration = BackwardEuler_cfl
+#stepController = MCorr.Newton_controller#need a tricked up controller that can fix the VOF model's initial conditions
+
+if ct.massCorrectionReference==5:
+    timeIntegration = BackwardEuler
+# timeIntegration = VBDF
+# timeOrder = 1
+
+if ct.massCorrectionReference==6:
+    timeIntegration = NoIntegration
+
 stepController = Min_dt_controller
 
 
