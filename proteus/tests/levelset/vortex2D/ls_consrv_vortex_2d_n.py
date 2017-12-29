@@ -8,13 +8,12 @@ from vortex2D import *
 # timeIntegration = NoIntegration
 #stepController = MCorr.Newton_controller#need a tricked up controller that can fix the VOF model's initial conditions
 
+timeIntegration = NoIntegration
+
 if ct.massCorrectionReference==5:
     timeIntegration = BackwardEuler
 # timeIntegration = VBDF
 # timeOrder = 1
-
-if ct.massCorrectionReference==6:
-    timeIntegration = NoIntegration
 
 stepController = Min_dt_controller
 
