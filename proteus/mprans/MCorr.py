@@ -34,7 +34,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sd = sd
         self.checkMass = checkMass
         self.variableNames = ['phiCorr']
-        assert mass_correction_reference < 7, "*****Use proper mass_correction_reference number*****"
+        assert mass_correction_reference < 8, "*****Use proper mass_correction_reference number*****"
         self.mass_correction_reference = mass_correction_reference
         self.theta_time_discretization_mcorr = theta_time_discretization_mcorr
         nc = 1
@@ -198,11 +198,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
             
             # implement BackwardEuler yyyyyy-debug
+            if self.mass_correction_reference == 7:
+                self.q_velocity_old[:] = self.vofModel.coefficients.q_v
+                self.massCorrModel.timeIntegration.dt_pre = self.massCorrModel.timeIntegration.dt
+                self.massCorrModel.timeIntegration.m_pre[:] = self.massCorrModel.timeIntegration.m_old
+                self.massCorrModel.setMassQuadrature()
+                self.massCorrModel.timeIntegration.m_old[:] = self.q_H_vof#it is self.timeIntegration.m_tmp
             if self.mass_correction_reference == 6:
                 self.q_velocity_old[:] = self.vofModel.coefficients.q_v
-                self.massCorrModel.timeIntegration.m_last[:] = self.massCorrModel.timeIntegration.m_tmp#it is self.timeIntegration.m_tmp
                 self.massCorrModel.setMassQuadrature()
-                self.massCorrModel.timeIntegration.m_tmp[:] = self.q_H_vof#it is self.timeIntegration.m_tmp
+                self.massCorrModel.timeIntegration.m_old[:] = self.q_H_vof#it is self.timeIntegration.m_tmp
 
 
             # vof
@@ -641,17 +646,24 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
 
-
         if self.coefficients.mass_correction_reference == 6:
-            self.timeIntegration.m_last = self.q[('m_last', 0)]
-            self.timeIntegration.m_tmp = self.q[('m_tmp', 0)]
-            self.timeIntegration.q_m_tmp = {0:numpy.zeros_like(self.timeIntegration.m_tmp)}
-            self.timeIntegration.beta_bdf={0:numpy.zeros_like(self.timeIntegration.m_tmp)}
+            self.timeIntegration.m_old = self.q[('m_tmp', 0)]
+            self.timeIntegration.dt = 1.0
+            self.timeIntegration.q_m_tmp = {0:numpy.zeros_like(self.timeIntegration.m_old)}
+            self.timeIntegration.beta_bdf={0:numpy.zeros_like(self.timeIntegration.m_old)}
+
+
+        if self.coefficients.mass_correction_reference == 7:
+            self.timeIntegration.m_pre = self.q[('m_last', 0)]
+            self.timeIntegration.m_old = self.q[('m_tmp', 0)]
+            self.timeIntegration.dt = 1.0
+            self.timeIntegration.dt_pre = 1.0
+            self.timeIntegration.q_m_tmp = {0:numpy.zeros_like(self.timeIntegration.m_old)}
+            self.timeIntegration.beta_bdf={0:numpy.zeros_like(self.timeIntegration.m_old)}
 
         if self.coefficients.mass_correction_reference == 5:
             self.timeIntegration.q_m_tmp = self.timeIntegration.m_tmp
 
-            
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MassMatrix.getCSRrepresentation()
         if (self.limited_L2p_vof_mass_correction is None):
@@ -690,7 +702,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 #             self.timeIntegration.calculateU(u)
         if self.coefficients.mass_correction_reference==6:
             self.timeIntegration.alpha_bdf = 1.0/self.timeIntegration.dt
-            self.timeIntegration.beta_bdf[0][:] = -self.timeIntegration.m_tmp/self.timeIntegration.dt
+            self.timeIntegration.beta_bdf[0][:] = -self.timeIntegration.m_old/self.timeIntegration.dt
+
+        if self.coefficients.mass_correction_reference==7:
+            rn = self.timeIntegration.dt/self.timeIntegration.dt_pre
+            self.timeIntegration.alpha_bdf = (1.0+2*rn)/(1.0+rn)/self.timeIntegration.dt
+            self.timeIntegration.beta_bdf[0][:] = -(1.0+rn)*self.timeIntegration.m_old/self.timeIntegration.dt
+            self.timeIntegration.beta_bdf[0][:] += rn*rn/(1.0+rn)*self.timeIntegration.m_pre/self.timeIntegration.dt
 
         self.setUnknowns(u)
         # no flux boundary conditions

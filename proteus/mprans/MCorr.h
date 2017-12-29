@@ -557,7 +557,7 @@ namespace proteus
           r = H_phi_u - H_phi_old;
       else if(mass_correction_reference==4)
           r = H_phi_u - H_phi_old;
-      else if(mass_correction_reference==5||mass_correction_reference==6)
+      else if(mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7)
       {
           //get r for BDF schemes
           ck.bdf(alphaBDF,
@@ -566,23 +566,15 @@ namespace proteus
                   dm,
                   m_t,
                   dm_t);
-          register double r1 = m_t*dt;
-          r = H_phi_u - H_phi_old;
-          if(fabs(r-r1)>1e-10)std::cout<<"r-r-r-wrong:"<<r<<"\t"<<r1<<std::endl;
-          //
-          r = r1;
+          r = m_t*dt;
 
       }
       else//if(mass_correction_reference==0)
           r = H_phi_u - H;
 
-      if (mass_correction_reference==5||mass_correction_reference==6)
+      if (mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7)
       {
-          register double dr1= dm_t*dt;
-          dr = dH_phi_u;
-          if(fabs(dr-dr1)>1e-10)std::cout<<"dr-dr-dr-wrong:"<<dr<<"\t"<<dr1<<std::endl;
-          //
-          dr = dr1;
+          dr= dm_t*dt;
       }
       else
           dr = dH_phi_u;
@@ -598,13 +590,13 @@ namespace proteus
           f[I] = v[I]*H_phi_u;
         else if(mass_correction_reference==3)
           f[I] = v[I]*H_phi_old;
-        else if(mass_correction_reference==4 || mass_correction_reference==5||mass_correction_reference==6)
+        else if(mass_correction_reference==4 || mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7)
           f[I] = (1-theta)*v_old[I]*H_phi_old+theta*v[I]*H_phi_u;
 
       if(df)
         if(mass_correction_reference==2)
           df[I] = v[I]*dH_phi_u;
-        else if(mass_correction_reference==4 || mass_correction_reference==5||mass_correction_reference==6)
+        else if(mass_correction_reference==4 || mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7)
           df[I] = theta*v[I]*dH_phi_u;
     }
     }
@@ -1218,7 +1210,7 @@ namespace proteus
           int j_nSpace = j*nSpace;
           elementJacobian_u_u[i*nDOF_trial_element+j] +=
             ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +// or MassJacobian_weak ?
-            (mass_correction_reference==2||mass_correction_reference==4||mass_correction_reference==5||mass_correction_reference==6?dt:0)
+            (mass_correction_reference==2||mass_correction_reference==4||mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7?dt:0)
             *ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace])+//minus is inside
             ck.NumericalDiffusionJacobian(epsDiffusion,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
         }//j
