@@ -1,10 +1,26 @@
 from proteus import (Domain,
                      Context)
+from proteus.default_n import nLevels
+
+ct = Context.Options([
+    ("T", 1.0, "Time interval [0, T]"),
+    ("checkMass", False, "Check mass or not"),
+    ("cfl", 0.3, "Target CFL number"),
+    ("parallel", False, "Use PETSc or not"),
+    ("lRefinement", 3, "Specify initial mesh size by giving number of cells in each direction"),
+    ("applyCorrection", True, "apply mass correction or not"),
+    ("applyRedistancing", True, "apply redkstancing or not"),
+    ("hk", 1.0, "the size of sub-triangles in the reference triangle used for comp quadrature rule"),
+    ("massCorrectionReference", 5, "reference mass in MCorr"),
+    ("thetaMCorr", 0.5, " >=0, <=1, e.g., 0.0=explicit, 0.5=Crank-Nicolson, 1.0=implicit"),
+    ("degreeFE",1,"degree of Lagrangian polynomial on each element")
+], mutable=True)
+
 #if True uses PETSc solvers
-parallel = False
+parallel = ct.parallel
 linearSmoother = None
 #compute mass balance statistics or not
-checkMass=False#True
+checkMass=ct.checkMass#True
 #number of space dimensions
 nd=2
 opts=Context.Options([
@@ -20,12 +36,12 @@ timeIntegration_vof = "vbdf"#vbdf,be,flcbdf,rk
 timeIntegration_ls = "vbdf"#vbdf,be,flcbdf,rk
 timeOrder = 2
 
-runCFL = 0.3#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
+runCFL = ct.cfl#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 #
 #spatial approximation orders
 cDegree_ls=0 #0 -- CG. -1 -- DG
 cDegree_vof=0
-pDegree_ls=1 #level set
+pDegree_ls=ct.degreeFE #level set
 pDegree_vof=pDegree_ls #volume of fluid should match ls for now
 useHex=False#True
 useMetrics=1.0
@@ -36,11 +52,18 @@ if pDegree_ls == 2:
     rotation_quad_order = 5
 else:
     rotation_quad_order = 3
+# mass correction
+mass_correction_reference = ct.massCorrectionReference #: 0=H(phi^{n+1}); 1=explicit-1; 2=implicit; 3=explicit-2; 4=theta method
+theta_time_discretization_mcorr = ct.thetaMCorr#: if mass_correction_reference==4
+
+#sub-element edge size, used to create composite quadrature rule
+hk = ct.hk
+
 #parallel partitioning info
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 #spatial mesh
-lRefinement=opts.r
+lRefinement=ct.lRefinement
 #tag simulation name to level of refinement
 #soname="rotationcgp2_bdf2_mc"+`lRefinement`
 nn=nnx=nny=(2**lRefinement)*5+1
@@ -48,10 +71,10 @@ nnz=1
 he=1.0/(nnx-1.0)
 L=[1.0,1.0]
 
-unstructured=True#True for tetgen, false for tet or hex from rectangular grid
-box=box=Domain.RectangularDomain(L=(2.0,2.0),
-                                 x=(-1.0,-1.0),
-                                 name="box");
+unstructured=False#True for tetgen, false for tet or hex from rectangular grid
+box=Domain.RectangularDomain(L=(2.0,2.0),
+                             x=(-1.0,-1.0),
+                             name="box");
 box.writePoly("box")
 if unstructured:
     from rotationDomain import *
@@ -62,23 +85,23 @@ if unstructured:
 else:
     domain = box
 #end time of simulation, full problem is T=8.0
-T = 1.0#8.0#
+T = ct.T#8.0#
 #number of output time steps
 nDTout = 10
 #mass correction
-applyCorrection=True
-applyRedistancing=True
+applyCorrection=ct.applyCorrection
+applyRedistancing=ct.applyRedistancing
 redist_Newton=True
 onlyVOF=False#True
 #smoothing factors
 #eps
-epsFactHeaviside=epsFactDirac=epsFact_vof=1.5
+epsFactHeaviside=epsFactDirac=epsFact_vof=1.5*hk
 epsFactRedistance=0.33
 epsFactDiffusion=opts.eps
 #
 if useMetrics:
-    shockCapturingFactor_vof=0.5
-    shockCapturingFactor_ls=0.5
+    shockCapturingFactor_vof=0.25
+    shockCapturingFactor_ls=0.25
     shockCapturingFactor_rd=0.5
     lag_shockCapturing_vof=True
     lag_shockCapturing_ls=True
@@ -92,10 +115,13 @@ else:
     lag_shockCapturing_rd=False
 
 #use absolute tolerances on al models
-atolRedistance = max(1.0e-12,0.1*he)
-atolConservation = 1.0e-12
-atolVolumeOfFluid= max(1.0e-12,0.001*he**2)
-atolLevelSet     = max(1.0e-12,0.001*he**2)
+atolRedistance = max(1.0e-12,0.01*he)
+#atolConservation = max(1.0e-12,0.001*he**2)#1.0e-12#
+#atolVolumeOfFluid= max(1.0e-12,0.001*he**2)
+#atolLevelSet     = max(1.0e-12,0.001*he**2)
+atolConservation = 1.0e-10
+atolVolumeOfFluid= 1.0e-10
+atolLevelSet     = 1.0e-10
 #controls
 linearSolverConvergenceTest = 'r-true' #rits is do a set number of iterations, r-true uses true residual, PETSc default is preconditioned residual
 #redist solver
@@ -110,4 +136,4 @@ if useHex:
     hex=True
     soname="rotation_c0q"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`+"_epsFact0_"+`epsFactDiffusion`
 else:
-    soname="rotation_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`+"_epsFact0_"+`epsFactDiffusion`
+    soname="rotation_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`+"_"+`ct.applyCorrection`+"_"+`ct.applyRedistancing`+"_"+`hk`+"_"+`mass_correction_reference`+"_"+`ct.thetaMCorr`

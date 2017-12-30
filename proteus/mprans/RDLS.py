@@ -221,10 +221,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         import pdb
-        # pdb.set_trace()
         if self.nModel is not None:
-            logEvent("resetting signed distance level set to current level set", level=2)
-            self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
+            logEvent("resetting signed distance level set to current level set",level=2)
+            self.rdModel.u[0].dof[:] = self.nModel.u[0].dof
+            self.rdModel.q[('u',0)][:] = self.nModel.q[('u',0)]
+            self.rdModel.ebqe[('u',0)][:] = self.nModel.ebqe[('u',0)]
+            self.rdModel.q[('grad(u)',0)][:] = self.nModel.q[('grad(u)',0)]
+            self.rdModel.ebqe[('grad(u)',0)][:] = self.nModel.ebqe[('grad(u)',0)]
             self.rdModel.calculateCoefficients()
             self.rdModel.calculateElementResidual()
             self.rdModel.timeIntegration.updateTimeHistory(resetFromDOF=True)
@@ -248,7 +251,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.nModel is not None:
             if self.applyRedistancing == True:
                 logEvent("resetting level set to signed distance")
-                self.nModel.u[0].dof.flat[:] = self.rdModel.u[0].dof.flat[:]
+                self.nModel.u[0].dof[:] = self.rdModel.u[0].dof
+                self.nModel.q[('u',0)][:] = self.rdModel.q[('u',0)]
+                self.nModel.ebqe[('u',0)][:] = self.rdModel.ebqe[('u',0)]
+                self.nModel.q[('grad(u)',0)][:] = self.rdModel.q[('grad(u)',0)]
+                self.nModel.ebqe[('grad(u)',0)][:] = self.rdModel.ebqe[('grad(u)',0)]
                 self.nModel.calculateCoefficients()
                 self.nModel.calculateElementResidual()
                 # save the boundary level set in the numerical flux to use for
