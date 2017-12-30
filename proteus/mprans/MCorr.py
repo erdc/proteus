@@ -688,7 +688,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.q_m_tmp = {0:numpy.zeros_like(self.timeIntegration.m_old)}
             self.timeIntegration.beta_bdf={0:numpy.zeros_like(self.timeIntegration.m_old)}
 
-        if self.coefficients.mass_correction_reference == 5:
+        if self.coefficients.mass_correction_reference <= 5:
             self.timeIntegration.q_m_tmp = self.timeIntegration.m_tmp
 
     def FCTStep(self):
