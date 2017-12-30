@@ -744,10 +744,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             _alpha = -(_a+_b+_c)*(_b+_c)/_b/(_a+_b)
             _beta  = (_a+_b+_c)*_c*_c/_a/_b/(_b+_c)
             _gamma = -(_b+_c)*_c*_c/_a/(_a+_b)/(_a+_b+_c)
-            self.timeIntegration.alpha_bdf = (_alpha+_beta+_gamma)/_c
-            self.timeIntegration.beta_bdf[0][:] = -_alpha*self.timeIntegration.m_old/_c
-            self.timeIntegration.beta_bdf[0][:] += -_beta*self.timeIntegration.m_pre/_c
-            self.timeIntegration.beta_bdf[0][:] += -_gamma*self.timeIntegration.m_pre_pre/_c
+            self.timeIntegration.alpha_bdf = -(_alpha+_beta+_gamma)/_c
+            self.timeIntegration.beta_bdf[0][:] = _alpha*self.timeIntegration.m_old/_c
+            self.timeIntegration.beta_bdf[0][:] += _beta*self.timeIntegration.m_pre/_c
+            self.timeIntegration.beta_bdf[0][:] += _gamma*self.timeIntegration.m_pre_pre/_c
 
         self.setUnknowns(u)
         # no flux boundary conditions
