@@ -553,7 +553,7 @@ namespace proteus
           r = H_phi_u - H_phi_old;
       else if(mass_correction_reference==4)
           r = H_phi_u - H_phi_old;
-      else if(mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7)
+      else if(mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7||mass_correction_reference==8)
       {
           //get r for BDF schemes
           ck.bdf(alphaBDF,
@@ -567,7 +567,7 @@ namespace proteus
       else//if(mass_correction_reference==0)
           r = H_phi_u - H;
 
-      if (mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7)
+      if (mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7||mass_correction_reference==8)
       {
           dr= dm_t*dt;
       }
@@ -583,13 +583,13 @@ namespace proteus
           f[I] = v[I]*H_phi_u;
         else if(mass_correction_reference==3)
           f[I] = v[I]*H_phi_old;
-        else if(mass_correction_reference==4 || mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7)
+        else if(mass_correction_reference==4 || mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7||mass_correction_reference==8)
           f[I] = (1-theta)*v_old[I]*H_phi_old+theta*v[I]*H_phi_u;
 
       if(df)
         if(mass_correction_reference==2)
           df[I] = v[I]*dH_phi_u;
-        else if(mass_correction_reference==4 || mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7)
+        else if(mass_correction_reference==4 || mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7||mass_correction_reference==8)
           df[I] = theta*v[I]*dH_phi_u;
     }
     }
@@ -1031,7 +1031,6 @@ namespace proteus
         ebqe_n[ebNE_kb_nSpace+I] = grad_u_ext[I]/norm;
         }//kb
     }//ebNE
-      if(diff_max-diff_min>1e-10) std::cout<<"somthing wrong: "<<diff_min<<"\t"<<diff_max<<std::endl;
     }
 
 
@@ -1201,7 +1200,7 @@ namespace proteus
           int j_nSpace = j*nSpace;
           elementJacobian_u_u[i*nDOF_trial_element+j] +=
             ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +// or MassJacobian_weak ?
-            (mass_correction_reference==2||mass_correction_reference==4||mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7?dt:0)
+            (mass_correction_reference==2||mass_correction_reference==4||mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7||mass_correction_reference==8?dt:0)
             *ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace])+//minus is inside
             ck.NumericalDiffusionJacobian(epsDiffusion,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
         }//j
