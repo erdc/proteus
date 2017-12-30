@@ -80,14 +80,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.applyCorrectionToDOF = False
         self.massConservationError = 0.0
 
-
     def initializeMesh(self, mesh):
         self.h = mesh.h
         self.epsHeaviside = self.epsFactHeaviside * mesh.h
         self.epsDirac = self.epsFactDirac * mesh.h
         self.epsDiffusion = (self.epsFactDiffusion * mesh.h *
                              (mesh.h if self.useQuadraticRegularization == True else 1.))
-
 
     def attachModels(self, modelList):
         import copy
@@ -186,7 +184,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                                                                                                   self.massCorrModel.mesh.nElements_owned),), level=2)
             logEvent("Phase 0 mass (consistent) before mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)
         copyInstructions = {'clear_uList': True}
-
         return copyInstructions
 
     def postStep(self, t, firstStep=False):
@@ -198,7 +195,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.lsModel.q[('grad(u)', 0)] += self.massCorrModel.q[('grad(u)', 0)]
             self.lsModel.ebqe[('grad(u)', 0)] += self.massCorrModel.ebqe[('grad(u)', 0)]
             self.lsModel.timeIntegration.m_tmp[0][:] = self.lsModel.q[('u', 0)]
-
 
             if self.mass_correction_reference > 0:
                 self.q_phi_old[:] = self.lsModel.q[('u', 0)]
@@ -226,7 +222,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.q_velocity_old[:] = self.vofModel.coefficients.q_v
                 self.massCorrModel.setMassQuadrature()
                 self.massCorrModel.timeIntegration.m_old[:] = self.q_H_vof#it is self.timeIntegration.m_tmp
-
 
             # vof
             #if self.edgeBasedStabilizationMethods == False:
@@ -539,11 +534,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('mt', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_tmp', 0)] = self.q[('u', 0)].copy()
 
-
-        self.ebqe[('u', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('u', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+                                           self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('grad(u)', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
-                                                 self.nElementBoundaryQuadraturePoints_elementBoundary, self.nSpace_global), 'd')
-
+                                                 self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                 self.nSpace_global), 'd')
 
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set([('u', ci) for ci in range(self.nc)])
@@ -814,7 +809,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape, 'd')
 
-        
     # GET MASS MATRIX # (MQL)
     def getMassMatrix(self):
         # NOTE. Both, the consistent and the lumped mass matrix must be init to zero
