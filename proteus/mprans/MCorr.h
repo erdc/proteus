@@ -13,6 +13,7 @@ namespace proteus
   public:
     virtual ~MCorr_base(){}
     virtual void calculateResidual(//element
+                                   double dt,
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
@@ -48,6 +49,14 @@ namespace proteus
                                    double* ebqe_phi,
                                    double* ebqe_normal_phi,
                                    double* q_H,
+                                   double* q_phi_old,
+                                   double* q_v,
+                                   int mass_correction_reference,
+                                   double theta,
+                                   double* q_v_old,
+                                   double alphaBDF,
+                                   double* q_m_betaBDF,
+                                   double* q_m,
                                    double* q_u,
                                    double* q_n,
                                    double* ebqe_u,
@@ -72,6 +81,7 @@ namespace proteus
                                    const double epsFactDiffusion_last,
                                    const double H1)=0;
     virtual void calculateJacobian(//element
+                                   double dt,
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
@@ -105,6 +115,13 @@ namespace proteus
                                    double* q_phi,
                                    double* q_normal_phi,
                                    double* q_H,
+                                   double* q_phi_old,
+                                   double* q_v,
+                                   int mass_correction_reference,
+                                   double theta,
+                                   double* q_v_old,
+                                   double alphaBDF,
+                                   double* q_m_betaBDF,
                                    double* q_porosity,
                                    int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                                    double* globalJacobian,
@@ -488,7 +505,7 @@ namespace proteus
         double HI;
         if (phi > eps)
           {
-            HI= phi - eps +     0.5*(eps + 0.5*eps*eps/eps - eps*cos(M_PI*eps/eps)/(M_PI*M_PI)) - 0.5*((-eps) + 0.5*(-eps)*(-eps)/eps - eps*cos(M_PI*(-eps)/eps)/(M_PI*M_PI));
+            HI= phi - eps +       0.5*(eps + 0.5*eps*eps/eps - eps*cos(M_PI*eps/eps)/(M_PI*M_PI)) - 0.5*((-eps) + 0.5*(-eps)*(-eps)/eps - eps*cos(M_PI*(-eps)/eps)/(M_PI*M_PI));
           }
         else if (phi < -eps)
           {
@@ -512,7 +529,7 @@ namespace proteus
           d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
         return d;
       }
-
+      
       inline double dsmoothedDirac(double eps, double phi)
       {
         double dd;
@@ -524,21 +541,103 @@ namespace proteus
           dd = -0.5*sin(M_PI*phi/eps)*M_PI/(eps*eps);
         return dd;
       }
+      
       inline
         void evaluateCoefficients(const double& epsHeaviside,
                                   const double& epsDirac,
                                   const double& phi,
                                   const double& H,
+                                  const double& phi_old,///phi^n
+                                  const double v[nSpace],///velocity field
+                                  const int& mass_correction_reference,///label for mass reference
+                                  const double& theta,
+                                  const double v_old[nSpace],///velocity field at previous time
                                   const double& u,
                                   const double& porosity,
+                                  const double& dt,
+                                  const double& alphaBDF,
+                                  const double& betaBDF,
                                   double& r,
-                                  double& dr)
+                                  double& dr,
+                                  double* f,
+                                  double* df,
+                                  double& m,
+                                  double& dm)
+      {
+        register double H_phi_old = 0.0, H_phi = 0.0, H_phi_u=0.0, dH_phi_u=0.0,m_t=0.0,dm_t=0.0;
+        H_phi_old = porosity*smoothedHeaviside(epsHeaviside, phi_old);
+        H_phi = porosity*smoothedHeaviside(epsHeaviside, phi);
+        H_phi_u = porosity*smoothedHeaviside(epsHeaviside, phi+u);
+        dH_phi_u = porosity*smoothedDirac(epsDirac,phi+u);
+
+        m = H_phi_u;
+        dm= dH_phi_u;
+
+        if(mass_correction_reference==1)
+          r = H_phi_u - H_phi_old;
+        else if(mass_correction_reference==2)
+          r = H_phi_u - H_phi_old;
+        else if(mass_correction_reference==3)
+          r = H_phi_u - H_phi_old;
+        else if(mass_correction_reference==4)
+          r = H_phi_u - H_phi_old;
+        else if(mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7||mass_correction_reference==8)
+          {
+            //get r for BDF schemes
+            ck.bdf(alphaBDF,
+                   betaBDF,
+                   m,
+                   dm,
+                   m_t,
+                   dm_t);
+            r = m_t*dt;
+          }
+        else//if(mass_correction_reference==0)
+          r = H_phi_u - H;
+
+        if (mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7||mass_correction_reference==8)
+          {
+            dr= dm_t*dt;
+          }
+        else
+          dr = dH_phi_u;
+
+        for (int I=0; I < nSpace; I++)
+          {
+            if(f)
+              if( mass_correction_reference==1)
+                f[I] = v[I]*H_phi;/// v is not NULL when mass_correction_reference > 0
+              else if(mass_correction_reference==2)
+                f[I] = v[I]*H_phi_u;
+              else if(mass_correction_reference==3)
+                f[I] = v[I]*H_phi_old;
+              else if(mass_correction_reference==4 || mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7||mass_correction_reference==8)
+                f[I] = (1-theta)*v_old[I]*H_phi_old+theta*v[I]*H_phi_u;
+
+            if(df)
+              if(mass_correction_reference==2)
+                df[I] = v[I]*dH_phi_u;
+              else if(mass_correction_reference==4 || mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7||mass_correction_reference==8)
+                df[I] = theta*v[I]*dH_phi_u;
+          }
+      }
+
+      inline
+        void evaluateCoefficientsOrig(const double& epsHeaviside,
+                                      const double& epsDirac,
+                                      const double& phi,
+                                      const double& H,
+                                      const double& u,
+                                      const double& porosity,
+                                      double& r,
+                                      double& dr)
       {
         r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H;
         dr = porosity*smoothedDirac(epsDirac,phi+u);
       }
 
       inline void calculateElementResidual(//element
+                                           double dt,
                                            double* mesh_trial_ref,
                                            double* mesh_grad_trial_ref,
                                            double* mesh_dof,
@@ -573,6 +672,14 @@ namespace proteus
                                            double* ebqe_phi,
                                            double* ebqe_normal_phi,
                                            double* q_H,
+                                           double* q_phi_old,///phi^{n}
+                                           double* q_v,///velocity field
+                                           int mass_correction_reference,
+                                           double theta,
+                                           double* q_v_old,///velocity field at previous time
+                                           double alphaBDF,
+                                           double* q_m_betaBDF,
+                                           double* q_m,
                                            double* q_u,
                                            double* q_n,
                                            double* ebqe_u,
@@ -621,6 +728,9 @@ namespace proteus
             register double u=0.0,grad_u[nSpace],
               lambda=0.0,grad_lambda[nSpace],
               r=0.0,dr=0.0,
+              m=0.0,dm=0.0,
+              m_t=0.0,dm_t=0.0,
+              f[nSpace],
               jac[nSpace*nSpace],
               jacDet,
               jacInv[nSpace*nSpace],
@@ -656,7 +766,7 @@ namespace proteus
             /* double norm = 1.0e-8; */
             /* for (int I=0;I<nSpace;I++) */
             /*   norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
-            /* norm = sqrt(norm);          */
+            /* norm = sqrt(norm);    */
             /* for (int I=0;I<nSpace;I++) */
             /*   dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
             /* ck.calculateGScale(G,dir,h_phi); */
@@ -699,10 +809,23 @@ namespace proteus
                                  epsDirac,
                                  q_phi[eN_k],
                                  q_H[eN_k],
+                                 q_phi_old[eN_k],///phi^n
+                                 &q_v[eN_k_nSpace],///velocity field
+                                 mass_correction_reference,///label for mass reference
+                                 theta,
+                                 &q_v_old[eN_k_nSpace],///velocity field at previous time
                                  u,
                                  q_porosity[eN_k],
+                                 dt,
+                                 alphaBDF,
+                                 q_m_betaBDF[eN_k],
                                  r,
-                                 dr);
+                                 dr,
+                                 f,
+                                 NULL,
+                                 m,
+                                 dm);
+            q_m[eN_k] = m;//used in TimeIntegration for next step
             double L2_tmp = ck.Reaction_weak(u*u, dV);
             double H1_tmp = L2_tmp + ck.NumericalDiffusion(1.0,grad_u, grad_u_dV);
             double J_tmp = 0.5*(L2_tmp + H1*ck.NumericalDiffusion(1.0,grad_u, grad_u_dV));
@@ -725,6 +848,7 @@ namespace proteus
                 register int  i_nSpace=i*nSpace;
 
                 elementResidual_u[i] += ck.Reaction_weak(r,u_test_dV[i]) +
+                  (mass_correction_reference>0?1:0)*dt*ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])+///minus is inside
                   ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]);
                 element_LAGR_u[i] += ck.Reaction_weak(u,u_test_dV[i]) +
                   H1*ck.NumericalDiffusion(1.0,
@@ -746,7 +870,6 @@ namespace proteus
             //
             //save solution for other models
             //
-
             q_r[eN_k] = r;
             q_u[eN_k] = u;
 
@@ -760,6 +883,7 @@ namespace proteus
           }
       }
       void calculateResidual(//element
+                             double dt,
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
                              double* mesh_dof,
@@ -795,6 +919,14 @@ namespace proteus
                              double* ebqe_phi,
                              double* ebqe_normal_phi,
                              double* q_H,
+                             double* q_phi_old,
+                             double* q_v,
+                             int mass_correction_reference,
+                             double theta,
+                             double* q_v_old,
+                             double alphaBDF,
+                             double* q_m_betaBDF,
+                             double* q_m,
                              double* q_u,
                              double* q_n,
                              double* ebqe_u,
@@ -854,7 +986,8 @@ namespace proteus
                 element_u[i] = u_dof[u_l2g[eN_i]];
                 element_lambda[i] = lambda_dof[u_l2g[eN_i]];
               }//i
-            calculateElementResidual(mesh_trial_ref,
+            calculateElementResidual(dt,
+				     mesh_trial_ref,
                                      mesh_grad_trial_ref,
                                      mesh_dof,
                                      mesh_l2g,
@@ -886,6 +1019,14 @@ namespace proteus
                                      ebqe_phi,
                                      ebqe_normal_phi,
                                      q_H,
+                                     q_phi_old,
+                                     q_v,
+                                     mass_correction_reference,
+                                     theta,
+                                     q_v_old,
+                                     alphaBDF,
+                                     q_m_betaBDF,
+                                     q_m,
                                      q_u,
                                      q_n,
                                      ebqe_u,
@@ -972,7 +1113,7 @@ namespace proteus
                   boundaryJac[nSpace*(nSpace-1)],
                   metricTensor[(nSpace-1)*(nSpace-1)],
                   metricTensorDetSqrt,
-                  //dS,
+                  dS,
                   //u_test_dS[nDOF_test_element],
                   u_grad_trial_trace[nDOF_trial_element*nSpace],
                   normal[nSpace],x_ext,y_ext,z_ext,
@@ -998,7 +1139,7 @@ namespace proteus
                                                     normal_ref,
                                                     normal,
                                                     x_ext,y_ext,z_ext);
-                //dS = metricTensorDetSqrt*dS_ref[kb];
+                dS = metricTensorDetSqrt*dS_ref[kb];
                 //get the metric tensor
                 //cek todo use symmetry
                 ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
@@ -1021,6 +1162,7 @@ namespace proteus
       }
 
       inline void calculateElementJacobian(//element
+                                           double dt,
                                            double* mesh_trial_ref,
                                            double* mesh_grad_trial_ref,
                                            double* mesh_dof,
@@ -1057,12 +1199,18 @@ namespace proteus
                                            double* q_phi,
                                            double* q_normal_phi,
                                            double* q_H,
+                                           double* q_phi_old,
+                                           double* q_v,
+                                           int mass_correction_reference,
+                                           double theta,
+                                           double* q_v_old,
+                                           double alphaBDF,
+                                           double* q_m_betaBDF,
                                            double* q_porosity,
                                            double* elementJacobian_u_u,
                                            double* element_u,
                                            double* element_N,
                                            double* element_lambda,
-                                           int eN,
                                            const double H1)
       {
         for (int i=0;i<nDOF_test_element;i++)
@@ -1074,7 +1222,9 @@ namespace proteus
         double epsHeaviside,epsDirac,epsDiffusion;
         for  (int k=0;k<nQuadraturePoints_element;k++)
           {
-            int eN_k = eN*nQuadraturePoints_element+k; //index to a scalar at a quadrature point
+            int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
+              eN_k_nSpace = eN_k*nSpace;
+            //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
             //declare local storage
             register double u=0.0,
@@ -1082,6 +1232,9 @@ namespace proteus
               lambda=0.0,
               grad_lambda[nSpace],
               r=0.0,dr=0.0,
+              m=0.0,dm=0.0,
+              m_t=0.0,dm_t=0.0,
+              df[nSpace],
               jac[nSpace*nSpace],
               jacDet,
               jacInv[nSpace*nSpace],
@@ -1154,10 +1307,22 @@ namespace proteus
                                  epsDirac,
                                  q_phi[eN_k],
                                  q_H[eN_k],
+                                 q_phi_old[eN_k],///phi^n
+                                 &q_v[eN_k_nSpace],///velocity field
+                                 mass_correction_reference,///label for mass reference
+                                 theta,
+                                 &q_v_old[eN_k_nSpace],
                                  u,
                                  q_porosity[eN_k],
+                                 dt,
+                                 alphaBDF,
+                                 q_m_betaBDF[eN_k],
                                  r,
-                                 dr);
+                                 dr,
+                                 NULL,
+                                 df,
+                                 m,
+                                 dm);
             double ddr = q_porosity[eN_k]*dsmoothedDirac(epsDirac, q_phi[eN_k]+u);
             for(int i=0;i<nDOF_test_element;i++)
               {
@@ -1169,6 +1334,8 @@ namespace proteus
                     elementJacobian_u_u[i*nDOF_trial_element+j] += ck.ReactionJacobian_weak(dr,
                                                                                             u_trial_ref[k*nDOF_trial_element+j],
                                                                                             u_test_dV[i]) +
+                      (mass_correction_reference==2||mass_correction_reference==4||mass_correction_reference==5||mass_correction_reference==6||mass_correction_reference==7||mass_correction_reference==8?dt:0)
+                      *ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace])+//minus is inside
                       ck.NumericalDiffusionJacobian(epsDiffusion,
                                                     &u_grad_trial[j_nSpace],
                                                     &u_grad_test_dV[i_nSpace]);
@@ -1182,6 +1349,7 @@ namespace proteus
           }//k
       }
       void calculateJacobian(//element
+                             double dt,
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
                              double* mesh_dof,
@@ -1219,6 +1387,13 @@ namespace proteus
                              double* q_phi,
                              double* q_normal_phi,
                              double* q_H,
+                             double* q_phi_old,
+                             double* q_v,
+                             int mass_correction_reference,
+                             double theta,
+                             double* q_v_old,
+                             double alphaBDF,
+                             double* q_m_betaBDF,
                              double* q_porosity,
                              int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                              double* globalJacobian,
@@ -1237,7 +1412,8 @@ namespace proteus
                 element_u[j] = u_dof[u_l2g[eN_j]];
                 element_lambda[j] = lambda_dof[u_l2g[eN_j]];
               }
-            calculateElementJacobian(mesh_trial_ref,
+            calculateElementJacobian(dt,
+				     mesh_trial_ref,
                                      mesh_grad_trial_ref,
                                      mesh_dof,
                                      mesh_l2g,
@@ -1267,6 +1443,13 @@ namespace proteus
                                      q_phi,
                                      q_normal_phi,
                                      q_H,
+                                     q_phi_old,
+                                     q_v,
+                                     mass_correction_reference,
+                                     theta,
+                                     q_v_old,
+                                     alphaBDF,
+                                     q_m_betaBDF,
                                      q_porosity,
                                      elementJacobian_u_u,
                                      element_u,
@@ -1378,7 +1561,8 @@ namespace proteus
             double element_L2_u=0.0,
               element_H1_u=0.0;
             const double H1=1.0;
-            calculateElementResidual(mesh_trial_ref,
+            calculateElementResidual(0.0,
+				     mesh_trial_ref,
                                      mesh_grad_trial_ref,
                                      mesh_dof,
                                      mesh_l2g,
@@ -1410,6 +1594,14 @@ namespace proteus
                                      ebqe_phi,
                                      ebqe_normal_phi,
                                      q_H,
+                                     NULL,
+                                     NULL,
+                                     0,
+                                     0,
+                                     NULL,
+                                     0,
+                                     NULL,
+                                     NULL,
                                      q_u,
                                      q_n,
                                      ebqe_u,
@@ -1446,7 +1638,8 @@ namespace proteus
             while (resNorm  >= atol && its < maxIts)
               {
                 its+=1;
-                calculateElementJacobian(mesh_trial_ref,
+                calculateElementJacobian(0.0,
+					 mesh_trial_ref,
                                          mesh_grad_trial_ref,
                                          mesh_dof,
                                          mesh_l2g,
@@ -1476,13 +1669,18 @@ namespace proteus
                                          q_phi,
                                          q_normal_phi,
                                          q_H,
+                                         NULL,
+                                         NULL,
+                                         0,
+                                         0,
+                                         NULL,
+                                         0,
+                                         NULL,
                                          q_porosity,
                                          elementJacobian_u_u,
                                          element_u,
-                                         element_N,
-                                         element_lambda,
-                                         eN,
-                                         H1);
+					 eN,
+					 H1);
                 for (int i=0;i<nDOF_test_element;i++)
                   {
                     element_du[i] = -elementResidual_u[i];
@@ -1517,7 +1715,8 @@ namespace proteus
                       }//i
                     lambda /= 2.0;
                     //compute new residual
-                    calculateElementResidual(mesh_trial_ref,
+		    calculateElementResidual(0.0,
+					     mesh_trial_ref,
                                              mesh_grad_trial_ref,
                                              mesh_dof,
                                              mesh_l2g,
@@ -1549,6 +1748,14 @@ namespace proteus
                                              ebqe_phi,
                                              ebqe_normal_phi,
                                              q_H,
+                                             NULL,
+                                             NULL,
+                                             0,
+                                             0,
+                                             NULL,
+                                             0,
+                                             NULL,
+                                             NULL,
                                              q_u,
                                              q_n,
                                              ebqe_u,
@@ -1661,7 +1868,8 @@ namespace proteus
             double element_L2_u=0.0,
               element_H1_u=0.0;
             const double H1=1.0;
-            calculateElementResidual(mesh_trial_ref,
+            calculateElementResidual(0.0,
+				     mesh_trial_ref,
                                      mesh_grad_trial_ref,
                                      mesh_dof,
                                      mesh_l2g,
@@ -1693,6 +1901,14 @@ namespace proteus
                                      ebqe_phi,
                                      ebqe_normal_phi,
                                      q_H,
+                                     NULL,
+                                     NULL,
+                                     0,
+                                     0,
+                                     NULL,
+                                     0,
+                                     NULL,
+                                     NULL,
                                      q_u,
                                      q_n,
                                      ebqe_u,
@@ -1729,7 +1945,8 @@ namespace proteus
             while (resNorm >= atol && its < maxIts)
               {
                 its+=1;
-                calculateElementJacobian(mesh_trial_ref,
+                calculateElementJacobian(0.0,
+					 mesh_trial_ref,
                                          mesh_grad_trial_ref,
                                          mesh_dof,
                                          mesh_l2g,
@@ -1759,13 +1976,20 @@ namespace proteus
                                          q_phi,
                                          q_normal_phi,
                                          q_H,
+                                         NULL,
+                                         NULL,
+                                         0,
+                                         0.0,
+                                         NULL,
+                                         0.0,
+                                         NULL,
                                          q_porosity,
                                          elementJacobian_u_u,
                                          element_u,
                                          element_N,
                                          element_lambda,
                                          eN,
-                                         H1);
+					   H1);
                 elementConstantJacobian=0.0;
                 elementConstant_N=0.0;
                 for (int i=0;i<nDOF_test_element;i++)
@@ -1783,7 +2007,8 @@ namespace proteus
                     element_u[i] = elementConstant_u;
                   }//i
                 //compute new residual
-                calculateElementResidual(mesh_trial_ref,
+		calculateElementResidual(0.0,
+					 mesh_trial_ref,
                                          mesh_grad_trial_ref,
                                          mesh_dof,
                                          mesh_l2g,
@@ -1815,6 +2040,14 @@ namespace proteus
                                          ebqe_phi,
                                          ebqe_normal_phi,
                                          q_H,
+                                         NULL,
+                                         NULL,
+                                         0,
+                                         0,/// has no effect since mass_correction_refence = 0
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         NULL,
                                          q_u,
                                          q_n,
                                          ebqe_u,
@@ -1927,7 +2160,8 @@ namespace proteus
             double element_L2_u=0.0,
               element_H1_u=0.0;
             const double H1=1.0;
-            calculateElementResidual(mesh_trial_ref,
+            calculateElementResidual(0.0,
+				     mesh_trial_ref,
                                      mesh_grad_trial_ref,
                                      mesh_dof,
                                      mesh_l2g,
@@ -1959,6 +2193,14 @@ namespace proteus
                                      ebqe_phi,
                                      ebqe_normal_phi,
                                      q_H,
+                                     NULL,
+                                     NULL,
+                                     0,
+                                     0,
+                                     NULL,
+                                     0,
+                                     NULL,
+                                     NULL,
                                      q_u,
                                      q_n,
                                      ebqe_u,
@@ -1988,7 +2230,8 @@ namespace proteus
               {
                 *constantResidual += elementResidual_u[i];
               }//i
-            calculateElementJacobian(mesh_trial_ref,
+            calculateElementJacobian(0.0,
+                                     mesh_trial_ref,
                                      mesh_grad_trial_ref,
                                      mesh_dof,
                                      mesh_l2g,
@@ -2018,13 +2261,20 @@ namespace proteus
                                      q_phi,
                                      q_normal_phi,
                                      q_H,
+                                     NULL,
+                                     NULL,
+                                     0,
+                                     0,
+                                     NULL,
+                                     0,
+                                     NULL,
                                      q_porosity,
                                      elementJacobian_u_u,
                                      element_u,
                                      element_N,
                                      element_lambda,
                                      eN,
-                                     H1);
+				     H1);
             for (int i=0;i<nDOF_test_element;i++)
               {
                 for (int j=0;j<nDOF_test_element;j++)
@@ -2092,8 +2342,8 @@ namespace proteus
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 //compute indeces and declare local storage
-                register int eN_k = eN*nQuadraturePoints_element+k;
-                //eN_k_nSpace = eN_k*nSpace;
+                register int eN_k = eN*nQuadraturePoints_element+k,
+                  eN_k_nSpace = eN_k*nSpace;
                 //eN_nDOF_trial_element = eN*nDOF_trial_element;
                 //double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
                 double jac[nSpace*nSpace],
@@ -2129,16 +2379,17 @@ namespace proteus
                 /* double dir[nSpace]; */
                 /* double norm = 1.0e-8; */
                 /* for (int I=0;I<nSpace;I++) */
-                /*      norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
+                /*        norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
                 /* norm = sqrt(norm); */
                 /* for (int I=0;I<nSpace;I++) */
-                /*      dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
+                /*        dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
                 /* ck.calculateGScale(G,dir,h_phi); */
                 epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 *globalMass += smoothedHeaviside(epsHeaviside,q_phi[eN_k])*dV;
               }//k
           }//elements
       }
+
       void setMassQuadrature(//element
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
@@ -2195,8 +2446,8 @@ namespace proteus
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 //compute indeces and declare local storage
-                register int eN_k = eN*nQuadraturePoints_element+k;
-                //eN_k_nSpace = eN_k*nSpace;
+                register int eN_k = eN*nQuadraturePoints_element+k,
+                  eN_k_nSpace = eN_k*nSpace;
                 //eN_nDOF_trial_element = eN*nDOF_trial_element;
                 //register double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
                 register double jac[nSpace*nSpace],
@@ -2205,8 +2456,7 @@ namespace proteus
                   //u_grad_trial[nDOF_trial_element*nSpace],
                   //u_test_dV[nDOF_trial_element],
                   //u_grad_test_dV[nDOF_test_element*nSpace],
-                  //dV,
-                  x,y,z,
+                  dV,x,y,z,
                   G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
                 //
                 //compute solution and gradients at quadrature points
@@ -2228,30 +2478,34 @@ namespace proteus
                                       mesh_trial_ref,
                                       h_phi);
                 //get the physical integration weight
-                //dV = fabs(jacDet)*dV_ref[k];
+                dV = fabs(jacDet)*dV_ref[k];
                 ck.calculateG(jacInv,G,G_dd_G,tr_G);
+
                 /* double dir[nSpace]; */
                 /* double norm = 1.0e-8; */
                 /* for (int I=0;I<nSpace;I++) */
-                /*      norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
+                /*    norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
                 /* norm = sqrt(norm); */
                 /* for (int I=0;I<nSpace;I++) */
-                /*      dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
+                /*    dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
 
                 /* ck.calculateGScale(G,dir,h_phi); */
                 epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 q_H[eN_k] = q_porosity[eN_k]*smoothedHeaviside(epsHeaviside,q_phi[eN_k]);
               }//k
+            // distribute rhs for mass correction
             for (int i=0;i<nDOF_trial_element;i++)
               {
                 int eN_i = eN*nDOF_trial_element + i;
                 int gi = phi_l2g[eN_i];
-                epsHeaviside = epsFactHeaviside*nodeDiametersArray[mesh_l2g[eN_i]];//cek hack, only works if isoparametric, but we can fix by including interpolation points
+                if(nDOF_mesh_trial_element==nDOF_trial_element)//maybe this is not enough to say it is isoparametric.
+                  epsHeaviside = epsFactHeaviside*nodeDiametersArray[mesh_l2g[eN_i]];//cek hack, only works if isoparametric, but we can fix by including interpolation points
+                else
+                  epsHeaviside = epsFactHeaviside*elementDiameter[eN];
                 H_dof [gi] = smoothedHeaviside(epsHeaviside,phi_dof[gi]);//cek hack, only works if H and phi in same FEM space, but we can fix by passing in H_l2g
               }
           }//elements
       }
-
       void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
                    int numDOFs, //number of DOFs
                    double* lumped_mass_matrix, //lumped mass matrix (as vector)
@@ -2457,14 +2711,14 @@ namespace proteus
             epsDirac    =epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
             epsDiffusion=epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
             //    *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-            evaluateCoefficients(epsHeaviside,
-                                 epsDirac,
-                                 q_phi[eN_k],
-                                 q_H[eN_k],
-                                 u,
-                                 q_porosity[eN_k],
-                                 r,
-                                 dr);
+            evaluateCoefficientsOrig(epsHeaviside,
+                                     epsDirac,
+                                     q_phi[eN_k],
+                                     q_H[eN_k],
+                                     u,
+                                     q_porosity[eN_k],
+                                     r,
+                                     dr);
             for(int i=0;i<nDOF_test_element;i++)
               {
                 //int eN_k_i=eN_k*nDOF_test_element+i;

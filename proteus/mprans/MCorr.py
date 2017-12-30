@@ -23,8 +23,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  useConstantH=False,
                  # mql. For edge based stabilization methods
                  useQuadraticRegularization=False,
-                 edgeBasedStabilizationMethods=False):
-
+                 edgeBasedStabilizationMethods=False,
+                 mass_correction_reference=0,
+                 theta_time_discretization_mcorr=1):
         self.useQuadraticRegularization = useQuadraticRegularization
         self.edgeBasedStabilizationMethods = edgeBasedStabilizationMethods
         self.useConstantH = useConstantH
@@ -32,8 +33,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sd = sd
         self.checkMass = checkMass
         self.variableNames = ['phiCorr']
+        assert mass_correction_reference < 9, "*****Use proper mass_correction_reference number*****"
+        self.mass_correction_reference = mass_correction_reference
+        self.theta_time_discretization_mcorr = theta_time_discretization_mcorr
         nc = 1
-        mass = {}
+        mass = {0: {0: 'linear'}}#for time integration
         advection = {}
         hamiltonian = {}
         diffusion = {0: {0: {0: 'constant'}}}
@@ -105,10 +109,26 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebq_H_vof = modelList[self.VOFModelIndex].ebq[('u', 0)]
         else:
             self.ebq_H_vof = None
+        self.q_phi_old = modelList[self.levelSetModelIndex].q[('u', 0)].copy()
+        self.q_velocity_old = self.vofModel.coefficients.q_v.copy()  # :previous velocity field; used in theta-method
         # correction
         self.massCorrModel = modelList[self.me_model]
         self.massCorrModel.setMassQuadrature()
         self.vofModel.q[('m_last', 0)][:] = self.vofModel.q[('m', 0)]
+
+        if self.mass_correction_reference==5:
+            self.massCorrModel.timeIntegration.m_last[0][:] = self.q_H_vof
+            self.massCorrModel.timeIntegration.m_tmp[0][:] = self.q_H_vof
+        if self.mass_correction_reference==6:
+            self.massCorrModel.timeIntegration.m_old[:] = self.q_H_vof
+        if self.mass_correction_reference==7:
+            self.massCorrModel.timeIntegration.m_old[:] = self.q_H_vof
+            self.massCorrModel.timeIntegration.m_pre[:] = self.q_H_vof
+        if self.mass_correction_reference==8:
+            self.massCorrModel.timeIntegration.m_old[:] = self.q_H_vof
+            self.massCorrModel.timeIntegration.m_pre[:] = self.q_H_vof
+            self.massCorrModel.timeIntegration.m_pre_pre[:] = self.q_H_vof
+
         if self.checkMass:
             self.m_tmp = copy.deepcopy(self.massCorrModel.q[('r', 0)])
             if self.checkMass:
@@ -170,6 +190,45 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.lsModel.ebqe[('u', 0)] += self.massCorrModel.ebqe[('u', 0)]
             self.lsModel.q[('grad(u)', 0)] += self.massCorrModel.q[('grad(u)', 0)]
             self.lsModel.ebqe[('grad(u)', 0)] += self.massCorrModel.ebqe[('grad(u)', 0)]
+            self.lsModel.timeIntegration.m_tmp[0][:] = self.lsModel.q[('u', 0)]
+
+            if self.mass_correction_reference > 0:
+                self.q_phi_old[:] = self.lsModel.q[('u', 0)]
+            if self.mass_correction_reference == 4:# : when theta-method is used for time discretization
+                self.q_velocity_old[:] = self.vofModel.coefficients.q_v
+            if self.mass_correction_reference ==5:
+                self.q_velocity_old[:] = self.vofModel.coefficients.q_v
+
+            # implement BackwardEuler yyyyyy-debug
+            if self.mass_correction_reference == 8:
+                self.q_velocity_old[:] = self.vofModel.coefficients.q_v
+                self.massCorrModel.timeIntegration.dt_pre_pre = self.massCorrModel.timeIntegration.dt_pre
+                self.massCorrModel.timeIntegration.dt_pre = self.massCorrModel.timeIntegration.dt
+                self.massCorrModel.timeIntegration.m_pre_pre[:] = self.massCorrModel.timeIntegration.m_pre
+                self.massCorrModel.timeIntegration.m_pre[:] = self.massCorrModel.timeIntegration.m_old
+                self.massCorrModel.setMassQuadrature()
+                self.massCorrModel.timeIntegration.m_old[:] = self.q_H_vof#it is self.timeIntegration.m_tmp
+            if self.mass_correction_reference == 7:
+                self.q_velocity_old[:] = self.vofModel.coefficients.q_v
+                self.massCorrModel.timeIntegration.dt_pre = self.massCorrModel.timeIntegration.dt
+                self.massCorrModel.timeIntegration.m_pre[:] = self.massCorrModel.timeIntegration.m_old
+                self.massCorrModel.setMassQuadrature()
+                self.massCorrModel.timeIntegration.m_old[:] = self.q_H_vof#it is self.timeIntegration.m_tmp
+            if self.mass_correction_reference == 6:
+                self.q_velocity_old[:] = self.vofModel.coefficients.q_v
+                self.massCorrModel.setMassQuadrature()
+                self.massCorrModel.timeIntegration.m_old[:] = self.q_H_vof#it is self.timeIntegration.m_tmp
+
+            # vof
+            #if self.edgeBasedStabilizationMethods == False:
+            #    self.massCorrModel.setMassQuadrature()
+            # rdls
+            #self.rdModel.u[0].dof[:] = self.lsModel.u[0].dof
+            #self.rdModel.q[('u',0)][:] = self.lsModel.q[('u',0)]
+            #self.rdModel.ebqe[('u',0)][:] = self.lsModel.ebqe[('u',0)]
+            #self.rdModel.q[('grad(u)',0)][:] = self.lsModel.q[('grad(u)',0)]
+            #self.rdModel.ebqe[('grad(u)',0)][:] = self.lsModel.ebqe[('grad(u)',0)]
+            #self.rdModel.timeIntegration.m_tmp[0][:] = self.lsModel.q[('u',0)]
             # vof
             if self.edgeBasedStabilizationMethods == False:
                 self.massCorrModel.setMassQuadrature()
@@ -466,9 +525,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('grad(u)', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         self.q[('r', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
 
-        self.ebqe[('u', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.q[('m', 0)] = self.q[('u', 0)].copy()
+        self.q[('m_last', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('mt', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('m_tmp', 0)] = self.q[('u', 0)].copy()
+
+        self.ebqe[('u', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+                                           self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('grad(u)', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
-                                                 self.nElementBoundaryQuadraturePoints_elementBoundary, self.nSpace_global), 'd')
+                                                 self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                 self.nSpace_global), 'd')
 
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set([('u', ci) for ci in range(self.nc)])
@@ -580,6 +646,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
         else:
             self.elementDiameter = self.mesh.elementDiametersArray
+
         self.mcorr = cMCorr_base(self.nSpace_global,
                                  self.nQuadraturePoints_element,
                                  self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -587,6 +654,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
+
         self.history = open(self.name + "lagrange_history.txt", "w")
         self.history.write('L2norm_u' + "," +
                            'H1norm_u' + "," +
@@ -602,6 +670,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                            'LAGR_u' + "," +
                            'bu' + "," +
                            'bl' + "\n")
+
+        if self.coefficients.mass_correction_reference == 6:
+            self.timeIntegration.m_old = self.q[('m_tmp', 0)]
+            self.timeIntegration.dt = 1.0
+            self.timeIntegration.q_m_tmp = {0:numpy.zeros_like(self.timeIntegration.m_old)}
+            self.timeIntegration.beta_bdf={0:numpy.zeros_like(self.timeIntegration.m_old)}
+
+        if self.coefficients.mass_correction_reference == 7:
+            self.timeIntegration.m_pre = self.q[('m_last', 0)]
+            self.timeIntegration.m_old = self.q[('m_tmp', 0)]
+            self.timeIntegration.dt = 1.0
+            self.timeIntegration.dt_pre = 1.0
+            self.timeIntegration.q_m_tmp = {0:numpy.zeros_like(self.timeIntegration.m_old)}
+            self.timeIntegration.beta_bdf={0:numpy.zeros_like(self.timeIntegration.m_old)}
+
+        if self.coefficients.mass_correction_reference == 8:
+            self.timeIntegration.m_pre = self.q[('m_last', 0)]
+            self.timeIntegration.m_old = self.q[('m_tmp', 0)]
+            self.timeIntegration.m_pre_pre = self.timeIntegration.m_old.copy()
+            self.timeIntegration.dt = 1.0
+            self.timeIntegration.dt_pre = 1.0
+            self.timeIntegration.dt_pre_pre = 1.0
+            self.timeIntegration.q_m_tmp = {0:numpy.zeros_like(self.timeIntegration.m_old)}
+            self.timeIntegration.beta_bdf={0:numpy.zeros_like(self.timeIntegration.m_old)}
+
+        if self.coefficients.mass_correction_reference <= 5:
+            self.timeIntegration.q_m_tmp = self.timeIntegration.m_tmp
 
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MassMatrix.getCSRrepresentation()
@@ -634,6 +729,32 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
         r.fill(0.0)
+        if self.coefficients.mass_correction_reference==5:
+            # Load the unknowns into the finite element dof
+            self.timeIntegration.calculateCoefs()
+#             self.timeIntegration.calculateU(u)
+        if self.coefficients.mass_correction_reference==6:#BDF1
+            self.timeIntegration.alpha_bdf = 1.0/self.timeIntegration.dt
+            self.timeIntegration.beta_bdf[0][:] = -self.timeIntegration.m_old/self.timeIntegration.dt
+
+        if self.coefficients.mass_correction_reference==7:#BDF2
+            rn = self.timeIntegration.dt/self.timeIntegration.dt_pre
+            self.timeIntegration.alpha_bdf = (1.0+2*rn)/(1.0+rn)/self.timeIntegration.dt
+            self.timeIntegration.beta_bdf[0][:] = -(1.0+rn)*self.timeIntegration.m_old/self.timeIntegration.dt
+            self.timeIntegration.beta_bdf[0][:] += rn*rn/(1.0+rn)*self.timeIntegration.m_pre/self.timeIntegration.dt
+
+        if self.coefficients.mass_correction_reference==8:#BDF3
+            _c = self.timeIntegration.dt
+            _b = self.timeIntegration.dt_pre
+            _a = self.timeIntegration.dt_pre_pre
+            _alpha = -(_a+_b+_c)*(_b+_c)/_b/(_a+_b)
+            _beta  = (_a+_b+_c)*_c*_c/_a/_b/(_b+_c)
+            _gamma = -(_b+_c)*_c*_c/_a/(_a+_b)/(_a+_b+_c)
+            self.timeIntegration.alpha_bdf = -(_alpha+_beta+_gamma)/_c
+            self.timeIntegration.beta_bdf[0][:] = _alpha*self.timeIntegration.m_old/_c
+            self.timeIntegration.beta_bdf[0][:] += _beta*self.timeIntegration.m_pre/_c
+            self.timeIntegration.beta_bdf[0][:] += _gamma*self.timeIntegration.m_pre_pre/_c
+
         # Load the unknowns into the finite element dof
         self.setUnknowns(u)
 
@@ -663,6 +784,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
          self.global_J,
          self.global_LAGR,
          self.global_LAGR_a) = self.mcorr.calculateResidual(  # element
+            self.coefficients.vofModel.timeIntegration.dt,
              self.u[0].femSpace.elementMaps.psi,
              self.u[0].femSpace.elementMaps.grad_psi,
              self.mesh.nodeArray,
@@ -697,7 +819,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.coefficients.q_n_ls,
              self.coefficients.ebqe_u_ls,
              self.coefficients.ebqe_n_ls,
-             self.coefficients.q_H_vof,
+             self.coefficients.q_H_vof,  # :H_epsilon(phi^{n+1})
+             self.coefficients.q_phi_old,  # :phi^n
+             self.coefficients.vofModel.coefficients.q_v,  # :velocity field
+             self.coefficients.mass_correction_reference,
+             self.coefficients.theta_time_discretization_mcorr,
+             self.coefficients.q_velocity_old,
+             self.timeIntegration.alpha_bdf,
+             self.timeIntegration.beta_bdf[0],
+             self.timeIntegration.q_m_tmp[0],#yyyyyyyyyy-debug
              self.q[('u', 0)],
              self.q[('grad(u)', 0)],
              self.ebqe[('u', 0)],
@@ -797,6 +927,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                   self.rowptr_N)
             cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian, self.Nmat)
         self.mcorr.calculateJacobian(  # element
+            self.coefficients.vofModel.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -829,6 +960,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_u_ls,
             self.coefficients.q_n_ls,
             self.coefficients.q_H_vof,
+            self.coefficients.q_phi_old,  # :phi^n
+            self.coefficients.vofModel.coefficients.q_v,  # :velocity field
+            self.coefficients.mass_correction_reference,
+            self.coefficients.theta_time_discretization_mcorr,
+            self.coefficients.q_velocity_old,
+            self.timeIntegration.alpha_bdf,
+            self.timeIntegration.beta_bdf[0],
             self.coefficients.q_porosity,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
             jacobian,
