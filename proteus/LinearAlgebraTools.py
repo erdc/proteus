@@ -729,7 +729,7 @@ class OperatorShell:
         """
         Return the number of degrees of freedom for the operator.
         """
-        raise NotImplementedError('You need to define a getSize' \
+        raise NotImplementedError('You need to define a getSize ' \
                                   'method for your shell')
 
 
@@ -819,7 +819,6 @@ class InvOperatorShell(OperatorShell):
                                        'ksp_constant_null_space'])
         if self.options.hasName(const_nullspace_str):
             matrix_operator.setNullSpace(self.const_null_space)
-
         ksp_obj.setUp()
         return ksp_obj
 
@@ -1231,7 +1230,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
 
     def apply(self,A,x,y):
         """
-        Applies the two-phase pressure-convection-diffusion 
+        Applies the two-phase pressure-convection-diffusion
         Schur complement approximation.
 
         Parameters
