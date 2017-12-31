@@ -304,7 +304,5 @@ def test_create_petsc_ksp_obj(create_simple_petsc_matrix):
     assert np.array_equal(InvOpShell.unknown_dof_is.getIndices(),
                           np.array([0,2]))
 
-=======
->>>>>>> Modifies the two-phase pcd to allow Dirichlet pressure conditions.
 if __name__ == '__main__':
     pass

@@ -1229,7 +1229,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
 
     def apply(self,A,x,y):
         """
-        Applies the two-phase pressure-convection-diffusion 
+        Applies the two-phase pressure-convection-diffusion
         Schur complement approximation.
 
         Parameters
