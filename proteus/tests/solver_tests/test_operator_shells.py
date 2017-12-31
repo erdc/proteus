@@ -110,6 +110,16 @@ def create_simple_saddle_point_problem(request):
 
     yield output_data
 
+@pytest.fixture()
+def create_simple_petsc_matrix(request):
+    vals_F  =    [3.2, 1.1, 6.3, 1., -5.1]
+    col_idx_F  = [0, 1, 0, 1, 2]
+    row_idx_F  = [0, 2, 4, 5]
+    num_v_unkwn = 3
+    petsc_matF = LAT.csr_2_petsc(size = (num_v_unkwn,num_v_unkwn),
+                                 csr = (row_idx_F,col_idx_F,vals_F))
+    yield petsc_matF
+
 @pytest.mark.LinearAlgebraTools
 class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
 
@@ -241,7 +251,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type','boomeramg')
 
         dirichlet_nodes = [3, 12, 15, 21, 33]
-        
+
         TPPCD_shell = LAT.TwoPhase_PCDInv_shell(Qp_visc,
                                                 Qp_dens,
                                                 Ap_rho,
@@ -265,6 +275,36 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir,
                                                        'import_modules/tppcd_y_dirichlet_dof'))
         assert np.allclose(y_vec.getArray(),true_solu.getArray())
+
+
+def test_tmp_vec_creation():
+    A = LAT.InvOperatorShell._create_tmp_vec(4)
+    assert A.norm() == 0.0
+    assert A.getSize() == 4
+
+@pytest.mark.dev
+def test_create_petsc_ksp_obj(create_simple_petsc_matrix):
+    def getSize():
+        return 3
+
+    petsc_options = p4pyPETSc.Options()
+    petsc_options.setValue('test_F_ksp_type','preonly')
+    petsc_options.setValue('test_F_pc_type','lu')
+    petsc_matF = create_simple_petsc_matrix
+
+    InvOpShell = LAT.InvOperatorShell()
+    InvOpShell.const_null_space =False
+    InvOpShell.options = petsc_options
+    InvOpShell.strong_dirichlet_DOF = [1]
+    InvOpShell.getSize = getSize
+    A = InvOpShell.create_petsc_ksp_obj('test_F_',
+                                        petsc_matF)
+    assert A.getClassName()=='KSP'
+    assert A.getOperators()[0].equal(petsc_matF)
+
+    InvOpShell._set_dirichlet_idx_set()
+    assert np.array_equal(InvOpShell.unknown_dof_is.getIndices(),
+                          np.array([0,2]))
 
 if __name__ == '__main__':
     pass
