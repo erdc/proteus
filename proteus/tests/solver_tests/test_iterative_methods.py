@@ -93,7 +93,8 @@ def initialize_petsc_options(request):
 def load_nse_cavity_matrix(request):
     """Loads a Navier-Stokes matrix drawn from the MPRANS module. """
     A = LAT.petsc_load_matrix(os.path.join
-                              (os.path.dirname(__file__),'NSE_cavity_matrix'))
+                              (os.path.dirname(__file__),
+                               'import_modules/NSE_cavity_matrix'))
     yield A
 
 @pytest.fixture()
@@ -104,10 +105,12 @@ def load_nse_step_matrix(request):
     boundary conditions, and weakly enforced Dirichlet conditions.
     """
     A = LAT.petsc_load_matrix(os.path.join
-                              (os.path.dirname(__file__),'NSE_step_no_slip'))
+                              (os.path.dirname(__file__),
+                               'import_modules/NSE_step_no_slip'))
     yield A
 
 @pytest.mark.LinearSolvers
+@pytest.mark.skip(reason='this test is completed in a different PR')
 def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
                                           initialize_petsc_options):
     """Tests a KSP solve using the Sp Schur complement approximation.
@@ -131,6 +134,7 @@ def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
     assert ksp_obj.reason == 2
 
 @pytest.mark.LinearSolvers
+@pytest.mark.skip(reason='this test is completed in a different PR')
 def test_Schur_Sp_solve(load_nse_step_matrix,
                         initialize_petsc_options):
     """Tests a KSP solve using the Sp Schur complement approximation.
