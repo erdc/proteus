@@ -1375,7 +1375,7 @@ cdef class ProtChSystem:
         if self.model is not None:
             try:
                 self.proteus_dt = self.model.levelModelList[-1].dt_last
-                self.proteus_dt_next = self.model.levelModelList[-1].dt
+                self.proteus_dt_next = self.model.levelModelList[-1].dt_last  # wrong prediction is varying time step
                 self.t = t = self.model.stepController.t_model_last
             except:
                 self.proteus_dt = self.dt_init
