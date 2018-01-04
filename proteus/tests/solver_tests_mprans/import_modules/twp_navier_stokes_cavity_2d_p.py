@@ -3,7 +3,6 @@ Incompressible Navier-Stokes flow around a cylinder in 2D.
 """
 from proteus import *
 from proteus.default_p import *
-import sys
 from cavity2d import *
 from proteus.mprans import RANS2P
 

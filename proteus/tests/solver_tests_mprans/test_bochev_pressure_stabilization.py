@@ -38,6 +38,8 @@ def clean_up_directory():
 
 @pytest.fixture()
 def load_cavity_problem(request):
+    reload(cavity2d)
+    reload(twp_navier_stokes_cavity_2d_so)
     reload(twp_navier_stokes_cavity_2d_p)
     reload(twp_navier_stokes_cavity_2d_n)
     pList = [twp_navier_stokes_cavity_2d_p]
@@ -68,7 +70,8 @@ def initialize_tp_pcd_options(request):
     petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type','hypre')
     petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type','boomeramg')
 
-@pytest.mark.Stablization
+@pytest.mark.Stabilization
+@pytest.mark.LinearSolvers
 def test_bochev_pressure_cavity(load_cavity_problem,
                                 initialize_tp_pcd_options):
     initialize_tp_pcd_options

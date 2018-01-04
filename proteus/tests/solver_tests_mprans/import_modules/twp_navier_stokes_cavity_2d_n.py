@@ -1,10 +1,10 @@
 from proteus import *
-from cavity2d import *
+import cavity2d
 from proteus.default_n import *
 from twp_navier_stokes_cavity_2d_p import *
 
 from proteus import Context
-ct = Context.get()
+ct = cavity2d.opts
 class Fixed_dt_controller(proteus.StepControl.Min_dt_controller):
     ''' Class for setting a fixed timestep, dt, from nOptions for the model
     to allow substepping between time intervals in tnlist '''
@@ -46,27 +46,9 @@ class Fixed_dt_controller(proteus.StepControl.Min_dt_controller):
 if useBackwardEuler:
     timeIntegration = BackwardEuler#_cfl
     stepController = Min_dt_controller
-    #stepController = HeuristicNL_dt_controller
-    #nonlinearIterationsFloor = 2
-    #nonlinearIterationsCeil=4
-    #nonlinearIterationsFloor = 3
-    #nonlinearIterationsCeil=4
-    #dtNLgrowFactor  = 1.5
-    #dtNLreduceFactor= 0.75
-    
-    #timeIntegration = NoIntegration
-    #stepController = Newton_controller
-
 else:
     timeIntegration = BackwardEuler
     stepController = SC_base #FixedStep #SC_base
-#    stepControllerType = proteus.SplitOperator.Sequential_tnList
-#    systemStepExact = True
-    
-#    timeOrder=2
-#    timeIntegration = VBDF 
-#    stepController = Fixed_dt_controller #Min_dt_controller
-#    DT = dt_fixed
 
 femSpaces = {0:basis,
              1:basis,
@@ -91,7 +73,7 @@ if usePETSc:
     levelLinearSolver = KSP_petsc4py
     linear_solver_options_prefix = 'rans2p_'
     #schur_solver = 'two_phase_PCD' #'two_phase_PCD' #'selfp_petsc'
-    schur_solver = ct.opts.schur_solver
+    schur_solver = ct.schur_solver
     if schur_solver == 'Qp':
         linearSmoother=NavierStokes3D_Qp
     elif schur_solver == 'petsc_ASM':

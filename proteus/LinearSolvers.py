@@ -1596,7 +1596,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
            the mass matrix takes, lumped (True) or full (False).
 
          * number chebyshev its - This integer allows the user to
-           specify how many Chebyshev its to use if a mull mass matrix
+           specify how many Chebyshev its to use if a full mass matrix
            is used and a direct solver is not applied.
     """
     def __init__(self,
