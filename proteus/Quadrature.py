@@ -50,46 +50,86 @@ class GaussEdge(Q_base):
     Gaussian Quadrature on the unit interval.
     """
     def __init__(self,order=1):
-        #mwf for convenience, see Guern and Ermond
+        #mql. Compute points and weigths for Gauss Quad with n=5,...,9
+        #mql. TODO: we should generalize this to any order.
+        #mql. Why are the points not in order? 
+        [p6,w6]=numpy.polynomial.legendre.leggauss(6); p6=0.5*(p6+1); w6=0.5*w6
+        [p7,w7]=numpy.polynomial.legendre.leggauss(7); p7=0.5*(p7+1); w7=0.5*w7
+        [p8,w8]=numpy.polynomial.legendre.leggauss(8); p8=0.5*(p8+1); w8=0.5*w8
+        [p9,w9]=numpy.polynomial.legendre.leggauss(9); p9=0.5*(p9+1); w9=0.5*w9
+        #mwf for convenience, see Ern and Guermond
         a1 = 0.5*sqrt((15.0+2.0*sqrt(30))/35.0)
         a2 = 0.5*sqrt((15.0-2.0*sqrt(30))/35.0)
         w1 = 0.25 - sqrt(5./6.)/12.
         w2 = 0.25 + sqrt(5./6.)/12.
         Q_base.__init__(self,order)
         self.pointsAll=(
-            (EVec(0.5),),
-            (EVec((sqrt(3.0)-1.0)/(2.0*sqrt(3.0))),
+            (EVec(0.5),), #n=1
+            (EVec((sqrt(3.0)-1.0)/(2.0*sqrt(3.0))), #n=2
              EVec((sqrt(3.0)+1.0)/(2.0*sqrt(3.0)))),
-            (EVec((sqrt(5.0) - sqrt(3.0))/(2.0*sqrt(5))),
+            (EVec((sqrt(5.0) - sqrt(3.0))/(2.0*sqrt(5))), #n=3
              EVec(0.5),
              EVec((sqrt(5.0) + sqrt(3.0))/(2.0*sqrt(5)))),
-            (EVec(0.5+a1),EVec(0.5-a1),
+            (EVec(0.5+a1),EVec(0.5-a1), #n=4
              EVec(0.5+a2),EVec(0.5-a2)),
-            (EVec(0.5),
+            (EVec(0.5), #n=5
              EVec(0.5*(sqrt(5.0-2.0*sqrt(10.0/7.0))/3.0) + 0.5),
              EVec(0.5*(-sqrt(5.0-2.0*sqrt(10.0/7.0))/3.0) + 0.5),
              EVec(0.5*(sqrt(5.0+2.0*sqrt(10.0/7.0))/3.0) + 0.5),
-             EVec(0.5*(-sqrt(5.0+2.0*sqrt(10.0/7.0))/3.0) + 0.5))
-            )
+             EVec(0.5*(-sqrt(5.0+2.0*sqrt(10.0/7.0))/3.0) + 0.5)),
+            (EVec(p6[0]), #n=6
+             EVec(p6[1]),
+             EVec(p6[2]),
+             EVec(p6[3]),
+             EVec(p6[4]),
+             EVec(p6[5])),            
+            (EVec(p7[0]), #n=7
+             EVec(p7[1]),
+             EVec(p7[2]),
+             EVec(p7[3]),
+             EVec(p7[4]),
+             EVec(p7[5]),
+             EVec(p7[6])),            
+            (EVec(p8[0]), #n=8
+             EVec(p8[1]),
+             EVec(p8[2]),
+             EVec(p8[3]),
+             EVec(p8[4]),
+             EVec(p8[5]),
+             EVec(p8[6]),             
+             EVec(p8[7])),
+            (EVec(p9[0]), #n=9
+             EVec(p9[1]),
+             EVec(p9[2]),
+             EVec(p9[3]),
+             EVec(p9[4]),
+             EVec(p9[5]),
+             EVec(p9[6]),
+             EVec(p9[7]),                          
+             EVec(p9[8]))
+            )        
         self.weightsAll=(
-            (1.0,),
-            (0.5,
+            (1.0,), #n=1
+            (0.5, #n=2
              0.5),
-            (5.0/18.0,
+            (5.0/18.0, #n=3
              8.0/18.0,
              5.0/18.0),
-            (w1,w1,w2,w2),
-            (0.5*(128.0/225.0),
+            (w1,w1,w2,w2), #n=4
+            (0.5*(128.0/225.0), #n=5
              0.5*(322.0+13.0*sqrt(70.0))/900.0,
              0.5*(322.0+13.0*sqrt(70.0))/900.0,
              0.5*(322.0-13.0*sqrt(70.0))/900.0,
-             0.5*(322.0-13.0*sqrt(70.0))/900.0)
+             0.5*(322.0-13.0*sqrt(70.0))/900.0),
+            (w6[0],w6[1],w6[2],w6[3],w6[4],w6[5]), #n=6
+            (w7[0],w7[1],w7[2],w7[3],w7[4],w7[5],w7[6]), #n=7
+            (w8[0],w8[1],w8[2],w8[3],w8[4],w8[5],w8[6],w8[7]), #n=8
+            (w9[0],w9[1],w9[2],w9[3],w9[4],w9[5],w9[6],w9[7],w9[8]) #n=9
             )
         self.setOrder(order)
 
     def setOrder(self,order,domain=[0.0,1.0]):
         Q_base.setOrder(self,order)
-
         points = self.points
         weights = self.weights
         self.points = []
@@ -97,7 +137,7 @@ class GaussEdge(Q_base):
         for i in range(order):
             self.points.append(EVec((domain[1]-domain[0])*points[i][0] +domain[0]))
             self.weights.append((domain[1]-domain[0])*weights[i])
-
+        
 class LobattoEdge(Q_base):
     """
     Gauss-Lobatto quadrature on the unit interval.
@@ -925,7 +965,6 @@ class CubeGaussQuadrature(Q_base):
         self.quadrature = GaussEdge(order=order)
         self.setOrder(order)
 
-
     def setOrder(self,order):
         self.quadrature.setOrder(order,[-1.0,1.0])
 
@@ -937,10 +976,8 @@ class CubeGaussQuadrature(Q_base):
             self.weights = []
             for i in range(order):
                 for j in range(order):
-
                     self.points.append(EVec(self.quadrature.points[i][0],self.quadrature.points[j][0]))
                     self.weights.append(self.quadrature.weights[i]*self.quadrature.weights[j])
-
         if self.nd == 3:
             self.points =[]
             self.weights = []
