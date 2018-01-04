@@ -727,7 +727,7 @@ class  SteadyCurrent:
             Free-surface elevation as a float
 
         """
-        return  self.mwl
+        return 0.
     def u(self,x,t):
         """Calculates wave velocity vector (SolitaryWave class).
         Parameters
