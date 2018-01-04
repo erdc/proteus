@@ -59,6 +59,7 @@ namespace proteus
                                    double PSTAB,
                                    int *mesh_l2g,
                                    double *dV_ref,
+                                   int nDOF_per_element_pressure,
                                    double *p_trial_ref,
                                    double *p_grad_trial_ref,
                                    double *p_test_ref,
@@ -2169,6 +2170,7 @@ namespace proteus
                              double PSTAB,
                              int* mesh_l2g,
                              double* dV_ref,
+                             int nDOF_per_element_pressure,
                              double* p_trial_ref,
                              double* p_grad_trial_ref,
                              double* p_test_ref,
@@ -3326,28 +3328,34 @@ namespace proteus
                 //
                 // LEO Forces
                 //
-                double p_ext = 0. ; // !!!! TO CHANGE BY REAL VALUE !!!!
+                //compute pressure at the quadrature point of the edge from dof-value of the pressure
+                double p_ext = 0.0;
+                for (int i=0; i<nDOF_per_element_pressure;++i)
+                {
+                    p_ext += p_dof[eN*nDOF_per_element_pressure+i]*p_trial_trace_ref[ebN_local_kb*nDOF_per_element_pressure+i];
+                }
                 double nx = -normal[0] ; // need ext normal of the solid
                 double ny = -normal[1] ;
                 for ( int i = 0 ; i < nDOF_test_element ; i++ ) {
-                  int eN_i = eN*nDOF_test_element+i;
-                  double phi_i = vel_test_dS[i];
-                  double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
-                  double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
+//                  int eN_i = eN*nDOF_test_element+i;
+//                  double phi_i = vel_test_dS[i];
+//                  double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
+//                  double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
 
                   double S_xx = 2*visco*grad_u_ext[0];
                   double S_xy = visco*(grad_u_ext[0] + grad_v_ext[1]); // sym tensor -> S_yx = S_xy
                   double S_yy = 2*visco*grad_v_ext[1];
 
-                  Fx -= p_ext*nx;
-                  Fx += S_xx*nx + S_xy*ny;
-                  Fy -= p_ext*ny;
-                  Fy += S_xy*nx + S_yy*ny;
+                  Fx -= p_ext*nx*dS;
+                  Fx += (S_xx*nx + S_xy*ny)*dS;
+                  Fy -= p_ext*ny*dS;
+                  Fy += (S_xy*nx + S_yy*ny)*dS;
 
                 } // i
 
               }//kb
           }//ebN_s
+        std::cout<<"force over solid is: "<<Fx<<"\t"<<Fy<<std::endl;
         //
         //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
         //
