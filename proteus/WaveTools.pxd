@@ -36,7 +36,7 @@ ctypedef void (*cfvel) (MonochromaticWaves, double*, double* , double )
 
 cdef class  SolitaryWave:
     cdef double H,gAbs,c,depth,K,d2,d3
-        cdef public:
+    cdef public:
         double mwl
     cdef np.ndarray g,waveDir,vDir,trans
     cdef bool fast
