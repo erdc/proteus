@@ -393,13 +393,13 @@ class VerifySteadyCurrent(unittest.TestCase):
         # no ramptime
         WW = SteadyCurrent(U,mwl)
         self.assertAlmostEqual(U.all(), WW.u(xx,t).all())
-        self.assertAlmostEqual(mwl, WW.eta(xx,t))
+        self.assertAlmostEqual(0., WW.eta(xx,t))
 
         # with ramp
         Up = 0.5*U
         WW = SteadyCurrent(U,mwl,0.2)
         self.assertAlmostEqual(Up.all(), WW.u(xx,t).all())
-        self.assertAlmostEqual(mwl, WW.eta(xx,t))
+        self.assertAlmostEqual(0., WW.eta(xx,t))
 
         
         
