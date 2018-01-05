@@ -583,9 +583,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def evaluateForcingTerms(self, t, c, mesh=None, mesh_trial_ref=None, mesh_l2g=None):
         if c.has_key('x') and len(c['x'].shape) == 3:
             if self.nd == 2:
-                # mwf debug
-                #import pdb
-                # pdb.set_trace()
                 c[('r', 0)].fill(0.0)
                 eps_source = self.eps_source
                 if self.waveFlag == 1:  # secondOrderStokes:
@@ -640,9 +637,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     import pdb
                     pdb.set_trace()
             else:
-                # mwf debug
-                #import pdb
-                # pdb.set_trace()
                 c[('r', 0)].fill(0.0)
                 eps_source = self.eps_source
                 if self.waveFlag == 1:  # secondOrderStokes:
@@ -1366,6 +1360,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getResidual(self, u, r):
         """
         Calculate the element residuals and add in to the global residual
+
+        Parameters
+        ----------
+        u : :class:`numpy.ndarray`
+        r : :class:`numpy.ndarray`
+            Stores the calculated residual vector.
         """
 
         # Load the unknowns into the finite element dof
@@ -1408,7 +1408,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     else:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],
                                                  self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
-
         self.rans2p.calculateResidual(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
