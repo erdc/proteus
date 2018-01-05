@@ -400,6 +400,14 @@ class VerifySteadyCurrent(unittest.TestCase):
         WW = SteadyCurrent(U,mwl,0.2)
         self.assertAlmostEqual(Up.all(), WW.u(xx,t).all())
         self.assertAlmostEqual(0., WW.eta(xx,t))
+    def testCurrentFailure(self):
+        from proteus.WaveTools import SteadyCurrent
+        U = 1.
+        mwl = 0.5
+
+        with self.assertRaises(SystemExit) as cm1:
+            SteadyCurrent(U,mwl,0.2)
+        self.assertEqual(cm1.exception.code, 1)
 
         
         
