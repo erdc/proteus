@@ -1283,7 +1283,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         # viscous layer
         if self.Ystar < 11.225:
             self.Ustar = self.Ystar
-            self.uDir = (self.Ustar*self.Ystar) * self.tV
+            self.uDir = (self.utStar*self.Ystar) * self.tV
             self.gradU = ( (self.utStar**2) / self.nu ) * self.tV
         # log-law layer
         else:
