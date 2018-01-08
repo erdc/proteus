@@ -1041,9 +1041,10 @@ class NS_base:  # (HasTraits):
             #     'velocityError', scalar)
 
             # This is hardcoded for the RANS3PF to be the 4th model
-            scalar[:,0] = self.modelList[4].levelModelList[0].coefficients.phi_s
-            p0.domain.PUMIMesh.transferFieldToPUMI(
-                'phi_s', scalar)
+            if hasattr(self.modelList[4].levelModelList[0].coefficients,"phi_s"):
+              scalar[:,0] = self.modelList[4].levelModelList[0].coefficients.phi_s
+              p0.domain.PUMIMesh.transferFieldToPUMI(
+                  'phi_s', scalar)
 
             del scalar
             #Get Physical Parameters
