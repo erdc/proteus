@@ -7,24 +7,24 @@ import numpy as np
 
 nd=2
 
-T=1
+T=1000.00
 nDTout=10
 
-L=(10.0,1.0)
+L=(8000.0,800.0)
 g = 9.81
 domain = RectangularDomain(L=L,x=[0,0,0])
 
-h0=1
-a=3
-B=1
-k=0.5
+h0=10
+a=3000
+B=2
+k=0.001
 p = np.sqrt(8*g*h0)/a
 s = np.sqrt(p**2 - k**2)/2.
 mannings=k
 
-#This is relevant just when use_second_order_NonFlatB_with_EV_stabilization=True
 cE=1
 LUMPED_MASS_MATRIX=0
+LINEAR_FRICTION=1
 
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
@@ -161,5 +161,5 @@ diffusiveFluxBoundaryConditions = {0:{},
 #########################################
 bathymetry={0:bathymetry_function}
 LevelModelType = SW2DCV.LevelModel
-coefficients = SW2DCV.Coefficients(g=g,bathymetry=bathymetry,cE=cE,LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,mannings=mannings)
+coefficients = SW2DCV.Coefficients(g=g,bathymetry=bathymetry,cE=cE,LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,LINEAR_FRICTION=LINEAR_FRICTION,mannings=mannings)
 

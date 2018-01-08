@@ -18,6 +18,7 @@ from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 import cRDLS3P
 
+
 class SubgridError(proteus.SubgridError.SGE_base):
 
     def __init__(self, coefficients, nd):
@@ -491,6 +492,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     setZeroLSweakDirichletBCs2 = staticmethod(setZeroLSweakDirichletBCs2)
     setZeroLSweakDirichletBCs3 = staticmethod(setZeroLSweakDirichletBCs3)
 
+
 debugRDLS3P = False  # True
 
 
@@ -524,7 +526,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  sd=True,
                  movingDomain=False,
                  bdyNullSpace=False):
-        self.bdyNullSpace=bdyNullSpace
+        self.bdyNullSpace = bdyNullSpace
         from proteus import Comm
         #
         # set the objects describing the method and boundary conditions
@@ -1214,6 +1216,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def updateAfterMeshMotion(self):
         pass
+
+
 # OneLevelRDLS3P
 from proteus import ctransportCoefficients
 

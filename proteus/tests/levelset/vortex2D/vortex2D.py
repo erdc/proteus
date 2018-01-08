@@ -28,9 +28,13 @@ useMetrics=1.0
 #spatial quadrature orders
 #2*max(pDegree_vof,pDegree_ls)+1
 if pDegree_ls == 2:
-    vortex_quad_order = 5
+    vortex_quad_order =4
 else:
     vortex_quad_order = 3
+
+#sub-element edge size, used to create composite quadrature rule
+hk = 0.2
+
 #parallel partitioning info
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
@@ -43,7 +47,7 @@ nnz=1
 he=1.0/(nnx-1.0)
 L=[1.0,1.0]
 
-unstructured=True#True for tetgen, false for tet or hex from rectangular grid
+unstructured=False#True for tetgen, false for tet or hex from rectangular grid
 if unstructured:
     from tank2dDomain import *
     domain = tank2d(L=L)
@@ -64,7 +68,7 @@ redist_Newton=True
 onlyVOF=False#True
 #smoothing factors
 #eps
-epsFactHeaviside=epsFactDirac=epsFact_vof=1.5
+epsFactHeaviside=epsFactDirac=epsFact_vof=1.5*hk
 epsFactRedistance=0.33
 epsFactDiffusion=10.0
 #
