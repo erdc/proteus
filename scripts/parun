@@ -161,11 +161,15 @@ parser.add_option("-n","--no_global_sync",
                   action="store_false",
                   help="""don't use a single hdf5 archive""")
 parser.add_option("-H","--hotStart",
-                  default=False,
                   dest="hotStart",
                   action="store_true",
-                  help="""Use the last step in the archive as the initial condition and continue appending to the
-                  archive""")
+                  help="""Use the last step in the archive as the initial condition and continue appending to the archive""")
+parser.add_option("-t","--hotStartTime",
+                  dest="hotStartTime",
+                  action="store",
+                  type="float",
+                  default=float('inf'),
+                  help="""Use the last step in the archive before t as the initial condition and continue appending to the archive""")
 parser.add_option("-B","--writeVelocityPostProcessor",
                   default=False,
                   dest="writeVPP",

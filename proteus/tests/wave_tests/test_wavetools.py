@@ -393,13 +393,21 @@ class VerifySteadyCurrent(unittest.TestCase):
         # no ramptime
         WW = SteadyCurrent(U,mwl)
         self.assertAlmostEqual(U.all(), WW.u(xx,t).all())
-        self.assertAlmostEqual(mwl, WW.eta(xx,t))
+        self.assertAlmostEqual(0., WW.eta(xx,t))
 
         # with ramp
         Up = 0.5*U
         WW = SteadyCurrent(U,mwl,0.2)
         self.assertAlmostEqual(Up.all(), WW.u(xx,t).all())
-        self.assertAlmostEqual(mwl, WW.eta(xx,t))
+        self.assertAlmostEqual(0., WW.eta(xx,t))
+    def testCurrentFailure(self):
+        from proteus.WaveTools import SteadyCurrent
+        U = 1.
+        mwl = 0.5
+
+        with self.assertRaises(SystemExit) as cm1:
+            SteadyCurrent(U,mwl,0.2)
+        self.assertEqual(cm1.exception.code, 1)
 
         
         
