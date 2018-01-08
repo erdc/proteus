@@ -1,5 +1,5 @@
 """
-A hierarchy of classes for managing comlete numerical solution implementations
+A hierarchy of classes for managing complete numerical solution implementations
 
 .. inheritance-diagram:: proteus.NumericalSolution
    :parts: 1
