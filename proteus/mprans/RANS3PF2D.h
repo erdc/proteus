@@ -3343,7 +3343,7 @@ namespace proteus
 //                  double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
 
                   double S_xx = 2*visco*grad_u_ext[0];
-                  double S_xy = visco*(grad_u_ext[0] + grad_v_ext[1]); // sym tensor -> S_yx = S_xy
+                  double S_xy = visco*(grad_u_ext[1] + grad_v_ext[0]); // sym tensor -> S_yx = S_xy
                   double S_yy = 2*visco*grad_v_ext[1];
 
                   Fx -= p_ext*nx*dS;
