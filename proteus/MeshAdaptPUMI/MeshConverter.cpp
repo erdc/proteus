@@ -1258,8 +1258,9 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
     std::cout<<"FINISHING RECONSTRUCTION\n";
 }
 
-
 int MeshAdaptPUMIDrvr::reconstructFromProteus2(Mesh& mesh,int* isModelVert,int* bFaces){
+
+//This function only applies for 3D meshes
 
     isReconstructed = 2;
     int nBFaces = mesh.nExteriorElementBoundaries_global;
