@@ -1408,6 +1408,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     else:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],
                                                  self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+        print 't= ',self.timeIntegration.t,
         self.rans2p.calculateResidual(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
