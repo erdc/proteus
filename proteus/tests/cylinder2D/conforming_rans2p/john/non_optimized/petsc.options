@@ -1,0 +1,1 @@
+-ksp_type bcgsl -pc_type asm -pc_asm_type basic -ksp_atol 1.0e-8 -ksp_rtol 0.0
