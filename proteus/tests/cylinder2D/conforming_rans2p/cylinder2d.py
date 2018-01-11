@@ -2,6 +2,7 @@ from math import *
 import proteus.MeshTools
 from proteus import Domain
 from proteus.default_n import *  
+
 '''
 flow around a 2D cylinder  benchmark problem.
 '''
@@ -11,17 +12,16 @@ spaceOrder=1
 Refinement=2
 useHex=False
 points_on_grain = 21
-DX = 0.03
-DX *=0.5
-#DX *=0.5
+DX = 0.01
 usePETSc = False#True
+
 
 parallelPartitioningType = MeshParallelPartitioningTypes.node
 nLayersOfOverlapForParallel = 1
 
 L = 2.2
 H = 0.41
-Um = 1.0e-1
+Um = 1.5
 radius = 0.05
 fl_H = H
 
@@ -51,12 +51,16 @@ elif spaceOrder == 2:
         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
 nLevels = 1
-from cylinder2dDomain import *
-domain = cylinder2D(L=L,
-                    H=H,
-                    C=(0.5*H,0.5*H),#C=(0.2,0.2),
-                    r=radius,
-                    points_on_grain=4*int(ceil(2.0*pi*radius/DX))+1)
+#from cylinder2dDomain import *
+from symmetricDomain_john import *
+domain = symmetric2D(box=(2.2,0.41),
+                    L= 0.2,
+                    H = 0.2,
+                    r = 0.05,
+                    C = (0.2,0.2),
+                    DX = DX,
+                    refinement_length=0.5,
+                    DX_coarse = DX)
 boundaryTags=domain.boundaryFlags
 
 # Time stepping
@@ -67,7 +71,6 @@ dt_init = 1.0e-3
 nDTout = int(T/dt_fixed)
 dt_init = min(dt_init,0.5*dt_fixed)
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)] 
-
 
 useBackwardEuler = False
 
@@ -91,7 +94,6 @@ nu = 1.0e-3
 
 # Gravity
 g = [0.0,0.0]
-
 
 triangleOptions="pAq30.0Dena%f" % (.5*DX**2)  #% (0.5*(DX)**2,)
 print triangleOptions
