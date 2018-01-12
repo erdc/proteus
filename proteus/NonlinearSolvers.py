@@ -1102,10 +1102,8 @@ class TwoStageNewton_for_CLSVOF(Newton):
                     par_r.scatter_forward_insert()
         else:
             # Try to save number of newton iterations
-            try:
-                self.F.newton_iterations = self.its
-            except:
-                pass            
+            if hasattr(self.F,'newton_iterations_stage1'):
+                self.F.newton_iterations_stage1 = self.its
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                      % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             logEvent(memory("Newton","Newton"),level=4)
@@ -1153,6 +1151,8 @@ class TwoStageNewton_for_CLSVOF(Newton):
                         logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                                  % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
 
+                        if hasattr(self.F,'newton_iterations_stage2'):
+                            self.F.newton_iterations_stage2 = self.its
 import deim_utils
 class POD_Newton(Newton):
     """Newton's method on the reduced order system based on POD"""
