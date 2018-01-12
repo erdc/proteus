@@ -367,7 +367,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     char namebuffer[20];
     sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
-    m->writeNative("beforeAnisotropicAdapt.smb");
+    sprintf(namebuffer,"beforeAnisotropicAdapt_%i.smb",nAdapt);
+    m->writeNative(namebuffer);
 /* Code to output size scale and frame
     apf::MeshIterator* it = m->begin(0);
     apf::MeshEntity* test;
@@ -466,9 +467,12 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     char namebuffer[20];
     sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
-    m->writeNative("afterAnisotropicAdapt.smb");
+    sprintf(namebuffer,"afterAnisotropicAdapt_%i.smb",nAdapt);
+    m->writeNative(namebuffer);
   }
   //isReconstructed = 0; //this is needed to maintain consistency with the post-adapt conversion back to Proteus
+  apf::destroyField(adaptSize);
+  apf::destroyField(adaptFrame);
   nAdapt++; //counter for number of adapt steps
   return 0;
 }
