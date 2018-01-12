@@ -1563,9 +1563,9 @@ class NS_base:  # (HasTraits):
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
                 #can only handle PUMIDomain's for now
-                #self.nSolveSteps += 1
-                #if(self.PUMI_estimateError()):
-                #    self.PUMI_adaptMesh()
+                self.nSolveSteps += 1
+                if(self.PUMI_estimateError()):
+                    self.PUMI_adaptMesh()
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
                 nSequenceStepsLast = self.nSequenceSteps
