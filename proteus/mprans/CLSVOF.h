@@ -5,10 +5,14 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+// True characteristic functions
+#define heaviside(z) (z>0 ? 1. : (z<0 ? 0. : 0.5))
+#define sign(z) (z>0 ? 1. : (z<0 ? -1. : 0.))
+
+// These functions are used just on experimental code
 #define betaNormGrad(gradu2,beta2) std::sqrt(gradu2+beta2)
 #define rabs(z) std::sqrt(z*z+1E-15)
 #define ISOTROPIC_REGULARIZATION 1 // to use with ..._experimental 
-#define USE_SIGN_FUNCTION 1
 
 namespace proteus
 {
@@ -492,34 +496,60 @@ namespace proteus
 						double* lumped_wx_tStar,
 						double* lumped_wy_tStar,
 						double* lumped_wz_tStar)=0;
-    virtual void calculateRhsL2p(
-				 double* mesh_trial_ref,
-				 double* mesh_grad_trial_ref,
-				 double* mesh_dof,
-				 int* mesh_l2g,
-				 double* dV_ref,
-				 double* u_trial_ref,
-				 double* u_grad_trial_ref,
-				 double* u_test_ref,
-				 //physics
-				 int nElements_global,
-				 int* u_l2g, 
-				 double* elementDiameter,
-				 //double* nodeDiametersArray,
-				 double* u_dof,
-				 double* phiHat_dof,
-				 double* phiExact_dof,
-				 int offset_u, int stride_u, 
-				 double* globalResidual,
-				 double* global_mass_error,
-				 double* global_L2_interface,
-				 double* global_H1_interface,
-				 double* global_L2_Hinterface,
-				 double* global_H1_Hinterface,
-				 double* global_L2_u,
-				 double* global_H1_u)=0;				 
-    virtual void normalReconstruction(
-				      double* mesh_trial_ref,
+    virtual void calculateMetricsAtEOS( //EOS=End Of Simulation
+				       double* mesh_trial_ref,
+				       double* mesh_grad_trial_ref,
+				       double* mesh_dof,
+				       int* mesh_l2g,
+				       double* dV_ref,
+				       double* u_trial_ref,
+				       double* u_grad_trial_ref,
+				       double* u_test_ref,
+				       //physics
+				       int nElements_global,
+				       int* u_l2g, 
+				       double* elementDiameter,
+				       //double* nodeDiametersArray,
+				       double degree_polynomial,
+				       double epsFactHeaviside,
+				       double* u_dof,
+				       double* u0_dof,
+				       double* u_exact,
+				       int offset_u, int stride_u,
+				       double* global_I_err,
+				       double* global_Ieps_err,
+				       double* global_V_err,
+				       double* global_Veps_err,
+				       double* global_D_err)=0;
+    virtual void calculateMetricsAtETS( //ETS=Every Time Step
+				       double dt,
+				       double* mesh_trial_ref,
+				       double* mesh_grad_trial_ref,
+				       double* mesh_dof,
+				       int* mesh_l2g,
+				       double* dV_ref,
+				       double* u_trial_ref,
+				       double* u_grad_trial_ref,
+				       double* u_test_ref,
+				       //physics
+				       int nElements_global,
+				       int* u_l2g, 
+				       double* elementDiameter,
+				       //double* nodeDiametersArray,
+				       double degree_polynomial,
+				       double epsFactHeaviside,
+				       double* u_dof,
+				       double* u_dof_old,
+				       double* u0_dof,
+				       double* velocity,
+				       int offset_u, int stride_u,
+				       int numDOFs,
+				       double* global_R,
+				       double* global_Reps,
+				       double* global_V_err,
+				       double* global_Veps_err,
+				       double* global_D_err)=0;    
+    virtual void normalReconstruction(double* mesh_trial_ref,
 				      double* mesh_grad_trial_ref,
 				      double* mesh_dof,
 				      int* mesh_l2g,
@@ -536,13 +566,6 @@ namespace proteus
 				      double* lumped_wx,
 				      double* lumped_wy,
 				      double* lumped_wz)=0;
-    //double* rhs_mass_correction,
-    //double* lumped_L2p,
-    //double* lumped_mass_matrix,
-    // FOR NONLINEAR CLSVOF; i.e., MCorr with VOF
-    //double epsFactHeaviside,
-    //double epsFactDiffusion,
-    //double* phiHat_dof)=0;           
   };
 
   template<class CompKernelType,
@@ -561,7 +584,7 @@ namespace proteus
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
 	ck()
 	  {}
-
+      
       inline
 	void calculateCFL(const double& elementDiameter,
 			  const double df[nSpace],
@@ -575,7 +598,7 @@ namespace proteus
 	nrm_v = sqrt(nrm_v);
 	cfl = nrm_v/h;
       }
-
+      
       inline
 	void exteriorNumericalAdvectiveFlux(const int& isDOFBoundary_u,
 					    const int& isFluxBoundary_u,
@@ -586,7 +609,6 @@ namespace proteus
 					    const double velocity[nSpace],
 					    double& flux)
       {
-
 	double flow=0.0;
 	for (int I=0; I < nSpace; I++)
 	  flow += n[I]*velocity[I];
@@ -668,6 +690,7 @@ namespace proteus
       inline void Mult(const double mat[nSpace][nSpace],
 		       const double vec[nSpace],
 		       double mat_times_vector[nSpace])
+      // Matrix*vector. This is used to project grad_u onto normal direction
       {
 	for (int I=0; I<nSpace; I++)
 	  {
@@ -676,7 +699,7 @@ namespace proteus
 	      mat_times_vector[I] += mat[I][J] * vec[J];
 	  }
       }
-    
+
       inline double smoothedHeaviside(double eps, double phi)
       {
 	double H;
@@ -688,11 +711,7 @@ namespace proteus
 	  H=0.5;
 	else
 	  H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
-#if USE_SIGN_FUNCTION==1
-	return 2*H-1; //MQL. USE SIGNED FUNCTION. TMP
-#else
 	return H; 
-#endif
       }
 
       inline double smoothedDirac(double eps, double phi)
@@ -704,12 +723,34 @@ namespace proteus
 	  d=0.0;
 	else
 	  d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
-#if USE_SIGN_FUNCTION==1
-	return 2*d; //MQL. USE SIGNED FUNCTION. TMP
-#else
-	return d; //MQL. USE SIGNED FUNCTION. TMP
-#endif
+	return d; 
       }
+
+      inline double smoothedSign(double eps, double phi)
+      {
+	double H;
+	if (phi > eps)
+	  H=1.0;
+	else if (phi < -eps)
+	  H=0.0;
+	else if (phi==0.0)
+	  H=0.5;
+	else
+	  H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
+	return 2*H-1;
+      }
+
+      inline double smoothedDerSign(double eps, double phi)
+      {
+	double d;
+	if (phi > eps)
+	  d=0.0;
+	else if (phi < -eps)
+	  d=0.0;
+	else
+	  d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
+	return 2*d; 
+      }      
 
       void calculateResidual_Monolithic(//element
 					double dt,
@@ -910,9 +951,9 @@ namespace proteus
 		mesh_velocity[2] = zt;
 
 		double lambda = epsFactDiffusion;	      
-		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]; 	    
-		double Hn = smoothedHeaviside(epsHeaviside,un);
-		double Hnp1 = smoothedHeaviside(epsHeaviside,u);
+		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
+		double Hn = smoothedSign(epsHeaviside,un);
+		double Hnp1 = smoothedSign(epsHeaviside,u);
 		
 		for (int I=0;I<nSpace;I++)
 		  {
@@ -927,12 +968,12 @@ namespace proteus
 		//////////////////////////////
 		// CALCULATE CELL BASED CFL //
 		//////////////////////////////
-		calculateCFL(elementDiameter[eN],relative_velocity,cfl[eN_k]);
+		calculateCFL(elementDiameter[eN]/degree_polynomial,relative_velocity,cfl[eN_k]);
 
 		/////////////////////
 		// TIME DERIVATIVE //
 		/////////////////////
-		double time_derivative_residual = (smoothedHeaviside(epsHeaviside,u)-Hn)/dt;
+		double time_derivative_residual = (Hnp1-Hn)/dt;
 
 		///////////////////////
 		// INTERFACE LOCATOR //
@@ -943,8 +984,8 @@ namespace proteus
 		// COMPUTE GAMMA // = h/norm_factor_lagged
 		///////////////////
 		//double gamma = interface_locator_lagged[eN] > 0 ? 1. : 0.;
-		double gamma = (useMetrics*h_phi
-				+(1.0-useMetrics)*elementDiameter[eN])/norm_factor_lagged;
+		double gamma = (useMetrics*h_phi + (1.0-useMetrics)
+				*elementDiameter[eN])/degree_polynomial/norm_factor_lagged;
 
 		// CALCULATE min, max and mean distance
 		min_distance = fmin(min_distance,u);
@@ -1248,10 +1289,10 @@ namespace proteus
 		mesh_velocity[1] = yt;
 		mesh_velocity[2] = zt;
 
-		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]; 
-		double epsDiffusion = epsFactDiffusion*elementDiameter[eN]; //kappa = const*h
-		double Hn = smoothedHeaviside(epsHeaviside,phin);
-		//double Hnp1 = smoothedHeaviside(epsHeaviside,phiHatnp1+u);
+		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
+		double epsDiffusion = epsFactDiffusion*elementDiameter[eN]/degree_polynomial; //kappa = const*h
+		double Hn = smoothedSign(epsHeaviside,phin);
+		double Hnp1 = smoothedSign(epsHeaviside,phiHatnp1+u);
 		for (int I=0;I<nSpace;I++)
 		  {
 		    relative_velocity[I] = (velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
@@ -1261,8 +1302,9 @@ namespace proteus
 		//////////////////////////////
 		// CALCULATE CELL BASED CFL //
 		//////////////////////////////
-		calculateCFL(elementDiameter[eN],relative_velocity,cfl[eN_k]); 
-		double time_derivative_residual=(smoothedHeaviside(epsHeaviside,phiHatnp1+u)-Hn)/dt;
+		calculateCFL(elementDiameter[eN]/degree_polynomial,relative_velocity,cfl[eN_k]);
+		
+		double time_derivative_residual=(Hnp1-Hn)/dt;
 		//////////////
 		// ith-LOOP //
 		//////////////	      
@@ -1483,7 +1525,7 @@ namespace proteus
 		double beta_norm_grad_un = betaNormGrad(gradun2,1.E-15);
 
 		double lambda = epsFactDiffusion;	      
-		//double lambda = epsFactDiffusion*elementDiameter[eN]/dt;
+		//double lambda = epsFactDiffusion*elementDiameter[eN]/degree_polynomial/dt;
 
 		//double coeffFullNewton = -1./beta_norm_grad_u; // single potential
 		double coeffFullNewton = 2*std::pow(beta_norm_grad_u,2)-3*beta_norm_grad_u; //d.pot
@@ -1491,9 +1533,9 @@ namespace proteus
 		//double coeffLinNewton = -1./beta_norm_grad_un; // single potential
 		double coeffLinNewton = 2*std::pow(beta_norm_grad_un,2)-3*beta_norm_grad_un; //d.pot
 
-		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]; 	    
-		double Hn = smoothedHeaviside(epsHeaviside,un);
-		double Hnp1 = smoothedHeaviside(epsHeaviside,u);
+		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
+		double Hn = smoothedSign(epsHeaviside,un);
+		double Hnp1 = smoothedSign(epsHeaviside,u);
 		for (int I=0;I<nSpace;I++)
 		  {
 		    relative_velocity[I] = (velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
@@ -1504,13 +1546,14 @@ namespace proteus
 		//////////////////////////////
 		// CALCULATE CELL BASED CFL //
 		//////////////////////////////
-		calculateCFL(elementDiameter[eN],relative_velocity,cfl[eN_k]); 
-		double time_derivative_residual = (smoothedHeaviside(epsHeaviside,u)-Hn)/dt;
+		calculateCFL(elementDiameter[eN]/degree_polynomial,relative_velocity,cfl[eN_k]);
+		
+		double time_derivative_residual = (Hnp1-Hn)/dt;
 
 		///////////////////
 		// COMPUTE GAMMA // = h/norm_factor_lagged
 		///////////////////
-		double gamma = 1.0;  //elementDiameter[eN]/norm_factor_lagged;
+		double gamma = 1.0;  //elementDiameter[eN]/degree_polynomial/norm_factor_lagged;
 
 		// CALCULATE min, max and mean distance
 		min_distance = fmin(min_distance,u);
@@ -1774,9 +1817,9 @@ namespace proteus
 		mesh_velocity[2] = zt;
 
 		double lambda = epsFactDiffusion;	      
-		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]; 	    
-		double Hn = smoothedHeaviside(epsHeaviside,un);
-		double Hnp1 = smoothedHeaviside(epsHeaviside,u);
+		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial; 	    
+		double Hn = smoothedSign(epsHeaviside,un);
+		double Hnp1 = smoothedSign(epsHeaviside,u);
 		
 		for (int I=0;I<nSpace;I++)
 		  {
@@ -1788,12 +1831,12 @@ namespace proteus
 		//////////////////////////////
 		// CALCULATE CELL BASED CFL //
 		//////////////////////////////
-		calculateCFL(elementDiameter[eN],relative_velocity,cfl[eN_k]);
+		calculateCFL(elementDiameter[eN]/degree_polynomial,relative_velocity,cfl[eN_k]);
 
 		/////////////////////
 		// TIME DERIVATIVE //
 		/////////////////////
-		double time_derivative_residual = (smoothedHeaviside(epsHeaviside,u)-Hn)/dt;
+		double time_derivative_residual = (Hnp1-Hn)/dt;
 
 		///////////////////////
 		// INTERFACE LOCATOR //
@@ -1805,7 +1848,7 @@ namespace proteus
 		///////////////////
 		//double gamma = interface_locator_lagged[eN] > 0 ? 1. : 0.;
 		double gamma = (useMetrics*h_phi
-				+(1.0-useMetrics)*elementDiameter[eN])/norm_factor_lagged;
+				+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged;
 
 		// CALCULATE min, max and mean distance
 		min_distance = fmin(min_distance,u);
@@ -2109,11 +2152,10 @@ namespace proteus
 		mesh_velocity[2] = zt;
 
 		double lambda = epsFactDiffusion;
-		//double lambda = epsFactDiffusion*elementDiameter[eN]/dt;
-		double epsDirac = epsFactDirac*elementDiameter[eN];				
-		double dHnp1 = smoothedDirac(epsDirac,u);
-		double epsHeaviside = epsFactHeaviside*elementDiameter[eN];
-		double Hn = smoothedHeaviside(epsHeaviside,un);
+		//double lambda = epsFactDiffusion*elementDiameter[eN]/degree_polynomial/dt;
+		double epsDirac = epsFactDirac*elementDiameter[eN]/degree_polynomial;
+		double dHnp1 = smoothedDerSign(epsDirac,u); //derivative of smoothed sign
+		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
 				
 		for (int I=0;I<nSpace;I++)
 		  {
@@ -2124,14 +2166,14 @@ namespace proteus
 		/////////////////////
 		// TIME DERIVATIVE //
 		/////////////////////
-		double time_derivative_jacobian = smoothedDirac(epsDirac,u)/dt;
+		double time_derivative_jacobian = dHnp1/dt;
 
 		///////////////////
 		// COMPUTE GAMMA // = h/norm_factor_lagged
 		///////////////////
 		//double gamma = interface_locator_lagged[eN] > 0 ? 1. : 0.;
-		double gamma = (useMetrics*h_phi
-				+(1.0-useMetrics)*elementDiameter[eN])/norm_factor_lagged;
+		double gamma = (useMetrics*h_phi + (1.0-useMetrics)
+				*elementDiameter[eN])/degree_polynomial/norm_factor_lagged;
 
 		//////////////////
 		// LOOP ON DOFs //
@@ -2149,8 +2191,8 @@ namespace proteus
 			  // IMPLICIT TERMS: ADVECTION, DIFFUSION
 			  + timeCoeff*
 			  (ck.AdvectionJacobian_weak(df,
-						     u_trial_ref[k*nDOF_trial_element+j],
-						     &u_grad_test_dV[i_nSpace])
+			   			     u_trial_ref[k*nDOF_trial_element+j],
+			   			     &u_grad_test_dV[i_nSpace])
 			   + gamma*lambda*ck.NumericalDiffusionJacobian(1.0,
 									&u_grad_trial[j_nSpace],
 									&u_grad_test_dV[i_nSpace]));
@@ -2175,7 +2217,7 @@ namespace proteus
 
       // piece of code to incorporate: |Seps(phi)| with (\nabla\phi-q)
       /*
-                double Hnp1 = smoothedHeaviside(epsHeaviside,u);
+                double Hnp1 = smoothedSign(epsHeaviside,u);
 		
 		//////////////////
 		// LOOP ON DOFs //
@@ -2330,9 +2372,9 @@ namespace proteus
 		    for (int I=0;I<nSpace;I++)
 		      u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;
 		  }
-		double epsDiffusion = epsFactDiffusion*elementDiameter[eN]; //kappa*h
-		double epsDirac = epsFactDirac*elementDiameter[eN]; //kappa*h
-		double time_derivative_jacobian = smoothedDirac(epsDirac,phiHatnp1+u)/dt;
+		double epsDiffusion = epsFactDiffusion*elementDiameter[eN]/degree_polynomial; //kappa*h
+		double epsDirac = epsFactDirac*elementDiameter[eN]/degree_polynomial; //kappa*h
+		double time_derivative_jacobian = smoothedDerSign(epsDirac,phiHatnp1+u)/dt;
 		
 		///////////////////////////////////
 		// FOR IMPLICIT NONLINEAR CLSVOF // (implicit advection term)
@@ -2341,7 +2383,7 @@ namespace proteus
 		//mesh_velocity[0] = xt;
 		//mesh_velocity[1] = yt;
 		//mesh_velocity[2] = zt;
-		//double dHnp1 = smoothedDirac(epsDirac,phiHatnp1+u);
+		//double dHnp1 = smoothedDerSign(epsDirac,phiHatnp1+u);
 		//for (int I=0;I<nSpace;I++)
 		//{
 		//relative_velocity[I] = (velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
@@ -2522,7 +2564,7 @@ namespace proteus
 		double beta_norm_grad_u = betaNormGrad(gradu2,1E-15);
 	      
 		double lambda = epsFactDiffusion;
-		//double lambda = epsFactDiffusion*elementDiameter[eN]/dt;
+		//double lambda = epsFactDiffusion*elementDiameter[eN]/degree_polynomial/dt;
 
 		// single potential
 		//double coeff1FullNonlinear = 1.-1./beta_norm_grad_u; 
@@ -2534,8 +2576,8 @@ namespace proteus
 		double coeff2FullNonlinear=fmax(1E-10,
 						4.-3./beta_norm_grad_u);
 
-		double epsDirac = epsFactDirac*elementDiameter[eN];
-		double time_derivative_jacobian = smoothedDirac(epsDirac,u)/dt;
+		double epsDirac = epsFactDirac*elementDiameter[eN]/degree_polynomial;
+		double time_derivative_jacobian = smoothedDerSign(epsDirac,u)/dt; //der of sign
 		//double time_derivative_jacobian = 1/dt;
 
 		///////////////////////////////////
@@ -2545,7 +2587,7 @@ namespace proteus
 		mesh_velocity[0] = xt;
 		mesh_velocity[1] = yt;
 		mesh_velocity[2] = zt;
-		double dHnp1 = smoothedDirac(epsDirac,u);
+		double dHnp1 = smoothedDerSign(epsDirac,u); // derivative of sign
 		for (int I=0;I<nSpace;I++)
 		  {
 		    relative_velocity[I] = (velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
@@ -2555,7 +2597,7 @@ namespace proteus
 		///////////////////
 		// COMPUTE GAMMA // = h/norm_factor_lagged
 		///////////////////
-		double gamma = 1.0;//elementDiameter[eN]/norm_factor_lagged;		
+		double gamma = 1.0;//elementDiameter[eN]/degree_polynomial/norm_factor_lagged;		
 
 		if (useFullNewton==false)
 		  for(int i=0;i<nDOF_test_element;i++)
@@ -2780,9 +2822,9 @@ namespace proteus
 		mesh_velocity[2] = zt;
 
 		double lambda = epsFactDiffusion;
-		//double lambda = epsFactDiffusion*elementDiameter[eN]/dt;
-		double epsDirac = epsFactDirac*elementDiameter[eN];				
-		double dHnp1 = smoothedDirac(epsDirac,u);
+		//double lambda = epsFactDiffusion*elementDiameter[eN]/degree_polynomial/dt;
+		double epsDirac = epsFactDirac*elementDiameter[eN]/degree_polynomial;		
+		double dHnp1 = smoothedDerSign(epsDirac,u); //derivative of sign
 		
 		for (int I=0;I<nSpace;I++)
 		  {
@@ -2793,14 +2835,14 @@ namespace proteus
 		/////////////////////
 		// TIME DERIVATIVE //
 		/////////////////////
-		double time_derivative_jacobian = smoothedDirac(epsDirac,u)/dt;
+		double time_derivative_jacobian = dHnp1/dt;
 
 		///////////////////
 		// COMPUTE GAMMA // = h/norm_factor_lagged
 		///////////////////
 		//double gamma = interface_locator_lagged[eN] > 0 ? 1. : 0.;
 		double gamma = (useMetrics*h_phi
-				+(1.0-useMetrics)*elementDiameter[eN])/norm_factor_lagged;
+				+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged;
 
 		if (timeOrder == 2 && timeStage == 2)
 		  {
@@ -2879,8 +2921,313 @@ namespace proteus
 	  }//elements
       }//computeJacobian for MCorr with CLSVOF      
        */
-      
-      void calculateRhsL2p(
+
+      void calculateMetricsAtEOS( //EOS=End Of Simulation
+				 double* mesh_trial_ref, //
+				 double* mesh_grad_trial_ref, //
+				 double* mesh_dof, //
+				 int* mesh_l2g, //
+				 double* dV_ref, //
+				 double* u_trial_ref, 
+				 double* u_grad_trial_ref,
+				 double* u_test_ref, //
+				 //physics
+				 int nElements_global, //
+				 int* u_l2g, //
+				 double* elementDiameter,
+				 //double* nodeDiametersArray,
+				 double degree_polynomial,
+				  double epsFactHeaviside,
+				 double* u_dof,
+				 double* u0_dof,
+				 double* u_exact,
+				 int offset_u, int stride_u, 
+				 double* global_I_err,
+				 double* global_Ieps_err,
+				 double* global_V_err,
+				 double* global_Veps_err,
+				 double* global_D_err)
+      {
+	double global_V = 0.;
+	double global_V0 = 0.;
+	double global_sV = 0.;
+	double global_sV0 = 0.;
+	*global_I_err = 0.0;
+	*global_Ieps_err = 0.0;
+	*global_V_err = 0.0;
+	*global_Veps_err = 0.0;
+	*global_D_err = 0.0;
+	//////////////////////
+	// ** LOOP IN CELLS //
+	//////////////////////
+	for(int eN=0;eN<nElements_global;eN++)
+	  {
+	    //declare local storage for local contributions and initialize
+	    register double 
+	      elementResidual_u[nDOF_test_element];
+	    double cell_mass_error = 0., cell_mass_exact = 0.,
+	      cell_I_err = 0., cell_Ieps_err = 0.,
+	      cell_V = 0., cell_V0 = 0., cell_sV = 0., cell_sV0 = 0.,
+	      cell_D_err = 0.;
+
+	    //loop over quadrature points and compute integrands
+	    for  (int k=0;k<nQuadraturePoints_element;k++)
+	      {
+		//compute indeces and declare local storage
+		register int eN_k = eN*nQuadraturePoints_element+k,
+		  eN_k_nSpace = eN_k*nSpace,
+		  eN_nDOF_trial_element = eN*nDOF_trial_element;
+		register double
+		  u, u0, uh,
+		  u_grad_trial[nDOF_trial_element*nSpace],
+		  grad_uh[nSpace], 
+		  //for general use
+		  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		  dV,x,y,z;
+		//get the physical integration weight
+		ck.calculateMapping_element(eN,
+					    k,
+					    mesh_dof,
+					    mesh_l2g,
+					    mesh_trial_ref,
+					    mesh_grad_trial_ref,
+					    jac,
+					    jacDet,
+					    jacInv,
+					    x,y,z);
+		dV = fabs(jacDet)*dV_ref[k];
+		// get functions at quad points
+		ck.valFromDOF(u_dof,
+			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			      uh);
+		ck.valFromDOF(u0_dof,
+			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			      u0);
+		u = u_exact[eN_k];
+		// get gradients
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				    jacInv,
+				    u_grad_trial);
+		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_uh);
+
+		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
+		// compute (smoothed) heaviside functions //		
+		double Hu0 = heaviside(u0);
+		double Hu = heaviside(u);
+		double Huh = heaviside(uh);
+		double sHu0 = smoothedHeaviside(epsHeaviside,u0);
+		double sHu = smoothedHeaviside(epsHeaviside,u);
+		double sHuh = smoothedHeaviside(epsHeaviside,uh);
+
+		// compute cell metrics //
+		cell_I_err += fabs(Hu - Huh)*dV;
+		cell_Ieps_err += fabs(sHu - sHuh)*dV;
+
+		cell_V   += Huh*dV;
+		cell_V0  += Hu0*dV;  
+		cell_sV  += sHuh*dV;
+		cell_sV0 += sHu0*dV; 
+
+		double norm2_grad_uh = 0.;
+		for (int I=0; I<nSpace; I++)
+		  norm2_grad_uh += grad_uh[I]*grad_uh[I];
+		cell_D_err += std::pow(std::sqrt(norm2_grad_uh) - 1, 2.)*dV;
+	      }
+	    global_V += cell_V;
+	    global_V0 += cell_V0;
+	    global_sV += cell_sV;
+	    global_sV0 += cell_sV0;
+	    // metrics //
+	    *global_I_err    += cell_I_err;
+	    *global_Ieps_err += cell_Ieps_err;
+	    *global_D_err    += cell_D_err;	    
+	  }//elements
+	*global_V_err = fabs(global_V0 - global_V)/global_V0;
+	*global_Veps_err = fabs(global_sV0 - global_sV)/global_sV0;
+	*global_D_err *= 0.5;
+      }
+
+      void calculateMetricsAtETS( // ETS=Every Time Step
+				 double dt,
+				 double* mesh_trial_ref, //
+				 double* mesh_grad_trial_ref, //
+				 double* mesh_dof, //
+				 int* mesh_l2g, //
+				 double* dV_ref, //
+				 double* u_trial_ref, 
+				 double* u_grad_trial_ref,
+				 double* u_test_ref, //
+				 //physics
+				 int nElements_global, //
+				 int* u_l2g, //
+				 double* elementDiameter,
+				 //double* nodeDiametersArray,
+				 double degree_polynomial,
+				 double epsFactHeaviside,
+				 double* u_dof,
+				 double* u_dof_old,
+				 double* u0_dof,
+				 double* velocity,
+				 int offset_u, int stride_u,
+				 int numDOFs,				 
+				 double* global_R,
+				 double* global_Reps,				 
+				 double* global_V_err,
+				 double* global_Veps_err,
+				 double* global_D_err)
+      {
+	register double R_vector[numDOFs], Reps_vector[numDOFs];
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    R_vector[i] = 0.;
+	    Reps_vector[i] = 0.;
+	  }
+	
+	double global_V = 0.;
+	double global_V0 = 0.;
+	double global_sV = 0.;
+	double global_sV0 = 0.;
+	*global_R = 0.0;
+	*global_Reps = 0.0;
+	*global_V_err = 0.0;
+	*global_Veps_err = 0.0;
+	*global_D_err = 0.0;
+	//////////////////////////////////////////////
+	// ** LOOP IN CELLS FOR CELL BASED TERMS ** //
+	//////////////////////////////////////////////
+	for(int eN=0;eN<nElements_global;eN++)
+	  {
+	    //declare local storage for local contributions and initialize
+	    register double element_R[nDOF_test_element], element_Reps[nDOF_test_element];
+	    for (int i=0;i<nDOF_test_element;i++)
+	      {
+		element_R[i] = 0.;
+		element_Reps[i] = 0.;
+	      }
+	    
+	    double cell_mass_error = 0., cell_mass_exact = 0.,
+	      cell_R = 0., cell_Reps = 0.,
+	      cell_V = 0., cell_V0 = 0., cell_sV = 0., cell_sV0 = 0.,
+	      cell_D_err = 0.;
+
+	    //loop over quadrature points and compute integrands
+	    for  (int k=0;k<nQuadraturePoints_element;k++)
+	      {
+		//compute indeces and declare local storage
+		register int eN_k = eN*nQuadraturePoints_element+k,
+		  eN_k_nSpace = eN_k*nSpace,
+		  eN_nDOF_trial_element = eN*nDOF_trial_element;
+		register double
+		  unp1, un, u0,
+		  grad_unp1[nSpace], sFlux_np1[nSpace], Flux_np1[nSpace],
+		  u_grad_trial[nDOF_trial_element*nSpace],
+		  u_grad_test_dV[nDOF_test_element*nSpace],
+		  u_test_dV[nDOF_trial_element], 
+		  //for general use
+		  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		  dV,x,y,z;
+		//get the physical integration weight
+		ck.calculateMapping_element(eN,
+					    k,
+					    mesh_dof,
+					    mesh_l2g,
+					    mesh_trial_ref,
+					    mesh_grad_trial_ref,
+					    jac,
+					    jacDet,
+					    jacInv,
+					    x,y,z);
+		dV = fabs(jacDet)*dV_ref[k];
+		// get functions at quad points
+		ck.valFromDOF(u_dof,
+			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			      unp1);
+		ck.valFromDOF(u_dof_old,
+			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			      un);
+		ck.valFromDOF(u0_dof,
+			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+			      u0);     
+		// get gradients
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				    jacInv,
+				    u_grad_trial);
+		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_unp1);
+
+		//precalculate test function products with integration weights for mass matrix terms
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		    for (int I=0;I<nSpace;I++)
+		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
+		  }
+		
+		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
+		// compute (smoothed) heaviside functions //		
+		double Hu0 = heaviside(u0);
+		double Hunp1 = heaviside(unp1);
+		double sHu0 = smoothedHeaviside(epsHeaviside,u0);
+		double sHunp1 = smoothedHeaviside(epsHeaviside,unp1);
+
+		// compute cell metrics //
+		cell_V   += Hunp1*dV;
+		cell_V0  += Hu0*dV;  
+		cell_sV  += sHunp1*dV;
+		cell_sV0 += sHu0*dV; 
+
+		double norm2_grad_unp1 = 0.;
+		for (int I=0; I<nSpace; I++)
+		  norm2_grad_unp1 += grad_unp1[I]*grad_unp1[I];
+		cell_D_err += std::pow(std::sqrt(norm2_grad_unp1) - 1, 2.)*dV;
+
+		double Sunp1 = sign(unp1);
+		double Sun = sign(un);
+		double sSunp1 = smoothedSign(epsHeaviside,unp1);
+		double sSun = smoothedSign(epsHeaviside,un);
+		for (int I=0; I<nSpace; I++)
+		  {
+		    Flux_np1[I] = velocity[eN_k_nSpace+I]*Sunp1;
+		    sFlux_np1[I] = velocity[eN_k_nSpace+I]*sSunp1;
+		  }
+		
+		for(int i=0;i<nDOF_test_element;i++)
+		  {
+		    register int i_nSpace=i*nSpace;
+		    element_R[i] += ((Sunp1-Sun)/dt*u_test_dV[i]
+				     + ck.Advection_weak(Flux_np1,&u_grad_test_dV[i_nSpace]));
+		    element_Reps[i] += ((sSunp1-sSun)/dt*u_test_dV[i]
+					+ ck.Advection_weak(sFlux_np1,&u_grad_test_dV[i_nSpace]));
+		  }
+	      }
+	    // DISTRIBUTE //
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {
+		int eN_i=eN*nDOF_test_element+i;
+		int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index	      
+		R_vector[gi] += element_R[i];
+		Reps_vector[gi] += element_Reps[i];
+	      }
+	    global_V += cell_V;
+	    global_V0 += cell_V0;
+	    global_sV += cell_sV;
+	    global_sV0 += cell_sV0;	    
+	    // metrics //
+	    *global_D_err    += cell_D_err;	    
+	  }//elements
+
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    *global_R += R_vector[i]*R_vector[i];
+	    *global_Reps += Reps_vector[i]*Reps_vector[i];
+	  }
+	
+	*global_V_err = fabs(global_V0 - global_V)/global_V0;
+	*global_Veps_err = fabs(global_sV0 - global_sV)/global_sV0;
+	*global_D_err *= 0.5;
+      }      
+
+      /*
+      void calculateMetrics(
 			   double* mesh_trial_ref, //
 			   double* mesh_grad_trial_ref, //
 			   double* mesh_dof, //
@@ -2894,6 +3241,8 @@ namespace proteus
 			   int* u_l2g, //
 			   double* elementDiameter,
 			   //double* nodeDiametersArray,
+			   double degree_polynomial,
+			   double epsFactHeaviside,
 			   double* u_dof,
 			   double* phiHat_dof,
 			   double* phiExact_dof,
@@ -2981,8 +3330,8 @@ namespace proteus
 		for (int j=0;j<nDOF_trial_element;j++)
 		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
 
-		double epsHeaviside = 1.5*elementDiameter[eN];
-		double epsDirac = 1.5*elementDiameter[eN];
+		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
+		double epsDirac = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
 
 		// gradients of errors in the interfaces
 		for (int I=0;I<nSpace;I++)
@@ -3037,6 +3386,7 @@ namespace proteus
 	  }//elements
 	*global_mass_error -= global_mass_exact;
       }
+       */
     
       void normalReconstruction(//element
 				double* mesh_trial_ref,//
