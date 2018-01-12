@@ -95,7 +95,8 @@ nu = 1.0e-3
 # Gravity
 g = [0.0,0.0]
 
-triangleOptions="pAq30.0Dena%f" % (.5*DX**2)  #% (0.5*(DX)**2,)
+#triangleOptions="pAq30.0Dena%f" % (.5*DX**2)  #% (0.5*(DX)**2,)
+triangleOptions="pAq30.0Dena"
 print triangleOptions
 genMesh=True
 domain.writePLY('cylinder2D')
