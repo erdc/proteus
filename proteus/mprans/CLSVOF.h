@@ -1093,6 +1093,7 @@ namespace proteus
 	//ebNE is the Exterior element boundary INdex
 	//ebN is the element boundary INdex
 	//eN is the element index
+	if (false)
 	for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
 	  {
 	    register int ebN = exteriorElementBoundariesArray[ebNE],
@@ -1258,7 +1259,7 @@ namespace proteus
 		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
 		double sHu_ext = smoothedSign(epsHeaviside,u_ext);
 
-		//std::cout << sHu_ext << std::endl;
+		std::cout << flow << std::endl;
 		if (flow >= 0)
 		  flux_ext = sHu_ext*flow;
 		else
@@ -2287,7 +2288,7 @@ namespace proteus
 					double* lumped_wz_tStar)
       {
 	double timeCoeff=1.0;
-	if (timeOrder==2)
+	if (timeOrder==2) 
 	  timeCoeff=0.5;
 	for(int eN=0;eN<nElements_global;eN++)
 	  {
@@ -2398,8 +2399,8 @@ namespace proteus
 			  // IMPLICIT TERMS: ADVECTION, DIFFUSION
 			  + timeCoeff*
 			  (ck.AdvectionJacobian_weak(df,
-			   			     u_trial_ref[k*nDOF_trial_element+j],
-			   			     &u_grad_test_dV[i_nSpace])
+						     u_trial_ref[k*nDOF_trial_element+j],
+						     &u_grad_test_dV[i_nSpace])
 			   + gamma*lambda*ck.NumericalDiffusionJacobian(1.0,
 									&u_grad_trial[j_nSpace],
 									&u_grad_test_dV[i_nSpace]));
@@ -2420,6 +2421,194 @@ namespace proteus
 		  }//j
 	      }//i
 	  }//elements
+
+	///////////////////
+	// BOUNDARY LOOP //
+	///////////////////
+	if (false)
+	for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+	  {
+	    register int ebN = exteriorElementBoundariesArray[ebNE];
+	    register int eN  = elementBoundaryElementsArray[ebN*2+0],
+	      ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+	      eN_nDOF_trial_element = eN*nDOF_trial_element;
+	    for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+	      {
+		register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+		  ebNE_kb_nSpace = ebNE_kb*nSpace,
+		  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+		  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+		register double u_ext=0.0,
+		  grad_u_ext[nSpace],
+		  m_ext=0.0,
+		  dm_ext=0.0,
+		  f_ext[nSpace],
+		  df_ext[nSpace],
+		  dflux_u_u_ext=0.0,
+		  bc_u_ext=0.0,
+		  //bc_grad_u_ext[nSpace],
+		  bc_m_ext=0.0,
+		  bc_dm_ext=0.0,
+		  bc_f_ext[nSpace],
+		  bc_df_ext[nSpace],
+		  fluxJacobian_u_u[nDOF_trial_element],
+		  jac_ext[nSpace*nSpace],
+		  jacDet_ext,
+		  jacInv_ext[nSpace*nSpace],
+		  boundaryJac[nSpace*(nSpace-1)],
+		  metricTensor[(nSpace-1)*(nSpace-1)],
+		  metricTensorDetSqrt,
+		  dS,
+		  u_test_dS[nDOF_test_element],
+		  u_grad_trial_trace[nDOF_trial_element*nSpace],
+		  normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
+		  //VRANS
+		  porosity_ext,
+		  //
+		  G[nSpace*nSpace],G_dd_G,tr_G;
+		//
+		//calculate the solution and gradients at quadrature points
+		//
+		// u_ext=0.0;
+		// for (int I=0;I<nSpace;I++)
+		//   {
+		//     grad_u_ext[I] = 0.0;
+		//     bc_grad_u_ext[I] = 0.0;
+		//   }
+		// for (int j=0;j<nDOF_trial_element;j++)
+		//   {
+		//     register int eN_j = eN*nDOF_trial_element+j,
+		//       ebNE_kb_j = ebNE_kb*nDOF_trial_element+j,
+		//       ebNE_kb_j_nSpace= ebNE_kb_j*nSpace;
+		//     u_ext += valFromDOF_c(u_dof[u_l2g[eN_j]],u_trial_ext[ebNE_kb_j]);
+
+		//     for (int I=0;I<nSpace;I++)
+		//       {
+		//         grad_u_ext[I] += gradFromDOF_c(u_dof[u_l2g[eN_j]],u_grad_trial_ext[ebNE_kb_j_nSpace+I]);
+		//       }
+		//   }
+		ck.calculateMapping_elementBoundary(eN,
+						    ebN_local,
+						    kb,
+						    ebN_local_kb,
+						    mesh_dof,
+						    mesh_l2g,
+						    mesh_trial_trace_ref,
+						    mesh_grad_trial_trace_ref,
+						    boundaryJac_ref,
+						    jac_ext,
+						    jacDet_ext,
+						    jacInv_ext,
+						    boundaryJac,
+						    metricTensor,
+						    metricTensorDetSqrt,
+						    normal_ref,
+						    normal,
+						    x_ext,y_ext,z_ext);
+		ck.calculateMappingVelocity_elementBoundary(eN,
+							    ebN_local,
+							    kb,
+							    ebN_local_kb,
+							    mesh_velocity_dof,
+							    mesh_l2g,
+							    mesh_trial_trace_ref,
+							    xt_ext,yt_ext,zt_ext,
+							    normal,
+							    boundaryJac,
+							    metricTensor,
+							    integralScaling);
+		//std::cout<<"J mtsqrdet "<<metricTensorDetSqrt<<" integralScaling "<<integralScaling<<std::endl;
+		dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
+		//dS = metricTensorDetSqrt*dS_ref[kb];
+		ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+		//compute shape and solution information
+		//shape
+		ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+		//solution and gradients
+		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+		//precalculate test function products with integration weights
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+		  }
+		//
+		//load the boundary values
+		//
+		bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
+		//VRANS
+		porosity_ext = ebqe_porosity_ext[ebNE_kb];
+		//
+		//
+		//calculate the internal and external trace of the pde coefficients
+		//
+		evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+				     u_ext,
+				     //VRANS
+				     porosity_ext,
+				     //
+				     m_ext,
+				     dm_ext,
+				     f_ext,
+				     df_ext);
+		evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+				     bc_u_ext,
+				     //VRANS
+				     porosity_ext,
+				     //
+				     bc_m_ext,
+				     bc_dm_ext,
+				     bc_f_ext,
+				     bc_df_ext);
+		//
+		//moving domain
+		//
+		double mesh_velocity[3];
+		mesh_velocity[0] = xt_ext;
+		mesh_velocity[1] = yt_ext;
+		mesh_velocity[2] = zt_ext;
+		//std::cout<<"ext J mesh_velocity"<<std::endl;
+		for (int I=0;I<nSpace;I++)
+		  {
+		    //std::cout<<mesh_velocity[I]<<std::endl;
+		    f_ext[I] -= MOVING_DOMAIN*m_ext*mesh_velocity[I];
+		    df_ext[I] -= MOVING_DOMAIN*dm_ext*mesh_velocity[I];
+		    bc_f_ext[I] -= MOVING_DOMAIN*bc_m_ext*mesh_velocity[I];
+		    bc_df_ext[I] -= MOVING_DOMAIN*bc_dm_ext*mesh_velocity[I];
+		  }
+		//
+		//calculate the numerical fluxes
+		//
+		exteriorNumericalAdvectiveFluxDerivative(isDOFBoundary_u[ebNE_kb],
+							 isFluxBoundary_u[ebNE_kb],
+							 normal,
+							 df_ext,//VRANS holds porosity
+							 dflux_u_u_ext);
+		//
+		//calculate the flux jacobian
+		//
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    //register int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
+		    register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
+		    fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
+		  }//j
+		//
+		//update the global Jacobian from the flux Jacobian
+		//
+		for (int i=0;i<nDOF_test_element;i++)
+		  {
+		    register int eN_i = eN*nDOF_test_element+i;
+		    //register int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
+		    for (int j=0;j<nDOF_trial_element;j++)
+		      {
+			register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
+			globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i];
+		      }//j
+		  }//i
+	      }//kb
+	  }//ebNE
+	// END OF BOUNDARY LOOP //	
       }//computeJacobian for MCorr with CLSVOF      
 
       // piece of code to incorporate: |Seps(phi)| with (\nabla\phi-q)
@@ -3615,25 +3804,21 @@ namespace proteus
 				double* lumped_wx,
 				double* lumped_wy,
 				double* lumped_wz)
-      //double* rhs_mass_correction,
-      //double* lumped_L2p,
-      //double* lumped_mass_matrix,
-      // FOR NONLINEAR CLSVOF; i.e., MCorr with VOF
-      //double epsFactHeaviside,
-      //double epsFactDiffusion,
-      //double* phiHat_dof)
       {
 	register double
 	  weighted_lumped_mass_matrix[numDOFs],
 	  rhsx_normal_reconstruction[numDOFs],
-	  rhsy_normal_reconstruction[numDOFs];
+	  rhsy_normal_reconstruction[numDOFs],
+	  rhsz_normal_reconstruction[numDOFs];
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    lumped_wx[i]=0.;
 	    lumped_wy[i]=0.;
+	    lumped_wz[i]=0.;
 	    weighted_lumped_mass_matrix[i]=0.;
 	    rhsx_normal_reconstruction[i]=0.;
 	    rhsy_normal_reconstruction[i]=0.;
+	    rhsz_normal_reconstruction[i]=0.;
 	  }
 	for(int eN=0;eN<nElements_global;eN++)
 	  {
@@ -3641,12 +3826,14 @@ namespace proteus
 	    register double
 	      element_weighted_lumped_mass_matrix[nDOF_test_element],
 	      element_rhsx_normal_reconstruction[nDOF_test_element],
-	      element_rhsy_normal_reconstruction[nDOF_test_element];	    
+	      element_rhsy_normal_reconstruction[nDOF_test_element],
+	      element_rhsz_normal_reconstruction[nDOF_test_element];
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
 		element_weighted_lumped_mass_matrix[i]=0.0;
 		element_rhsx_normal_reconstruction[i]=0.0;
 		element_rhsy_normal_reconstruction[i]=0.0;
+		element_rhsz_normal_reconstruction[i]=0.0;
 	      }
 	    //loop over quadrature points and compute integrands
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
@@ -3687,6 +3874,7 @@ namespace proteus
 	      
 		double rhsx = grad_phi[0];
 		double rhsy = grad_phi[1];
+		double rhsz = grad_phi[2];
 		double grad_phi2 = 0;
 		for (int I=0;I<nSpace; I++)
 		  grad_phi2 += grad_phi[I]*grad_phi[I];
@@ -3697,6 +3885,7 @@ namespace proteus
 		    element_weighted_lumped_mass_matrix[i] += beta_norm_grad_phi*u_test_dV[i];
 		    element_rhsx_normal_reconstruction[i] += rhsx*u_test_dV[i];
 		    element_rhsy_normal_reconstruction[i] += rhsy*u_test_dV[i];
+		    element_rhsz_normal_reconstruction[i] += rhsz*u_test_dV[i];
 		  }
 	      } //k
 	    // DISTRIBUTE //
@@ -3707,6 +3896,7 @@ namespace proteus
 		weighted_lumped_mass_matrix[gi] += element_weighted_lumped_mass_matrix[i];
 		rhsx_normal_reconstruction[gi] += element_rhsx_normal_reconstruction[i];
 		rhsy_normal_reconstruction[gi] += element_rhsy_normal_reconstruction[i];
+		rhsz_normal_reconstruction[gi] += element_rhsz_normal_reconstruction[i];
 	      }//i
 	  }//elements
 	// COMPUTE LUMPED L2 PROJECTION
@@ -3715,6 +3905,7 @@ namespace proteus
 	    double mi = weighted_lumped_mass_matrix[i];
 	    lumped_wx[i] = 1./mi*rhsx_normal_reconstruction[i];
 	    lumped_wy[i] = 1./mi*rhsy_normal_reconstruction[i];
+	    lumped_wz[i] = 1./mi*rhsz_normal_reconstruction[i];
 	  }
       }
     
