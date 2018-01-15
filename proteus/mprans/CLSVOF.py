@@ -153,7 +153,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_v = numpy.ones(cebqe[('f',0)].shape,'d')
         #VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
-    def preStep(self,t,firstStep=False):        
+    def preStep(self,t,firstStep=False):
+        self.model.getResidualBeforeFirstStep = False        
         if (self.computeMetrics==True and firstStep==True):
             self.model.u0_dof[:] = self.model.u[0].dof
         #############################
@@ -503,6 +504,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q['abs(det(J))'] = np.abs(self.q['det(J)'])
             
         # mql. Allow the user to provide functions to define the velocity field
+        self.getResidualBeforeFirstStep = True
         self.hasVelocityFieldAsFunction = False
         if ('velocityFieldAsFunction') in dir (options): 
             self.velocityFieldAsFunction = options.velocityFieldAsFunction
@@ -710,20 +712,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         X = {0:self.q[('x')][:,:,0],
              1:self.q[('x')][:,:,1],
              2:self.q[('x')][:,:,2]}
-        t = self.timeIntegration.t
-        self.coefficients.q_v[...,0] = self.velocityFieldAsFunction[0](X,t)
-        self.coefficients.q_v[...,1] = self.velocityFieldAsFunction[1](X,t)
+        time = self.timeIntegration.t
+        self.coefficients.q_v[...,0] = self.velocityFieldAsFunction[0](X,time)
+        self.coefficients.q_v[...,1] = self.velocityFieldAsFunction[1](X,time)
         if (self.nSpace_global==3):
-            self.coefficients.q_v[...,2] = self.velocityFieldAsFunction[2](X,t)
+            self.coefficients.q_v[...,2] = self.velocityFieldAsFunction[2](X,time)
 
         # BOUNDARY
         ebqe_X = {0:self.ebqe['x'][:,:,0],
                   1:self.ebqe['x'][:,:,1],
                   2:self.ebqe['x'][:,:,2]}
-        self.coefficients.ebqe_v[...,0] = self.velocityFieldAsFunction[0](ebqe_X,t)
-        self.coefficients.ebqe_v[...,1] = self.velocityFieldAsFunction[1](ebqe_X,t)
+        self.coefficients.ebqe_v[...,0] = self.velocityFieldAsFunction[0](ebqe_X,time)
+        self.coefficients.ebqe_v[...,1] = self.velocityFieldAsFunction[1](ebqe_X,time)
         if (self.nSpace_global==3):
-            self.coefficients.ebqe_v[...,2] = self.velocityFieldAsFunction[2](ebqe_X,t)
+            self.coefficients.ebqe_v[...,2] = self.velocityFieldAsFunction[2](ebqe_X,time)
 
     def runAtEOS(self):
         if self.coefficients.computeMetrics==True and self.hasExactSolution==True:
@@ -865,7 +867,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-        
+        if self.getResidualBeforeFirstStep:
+            self.updateVelocityFieldAsFunction()
         if self.coefficients.porosity_dof is None: 
             self.coefficients.porosity_dof = numpy.ones(self.u[0].dof.shape,'d')
         if self.u_dof_old is None:
