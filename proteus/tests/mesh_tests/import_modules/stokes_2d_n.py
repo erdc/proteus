@@ -117,7 +117,10 @@ else:
 
 #linear solver relative convergence test
 linTolFac = 0.0
+linearSmoother = Schur_Qp
 #linear solver absolute convergence test
 l_atol_res = 1.0e-10
 
 #conservativeFlux =  {0:'pwl'}
+conservativeFlux =  None
+cfluxtag = None

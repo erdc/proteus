@@ -160,39 +160,42 @@ class TestBC(unittest.TestCase):
 
     def test_open_air(self):
         BC = create_BC(folder='mprans')
-        BC.setFreeSlip()
-        u_adv, v_adv, w_adv,p_adv, u_diff, v_diff, w_diff, k_dir, d_diff, vof_adv = [], [], [], [], [], [], [], [], [], []
+        BC = create_BC(folder='mprans', b_or=np.array([[1., 1., 1.]]), b_i=0)
+        BC.setAtmosphere()
+        p_dir, u_dir, v_dir, w_dir, vof_dir, u_diff, v_diff, w_diff, k_diff, d_diff = [], [], [], [], [], [], [], [], [], []
         t_list = get_time_array()
         for t in t_list:
             x = get_random_x()
-            u_adv += [BC.u_advective.uOfXT(x, t)]
-            v_adv += [BC.v_advective.uOfXT(x, t)]
-            w_adv += [BC.w_advective.uOfXT(x, t)]
-            p_adv += [BC.p_advective.uOfXT(x, t)]
+            p_dir += [BC.p_dirichlet.uOfXT(x, t)]
+            u_dir += [BC.u_dirichlet.uOfXT(x, t)]
+            v_dir += [BC.v_dirichlet.uOfXT(x, t)]
+            w_dir += [BC.w_dirichlet.uOfXT(x, t)]
+            vof_dir += [BC.vof_dirichlet.uOfXT(x, t)]
             u_diff += [BC.u_diffusive.uOfXT(x, t)]
             v_diff += [BC.v_diffusive.uOfXT(x, t)]
             w_diff += [BC.w_diffusive.uOfXT(x, t)]
-            k_dir += [BC.k_dirichlet.uOfXT(x, t)]
+            k_diff += [BC.k_diffusive.uOfXT(x, t)]
             d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
-            vof_adv += [BC.vof_advective.uOfXT(x, t)]
         zeros = np.zeros(len(t_list))
-        npt.assert_equal(BC.p_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.u_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.v_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.w_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.vof_dirichlet.uOfXT, None)
-        npt.assert_equal(k_dir, zeros)
+        vofAir = zeros + 1.
+        npt.assert_equal(p_dir, zeros)
+        npt.assert_equal(u_dir, zeros)
+        npt.assert_equal(v_dir, zeros)
+        npt.assert_equal(w_dir, zeros)
+        npt.assert_equal(vof_dir, vofAir)
+        npt.assert_equal(BC.k_dirichlet.uOfXT, None)
         npt.assert_equal(BC.dissipation_dirichlet.uOfXT, None)
-        npt.assert_equal(p_adv, zeros)
-        npt.assert_equal(u_adv, zeros)
-        npt.assert_equal(v_adv, zeros)
-        npt.assert_equal(w_adv, zeros)
-        npt.assert_equal(vof_adv, zeros)
+        npt.assert_equal(BC.p_advective.uOfXT, None)
+        npt.assert_equal(BC.u_advective.uOfXT, None)
+        npt.assert_equal(BC.v_advective.uOfXT, None)
+        npt.assert_equal(BC.w_advective.uOfXT, None)
+        npt.assert_equal(BC.vof_advective.uOfXT, None)
         npt.assert_equal(BC.k_advective.uOfXT, None)
         npt.assert_equal(BC.dissipation_advective.uOfXT, None)
         npt.assert_equal(u_diff, zeros)
         npt.assert_equal(v_diff, zeros)
         npt.assert_equal(w_diff, zeros)
+        npt.assert_equal(k_diff, zeros)
         npt.assert_equal(d_diff, zeros)
         # check if other BC are None
     # def test_unsteady_two_phase_velocity_inlet(self):
@@ -271,7 +274,8 @@ class TestBC(unittest.TestCase):
         #-----
         # set BC
         wind_speed=np.array([1., 2., 3.4])
-        BC.setUnsteadyTwoPhaseVelocityInlet(waves, vert_axis=1,
+        smoothing = 0.
+        BC.setUnsteadyTwoPhaseVelocityInlet(waves, smoothing, vert_axis=1,
                                             wind_speed=wind_speed)
         BC.getContext(ct)
         BC.u_dirichlet.uOfXT = BC.u_dirichlet.init_cython()
@@ -282,7 +286,6 @@ class TestBC(unittest.TestCase):
         u_dir, v_dir, w_dir, vof_dir, p_adv = [], [], [], [], []
         u_calc, vof_calc, p_calc = [], [], []
         t_list = get_time_array()
-        smoothing = 0.
         for t in t_list:
             x = np.array(get_random_x())
             u_dir += [BC.u_dirichlet.uOfXT(x, t)]
@@ -336,7 +339,189 @@ class TestBC(unittest.TestCase):
         npt.assert_equal(BC.k_diffusive.uOfXT, None)
         npt.assert_equal(BC.dissipation_diffusive.uOfXT, None)
 
+    def test_two_phase_velocity_inlet(self):
+        from proteus.ctransportCoefficients import smoothedHeaviside
+        # input 
+        ct = get_context()
+        b_or = np.array([[0., -1., 0.]])
+        b_i = 0
+        U0 = [0.1, 0.2, 0.3] # m/s
+        waterDepth = 0.5 # m
+        smoothing = 3.*0.01 # m
+        Uwind =  [0.01, 0.02, 0.03] # m/s
+        vert_axis = 1 # by default alligned with the gravity
+        air = 1.
+        water = 0.
+        kInflow = 0.00005
+        dissipationInflow = 0.00001
+        kInflowAir = kInflow / 10.
+        dissipationInflowAir = dissipationInflow / 10.
+        BC = create_BC(folder='mprans', b_or=b_or, b_i=b_i)
+        # setting variables
+        uDir, vDir, wDir, vofDir, pAdv, kDir, dissipationDir = [],[],[],[],[],[],[]
+        uCalc, vCalc, wCalc, vofCalc, pCalc, kCalc, dissipationCalc = [],[],[],[],[],[],[]
+        t_list = get_time_array()
+        BC.setTwoPhaseVelocityInlet(U0, waterDepth, smoothing, Uwind, 
+                                    vert_axis, air, water,
+                                    kInflow, dissipationInflow,
+                                    kInflowAir, dissipationInflowAir)
+        # time step iterations
+        for t in t_list:
+            x = np.array(get_random_x())
+            uDir += [BC.u_dirichlet.uOfXT(x, t)]
+            vDir += [BC.v_dirichlet.uOfXT(x, t)]
+            wDir += [BC.w_dirichlet.uOfXT(x, t)]
+            vofDir += [BC.vof_dirichlet.uOfXT(x, t)]
+            pAdv += [BC.p_advective.uOfXT(x, t)]
+            kDir += [BC.k_dirichlet.uOfXT(x, t)]
+            dissipationDir += [BC.dissipation_dirichlet.uOfXT(x, t)]
+            phiCalc = x[vert_axis] - waterDepth
+            # smoothing for velocity, kappa, dissipation field activated only along the 'air phase' side
+            if phiCalc <= 0.: 
+                Heav = 0.
+            elif 0. < phiCalc <= smoothing: 
+                Heav = smoothedHeaviside(smoothing/2., phiCalc - smoothing/2.)
+            else: 
+                Heav = 1.
+            u, v, w = Heav*np.array(Uwind) + (1.-Heav)*np.array(U0)
+            uCalc += [u]
+            vCalc += [v]
+            wCalc += [w]
+            up = np.sqrt( (u**2)*abs(b_or[0][0])+(v**2)*abs(b_or[0][1])+(w**2)*abs(b_or[0][2]) )
+            pCalc += [-up]
+            kCalc += [Heav*kInflowAir + (1.-Heav)*kInflow]
+            dissipationCalc += [Heav*dissipationInflowAir + (1.-Heav)*dissipationInflow]
+            # smoothing for vof activated along either the water-phase and air phase side
+            if phiCalc <= -smoothing: 
+                Heav = 0.
+            elif -smoothing < phiCalc < smoothing: 
+                Heav = smoothedHeaviside(smoothing, phiCalc)
+            else: 
+                Heav = 1.
+            vofCalc += [Heav*air + (1.-Heav)*water]
+        npt.assert_equal(uDir, uCalc)
+        npt.assert_equal(vDir, vCalc)
+        npt.assert_equal(wDir, wCalc)
+        npt.assert_equal(vofDir, vofCalc)
+        npt.assert_equal(BC.p_dirichlet.uOfXT, None)
+        npt.assert_equal(kDir, kCalc)
+        npt.assert_equal(dissipationDir, dissipationCalc)
+        npt.assert_equal(pAdv, pCalc)
+            
+    def test_hydrostatic_pressure_outlet_with_depth(self):
+        from proteus.ctransportCoefficients import smoothedHeaviside, smoothedHeaviside_integral
+        # input 
+        ct = get_context()
+        b_or = np.array([[0., -1., 0.]])
+        b_i = 0
+        seaLevel = 0.5 # m
+        rhoUp = 1.004e-6 # kg/m3
+        rhoDown = 1.500e-5 # kg/m3
+        g = np.array([0., -9.81, 0.]) # m/s2
+        refLevel = seaLevel
+        smoothing = 3.*0.01 # m
+        nd = 2
+        vert_axis = nd - 1
+        air = 1.
+        water = 0.
+        pRef = 0. # Pa
+        BC = create_BC(folder='mprans', b_or=b_or, b_i=b_i)
+        # setting variables
+        uDir, vDir, wDir, vofDir, pDir, uDiff, kDiff, dissDiff = [],[],[],[],[],[],[],[]
+        vofCalc, pCalc = [],[]
+        t_list = get_time_array()
+        BC.setHydrostaticPressureOutletWithDepth(seaLevel, rhoUp, rhoDown, g, refLevel, smoothing)
+        # time step iterations
+        for t in t_list:
+            x = np.array(get_random_x())
+            vofDir += [BC.vof_dirichlet.uOfXT(x, t)]
+            pDir += [BC.p_dirichlet.uOfXT(x, t)]
+            # Relative system of coordinates based on the point chosen as reference with pressure=pRef
+            phiCalc = x[vert_axis] - seaLevel
+            phi_top = refLevel - seaLevel
+            phi_ref = phi_top - phiCalc
+            rho_diff = rhoUp - rhoDown
+            phi_diff = smoothedHeaviside_integral(smoothing, phi_top) - smoothedHeaviside_integral(smoothing, phiCalc)
+            pTot = pRef - (g[vert_axis]*rhoDown*phi_ref) - (g[vert_axis]*rho_diff*phi_diff)
+            pCalc += [pTot]
+            # smoothing for vof activated along either the water-phase and air phase side
+            if phiCalc <= -smoothing: 
+                Heav = 0.
+            elif -smoothing < phiCalc < smoothing: 
+                Heav = smoothedHeaviside(smoothing, phiCalc)
+            else: 
+                Heav = 1.
+            vofCalc += [Heav*air + (1.-Heav)*water]
+            # Velocity and turbulence variables
+            uDir += [BC.u_dirichlet.uOfXT(x, t)]
+            vDir += [BC.v_dirichlet.uOfXT(x, t)]
+            wDir += [BC.w_dirichlet.uOfXT(x, t)]
+            uDiff += [BC.u_diffusive.uOfXT(x, t)]
+            kDiff += [BC.k_diffusive.uOfXT(x, t)]
+            dissDiff += [BC.dissipation_diffusive.uOfXT(x, t)]
+        nt = len(t_list)
+        uCalc, vCalc, wCalc, uDiffCalc, kCalc, dissCalc = np.zeros(nt), np.zeros(nt), np.zeros(nt), np.zeros(nt), np.zeros(nt), np.zeros(nt)
+        npt.assert_equal(uDir, uCalc)
+        npt.assert_equal(vDir, vCalc)
+        npt.assert_equal(wDir, wCalc)
+        npt.assert_allclose(pDir, pCalc, atol=1e-10)
+        npt.assert_equal(vofDir, vofCalc)
+        npt.assert_equal(uDiff, uDiffCalc)
+        npt.assert_equal(kDiff, kCalc)
+        npt.assert_equal(dissDiff, dissCalc)
 
+    def test_wall_functions(self):
+        from proteus import BoundaryConditions as bc
+        from proteus.mprans import BoundaryConditions as mbc
+        # input 
+        ct = get_context() 
+        b_or = np.array([[0., -1., 0.]])
+        b_or_wall = np.array([0., -1., 0.])
+        b_i = 0
+        BC = create_BC(folder='mprans', b_or=b_or, b_i=b_i)
+        Y = 0.01 # m
+        U0 = np.array( [0.1, 0., 0.]) # m/s
+        U0abs = np.sqrt(np.sum(U0**2))
+        Cmu = 0.09
+        B = 5.57
+        # Normal and tangential vectors
+        nV = -b_or_wall/np.sqrt(np.sum(b_or_wall**2))
+        uTan = U0 - U0*(nV**2)
+        tV = uTan/np.sqrt(np.sum(uTan**2))
+        uTanAbs = np.sqrt(np.sum(uTan**2))
+        # Calculation of turbulent variables
+        Re0 = U0abs * Y / 1.004e-6
+        cf = 0.045 / (Re0**0.25)
+        ut = U0abs * np.sqrt(cf/2.)
+        Yplus = Y*ut/1.004e-6
+        turbModel = 'ke' # 'kw'
+        kappaP = (ut**2) / (Cmu**0.5)
+        if turbModel is 'ke':
+            dissipationP = (ut**3) / (0.41*Y) # ke model
+        elif turbModel is 'kw':
+            dissipationP = np.sqrt(kappaP) / (0.41*Y*(Cmu**0.25)) # kw model
+        # Log law
+        E = np.exp(0.41*B)
+        utStar = (kappaP**0.5)*(0.09**0.25)
+        uStar = utStar * np.log(E*Yplus) / 0.41
+        ut = utStar * np.sqrt(uTanAbs/uStar)
+        gradU = (ut/0.41/Y) * tV
+        uDir = uTan - gradU*Y
+        # Wall objects
+        kWall = mbc.kWall(Y=Y, Yplus=Yplus, b_or=b_or_wall)
+        wall = mbc.WallFunctions(turbModel=turbModel, kWall=kWall, b_or=b_or_wall, Y=Y, Yplus=Yplus, U0=U0)
+        kWall.model = None
+        wall.model = None
+        # Boundary conditions
+        x = np.array(get_random_x())  
+        t = random.uniform(0., 10.)
+        BC.setWallFunction(wall)
+        npt.assert_allclose(BC.u_dirichlet.uOfXT(x, t), uDir[0], atol=1e-10)
+        npt.assert_allclose(BC.v_dirichlet.uOfXT(x, t), uDir[1], atol=1e-10)
+        npt.assert_allclose(BC.w_dirichlet.uOfXT(x, t), uDir[2], atol=1e-10)
+        npt.assert_allclose(BC.k_dirichlet.uOfXT(x, t), kappaP, atol=1e-10)
+        npt.assert_allclose(BC.dissipation_dirichlet.uOfXT(x, t), dissipationP, atol=1e-10)
+        
 
 
 

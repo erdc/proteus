@@ -17,7 +17,10 @@ import poisson_3d_c0p1_n
 import poisson_3d_c0p2_n
 import poisson_3d_c0q1_n
 import poisson_3d_c0q2_n
+import pytest
 
+@pytest.mark.modelTest
+@pytest.mark.poissonTest
 class TestPoisson():
 
     @classmethod
@@ -51,7 +54,14 @@ class TestPoisson():
                     'poisson_3d_tetgen_c0p1pe1.xmf',
                     'poisson_3d_tetgen_c0p1pe1.h5',
                     'poisson_3d_c0q2pe1.xmf',
-                    'poisson_3d_c0q2pe1.h5']
+                    'poisson_3d_c0q2pe1.h5',
+                    'reference_triangle_2d.node',
+                    'reference_triangle_2d.ele',
+                    'reference_triangle_2d.poly',
+                    'reference_triangle_3d.ele',
+                    'reference_triangle_3d.node',
+                    'reference_triangle_3d.poly',
+                    'reference_triangle_3d.face']
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
@@ -78,6 +88,7 @@ class TestPoisson():
         del ns
         assert(True)
 
+    @pytest.mark.slowTest
     def test_c0p2(self):
         reload(poisson_3d_p)
         reload(poisson_3d_c0p2_n)
@@ -139,6 +150,7 @@ class TestPoisson():
         MeshTools.writeHexMesh(mesh_info,hex_meshfile_base,index_base=1)
         self.check_c0q1(test_hexMesh_3x3=True,use_petsc=True, name="_hexMesh_")
 
+    @pytest.mark.slowTest
     def test_c0q2(self):
         reload(poisson_3d_p)
         reload(poisson_3d_c0q2_n)

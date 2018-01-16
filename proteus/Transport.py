@@ -41,8 +41,7 @@ class StorageSet(set):
             storageDict[k] = numpy.zeros(self.shape,self.storageType)
 
 class OneLevelTransport(NonlinearEquation):
-    r"""
-    A class for finite element discretizations of multicomponent
+    r""" A class for finite element discretizations of multicomponent
     advective-diffusive-reactive transport on a single spatial mesh.
 
     Objects of this type take the initial-boundary value
@@ -71,6 +70,13 @@ class OneLevelTransport(NonlinearEquation):
 
     The rest of the functions in this class are either private functions
     or return various other pieces of information.
+
+    Attributes
+    ----------
+    ebq_global[('velocityAverage',0)] : array
+        This attribute stores the average velocity along an edge given 
+        a discontinous velocity field.
+
     """
     def __init__(self,
                  uDict,
@@ -97,7 +103,8 @@ class OneLevelTransport(NonlinearEquation):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=False,
                  sd = True,
-                 movingDomain=False):#,
+                 movingDomain=False,
+                 bdyNullSpace=False):#,
         r""" Allocate storage and initialize some variables.
 
         Parameters
@@ -133,6 +140,10 @@ class OneLevelTransport(NonlinearEquation):
         shockCapturing : bool
 
         numericalFlux : bool
+
+        bdyNullSpace : bool
+            Indicates whether the boundary conditions create a global
+            null space.
 
         Notes
         -----
@@ -175,6 +186,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         self.movingDomain=movingDomain
         self.tLast_mesh=None
+        self.par_info = ParInfo_petsc4py()
         #
         self.name=name
         self.sd=sd
@@ -223,6 +235,7 @@ class OneLevelTransport(NonlinearEquation):
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
         self.dirichletNodeSetList=None #explicit Dirichlet  conditions for now, no Dirichlet BC constraints
+        self.bdyNullSpace = bdyNullSpace
         self.coefficients = coefficients
         self.coefficients.initializeMesh(self.mesh)
         self.nc = self.coefficients.nc
@@ -296,6 +309,8 @@ class OneLevelTransport(NonlinearEquation):
         #is just for convenience so that the input doesn't have to be
         #complete)
         #
+        self._elementQuadrature = elementQuadrature
+        self._elementBoundaryQuadrature = elementBoundaryQuadrature
         elementQuadratureDict={}
         elemQuadIsDict = isinstance(elementQuadrature,dict)
         if elemQuadIsDict: #set terms manually
@@ -1030,7 +1045,7 @@ class OneLevelTransport(NonlinearEquation):
             for ci,ckDict in diffusion.iteritems():
                 tmp = sorted(ckDict.keys())
                 if tmp:
-                    if firstComp == None or tmp[0] < firstComp:
+                    if firstComp is None or tmp[0] < firstComp:
                         firstComp = tmp[0]
             return firstComp
         #
@@ -1544,7 +1559,7 @@ class OneLevelTransport(NonlinearEquation):
 
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType is not None:
-            if options == None or options.periodicDirichletConditions == None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,
@@ -1576,6 +1591,7 @@ class OneLevelTransport(NonlinearEquation):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         import PostProcessingTools
+#        import pdb ; pdb.set_trace()
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
@@ -1634,7 +1650,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         #set the initial conditions for the DOF based on the generalized interpolation conditions
         #
-        if analyticalSolutionsDict == None:
+        if analyticalSolutionsDict is None:
             return
         for cj,sol in analyticalSolutionsDict.iteritems():
             #pdb.set_trace()
@@ -1648,13 +1664,11 @@ class OneLevelTransport(NonlinearEquation):
                 for eN in range(self.mesh.nElements_global):
                     materialFlag = self.mesh.elementMaterialTypes[eN]
                     for k in range(self.u[cj].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
-#                        pdb.set_trace()
                         interpolationValues[eN,k] = sol.uOfXT(self.u[cj].femSpace.interpolationPoints[eN,k],T,materialFlag)
             except TypeError:
                 for eN in range(self.mesh.nElements_global):
                     for k in range(self.u[cj].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
                         interpolationValues[eN,k] = sol.uOfXT(self.u[cj].femSpace.interpolationPoints[eN,k],T)
-#            pdb.set_trace()
             self.ua[cj].projectFromInterpolationConditions(interpolationValues)
             self.u[cj].femSpace.writeFunctionXdmf(archive,self.ua[cj],tCount)
     #what about setting initial conditions directly from dofs calculated elsewhere?
@@ -2377,7 +2391,7 @@ class OneLevelTransport(NonlinearEquation):
                                                self.elementResidual[ci])
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             for ck in ckDict.keys():
-                if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
+                if self.numericalFlux is None or self.numericalFlux.mixedDiffusion[ci] == False:
                     if self.sd:
                         cfemIntegrals.updateDiffusion_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                               self.q[('a',ci,ck)],
@@ -2739,7 +2753,7 @@ class OneLevelTransport(NonlinearEquation):
             for ck,cjDict in ckDict.iteritems():
                 for cj in set(cjDict.keys()+self.coefficients.potential[ck].keys()):
                     if self.timeIntegration.diffusionIsImplicit[ci]:
-                        if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
+                        if self.numericalFlux is None or self.numericalFlux.mixedDiffusion[ci] == False:
                             if self.sd:
                                 cfemIntegrals.updateDiffusionJacobian_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                               self.phi[ck].femSpace.dofMap.l2g,
@@ -3498,7 +3512,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                   self.ebq[('velocity',ci)],
                                                                                   self.ebq_global[('velocityAverage',ci)])
                     #mwf can never get here! Need to fix
-                    #if self.numericalFlux == None:
+                    #if self.numericalFlux is None:
                     #cfemIntegrals.calculateExteriorElementBoundaryAverageVelocity(self.mesh.exteriorElementBoundariesArray,
                     #                                                              self.mesh.elementBoundaryElementsArray,
                     #                                                              self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -3775,7 +3789,6 @@ class OneLevelTransport(NonlinearEquation):
 
         This function should be called only when the mesh changes.
         """
-        import pdb
         #
         #cek get rid of trickiness
         #
@@ -4215,8 +4228,6 @@ class OneLevelTransport(NonlinearEquation):
         list of local dof because of the exclusion of Dirichlet nodes
         (otherwise we could just loop over range(self.nDOF_element).
         """
-        import pdb
-#        pdb.set_trace()
         self.l2g=[{'nFreeDOF':numpy.zeros((self.mesh.nElements_global,),'i'),
                    'freeLocal':numpy.zeros((self.mesh.nElements_global,self.nDOF_trial_element[cj]),'i'),
                    'freeGlobal':numpy.zeros((self.mesh.nElements_global,self.nDOF_trial_element[cj]),'i')} for cj in range(self.nc)]
@@ -5321,7 +5332,7 @@ class OneLevelTransport(NonlinearEquation):
                 pN+=1
         meshOut.close()
     def write_ebq_velocity_Ensight(self,filename,nOutput,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
             if not append:
                 caseOut=open(case_filename+'.case','a')
@@ -5561,12 +5572,12 @@ class OneLevelTransport(NonlinearEquation):
             """
             needed to satisfy api for writeFunctionXdmf
             """
-            def __init__(self,ci,r):
+            def __init__(self,ci,r,femSpace):
                 self.dof=r
                 self.name=res_name_base+'{0}'.format(ci)
+                self.femSpace=femSpace
         for ci in range(self.coefficients.nc):
-            self.u[ci].femSpace.writeFunctionXdmf(archive,dummy(ci,res_dict[ci]),tCount)
-
+            self.u[ci].femSpace.writeFunctionXdmf(archive,dummy(ci,res_dict[ci],self.u[ci].femSpace),tCount)
 
     def initializeMassJacobian(self):
         """
@@ -5640,8 +5651,6 @@ class OneLevelTransport(NonlinearEquation):
         portions of the reaction term, 'r', and boundary condition terms
         This is a temporary fix for linear model reduction.
         """
-        #import pdb
-        #pdb.set_trace()
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
         for ci in self.coefficients.reaction.keys():
@@ -6014,7 +6023,7 @@ class OneLevelTransport(NonlinearEquation):
                                          self.rowptr)
 
         _nd = self.coefficients.nd
-        if self.coefficients.nu != None:
+        if self.coefficients.nu is not None:
             _nu = self.coefficients.nu
         self.LaplaceOperatorCoeff = DiscreteLaplaceOperator(nd=_nd)
         _t = 1.0
@@ -6114,7 +6123,7 @@ class MultilevelTransport:
     def __init__(self,problem,numerics,mlMesh,OneLevelTransportType=OneLevelTransport):
         self.name = problem.name
         #cek temporary fix to get everything weaned off the old BC's
-        if numerics.numericalFluxType == None:
+        if numerics.numericalFluxType is None:
             numerics.numericalFluxType = NumericalFlux.StrongDirichletFactory(problem.fluxBoundaryConditions)
         self.OneLevelTransportType=OneLevelTransportType
         phiSpaces = None
@@ -6145,7 +6154,8 @@ class MultilevelTransport:
             numerics,
             problem.sd,
             problem.movingDomain,
-            PhiSpaceTypeDict=phiSpaces)
+            PhiSpaceTypeDict=phiSpaces,
+            bdyNullSpace=problem.boundaryCreatesNullSpace)
     def initialize(self,
                    nd,
                    mlMesh,
@@ -6171,12 +6181,12 @@ class MultilevelTransport:
                    options=None,
                    useSparseDiffusion=True,
                    movingDomain=False,
-                   PhiSpaceTypeDict=None):
+                   PhiSpaceTypeDict=None,
+                   bdyNullSpace=False):
         import copy
         """read in the multilevel mesh, mesh independent boundary
         conditions, and types for test and trial spaces and the
         jacobian. Pass through the rest to the models on each mesh"""
-
         if bool(TrialSpaceTypeDict) == False:
             raise Exception,  'Proteus is trying to create a' \
             ' Multilevel Transport object with no trial space.  Make' \
@@ -6202,9 +6212,7 @@ class MultilevelTransport:
         self.strideListList=[]
         self.matType = matType
         #mwf debug
-        #import pdb
-        #pdb.set_trace()
-        if PhiSpaceTypeDict == None: #by default phi in same space as u
+        if PhiSpaceTypeDict is None: #by default phi in same space as u
             PhiSpaceTypeDict = TrialSpaceTypeDict
         self.phiSpaceDictList = []
         #self.phiSpaceListDict = {}
@@ -6214,8 +6222,6 @@ class MultilevelTransport:
             self.trialSpaceListDict[cj]=[]
             self.bcListDict[cj]=[]
         for mesh in mlMesh.meshList:
-       #     import pdb
-       #     pdb.set_trace()
             sdmesh = mesh.subdomainMesh
             memory()
             logEvent("Generating Trial Space",level=2)
@@ -6239,20 +6245,18 @@ class MultilevelTransport:
                 phiDict[cj].setupParallelCommunication()
             logEvent(memory("finite element spaces","MultilevelTransport"),level=4)
             logEvent("Setting Boundary Conditions")
-            if numericalFluxType==None:
+            if numericalFluxType is None:
                 useWeakDirichletConditions=False
             else:
                 useWeakDirichletConditions=numericalFluxType.useWeakDirichletConditions
             logEvent("Setting Boundary Conditions-1")
-            import pdb
-#            pdb.set_trace()
             for cj in trialSpaceDict.keys():
                 if not dirichletConditionsSetterDict.has_key(cj):
                     dirichletConditionsSetterDict[cj] = None
                 if not fluxBoundaryConditionsDict.has_key(cj):
                     fluxBoundaryConditionsDict[cj] = None
             logEvent("Setting Boundary Conditions-2")
-            if options == None or options.periodicDirichletConditions == None or options.parallelPeriodic==True:
+            if options is None or options.periodicDirichletConditions is None or options.parallelPeriodic==True:
                 logEvent("Setting Boundary Conditions-2a")
                 dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
                     trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions))
@@ -6348,6 +6352,8 @@ class MultilevelTransport:
             #
             logEvent(memory("boundary conditions","MultilevelTransport"),level=4)
             logEvent("Initializing OneLevelTransport",level=2)
+            uDict[0].femSpace.mesh.nLayersOfOverlap = mesh.nLayersOfOverlap
+            uDict[0].femSpace.mesh.parallelPartitioningType = mesh.parallelPartitioningType
             transport=self.OneLevelTransportType(uDict,
                                             phiDict,
                                             testSpaceDict,
@@ -6370,8 +6376,9 @@ class MultilevelTransport:
                                             reactionLumping,
                                             options,
                                             self.name + str(len(self.levelModelList)),
-                                            sd = useSparseDiffusion,
-                                            movingDomain=movingDomain)
+                                            sd=useSparseDiffusion,
+                                            movingDomain=movingDomain,
+                                            bdyNullSpace=bdyNullSpace)
             self.offsetListList.append(transport.offset)
             self.strideListList.append(transport.stride)
             memory()
@@ -6562,8 +6569,8 @@ class MultilevelTransport:
                         assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
                         comm.endSequential()
                         assert(nzval_petsc.shape[0] == colind_petsc.shape[0] == rowptr_petsc[-1] - rowptr_petsc[0])
-                        petsc_a = np.zeros((transport.dim, transport.dim),'d')
-                        proteus_a = np.zeros((transport.dim, transport.dim),'d')
+                        petsc_a = {}
+                        proteus_a = {}
                         for i in range(transport.dim):
                             for j,k in zip(colind[rowptr[i]:rowptr[i+1]],range(rowptr[i],rowptr[i+1])):
                                 nzval[k] = i*transport.dim+j
@@ -6574,9 +6581,8 @@ class MultilevelTransport:
                                 nzval_petsc[k] = petsc_a[i,j]
                         assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
                         assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
-                        assert (proteus_a[petsc2proteus_subdomain,:][:,petsc2proteus_subdomain] == petsc_a).all()
-                        assert((proteus_a == petsc_a[proteus2petsc_subdomain,:][:,proteus2petsc_subdomain]).all())
-                        petsc_a = np.arange(transport.dim**2).reshape(transport.dim,transport.dim)
+                        assert (all(proteus_a[(petsc2proteus_subdomain[k[0]],petsc2proteus_subdomain[k[1]])] == v for k,v in petsc_a.items()))
+                        assert (all(petsc_a[(proteus2petsc_subdomain[k[0]],proteus2petsc_subdomain[k[1]])] == v for k,v in proteus_a.items()))
                         transport.nzval_petsc = nzval_petsc
                         transport.colind_petsc = colind_petsc
                         transport.rowptr_petsc = rowptr_petsc
@@ -6588,6 +6594,22 @@ class MultilevelTransport:
                             assert (rowptr_petsc == rowptr).all()
                         assert(colind.max() <= par_n+par_nghost)
                         assert(colind_petsc.max() <= par_n + par_nghost)
+                        try:
+                            transport.par_info.par_bs = 1
+                            transport.par_info.par_n = par_n
+                            transport.par_info.par_n_lst = par_n_list
+                            transport.par_info.par_N = par_N
+                            transport.par_info.par_nghost = par_nghost
+                            transport.par_info.par_nghost_lst = par_nghost_list
+                            transport.par_info.petsc_subdomain2global_petsc = petsc_subdomain2global_petsc
+                            transport.par_info.proteus2petsc_subdomain = proteus2petsc_subdomain
+                            transport.par_info.petsc2proteus_subdomain = petsc2proteus_subdomain
+                            transport.par_info.subdomain2global = subdomain2global
+                            transport.par_info.dim = transport.dim
+                            transport.par_info.nzval_proteus2petsc = nzval_proteus2petsc
+                            transport.par_info.mixed = mixed
+                        except AttributeError:
+                            logEvent("Transport class has no ParInfo_petsc4py class to store parallel data.",level=4)
                         par_jacobian = ParMat_petsc4py(petsc_jacobian,1,par_n,par_N,par_nghost,
                                                        petsc_subdomain2global_petsc,pde=transport,
                                                        proteus_jacobian=jacobian, nzval_proteus2petsc=nzval_proteus2petsc)
@@ -6601,6 +6623,16 @@ class MultilevelTransport:
                         logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                         par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
                         logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
+                        try:
+                            transport.par_info.par_bs = par_bs
+                            transport.par_info.par_n = par_n
+                            transport.par_info.par_N = par_N
+                            transport.par_info.par_nghost = par_nghost
+                            transport.par_info.subdomain2global = subdomain2global
+                            transport.par_info.dim = transport.dim
+                            transport.par_info.mixed = mixed
+                        except AttributeError:
+                            logEvent("Transport class has no ParInfo_petsc4py class to store parallel data.",level=4)
                         par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
                 else:
                     par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
@@ -6638,6 +6670,8 @@ class MultilevelTransport:
                     if ts.dofMap.nDOF_all_processes != par_N:
                         mixed=True
                 par_nghost = 0
+                subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
+                max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
                 logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                 if mixed:
                     par_N = par_n = sum([ts.dofMap.nDOF_all_processes for ts in trialSpaceDict.values()])
@@ -6650,6 +6684,16 @@ class MultilevelTransport:
                     par_du = ParVec_petsc4py(du,1,par_n,par_N)
                     logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                     par_jacobian = ParMat_petsc4py(jacobian,1,par_n,par_N,par_nghost,subdomain2global,pde=transport)
+                    try:
+                        transport.par_info.par_bs = par_bs
+                        transport.par_info.mixed = mixed
+                        transport.par_info.par_n = par_n
+                        transport.par_info.par_N = par_N
+                        transport.par_info.par_nghost = par_nghost
+                        transport.par_info.subdomain2global = subdomain2global
+                        transport.par_info.dim = transport.dim
+                    except AttributeError:
+                        logEvent("Transport class has no ParInfo_petsc4py class to store parallel data.",level=4)
                 else:
                     transport.owned_local = numpy.arange(par_n*par_bs)
                     subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
@@ -6660,6 +6704,16 @@ class MultilevelTransport:
                     par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
                     logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                     par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
+                    try:
+                        transport.par_info.par_bs = par_bs
+                        transport.par_info.mixed = mixed
+                        transport.par_info.par_n = par_n
+                        transport.par_info.par_N = par_N
+                        transport.par_info.par_nghost = par_nghost
+                        transport.par_info.subdomain2global = subdomain2global
+                        transport.par_info.dim = transport.dim
+                    except AttributeError:
+                        logEvent("Transport class has no ParInfo_petsc4py class to store parallel data.",level=4)
             else:
                 transport.owned_local = numpy.arange(transport.dim)
                 par_u = None

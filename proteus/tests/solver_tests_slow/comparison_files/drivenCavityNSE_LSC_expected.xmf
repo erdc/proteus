@@ -1,0 +1,298 @@
+<?xml version="1.0" ?>
+<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
+<Xdmf Version="2.0" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <Domain>
+    <Grid CollectionType="Temporal" GridType="Collection" Name="Mesh Spatial_Domain">
+      <Grid GridType="Uniform">
+        <Time Name="0" Value="0.0" />
+        <Topology NumberOfElements="256" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="256 4" Format="HDF">drivenCavityNSETrial.h5:/elementsSpatial_Domain0</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="289 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodesSpatial_Domain0</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="nodeMaterialTypes">
+          <DataItem DataType="Int" Dimensions="289" Format="HDF">drivenCavityNSETrial.h5:/nodeMaterialTypes_t0</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Cell" Name="elementMaterialTypes">
+          <DataItem DataType="Int" Dimensions="256" Format="HDF">drivenCavityNSETrial.h5:/elementMaterialTypes_t0</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="p">
+          <DataItem DataType="Float" Dimensions="289" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/p_t0</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform">
+        <Time Name="1" Value="1.0" />
+        <Topology NumberOfElements="256" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="256 4" Format="HDF">drivenCavityNSETrial.h5:/elementsSpatial_Domain1</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="289 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodesSpatial_Domain1</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="nodeMaterialTypes">
+          <DataItem DataType="Int" Dimensions="289" Format="HDF">drivenCavityNSETrial.h5:/nodeMaterialTypes_t1</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Cell" Name="elementMaterialTypes">
+          <DataItem DataType="Int" Dimensions="256" Format="HDF">drivenCavityNSETrial.h5:/elementMaterialTypes_t1</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="p">
+          <DataItem DataType="Float" Dimensions="289" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/p_t1</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform">
+        <Time Name="2" Value="1.7" />
+        <Topology NumberOfElements="256" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="256 4" Format="HDF">drivenCavityNSETrial.h5:/elementsSpatial_Domain2</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="289 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodesSpatial_Domain2</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="nodeMaterialTypes">
+          <DataItem DataType="Int" Dimensions="289" Format="HDF">drivenCavityNSETrial.h5:/nodeMaterialTypes_t2</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Cell" Name="elementMaterialTypes">
+          <DataItem DataType="Int" Dimensions="256" Format="HDF">drivenCavityNSETrial.h5:/elementMaterialTypes_t2</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="p">
+          <DataItem DataType="Float" Dimensions="289" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/p_t2</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform">
+        <Time Name="3" Value="2.2" />
+        <Topology NumberOfElements="256" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="256 4" Format="HDF">drivenCavityNSETrial.h5:/elementsSpatial_Domain3</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="289 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodesSpatial_Domain3</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="nodeMaterialTypes">
+          <DataItem DataType="Int" Dimensions="289" Format="HDF">drivenCavityNSETrial.h5:/nodeMaterialTypes_t3</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Cell" Name="elementMaterialTypes">
+          <DataItem DataType="Int" Dimensions="256" Format="HDF">drivenCavityNSETrial.h5:/elementMaterialTypes_t3</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="p">
+          <DataItem DataType="Float" Dimensions="289" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/p_t3</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform">
+        <Time Name="4" Value="2.7" />
+        <Topology NumberOfElements="256" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="256 4" Format="HDF">drivenCavityNSETrial.h5:/elementsSpatial_Domain4</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="289 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodesSpatial_Domain4</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="nodeMaterialTypes">
+          <DataItem DataType="Int" Dimensions="289" Format="HDF">drivenCavityNSETrial.h5:/nodeMaterialTypes_t4</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Cell" Name="elementMaterialTypes">
+          <DataItem DataType="Int" Dimensions="256" Format="HDF">drivenCavityNSETrial.h5:/elementMaterialTypes_t4</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="p">
+          <DataItem DataType="Float" Dimensions="289" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/p_t4</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform">
+        <Time Name="5" Value="3.2" />
+        <Topology NumberOfElements="256" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="256 4" Format="HDF">drivenCavityNSETrial.h5:/elementsSpatial_Domain5</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="289 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodesSpatial_Domain5</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="nodeMaterialTypes">
+          <DataItem DataType="Int" Dimensions="289" Format="HDF">drivenCavityNSETrial.h5:/nodeMaterialTypes_t5</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Cell" Name="elementMaterialTypes">
+          <DataItem DataType="Int" Dimensions="256" Format="HDF">drivenCavityNSETrial.h5:/elementMaterialTypes_t5</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="p">
+          <DataItem DataType="Float" Dimensions="289" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/p_t5</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform">
+        <Time Name="6" Value="3.5" />
+        <Topology NumberOfElements="256" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="256 4" Format="HDF">drivenCavityNSETrial.h5:/elementsSpatial_Domain6</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="289 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodesSpatial_Domain6</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="nodeMaterialTypes">
+          <DataItem DataType="Int" Dimensions="289" Format="HDF">drivenCavityNSETrial.h5:/nodeMaterialTypes_t6</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Cell" Name="elementMaterialTypes">
+          <DataItem DataType="Int" Dimensions="256" Format="HDF">drivenCavityNSETrial.h5:/elementMaterialTypes_t6</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="p">
+          <DataItem DataType="Float" Dimensions="289" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/p_t6</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform">
+        <Time Name="7" Value="3.7" />
+        <Topology NumberOfElements="256" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="256 4" Format="HDF">drivenCavityNSETrial.h5:/elementsSpatial_Domain7</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="289 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodesSpatial_Domain7</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="nodeMaterialTypes">
+          <DataItem DataType="Int" Dimensions="289" Format="HDF">drivenCavityNSETrial.h5:/nodeMaterialTypes_t7</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Cell" Name="elementMaterialTypes">
+          <DataItem DataType="Int" Dimensions="256" Format="HDF">drivenCavityNSETrial.h5:/elementMaterialTypes_t7</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="p">
+          <DataItem DataType="Float" Dimensions="289" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/p_t7</DataItem>
+        </Attribute>
+      </Grid>
+    </Grid>
+    <Grid CollectionType="Temporal" GridType="Collection" Name="Mesh_c0q2_Lagrange">
+      <Grid GridType="Uniform" Name="Grid_c0q2_Lagrange">
+        <Time Name="0" Value="0.0" />
+        <Topology NumberOfElements="1024" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="1024 4" Format="HDF">drivenCavityNSETrial.h5:/elements_c0q2_Lagrange0</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodes_c0q2_Lagrange0</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/u_t0</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="v">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/v_t0</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Vector" Center="Node" Name="velocity">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF">drivenCavityNSETrial.h5:/velocity_t0</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform" Name="Grid_c0q2_Lagrange">
+        <Time Name="1" Value="1.0" />
+        <Topology NumberOfElements="1024" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="1024 4" Format="HDF">drivenCavityNSETrial.h5:/elements_c0q2_Lagrange1</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodes_c0q2_Lagrange1</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/u_t1</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="v">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/v_t1</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Vector" Center="Node" Name="velocity">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF">drivenCavityNSETrial.h5:/velocity_t1</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform" Name="Grid_c0q2_Lagrange">
+        <Time Name="2" Value="1.7" />
+        <Topology NumberOfElements="1024" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="1024 4" Format="HDF">drivenCavityNSETrial.h5:/elements_c0q2_Lagrange2</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodes_c0q2_Lagrange2</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/u_t2</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="v">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/v_t2</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Vector" Center="Node" Name="velocity">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF">drivenCavityNSETrial.h5:/velocity_t2</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform" Name="Grid_c0q2_Lagrange">
+        <Time Name="3" Value="2.2" />
+        <Topology NumberOfElements="1024" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="1024 4" Format="HDF">drivenCavityNSETrial.h5:/elements_c0q2_Lagrange3</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodes_c0q2_Lagrange3</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/u_t3</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="v">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/v_t3</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Vector" Center="Node" Name="velocity">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF">drivenCavityNSETrial.h5:/velocity_t3</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform" Name="Grid_c0q2_Lagrange">
+        <Time Name="4" Value="2.7" />
+        <Topology NumberOfElements="1024" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="1024 4" Format="HDF">drivenCavityNSETrial.h5:/elements_c0q2_Lagrange4</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodes_c0q2_Lagrange4</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/u_t4</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="v">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/v_t4</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Vector" Center="Node" Name="velocity">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF">drivenCavityNSETrial.h5:/velocity_t4</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform" Name="Grid_c0q2_Lagrange">
+        <Time Name="5" Value="3.2" />
+        <Topology NumberOfElements="1024" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="1024 4" Format="HDF">drivenCavityNSETrial.h5:/elements_c0q2_Lagrange5</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodes_c0q2_Lagrange5</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/u_t5</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="v">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/v_t5</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Vector" Center="Node" Name="velocity">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF">drivenCavityNSETrial.h5:/velocity_t5</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform" Name="Grid_c0q2_Lagrange">
+        <Time Name="6" Value="3.5" />
+        <Topology NumberOfElements="1024" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="1024 4" Format="HDF">drivenCavityNSETrial.h5:/elements_c0q2_Lagrange6</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodes_c0q2_Lagrange6</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/u_t6</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="v">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/v_t6</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Vector" Center="Node" Name="velocity">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF">drivenCavityNSETrial.h5:/velocity_t6</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform" Name="Grid_c0q2_Lagrange">
+        <Time Name="7" Value="3.7" />
+        <Topology NumberOfElements="1024" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="1024 4" Format="HDF">drivenCavityNSETrial.h5:/elements_c0q2_Lagrange7</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/nodes_c0q2_Lagrange7</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/u_t7</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="v">
+          <DataItem DataType="Float" Dimensions="1089" Format="HDF" Precision="8">drivenCavityNSETrial.h5:/v_t7</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Vector" Center="Node" Name="velocity">
+          <DataItem DataType="Float" Dimensions="1089 3" Format="HDF">drivenCavityNSETrial.h5:/velocity_t7</DataItem>
+        </Attribute>
+      </Grid>
+    </Grid>
+  </Domain>
+</Xdmf>

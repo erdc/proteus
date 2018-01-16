@@ -5,7 +5,11 @@ from proteus.MeshTools import InterpolatedBathymetryMesh
 from proteus.Archiver import XdmfArchive
 
 import xml.etree.ElementTree as ElementTree
+import pytest
 
+@pytest.mark.MeshTools
+@pytest.mark.Archiver
+@pytest.mark.Domain
 class TestInterpolatedBathy():
     """ Runs a set of tests for Interpolated Bathymetry"""
     
@@ -35,7 +39,7 @@ class TestInterpolatedBathy():
                     print ("Error: %s - %s." %(e.filename,e.strerror))
             else:
                 pass
-            
+
     def setupStepGauss(self):
         import numpy as np
         from math import sin,cos,pi,sqrt,exp
@@ -82,7 +86,7 @@ class TestInterpolatedBathy():
                                               bathyGridDim = (nPoints_y,nPoints_x))
         domain.writePoly(domain.name)
         return domain
-    
+
     def test_L1(self):
         domain = self.setupStepGauss()
         mesh = InterpolatedBathymetryMesh(domain,
