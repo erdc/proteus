@@ -17,7 +17,7 @@ class SO_base:
 
     The base class implements sequential splitting with a fixed time
     step based on the input parameter `default_so.dt_system`. If
-    `default_so.stepExactSystem` is True then the time step will be
+    `default_so.systemStepExact` is True then the time step will be
     reduced when needed to match the output times in
     `default_so.tnList`, otherwise the output will be the first time
     step after each step in `tnList`.
