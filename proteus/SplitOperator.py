@@ -17,7 +17,7 @@ class SO_base:
 
     The base class implements sequential splitting with a fixed time
     step based on the input parameter `default_so.dt_system`. If
-    `default_so.stepExactSystem` is True then the time step will be
+    `default_so.systemStepExact` is True then the time step will be
     reduced when needed to match the output times in
     `default_so.tnList`, otherwise the output will be the first time
     step after each step in `tnList`.
@@ -325,7 +325,7 @@ class Sequential_MinModelStep(SO_base):
     def initialize_dt_system(self,t0,tOut):
         self.its=0
         self.t_system_last = t0
-        self.dt_system = min([model.stepController.dt_model for model in self.modelList])
+        self.dt_system = min(min([model.stepController.dt_model for model in self.modelList]),tOut-t0)
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,m) for m in self.modelList]
         for model in self.modelList:
@@ -514,7 +514,7 @@ class Sequential_MinAdaptiveModelStep(SO_base):
     def initialize_dt_system(self,t0,tOut):
         self.its=0
         self.t_system_last = t0
-        self.dt_system = min([model.stepController.dt_model for model in self.controllerList])
+        self.dt_system = min(tOut-t0,min([model.stepController.dt_model for model in self.controllerList]))
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,m) for m in self.modelList]
         for model in self.modelList:
