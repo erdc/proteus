@@ -7,10 +7,12 @@ from proteus.Profiling import logEvent
 #  Discretization -- input options
 #Refinement = 20#45min on a single core for spaceOrder=1, useHex=False
 Refinement = 8
+DX=0.04
+
 sedimentDynamics=False
 genMesh = True
 movingDomain = False
-applyRedistancing = True
+# applyRedistancing = True
 useOldPETSc = False
 useSuperlu = True#False
 timeDiscretization = 'vbdf'#vbdf'#'vbdf'  # 'vbdf', 'be', 'flcbdf'
@@ -19,7 +21,7 @@ pspaceOrder = 1
 useHex = False
 useRBLES = 0.0
 useMetrics = 1.0
-applyCorrection = True
+# applyCorrection = True
 useVF = 0.0
 useOnlyVF = False
 useRANS = 0  # 0 -- None
@@ -92,7 +94,6 @@ nLevels = 1
 parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.node
 nLayersOfOverlapForParallel = 0
 structured = False
-DX=0.04
 he=DX
 from symmetricDomain_john import symmetric2D
 
@@ -223,28 +224,29 @@ nu_s = 10000.0*nu_0
 dragAlpha = 0.0
 
 # Surface tension
-sigma_01 = 0.0
+# sigma_01 = 0.0
 
 # Gravity
 g = [0.0, 0.0]
 
-Um = 1/0.41**2
-import math
-def velRamp(t):
-    if t < 1.0:
-        return Um*(1.0+math.cos((t-1.0)*math.pi/1.0))/2.0
-    else:
-        return Um
+Um = 1.5
+# Um = 1/0.41**2
+# import math
+# def velRamp(t):
+#     if t < 1.0:
+#         return Um*(1.0+math.cos((t-1.0)*math.pi/1.0))/2.0
+#     else:
+#         return Um
+# 
+# print "U",velRamp(10.0)*6.0*(fl_H/2.0)*(fl_H-fl_H/2.0)
+# def signedDistance(x):
+#     return x[1] - L[1]/2.
 
-print "U",velRamp(10.0)*6.0*(fl_H/2.0)*(fl_H-fl_H/2.0)
-def signedDistance(x):
-    return x[1] - L[1]/2.
-
-def particle_sdf(t, x):
-    cx = 0.2# + t*2.2/8.0
-    cy = 0.2
-    r = math.sqrt( (x[0]-cx)**2 + (x[1]-cy)**2)
-    n = ((cx-x[0])/r,(cy-x[1])/r)
-    if r < 1.0e-16:
-        n = (1.0,0.0)
-    return  r - 0.05,n
+# def particle_sdf(t, x):
+#     cx = 0.2# + t*2.2/8.0
+#     cy = 0.2
+#     r = math.sqrt( (x[0]-cx)**2 + (x[1]-cy)**2)
+#     n = ((cx-x[0])/r,(cy-x[1])/r)
+#     if r < 1.0e-16:
+#         n = (1.0,0.0)
+#     return  r - 0.05,n
