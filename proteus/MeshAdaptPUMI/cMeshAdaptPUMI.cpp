@@ -392,35 +392,45 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 */
   }
 
+  std::cout<<"Flag 1\n";
   if(size_field_config=="ERM"){
       //MeshAdapt error will be thrown if region fields are not freed
       freeField(err_reg); 
       freeField(errRho_reg); 
       freeField(errRel_reg); 
   }
+
+  std::cout<<"Flag 2\n";
   // These are relics from an attempt to pass BCs from proteus into the error estimator.
   // They maybe useful in the future.
   //m->destroyTag(fluxtag[1]); m->destroyTag(fluxtag[2]); m->destroyTag(fluxtag[3]);
   delete [] exteriorGlobaltoLocalElementBoundariesArray;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
 
+  std::cout<<"Flag 3\n";
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
 
-  apf::Field* adaptSize  = apf::createFieldOn(m, "adapt_size", apf::VECTOR);
-  apf::Field* adaptFrame = apf::createFieldOn(m, "adapt_frame", apf::MATRIX);
+  apf::Field* adaptSize;
+  apf::Field* adaptFrame;
 
-  apf::copyData(adaptSize, size_scale);
-  apf::copyData(adaptFrame, size_frame);
+  std::cout<<"Flag 4\n";
 
   /// Adapt the mesh
   assert(size_iso || (size_scale && size_frame));
   ma::Input* in;
-  if(adapt_type_config=="anisotropic" || size_field_config== "interface")
+  if(adapt_type_config=="anisotropic" || size_field_config== "interface"){
     //in = ma::configure(m, size_scale, size_frame);
+    adaptSize  = apf::createFieldOn(m, "adapt_size", apf::VECTOR);
+    adaptFrame = apf::createFieldOn(m, "adapt_frame", apf::MATRIX);
+    apf::copyData(adaptSize, size_scale);
+    apf::copyData(adaptFrame, size_frame);
     in = ma::configure(m, adaptSize, adaptFrame);
+  }
   else{
-    in = ma::configure(m, size_iso);
+    adaptSize  = apf::createFieldOn(m, "adapt_size", apf::SCALAR);
+    apf::copyData(adaptSize, size_iso);
+    in = ma::configure(m, adaptSize);
   }
   ma::validateInput(in);
   in->shouldRunPreZoltan = true;
@@ -431,7 +441,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->shouldSnap = false;
   in->shouldFixShape = true;
   in->shouldForceAdaptation = false;
-  in->goodQuality = 0.05;
+  in->goodQuality = 0.008;
   double mass_before = getTotalMass();
   
   double t1 = PCU_Time();
@@ -472,7 +482,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   }
   //isReconstructed = 0; //this is needed to maintain consistency with the post-adapt conversion back to Proteus
   apf::destroyField(adaptSize);
-  apf::destroyField(adaptFrame);
+  if(adapt_type_config=="anisotropic")
+    apf::destroyField(adaptFrame);
   nAdapt++; //counter for number of adapt steps
   return 0;
 }
