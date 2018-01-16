@@ -67,9 +67,13 @@ class NS_base:  # (HasTraits):
         for p in pList:
             message += p.name+"\n"
         logEvent(message)
+        #: SplitOperator initialize file
         self.so=so
+        #: List of physics initialize files
         self.pList=pList
+        #: List of numerics initialize files
         self.nList=nList
+        #: Dictionary of command line arguments
         self.opts=opts
         self.simFlagsList=simFlagsList
         self.timeValues={}
