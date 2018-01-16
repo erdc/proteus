@@ -2,6 +2,7 @@ from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
 import pytest
+import os
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 
@@ -302,6 +303,50 @@ def test_petsc_binary_mat_io():
     npt.assert_equal(mi, ai)
     npt.assert_equal(mj, aj)
     npt.assert_equal(mv, av)
+
+@pytest.mark.LinearAlgebraTools
+def test_petsc_load_matrix(tmpdir):
+    """test petsc_load_matrix """
+    from petsc4py import PETSc as p4pyPETSc
+    from proteus import LinearAlgebraTools as LAT
+
+    vals_A =     [5.5,7.1,1.0]
+    col_idx_A =  [0 , 1 , 2  ]
+    row_idx_A =  [0, 1, 2, 3]
+    A = LAT.csr_2_petsc(size = (3,3),
+                        csr = (row_idx_A,col_idx_A,vals_A))
+
+    A_tmp = tmpdir.join('A.petsc_mat')
+    LAT._petsc_view(A,A_tmp.strpath)
+    A_test = LAT.petsc_load_matrix(A_tmp.strpath)
+    csr_values = A_test.getValuesCSR()
+
+    assert np.allclose(csr_values[0], row_idx_A)
+    assert np.allclose(csr_values[1], col_idx_A)
+    assert np.allclose(csr_values[2], vals_A)
+
+    A_test = LAT.petsc_load_matrix('dne.txt')
+    assert A_test is None
+
+@pytest.mark.LinearAlgebraTools
+def test_petsc_load_vec(tmpdir):
+    """test petsc_load_matrix """
+    from petsc4py import PETSc as p4pyPETSc
+    from proteus import LinearAlgebraTools as LAT
+
+    vals_A = np.array([5.5,7.1,1.0])
+    A = p4pyPETSc.Vec()
+    A.createWithArray(vals_A)
+
+    A_tmp = tmpdir.join('A.petsc_vec')
+    LAT._petsc_view(A,A_tmp.strpath)
+    A_test = LAT.petsc_load_vector(A_tmp.strpath)
+    vec_values = A_test.getArray()
+
+    assert np.allclose(vec_values, vals_A)
+
+    A_test = LAT.petsc_load_vector('dne.txt')
+    assert A_test is None
 
 if __name__ == '__main__':
     import nose
