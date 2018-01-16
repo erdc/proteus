@@ -349,6 +349,10 @@ elif len(args) == 2: #p and n modules provided
     except:
         pass
     try:
+        so.systemStepExact = nList[0].systemStepExact
+    except:
+        pass
+    try:
         so.tnList = nList[0].tnList
         so.archiveFlag = nList[0].archiveFlag
     except:
