@@ -845,6 +845,7 @@ void cppCable::setAddedMassForce() {
   ChVector<> t_dir;  // tangent at node
   ChVector<> Fm_a;  // axial (tangential) added mass force
   ChVector<> Fm_n;  // normal(transversal) added mass force
+  ChVector<> Fm_f;  // fluid part added mass force
   ChVector<> Fm;  // total added mass force
   ChVector<> Va;
   ChVector<> Vn;
@@ -872,7 +873,8 @@ void cppCable::setAddedMassForce() {
     Vn = a_rel-Va;
     Fm_a = rho_f*Cm_axial*M_PI*d*d/4.*Va;//(force per unit length)
     Fm_n = rho_f*Cm_normal*M_PI*d*d/4.*Vn;//(force per unit length)
-    Fm = Fm_a + Fm_n;
+    Fm_f = rho_f*M_PI*d*d/4.*a_prot;
+    Fm = Fm_a + Fm_n + Fm_f;
     forces_addedmass.push_back(Fm);
   }
 }
