@@ -9,10 +9,10 @@ flow around a 2D cylinder  benchmark problem.
 
 nd = 2
 spaceOrder=1
-Refinement=2
+Refinement=1
 useHex=False
 points_on_grain = 21
-DX = 0.01
+DX = 0.04
 usePETSc = False#True
 
 
@@ -54,28 +54,28 @@ nLevels = 1
 #from cylinder2dDomain import *
 from symmetricDomain_john import *
 domain = symmetric2D(box=(2.2,0.41),
-                    L= 0.2,
-                    H = 0.2,
-                    r = 0.05,
-                    C = (0.2,0.2),
-                    DX = DX,
-                    refinement_length=0.5,
-                    DX_coarse = DX)
+                     L= 0.2,
+                     H = 0.2,
+                     r = 0.05,
+                     C = (0.2,0.2),
+                     DX = DX,
+                     refinement_length=0.5,
+                     DX_coarse = DX)
 boundaryTags=domain.boundaryFlags
 
 # Time stepping
 T= 8.0
-runCFL = 0.33
+runCFL = 0.9
 dt_fixed = 2.5e-1
 dt_init = 1.0e-3
 nDTout = int(T/dt_fixed)
 dt_init = min(dt_init,0.5*dt_fixed)
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)] 
-
-useBackwardEuler = False
+#tnList = [0.0,dt_init,T]
+useBackwardEuler = True
 
 # Numerical parameters
-ns_shockCapturingFactor  = 0.2
+ns_shockCapturingFactor  = 0.0
 ns_lag_shockCapturing = True#False
 ns_lag_subgridError = True
 
