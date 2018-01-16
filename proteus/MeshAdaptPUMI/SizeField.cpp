@@ -341,8 +341,8 @@ static void scaleFormula(double phi, double hmin, double hmax,
     scale = apf::Vector3(1, 1, 1) * hmax;
   }
 
-  for (int i = 0; i < 3; ++i)
-    clamp(scale[i], hmin, hmax);
+  //for (int i = 0; i < 3; ++i)
+  //  clamp(scale[i], hmin, hmax);
 }
 
 static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
@@ -775,6 +775,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     //Set the size scale for vertices
     it = m->begin(0);
     apf::Vector3 scale;
+/*
     while ((v = m->iterate(it)))
     {
       double tempScale = apf::getScalar(size_iso, v, 0);
@@ -787,6 +788,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       clamp(tempScale, hmin, hmax);
       apf::setScalar(size_iso,v,0,tempScale);
     }
+*/
     //gradeMesh();
     it = m->begin(0);
     while( (v = m->iterate(it)) ){
@@ -874,20 +876,22 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       clamp(tempScale, hmin, hmax);
       apf::setScalar(size_iso, v, 0, tempScale);
     }
+    gradeMesh();
     apf::synchronize(size_iso);
     m->end(it);
     if (target_element_count != 0)
     {
       sam::scaleIsoSizeField(size_iso, target_element_count);
       clampField(size_iso, hmin, hmax);
-      SmoothField(size_iso);
+      gradeMesh();
+      //SmoothField(size_iso);
     }
-  }
+  } 
 
   //Destroy locally required fields
   apf::destroyField(size_iso_reg);
   apf::destroyField(clipped_vtx);
-
+  std::cout<<"Finished Size Field\n";
   return 0;
 }
 
