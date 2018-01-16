@@ -27,11 +27,12 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
 
 
 from math import cos,pi
-# def velRamp(t):
-#     if t < 2.0:
-#         return 0.5*(1.0-cos(0.5*pi*t))
-#     else:
-#         return 1.0
+def vel(x,t):
+    U = Um*x[1]*(fl_H-x[1])/(fl_H/2.0)**2
+    if t < 2.0:
+        return t*U/2.0
+    else:
+        return U
 
 def getDBC_p(x,flag):
     if flag == boundaryTags['right']:
@@ -39,7 +40,7 @@ def getDBC_p(x,flag):
     
 def getDBC_u(x,flag):
     if flag == boundaryTags['left']:
-        return lambda x,t: Um*x[1]*(fl_H-x[1])/(fl_H/2.0)**2
+        return vel 
     elif flag in [boundaryTags['obstacle'],boundaryTags['front'],boundaryTags['back']]:
         return lambda x,t: 0.0
 
@@ -57,7 +58,7 @@ dirichletConditions = {0:getDBC_p,
 
 def getAFBC_p(x,flag):
     if flag == boundaryTags['left']:
-        return lambda x,t: -Um*x[1]*(fl_H-x[1])/(fl_H/2.0)**2#YY:???
+        return lambda x,t: -vel(x,t)
     elif flag == boundaryTags['right']:
         return None
     else:

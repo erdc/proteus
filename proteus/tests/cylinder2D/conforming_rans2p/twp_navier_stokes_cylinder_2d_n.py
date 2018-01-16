@@ -3,6 +3,8 @@ from cylinder2d import *
 from proteus.default_n import *
 from twp_navier_stokes_cylinder_2d_p import *
 
+systemStepExact=True
+
 if useBackwardEuler:
     timeIntegration = BackwardEuler_cfl
     stepController = Min_dt_controller
@@ -64,3 +66,4 @@ nl_atol_res = 1.0e-5
 
 maxNonlinearIts = 100
 maxLineSearches =0
+conservativeFlux = {0:'pwl-bdm-opt'}
