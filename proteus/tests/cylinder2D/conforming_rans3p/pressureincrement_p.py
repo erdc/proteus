@@ -33,7 +33,7 @@ from math import cos,pi
 #the advectiveFlux should be zero on any no-flow  boundaries
 def getAdvectiveFlux_qt(x,flag):
     if flag == boundaryTags['left']:
-        return lambda x,t: -velRamp(t)*6.0*x[1]*(fl_H-x[1])
+        return lambda x,t: -Um*x[1]*(fl_H-x[1])/(fl_H/2.0)**2
     elif flag == boundaryTags['right']:
         return None
     else:
