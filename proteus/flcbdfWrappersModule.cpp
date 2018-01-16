@@ -3803,6 +3803,11 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //
   //8. Build subdomain meshes in new numbering, assumes memory not allocated in subdomain mesh
   //   
+  if(rank==0){
+    std::cerr<<"USER WARNING: In order to avoid a segmentation fault, you need to have supplied the 'f' flag to the triangleOptions input."<<std::endl;
+    std::cerr<<"USER WARNING: In order to avoid an edge assertion error, you need to have supplied the 'ee' flag to the triangleOptions input."<<std::endl; 
+  }
+
   if (newMesh.subdomainp == NULL)
     newMesh.subdomainp = new Mesh();
   newMesh.subdomainp->nElements_global = nElements_subdomain_new[rank] + elements_overlap.size();
@@ -3868,6 +3873,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   ISDestroy(&nodeNumberingIS_global_old2new);
   //done with vertex file (and all file reads at this point)
   ierr = enforceMemoryLimit(rank, max_rss_gb,"Done reading vertices");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+
   newMesh.subdomainp->elementNodesArray = new int[newMesh.subdomainp->nElements_global*newMesh.subdomainp->nNodes_element];
   newMesh.subdomainp->elementMaterialTypes = new int[newMesh.subdomainp->nElements_global];
   //

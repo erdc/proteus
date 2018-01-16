@@ -18,12 +18,16 @@ Profiling.verbose=False
 from petsc4py import PETSc
 import numpy as np
 import numpy.testing as npt
+import ladr_2d_p
+import ladr_2d_n
+
 
 def test_minModelStep_stepExactTrue():
-    import ladr_2d_p
-    import ladr_2d_n
+    reload(ladr_2d_p)
+    reload(ladr_2d_n)
     pList = [ladr_2d_p]
     nList = [ladr_2d_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
@@ -49,10 +53,11 @@ def test_minModelStep_stepExactTrue():
     del ns
 
 def test_minModelStep_stepExactFalse():
-    import ladr_2d_p
-    import ladr_2d_n
+    reload(ladr_2d_p)
+    reload(ladr_2d_n)
     pList = [ladr_2d_p]
     nList = [ladr_2d_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
@@ -78,10 +83,11 @@ def test_minModelStep_stepExactFalse():
     del ns
 
 def test_fixedStep_stepExactFalse():
-    import ladr_2d_p
-    import ladr_2d_n
+    reload(ladr_2d_p)
+    reload(ladr_2d_n)
     pList = [ladr_2d_p]
     nList = [ladr_2d_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
@@ -117,10 +123,11 @@ def test_fixedStep_stepExactFalse():
     del ns
 
 def test_fixedStep_stepExactTrue():
-    import ladr_2d_p
-    import ladr_2d_n
+    reload(ladr_2d_p)
+    reload(ladr_2d_n)
     pList = [ladr_2d_p]
     nList = [ladr_2d_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
@@ -147,10 +154,11 @@ def test_fixedStep_stepExactTrue():
     del ns
 
 def test_fixedStep_stepSimple():
-    import ladr_2d_p
-    import ladr_2d_n
+    reload(ladr_2d_p)
+    reload(ladr_2d_n)
     pList = [ladr_2d_p]
     nList = [ladr_2d_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
@@ -181,7 +189,6 @@ if __name__ == '__main__':
     test_minModelStep_stepExactFalse()
     test_fixedStep_stepExactFalse()
     test_fixedStep_stepExactTrue()
-    test_fixedStep_simple()
     Profiling.logEvent("Closing Log")
     try:
         Profiling.closeLog()

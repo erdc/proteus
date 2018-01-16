@@ -32,7 +32,8 @@ nd = 2
 x0 = [-1.0,-1.0]
 # (mesh length in x and y direction)
 L = [2,2]
-
+domain=None
+polyfile = None
 if (numeric_scheme!= "C0Q1C0Q1" and numeric_scheme!="THQuads"):
     rdomain = Domain.RectangularDomain(x=x0[:2],L=L[:2],name="rdomain")
     polyfile="rdomain"

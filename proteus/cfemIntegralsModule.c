@@ -2040,6 +2040,29 @@ cfemIntegralsCalculateWeightedShapeGradients(PyObject* self,
 }
 
 static PyObject*
+cfemIntegralsCalculateWeightedPiolaShapeGradients(PyObject* self,
+						  PyObject* args)
+{
+  PyObject *dVR,*abs_det_jac,*grad_w,*grad_w_dV;
+  if(!PyArg_ParseTuple(args,"OOOO",
+                       &dVR,
+                       &abs_det_jac,
+                       &grad_w,
+                       &grad_w_dV))
+    return NULL;
+  calculateWeightedPiolaShapeGradients(SHAPE(grad_w_dV)[0],
+				       SHAPE(grad_w_dV)[1],
+				       SHAPE(grad_w_dV)[2],
+				       SHAPE(grad_w_dV)[3],
+				       DDATA(dVR),
+				       DDATA(abs_det_jac),
+				       DDATA(grad_w),
+				       DDATA(grad_w_dV));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject*
 cfemIntegralsCalculateWeightedShapeHessians(PyObject* self,
                                              PyObject* args)
 {
@@ -2168,6 +2191,29 @@ cfemIntegralsCalculateWeightedShapeTrace(PyObject* self,
                               DDATA(sqrt_det_g),
                               DDATA(w),
                               DDATA(w_dS));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject*
+cfemIntegralsCalculateWeightedPiolaShapeTrace(PyObject* self,
+					      PyObject* args)
+{
+  PyObject *dSR,*sqrt_det_g,*w,*w_dS;
+  if(!PyArg_ParseTuple(args,"OOOO",
+                       &dSR,
+                       &sqrt_det_g,
+                       &w,
+                       &w_dS))
+    return NULL;
+  calculateWeightedPiolaShapeTrace(SHAPE(w_dS)[0],
+				   SHAPE(w_dS)[1],
+				   SHAPE(w_dS)[2],
+				   SHAPE(w_dS)[3],
+				   DDATA(dSR),
+				   DDATA(sqrt_det_g),
+				   DDATA(w),
+				   DDATA(w_dS));
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -6826,6 +6872,10 @@ static PyMethodDef cfemIntegralsMethods[] = {
     cfemIntegralsCalculateWeightedShapeGradients,
     METH_VARARGS, 
     "The quadrature weighted shape  function gradients"},
+  { "calculateWeightedPiolaShapeGradients", 
+    cfemIntegralsCalculateWeightedPiolaShapeGradients,
+    METH_VARARGS, 
+    "The quadrature weighted shape function gradients using Piola Mapping"},
   { "calculateWeightedShapeHessians", 
     cfemIntegralsCalculateWeightedShapeHessians,
     METH_VARARGS, 
@@ -6850,6 +6900,10 @@ static PyMethodDef cfemIntegralsMethods[] = {
     cfemIntegralsCalculateWeightedShapeTrace,
     METH_VARARGS, 
     "The quadrature weighted shape  functions"},
+  { "calculateWeightedPiolaShapeTrace", 
+    cfemIntegralsCalculateWeightedPiolaShapeTrace,
+    METH_VARARGS, 
+    "The quadrature weighted shape functions for Piola mapping"},
   { "calculateShape_X_weightedShapeTrace", 
     cfemIntegralsCalculateShape_X_weightedShapeTrace,
     METH_VARARGS, 

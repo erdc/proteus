@@ -18,6 +18,8 @@ nd = 3
 #if unstructured would need variable polyfile or meshfile set
 x0 = (-3.,-3.,-3.)
 L  = ( 6., 6., 6.)
+domain = None
+polyfile = None
 
 test_hexMesh_3x3 = False
 if test_hexMesh_3x3 == True:
