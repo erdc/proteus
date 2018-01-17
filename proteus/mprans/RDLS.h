@@ -186,7 +186,61 @@ namespace proteus
 				   int* isDOFBoundary_u,
 				   double* ebqe_bc_u_ext,
 				   double* ebqe_u,
-				   double* ebqe_n)=0;    
+				   double* ebqe_n)=0;
+    virtual void calculateJacobian_ellipticRedist(//element
+				   double* mesh_trial_ref,
+				   double* mesh_grad_trial_ref,
+				   double* mesh_dof,
+				   int* mesh_l2g,
+				   double* dV_ref,
+				   double* u_trial_ref,
+				   double* u_grad_trial_ref,
+				   double* u_test_ref,
+				   double* u_grad_test_ref,
+				   //element boundary
+				   double* mesh_trial_trace_ref,
+				   double* mesh_grad_trial_trace_ref,
+				   double* dS_ref,
+				   double* u_trial_trace_ref,
+				   double* u_grad_trial_trace_ref,
+				   double* u_test_trace_ref,
+				   double* u_grad_test_trace_ref,
+				   double* normal_ref,
+				   double* boundaryJac_ref,
+				   //physics
+				   int nElements_global,
+				   double useMetrics,
+				   double alphaBDF,
+				   double epsFact_redist,
+				   double backgroundDiffusionFactor,
+				   double weakDirichletFactor,
+				   int freezeLevelSet,
+				   int useTimeIntegration,
+				   int lag_shockCapturing,
+				   int lag_subgridError,
+				   double shockCapturingDiffusion,
+				   int* u_l2g,
+				   double* elementDiameter,
+				   double* nodeDiametersArray,
+				   double* u_dof,
+				   double* u_weak_internal_bc_dofs,//for freezing level set
+				   double* phi_ls,
+				   double* q_m_betaBDF,
+				   double* q_dH_last,
+				   double* q_cfl,
+				   double* q_numDiff_u,
+				   double* q_numDiff_u_last,
+				   int * weakDirichletConditionFlags,
+				   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				   double* globalJacobian,
+				   int nExteriorElementBoundaries_global,
+				   int* exteriorElementBoundariesArray,
+				   int* elementBoundaryElementsArray,
+				   int* elementBoundaryLocalElementBoundariesArray,
+				   double* ebqe_phi_ls_ext,
+				   int* isDOFBoundary_u,
+				   double* ebqe_bc_u_ext,
+				   int* csrColumnOffsets_eb_u_u)=0;    
   };
 
   template<class CompKernelType,
@@ -1572,7 +1626,301 @@ namespace proteus
 	  }//elements
       }
 
+      void calculateJacobian_ellipticRedist(//element
+			     double* mesh_trial_ref,
+			     double* mesh_grad_trial_ref,
+			     double* mesh_dof,
+			     int* mesh_l2g,
+			     double* dV_ref,
+			     double* u_trial_ref,
+			     double* u_grad_trial_ref,
+			     double* u_test_ref,
+			     double* u_grad_test_ref,
+			     //element boundary
+			     double* mesh_trial_trace_ref,
+			     double* mesh_grad_trial_trace_ref,
+			     double* dS_ref,
+			     double* u_trial_trace_ref,
+			     double* u_grad_trial_trace_ref,
+			     double* u_test_trace_ref,
+			     double* u_grad_test_trace_ref,
+			     double* normal_ref,
+			     double* boundaryJac_ref,
+			     //physics
+			     int nElements_global,
+			     double useMetrics,
+			     double alphaBDF,
+			     double epsFact_redist,
+			     double backgroundDiffusionFactor,
+			     double weakDirichletFactor,
+			     int freezeLevelSet,
+			     int useTimeIntegration,
+			     int lag_shockCapturing,
+			     int lag_subgridError,
+			     double shockCapturingDiffusion,
+			     int* u_l2g,
+			     double* elementDiameter,
+			     double* nodeDiametersArray,
+			     double* u_dof,
+			     double* u_weak_internal_bc_dofs,//for freezing level set
+			     double* phi_ls,
+			     double* q_m_betaBDF,
+			     double* q_dH_last,
+			     double* q_cfl,
+			     double* q_numDiff_u,
+			     double* q_numDiff_u_last,
+			     int * weakDirichletConditionFlags,
+			     int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+			     double* globalJacobian,
+			     int nExteriorElementBoundaries_global,
+			     int* exteriorElementBoundariesArray,
+			     int* elementBoundaryElementsArray,
+			     int* elementBoundaryLocalElementBoundariesArray,
+			     double* ebqe_phi_ls_ext,
+			     int* isDOFBoundary_u,
+			     double* ebqe_bc_u_ext,
+			     int* csrColumnOffsets_eb_u_u)
+      {
+	//
+	//loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
+	//
+	double timeIntegrationScale = 1.0;
+	if (useTimeIntegration == 0)
+	  timeIntegrationScale = 0.0;
+	double lag_shockCapturingScale = 1.0;
+	if (lag_shockCapturing == 0)
+	  lag_shockCapturingScale = 0.0;
+	for(int eN=0;eN<nElements_global;eN++)
+	  {
+	    register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
+	    double epsilon_redist,h_phi, dir[nSpace], norm;
+	    for (int i=0;i<nDOF_test_element;i++)
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  elementJacobian_u_u[i][j]=0.0;
+		}
+	    for  (int k=0;k<nQuadraturePoints_element;k++)
+	      {
+		int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
+		  eN_k_nSpace = eN_k*nSpace,
+		  eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
+		//declare local storage
+		register double u=0.0,
+		  grad_u[nSpace],
+		  m=0.0,dm=0.0,
+		  H=0.0,dH[nSpace],
+		  m_t=0.0,dm_t=0.0,r=0.0,
+		  dH_tau[nSpace],//dH or dH_last if lagging for tau formula
+		  dH_strong[nSpace],//dH or dH_last if lagging for strong residual and adjoint
+		  dpdeResidual_u_u[nDOF_trial_element],
+		  Lstar_u[nDOF_test_element],
+		  dsubgridError_u_u[nDOF_trial_element],
+		  tau=0.0,tau0=0.0,tau1=0.0,
+		  nu_sc=0.0,
+		  jac[nSpace*nSpace],
+		  jacDet,
+		  jacInv[nSpace*nSpace],
+		  u_grad_trial[nDOF_trial_element*nSpace],
+		  dV,
+		  u_test_dV[nDOF_test_element],
+		  u_grad_test_dV[nDOF_test_element*nSpace],
+		  x,y,z,
+		  G[nSpace*nSpace],G_dd_G,tr_G;
+		//
+		//calculate solution and gradients at quadrature points
+		//
+		ck.calculateMapping_element(eN,
+					    k,
+					    mesh_dof,
+					    mesh_l2g,
+					    mesh_trial_ref,
+					    mesh_grad_trial_ref,
+					    jac,
+					    jacDet,
+					    jacInv,
+					    x,y,z);
+		ck.calculateH_element(eN,
+				      k,
+				      nodeDiametersArray,
+				      mesh_l2g,
+				      mesh_trial_ref,
+				      h_phi);
+		//get the physical integration weight
+		dV = fabs(jacDet)*dV_ref[k];
+		ck.calculateG(jacInv,G,G_dd_G,tr_G);
+		//get the trial function gradients
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		//get the solution
+		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+		//get the solution gradients
+		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+		//precalculate test function products with integration weights
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		    for (int I=0;I<nSpace;I++)
+		      {
+			u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+		      }
+		  }
+		//
+		//calculate pde coefficients and derivatives at quadrature points
+		//
+		/* norm = 1.0e-8; */
+		/* for (int I=0;I<nSpace;I++) */
+		/*        norm += grad_u[I]*grad_u[I]; */
+		/* norm = sqrt(norm); */
+		/* for (int I=0;I<nSpace;I++) */
+		/*        dir[I] = grad_u[I]/norm; */
+
+		/* ck.calculateGScale(G,dir,h_phi); */
+
+		epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+
+		evaluateCoefficients(epsilon_redist,
+				     phi_ls[eN_k],
+				     u,
+				     grad_u,
+				     m,
+				     dm,
+				     H,
+				     dH,
+				     r);
+		//TODO allow not lagging of subgrid error etc
+		//remove conditional?
+		//default no lagging
+		for (int I=0; I < nSpace; I++)
+		  {
+		    dH_tau[I] = dH[I];
+		    dH_strong[I] = dH[I];
+		  }
+		if (lag_subgridError > 0)
+		  {
+		    for (int I=0; I < nSpace; I++)
+		      {
+			dH_tau[I] = q_dH_last[eN_k_nSpace+I];
+		      }
+		  }
+		if (lag_subgridError > 1)
+		  {
+		    for (int I=0; I < nSpace; I++)
+		      {
+			dH_strong[I] = q_dH_last[eN_k_nSpace+I];
+		      }
+		  }
+		//
+		//moving mesh
+		//
+		//omit for now
+		//
+		//calculate time derivatives
+		//
+		ck.bdf(alphaBDF,
+		       q_m_betaBDF[eN_k],
+		       m,
+		       dm,
+		       m_t,
+		       dm_t);
+		//TODO add option to skip if not doing time integration (Newton stead-state solve)
+		m *= timeIntegrationScale; dm *= timeIntegrationScale; m_t *= timeIntegrationScale;
+		dm_t *= timeIntegrationScale;
+
+		//
+		//calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
+		//
+		//calculate the adjoint times the test functions
+		for (int i=0;i<nDOF_test_element;i++)
+		  {
+		    //int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace;
+		    int i_nSpace=i*nSpace;
+
+		    Lstar_u[i]=ck.Hamiltonian_adjoint(dH_strong,&u_grad_test_dV[i_nSpace]);
+
+		  }
+		//calculate the Jacobian of strong residual
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    //int eN_k_j=eN_k*nDOF_trial_element+j;
+		    //int eN_k_j_nSpace = eN_k_j*nSpace;
+		    int j_nSpace = j*nSpace;
+		    dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref[k*nDOF_trial_element+j]) +
+		      ck.HamiltonianJacobian_strong(dH_strong,&u_grad_trial[j_nSpace]);
+
+		  }
+		//tau and tau*Res
+		calculateSubgridError_tau(elementDiameter[eN],
+					  dm_t,
+					  dH_tau,
+					  q_cfl[eN_k],
+					  tau0);
+		calculateSubgridError_tau(G,
+					  dH_tau,
+					  tau1,
+					  q_cfl[eN_k]);
+
+		tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
+
+		for (int j=0;j<nDOF_trial_element;j++)
+		  dsubgridError_u_u[j] =  -tau*dpdeResidual_u_u[j];
+
+		nu_sc = q_numDiff_u[eN_k]*(1.0-lag_shockCapturingScale) + q_numDiff_u_last[eN_k]*lag_shockCapturingScale;
+		double epsilon_background_diffusion = 2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+		if (fabs(phi_ls[eN_k]) >  epsilon_background_diffusion)
+		  nu_sc += backgroundDiffusionFactor*elementDiameter[eN];
+
+		for(int i=0;i<nDOF_test_element;i++)
+		  {
+		    //int eN_k_i=eN_k*nDOF_test_element+i;
+		    //int eN_k_i_nSpace=eN_k_i*nSpace;
+		    for(int j=0;j<nDOF_trial_element;j++)
+		      {
+			//int eN_k_j=eN_k*nDOF_trial_element+j;
+			//int eN_k_j_nSpace = eN_k_j*nSpace;
+			int j_nSpace = j*nSpace;
+			int i_nSpace = i*nSpace;
+
+			elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
+			  ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
+			  ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
+			  ck.NumericalDiffusionJacobian(nu_sc,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
+
+		      }//j
+		  }//i
+	      }//k
+	    //
+	    //load into element Jacobian into global Jacobian
+	    //
+
+	    //now try to account for weak dirichlet conditions in interior (frozen level set values)
+	    if (freezeLevelSet)
+	      {
+		//assume correspondence between dof and equations
+		for (int j = 0; j < nDOF_trial_element; j++)
+		  {
+		    const int J = u_l2g[eN*nDOF_trial_element+j];
+		    if (fabs(u_weak_internal_bc_dofs[J]) < epsilon_redist)
+		      //if (weakDirichletConditionFlags[J] == 1)
+		      {
+			for (int jj=0; jj < nDOF_trial_element; jj++)
+			  elementJacobian_u_u[j][jj] = 0.0;
+			elementJacobian_u_u[j][j] = weakDirichletFactor*elementDiameter[eN];
+			//mwf debug
+			//std::cout<<"RDLSV2 Jac freeze eN= "<<eN<<" j= "<<j<<" J= "<<J<<std::endl;
+		      }
+		  }
+	      }
+	    for (int i=0;i<nDOF_test_element;i++)
+	      {
+		int eN_i = eN*nDOF_test_element+i;
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    int eN_i_j = eN_i*nDOF_trial_element+j;
+		    globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+		  }//j
+	      }//i
+	  }//elements
+      }//computeJacobian
 
       //////////////////
       
