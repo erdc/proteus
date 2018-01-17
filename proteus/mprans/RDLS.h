@@ -126,6 +126,67 @@ namespace proteus
 				   int* isDOFBoundary_u,
 				   double* ebqe_bc_u_ext,
 				   int* csrColumnOffsets_eb_u_u)=0;
+    virtual void calculateResidual_ellipticRedist(//element
+				   double* mesh_trial_ref,
+				   double* mesh_grad_trial_ref,
+				   double* mesh_dof,
+				   int* mesh_l2g,
+				   double* dV_ref,
+				   double* u_trial_ref,
+				   double* u_grad_trial_ref,
+				   double* u_test_ref,
+				   double* u_grad_test_ref,
+				   //element boundary
+				   double* mesh_trial_trace_ref,
+				   double* mesh_grad_trial_trace_ref,
+				   double* dS_ref,
+				   double* u_trial_trace_ref,
+				   double* u_grad_trial_trace_ref,
+				   double* u_test_trace_ref,
+				   double* u_grad_test_trace_ref,
+				   double* normal_ref,
+				   double* boundaryJac_ref,
+				   //physics
+				   int nElements_global,
+				   double useMetrics,
+				   double alphaBDF,
+				   double epsFact_redist,
+				   double backgroundDiffusionFactor,
+				   double weakDirichletFactor,
+				   int freezeLevelSet,
+				   int useTimeIntegration,
+				   int lag_shockCapturing,
+				   int lag_subgridError, //0 nothing lagged
+				   //1 dH lagged in tau
+				   //2 dH lagged in tau and Residual, adjoint calculations
+				   double shockCapturingDiffusion,
+				   int* u_l2g,
+				   double* elementDiameter,
+				   double* nodeDiametersArray,
+				   double* u_dof,
+				   double* phi_ls,
+				   double* q_m,
+				   double* q_u,
+				   double* q_n,
+				   double* q_dH,
+				   double* u_weak_internal_bc_dofs,//for freezing level set
+				   double* q_m_betaBDF,
+				   double* q_dH_last,//for lagging subgrid error
+				   double* q_cfl,
+				   double* q_numDiff_u,
+				   double* q_numDiff_u_last,
+				   int* weakDirichletConditionFlags,
+				   int offset_u, int stride_u,
+				   double* globalResidual,
+				   int nExteriorElementBoundaries_global,
+				   int* exteriorElementBoundariesArray,
+				   int* elementBoundaryElementsArray,
+				   int* elementBoundaryLocalElementBoundariesArray,
+				   double* ebqe_phi_ls_ext,
+				   int* isDOFBoundary_u,
+				   double* ebqe_bc_u_ext,
+				   double* ebqe_u,
+				   double* ebqe_n)=0;    
   };
 
   template<class CompKernelType,
@@ -1191,6 +1252,330 @@ namespace proteus
 	      }//kb
 	  }//ebNE
       }//computeJacobian
+
+      //////////////////
+      void calculateResidual_ellipticRedist(//element
+			     double* mesh_trial_ref,
+			     double* mesh_grad_trial_ref,
+			     double* mesh_dof,
+			     int* mesh_l2g,
+			     double* dV_ref,
+			     double* u_trial_ref,
+			     double* u_grad_trial_ref,
+			     double* u_test_ref,
+			     double* u_grad_test_ref,
+			     //element boundary
+			     double* mesh_trial_trace_ref,
+			     double* mesh_grad_trial_trace_ref,
+			     double* dS_ref,
+			     double* u_trial_trace_ref,
+			     double* u_grad_trial_trace_ref,
+			     double* u_test_trace_ref,
+			     double* u_grad_test_trace_ref,
+			     double* normal_ref,
+			     double* boundaryJac_ref,
+			     //physics
+			     int nElements_global,
+			     double useMetrics,
+			     double alphaBDF,
+			     double epsFact_redist,
+			     double backgroundDiffusionFactor,
+			     double weakDirichletFactor,
+			     int freezeLevelSet,
+			     int useTimeIntegration,
+			     int lag_shockCapturing,
+			     int lag_subgridError, //0 nothing lagged
+			     //1 dH lagged in tau
+			     //2 dH lagged in tau and Residual, adjoint calculations
+			     double shockCapturingDiffusion,
+			     int* u_l2g,
+			     double* elementDiameter,
+			     double* nodeDiametersArray,
+			     double* u_dof,
+			     double* phi_ls,
+			     double* q_m,
+			     double* q_u,
+			     double* q_n,
+			     double* q_dH,
+			     double* u_weak_internal_bc_dofs,//for freezing level set
+			     double* q_m_betaBDF,
+			     double* q_dH_last,//for lagging subgrid error
+			     double* q_cfl,
+			     double* q_numDiff_u,
+			     double* q_numDiff_u_last,
+			     int* weakDirichletConditionFlags,
+			     int offset_u, int stride_u,
+			     double* globalResidual,
+			     int nExteriorElementBoundaries_global,
+			     int* exteriorElementBoundariesArray,
+			     int* elementBoundaryElementsArray,
+			     int* elementBoundaryLocalElementBoundariesArray,
+			     double* ebqe_phi_ls_ext,
+			     int* isDOFBoundary_u,
+			     double* ebqe_bc_u_ext,
+			     double* ebqe_u,
+			     double* ebqe_n)
+      {
+	//
+	//loop over elements to compute volume integrals and load them into element and global residual
+	//
+	//eN is the element index
+	//eN_k is the quadrature point index for a scalar
+	//eN_k_nSpace is the quadrature point index for a vector
+	//eN_i is the element test function index
+	//eN_j is the element trial function index
+	//eN_k_j is the quadrature point index for a trial function
+	//eN_k_i is the quadrature point index for a trial function
+	double timeIntegrationScale = 1.0;
+	if (useTimeIntegration == 0)
+	  timeIntegrationScale = 0.0;
+	double lag_shockCapturingScale = 1.0;
+	if (lag_shockCapturing == 0)
+	  lag_shockCapturingScale = 0.0;
+	for(int eN=0;eN<nElements_global;eN++)
+	  {
+	    //declare local storage for element residual and initialize
+	    register double elementResidual_u[nDOF_test_element];
+	    double epsilon_redist,h_phi, dir[nSpace], norm;
+	    for (int i=0;i<nDOF_test_element;i++)
+	      {
+		elementResidual_u[i]=0.0;
+	      }//i
+	    //loop over quadrature points and compute integrands
+	    for  (int k=0;k<nQuadraturePoints_element;k++)
+	      {
+		//compute indeces and declare local storage
+		register int eN_k = eN*nQuadraturePoints_element+k,
+		  eN_k_nSpace = eN_k*nSpace,
+		  eN_nDOF_trial_element = eN*nDOF_trial_element;
+		register double u=0.0,grad_u[nSpace],
+		  m=0.0,dm=0.0,
+		  H=0.0,dH[nSpace],
+		  m_t=0.0,dm_t=0.0,
+		  r=0.0,
+		  dH_tau[nSpace],//dH if not lagging or q_dH_last if lagging tau
+		  dH_strong[nSpace],//dH if not lagging or q_dH_last if lagging strong residual and adjoint
+		  pdeResidual_u=0.0,
+		  Lstar_u[nDOF_test_element],
+		  subgridError_u=0.0,
+		  tau=0.0,tau0=0.0,tau1=0.0,
+		  numDiff0=0.0,numDiff1=0.0,
+		  nu_sc=0.0,
+		  jac[nSpace*nSpace],
+		  jacDet,
+		  jacInv[nSpace*nSpace],
+		  u_grad_trial[nDOF_trial_element*nSpace],
+		  u_test_dV[nDOF_trial_element],
+		  u_grad_test_dV[nDOF_test_element*nSpace],
+		  dV,x,y,z,
+		  G[nSpace*nSpace],G_dd_G,tr_G;
+		ck.calculateMapping_element(eN,
+					    k,
+					    mesh_dof,
+					    mesh_l2g,
+					    mesh_trial_ref,
+					    mesh_grad_trial_ref,
+					    jac,
+					    jacDet,
+					    jacInv,
+					    x,y,z);
+		ck.calculateH_element(eN,
+				      k,
+				      nodeDiametersArray,
+				      mesh_l2g,
+				      mesh_trial_ref,
+				      h_phi);
+		//get the physical integration weight
+		dV = fabs(jacDet)*dV_ref[k];
+		ck.calculateG(jacInv,G,G_dd_G,tr_G);
+
+
+
+		//get the trial function gradients
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		//get the solution
+		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+		//get the solution gradients
+		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+		//precalculate test function products with integration weights
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		    for (int I=0;I<nSpace;I++)
+		      {
+			u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+		      }
+		  }
+		//
+		//calculate pde coefficients at quadrature points
+		//
+		/* norm = 1.0e-8; */
+		/* for (int I=0;I<nSpace;I++) */
+		/*        norm += grad_u[I]*grad_u[I]; */
+		/* norm = sqrt(norm); */
+
+		/* for (int I=0;I<nSpace;I++) */
+		/*        dir[I] = grad_u[I]/norm; */
+
+		/* ck.calculateGScale(G,dir,h_phi); */
+
+		epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+
+		evaluateCoefficients(epsilon_redist,
+				     phi_ls[eN_k],
+				     u,
+				     grad_u,
+				     m,
+				     dm,
+				     H,
+				     dH,
+				     r);
+		//TODO allow not lagging of subgrid error etc,
+		//remove conditional?
+		//default no lagging
+		for (int I=0; I < nSpace; I++)
+		  {
+		    dH_tau[I] = dH[I];
+		    dH_strong[I] = dH[I];
+		  }
+		if (lag_subgridError > 0)
+		  {
+		    for (int I=0; I < nSpace; I++)
+		      {
+			dH_tau[I] = q_dH_last[eN_k_nSpace+I];
+		      }
+		  }
+		if (lag_subgridError > 1)
+		  {
+		    for (int I=0; I < nSpace; I++)
+		      {
+			dH_strong[I] = q_dH_last[eN_k_nSpace+I];
+		      }
+		  }
+		//save mass for time history and dH for subgrid error
+		//save solution for other models
+		//
+		q_m[eN_k] = m;
+		q_u[eN_k] = u;
+		for (int I=0;I<nSpace;I++)
+		  q_n[eN_k_nSpace+I] = dir[I];
+
+		for (int I=0;I<nSpace;I++)
+		  {
+		    int eN_k_nSpace_I = eN_k_nSpace+I;
+		    q_dH[eN_k_nSpace_I] = dH[I];
+		  }
+
+		//
+		//moving mesh
+		//
+		//omit for now
+		//
+		//calculate time derivative at quadrature points
+		//
+		ck.bdf(alphaBDF,
+		       q_m_betaBDF[eN_k],
+		       m,
+		       dm,
+		       m_t,
+		       dm_t);
+
+		//TODO add option to skip if not doing time integration (Newton stead-state solve)
+		m *= timeIntegrationScale; dm *= timeIntegrationScale; m_t *= timeIntegrationScale;
+		dm_t *= timeIntegrationScale;
+		//
+		//calculate subgrid error (strong residual and adjoint)
+		//
+		//calculate strong residual
+		pdeResidual_u = ck.Mass_strong(m_t) +
+		  ck.Hamiltonian_strong(dH_strong,grad_u) + //would need dH if not lagging
+		  ck.Reaction_strong(r);
+		//calculate adjoint
+		for (int i=0;i<nDOF_test_element;i++)
+		  {
+		    //register int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace;
+		    register int  i_nSpace=i*nSpace;
+		    Lstar_u[i]  = ck.Hamiltonian_adjoint(dH_strong,&u_grad_test_dV[i_nSpace]);
+		    //reaction is constant
+		  }
+		//calculate tau and tau*Res
+		calculateSubgridError_tau(elementDiameter[eN],
+					  dm_t,dH_tau,
+					  q_cfl[eN_k],
+					  tau0);
+		calculateSubgridError_tau(G,
+					  dH_tau,
+					  tau1,
+					  q_cfl[eN_k]);
+
+		tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
+
+		//std::cout<<tau<<std::endl;
+
+
+		subgridError_u = -tau*pdeResidual_u;
+		//
+		//calculate shock capturing diffusion
+		//
+		ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u,grad_u,numDiff0);
+		ck.calculateNumericalDiffusion(shockCapturingDiffusion,G,pdeResidual_u,grad_u,numDiff1);
+
+		q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
+
+		nu_sc = q_numDiff_u[eN_k]*(1.0-lag_shockCapturingScale) + q_numDiff_u_last[eN_k]*lag_shockCapturingScale;
+		double epsilon_background_diffusion = 2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+		if (fabs(phi_ls[eN_k]) >  epsilon_background_diffusion)
+		  nu_sc += backgroundDiffusionFactor*elementDiameter[eN];
+		//
+		//update element residual
+		//
+		for(int i=0;i<nDOF_test_element;i++)
+		  {
+		    register int i_nSpace = i*nSpace;
+		    //register int eN_k_i=eN_k*nDOF_test_element+i;
+		    //register int eN_k_i_nSpace = eN_k_i*nSpace;
+
+		    elementResidual_u[i] += ck.Mass_weak(m_t,u_test_dV[i]) +
+		      ck.Hamiltonian_weak(H,u_test_dV[i]) +
+		      ck.Reaction_weak(r,u_test_dV[i]) +
+		      ck.SubgridError(subgridError_u,Lstar_u[i]) +
+		      ck.NumericalDiffusion(nu_sc,grad_u,&u_grad_test_dV[i_nSpace]);
+		  }//i
+		//
+	      }//k
+	    //
+	    //apply weak constraints for unknowns near zero level set
+	    //
+	    //
+	    if (freezeLevelSet)
+	      {
+		for (int j = 0; j < nDOF_trial_element; j++)
+		  {
+		    const int eN_j = eN*nDOF_trial_element+j;
+		    const int J = u_l2g[eN_j];
+		    //if (weakDirichletConditionFlags[J] == 1)
+		    if (fabs(u_weak_internal_bc_dofs[J]) < epsilon_redist)
+		      {
+			elementResidual_u[j] = (u_dof[J]-u_weak_internal_bc_dofs[J])*weakDirichletFactor*elementDiameter[eN];
+		      }
+		  }//j
+	      }//freeze
+
+	    //
+	    //load element into global residual and save element residual
+	    //
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {
+		register int eN_i=eN*nDOF_test_element+i;
+		globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
+	      }//i
+	  }//elements
+      }
+
+
+
+      //////////////////
+      
     };//RDLS
   inline RDLS_base* newRDLS(int nSpaceIn,
 			    int nQuadraturePoints_elementIn,
