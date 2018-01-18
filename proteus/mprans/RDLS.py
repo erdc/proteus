@@ -1,7 +1,6 @@
 import proteus
 from proteus.mprans.cRDLS import *
 
-
 class SubgridError(proteus.SubgridError.SGE_base):
     def __init__(self, coefficients, nd):
         proteus.SubgridError.SGE_base.__init__(self, coefficients, nd, False)
@@ -145,7 +144,20 @@ class PsiTC(proteus.StepControl.SC_base):
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import redistanceLevelSetCoefficientsEvaluate
 
-    def __init__(self, applyRedistancing=True, epsFact=2.0, nModelId=None, u0=None, rdModelId=0, penaltyParameter=0.0, useMetrics=0.0, useConstantH=False, weakDirichletFactor=10.0, backgroundDiffusionFactor=0.01):
+    def __init__(self,
+                 applyRedistancing=True,
+                 epsFact=2.0,
+                 nModelId=None,
+                 u0=None,
+                 rdModelId=0,
+                 penaltyParameter=0.0,
+                 useMetrics=0.0,
+                 useConstantH=False,
+                 weakDirichletFactor=10.0,
+                 backgroundDiffusionFactor=0.01,
+                 # Parameters for elliptic re-distancing                
+                 ELLIPTIC_REDISTANCING=False,
+                 alpha=1.0):
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
         variableNames = ['phid']
@@ -178,7 +190,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.penaltyParameter = penaltyParameter
         self.backgroundDiffusionFactor = backgroundDiffusionFactor
         self.weakDirichletFactor = weakDirichletFactor
-
+        self.ELLIPTIC_REDISTANCING=ELLIPTIC_REDISTANCING
+        self.alpha=alpha
+        
     def attachModels(self, modelList):
         if self.nModelId is not None:
             self.nModel = modelList[self.nModelId]
@@ -823,7 +837,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # self.elementResidual[0].fill(0.0)
         # cRDLS.calculateResidual(self.mesh.nElements_global,
         # print "beta_bdf",beta_bdf
-        self.rdls.calculateResidual(  # element
+
+        if (self.coefficients.ELLIPTIC_REDISTANCING==True):
+            self.calculateResidual = self.rdls.calculateResidual_ellipticRedist
+            self.calculateJacobian = self.rdls.calculateJacobian_ellipticRedist
+        else:
+            self.calculateResidual = self.rdls.calculateResidual
+            self.calculateJacobian = self.rdls.calculateJacobian
+            
+        self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -883,7 +905,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('u', 0)],
-            self.ebqe[('grad(u)', 0)])
+            self.ebqe[('grad(u)', 0)],
+            # elliptic re-distancing
+            self.coefficients.alpha)
         # print "m_tmp",self.timeIntegration.m_tmp[0]
         # print "dH",self.q[('dH',0,0)]
         # print "dH_sge",self.q[('dH_sge',0,0)]
@@ -916,7 +940,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             alpha_bdf = self.timeIntegration.dt
             beta_bdf = self.timeIntegration.m_last
-        self.rdls.calculateJacobian(  # element
+            
+        self.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -968,7 +993,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_u0,
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.ebqe[('u', 0)],
-            self.csrColumnOffsets_eb[(0, 0)])
+            self.csrColumnOffsets_eb[(0, 0)],
+            # elliptic re-distancing
+            self.coefficients.alpha)
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1

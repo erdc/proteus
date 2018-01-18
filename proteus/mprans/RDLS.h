@@ -5,6 +5,8 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+#define SINGLE_POTENTIAL 0
+
 namespace proteus
 {
   class RDLS_base
@@ -71,7 +73,9 @@ namespace proteus
 				   int* isDOFBoundary_u,
 				   double* ebqe_bc_u_ext,
 				   double* ebqe_u,
-				   double* ebqe_n)=0;
+				   double* ebqe_n,
+				   // elliptic redistancing
+				   double alpha)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -125,7 +129,9 @@ namespace proteus
 				   double* ebqe_phi_ls_ext,
 				   int* isDOFBoundary_u,
 				   double* ebqe_bc_u_ext,
-				   int* csrColumnOffsets_eb_u_u)=0;
+				   int* csrColumnOffsets_eb_u_u,
+				   // elliptic redistancing
+				   double alpha)=0;
     virtual void calculateResidual_ellipticRedist(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -186,7 +192,9 @@ namespace proteus
 				   int* isDOFBoundary_u,
 				   double* ebqe_bc_u_ext,
 				   double* ebqe_u,
-				   double* ebqe_n)=0;
+				   double* ebqe_n,
+				   // elliptic redistancing
+				   double alpha)=0;
     virtual void calculateJacobian_ellipticRedist(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -240,7 +248,9 @@ namespace proteus
 				   double* ebqe_phi_ls_ext,
 				   int* isDOFBoundary_u,
 				   double* ebqe_bc_u_ext,
-				   int* csrColumnOffsets_eb_u_u)=0;    
+				   int* csrColumnOffsets_eb_u_u,
+				   // elliptic redistancing
+				   double alpha)=0;    
   };
 
   template<class CompKernelType,
@@ -273,6 +283,19 @@ namespace proteus
 	else
 	  H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
 	return H;
+      }
+      
+      inline
+	double smoothedDirac(double eps, double phi)
+      {
+	double d;
+	if (phi > eps)
+	  d=0.0;
+	else if (phi < -eps)
+	  d=0.0;
+	else
+	  d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
+	return d; 
       }
 
       inline
@@ -404,7 +427,9 @@ namespace proteus
 			     int* isDOFBoundary_u,
 			     double* ebqe_bc_u_ext,
 			     double* ebqe_u,
-			     double* ebqe_n)
+			     double* ebqe_n,
+			     // elliptic redistancing
+			     double alpha)
       {
 #ifdef CKDEBUG
 	std::cout<<"stuff"<<"\t"
@@ -912,7 +937,9 @@ namespace proteus
 			     double* ebqe_phi_ls_ext,
 			     int* isDOFBoundary_u,
 			     double* ebqe_bc_u_ext,
-			     int* csrColumnOffsets_eb_u_u)
+			     int* csrColumnOffsets_eb_u_u,
+			     // elliptic redistancing
+			     double alpha)
       {
 	//
 	//loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -1368,7 +1395,9 @@ namespace proteus
 			     int* isDOFBoundary_u,
 			     double* ebqe_bc_u_ext,
 			     double* ebqe_u,
-			     double* ebqe_n)
+			     double* ebqe_n,
+			     // elliptic redistancing
+			     double alpha)
       {
 	//
 	//loop over elements to compute volume integrals and load them into element and global residual
@@ -1380,12 +1409,6 @@ namespace proteus
 	//eN_j is the element trial function index
 	//eN_k_j is the quadrature point index for a trial function
 	//eN_k_i is the quadrature point index for a trial function
-	double timeIntegrationScale = 1.0;
-	if (useTimeIntegration == 0)
-	  timeIntegrationScale = 0.0;
-	double lag_shockCapturingScale = 1.0;
-	if (lag_shockCapturing == 0)
-	  lag_shockCapturingScale = 0.0;
 	for(int eN=0;eN<nElements_global;eN++)
 	  {
 	    //declare local storage for element residual and initialize
@@ -1402,27 +1425,14 @@ namespace proteus
 		register int eN_k = eN*nQuadraturePoints_element+k,
 		  eN_k_nSpace = eN_k*nSpace,
 		  eN_nDOF_trial_element = eN*nDOF_trial_element;
-		register double u=0.0,grad_u[nSpace],
-		  m=0.0,dm=0.0,
-		  H=0.0,dH[nSpace],
-		  m_t=0.0,dm_t=0.0,
-		  r=0.0,
-		  dH_tau[nSpace],//dH if not lagging or q_dH_last if lagging tau
-		  dH_strong[nSpace],//dH if not lagging or q_dH_last if lagging strong residual and adjoint
-		  pdeResidual_u=0.0,
-		  Lstar_u[nDOF_test_element],
-		  subgridError_u=0.0,
-		  tau=0.0,tau0=0.0,tau1=0.0,
-		  numDiff0=0.0,numDiff1=0.0,
-		  nu_sc=0.0,
-		  jac[nSpace*nSpace],
-		  jacDet,
-		  jacInv[nSpace*nSpace],
+		register double
+		  coeff, delta,
+		  u=0,grad_u[nSpace],
+		  m=0.0,
+		  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
 		  u_grad_trial[nDOF_trial_element*nSpace],
-		  u_test_dV[nDOF_trial_element],
-		  u_grad_test_dV[nDOF_test_element*nSpace],
-		  dV,x,y,z,
-		  G[nSpace*nSpace],G_dd_G,tr_G;
+		  u_test_dV[nDOF_trial_element], u_grad_test_dV[nDOF_test_element*nSpace],
+		  dV,x,y,z,G[nSpace*nSpace],G_dd_G,tr_G;
 		ck.calculateMapping_element(eN,
 					    k,
 					    mesh_dof,
@@ -1442,179 +1452,62 @@ namespace proteus
 		//get the physical integration weight
 		dV = fabs(jacDet)*dV_ref[k];
 		ck.calculateG(jacInv,G,G_dd_G,tr_G);
-
-
-
 		//get the trial function gradients
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				    jacInv,
+				    u_grad_trial);
 		//get the solution
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+		ck.valFromDOF(u_dof,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_ref[k*nDOF_trial_element],
+			      u);
 		//get the solution gradients
-		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+		ck.gradFromDOF(u_dof,
+			       &u_l2g[eN_nDOF_trial_element],
+			       u_grad_trial,
+			       grad_u);
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
 		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
 		    for (int I=0;I<nSpace;I++)
-		      {
-			u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
-		      }
+		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
 		  }
-		//
-		//calculate pde coefficients at quadrature points
-		//
-		/* norm = 1.0e-8; */
-		/* for (int I=0;I<nSpace;I++) */
-		/*        norm += grad_u[I]*grad_u[I]; */
-		/* norm = sqrt(norm); */
-
-		/* for (int I=0;I<nSpace;I++) */
-		/*        dir[I] = grad_u[I]/norm; */
-
-		/* ck.calculateGScale(G,dir,h_phi); */
-
-		epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-
-		evaluateCoefficients(epsilon_redist,
-				     phi_ls[eN_k],
-				     u,
-				     grad_u,
-				     m,
-				     dm,
-				     H,
-				     dH,
-				     r);
-		//TODO allow not lagging of subgrid error etc,
-		//remove conditional?
-		//default no lagging
-		for (int I=0; I < nSpace; I++)
-		  {
-		    dH_tau[I] = dH[I];
-		    dH_strong[I] = dH[I];
-		  }
-		if (lag_subgridError > 0)
-		  {
-		    for (int I=0; I < nSpace; I++)
-		      {
-			dH_tau[I] = q_dH_last[eN_k_nSpace+I];
-		      }
-		  }
-		if (lag_subgridError > 1)
-		  {
-		    for (int I=0; I < nSpace; I++)
-		      {
-			dH_strong[I] = q_dH_last[eN_k_nSpace+I];
-		      }
-		  }
-		//save mass for time history and dH for subgrid error
-		//save solution for other models
-		//
+		// MOVING MESH. Omit for now //
+		// COMPUTE NORM OF GRAD(u) //
+		double norm_grad_u = 0.;
+		for (int I=0;I<nSpace;I++)
+		  norm_grad_u += grad_u[I]*grad_u[I];
+		norm_grad_u = std::sqrt(norm_grad_u) + 1.0E-10;
+		
+		// SAVE MASS AND SOLUTION FOR OTHER MODELS //
 		q_m[eN_k] = m;
 		q_u[eN_k] = u;
 		for (int I=0;I<nSpace;I++)
-		  q_n[eN_k_nSpace+I] = dir[I];
+		  q_n[eN_k_nSpace+I] = grad_u[I]/norm_grad_u; 
 
-		for (int I=0;I<nSpace;I++)
-		  {
-		    int eN_k_nSpace_I = eN_k_nSpace+I;
-		    q_dH[eN_k_nSpace_I] = dH[I];
-		  }
+		// COMPUTE COEFFICIENTS //
+		if (SINGLE_POTENTIAL == 1)
+		  coeff = 1.0-1.0/norm_grad_u; //single potential
+		else
+		  coeff = 1.0+2*std::pow(norm_grad_u,2)-3*norm_grad_u;
 
-		//
-		//moving mesh
-		//
-		//omit for now
-		//
-		//calculate time derivative at quadrature points
-		//
-		ck.bdf(alphaBDF,
-		       q_m_betaBDF[eN_k],
-		       m,
-		       dm,
-		       m_t,
-		       dm_t);
+		// COMPUTE DELTA FUNCTION //
+		epsilon_redist = epsFact_redist*(useMetrics*h_phi
+						 +(1.0-useMetrics)*elementDiameter[eN]);
+		delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
 
-		//TODO add option to skip if not doing time integration (Newton stead-state solve)
-		m *= timeIntegrationScale; dm *= timeIntegrationScale; m_t *= timeIntegrationScale;
-		dm_t *= timeIntegrationScale;
-		//
-		//calculate subgrid error (strong residual and adjoint)
-		//
-		//calculate strong residual
-		pdeResidual_u = ck.Mass_strong(m_t) +
-		  ck.Hamiltonian_strong(dH_strong,grad_u) + //would need dH if not lagging
-		  ck.Reaction_strong(r);
-		//calculate adjoint
-		for (int i=0;i<nDOF_test_element;i++)
-		  {
-		    //register int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace;
-		    register int  i_nSpace=i*nSpace;
-		    Lstar_u[i]  = ck.Hamiltonian_adjoint(dH_strong,&u_grad_test_dV[i_nSpace]);
-		    //reaction is constant
-		  }
-		//calculate tau and tau*Res
-		calculateSubgridError_tau(elementDiameter[eN],
-					  dm_t,dH_tau,
-					  q_cfl[eN_k],
-					  tau0);
-		calculateSubgridError_tau(G,
-					  dH_tau,
-					  tau1,
-					  q_cfl[eN_k]);
-
-		tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
-
-		//std::cout<<tau<<std::endl;
-
-
-		subgridError_u = -tau*pdeResidual_u;
-		//
-		//calculate shock capturing diffusion
-		//
-		ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u,grad_u,numDiff0);
-		ck.calculateNumericalDiffusion(shockCapturingDiffusion,G,pdeResidual_u,grad_u,numDiff1);
-
-		q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
-
-		nu_sc = q_numDiff_u[eN_k]*(1.0-lag_shockCapturingScale) + q_numDiff_u_last[eN_k]*lag_shockCapturingScale;
-		double epsilon_background_diffusion = 2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-		if (fabs(phi_ls[eN_k]) >  epsilon_background_diffusion)
-		  nu_sc += backgroundDiffusionFactor*elementDiameter[eN];
-		//
-		//update element residual
-		//
+		// UPDATE ELEMENT RESIDUAL //
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
 		    register int i_nSpace = i*nSpace;
-		    //register int eN_k_i=eN_k*nDOF_test_element+i;
-		    //register int eN_k_i_nSpace = eN_k_i*nSpace;
-
-		    elementResidual_u[i] += ck.Mass_weak(m_t,u_test_dV[i]) +
-		      ck.Hamiltonian_weak(H,u_test_dV[i]) +
-		      ck.Reaction_weak(r,u_test_dV[i]) +
-		      ck.SubgridError(subgridError_u,Lstar_u[i]) +
-		      ck.NumericalDiffusion(nu_sc,grad_u,&u_grad_test_dV[i_nSpace]);
+		    elementResidual_u[i] +=
+		      ck.NumericalDiffusion(coeff,grad_u,&u_grad_test_dV[i_nSpace])
+		      +alpha*u*delta*u_test_dV[i];
 		  }//i
 		//
 	      }//k
 	    //
-	    //apply weak constraints for unknowns near zero level set
-	    //
-	    //
-	    if (freezeLevelSet)
-	      {
-		for (int j = 0; j < nDOF_trial_element; j++)
-		  {
-		    const int eN_j = eN*nDOF_trial_element+j;
-		    const int J = u_l2g[eN_j];
-		    //if (weakDirichletConditionFlags[J] == 1)
-		    if (fabs(u_weak_internal_bc_dofs[J]) < epsilon_redist)
-		      {
-			elementResidual_u[j] = (u_dof[J]-u_weak_internal_bc_dofs[J])*weakDirichletFactor*elementDiameter[eN];
-		      }
-		  }//j
-	      }//freeze
-
 	    //
 	    //load element into global residual and save element residual
 	    //
@@ -1679,17 +1572,13 @@ namespace proteus
 			     double* ebqe_phi_ls_ext,
 			     int* isDOFBoundary_u,
 			     double* ebqe_bc_u_ext,
-			     int* csrColumnOffsets_eb_u_u)
+			     int* csrColumnOffsets_eb_u_u,
+			     // elliptic redistancing
+			     double alpha)
       {
 	//
-	//loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
+	//loop over elements 
 	//
-	double timeIntegrationScale = 1.0;
-	if (useTimeIntegration == 0)
-	  timeIntegrationScale = 0.0;
-	double lag_shockCapturingScale = 1.0;
-	if (lag_shockCapturing == 0)
-	  lag_shockCapturingScale = 0.0;
 	for(int eN=0;eN<nElements_global;eN++)
 	  {
 	    register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
@@ -1706,27 +1595,14 @@ namespace proteus
 		  eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
 		//declare local storage
-		register double u=0.0,
-		  grad_u[nSpace],
-		  m=0.0,dm=0.0,
-		  H=0.0,dH[nSpace],
-		  m_t=0.0,dm_t=0.0,r=0.0,
-		  dH_tau[nSpace],//dH or dH_last if lagging for tau formula
-		  dH_strong[nSpace],//dH or dH_last if lagging for strong residual and adjoint
-		  dpdeResidual_u_u[nDOF_trial_element],
-		  Lstar_u[nDOF_test_element],
-		  dsubgridError_u_u[nDOF_trial_element],
-		  tau=0.0,tau0=0.0,tau1=0.0,
-		  nu_sc=0.0,
-		  jac[nSpace*nSpace],
-		  jacDet,
-		  jacInv[nSpace*nSpace],
+		register double
+		  coeff1, coeff2, delta,
+		  u=0.0, grad_u[nSpace],
+		  m=0.0,
+		  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
 		  u_grad_trial[nDOF_trial_element*nSpace],
-		  dV,
-		  u_test_dV[nDOF_test_element],
-		  u_grad_test_dV[nDOF_test_element*nSpace],
-		  x,y,z,
-		  G[nSpace*nSpace],G_dd_G,tr_G;
+		  dV, u_test_dV[nDOF_test_element], u_grad_test_dV[nDOF_test_element*nSpace],
+		  x,y,z,G[nSpace*nSpace],G_dd_G,tr_G;
 		//
 		//calculate solution and gradients at quadrature points
 		//
@@ -1750,125 +1626,50 @@ namespace proteus
 		dV = fabs(jacDet)*dV_ref[k];
 		ck.calculateG(jacInv,G,G_dd_G,tr_G);
 		//get the trial function gradients
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				    jacInv,
+				    u_grad_trial);
 		//get the solution
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+		ck.valFromDOF(u_dof,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_ref[k*nDOF_trial_element],
+			      u);
 		//get the solution gradients
-		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+		ck.gradFromDOF(u_dof,
+			       &u_l2g[eN_nDOF_trial_element],
+			       u_grad_trial,
+			       grad_u);
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
 		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
 		    for (int I=0;I<nSpace;I++)
-		      {
-			u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
-		      }
+		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
 		  }
-		//
-		//calculate pde coefficients and derivatives at quadrature points
-		//
-		/* norm = 1.0e-8; */
-		/* for (int I=0;I<nSpace;I++) */
-		/*        norm += grad_u[I]*grad_u[I]; */
-		/* norm = sqrt(norm); */
-		/* for (int I=0;I<nSpace;I++) */
-		/*        dir[I] = grad_u[I]/norm; */
+		// MOVING MESH. Omit for now //
+		// COMPUTE NORM OF GRAD(u) //
+		double norm_grad_u = 0;
+		for(int I=0;I<nSpace;I++)
+		  norm_grad_u += grad_u[I]*grad_u[I];
+		norm_grad_u = std::sqrt(norm_grad_u) + 1E-10;
 
-		/* ck.calculateGScale(G,dir,h_phi); */
-
-		epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-
-		evaluateCoefficients(epsilon_redist,
-				     phi_ls[eN_k],
-				     u,
-				     grad_u,
-				     m,
-				     dm,
-				     H,
-				     dH,
-				     r);
-		//TODO allow not lagging of subgrid error etc
-		//remove conditional?
-		//default no lagging
-		for (int I=0; I < nSpace; I++)
+		// COMPUTE COEFFICIENTS //
+		if (SINGLE_POTENTIAL==1)
 		  {
-		    dH_tau[I] = dH[I];
-		    dH_strong[I] = dH[I];
+		    coeff1 = 0.; //-1./norm_grad_u;
+		    coeff2 = 1./std::pow(norm_grad_u,3);
 		  }
-		if (lag_subgridError > 0)
+		else
 		  {
-		    for (int I=0; I < nSpace; I++)
-		      {
-			dH_tau[I] = q_dH_last[eN_k_nSpace+I];
-		      }
+		    coeff1=fmax(1E-10, 2*std::pow(norm_grad_u,2)-3*norm_grad_u);
+		    coeff2=fmax(1E-10, 4.-3./norm_grad_u);
 		  }
-		if (lag_subgridError > 1)
-		  {
-		    for (int I=0; I < nSpace; I++)
-		      {
-			dH_strong[I] = q_dH_last[eN_k_nSpace+I];
-		      }
-		  }
-		//
-		//moving mesh
-		//
-		//omit for now
-		//
-		//calculate time derivatives
-		//
-		ck.bdf(alphaBDF,
-		       q_m_betaBDF[eN_k],
-		       m,
-		       dm,
-		       m_t,
-		       dm_t);
-		//TODO add option to skip if not doing time integration (Newton stead-state solve)
-		m *= timeIntegrationScale; dm *= timeIntegrationScale; m_t *= timeIntegrationScale;
-		dm_t *= timeIntegrationScale;
 
-		//
-		//calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
-		//
-		//calculate the adjoint times the test functions
-		for (int i=0;i<nDOF_test_element;i++)
-		  {
-		    //int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace;
-		    int i_nSpace=i*nSpace;
-
-		    Lstar_u[i]=ck.Hamiltonian_adjoint(dH_strong,&u_grad_test_dV[i_nSpace]);
-
-		  }
-		//calculate the Jacobian of strong residual
-		for (int j=0;j<nDOF_trial_element;j++)
-		  {
-		    //int eN_k_j=eN_k*nDOF_trial_element+j;
-		    //int eN_k_j_nSpace = eN_k_j*nSpace;
-		    int j_nSpace = j*nSpace;
-		    dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref[k*nDOF_trial_element+j]) +
-		      ck.HamiltonianJacobian_strong(dH_strong,&u_grad_trial[j_nSpace]);
-
-		  }
-		//tau and tau*Res
-		calculateSubgridError_tau(elementDiameter[eN],
-					  dm_t,
-					  dH_tau,
-					  q_cfl[eN_k],
-					  tau0);
-		calculateSubgridError_tau(G,
-					  dH_tau,
-					  tau1,
-					  q_cfl[eN_k]);
-
-		tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
-
-		for (int j=0;j<nDOF_trial_element;j++)
-		  dsubgridError_u_u[j] =  -tau*dpdeResidual_u_u[j];
-
-		nu_sc = q_numDiff_u[eN_k]*(1.0-lag_shockCapturingScale) + q_numDiff_u_last[eN_k]*lag_shockCapturingScale;
-		double epsilon_background_diffusion = 2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-		if (fabs(phi_ls[eN_k]) >  epsilon_background_diffusion)
-		  nu_sc += backgroundDiffusionFactor*elementDiameter[eN];
-
+		// COMPUTE DELTA FUNCTION //
+		epsilon_redist = epsFact_redist*(useMetrics*h_phi
+						 +(1.0-useMetrics)*elementDiameter[eN]);
+		delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
+		
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
 		    //int eN_k_i=eN_k*nDOF_test_element+i;
@@ -1879,51 +1680,37 @@ namespace proteus
 			//int eN_k_j_nSpace = eN_k_j*nSpace;
 			int j_nSpace = j*nSpace;
 			int i_nSpace = i*nSpace;
-
-			elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
-			  ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
-			  ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
-			  ck.NumericalDiffusionJacobian(nu_sc,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
-
+			
+			elementJacobian_u_u[i][j] +=
+			  ck.NumericalDiffusionJacobian(1.0,
+			  				&u_grad_trial[j_nSpace],
+			  				&u_grad_test_dV[i_nSpace])
+			  + ck.NumericalDiffusionJacobian(coeff1,
+							&u_grad_trial[j_nSpace],
+							&u_grad_test_dV[i_nSpace])
+			  + ( coeff2*dV*
+			      ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[i_nSpace])*
+			      ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[j_nSpace]) )
+			  +alpha*delta*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i];
 		      }//j
 		  }//i
 	      }//k
 	    //
 	    //load into element Jacobian into global Jacobian
 	    //
-
-	    //now try to account for weak dirichlet conditions in interior (frozen level set values)
-	    if (freezeLevelSet)
-	      {
-		//assume correspondence between dof and equations
-		for (int j = 0; j < nDOF_trial_element; j++)
-		  {
-		    const int J = u_l2g[eN*nDOF_trial_element+j];
-		    if (fabs(u_weak_internal_bc_dofs[J]) < epsilon_redist)
-		      //if (weakDirichletConditionFlags[J] == 1)
-		      {
-			for (int jj=0; jj < nDOF_trial_element; jj++)
-			  elementJacobian_u_u[j][jj] = 0.0;
-			elementJacobian_u_u[j][j] = weakDirichletFactor*elementDiameter[eN];
-			//mwf debug
-			//std::cout<<"RDLSV2 Jac freeze eN= "<<eN<<" j= "<<j<<" J= "<<J<<std::endl;
-		      }
-		  }
-	      }
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i = eN*nDOF_test_element+i;
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
 		    int eN_i_j = eN_i*nDOF_trial_element+j;
-		    globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+		    globalJacobian[csrRowIndeces_u_u[eN_i]
+				   + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
 		  }//j
 	      }//i
 	  }//elements
       }//computeJacobian
-
-      //////////////////
-      
+      //////////////////      
     };//RDLS
   inline RDLS_base* newRDLS(int nSpaceIn,
 			    int nQuadraturePoints_elementIn,
