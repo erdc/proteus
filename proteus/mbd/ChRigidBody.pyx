@@ -7,6 +7,7 @@
 import os
 import sys
 import csv
+import copy
 cimport numpy as np
 import numpy as np
 from mpi4py import MPI
@@ -1243,6 +1244,7 @@ cdef class ProtChSystem:
     cdef public:
         double chrono_dt
         bool build_kdtree
+        bool dist_search
         bool parallel_mode
         int chrono_processor
         bool first_step
@@ -1253,6 +1255,7 @@ cdef class ProtChSystem:
         double sampleRate
         double next_sample
         bool record_values
+        object model_mesh
 
     def __cinit__(self, np.ndarray gravity, int nd=3, dt_init=0., sampleRate=0):
         self.thisptr = newSystem(<double*> gravity.data)
@@ -1260,7 +1263,8 @@ cdef class ProtChSystem:
         self.dt_init = dt_init
         self.model = None
         self.nd = nd
-        self.build_kdtree = False
+        self.build_kdtree = True
+        self.dist_search = True
         comm = Comm.get().comm.tompi4py()
         if comm.Get_size() > 1:
             parallel_mode = True
@@ -1375,7 +1379,7 @@ cdef class ProtChSystem:
         if self.model is not None:
             try:
                 self.proteus_dt = self.model.levelModelList[-1].dt_last
-                self.proteus_dt_next = self.model.levelModelList[-1].dt
+                self.proteus_dt_next = self.model.levelModelList[-1].dt_last  # wrong prediction is varying time step
                 self.t = t = self.model.stepController.t_model_last
             except:
                 self.proteus_dt = self.dt_init
@@ -1386,11 +1390,14 @@ cdef class ProtChSystem:
             self.t = t = self.thisptr.system.GetChTime()
         else:
             sys.exit('no time step set')
-        if self.model is not None and self.build_kdtree is True:
-            self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
+        if self.model is not None:
+            if self.build_kdtree is True and self.dist_search is False:
+                Profiling.logEvent("Building k-d tree for mooring nodes lookup")
+                self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
         if t >= self.next_sample:
             self.record_values = True
             self.next_sample += self.sampleRate
+        import time
         Profiling.logEvent("Chrono prestep")
         for s in self.subcomponents:
             s.prestep()
@@ -1415,12 +1422,15 @@ cdef class ProtChSystem:
         Profiling.logEvent("Starting init"+str(self.next_sample))
         self.directory = str(Profiling.logDir)+'/'
         self.thisptr.setDirectory(self.directory)
-        if self.model is not None and self.build_kdtree is True:
-            self.u = self.model.levelModelList[-1].u
-            # finite element space (! linear for p, quadratic for velocity)
-            self.femSpace_velocity = self.u[1].femSpace
-            self.femSpace_pressure = self.u[0].femSpace
-            self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
+        if self.model is not None:
+            self.model_mesh = self.model.levelModelList[-1].mesh
+            if self.build_kdtree is True:
+                Profiling.logEvent("Building k-d tree for mooring nodes lookup on first time step")
+                self.u = self.model.levelModelList[-1].u
+                # finite element space (! linear for p, quadratic for velocity)
+                self.femSpace_velocity = self.u[1].femSpace
+                self.femSpace_pressure = self.u[0].femSpace
+                self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
         for s in self.subcomponents:
             s.calculate_init()
         Profiling.logEvent("Setup initial"+str(self.next_sample))
@@ -1476,8 +1486,11 @@ cdef class ProtChSystem:
         """
         self.subcomponents += [subcomponent]
 
-    def findElementContainingCoords(self, coords):
+    def findElementContainingCoordsKD(self, coords):
         """
+        k-d tree search of nearest node, element containing coords, and owning
+        rank.
+
         Parameters
         ----------
         coords: array_like
@@ -1487,58 +1500,142 @@ cdef class ProtChSystem:
         -------
         xi:
             local coordinates
+        node: int
+            nearest node
         eN: int
             (local) element number
         rank: int
             processor rank containing element
         """
-        #log Profiling.logEvent("Looking for element " +str(coords))
         comm = Comm.get().comm.tompi4py()
-        xi = owning_proc = element = rank = None  # initialised as None
+        owning_proc = 0
+        xi = element = None  # initialised as None
+        local_element = None
         # get nearest node on each processor
         comm.barrier()
-        #log Profiling.logEvent("get nearest node " +str(coords))
         nearest_node, nearest_node_distance = getLocalNearestNode(coords, self.nodes_kdtree)
         # look for element containing coords on each processor (if it exists)
         comm.barrier()
-        #log Profiling.logEvent("get local element " +str(coords))
-        local_element = getLocalElement(self.femSpace_velocity, coords, nearest_node)
+        # make sure that processor owns nearest node
+        if nearest_node < self.model_mesh.nNodes_owned:
+            local_element = getLocalElement(self.femSpace_velocity, coords, nearest_node)
+            
+        else:
+            nearest_node_distance = 0
+        _, owning_proc = comm.allreduce((-nearest_node_distance, comm.rank),
+                                        op=MPI.MINLOC)
         comm.barrier()
-        #log Profiling.logEvent("got local element " +str(coords))
-        if local_element:
+        if comm.rank == owning_proc and local_element:
+            xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element,
+                                                                    coords)
+        comm.barrier()
+        xi = comm.bcast(xi, owning_proc)
+        eN = comm.bcast(local_element, owning_proc)
+        rank = comm.bcast(owning_proc, owning_proc)
+        node = comm.bcast(nearest_node, owning_proc)
+        return xi, node, eN, rank
+
+
+    def findElementContainingCoordsDist(self,
+                                        coords,
+                                        node_guess,
+                                        eN_guess,
+                                        rank_guess):
+        """
+        Distance search of nearest node, element containing coords, and owning
+        rank.
+
+        Parameters
+        ----------
+        coords: array_like
+            global coordinates to look for
+        node_guess: int
+            first guess of closest node
+        eN_guess: int
+            first guess of element containing coords
+        rank_guess: int
+            first guess of rank containing coords
+
+        Returns
+        -------
+        xi:
+            local coordinates
+        node: int
+            nearest node
+        eN: int
+            (local) element number
+        rank: int
+            processor rank containing element
+        """
+        mm = self.model_mesh  # local mesh
+        mg = self.model_mesh.globalMesh  # global mesh
+        comm = Comm.get().comm.tompi4py()
+        xi = None  # initialised as None
+        # get nearest node on each processor
+        local_element = None
+        # first check if element still containing coords
+        rank_owning = rank_guess
+        nearest_node = node_guess
+        if comm.rank == rank_owning:
+            if 0 <= eN_guess < mm.nElements_global:
+                xi = self.femSpace_velocity.elementMaps.getInverseValue(eN_guess, coords)
+                if self.femSpace_velocity.elementMaps.referenceElement.onElement(xi):
+                    local_element = eN_guess
+                else:
+                    xi = None
+        local_element = comm.bcast(local_element, rank_owning)
+        # if not, find new nearest node, element, and owning processor 
+        coords_outside = False
+        while local_element is None and coords_outside is False:
+            rank_owning_previous = rank_owning
+            owning_rank = False
+            if comm.rank == rank_owning:
+                owning_rank = True
+                nearest_node, dist = pyxGetLocalNearestNode(coords=coords,
+                                                      nodeArray=mm.nodeArray,
+                                                      nodeStarOffsets=mm.nodeStarOffsets,
+                                                      nodeStarArray=mm.nodeStarArray,
+                                                      node=nearest_node,
+                                                      rank=rank_owning)
+                if nearest_node >= mm.nNodes_owned:
+                    # change rank ownership
+                    node_nb_global = mg.nodeNumbering_subdomain2global[nearest_node]
+                    if not mg.nodeOffsets_subdomain_owned[comm.rank] <= node_nb_global < mg.nodeOffsets_subdomain_owned[comm.rank+1]:
+                        new_rank = None
+                        for i in range(len(mg.nodeOffsets_subdomain_owned)):
+                            if mg.nodeOffsets_subdomain_owned[i] > node_nb_global:
+                                # changing processor
+                                if new_rank is None:
+                                    new_rank = i-1
+                            # getting nearest node number on new rank
+                        if new_rank is not None:
+                            nearest_node = node_nb_global-mg.nodeOffsets_subdomain_owned[new_rank]
+                            rank_owning = new_rank
+                else:
+                    # find local element
+                    local_element = getLocalElement(self.femSpace_velocity,
+                                                    coords,
+                                                    nearest_node)
+            # ownership might have changed here
+            comm.barrier()
+            _, rank_owning = comm.allreduce((owning_rank, rank_owning),
+                                            op=MPI.MAXLOC)
+            comm.barrier()
+            # if ownership is the same after 1 loop and local_element not found
+            # => coords must be outside domain
+            if rank_owning == rank_owning_previous and local_element is None:
+                coords_outside = True
+                break
+        if local_element is not None and comm.rank == rank_owning:
             xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
-        # check which processor has element (if any)
-        # if local_element:
-        #     print("Local element!")
-        #     owning_proc = comm.bcast(comm.rank, comm.rank)
-        #     # get local coords
-        #     Profiling.logEvent("getting xi" +str(coords))
-        #     xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
-        #     Profiling.logEvent("broadcasting results" +str(coords))
-        #     xi = comm.bcast(xi, owning_proc)
-        #     Profiling.logEvent("Broadcasted xi")
-        #     element = comm.bcast(local_element, owning_proc)
-        #     Profiling.logEvent("Broadcasted element")
-        #     rank = comm.bcast(owning_proc, owning_proc)
-        #     Profiling.logEvent("Broadcasted rank")
-        # Profiling.logEvent("broadcasting results" +str(coords))
         comm.barrier()
-        #print("MYRANK ", comm.rank)
-        #log Profiling.logEvent("Starting all reduce")
-        global_have_element, owning_proc = comm.allreduce((local_element, comm.rank),
+        global_have_element, rank_owning = comm.allreduce((local_element, comm.rank),
                                                           op=MPI.MAXLOC)
-        comm.barrier()
-        #log Profiling.logEvent("Finished all reduce")
-        if global_have_element:
-            #     Profiling.logEvent("broadcasting results" +str(coords))
-            xi = comm.bcast(xi, owning_proc)
-            #log Profiling.logEvent("Broadcasted xi" +str(xi))
-            element = comm.bcast(local_element, owning_proc)
-            #log Profiling.logEvent("Broadcasted element" +str(element))
-            rank = comm.bcast(owning_proc, owning_proc)
-            #log Profiling.logEvent("Broadcasted owning_proc" +str(rank))
-        #log Profiling.logEvent("got element finished" +str(coords))
-        return xi, element, rank
+        xi = comm.bcast(xi, rank_owning)
+        eN = comm.bcast(local_element, rank_owning)
+        rank = rank_owning
+        node = comm.bcast(nearest_node, rank_owning)
+        return xi, node, eN, rank
 
     def getFluidVelocityLocalCoords(self, xi, element, rank):
         """
@@ -1742,6 +1839,9 @@ cdef class ProtChMoorings:
       np.ndarray nb_elems
       double[:] _record_etas
       bool initialized
+      int[:] nearest_node_array
+      int[:] containing_element_array
+      int[:] owning_rank
     def __cinit__(self,
                   ProtChSystem system,
                   Mesh mesh,
@@ -1851,7 +1951,7 @@ cdef class ProtChMoorings:
         row = (accelerations.flatten('C')).tolist()
         record(self.record_file+file_name, row)
         # Fairlead / anchor tensions
-        file_name = '_T.csv'
+        file_name = '_tens.csv'
         if t == 0:
             row = ['Tb0', 'Tb1', 'Tb2', 'Tf0', 'Tf1', 'Tf2']
             record(self.record_file+file_name, row, 'w')
@@ -1935,16 +2035,16 @@ cdef class ProtChMoorings:
             self.fluid_acceleration_array = np.zeros((nb_nodes, 3))
         if self.fluid_density_array is None:
             self.fluid_density_array = np.zeros(nb_nodes)
-
+        self.nearest_node_array = np.zeros(nb_nodes, dtype=np.int32)
+        self.containing_element_array = np.zeros(nb_nodes, dtype=np.int32)
+        self.owning_rank = np.zeros(nb_nodes, dtype=np.int32)
 
     def prestep(self):
         """Sets external forces on the cable (if any)
         """
         if self.ProtChSystem.model is not None and self.external_forces_from_ns is True:
-            Profiling.logEvent('moorings extern forces')
             self.setExternalForces()
         elif self.external_forces_manual is True:
-            Profiling.logEvent('moorings manual extern forces')
             self.setExternalForces()
 
     def poststep(self):
@@ -2277,6 +2377,15 @@ cdef class ProtChMoorings:
             nb_nodes = self.thisptr.nodesRot.size()
         else:
             nb_nodes = self.thisptr.nodes.size()
+        cdef bool mesh_search = False
+        cdef bool dist_search = False
+        if self.ProtChSystem.model is not None and self.external_forces_from_ns is True:
+            mesh_search = True
+            if self.ProtChSystem.dist_search is True and self.ProtChSystem.first_step is False:
+                Profiling.logEvent("Starting distance search for cable nodes")
+                dist_search = True
+            else:
+                Profiling.logEvent("Starting k-d tree search for cable nodes")
         for i in range(nb_nodes):
             if self.beam_type == "BeamEuler":
                 vec = deref(self.thisptr.nodesRot[i]).GetPos()
@@ -2291,11 +2400,22 @@ cdef class ProtChMoorings:
                 z = comm.bcast(z, self.ProtChSystem.chrono_processor)
             coords = np.array([x, y, z])
             vel_arr = np.zeros(3)
-            if self.ProtChSystem.model is not None and self.external_forces_from_ns is True:
+            if mesh_search is True:
                 vel_grad_arr = np.zeros(3)
-                xi, el, rank = self.ProtChSystem.findElementContainingCoords(coords[:self.nd])
+                if dist_search is True:
+                    xi, nearest_node, el, rank = self.ProtChSystem.findElementContainingCoordsDist(coords=coords[:self.nd],
+                                                                                                   node_guess=self.nearest_node_array[i],
+                                                                                                   eN_guess=self.containing_element_array[i],
+                                                                                                   rank_guess=self.owning_rank[i])
+                else:
+                    xi, nearest_node, el, rank = self.ProtChSystem.findElementContainingCoordsKD(coords[:self.nd])
+                if el is None:
+                    el = -1
+                self.nearest_node_array[i] = nearest_node
+                self.containing_element_array[i] = el
+                self.owning_rank[i] = rank
                 comm.barrier()
-                if rank is not None:
+                if rank is not None and xi is not None:
                     vel_arr[:] = self.ProtChSystem.getFluidVelocityLocalCoords(xi, el, rank)
                 else:  # means node is outside domain
                     if self.fluid_velocity_function is not None:
@@ -2326,6 +2446,7 @@ cdef class ProtChMoorings:
             fluid_acceleration.push_back(acc)
             dens = self.fluid_density_array[i]
             fluid_density.push_back(dens)
+        Profiling.logEvent("Finished search for cable nodes")
         self.thisptr.setFluidAccelerationAtNodes(fluid_acceleration)
         self.thisptr.setFluidVelocityAtNodes(fluid_velocity)
         self.thisptr.setFluidDensityAtNodes(fluid_density)
@@ -2387,6 +2508,64 @@ def getLocalNearestNode(coords, kdtree):
     # determine local nearest node distance
     distance, node = kdtree.query(coords)
     return node, distance
+
+cdef pyxGetLocalNearestNode(double[:] coords,
+                            double[:,:] nodeArray,
+                            int[:] nodeStarOffsets,
+                            int[:] nodeStarArray,
+                            int node,
+                            int rank):
+    """Finds nearest node to coordinates (local)
+    Parameters
+    ----------
+    coords: array_like
+        coordinates from which to find nearest node
+    nodeArray: array_like
+        array of fluid mesh node coordinates
+    nodeStarOffsets: array_like
+        array of offsets from nodes (range)
+    nodeStarArray: array_like
+        array of neighbouring nodes
+    node: int
+        first guess for nearest node
+    rank: int
+        rank on which the nearest node is searched
+
+    Returns
+    -------
+    node: int
+        nearest node index
+    dist: float
+        distance to nearest node
+    """
+    # determine local nearest node distance
+    cdef int nearest_node = copy.deepcopy(node)
+    cdef int nearest_node0 = copy.deepcopy(node)
+    cdef int nOffsets
+    cdef double dist
+    cdef double min_dist
+    cdef double[:] node_coords
+    cdef bool found_node = False
+    node_coords = nodeArray[node]
+    min_dist = (node_coords[0]-coords[0])*(node_coords[0]-coords[0])+\
+               (node_coords[1]-coords[1])*(node_coords[1]-coords[1])+\
+               (node_coords[2]-coords[2])*(node_coords[2]-coords[2])
+    while found_node is False:
+        nearest_node0 = nearest_node
+        for nOffset in range(nodeStarOffsets[nearest_node0],
+                             nodeStarOffsets[nearest_node0+1]):
+            node = nodeStarArray[nOffset]
+            node_coords = nodeArray[node]
+            dist = (node_coords[0]-coords[0])*(node_coords[0]-coords[0])+\
+                   (node_coords[1]-coords[1])*(node_coords[1]-coords[1])+\
+                   (node_coords[2]-coords[2])*(node_coords[2]-coords[2])
+            if dist < min_dist:
+                min_dist = dist
+                nearest_node = node
+        if nearest_node0 == nearest_node:
+            found_node = True
+    return nearest_node, dist
+
 
 def getLocalElement(femSpace, coords, node):
     """Given coordinates and its nearest node, determine if it is on a
