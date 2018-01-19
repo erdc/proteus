@@ -63,6 +63,11 @@ cdef extern from "RDLS.h" namespace "proteus":
                                double * ebqe_bc_u_ext,
                                double * ebqe_u,
                                double * ebqe_n,
+                               int ELLIPTIC_REDISTANCING,
+                               double * abs_grad_u,
+                               double * lumped_qx,
+                               double * lumped_qy,
+                               double * lumped_qz,
                                double alpha)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -115,6 +120,8 @@ cdef extern from "RDLS.h" namespace "proteus":
                                int * isDOFBoundary_u,
                                double * ebqe_bc_u_ext,
                                int * csrColumnOffsets_eb_u_u,
+                               int ELLIPTIC_REDISTANCING,
+                               double * abs_grad_u,
                                double alpha)
         void calculateResidual_ellipticRedist(double * mesh_trial_ref,
                                               double * mesh_grad_trial_ref,
@@ -172,6 +179,11 @@ cdef extern from "RDLS.h" namespace "proteus":
                                               double * ebqe_bc_u_ext,
                                               double * ebqe_u,
                                               double * ebqe_n,
+                                              int ELLIPTIC_REDISTANCING,
+                                              double * abs_grad_u,
+                                              double * lumped_qx,
+                                              double * lumped_qy,
+                                              double * lumped_qz,
                                               double alpha)
         void calculateJacobian_ellipticRedist(double * mesh_trial_ref,
                                               double * mesh_grad_trial_ref,
@@ -224,6 +236,8 @@ cdef extern from "RDLS.h" namespace "proteus":
                                               int * isDOFBoundary_u,
                                               double * ebqe_bc_u_ext,
                                               int * csrColumnOffsets_eb_u_u,
+                                              int ELLIPTIC_REDISTANCING,
+                                              double * abs_grad_u,
                                               double alpha)
         void normalReconstruction(double* mesh_trial_ref,
                                   double* mesh_grad_trial_ref,
@@ -239,10 +253,24 @@ cdef extern from "RDLS.h" namespace "proteus":
                                   double* phi_dof,
                                   int offset_u, int stride_u,
                                   int numDOFs,
-                                  double* abs_grad_u,
                                   double* lumped_qx,
                                   double* lumped_qy,
                                   double* lumped_qz)
+        void absGradUReconstruction(double* mesh_trial_ref,
+                                    double* mesh_grad_trial_ref,
+                                    double* mesh_dof,
+                                    int* mesh_l2g,
+                                    double* dV_ref,
+                                    double* u_trial_ref,
+                                    double* u_grad_trial_ref,
+                                    double* u_test_ref,
+                                    int nElements_global,
+                                    int* u_l2g,
+                                    double* elementDiameter,
+                                    double* phi_dof,
+                                    int offset_u, int stride_u,
+                                    int numDOFs,
+                                    double* abs_grad_u)
     RDLS_base * newRDLS(int nSpaceIn,
                         int nQuadraturePoints_elementIn,
                         int nDOF_mesh_trial_elementIn,
@@ -330,6 +358,11 @@ cdef class cRDLS_base:
                           numpy.ndarray ebqe_bc_u_ext,
                           numpy.ndarray ebqe_u,
                           numpy.ndarray ebqe_n,
+                          int ELLIPTIC_REDISTANCING,
+                          numpy.ndarray abs_grad_u,
+                          numpy.ndarray lumped_qx,
+                          numpy.ndarray lumped_qy,
+                          numpy.ndarray lumped_qz,
                           double alpha):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                         < double * > mesh_grad_trial_ref.data,
@@ -387,6 +420,11 @@ cdef class cRDLS_base:
                                         < double * > ebqe_bc_u_ext.data,
                                         < double * > ebqe_u.data,
                                         < double * > ebqe_n.data,
+                                        ELLIPTIC_REDISTANCING,
+                                        < double * > abs_grad_u.data,
+                                        < double * > lumped_qx.data,
+                                        < double * > lumped_qy.data,
+                                        < double * > lumped_qz.data,
                                         alpha)
 
     def calculateJacobian(self,
@@ -441,6 +479,8 @@ cdef class cRDLS_base:
                           numpy.ndarray isDOFBoundary_u,
                           numpy.ndarray ebqe_bc_u_ext,
                           numpy.ndarray csrColumnOffsets_eb_u_u,
+                          int ELLIPTIC_REDISTANCING,
+                          numpy.ndarray abs_grad_u,
                           double alpha):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
@@ -495,6 +535,8 @@ cdef class cRDLS_base:
                                         < int * > isDOFBoundary_u.data,
                                         < double * > ebqe_bc_u_ext.data,
                                         < int * > csrColumnOffsets_eb_u_u.data,
+                                        ELLIPTIC_REDISTANCING,
+                                        < double * > abs_grad_u.data,
                                         alpha)
 
     def calculateResidual_ellipticRedist(self,
@@ -554,6 +596,11 @@ cdef class cRDLS_base:
                                          numpy.ndarray ebqe_bc_u_ext,
                                          numpy.ndarray ebqe_u,
                                          numpy.ndarray ebqe_n,
+                                         int ELLIPTIC_REDISTANCING,
+                                         numpy.ndarray abs_grad_u,
+                                         numpy.ndarray lumped_qx,
+                                         numpy.ndarray lumped_qy,
+                                         numpy.ndarray lumped_qz,
                                          double alpha):
         self.thisptr.calculateResidual_ellipticRedist( < double*> mesh_trial_ref.data,
                                                        < double * > mesh_grad_trial_ref.data,
@@ -611,6 +658,11 @@ cdef class cRDLS_base:
                                                        < double * > ebqe_bc_u_ext.data,
                                                        < double * > ebqe_u.data,
                                                        < double * > ebqe_n.data,
+                                                       ELLIPTIC_REDISTANCING,
+                                                       < double * > abs_grad_u.data,
+                                                       < double * > lumped_qx.data,
+                                                       < double * > lumped_qy.data,
+                                                       < double * > lumped_qz.data,
                                                        alpha)
 
     def calculateJacobian_ellipticRedist(self,
@@ -665,6 +717,8 @@ cdef class cRDLS_base:
                                          numpy.ndarray isDOFBoundary_u,
                                          numpy.ndarray ebqe_bc_u_ext,
                                          numpy.ndarray csrColumnOffsets_eb_u_u,
+                                         int ELLIPTIC_REDISTANCING,
+                                         numpy.ndarray abs_grad_u,
                                          double alpha):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
@@ -719,6 +773,8 @@ cdef class cRDLS_base:
                                                       < int * > isDOFBoundary_u.data,
                                                       < double * > ebqe_bc_u_ext.data,
                                                       < int * > csrColumnOffsets_eb_u_u.data,
+                                                      ELLIPTIC_REDISTANCING,
+                                                      < double * > abs_grad_u.data,
                                                       alpha)
     def normalReconstruction(self,
                              numpy.ndarray mesh_trial_ref,
@@ -735,7 +791,6 @@ cdef class cRDLS_base:
                              numpy.ndarray phi_dof,
                              int offset_u, int stride_u,
                              int numDOFs,
-                             numpy.ndarray abs_grad_u,
                              numpy.ndarray lumped_qx,
                              numpy.ndarray lumped_qy,
                              numpy.ndarray lumped_qz):
@@ -753,7 +808,38 @@ cdef class cRDLS_base:
                                           <double*> phi_dof.data,
                                           offset_u, stride_u,
                                           numDOFs,
-                                          <double*> abs_grad_u.data,
                                           <double*> lumped_qx.data,
                                           <double*> lumped_qy.data,
                                           <double*> lumped_qz.data)
+    def absGradUReconstruction(self,
+                               numpy.ndarray mesh_trial_ref,
+                               numpy.ndarray mesh_grad_trial_ref,
+                               numpy.ndarray mesh_dof,
+                               numpy.ndarray mesh_l2g,
+                               numpy.ndarray dV_ref,
+                               numpy.ndarray u_trial_ref,
+                               numpy.ndarray u_grad_trial_ref,
+                               numpy.ndarray u_test_ref,
+                               int nElements_global,
+                               numpy.ndarray u_l2g,
+                               numpy.ndarray elementDiameter,
+                               numpy.ndarray phi_dof,
+                               int offset_u, int stride_u,
+                               int numDOFs,
+                               numpy.ndarray abs_grad_u):
+        self.thisptr.absGradUReconstruction(<double*> mesh_trial_ref.data,
+                                            <double*> mesh_grad_trial_ref.data,
+                                            <double*> mesh_dof.data,
+                                            <int*> mesh_l2g.data,
+                                            <double*> dV_ref.data,
+                                            <double*> u_trial_ref.data,
+                                            <double*> u_grad_trial_ref.data,
+                                            <double*> u_test_ref.data,
+                                            nElements_global,
+                                            <int*> u_l2g.data,
+                                            <double*> elementDiameter.data,
+                                            <double*> phi_dof.data,
+                                            offset_u, stride_u,
+                                            numDOFs,
+                                            <double*> abs_grad_u.data)
+        

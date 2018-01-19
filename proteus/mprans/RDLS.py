@@ -155,8 +155,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  useConstantH=False,
                  weakDirichletFactor=10.0,
                  backgroundDiffusionFactor=0.01,
-                 # Parameters for elliptic re-distancing                
-                 ELLIPTIC_REDISTANCING=False,
+                 # Parameters for elliptic re-distancing
+                 ELLIPTIC_REDISTANCING=0,
                  alpha=1.0):
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
@@ -191,6 +191,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.backgroundDiffusionFactor = backgroundDiffusionFactor
         self.weakDirichletFactor = weakDirichletFactor
         self.ELLIPTIC_REDISTANCING=ELLIPTIC_REDISTANCING
+        #ELLIPTIC_REDISTANCING:
+        #0: no elliptic re-distancing
+        #1: Non-linear elliptic re-distancing via single or doble pot.
+        #   Uses single/double pot. with(out) |grad(u)| reconstructed. See c++ code
+        #2: Linear elliptic re-distancing via C0 normal reconstruction and single pot.
+        #3: Non-linear elliptic re-distancing via C0 normal reconstruction and single pot.
         self.alpha=alpha
         
     def attachModels(self, modelList):
@@ -234,8 +240,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.ebqe_u0.flat[i] = self.u0.uOfXT(cebqe['x'].flat[3 * i:3 * (i + 1)], 0.)
 
     def preStep(self, t, firstStep=False):
-        import pdb
-        # pdb.set_trace()
+        # COMPUTE NORMAL RECONSTRUCTION
+        if self.ELLIPTIC_REDISTANCING == 2: # linear via C0 normal reconstruction
+            self.rdModel.getNormalReconstruction()
+            
         if self.nModel is not None:
             logEvent("resetting signed distance level set to current level set", level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
@@ -720,6 +728,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if comm.size() > 1:
             assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions, "You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
+        # add some structures for elliptic re-distancin
+        self.abs_grad_u = numpy.zeros(self.u[0].dof.shape,'d')
+        self.lumped_qx = numpy.zeros(self.u[0].dof.shape,'d')
+        self.lumped_qy = numpy.zeros(self.u[0].dof.shape,'d')
+        self.lumped_qz = numpy.zeros(self.u[0].dof.shape,'d')
+        
         logEvent(memory("stride+offset", "OneLevelTransport"), level=4)
         if numericalFluxType is not None:
             if options is None or options.periodicDirichletConditions is None:
@@ -806,6 +820,44 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def calculateElementResidual(self):
         pass
 
+    def getAbsGradUReconstruction(self):
+        self.rdls.absGradUReconstruction(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.mesh.elementDiametersArray,
+            self.u[0].dof, # phi
+            self.offset[0],self.stride[0],
+            self.nFreeDOF_global[0], #numDOFs
+            self.abs_grad_u)
+        
+    def getNormalReconstruction(self):
+        self.rdls.normalReconstruction(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.mesh.elementDiametersArray,
+            self.u[0].dof, # phi
+            self.offset[0],self.stride[0],
+            self.nFreeDOF_global[0], #numDOFs
+            self.lumped_qx,
+            self.lumped_qy,
+            self.lumped_qz)
+                    
     def getResidual(self, u, r):
         import pdb
         import copy
@@ -838,12 +890,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # cRDLS.calculateResidual(self.mesh.nElements_global,
         # print "beta_bdf",beta_bdf
 
-        if (self.coefficients.ELLIPTIC_REDISTANCING==True):
+        if self.coefficients.ELLIPTIC_REDISTANCING > 0:
             self.calculateResidual = self.rdls.calculateResidual_ellipticRedist
             self.calculateJacobian = self.rdls.calculateJacobian_ellipticRedist
         else:
             self.calculateResidual = self.rdls.calculateResidual
             self.calculateJacobian = self.rdls.calculateJacobian
+
+        if self.coefficients.ELLIPTIC_REDISTANCING == 1: # non-linear via single or double pot.
+            self.getAbsGradUReconstruction()
+        if self.coefficients.ELLIPTIC_REDISTANCING == 3: # non-linear via C0 normal reconstruction
+            self.getNormalReconstruction()
             
         self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
@@ -907,7 +964,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
             # elliptic re-distancing
+            self.coefficients.ELLIPTIC_REDISTANCING,
+            self.abs_grad_u,
+            self.lumped_qx,
+            self.lumped_qy,
+            self.lumped_qz,
             self.coefficients.alpha)
+        
         # print "m_tmp",self.timeIntegration.m_tmp[0]
         # print "dH",self.q[('dH',0,0)]
         # print "dH_sge",self.q[('dH_sge',0,0)]
@@ -995,6 +1058,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
             # elliptic re-distancing
+            self.coefficients.ELLIPTIC_REDISTANCING,
+            self.abs_grad_u,
             self.coefficients.alpha)
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
