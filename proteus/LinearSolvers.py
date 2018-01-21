@@ -503,6 +503,13 @@ class KSP_petsc4py(LinearSolver):
 
         if self.bdyNullSpace is True:
             self._setNullSpace(par_b)
+        if self.preconditioner:
+            try:
+                if self.preconditioner.hasNullSpace:
+#                    self.ksp.getOperators()[0].setNullSpace(self.preconditioner.nsp)
+                    self.preconditioner.nsp.remove(par_b)
+            except:
+                pass
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
@@ -725,7 +732,7 @@ class KSP_petsc4py(LinearSolver):
                 self.preconditioner = SimpleDarcyFC(par_L)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokesPressureCorrection:
-                self.preconditioner = NavierStokesPressureCorrection(par_L)
+                self.preconditioner = NavierStokesPressureCorrection(par_L, prefix)
                 self.pc = self.preconditioner.pc
 
 class SchurOperatorConstructor:
