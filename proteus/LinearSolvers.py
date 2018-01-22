@@ -506,7 +506,6 @@ class KSP_petsc4py(LinearSolver):
         if self.preconditioner:
             try:
                 if self.preconditioner.hasNullSpace:
-#                    self.ksp.getOperators()[0].setNullSpace(self.preconditioner.nsp)
                     self.preconditioner.nsp.remove(par_b)
             except:
                 pass
