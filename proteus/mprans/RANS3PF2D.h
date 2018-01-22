@@ -3277,10 +3277,10 @@ namespace proteus
                     double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
                     double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
 
-                    double dd1 = dx*grad_u_ext[0] + dy*grad_v_ext[0];
-                    double dd2 = dx*grad_u_ext[1] + dy*grad_v_ext[1];
-                    double dt1 = P_tangent[0]*grad_u_ext[0] + P_tangent[1]*grad_v_ext[0];
-                    double dt2 = P_tangent[0]*grad_u_ext[1] + P_tangent[1]*grad_v_ext[1];
+                    double dd1 = dx*grad_u_ext[0] + dy*grad_u_ext[1];
+                    double dd2 = dx*grad_v_ext[0] + dy*grad_v_ext[1];
+                    double dt1 = P_tangent[0]*grad_u_ext[0] + P_tangent[1]*grad_u_ext[1];
+                    double dt2 = P_tangent[0]*grad_v_ext[0] + P_tangent[1]*grad_v_ext[1];
 
                     // Classical Nitsche
                     // C < w , u - uD > (1)
@@ -3288,25 +3288,23 @@ namespace proteus
                     globalResidual[GlobPos_v] += phi_i*C_adim*(v_ext - bc_v_ext);
 
                     // - < w , mu Gu.nt > (2)
-                    globalResidual[GlobPos_u] -= visco * phi_i*(normal[0]*grad_u_ext[0] + normal[1]*grad_v_ext[0]);
-                    globalResidual[GlobPos_v] -= visco * phi_i*(normal[0]*grad_u_ext[1] + normal[1]*grad_v_ext[1]);
+                    globalResidual[GlobPos_u] -= visco * phi_i*(normal[0]*grad_u_ext[0] + normal[1]*grad_u_ext[1]);
+                    globalResidual[GlobPos_v] -= visco * phi_i*(normal[0]*grad_v_ext[0] + normal[1]*grad_v_ext[1]);
 
                     // - < mu Gw.nt , u - uD > (3)
-                    globalResidual[GlobPos_u] -= visco * (Gxphi_i*normal[0]*(u_ext - bc_u_ext) +
-                                                          Gyphi_i*normal[1]*(v_ext - bc_v_ext));
-                    globalResidual[GlobPos_v] -= visco * (Gxphi_i*normal[0]*(u_ext - bc_u_ext) +
-                                                          Gyphi_i*normal[1]*(v_ext - bc_v_ext));
+                    globalResidual[GlobPos_u] -= visco * (Gxphi_i*normal[0] + Gyphi_i*normal[1])*(u_ext - bc_u_ext);
+                    globalResidual[GlobPos_v] -= visco * (Gxphi_i*normal[0] + Gyphi_i*normal[1])*(v_ext - bc_v_ext);
 
                     // second order Taylor expansion
                     //
                     // missing part of (1) :: C < w + Gw d , u + Gu d - ud >
                     // C < Gw d , u - uD >
-                    globalResidual[GlobPos_u] += C_adim*dx*(Gxphi_i*(u_ext - bc_u_ext) + Gyphi_i*(v_ext - bc_v_ext));
-                    globalResidual[GlobPos_v] += C_adim*dy*(Gxphi_i*(u_ext - bc_u_ext) + Gyphi_i*(v_ext - bc_v_ext));
+                    globalResidual[GlobPos_u] += C_adim*(dx*Gxphi_i + dy*Gyphi_i)*(u_ext - bc_u_ext);
+                    globalResidual[GlobPos_v] += C_adim*(dx*Gxphi_i + dy*Gyphi_i)*(v_ext - bc_v_ext);
 
                     // C < Gv d , Gu d >
-                    globalResidual[GlobPos_u] += C_adim*dx*(Gxphi_i*dd1 + Gyphi_i*dd2);
-                    globalResidual[GlobPos_v] += C_adim*dy*(Gxphi_i*dd1 + Gyphi_i*dd2);
+                    globalResidual[GlobPos_u] += C_adim*(dx*Gxphi_i + dy*Gyphi_i)*dd1;
+                    globalResidual[GlobPos_v] += C_adim*(dx*Gxphi_i + dy*Gyphi_i)*dd2;
 
                     // C < v , Gu d >
                     globalResidual[GlobPos_u] += C_adim*phi_i*dd1;
@@ -3315,13 +3313,13 @@ namespace proteus
                     //
                     // missing part of (3)
                     // - < mu Gw.nt , Gu.d >
-                    globalResidual[GlobPos_u] -= visco*normal[0]*(Gxphi_i*dd1 + Gyphi_i*dd2);
-                    globalResidual[GlobPos_v] -= visco*normal[1]*(Gxphi_i*dd1 + Gyphi_i*dd2);
+                    globalResidual[GlobPos_u] -= visco*(normal[0]*Gxphi_i + normal[1]*Gyphi_i)*dd1;
+                    globalResidual[GlobPos_v] -= visco*(normal[0]*Gxphi_i + normal[1]*Gyphi_i)*dd2;
 
                     // the penalization on the tangential derivative
                     // B < Gw t , (Gu - GuD) t >
-                    globalResidual[GlobPos_u] += beta_adim*P_tangent[0]*(Gxphi_i*dt1 + Gyphi_i*dt2);
-                    globalResidual[GlobPos_v] += beta_adim*P_tangent[1]*(Gxphi_i*dt1 + Gyphi_i*dt2);
+                    globalResidual[GlobPos_u] += beta_adim*dt1*(Gxphi_i*P_tangent[0] + Gyphi_i*P_tangent[1]);
+                    globalResidual[GlobPos_v] += beta_adim*dt1*(Gxphi_i*P_tangent[0] + Gyphi_i*P_tangent[1]);
 
                   }//i
 
@@ -5427,26 +5425,26 @@ namespace proteus
                         // - < w , mu Gu.nt > (2)
                         // diag
                         globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
-                          visco * phi_i * normal[0] * Gxphi_j ;
+                          visco * phi_i * (normal[0] * Gxphi_j + normal[1] * Gyphi_j);
                         globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
-                          visco * phi_i * normal[1] * Gyphi_j ;
+                          visco * phi_i * (normal[0] * Gxphi_j + normal[1] * Gyphi_j);
                         // extra diag
-                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
-                          visco * phi_i * normal[1] * Gxphi_j ;
-                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
-                          visco * phi_i * normal[0] * Gyphi_j ;
+//                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+//                          visco * phi_i * normal[1] * Gxphi_j ;
+//                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+//                          visco * phi_i * normal[0] * Gyphi_j ;
 
                         // - < mu Gw.nt , u - uD > (3)
                         // diag
                         globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
-                          visco * Gxphi_i * normal[0] * phi_j;
+                          visco * (Gxphi_i * normal[0] +Gyphi_i * normal[1])* phi_j;
                         globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
-                          visco * Gyphi_i * normal[1] * phi_j;
+                          visco * (Gxphi_i * normal[0] +Gyphi_i * normal[1])* phi_j;
                         // extra diag
-                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
-                          visco * Gyphi_i * normal[1] * phi_j;
-                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
-                          visco * Gxphi_i * normal[0] * phi_j;
+//                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+//                          visco * Gyphi_i * normal[1] * phi_j;
+//                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+//                          visco * Gxphi_i * normal[0] * phi_j;
 
                         // second order Taylor expansion
                         // missing part of (1) :: C < w + Gw d , u + Gu d - ud >
@@ -5454,63 +5452,63 @@ namespace proteus
                         // C < Gw d , u - uD >
                         // diag
                         globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
-                          C_adim*dx*Gxphi_i*phi_j;
+                          C_adim*(dx*Gxphi_i+dy*Gyphi_i)*phi_j;
                         globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
-                          C_adim*dy*Gyphi_i*phi_j;
-                        //extra diag
-                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
-                          C_adim*dx*Gyphi_i*phi_j;
-                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
-                          C_adim*dy*Gxphi_i*phi_j;
+                          C_adim*(dx*Gxphi_i+dy*Gyphi_i)*phi_j;
+//                        //extra diag
+//                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+//                          C_adim*dx*Gyphi_i*phi_j;
+//                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+//                          C_adim*dy*Gxphi_i*phi_j;
 
                         // C < Gv d , Gu d >
                         // diag
                         globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
-                          C_adim*dx*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
+                          C_adim*(dx*Gxphi_i+dy*Gyphi_i)*(dx*Gxphi_j + dy*Gyphi_j);
                         globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
-                          C_adim*dy*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
+                          C_adim*(dx*Gxphi_i+dy*Gyphi_i)*(dx*Gxphi_j + dy*Gyphi_j);
                         // extra diag
-                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
-                          C_adim*dx*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
-                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
-                          C_adim*dy*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
+//                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+//                          C_adim*dx*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
+//                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+//                          C_adim*dy*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
 
                         // C < v , Gu d >
                         // diag
                         globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
-                          C_adim*phi_i*dx*Gxphi_j;
+                          C_adim*phi_i*(dx*Gxphi_j + dy*Gyphi_j);
                         globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
-                          C_adim*phi_i*dy*Gyphi_j;
+                          C_adim*phi_i*(dx*Gxphi_j + dy*Gyphi_j);
                         // extra diag
-                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
-                          C_adim*phi_i*dy*Gxphi_j;
-                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
-                          C_adim*phi_i*dx*Gyphi_j;
+//                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+//                          C_adim*phi_i*dy*Gxphi_j;
+//                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+//                          C_adim*phi_i*dx*Gyphi_j;
 
                         /* // missing part of (3) */
                         // - < mu Gw.nt , Gu.d >
                         globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
-                          visco*normal[0]*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
+                          visco*(normal[0]*Gxphi_i+normal[1]*Gyphi_i)*(dx*Gxphi_j + dy*Gyphi_j);
                         globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
-                          visco*normal[1]*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
+                          visco*(normal[0]*Gxphi_i+normal[1]*Gyphi_i)*(dx*Gxphi_j + dy*Gyphi_j);
                         // extra diag
-                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
-                          visco*normal[0]*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
-                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
-                          visco*normal[1]*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
+//                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+//                          visco*normal[0]*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
+//                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+//                          visco*normal[1]*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
 
                         // the penalization on the tangential derivative
                         // B < Gw t , (Gu - GuD) t >
                         // diag
                         globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
-                          beta_adim*tx*(Gxphi_i*tx*Gxphi_j + Gyphi_i*tx*Gyphi_j);
+                          beta_adim*(tx*Gxphi_i+ ty*Gyphi_i)*(tx*Gxphi_j+ ty*Gyphi_j);
                         globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
-                          beta_adim*ty*(Gxphi_i*ty*Gxphi_j + Gyphi_i*ty*Gyphi_j);
-                        // extra diag
-                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
-                          beta_adim*tx*(Gxphi_i*ty*Gxphi_j + Gyphi_i*ty*Gyphi_j);
-                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
-                          beta_adim*ty*(Gxphi_i*tx*Gxphi_j + Gyphi_i*tx*Gyphi_j);
+                          beta_adim*(tx*Gxphi_i+ ty*Gyphi_i)*(tx*Gxphi_j+ ty*Gyphi_j);
+//                        // extra diag
+//                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+//                          beta_adim*tx*(Gxphi_i*ty*Gxphi_j + Gyphi_i*ty*Gyphi_j);
+//                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+//                          beta_adim*ty*(Gxphi_i*tx*Gxphi_j + Gyphi_i*tx*Gyphi_j);
 
                       }//j
                   }//i
