@@ -13,6 +13,8 @@
 #include <queue>
 
 static void SmoothField(apf::Field *f);
+void gradeAnisoMesh(apf::Mesh* m);
+void gradeAspectRatio(apf::Mesh* m, int idx);
 
 /* Based on the distance from the interface epsilon can be controlled to determine
    thickness of refinement near the interface */
@@ -883,8 +885,39 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
     }
     m->end(it);
-    apf::synchronize(size_scale);
 
+    //Do simple size and aspect ratio grading
+    gradeAnisoMesh(m);
+    std::cout<<"Finished grading size 0\n";
+    gradeAspectRatio(m,1);
+    std::cout<<"Finished grading size 1\n";
+    gradeAspectRatio(m,2);
+    std::cout<<"Finished grading size 2\n";
+
+    apf::synchronize(size_scale);
+    
+    //Test if grading has achieved the intended result 
+/*
+    it = m->begin(0);
+    apf::MeshEntity* ent;
+    while( (ent = m->iterate(it)) ){
+      apf::Adjacent testVertAdj;
+      m->getAdjacent(ent, 0, testVertAdj);
+      apf::Vector3 baseScale;
+      apf::Vector3 adjScale;
+      double gradingFactor=1.3;
+      double marginVal = 1.01;
+      apf::getVector(size_scale,ent,0,baseScale);
+      for(int i = 0; i<testVertAdj.getSize(); i++){
+        apf::getVector(size_scale,testVertAdj[i],0,adjScale);
+        assert(baseScale[0] < gradingFactor*adjScale[0]*marginVal ||           adjScale[0] < gradingFactor*baseScale[0]*marginVal);
+        assert(baseScale[1]/baseScale[0] < gradingFactor*adjScale[1]/adjScale[0]*marginVal || adjScale[1]/adjScale[0] < gradingFactor*baseScale[1]/baseScale[0]*marginVal);
+        assert(baseScale[2]/baseScale[0] < gradingFactor*adjScale[2]/adjScale[0]*marginVal || adjScale[2]/adjScale[0] < gradingFactor*baseScale[2]/baseScale[0]*marginVal);
+      }
+    }
+    m->end(it);
+    std::cout<<"passed assertion tests\n";
+*/
     //apf::destroyField(gradphi);
     //apf::destroyField(grad2phi);
     //apf::destroyField(curves);
@@ -950,6 +983,72 @@ int MeshAdaptPUMIDrvr::testIsotropicSizeField()
       clamp(phi,hmin,hmax);
       apf::setScalar(size_iso,v,0,phi);
     }
+    return 0;
+}
+
+void gradeSizeModify(apf::Mesh* m, double gradingFactor, 
+    double size[2], apf::Adjacent edgAdjVert, 
+    apf::Adjacent vertAdjEdg,
+    std::queue<apf::MeshEntity*> &markedEdges,
+    apf::MeshTag* isMarked,
+    int fieldType,
+    int vecPos, //which idx of sizeVec to modify
+    int idxFlag)
+{
+    //Determine a switching scheme depending on which vertex needs a modification
+    int idx1,idx2;
+    if(idxFlag == 0){
+      idx1=0;
+      idx2=1;
+    } 
+    else{
+      idx1=1;
+      idx2 = 0;
+    } 
+    
+    int marker[3] = {0,1,0}; 
+    double marginVal = 0.01;
+
+    if(fieldType == apf::SCALAR){
+      apf::Field* size_iso = m->findField("proteus_size");
+      if(size[idx1]>gradingFactor*size[idx2]){
+        size[idx1] = gradingFactor*size[idx2];
+        apf::setScalar(size_iso,edgAdjVert[idx1],0,size[idx1]);
+        m->getAdjacent(edgAdjVert[idx1], 1, vertAdjEdg);
+        for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
+          m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+          //if edge is not already marked
+          if(!marker[2]){
+            m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
+            markedEdges.push(vertAdjEdg[i]);
+          }
+        }
+      }
+    }//end if apf::SCALAR
+    else{
+      apf::Field* size_scale = m->findField("proteus_size_scale");
+      apf::Vector3 sizeVec;
+      if(size[idx1]>(gradingFactor*size[idx2])*(1+marginVal)){
+        size[idx1] = gradingFactor*size[idx2];
+        apf::getVector(size_scale,edgAdjVert[idx1],0,sizeVec);
+        if(vecPos > 0){
+          sizeVec[vecPos] = size[idx1]*sizeVec[0]; //realize the new aspect ratio
+        }
+        else{
+          sizeVec[0] = size[idx1];
+        }
+        apf::setVector(size_scale,edgAdjVert[idx1],0,sizeVec);
+        m->getAdjacent(edgAdjVert[idx1], 1, vertAdjEdg);
+        for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
+          m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+          //if edge is not already marked
+          if(!marker[2]){
+            m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
+            markedEdges.push(vertAdjEdg[i]);
+          }
+        }
+      }
+    }
 }
 
 int MeshAdaptPUMIDrvr::gradeMesh()
@@ -994,6 +1093,7 @@ int MeshAdaptPUMIDrvr::gradeMesh()
     for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
       size[i] = apf::getScalar(size_iso,edgAdjVert[i],0);
     }
+    //This can be simplified with one function call
     if(size[0]>gradingFactor*size[1]){
       size[0] = gradingFactor*size[1];
       apf::setScalar(size_iso,edgAdjVert[0],0,size[0]);
@@ -1035,3 +1135,162 @@ int MeshAdaptPUMIDrvr::gradeMesh()
     std::cout<<"Completed grading\n";
 }
 
+void gradeAnisoMesh(apf::Mesh* m)
+//Function to grade anisotropic mesh through comparison of edge vertex aspect ratios and minimum sizes
+//For simplicity, we do not bother with accounting for entities across partitions
+{
+  //
+  //if(comm_rank==0)
+  //  std::cout<<"Starting anisotropic grading\n";
+  apf::MeshIterator* it = m->begin(1);
+  apf::MeshEntity* edge;
+  apf::Adjacent edgAdjVert;
+  apf::Adjacent vertAdjEdg;
+  double gradingFactor = 1.3;
+  double size[2];
+  apf::Vector3 sizeVec;
+  std::queue<apf::MeshEntity*> markedEdges;
+  apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
+  apf::Field* size_scale = m->findField("proteus_size_scale");
+
+  //marker structure for 0) not marked 1) marked 2)storage
+  int marker[3] = {0,1,0}; 
+
+  while((edge=m->iterate(it))){
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      apf::getVector(size_scale,edgAdjVert[i],0,sizeVec);
+      size[i]=sizeVec[0];
+    }
+    if( (size[0] > gradingFactor*size[1]) || (size[1] > gradingFactor*size[0]) ){
+      //add edge to a queue 
+      markedEdges.push(edge);
+      //tag edge to indicate that it is part of queue 
+      m->setIntTag(edge,isMarked,&marker[1]); 
+
+    }
+    else{
+      m->setIntTag(edge,isMarked,&marker[0]); 
+    }
+  }
+  m->end(it); 
+  while(!markedEdges.empty()){
+    edge = markedEdges.front();
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      apf::getVector(size_scale,edgAdjVert[i],0,sizeVec);
+      size[i]=sizeVec[0];
+    }
+    gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::VECTOR,0, 0);
+    gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::VECTOR,0, 1);
+
+/*
+    if(size[0]>gradingFactor*size[1]){
+      size[0] = gradingFactor*size[1];
+      apf::getVector(size_scale,edgAdjVert[0],0,sizeVec);
+      sizeVec[0] = size[0];
+      apf::setVector(size_scale,edgAdjVert[0],0,sizeVec);
+      m->getAdjacent(edgAdjVert[0], 1, vertAdjEdg);
+      for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
+        m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+        //if edge is not already marked
+        if(!marker[2]){
+          m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
+          markedEdges.push(vertAdjEdg[i]);
+        }
+      }
+    }
+    if(size[1]>gradingFactor*size[0]){
+      size[1] = gradingFactor*size[0];
+      apf::getVector(size_scale,edgAdjVert[1],0,sizeVec);
+      sizeVec[0] = size[1];
+      apf::setVector(size_scale,edgAdjVert[1],0,sizeVec);
+      m->getAdjacent(edgAdjVert[1], 1, vertAdjEdg);
+      for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
+        m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+        //if edge is not already marked
+        if(!marker[2]){
+          m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
+          markedEdges.push(vertAdjEdg[i]);
+        }
+      }
+    }
+*/
+    m->setIntTag(edge,isMarked,&marker[0]);
+    markedEdges.pop();
+  }
+  it = m->begin(1);
+  while((edge=m->iterate(it))){
+    m->removeTag(edge,isMarked);
+  }
+  m->end(it); 
+  m->destroyTag(isMarked);
+  apf::synchronize(size_scale);
+  //if(comm_rank==0)
+  //  std::cout<<"Completed minimum size grading\n";
+}
+
+void gradeAspectRatio(apf::Mesh* m,int idx)
+//Function to grade anisotropic mesh through comparison of edge vertex aspect ratios and minimum sizes
+//For simplicity, we do not bother with accounting for entities across partitions
+{
+  std::cout<<"Entered function\n"; 
+  apf::MeshIterator* it = m->begin(1);
+  apf::MeshEntity* edge;
+  apf::Adjacent edgAdjVert;
+  apf::Adjacent vertAdjEdg;
+  double gradingFactor = 1.3;
+  double size[2];
+  apf::Vector3 sizeVec;
+  std::queue<apf::MeshEntity*> markedEdges;
+  apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
+  apf::Field* size_scale = m->findField("proteus_size_scale");
+
+  //marker structure for 0) not marked 1) marked 2)storage
+  int marker[3] = {0,1,0}; 
+
+  while((edge=m->iterate(it))){
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      apf::getVector(size_scale,edgAdjVert[i],0,sizeVec);
+      size[i]=sizeVec[idx]/sizeVec[0];
+    }
+    if( (size[0] > gradingFactor*size[1]) || (size[1] > gradingFactor*size[0]) ){
+      //add edge to a queue 
+      markedEdges.push(edge);
+      //tag edge to indicate that it is part of queue 
+      m->setIntTag(edge,isMarked,&marker[1]); 
+
+    }
+    else{
+      m->setIntTag(edge,isMarked,&marker[0]); 
+    }
+  }
+  m->end(it); 
+
+  std::cout<<"Got queue of size "<<markedEdges.size()<<std::endl; 
+  while(!markedEdges.empty()){
+    edge = markedEdges.front();
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      apf::getVector(size_scale,edgAdjVert[i],0,sizeVec);
+      size[i]=sizeVec[idx]/sizeVec[0];
+    }
+    gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::VECTOR, idx, 0);
+    gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::VECTOR, idx, 1);
+
+    m->setIntTag(edge,isMarked,&marker[0]);
+    markedEdges.pop();
+  }
+  it = m->begin(1);
+  while((edge=m->iterate(it))){
+    m->removeTag(edge,isMarked);
+  }
+  m->end(it); 
+  m->destroyTag(isMarked);
+  apf::synchronize(size_scale);
+}
