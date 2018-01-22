@@ -3319,7 +3319,7 @@ namespace proteus
                     // the penalization on the tangential derivative
                     // B < Gw t , (Gu - GuD) t >
                     globalResidual[GlobPos_u] += beta_adim*dt1*(Gxphi_i*P_tangent[0] + Gyphi_i*P_tangent[1]);
-                    globalResidual[GlobPos_v] += beta_adim*dt1*(Gxphi_i*P_tangent[0] + Gyphi_i*P_tangent[1]);
+                    globalResidual[GlobPos_v] += beta_adim*dt2*(Gxphi_i*P_tangent[0] + Gyphi_i*P_tangent[1]);
 
                   }//i
 
