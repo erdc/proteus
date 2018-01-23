@@ -848,4 +848,4 @@ cdef class cRDLS_base:
                                             offset_u, stride_u,
                                             numDOFs,
                                             <double*> abs_grad_u.data)
-        
+

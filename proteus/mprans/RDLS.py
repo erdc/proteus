@@ -191,7 +191,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.backgroundDiffusionFactor = backgroundDiffusionFactor
         self.weakDirichletFactor = weakDirichletFactor
         self.ELLIPTIC_REDISTANCING=ELLIPTIC_REDISTANCING
-        assert (ELLIPTIC_REDISTANCING >= 0 and ELLIPTIC_REDISTANCING <= 3), "ELLIPTIC_REDISTANCING=0,1,2 or 3." 
+        assert (ELLIPTIC_REDISTANCING >= 0 and ELLIPTIC_REDISTANCING <= 3), "ELLIPTIC_REDISTANCING=0,1,2 or 3."
         #ELLIPTIC_REDISTANCING:
         #0: no elliptic re-distancing
         #1: Non-linear elliptic re-distancing via single or doble pot.
@@ -199,7 +199,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #2: Linear elliptic re-distancing via C0 normal reconstruction and single pot.
         #3: Non-linear elliptic re-distancing via C0 normal reconstruction and single pot.
         self.alpha=alpha
-        
+
     def attachModels(self, modelList):
         if self.nModelId is not None:
             self.nModel = modelList[self.nModelId]
@@ -244,7 +244,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # COMPUTE NORMAL RECONSTRUCTION
         if self.ELLIPTIC_REDISTANCING == 2: # linear via C0 normal reconstruction
             self.rdModel.getNormalReconstruction()
-            
+
         if self.nModel is not None:
             logEvent("resetting signed distance level set to current level set", level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
@@ -734,7 +734,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.lumped_qx = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qy = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qz = numpy.zeros(self.u[0].dof.shape,'d')
-        
+
         logEvent(memory("stride+offset", "OneLevelTransport"), level=4)
         if numericalFluxType is not None:
             if options is None or options.periodicDirichletConditions is None:
@@ -838,7 +838,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.offset[0],self.stride[0],
             self.nFreeDOF_global[0], #numDOFs
             self.abs_grad_u)
-        
+
     def getNormalReconstruction(self):
         self.rdls.normalReconstruction(#element
             self.u[0].femSpace.elementMaps.psi,
@@ -858,7 +858,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_qx,
             self.lumped_qy,
             self.lumped_qz)
-                    
+
     def getResidual(self, u, r):
         import pdb
         import copy
@@ -874,7 +874,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # Dirichlet boundary conditions
         if hasattr(self.numericalFlux, 'setDirichletValues'):
             self.numericalFlux.setDirichletValues(self.ebqe)
-            
+
         # flux boundary conditions, SHOULDN'T HAVE
         # for  now force time integration
         useTimeIntegration = 1
@@ -973,7 +973,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_qy,
             self.lumped_qz,
             self.coefficients.alpha)
-        
+
         # print "m_tmp",self.timeIntegration.m_tmp[0]
         # print "dH",self.q[('dH',0,0)]
         # print "dH_sge",self.q[('dH_sge',0,0)]
@@ -1006,7 +1006,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             alpha_bdf = self.timeIntegration.dt
             beta_bdf = self.timeIntegration.m_last
-            
+
         self.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
