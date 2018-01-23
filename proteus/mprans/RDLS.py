@@ -191,6 +191,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.backgroundDiffusionFactor = backgroundDiffusionFactor
         self.weakDirichletFactor = weakDirichletFactor
         self.ELLIPTIC_REDISTANCING=ELLIPTIC_REDISTANCING
+        assert (ELLIPTIC_REDISTANCING >= 0 and ELLIPTIC_REDISTANCING <= 3), "ELLIPTIC_REDISTANCING=0,1,2 or 3." 
         #ELLIPTIC_REDISTANCING:
         #0: no elliptic re-distancing
         #1: Non-linear elliptic re-distancing via single or doble pot.
