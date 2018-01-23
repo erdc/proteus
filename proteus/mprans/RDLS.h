@@ -52,6 +52,7 @@ namespace proteus
                                    double* elementDiameter,
                                    double* nodeDiametersArray,
                                    double* u_dof,
+				   double* phi_dof,
                                    double* phi_ls,
                                    double* q_m,
                                    double* q_u,
@@ -178,6 +179,7 @@ namespace proteus
                                    double* elementDiameter,
                                    double* nodeDiametersArray,
                                    double* u_dof,
+				   double* phi_dof,
                                    double* phi_ls,
                                    double* q_m,
                                    double* q_u,
@@ -452,6 +454,7 @@ namespace proteus
                              double* elementDiameter,
                              double* nodeDiametersArray,
                              double* u_dof,
+			     double* phi_dof,
                              double* phi_ls,
                              double* q_m,
                              double* q_u,
@@ -1427,6 +1430,7 @@ namespace proteus
                              double* elementDiameter,
                              double* nodeDiametersArray,
                              double* u_dof,
+			     double* phi_dof,
                              double* phi_ls,
                              double* q_m,
                              double* q_u,
@@ -1485,7 +1489,7 @@ namespace proteus
                   eN_k_nSpace = eN_k*nSpace,
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
                 register double
-                  coeff, delta, 
+                  coeff, delta, hK,
 		  abs_grad_u, qx, qy, qz, normalReconstruction[nSpace],
                   u=0,grad_u[nSpace],
                   m=0.0,
@@ -1555,7 +1559,7 @@ namespace proteus
                     u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
                     for (int I=0;I<nSpace;I++)
                       u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
-                  }
+                  }		
                 // MOVING MESH. Omit for now //
                 // COMPUTE NORM OF GRAD(u) //
                 double norm_grad_u = 0.;
@@ -1581,24 +1585,34 @@ namespace proteus
                 // COMPUTE DELTA FUNCTION //
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi
                                                  +(1.0-useMetrics)*elementDiameter[eN]);
+		hK = useMetrics*h_phi + (1.0-useMetrics)*elementDiameter[eN];
                 delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
+
                 // UPDATE ELEMENT RESIDUAL //
 		if (ELLIPTIC_REDISTANCING > 1) // (NON)LINEAR VIA C0 NORMAL RECONSTRUCTION
 		  for(int i=0;i<nDOF_test_element;i++)
 		    {
 		      register int i_nSpace = i*nSpace;
+		      // global i-th index
+		      int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
+		      
 		      elementResidual_u[i] +=
 			ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace])
 			-ck.NumericalDiffusion(1.0,normalReconstruction,&u_grad_test_dV[i_nSpace])
-			+alpha*u*delta*u_test_dV[i];
+			//+alpha/hK*(u-phi_ls[eN_k])*delta*u_test_dV[i];
+			+alpha/hK*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i]; 
 		    }
 		else // =1. Nonlinear via single or double pot., with(out) |grad(u)| reconstructed
 		  for(int i=0;i<nDOF_test_element;i++)
 		    {
-		      register int i_nSpace = i*nSpace;
-		      elementResidual_u[i] +=
+		      register int i_nSpace = i*nSpace; 
+		      // global i-th index
+		      int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
+		      
+		      elementResidual_u[i] += 
 			ck.NumericalDiffusion(coeff,grad_u,&u_grad_test_dV[i_nSpace])
-			+alpha*u*delta*u_test_dV[i];
+			//+alpha/hK*(u-phi_ls[eN_k])*delta*u_test_dV[i]; // consistent mass matrix
+			+ alpha/hK*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i]; //lump mass matrix
 		    }//i
               }//k
             //
@@ -1691,7 +1705,7 @@ namespace proteus
 
                 //declare local storage
                 register double
-                  coeff1, coeff2, delta, abs_grad_u,
+                  coeff1, coeff2, delta, abs_grad_u, hK,
                   u=0.0, grad_u[nSpace],
                   m=0.0,
                   jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
@@ -1773,31 +1787,28 @@ namespace proteus
                 // COMPUTE DELTA FUNCTION //
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi
                                                  +(1.0-useMetrics)*elementDiameter[eN]);
+		hK = useMetrics*h_phi + (1.0-useMetrics)*elementDiameter[eN];
                 delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
 
                 for(int i=0;i<nDOF_test_element;i++)
                   {
-                    //int eN_k_i=eN_k*nDOF_test_element+i;
-                    //int eN_k_i_nSpace=eN_k_i*nSpace;
+		    int i_nSpace = i*nSpace;
                     for(int j=0;j<nDOF_trial_element;j++)
                       {
-                        //int eN_k_j=eN_k*nDOF_trial_element+j;
-                        //int eN_k_j_nSpace = eN_k_j*nSpace;
                         int j_nSpace = j*nSpace;
-                        int i_nSpace = i*nSpace;
-
-                        elementJacobian_u_u[i][j] +=
+                        elementJacobian_u_u[i][j] += 
                           ck.NumericalDiffusionJacobian(1.0,
-                                                        &u_grad_trial[j_nSpace],
-                                                        &u_grad_test_dV[i_nSpace])
+			  				&u_grad_trial[j_nSpace],
+			  				&u_grad_test_dV[i_nSpace])
                           + (ELLIPTIC_REDISTANCING == 1 ? 1. : 0.)*
 			  ( ck.NumericalDiffusionJacobian(coeff1,
-							  &u_grad_trial[j_nSpace],
-							  &u_grad_test_dV[i_nSpace])
+			  				  &u_grad_trial[j_nSpace],
+			  				  &u_grad_test_dV[i_nSpace])
 			    + coeff2*dV*
 			    ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[i_nSpace])*
 			    ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[j_nSpace]) )
-                          +alpha*delta*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i];
+			  //+ alpha/hK*u_trial_ref[k*nDOF_trial_element+j]*delta*u_test_dV[i];//cons.
+			+ (i == j ? alpha/hK*delta*u_test_dV[i] : 0.); //lumped
                       }//j
                   }//i
               }//k

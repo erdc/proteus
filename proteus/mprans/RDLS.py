@@ -873,6 +873,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # Dirichlet boundary conditions
         if hasattr(self.numericalFlux, 'setDirichletValues'):
             self.numericalFlux.setDirichletValues(self.ebqe)
+            
         # flux boundary conditions, SHOULDN'T HAVE
         # for  now force time integration
         useTimeIntegration = 1
@@ -901,7 +902,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.getAbsGradUReconstruction()
         if self.coefficients.ELLIPTIC_REDISTANCING == 3: # non-linear via C0 normal reconstruction
             self.getNormalReconstruction()
-            
+
         self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -940,6 +941,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter,  # self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
+            self.coefficients.dof_u0,
             self.coefficients.q_u0,
             self.timeIntegration.m_tmp[0],
             self.q[('u', 0)],
