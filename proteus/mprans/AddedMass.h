@@ -33,6 +33,7 @@ namespace proteus
                                    double* boundaryJac_ref,
                                    //physics
                                    int nElements_global,
+                                   int nElementBoundaries_owned,
                                    int* u_l2g,
                                    double* u_dof,
                                    double* q_rho,
@@ -241,6 +242,7 @@ namespace proteus
                            double* boundaryJac_ref,
                            //physics
                            int nElements_global,
+			   int nElementBoundaries_owned,
                            int* u_l2g,
                            double* u_dof,
                            double* q_rho,
@@ -435,7 +437,7 @@ namespace proteus
                     + ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]);
                 }//i
 	      //calculate Aij
-	      if (elementBoundaryMaterialTypesArray[ebN] == 9)
+	      if (elementBoundaryMaterialTypesArray[ebN] == 9 && ebN < nElementBoundaries_owned)
 		Aij[2] += u_ext*normal[2]*dS;
             }//kb
           //
