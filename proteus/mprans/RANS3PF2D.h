@@ -3263,6 +3263,10 @@ namespace proteus
                 double beta = 0.0;
                 double beta_adim = beta*h_penalty*visco;
 
+                double dd1 = dx*grad_u_ext[0] + dy*grad_u_ext[1];
+                double dd2 = dx*grad_v_ext[0] + dy*grad_v_ext[1];
+                double dt1 = P_tangent[0]*grad_u_ext[0] + P_tangent[1]*grad_u_ext[1];
+                double dt2 = P_tangent[0]*grad_v_ext[0] + P_tangent[1]*grad_v_ext[1];
                 for (int i=0;i<nDOF_test_element;i++)
                   {
                     int eN_i = eN*nDOF_test_element+i;
@@ -3276,11 +3280,6 @@ namespace proteus
                     double phi_i = vel_test_dS[i];
                     double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
                     double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
-
-                    double dd1 = dx*grad_u_ext[0] + dy*grad_u_ext[1];
-                    double dd2 = dx*grad_v_ext[0] + dy*grad_v_ext[1];
-                    double dt1 = P_tangent[0]*grad_u_ext[0] + P_tangent[1]*grad_u_ext[1];
-                    double dt2 = P_tangent[0]*grad_v_ext[0] + P_tangent[1]*grad_v_ext[1];
 
                     // Classical Nitsche
                     // C < w , u - uD > (1)
@@ -3334,7 +3333,7 @@ namespace proteus
                 }
                 double nx = -normal[0] ; // need ext normal of the solid
                 double ny = -normal[1] ;
-                for ( int i = 0 ; i < nDOF_test_element ; i++ ) {
+//                for ( int i = 0 ; i < nDOF_test_element ; i++ ) {
 //                  int eN_i = eN*nDOF_test_element+i;
 //                  double phi_i = vel_test_dS[i];
 //                  double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
@@ -3345,11 +3344,17 @@ namespace proteus
                   double S_yy = 2*visco*grad_v_ext[1];
 
                   Fx -= p_ext*nx*dS;
-                  Fx += (S_xx*nx + S_xy*ny)*dS;
+                  //Fx += (S_xx*nx + S_xy*ny)*dS;
+                  Fx += dS*(C_adim*(u_ext - bc_u_ext)
+                          - visco * (normal[0]*grad_u_ext[0] + normal[1]*grad_u_ext[1])
+                          + C_adim*dd1);
                   Fy -= p_ext*ny*dS;
-                  Fy += (S_xy*nx + S_yy*ny)*dS;
+                  //Fy += (S_xy*nx + S_yy*ny)*dS;
+                  Fy += dS*(C_adim*(v_ext - bc_v_ext)
+                          - visco * (normal[0]*grad_v_ext[0] + normal[1]*grad_v_ext[1])
+                          + C_adim*dd2);
 
-                } // i
+//                } // i
 
               }//kb
           }//ebN_s
