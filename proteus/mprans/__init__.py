@@ -39,5 +39,6 @@ __all__ = ["RANS2PV2",
            "Pres",
            "PresInit",
            "PresInc",
+           "AddedMass",
            "BoundaryConditions",
            "SpatialTools"]
