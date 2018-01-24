@@ -1767,7 +1767,7 @@ namespace proteus
                   {
                     for(int I=0;I<nSpace;I++)
                       norm_grad_u += grad_u[I]*grad_u[I];
-                    norm_grad_u = std::sqrt(norm_grad_u) + 1E-10;
+                    norm_grad_u = std::sqrt(norm_grad_u) + 1.0E-10;
                   }
                 else
                   norm_grad_u = abs_grad_u;
@@ -1780,8 +1780,8 @@ namespace proteus
                   }
                 else
                   {
-                    coeff1=fmax(1E-10, 2*std::pow(norm_grad_u,2)-3*norm_grad_u);
-                    coeff2=fmax(1E-10, 4.-3./norm_grad_u);
+                    coeff1=fmax(1.0E-10, 2*std::pow(norm_grad_u,2)-3*norm_grad_u);
+                    coeff2=fmax(1.0E-10, 4.-3./norm_grad_u);
                   }
 
                 // COMPUTE DELTA FUNCTION //
@@ -1920,7 +1920,7 @@ namespace proteus
                 double norm_grad_u = 0;
                 for (int I=0;I<nSpace; I++)
                   norm_grad_u += grad_u[I]*grad_u[I];
-                norm_grad_u = std::sqrt(norm_grad_u+1E-10);
+                norm_grad_u = std::sqrt(norm_grad_u) + 1.0E-10;
 
                 for(int i=0;i<nDOF_test_element;i++)
                   {
@@ -2031,7 +2031,7 @@ namespace proteus
                 double norm_grad_u = 0;
                 for (int I=0;I<nSpace; I++)
                   norm_grad_u += grad_u[I]*grad_u[I];
-                norm_grad_u = std::sqrt(norm_grad_u+1E-10);
+                norm_grad_u = std::sqrt(norm_grad_u) + 1.0E-10;
 
                 for(int i=0;i<nDOF_test_element;i++)
                   {

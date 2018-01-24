@@ -241,6 +241,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.ebqe_u0.flat[i] = self.u0.uOfXT(cebqe['x'].flat[3 * i:3 * (i + 1)], 0.)
 
     def preStep(self, t, firstStep=False):
+        # reset ellipticStage flag
+        self.rdModel.ellipticStage = 1
+        self.rdModel.auxEllipticFlag = 1
         # COMPUTE NORMAL RECONSTRUCTION
         if self.ELLIPTIC_REDISTANCING == 2: # linear via C0 normal reconstruction
             self.rdModel.getNormalReconstruction()
@@ -729,11 +732,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if comm.size() > 1:
             assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions, "You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        # add some structures for elliptic re-distancin
+        # add some structures for elliptic re-distancing
         self.abs_grad_u = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qx = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qy = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qz = numpy.zeros(self.u[0].dof.shape,'d')
+        self.ellipticStage = 1
+        self.auxEllipticFlag = 1
 
         logEvent(memory("stride+offset", "OneLevelTransport"), level=4)
         if numericalFluxType is not None:
@@ -904,6 +909,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.coefficients.ELLIPTIC_REDISTANCING == 3: # non-linear via C0 normal reconstruction
             self.getNormalReconstruction()
 
+        if (self.coefficients.ELLIPTIC_REDISTANCING == 2 and
+            self.ellipticStage == 2 and
+            self.auxEllipticFlag == 1):
+            self.getNormalReconstruction()
+            self.auxEllipticFlag = 0
+
         self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -973,6 +984,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_qy,
             self.lumped_qz,
             self.coefficients.alpha)
+
+        if self.coefficients.ELLIPTIC_REDISTANCING == 2 and self.ellipticStage == 1:
+            self.ellipticStage = 2
 
         # print "m_tmp",self.timeIntegration.m_tmp[0]
         # print "dH",self.q[('dH',0,0)]
