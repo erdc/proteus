@@ -15,6 +15,7 @@
 static void SmoothField(apf::Field *f);
 void gradeAnisoMesh(apf::Mesh* m);
 void gradeAspectRatio(apf::Mesh* m, int idx);
+void gradeSizeFrames(apf::Mesh* m);
 
 /* Based on the distance from the interface epsilon can be controlled to determine
    thickness of refinement near the interface */
@@ -894,7 +895,10 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     gradeAspectRatio(m,2);
     std::cout<<"Finished grading size 2\n";
 
+    //grade directions
+    //gradeSizeFrames(m);
     apf::synchronize(size_scale);
+    apf::synchronize(size_frame);
     
     //Test if grading has achieved the intended result 
 /*
@@ -1048,7 +1052,35 @@ void gradeSizeModify(apf::Mesh* m, double gradingFactor,
           }
         }
       }
-    }
+/*
+      if(size[idx1]>(gradingFactor*size[idx2])*(1+marginVal)){
+        if(vecPos > 0){
+          size[idx2] = size[idx1]/gradingFactor;
+          apf::getVector(size_scale,edgAdjVert[idx2],0,sizeVec);
+          sizeVec[vecPos] = size[idx2]*sizeVec[0]; //realize the new aspect ratio
+          apf::setVector(size_scale,edgAdjVert[idx2],0,sizeVec);
+          m->getAdjacent(edgAdjVert[idx2], 1, vertAdjEdg);
+        }
+        else{
+          apf::getVector(size_scale,edgAdjVert[idx1],0,sizeVec);
+          size[idx1] = gradingFactor*size[idx2];
+          sizeVec[0] = size[idx1];
+          apf::setVector(size_scale,edgAdjVert[idx1],0,sizeVec);
+          m->getAdjacent(edgAdjVert[idx1], 1, vertAdjEdg);
+        }
+          for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
+            m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+            //if edge is not already marked
+            if(!marker[2]){
+              m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
+              markedEdges.push(vertAdjEdg[i]);
+            }
+          }
+
+      }
+*/
+
+    } //end if Vector
 }
 
 int MeshAdaptPUMIDrvr::gradeMesh()
@@ -1294,3 +1326,26 @@ void gradeAspectRatio(apf::Mesh* m,int idx)
   m->destroyTag(isMarked);
   apf::synchronize(size_scale);
 }
+
+void gradeSizeFrames(apf::Mesh* m)
+//Gradation of size frames based on simple averaging
+{
+  apf::MeshIterator* it = m->begin(0);
+  apf::MeshEntity* vert;
+  apf::Adjacent vertAdjVert;
+  apf::Field* size_frame = m->findField("proteus_size_frame");
+  apf::Matrix3x3 testFrame;
+  apf::Matrix3x3 currentFrame; 
+  while( (vert = m->iterate(it)) ){
+    m->getAdjacent(vert, 0, vertAdjVert);
+    apf::getMatrix(size_frame,vert,0,currentFrame);
+    for(int i=0; i<vertAdjVert.getSize(); i++){
+      apf::getMatrix(size_frame,vert,0,testFrame);
+      currentFrame = currentFrame + testFrame;
+    }
+    currentFrame = currentFrame/(vertAdjVert.getSize()+1);
+    apf::setMatrix(size_frame,vert,0,currentFrame);
+  }
+  m->end(it); 
+}
+
