@@ -156,8 +156,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  weakDirichletFactor=10.0,
                  backgroundDiffusionFactor=0.01,
                  # Parameters for elliptic re-distancing
-                 ELLIPTIC_REDISTANCING=0,
-                 alpha=1.0):
+                 ELLIPTIC_REDISTANCING=False,
+                 ELLIPTIC_REDISTANCING_TYPE=2, #Linear elliptic re-distancing by default
+                 alpha=100.0): #penalization param for elliptic re-distancing
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
         variableNames = ['phid']
@@ -191,9 +192,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.backgroundDiffusionFactor = backgroundDiffusionFactor
         self.weakDirichletFactor = weakDirichletFactor
         self.ELLIPTIC_REDISTANCING=ELLIPTIC_REDISTANCING
-        assert (ELLIPTIC_REDISTANCING >= 0 and ELLIPTIC_REDISTANCING <= 3), "ELLIPTIC_REDISTANCING=0,1,2 or 3."
-        #ELLIPTIC_REDISTANCING:
-        #0: no elliptic re-distancing
+        self.ELLIPTIC_REDISTANCING_TYPE=ELLIPTIC_REDISTANCING_TYPE
+        assert (ELLIPTIC_REDISTANCING_TYPE >= 1 and ELLIPTIC_REDISTANCING_TYPE <= 3), "ELLIPTIC_REDISTANCING_TYPE=0,1,2 or 3."
+        #ELLIPTIC_REDISTANCING_TYPE:
         #1: Non-linear elliptic re-distancing via single or doble pot.
         #   Uses single/double pot. with(out) |grad(u)| reconstructed. See c++ code
         #2: Linear elliptic re-distancing via C0 normal reconstruction and single pot.
@@ -245,7 +246,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.rdModel.ellipticStage = 1
         self.rdModel.auxEllipticFlag = 1
         # COMPUTE NORMAL RECONSTRUCTION
-        if self.ELLIPTIC_REDISTANCING == 2: # linear via C0 normal reconstruction
+        if self.ELLIPTIC_REDISTANCING == True and self.ELLIPTIC_REDISTANCING_TYPE == 2: # linear via C0 normal reconstruction
             self.rdModel.getNormalReconstruction()
 
         if self.nModel is not None:
@@ -897,23 +898,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # cRDLS.calculateResidual(self.mesh.nElements_global,
         # print "beta_bdf",beta_bdf
 
-        if self.coefficients.ELLIPTIC_REDISTANCING > 0:
+        if self.coefficients.ELLIPTIC_REDISTANCING == True:
             self.calculateResidual = self.rdls.calculateResidual_ellipticRedist
             self.calculateJacobian = self.rdls.calculateJacobian_ellipticRedist
+            # COMPUTE RECONSTRUCTIONS #
+            if self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 1: # non-linear via single or double pot.
+                self.getAbsGradUReconstruction()
+            if self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 3: # non-linear via C0 normal reconstruction
+                self.getNormalReconstruction()
+            if (self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 2 # linear via C0 normal rec.
+                and self.ellipticStage == 2 and self.auxEllipticFlag == 1):
+                self.getNormalReconstruction()
+                self.auxEllipticFlag = 0
         else:
             self.calculateResidual = self.rdls.calculateResidual
             self.calculateJacobian = self.rdls.calculateJacobian
-
-        if self.coefficients.ELLIPTIC_REDISTANCING == 1: # non-linear via single or double pot.
-            self.getAbsGradUReconstruction()
-        if self.coefficients.ELLIPTIC_REDISTANCING == 3: # non-linear via C0 normal reconstruction
-            self.getNormalReconstruction()
-
-        if (self.coefficients.ELLIPTIC_REDISTANCING == 2 and
-            self.ellipticStage == 2 and
-            self.auxEllipticFlag == 1):
-            self.getNormalReconstruction()
-            self.auxEllipticFlag = 0
 
         self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
@@ -978,14 +977,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
             # elliptic re-distancing
-            self.coefficients.ELLIPTIC_REDISTANCING,
+            self.coefficients.ELLIPTIC_REDISTANCING_TYPE,
             self.abs_grad_u,
             self.lumped_qx,
             self.lumped_qy,
             self.lumped_qz,
             self.coefficients.alpha)
 
-        if self.coefficients.ELLIPTIC_REDISTANCING == 2 and self.ellipticStage == 1:
+        if self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 2 and self.ellipticStage == 1:
             self.ellipticStage = 2
 
         # print "m_tmp",self.timeIntegration.m_tmp[0]
@@ -1075,7 +1074,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
             # elliptic re-distancing
-            self.coefficients.ELLIPTIC_REDISTANCING,
+            self.coefficients.ELLIPTIC_REDISTANCING_TYPE,
             self.abs_grad_u,
             self.coefficients.alpha)
         logEvent("Jacobian ", level=10, data=jacobian)

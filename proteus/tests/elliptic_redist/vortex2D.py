@@ -10,7 +10,8 @@ ct=Context.Options([
     ("refinement",1,"Level of refinement"),
     ("unstructured",False,"Use unstructured mesh. Set to false for periodic BCs"),
     # parameters for elliptic re-distancing    
-    ("ELLIPTIC_REDISTANCING",2, "Type of elliptic re-distancing"),
+    ("ELLIPTIC_REDISTANCING",False, "Type of elliptic re-distancing"),
+    ("ELLIPTIC_REDISTANCING_TYPE",2, "Type of elliptic re-distancing"),    
     ("alpha",100.0,"penalization parameter")
 ],mutable=True)
 
