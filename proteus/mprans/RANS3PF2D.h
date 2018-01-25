@@ -1393,28 +1393,28 @@ namespace proteus
         double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
 
         double new_beta = closure.betaCoeff(1.0-phi_s,
-                                          rho,
-                                          fluid_velocity,
-                                          solid_velocity,
-                                          viscosity);
+                                         rho,
+                                       fluid_velocity,
+                                        solid_velocity,
+                                         viscosity);
 
 
         //new_beta /= rho;
-        mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s);
-        mom_v_source += (1.0 - phi_s) * new_beta * (v - v_s);
+        mom_u_source +=   (1.0 - phi_s) * new_beta * (u - u_s);
+        mom_v_source +=  (1.0 - phi_s) * new_beta * (v - v_s);
         /* mom_w_source += phi_s*new_beta*(w-w_s); */
 
-        dmom_u_source[0] = (1.0 - phi_s) * new_beta;
+        dmom_u_source[0] =   (1.0 - phi_s) * new_beta;
         dmom_u_source[1] = 0.0;
         /* dmom_u_source[2] = 0.0; */
 
         dmom_v_source[0] = 0.0;
-        dmom_v_source[1] = (1.0 - phi_s) * new_beta;
-        dmom_v_source[2] = 0.0;
+        dmom_v_source[1] =  (1.0 - phi_s) * new_beta;
+        /*dmom_v_source[2] = 0.0; */
 
         dmom_w_source[0] = 0.0;
         dmom_w_source[1] = 0.0;
-        dmom_w_source[2] = (1.0 - phi_s) * new_beta;
+        /*dmom_w_source[2] =  (1.0 - phi_s) * new_beta; */
       }
 
       inline void updateSolidParticleTerms(bool element_owned,

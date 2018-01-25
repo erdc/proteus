@@ -476,7 +476,6 @@ namespace proteus
 		}
 	      //VRANS
 	      porosity = 1.0 - q_vos[eN_k];
-          //printf("u fluid --> %3.2f", u);
 	      //
 	      //
 	      //calculate pde coefficients at quadrature points
@@ -694,7 +693,6 @@ namespace proteus
 	      bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
 	      //VRANS
 	      porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb];
-          //printf("u_ext fluid --> %3.2f", u_ext);
 	      //
 	      // 
 	      //calculate the pde coefficients using the solution and the boundary values for the solution 
@@ -926,7 +924,6 @@ namespace proteus
 		}
 	      //VRANS
 	      porosity = 1.0 - q_vos[eN_k];
-          //printf("u fluid --> %3.2f", u);
 	      //
 	      //
 	      //calculate pde coefficients and derivatives at quadrature points
@@ -1148,7 +1145,6 @@ namespace proteus
 	      bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
 	      //VRANS
 	      porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb];
-          //printf("u_ext fluid --> %3.2f", u_ext);
 	      //
 	      // 
 	      //calculate the internal and external trace of the pde coefficients 

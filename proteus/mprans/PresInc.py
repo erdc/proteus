@@ -142,9 +142,9 @@ class Coefficients(TC_base):
             ebqe_a = 1.0/(ebqe_vos*self.rho_s_min + (1.0-ebqe_vos)*self.rho_f_min)/alphaBDF
             for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
                 self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * (1.0 - q_vos) * q_a 
-                self.fluidModel.ebqe[('velocity',0)][...,i] = (1.0-ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
+                self.fluidModel.ebqe[('velocity',0)][...,i] = (1.0-ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]                
                 self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * (q_vos) * q_a
-                self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
+                self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]                
             self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
             self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
             if self.sedModelIndex is not None:
@@ -172,16 +172,16 @@ class Coefficients(TC_base):
             rho_f = self.fluidModel.coefficients.q_rho
         if  u_shape == self.fluidModel.ebqe[('u',0)].shape:
             vf = self.fluidModel.ebqe[('velocity',0)]
-            vs = self.sedModel.coefficients.ebqe[('velocity',0)]
+            vs = self.sedModel.ebqe[('velocity',0)]
             vos = self.sedModel.coefficients.ebqe_vos
             rho_s = self.sedModel.coefficients.rho_s
             rho_f = self.fluidModel.coefficients.ebqe_rho
-        if  u_shape == self.fluidModel.ebq[('u',0)].shape:
-            vf = self.fluidModel.ebq[('velocity',0)]
-            vs = self.sedModel.coefficients.ebq[('velocity',0)]
-            vos = self.sedModel.coefficients.ebq_vos
-            rho_s = self.sedModel.coefficients.rho_s
-            rho_f = self.fluidModel.coefficients.ebq_rho
+        #if  u_shape == self.fluidModel.ebq[('u',0)].shape:
+        #    vf = self.fluidModel.ebq[('velocity',0)]
+        #    vs = self.sedModel.ebq[('velocity',0)]
+        #    vos = self.sedModel.ebq_vos
+        #    rho_s = self.sedModel.coefficients.rho_s
+        #    rho_f = self.fluidModel.coefficients.ebqe_rho
         
         assert rho_s >= self.rho_s_min, "solid density out of bounds"
         assert (rho_f >= self.rho_f_min).all(), "fluid density out of bounds"

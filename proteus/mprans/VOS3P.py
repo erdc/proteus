@@ -704,6 +704,48 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
+        self.ebq[
+            ('u',
+             0)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.ebq[
+            ('u',
+             1)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.ebq[
+            ('u',
+             2)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.ebq[
+            ('grad(u)',
+             0)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.ebq[
+            ('grad(u)',
+             1)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.ebq[
+            ('grad(u)',
+             2)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set(
             [('u', ci) for ci in range(self.nc)])

@@ -825,7 +825,7 @@ namespace proteus
 					   const double vStar,
 					   const double wStar,
 					   const double eps_s,
-					   const double phi_s,
+					   const double vos,
 					   const double u_f,
 					   const double v_f,
 					   const double w_f,
@@ -843,62 +843,88 @@ namespace proteus
       muFluid  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
       //gco kinematic viscosity used, in sedclosure betaterm is multiplied by fluidDensity
       viscosity = nuFluid;//mu; gco check
-      //phi_s is porosity fraction in this case - gco check
+      //vos is sediment fraction in this case - gco check
       uc = sqrt(u*u+v*v*+w*w); 
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
       double solid_velocity[3]={uStar,vStar,wStar}, fluid_velocity[3]={u_f,v_f,w_f};
-      double new_beta = closure.betaCoeff(1.0-phi_s,
+      double new_beta =    closure.betaCoeff(vos,
                                           rhoFluid,
                                           fluid_velocity,
                                           solid_velocity,
                                           viscosity);
       //new_beta/=rhoFluid;
-      mom_u_source += (1.0-phi_s)*new_beta*(u-u_f);
-      mom_v_source += (1.0-phi_s)*new_beta*(v-v_f);
-      mom_w_source += (1.0-phi_s)*new_beta*(w-w_f);
+      mom_u_source +=  (vos)*new_beta*(u-u_f);
+      mom_v_source +=  (vos)*new_beta*(v-v_f);
+      mom_w_source +=  (vos)*new_beta*(w-w_f);
 
-      dmom_u_source[0] = (1.0-phi_s)*new_beta;
+      dmom_u_source[0] = (vos)*new_beta;
       dmom_u_source[1] = 0.0;
       dmom_u_source[2] = 0.0;
     
       dmom_v_source[0] = 0.0;
-      dmom_v_source[1] = (1.0-phi_s)*new_beta;
+      dmom_v_source[1] =  (vos)*new_beta;
       dmom_v_source[2] = 0.0;
 
       dmom_w_source[0] = 0.0;
       dmom_w_source[1] = 0.0;
-      dmom_w_source[2] = (1.0-phi_s)*new_beta;
+      dmom_w_source[2] = (vos)*new_beta;
     }
 
     inline
-        void updateParticlePressure(const double phi_s,
+      void updateFrictionalPressure(const double vos,
                                     double& mom_u_source,
                                     double& mom_v_source,
-                                    double& mom_w_source,
-                                    double dmom_u_source[nSpace],
-                                    double dmom_v_source[nSpace],
-                                    double dmom_w_source[nSpace])
+                                    double& mom_w_source)
     {
-      double p_sf = closure.p_friction(phi_s);
-
+      double p_sf = closure.p_friction(vos);
       mom_u_source += p_sf;
       mom_v_source += p_sf;
       mom_w_source += p_sf;
+    } 
 
-      dmom_u_source[0] += 0.0;
-      dmom_u_source[1] += 0.0;
-      dmom_u_source[2] += 0.0;
+    inline
+      void updateFrictionalStress(const double vos,
+                                    const double grad_u[nSpace],
+                                    const double grad_v[nSpace],
+                                    const double grad_w[nSpace], 
+                                    double mom_uu_diff_ten[nSpace],
+                                    double mom_uv_diff_ten[1],
+                                    double mom_uw_diff_ten[1],
+                                    double mom_vv_diff_ten[nSpace],
+                                    double mom_vu_diff_ten[1],
+                                    double mom_vw_diff_ten[1],
+                                    double mom_ww_diff_ten[nSpace],
+                                    double mom_wu_diff_ten[1],
+                                    double mom_wv_diff_ten[1])
+    {
+      double mu_sf = closure.mu_fr(vos,
+                                   grad_u[0], grad_u[1], grad_u[2], 
+                                   grad_v[0], grad_v[1], grad_v[2], 
+                                   grad_w[0], grad_w[1], grad_w[2]);
 
-      dmom_v_source[0] += 0.0;
-      dmom_v_source[1] += 0.0;
-      dmom_v_source[2] += 0.0;
+      mom_uu_diff_ten[0] += mu_sf * (2.);// - 2./3.); 
+      mom_uu_diff_ten[1] += mu_sf;
+      mom_uu_diff_ten[2] += mu_sf;
 
-      dmom_w_source[0] += 0.0;
-      dmom_w_source[1] += 0.0;
-      dmom_w_source[2] += 0.0;
-    }  
+      mom_uv_diff_ten[0] += mu_sf;
+      mom_uw_diff_ten[0] += mu_sf;
+
+      mom_vv_diff_ten[0] += mu_sf; 
+      mom_vv_diff_ten[1] += mu_sf * (2.);// - 2./3.);
+      mom_vv_diff_ten[2] += mu_sf;
+
+      mom_vu_diff_ten[0] += mu_sf;
+      mom_vw_diff_ten[0] += mu_sf;
+
+      mom_ww_diff_ten[0] += mu_sf; 
+      mom_ww_diff_ten[1] += mu_sf;
+      mom_ww_diff_ten[2] += mu_sf * (2.);// - 2./3.);
+
+      mom_wu_diff_ten[0] += mu_sf;
+      mom_wv_diff_ten[0] += mu_sf;
+    }
 
 
     inline
@@ -1940,7 +1966,7 @@ namespace proteus
                                                 q_velocity_sge[eN_k_nSpace+1],
                                                 q_velocity_sge[eN_k_nSpace+2],
 						eps_solid[elementFlags[eN]],
-						1.0-vos,
+						vos,
 						q_velocity_fluid[eN_k_nSpace+0],
 						q_velocity_fluid[eN_k_nSpace+1],
 						q_velocity_fluid[eN_k_nSpace+2],
@@ -1950,13 +1976,24 @@ namespace proteus
 						dmom_u_source,
 						dmom_v_source,
 						dmom_w_source);
-          updateParticlePressure(vos,
+          updateFrictionalPressure(vos,
 						mom_u_source,
 						mom_v_source,
-						mom_w_source,
-						dmom_u_source,
-						dmom_v_source,
-						dmom_w_source);
+						mom_w_source);
+          updateFrictionalStress(vos,
+                                  grad_u,
+                                  grad_v,
+                                  grad_w, 
+                                  mom_uu_diff_ten,
+                                  mom_uv_diff_ten,
+                                  mom_uw_diff_ten,
+                                  mom_vv_diff_ten,
+                                  mom_vu_diff_ten,
+                                  mom_vw_diff_ten,
+                                  mom_ww_diff_ten,
+                                  mom_wu_diff_ten,
+                                  mom_wv_diff_ten);
+
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{
@@ -3606,7 +3643,7 @@ namespace proteus
                                                 q_velocity_sge[eN_k_nSpace+1],
                                                 q_velocity_sge[eN_k_nSpace+2],
 						eps_solid[elementFlags[eN]],
-						1.0-vos,
+						vos,
 						q_velocity_fluid[eN_k_nSpace+0],
 						q_velocity_fluid[eN_k_nSpace+1],
 						q_velocity_fluid[eN_k_nSpace+2],
@@ -3616,13 +3653,24 @@ namespace proteus
 						dmom_u_source,
 						dmom_v_source,
 						dmom_w_source);
-          updateParticlePressure(vos,
+          updateFrictionalPressure(vos,
 						mom_u_source,
 						mom_v_source,
-						mom_w_source,
-						dmom_u_source,
-						dmom_v_source,
-						dmom_w_source);
+						mom_w_source);
+          updateFrictionalStress(vos,
+                                  grad_u,
+                                  grad_v,
+                                  grad_w, 
+                                  mom_uu_diff_ten,
+                                  mom_uv_diff_ten,
+                                  mom_uw_diff_ten,
+                                  mom_vv_diff_ten,
+                                  mom_vu_diff_ten,
+                                  mom_vw_diff_ten,
+                                  mom_ww_diff_ten,
+                                  mom_wu_diff_ten,
+                                  mom_wv_diff_ten);
+
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{

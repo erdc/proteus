@@ -393,10 +393,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
             self.model.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
             self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
+            self.model.ebq_vos = modelList[self.VOS_model].ebq[('u',0)]
             self.vos_dof = self.model.vos_dof
             self.q_vos = self.model.q_vos
             self.q_dvos_dt = self.model.q_dvos_dt
-            self.ebqe_vos = self.model.ebqe_vos       
+            self.ebqe_vos = self.model.ebqe_vos   
+            self.ebq_vos = self.model.ebq_vos       
         if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u', 0)]
             if modelList[self.LS_model].ebq.has_key(('u', 0)):

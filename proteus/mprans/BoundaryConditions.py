@@ -81,6 +81,8 @@ class BC_RANS(BC_Base):
         """
         # self.BC_type = 'None'
         self.p_dirichlet.resetBC()
+        self.pInit_dirichlet.resetBC()
+        self.pInc_dirichlet.resetBC()
         self.u_dirichlet.resetBC()
         self.v_dirichlet.resetBC()
         self.w_dirichlet.resetBC()
@@ -92,6 +94,8 @@ class BC_RANS(BC_Base):
         self.ws_dirichlet.resetBC()
         self.vos_dirichlet.resetBC()
         self.p_advective.resetBC()
+        self.pInit_advective.resetBC()
+        self.pInc_advective.resetBC()
         self.u_advective.resetBC()
         self.v_advective.resetBC()
         self.w_advective.resetBC()
@@ -102,6 +106,8 @@ class BC_RANS(BC_Base):
         self.vs_advective.resetBC()
         self.ws_advective.resetBC()
         self.vos_advective.resetBC()
+        self.pInit_diffusive.resetBC()
+        self.pInc_diffusive.resetBC()
         self.u_diffusive.resetBC()
         self.v_diffusive.resetBC()
         self.w_diffusive.resetBC()
@@ -162,20 +168,21 @@ class BC_RANS(BC_Base):
         """
         self.reset()
         self.BC_type = 'NoSlip'
+        # dirichlet
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
         self.us_dirichlet.setConstantBC(0.)
         self.vs_dirichlet.setConstantBC(0.)
-        self.ws_dirichlet.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(0.)           
-        self.p_advective.setConstantBC(0.)         
-        self.pInit_advective.setConstantBC(0.)          
-        self.pInc_advective.setConstantBC(0.)
+        self.ws_dirichlet.setConstantBC(0.)         
+        self.pInit_dirichlet.setConstantBC(0.)          
+        self.pInc_dirichlet.setConstantBC(0.)
+        self.k_dirichlet.setConstantBC(0.)  
+        # advective
+        self.p_advective.setConstantBC(0.)
         self.vof_advective.setConstantBC(0.)
         self.vos_advective.setConstantBC(0.)
-        self.pInit_diffusive.setConstantBC(0.)          
-        self.pInc_diffusive.setConstantBC(0.)
+        # diffusive
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)  
 
@@ -185,10 +192,11 @@ class BC_RANS(BC_Base):
         """
         self.reset()
         self.BC_type = 'FreeSlip'
-        self.k_dirichlet.setConstantBC(0.)         
+        # dirichlet
+        self.k_dirichlet.setConstantBC(0.) 
+        # advective        
         self.p_advective.setConstantBC(0.)
         self.pInit_advective.setConstantBC(0.)          
-        self.pInc_advective.setConstantBC(0.)
         self.u_advective.setConstantBC(0.)
         self.v_advective.setConstantBC(0.)
         self.w_advective.setConstantBC(0.)
@@ -197,13 +205,10 @@ class BC_RANS(BC_Base):
         self.ws_advective.setConstantBC(0.)
         self.vof_advective.setConstantBC(0.)
         self.vos_advective.setConstantBC(0.)
+        # diffusive
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
-        self.us_diffusive.setConstantBC(0.)
-        self.vs_diffusive.setConstantBC(0.)
-        self.ws_diffusive.setConstantBC(0.)
-        self.pInit_diffusive.setConstantBC(0.)          
         self.pInc_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)  

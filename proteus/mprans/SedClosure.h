@@ -508,10 +508,17 @@ public:
 	{
 	  pf =std::min( fContact_*pow(sedF-frFraction_,mContact_) / ( pow(maxFraction_ - sedF,nContact_) + small_), notSoLarge_);
 	} 
-	
 
+//      printf("frFraction_ --> %2.9f", frFraction_);
+//      printf("maxFraction_ --> %2.9f", maxFraction_);
+//
+//      printf("fContact_ --> %2.9f", fContact_);
+//      printf("mContact_ --> %2.9f", mContact_);
+//      printf("nContact_ --> %2.9f", nContact_);
+	  
       return pf;
     }
+
     inline double mu_fr(double sedF,
 		      double du_dx,
 		      double du_dy,
@@ -521,9 +528,7 @@ public:
 		      double dv_dz,
 		      double dw_dx,
 		      double dw_dy,
-			double dw_dz)
-
-
+			  double dw_dz)
     {
       double divU = du_dx + dv_dy + dw_dz;
       double pf = p_friction(sedF);
