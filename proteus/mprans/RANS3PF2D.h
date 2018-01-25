@@ -3329,7 +3329,7 @@ namespace proteus
                 double p_ext = 0.0;
                 for (int i=0; i<nDOF_per_element_pressure;++i)
                 {
-                    p_ext += p_dof[eN*nDOF_per_element_pressure+i]*p_trial_trace_ref[ebN_local_kb*nDOF_per_element_pressure+i];
+                    p_ext += p_dof[p_l2g[eN*nDOF_per_element_pressure+i]]*p_trial_trace_ref[ebN_local_kb*nDOF_per_element_pressure+i];
                 }
                 double nx = -normal[0] ; // need ext normal of the solid
                 double ny = -normal[1] ;
