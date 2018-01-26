@@ -61,8 +61,8 @@ namespace proteus
                                    double* normal_ref,
                                    double* boundaryJac_ref,
                                    double eb_adjoint_sigma,
-                                   double *elementDiameter,
-                                   double *nodeDiametersArray,
+                                   double* elementDiameter,
+                                   double* nodeDiametersArray,
                                    double hFactor,
                                    int nElements_global,
                                    int nElementBoundaries_owned,
@@ -151,7 +151,7 @@ namespace proteus
                                    int stride_u,
                                    int stride_v,
                                    int stride_w,
-                                   double *globalResidual,
+                                   double* globalResidual,
                                    int nExteriorElementBoundaries_global,
                                    int* exteriorElementBoundariesArray,
                                    int* elementBoundaryElementsArray,
@@ -270,7 +270,7 @@ namespace proteus
                                    const double* q_turb_var_0,
                                    const double* q_turb_var_1,
                                    const double* q_turb_var_grad_0,
-                                   int* p_l2g, 
+                                   int* p_l2g,
                                    int* vel_l2g,
                                    double* p_dof, double* u_dof, double* v_dof, double* w_dof,
                                    double* g,
@@ -390,7 +390,7 @@ namespace proteus
                                           double *ebqe_velocity,
                                           double *velocityAverage) = 0;
   };
-  
+
   template<class CompKernelType,
     int nSpace,
     int nQuadraturePoints_element,
@@ -826,6 +826,7 @@ namespace proteus
 					   double dmom_u_source[nSpace],
 					   double dmom_v_source[nSpace],
 					   double dmom_w_source[nSpace])
+
     {
       double rhoFluid, muFluid,nuFluid,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
@@ -855,7 +856,7 @@ namespace proteus
       dmom_u_source[0] = (vos)*new_beta;
       dmom_u_source[1] = 0.0;
       /* dmom_u_source[2] = 0.0; */
-      
+
       dmom_v_source[0] = 0.0;
       dmom_v_source[1] =  (vos)*new_beta;
       /*dmom_v_source[2] = 0.0;*/
@@ -1329,11 +1330,11 @@ namespace proteus
         dflux_umom_du = 0.0;
         dflux_umom_dv = 0.0;
         /* dflux_umom_dw = 0.0; */
-
         dflux_vmom_dp = 0.0;
         dflux_vmom_du = 0.0;
         dflux_vmom_dv = 0.0;
         /* dflux_vmom_dw = 0.0; */
+
 
         dflux_wmom_dp = 0.0;
         dflux_wmom_du = 0.0;
@@ -3349,6 +3350,7 @@ namespace proteus
               elementJacobian_w_w[nDOF_test_element][nDOF_trial_element];
             for (int i=0;i<nDOF_test_element;i++)
               for (int j=0;j<nDOF_trial_element;j++)
+
                 {
                   elementJacobian_p_p[i][j]=0.0;
                   elementJacobian_p_u[i][j]=0.0;
@@ -3367,6 +3369,7 @@ namespace proteus
                   elementJacobian_w_v[i][j]=0.0;
                   elementJacobian_w_w[i][j]=0.0;
                 }
+
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
@@ -5040,6 +5043,7 @@ namespace proteus
       }
     };//RANS3PSed2D
   
+
   inline cppRANS3PSed2D_base* newRANS3PSed2D(int nSpaceIn,
                                              int nQuadraturePoints_elementIn,
                                              int nDOF_mesh_trial_elementIn,

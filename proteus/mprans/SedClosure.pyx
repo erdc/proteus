@@ -688,3 +688,4 @@ cdef class HsuSedStress:
                                          nu)
     def p_s( self, sedF,  rhoSolid, theta, du_dx, du_dy, du_dz, dv_dx, dv_dy, dv_dz, dw_dx, dw_dy, dw_dz):
         return self.thisptr.p_s( sedF,  rhoSolid, theta, du_dx, du_dy, du_dz, dv_dx, dv_dy, dv_dz, dw_dx, dw_dy, dw_dz)
+

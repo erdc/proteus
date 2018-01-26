@@ -561,6 +561,165 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         # Get boundary data
         self.defineTraceFunctions()
 
+class BernsteinOnCube(LocalFunctionSpace):
+    """
+    Bernstein polynomials on the unit nd-cube
+
+    Bernstein basis functions on the reference nd-cube (nd <=3) with
+    coordinates xi[0],xi[1],and xi[2]. 
+    The basis functions are numbered as follows:     
+    ##############
+    # *** 2D *** #
+    ##############
+    ###########
+    # Order=1 #
+    ###########
+    3--2
+    |  |
+    0--1
+    ###########
+    # Order=2 #
+    ###########
+    3-6-2
+    | | |
+    7-8-5
+    | | |
+    0-4-1
+    ###########
+    # Order=3 #
+    ###########
+    3--9--8--2
+    |  |  |  |
+    10-14-15-7
+    |  |  |  |
+    11-12-13-6
+    |  |  |  |
+    0--4--5--1
+    ###########
+    # Order=4 #
+    ###########
+    3--12-11-10-2
+    |  |  |  |  |
+    13-22-23-24-9
+    |  |  |  |  |
+    14-19-20-21-8
+    |  |  |  |  |
+    15-16-17-18-7
+    |  |  |  |  |
+    0--4--5--6--1
+
+    NOTE (mql): *** The polynomials are defined for arbitrary order in 1D. 
+                    This definition is carried to multi-D via tensor products. 
+                *** The numbering is defined for arbitrary order (via funMap) in 2D.
+                *** TODO: Generalize numbering for 1D and 3D. 
+                *** TODO: The quad rule Lobatto edge alt must be generalized. 
+                *** TODO: define hessians and higher order deriavtives 
+    """
+    from math import factorial 
+
+    def nChooseK(self,n,k):
+        return factorial(n)/factorial(k)/factorial(n-k)
+    
+    def __init__(self,nd=3, order=2):
+        self.referenceElement = ReferenceCube(nd)
+        LocalFunctionSpace.__init__(self,(order+1)**nd,self.referenceElement)
+        self.gradientList=[]
+        self.order = order
+
+        # Generate equi distance nodes for generation of basis
+        # Should use Gauss Labatto points
+
+        self.nodes=[]
+
+        self.quadrature = LobattoEdgeAlt(order=order)
+        for i in range(order+1):
+            self.nodes.append(self.quadrature.points[i][0])
+        # Define 1D functions using definition via binomial coefficients
+        self.fun=[]
+        self.dfun=[]
+        #self.dfun2=[] 
+
+        for k in range(order+1):
+            self.fun.append(lambda x,n=order,k=k:
+                            self.nChooseK(n,k)*((x+1)/2.)**k*((1-x)/2.)**(n-k))
+            self.dfun.append(lambda x,n=order,k=k:
+                             #-2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
+                             # Rule out the cases when 1-x or 1+x = 0. This is to avoid warnings due to division by zero
+                             0. if 1-x == 0. or 1+x == 0. else -2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
+            #self.dfun2.append(lambda x,n=order,k=k: ...)
+
+        # Define multi-dimensional stuff
+        basis= []
+        basisGradients = []
+        if nd == 1:
+            basis = self.fun
+            basisGradients = self.dfun
+            funMap=[0,2,1]
+        elif nd == 2:
+            #Define the basis and its gradient via tensor products
+            for j in range(order+1):
+                for i in range(order+1):
+                    basis.append(lambda xi,i=i,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
+                    basisGradients.append(lambda xi,i=i,j=j:
+                                          numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
+                                                       self. fun[i](xi[0])*self.dfun[j](xi[1])]))
+            #Define numbering for arbitrary order (see above)
+            funMap=np.zeros((order+1)**2,'i')
+            for i in range(order+1):
+                #auxiliary vector to construct ith column of funMap
+                vec=np.zeros(order+1)
+                # COMPUTE BOTTOM AND UPPER ROW OF funMap #
+                if (i==0): #left column
+                    vec[0]=0
+                    vec[order]=3
+                elif (i==order): #right column
+                    vec[0]=1
+                    vec[order]=2
+                else: #middle columns                    
+                    vec[0]=nd+1+i #bottom row
+                    vec[order]=nd+2*order+(order-1)-i #upper row
+                # COMPUTE MIDDLE ROWS OF funMap #
+                for k in range(1,order):
+                    if (i==0): #left column
+                        vec[order-k] = nd+3*order-2+k
+                    elif (i==order): #right column
+                        vec[k] = nd+order+k
+                    else: #middle columns
+                        vec[k] = (2*nd)*(order-1)+2*nd-1+i+(k-1)*(order-1)
+                #print vec
+                funMap[i*(order+1):(i+1)*(order+1)]=vec[:]
+                #print funMap
+        elif nd == 3:
+            for k in range(order+1):
+                for j in range(order+1):
+                    for i in range(order+1):
+                        basis.append(lambda xi,i=i,j=j,k=k:
+                                     self.fun[i](xi[0])*self.fun[j](xi[1])*self.fun[k](xi[2]))
+                        basisGradients.append(lambda xi,i=i,j=j,k=k:
+                         numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1])*self. fun[k](xi[2]),
+                                      self. fun[i](xi[0])*self.dfun[j](xi[1])*self. fun[k](xi[2]),
+                                      self. fun[i](xi[0])*self. fun[j](xi[1])*self.dfun[k](xi[2])]))
+            funMap = [ 0, 8, 1,
+                       11,20, 9,
+                       3,10, 2,
+                       12,21,13,
+                       24,26,22,
+                       15,23,14,
+                       4,16, 5,
+                       19,25,17,
+                       7,18, 6]
+
+        # Reorder local functions
+        invMap=numpy.zeros((self.dim),'i')
+        for i in range(self.dim):
+            invMap[funMap[i]] = i
+
+        for i in range(self.dim):
+            self.basis.append(basis[invMap[i]])
+            self.basisGradients.append(basisGradients[invMap[i]])
+        # Get boundary data
+        self.defineTraceFunctions()
+        
 class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
     """
     Quadratic polynomials on the unit nd-simplex with the nodal basis.
@@ -844,6 +1003,235 @@ class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
         #end 3d
     #end init
 #end QuadraticOnSimplex
+
+class BernsteinOnSimplex(LocalFunctionSpace):
+    """
+    Quadratic Bernstein polynomials on the unit nd-simplex.
+
+    The basis functions are numbered according to
+
+    .. math::
+
+    \psi &= \lambda_i^2               0<= i<= d
+    \psi &= 2\lambda_j\lambda_k       0<= j < k <= d
+
+    where :math:`\lambda_i` is the barycentric coordinate associated
+    with node i (i.e., it's 1 at node i and zero elsewhere). 
+    These can be generalized to:
+
+    \psi &= p!/(i!j!k!)\lambda_0^i\lambda_1^j\lambda_2^k, 0<=i,j,k<=order, i+j+k=order
+
+    Gradients of shape functions are
+
+    .. math::
+
+     \nabla \psi_i &= 2\lambda_i\nabla\lambda_i   0<= i <= d
+     \nabla \psi_i &= 2\lambda_k\nabla\lambda_j + 2\lambda_j\nabla\lambda_k \mbox{for} 0 <= j < k <= d
+
+    which again can be generalized via the general formula above.
+
+    In 2d we have
+
+    .. math::
+
+    \psi_i &= \lambda_i^2  0<= i<= 2
+    \psi_3 &= 2\lambda_0\lambda_1
+    \psi_4 &= 2\lambda_1\lambda_2
+    \psi_5 &= 2\lambda_0\lambda_2
+
+    2d numberings for :math:`\psi`
+
+      2
+      |\
+      | \
+      |  \
+      5   4
+      |    \
+      |     \
+      0---3--1
+
+    Note that mesh numbers edges according to the node they are across
+    from, so that local dof 3 corresponds to edge 2, local dof 4
+    corresponds to edge 0, local dof 5 corresponds to edge 1,
+
+    3d should be
+
+    .. math::
+
+    \psi_i &= \lambda_i^2  0<= i<= 3
+    \psi_4 &= 2\lambda_0\lambda_1
+    \psi_5 &= 2\lambda_1\lambda_2
+    \psi_6 &= 2\lambda_2\lambda_3
+    \psi_7 &= 2\lambda_0\lambda_2
+    \psi_8 &= 2\lambda_1\lambda_3
+    \psi_9 &= 2\lambda_0\lambda_3
+    """
+    def __init__(self,nd=3):
+        from RefUtils import baryCoords
+        from RefUtils import fact
+        from RefUtils import baryGrads
+        from RefUtils import p2refNodes
+
+        self.referenceElement = ReferenceSimplex(nd)
+        LocalFunctionSpace.__init__(self,fact(nd+2)/(2*fact(nd)),
+                                    self.referenceElement)
+        self.gradientList=[]
+        self.basisHessians=[]
+        self.nonzeroHessians=True
+        for ebN in self.referenceElement.range_nElementBoundaries:
+            self.basisTrace.append([])
+            self.basisGradientsTrace.append([])
+        if nd == 1:
+            for i in range(nd+1): #0,1
+                self.basis.append(lambda  xi, i=i:
+                                  baryCoords['1d'][i](xi)**2.0)
+                self.basisTrace[0].append(lambda xBar, i=i:
+                                        self.basis[i](self.referenceElement.boundaryMapList[0](xBar)))
+                self.basisTrace[1].append(lambda xBar, i=i:
+                                        self.basis[i](self.referenceElement.boundaryMapList[1](xBar)))
+                self.gradientList.append(lambda xi, i=i:
+                                         2.0*baryCoords['1d'][i](xi)*baryGrads['1d'][i])
+                self.basisGradients.append(lambda xi, i=i: self.gradientList[i](xi))
+                self.basisGradientsTrace[0].append(lambda xBar, i=i:
+                                     self.gradientList[i](self.referenceElement.boundaryMapList[0](xBar)))
+                self.basisGradientsTrace[1].append(lambda xBar, i=i:
+                                     self.gradientList[i](self.referenceElement.boundaryMapList[1](xBar)))
+                self.basisHessians.append(lambda xi, i=i:
+                                          2.0*numpy.outer(baryGrads['1d'][i],baryGrads['1d'][i]))
+            #end 0,1
+            #2
+            self.basis.append(lambda xi: 2.0*baryCoords['1d'][0](xi)*baryCoords['1d'][1](xi))
+            self.basisTrace[0].append(lambda xBar:
+                                      self.basis[2](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisTrace[1].append(lambda xBar:
+                                      self.basis[2](self.referenceElement.boundaryMapList[1](xBar)))
+            self.gradientList.append(lambda xi:
+                                     2.0*baryCoords['1d'][1](xi)*baryGrads['1d'][0]+
+                                     2.0*baryCoords['1d'][0](xi)*baryGrads['1d'][1])
+            self.basisGradients.append(lambda xi: self.gradientList[2](xi))
+            self.basisGradientsTrace[0].append(lambda xBar:
+                              self.gradientList[2](self.referenceElement.boundaryMapList[0](xBar)))
+            self.basisGradientsTrace[1].append(lambda xBar:
+                              self.gradientList[2](self.referenceElement.boundaryMapList[1](xBar)))
+            self.basisHessians.append(lambda xi:
+                                          (2.0*numpy.outer(baryGrads['1d'][0],baryGrads['1d'][1])+
+                                           2.0*numpy.outer(baryGrads['1d'][1],baryGrads['1d'][0])))
+        elif nd == 2:
+            #NOTE (mql): the formulas for the basis functions and its first derivatives are grl
+            # with respect to the polynomial order. The Hessian is computed assuming order=2
+            ijk = np.array([[2,0,0],                     
+                            [0,2,0],
+                            [0,0,2],
+                            [1,1,0],
+                            [0,1,1],
+                            [1,0,1]])            
+            for i in range(len(ijk)):
+                self.basis.append(lambda xi, i=i:
+                                  math.factorial(2)/math.factorial(ijk[i][0])/math.factorial(ijk[i][1])/math.factorial(ijk[i][2])*
+                                  (1. if ijk[i][0]==0 else baryCoords['2d'][0](xi)**ijk[i][0])*
+                                  (1. if ijk[i][1]==0 else baryCoords['2d'][1](xi)**ijk[i][1])*
+                                  (1. if ijk[i][2]==0 else baryCoords['2d'][2](xi)**ijk[i][2]))
+                self.basisTrace[0].append(lambda xBar, i=i:
+                                          self.basis[i](self.referenceElement.boundaryMapList[0](xBar)))
+                self.basisTrace[1].append(lambda xBar, i=i:
+                                          self.basis[i](self.referenceElement.boundaryMapList[1](xBar)))
+                self.basisTrace[2].append(lambda xBar, i=i:
+                                          self.basis[i](self.referenceElement.boundaryMapList[2](xBar)))
+                self.gradientList.append(
+                    lambda xi, i=i:
+                    math.factorial(2)/math.factorial(ijk[i][0])/math.factorial(ijk[i][1])/math.factorial(ijk[i][2])*
+                    (
+                    baryCoords['2d'][0](xi)**ijk[i][0]*
+                    baryCoords['2d'][1](xi)**ijk[i][1]*
+                    (0. if baryCoords['2d'][2](xi) == 0. else ijk[i][2]*baryCoords['2d'][2](xi)**(ijk[i][2]-1))
+                        *baryGrads['2d'][2]+
+                    baryCoords['2d'][0](xi)**ijk[i][0]*
+                    (0. if baryCoords['2d'][1](xi) == 0. else ijk[i][1]*baryCoords['2d'][1](xi)**(ijk[i][1]-1))*
+                    baryCoords['2d'][2](xi)**ijk[i][2]
+                        *baryGrads['2d'][1]+
+                    (0. if baryCoords['2d'][0](xi) == 0. else ijk[i][0]*baryCoords['2d'][0](xi)**(ijk[i][0]-1))*
+                    baryCoords['2d'][1](xi)**ijk[i][1]*
+                    baryCoords['2d'][2](xi)**ijk[i][2]
+                        *baryGrads['2d'][0]))
+                self.basisGradients.append(lambda xi, i=i: self.gradientList[i](xi))
+                self.basisGradientsTrace[0].append(lambda xBar, i=i:
+                                                   self.gradientList[i](self.referenceElement.boundaryMapList[0](xBar)))
+                self.basisGradientsTrace[1].append(lambda xBar, i=i:
+                                                   self.gradientList[i](self.referenceElement.boundaryMapList[1](xBar)))
+                self.basisGradientsTrace[2].append(lambda xBar, i=i:
+                                                   self.gradientList[i](self.referenceElement.boundaryMapList[2](xBar)))
+            # COMPUTE HESSIANS. These formulas assume that order=2
+            for i in range(nd+1): #0, 1, 2
+                self.basisHessians.append(lambda xi, i=i:
+                                          2.0*numpy.outer(baryGrads['2d'][i],baryGrads['2d'][i]))
+            r=1
+            nsofar=nd+1
+            for i in range(2): #(0,1) and (1,2)
+                self.basisHessians.append(lambda xi, i=i, nsofar=nsofar, r=r:
+                                          2.0*numpy.outer(baryGrads['2d'][i],baryGrads['2d'][i+r])+
+                                          2.0*numpy.outer(baryGrads['2d'][i+r],baryGrads['2d'][i]))
+            nsofar+=2
+            r=2
+            for i in range(1): #(0,2)
+                self.basisHessians.append(lambda xi, i=i, nsofar=nsofar, r=r:
+                                          2.0*numpy.outer(baryGrads['2d'][i],baryGrads['2d'][i+r])+
+                                          2.0*numpy.outer(baryGrads['2d'][i+r],baryGrads['2d'][i]))
+
+        elif nd == 3:
+            # NOTE (mql): the formulas are not general; i.e., I assume order=2
+            nsofar=0
+            for i in range(nd+1): #0,1,2,3
+                self.basis.append(lambda xi, i=i:
+                                  baryCoords['3d'][i](xi)**2.0)
+                self.basisTrace[0].append(lambda xBar, nsofar=nsofar:
+                                 self.basis[nsofar](self.referenceElement.boundaryMapList[0](xBar)))
+                self.basisTrace[1].append(lambda xBar, nsofar=nsofar:
+                                 self.basis[nsofar](self.referenceElement.boundaryMapList[1](xBar)))
+                self.basisTrace[2].append(lambda xBar, nsofar=nsofar:
+                                 self.basis[nsofar](self.referenceElement.boundaryMapList[2](xBar)))
+                self.basisTrace[3].append(lambda xBar, nsofar=nsofar:
+                                 self.basis[nsofar](self.referenceElement.boundaryMapList[3](xBar)))
+                self.gradientList.append(lambda xi, i=i, nsofar=nsofar:
+                                         2.0*baryCoords['3d'][i](xi)*baryGrads['3d'][i])
+                self.basisGradients.append(lambda xi, nsofar=nsofar:
+                                           self.gradientList[nsofar](xi))
+                for ib in range(nd+1):
+                    self.basisGradientsTrace[ib].append(lambda xBar, nsofar=nsofar, ib=ib:
+                         self.gradientList[nsofar](self.referenceElement.boundaryMapList[ib](xBar)))
+                #end ib
+                self.basisHessians.append(lambda xi, i=i:
+                                          2.0*numpy.outer(baryGrads['3d'][i],baryGrads['3d'][i]))
+                nsofar += 1
+                #end ib
+            #end for nd+1
+
+            #no go through increments of size 1,2,3
+            #number of combos per increment are dim-incr+1
+            for r in range(1,nd+1): #1,2,3
+                for i in range(nd-r+1):
+                    self.basis.append(lambda xi, i=i, r=r:
+                                      2.0*baryCoords['3d'][i](xi)*baryCoords['3d'][i+r](xi))
+                    self.basisTrace[0].append(lambda xBar, nsofar=nsofar:
+                         self.basis[nsofar](self.referenceElement.boundaryMapList[0](xBar)))
+                    self.basisTrace[1].append(lambda xBar, nsofar=nsofar:
+                         self.basis[nsofar](self.referenceElement.boundaryMapList[1](xBar)))
+                    self.basisTrace[2].append(lambda xBar, nsofar=nsofar:
+                         self.basis[nsofar](self.referenceElement.boundaryMapList[2](xBar)))
+                    self.basisTrace[3].append(lambda xBar, nsofar=nsofar:
+                         self.basis[nsofar](self.referenceElement.boundaryMapList[3](xBar)))
+                    self.gradientList.append(lambda xi, i=i, r=r:
+                                             2.0*baryCoords['3d'][i+r](xi)*baryGrads['3d'][i]+
+                                             2.0*baryCoords['3d'][i](xi)*baryGrads['3d'][i+r])
+                    self.basisGradients.append(lambda xi, nsofar=nsofar:
+                                               self.gradientList[nsofar](xi))
+                    for ib in range(nd+1):
+                        self.basisGradientsTrace[ib].append(lambda xBar, nsofar=nsofar, ib=ib:
+                             self.gradientList[nsofar](self.referenceElement.boundaryMapList[ib](xBar)))
+                    #end ib
+                    self.basisHessians.append(lambda xi, i=i, nsofar=nsofar, r=r:
+                                              2.0*numpy.outer(baryGrads['3d'][i],baryGrads['3d'][i+r])+
+                                              2.0*numpy.outer(baryGrads['3d'][i+r],baryGrads['3d'][i]))
+                    nsofar += 1
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #finite element spaces for P^1 non-conforming approximation
@@ -3187,12 +3575,21 @@ class ParametricFiniteElementSpace:
                                xiArray,
                                inverseJacobianArray,
                                grad_vArray):
-        ''' This function calculates the BasisGradientValues for calculations on the reference element
-            xiArray (input)               - a list of quadrature points (x,y,z) in 2D case, z = 0
-            inverseJacobianArray (input)  - values of the inverseJacobian matrix used in the affine transformation from 
-                                            the physical domain to the reference element
-            grad_vArray (output)          - gradient values of basis functions on reference triangle, adjusted for transformation
-                                            from physical domain
+        '''
+        This function calculates the BasisGradientValues for
+        calculations on the reference element.
+
+        Parameters
+        ----------
+        xiArray : input, :obj:`list` of :obj:`tuple`
+            A list of quadrature points (x,y,z) in 2D case, z = 0.
+        inverseJacobianArray : input, :obj:`numpy.array`
+            Values of the inverseJacobian matrix used in the affine
+            transformation from the physical domain to the reference
+            element.
+        grad_vArray : output, :obj:`numpy.array`
+            Gradient values of basis functions on reference triangle,
+            adjusted for transformation from physical domain.
         '''
         grad_vArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
@@ -4125,6 +4522,93 @@ def LagrangeCubeFactory(OrderIn):
 Q1 = C0_AffineLinearOnCubeWithNodalBasis
 Q2 = LagrangeCubeFactory(2)
 
+class C0_BernsteinOnCube(C0_AffineLinearOnSimplexWithNodalBasis):
+    """
+    The standard linear CG space.
+    Globally C0
+    Each geometric element is the image of the reference cube under
+    a n-linear(non-affine) mapping. The Bernstein basis is used on the reference cube.
+    """
+    def __init__(self,mesh,nd=3,order=2):
+        assert False, "Bernstein polynomials are not interpolatory. Remove this assert to use p2 Lagrange interpolatory conditions"
+        localFunctionSpace = BernsteinOnCube(nd,order=2)
+        # NOTE: Bernstein polynomials ARE NOT INTERPOLATORY but we use them as control points to create a bezier curve. 
+        interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        ParametricFiniteElementSpace.__init__(self,
+                                              ReferenceFiniteElement(localFunctionSpace,
+                                                                     interpolationConditions),
+                                              ParametricMaps(mesh,
+                                                         localFunctionSpace.referenceElement,
+                                                         LagrangeOnCubeWithNodalBasis(nd,order=mesh.px)),
+                                              QuadraticLagrangeCubeDOFMap(mesh))
+
+        print "C0_BernsteinOnCubeWithNodalBasis"
+        print mesh.px
+
+class C0_AffineBernsteinOnCube(ParametricFiniteElementSpace):
+    """
+    Bernstein CG space.
+    Globally C0
+    Each geometric element is the image of the reference simplex under
+    a linear affine mapping. The Bernstein basis is used on the reference simplex.
+    """
+    def __init__(self,mesh,nd=3,order=2):
+        self.order = order
+        localGeometricSpace= LinearOnCubeWithNodalBasis(nd)
+        #todo fix these interpolation conditions to work on Cube
+        
+        if self.order==2:
+            localFunctionSpace = BernsteinOnCube(nd,order=2)
+            # NOTE: Bernstein polynomials ARE NOT INTERPOLATORY but we use them as control points to create a bezier curve.
+            interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        #elif self.order==1:
+            #localFunctionSpace = LagrangeOnCubeWithNodalBasis(nd,order=1)
+            #interpolationConditions = CubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        else:
+            raise NotImplementedError ("Lagrange factory only implemented for Q2"
+                                       "elements so far. For Q1 use C0_AffineLinearOnCubeWithNodalBasis.")
+        ParametricFiniteElementSpace.__init__(self,
+                                              ReferenceFiniteElement(localFunctionSpace,
+                                                                     interpolationConditions),
+                                              AffineMaps(mesh,
+                                                         localGeometricSpace.referenceElement,
+                                                         LinearOnCubeWithNodalBasis(nd)),
+                                              QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd))
+
+        for i in range(localFunctionSpace.dim):
+            for j in range(localFunctionSpace.dim):
+                x_j = interpolationConditions.quadraturePointArray[j]
+                psi_ij = localFunctionSpace.basis[i](x_j)
+                #print i,j,x_j,psi_ij
+        #for archiving
+        import Archiver
+        self.XdmfWriter=Archiver.XdmfWriter()
+
+    def writeMeshXdmf(self,ar,name,t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0):
+        if self.order == 2:
+            return self.XdmfWriter.writeMeshXdmf_C0Q2Lagrange(ar,name,mesh=self.mesh,spaceDim=self.nSpace_global,
+                                                              dofMap=self.dofMap,t=t,init=init,meshChanged=meshChanged,
+                                                              arGrid=arGrid,tCount=tCount)
+        else:
+            raise NotImplementedError ("Lagrange factory only implemented for Q2"
+                                       "elements so far. For Q1 use C0_AffineLinearOnCubeWithNodalBasis.")
+
+    def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
+        self.XdmfWriter.writeFunctionXdmf_C0P2Lagrange(ar,u,tCount=tCount,init=init)
+    def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
+        self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"c0p2_Lagrange",tCount=tCount,init=init)
+
+# Bernstein Factory On Cube
+#def BernsteinCubeFactory(OrderIn):
+#    class BernsteinCubeOrderN(C0_AffineBernsteinOnCube):
+#        def __init__(self,mesh,nd):
+#            C0_AffineBernsteinOnCube.__init__(self,mesh,nd,order=OrderIn)
+#    return BernsteinCubeOrderN
+
+# TODO - migrate Q1 to an instance of BernsteinCubeFactor
+#Q1 = C0_AffineLinearOnCubeWithNodalBasis
+#Q2 = BernsteinCubeFactory(2)
+
 class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpace):
     def __init__(self,mesh,nd=3,k=0):
         localFunctionSpace = Monomials(nd,k)
@@ -4597,6 +5081,7 @@ class DG_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                                   dof,
                                                   nodalValues,
                                                   dim_dof)
+        
 class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
     """
     A quadratic C0 space with the nodal basis.
@@ -5104,6 +5589,33 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
         return 0
 
 P2 = C0_AffineQuadraticOnSimplexWithNodalBasis
+
+class C0_AffineBernsteinOnSimplex(C0_AffineQuadraticOnSimplexWithNodalBasis):
+    """
+    A quadratic C0 space with Bernstein basis.
+
+    Globally piecewise continuous.
+    Each geometric element is the image of the reference simplex under
+    a piecewise linear, continuous, affine mapping.
+    The nodal basis is used on the reference simplex.
+    """    
+    def __init__(self,mesh,nd=3):
+        self.order = 2
+        localFunctionSpace = BernsteinOnSimplex(nd)
+        localGeometricSpace= LinearOnSimplexWithNodalBasis(nd)
+        # NOTE: Bernstein polynomials ARE NOT INTERPOLATORY but we use them as control points to create a bezier curve.
+        interpolationConditions = QuadraticLagrangeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        ParametricFiniteElementSpace.__init__(self,
+                                              ReferenceFiniteElement(localFunctionSpace,
+                                                                     interpolationConditions),
+                                              AffineMaps(mesh,
+                                                         localGeometricSpace.referenceElement,
+                                                         LinearOnSimplexWithNodalBasis(nd)),
+                                              QuadraticLagrangeDOFMap(mesh,localFunctionSpace,nd))
+
+        #for archiving
+        import Archiver
+        self.XdmfWriter=Archiver.XdmfWriter()
 
 class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
     """
@@ -6530,10 +7042,28 @@ class DOFBoundaryConditions_alt:
 
 
 
-class FluxBoundaryConditions:
-    """
-    A class for generating the list of element boundaries
-    where flux values are specified.
+class FluxBoundaryConditions(object):
+    """Generating class for the fluxBoundaryConditions dictionaries.
+
+    This class manages the generation of the advective, stress and
+    diffusive fluxBoundaryCondition dictionaries.  These dictionaries
+    store lists of functions that describe the flux conditions along
+    the finite element boundaries.
+
+    Attributes
+    ----------
+    advectiveFluxBoundaryConditionsDict : :obj:`dict`
+        Stores advective flux boundary conditions functions.
+    stressFluxBoundaryConditionsDict : :obj:`dict`
+        Stores stress flux boundary conditions functions.
+    diffusiveFluxBoundaryConditionsDictDict : :obj:`dict`
+        Stores diffusive flux boundary conditions functions.
+
+    Notes
+    -----
+    The boundary condition dictionaries all use the key convention
+    (ebNE,k) where ebNE is the global edge number and k is the local
+    quadrature point number.
     """
     def __init__(self,mesh,nElementBoundaryQuadraturePoints_elementBoundary,x,
                  getAdvectiveFluxBoundaryConditions=None,

@@ -19,6 +19,7 @@ from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 import cRANS3PSed
 
+
 class SubgridError(proteus.SubgridError.SGE_base):
 
     def __init__(
@@ -184,17 +185,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  barycenters=None,
                  PSTAB=0.0,
                  aDarcy=150.0,
-		 betaForch=0.0,
-		 grain=0.0102,
-		 packFraction=0.2,
-		 packMargin=0.01,
-		 maxFraction=0.635,
-		 frFraction=0.57,
+                 betaForch=0.0,
+                 grain=0.0102,
+                 packFraction=0.2,
+                 packMargin=0.01,
+                 maxFraction=0.635,
+                 frFraction=0.57,
                  sigmaC=1.1,
                  C3e=1.2,
                  C4e=1.0,
                  eR=0.8,
- 		 fContact=0.02,
+                 fContact=0.02,
                  mContact=2.0,
                  nContact=5.0,
                  angFriction=pi/6.0,
@@ -318,7 +319,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              useSparseDiffusion=sd,
                              movingDomain=movingDomain)
             self.vectorComponents = [0, 1]
-            self.vectorName="sediment_velocity"
+            self.vectorName = "sediment_velocity"
         elif nd == 3:
             variableNames = ['us', 'vs', 'ws']
             mass = {0: {0: 'linear'},
@@ -374,20 +375,20 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              useSparseDiffusion=sd,
                              movingDomain=movingDomain)
             self.vectorComponents = [0, 1, 2]
-            self.vectorName="sediment_velocity"
+            self.vectorName = "sediment_velocity"
 
     def attachModels(self, modelList):
         # level set
         self.model = modelList[self.ME_model]
         if self.FLUID_model is not None:
-            self.model.q_velocity_fluid = modelList[self.FLUID_model].q[('velocity',0)]
-            self.model.ebqe_velocity_fluid = modelList[self.FLUID_model].ebqe[('velocity',0)]
+            self.model.q_velocity_fluid = modelList[self.FLUID_model].q[('velocity', 0)]
+            self.model.ebqe_velocity_fluid = modelList[self.FLUID_model].ebqe[('velocity', 0)]
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
-            self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u',0)]
-            self.model.ebqe_p_fluid = modelList[self.PRESSURE_model].ebqe[('u',0)]
-            self.model.q_grad_p_fluid = modelList[self.PRESSURE_model].q[('grad(u)',0)]
-            self.model.ebqe_grad_p_fluid = modelList[self.PRESSURE_model].ebqe[('grad(u)',0)]
+            self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u', 0)]
+            self.model.ebqe_p_fluid = modelList[self.PRESSURE_model].ebqe[('u', 0)]
+            self.model.q_grad_p_fluid = modelList[self.PRESSURE_model].q[('grad(u)', 0)]
+            self.model.ebqe_grad_p_fluid = modelList[self.PRESSURE_model].ebqe[('grad(u)', 0)]
         if self.VOS_model is not None:
             self.model.vos_dof = modelList[self.VOS_model].u[0].dof
             self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
@@ -1688,17 +1689,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.nElementBoundaryQuadraturePoints_elementBoundary,
                 compKernelFlag,
                 self.coefficients.aDarcy,
-		self.coefficients.betaForch,
-		self.coefficients.grain,
-		self.coefficients.packFraction,
-		self.coefficients.packMargin,
-		self.coefficients.maxFraction,
-		self.coefficients.frFraction,
+                self.coefficients.betaForch,
+                self.coefficients.grain,
+                self.coefficients.packFraction,
+                self.coefficients.packMargin,
+                self.coefficients.maxFraction,
+                self.coefficients.frFraction,
                 self.coefficients.sigmaC,
                 self.coefficients.C3e,
                 self.coefficients.C4e,
                 self.coefficients.eR,
- 		self.coefficients.fContact,
+                self.coefficients.fContact,
                 self.coefficients.mContact,
                 self.coefficients.nContact,
                 self.coefficients.angFriction)
@@ -1713,17 +1714,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.nElementBoundaryQuadraturePoints_elementBoundary,
                 compKernelFlag,
                 self.coefficients.aDarcy,
-		self.coefficients.betaForch,
-		self.coefficients.grain,
-		self.coefficients.packFraction,
-		self.coefficients.packMargin,
-		self.coefficients.maxFraction,
-		self.coefficients.frFraction,
+                self.coefficients.betaForch,
+                self.coefficients.grain,
+                self.coefficients.packFraction,
+                self.coefficients.packMargin,
+                self.coefficients.maxFraction,
+                self.coefficients.frFraction,
                 self.coefficients.sigmaC,
                 self.coefficients.C3e,
                 self.coefficients.C4e,
                 self.coefficients.eR,
- 		self.coefficients.fContact,
+                self.coefficients.fContact,
                 self.coefficients.mContact,
                 self.coefficients.nContact,
                 self.coefficients.angFriction)
@@ -2033,10 +2034,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pressureModel.q_grad_p_sharp,
             self.pressureModel.ebqe_p_sharp,
             self.pressureModel.ebqe_grad_p_sharp,
-            #self.pressureModel.q[('u',0)],
-            #self.pressureModel.q[('grad(u)',0)],
-            #self.pressureModel.ebqe[('u',0)],
-            #self.pressureModel.ebqe[('grad(u)',0)],
+            # self.pressureModel.q[('u',0)],
+            # self.pressureModel.q[('grad(u)',0)],
+            # self.pressureModel.ebqe[('u',0)],
+            # self.pressureModel.ebqe[('grad(u)',0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,

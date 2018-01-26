@@ -12,34 +12,34 @@ namespace proteus
   public:
     virtual ~cppPresInc_base(){}
     virtual void calculateResidual(//element
-				   double* mesh_trial_ref,
-				   double* mesh_grad_trial_ref,
-				   double* mesh_dof,
-				   int* mesh_l2g,
-				   double* dV_ref,
-				   double* u_trial_ref,
-				   double* u_grad_trial_ref,
-				   double* u_test_ref,
-				   double* u_grad_test_ref,
-				   //element boundary
-				   double* mesh_trial_trace_ref,
-				   double* mesh_grad_trial_trace_ref,
-				   double* dS_ref,
-				   double* u_trial_trace_ref,
-				   double* u_grad_trial_trace_ref,
-				   double* u_test_trace_ref,
-				   double* u_grad_test_trace_ref,
-				   double* normal_ref,
-				   double* boundaryJac_ref,
-				   //physics
-				   int nElements_global,
+                                   double* mesh_trial_ref,
+                                   double* mesh_grad_trial_ref,
+                                   double* mesh_dof,
+                                   int* mesh_l2g,
+                                   double* dV_ref,
+                                   double* u_trial_ref,
+                                   double* u_grad_trial_ref,
+                                   double* u_test_ref,
+                                   double* u_grad_test_ref,
+                                   //element boundary
+                                   double* mesh_trial_trace_ref,
+                                   double* mesh_grad_trial_trace_ref,
+                                   double* dS_ref,
+                                   double* u_trial_trace_ref,
+                                   double* u_grad_trial_trace_ref,
+                                   double* u_test_trace_ref,
+                                   double* u_grad_test_trace_ref,
+                                   double* normal_ref,
+                                   double* boundaryJac_ref,
+                                   //physics
+                                   int nElements_global,
                                    int* isDOFBoundary,
                                    int* isFluxBoundary,
-				   int* u_l2g,
+                                   int* u_l2g,
                                    double* u_dof,
                                    double alphaBDF,
                                    double* q_vf,
-				   double* q_divU,
+                                   double* q_divU,
                                    double* q_vs,
                                    double* q_vos,
                                    double rho_s,
@@ -69,31 +69,31 @@ namespace proteus
 				   double* q_a,
 				   double* ebqe_a)=0;
     virtual void calculateJacobian(//element
-				   double* mesh_trial_ref,
-				   double* mesh_grad_trial_ref,
-				   double* mesh_dof,
-				   int* mesh_l2g,
-				   double* dV_ref,
-				   double* u_trial_ref,
-				   double* u_grad_trial_ref,
-				   double* u_test_ref,
-				   double* u_grad_test_ref,
-				   //element boundary
-				   double* mesh_trial_trace_ref,
-				   double* mesh_grad_trial_trace_ref,
-				   double* dS_ref,
-				   double* u_trial_trace_ref,
-				   double* u_grad_trial_trace_ref,
-				   double* u_test_trace_ref,
-				   double* u_grad_test_trace_ref,
-				   double* normal_ref,
-				   double* boundaryJac_ref,
-				   //physics
-				   int nElements_global,
+                                   double* mesh_trial_ref,
+                                   double* mesh_grad_trial_ref,
+                                   double* mesh_dof,
+                                   int* mesh_l2g,
+                                   double* dV_ref,
+                                   double* u_trial_ref,
+                                   double* u_grad_trial_ref,
+                                   double* u_test_ref,
+                                   double* u_grad_test_ref,
+                                   //element boundary
+                                   double* mesh_trial_trace_ref,
+                                   double* mesh_grad_trial_trace_ref,
+                                   double* dS_ref,
+                                   double* u_trial_trace_ref,
+                                   double* u_grad_trial_trace_ref,
+                                   double* u_test_trace_ref,
+                                   double* u_grad_test_trace_ref,
+                                   double* normal_ref,
+                                   double* boundaryJac_ref,
+                                   //physics
+                                   int nElements_global,
                                    int* isDOFBoundary,
                                    int* isFluxBoundary,
-				   int* u_l2g,
-				   double* u_dof,
+                                   int* u_l2g,
+                                   double* u_dof,
                                    double alphaBDF,
                                    double* q_vf,
                                    double* q_vs,
@@ -106,23 +106,23 @@ namespace proteus
                                    double* ebqe_vs,
                                    double* ebqe_vos,
                                    double* ebqe_rho_f,
-				   int* csrRowIndeces_u_u,
+                                   int* csrRowIndeces_u_u,
                                    int* csrColumnOffsets_u_u,
-				   double* globalJacobian,
+                                   double* globalJacobian,
                                    int nExteriorElementBoundaries_global,
-				   int* exteriorElementBoundariesArray,
-				   int* elementBoundaryElementsArray,
-				   int* elementBoundaryLocalElementBoundariesArray,
+                                   int* exteriorElementBoundariesArray,
+                                   int* elementBoundaryElementsArray,
+                                   int* elementBoundaryLocalElementBoundariesArray,
                                    int* csrColumnOffsets_eb_u_u)=0;
   };
-  
+
   template<class CompKernelType,
-	   int nSpace,
-	   int nQuadraturePoints_element,
-	   int nDOF_mesh_trial_element,
-	   int nDOF_trial_element,
-	   int nDOF_test_element,
-	   int nQuadraturePoints_elementBoundary>
+           int nSpace,
+           int nQuadraturePoints_element,
+           int nDOF_mesh_trial_element,
+           int nDOF_trial_element,
+           int nDOF_test_element,
+           int nQuadraturePoints_elementBoundary>
   class cppPresInc : public cppPresInc_base
   {
   public:
@@ -150,7 +150,7 @@ namespace proteus
       //a = (1.0)/(rhof_min*alphaBDF) ; 
       //a = (1.0-vos)/(rhof_min*alphaBDF) + (vos)/(rhos_min*alphaBDF); 
     }
-    
+
     inline
       void exteriorNumericalAdvectiveFlux(const double n[nSpace],
                                           const double f[nSpace],
@@ -158,85 +158,85 @@ namespace proteus
     {
       flux = 0.0;
       for (int I=0; I < nSpace; I++)
-	flux += n[I]*f[I];
+        flux += n[I]*f[I];
     }
 
     inline
     void exteriorNumericalDiffusiveFlux(const int& isDOFBoundary,
-					const int& isFluxBoundary,
-					const double n[nSpace],
-					const double& a,
-					const double grad_potential[nSpace],
-					const double& u,
+                                        const int& isFluxBoundary,
+                                        const double n[nSpace],
+                                        const double& a,
+                                        const double grad_potential[nSpace],
+                                        const double& u,
                                         const double& bc_u,
                                         const double& bc_flux,
-					const double& penalty,
-					double& flux)
+                                        const double& penalty,
+                                        double& flux)
     {
       if(isFluxBoundary == 1)
-	{ 
-	  flux = bc_flux;
-	}
+        {
+          flux = bc_flux;
+        }
       else if(isDOFBoundary == 1)
-	{
-	  flux = 0.0;
-	  for(int I=0;I<nSpace;I++)
+        {
+          flux = 0.0;
+          for(int I=0;I<nSpace;I++)
             flux-= a*grad_potential[I]*n[I];
-	  flux += a*penalty*(u-bc_u);
-	}
+          flux += a*penalty*(u-bc_u);
+        }
       else
-	{
-	  std::cerr<<"warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl;
-	  flux = 0.0;
-	}
+        {
+          std::cerr<<"warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl;
+          flux = 0.0;
+        }
     }
 
     inline
     double ExteriorNumericalDiffusiveFluxJacobian(const int& isDOFBoundary,
-						  const int& isFluxBoundary,
-						  const double n[nSpace],
-						  const double& a,
-						  const double& v,
-						  const double grad_v[nSpace],
-						  const double& penalty)
+                                                  const int& isFluxBoundary,
+                                                  const double n[nSpace],
+                                                  const double& a,
+                                                  const double& v,
+                                                  const double grad_v[nSpace],
+                                                  const double& penalty)
     {
       double tmp=0.0;
       if(isFluxBoundary==0 && isDOFBoundary==1)
-	{
-	  for(int I=0;I<nSpace;I++)
+        {
+          for(int I=0;I<nSpace;I++)
             tmp -= a*grad_v[I]*n[I];
-	  tmp +=a*penalty*v;
-	}
+          tmp +=a*penalty*v;
+        }
       return tmp;
     }
-    
+
     inline void calculateElementResidual(//element
-					 double* mesh_trial_ref,
-					 double* mesh_grad_trial_ref,
-					 double* mesh_dof,
-					 int* mesh_l2g,
-					 double* dV_ref,
-					 double* u_trial_ref,
-					 double* u_grad_trial_ref,
-					 double* u_test_ref,
-					 double* u_grad_test_ref,
-					 //element boundary
-					 double* mesh_trial_trace_ref,
-					 double* mesh_grad_trial_trace_ref,
-					 double* dS_ref,
-					 double* u_trial_trace_ref,
-					 double* u_grad_trial_trace_ref,
-					 double* u_test_trace_ref,
-					 double* u_grad_test_trace_ref,
-					 double* normal_ref,
-					 double* boundaryJac_ref,
-					 //physics
-					 int nElements_global,
-					 int* u_l2g, 
-					 double* u_dof,
+                                         double* mesh_trial_ref,
+                                         double* mesh_grad_trial_ref,
+                                         double* mesh_dof,
+                                         int* mesh_l2g,
+                                         double* dV_ref,
+                                         double* u_trial_ref,
+                                         double* u_grad_trial_ref,
+                                         double* u_test_ref,
+                                         double* u_grad_test_ref,
+                                         //element boundary
+                                         double* mesh_trial_trace_ref,
+                                         double* mesh_grad_trial_trace_ref,
+                                         double* dS_ref,
+                                         double* u_trial_trace_ref,
+                                         double* u_grad_trial_trace_ref,
+                                         double* u_test_trace_ref,
+                                         double* u_grad_test_trace_ref,
+                                         double* normal_ref,
+                                         double* boundaryJac_ref,
+                                         //physics
+                                         int nElements_global,
+                                         int* u_l2g,
+                                         double* u_dof,
                                          double alphaBDF,
                                          double* q_vf,
-					 double* q_divU,
+                                         double* q_divU,
                                          double* q_vs,
                                          double* q_vos,
                                          double rho_s,
@@ -265,62 +265,62 @@ namespace proteus
 					 double* q_a)
     {
       for (int i=0;i<nDOF_test_element;i++)
-	{
-	  elementResidual_u[i]=0.0;
-	}//i
+        {
+          elementResidual_u[i]=0.0;
+        }//i
       //loop over quadrature points and compute integrands
       for  (int k=0;k<nQuadraturePoints_element;k++)
-	{
-	  //compute indeces and declare local storage
-	  register int eN_k = eN*nQuadraturePoints_element+k,
-	    eN_k_nSpace = eN_k*nSpace;
-	    //eN_nDOF_trial_element = eN*nDOF_trial_element;
-	  register double u=0.0,grad_u[nSpace],
-	    a=0.0,
+        {
+          //compute indeces and declare local storage
+          register int eN_k = eN*nQuadraturePoints_element+k,
+            eN_k_nSpace = eN_k*nSpace;
+            //eN_nDOF_trial_element = eN*nDOF_trial_element;
+          register double u=0.0,grad_u[nSpace],
+            a=0.0,
             f[nSpace],
-	    jac[nSpace*nSpace],
-	    jacDet,
-	    jacInv[nSpace*nSpace],
-	    u_grad_trial[nDOF_trial_element*nSpace],
-	    u_test_dV[nDOF_trial_element],
-	    u_grad_test_dV[nDOF_test_element*nSpace],
-	    dV,x,y,z,
-	    G[nSpace*nSpace],G_dd_G,tr_G;
-	  //
-	  //compute solution and gradients at quadrature points
-	  //
-	  ck.calculateMapping_element(eN,
-				      k,
-				      mesh_dof,
-				      mesh_l2g,
-				      mesh_trial_ref,
-				      mesh_grad_trial_ref,
-				      jac,
-				      jacDet,
-				      jacInv,
-				      x,y,z);
-	  //get the physical integration weight
-	  dV = fabs(jacDet)*dV_ref[k];
-	  ck.calculateG(jacInv,G,G_dd_G,tr_G);
-	  //get the trial function gradients
-	  ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
-	  //get the solution
-	  ck.valFromElementDOF(element_u,&u_trial_ref[k*nDOF_trial_element],u);
-	  //get the solution gradients
-	  ck.gradFromElementDOF(element_u,u_grad_trial,grad_u);
-	  //precalculate test function products with integration weights
-	  for (int j=0;j<nDOF_trial_element;j++)
-	    {
-	      u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
-	      for (int I=0;I<nSpace;I++)
-		{
-		  u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
-		}
-	    }
-	  //
-	  //calculate pde coefficients at quadrature points
-	  //
-	  evaluateCoefficients(alphaBDF,
+            jac[nSpace*nSpace],
+            jacDet,
+            jacInv[nSpace*nSpace],
+            u_grad_trial[nDOF_trial_element*nSpace],
+            u_test_dV[nDOF_trial_element],
+            u_grad_test_dV[nDOF_test_element*nSpace],
+            dV,x,y,z,
+            G[nSpace*nSpace],G_dd_G,tr_G;
+          //
+          //compute solution and gradients at quadrature points
+          //
+          ck.calculateMapping_element(eN,
+                                      k,
+                                      mesh_dof,
+                                      mesh_l2g,
+                                      mesh_trial_ref,
+                                      mesh_grad_trial_ref,
+                                      jac,
+                                      jacDet,
+                                      jacInv,
+                                      x,y,z);
+          //get the physical integration weight
+          dV = fabs(jacDet)*dV_ref[k];
+          ck.calculateG(jacInv,G,G_dd_G,tr_G);
+          //get the trial function gradients
+          ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+          //get the solution
+          ck.valFromElementDOF(element_u,&u_trial_ref[k*nDOF_trial_element],u);
+          //get the solution gradients
+          ck.gradFromElementDOF(element_u,u_grad_trial,grad_u);
+          //precalculate test function products with integration weights
+          for (int j=0;j<nDOF_trial_element;j++)
+            {
+              u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+              for (int I=0;I<nSpace;I++)
+                {
+                  u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+                }
+            }
+          //
+          //calculate pde coefficients at quadrature points
+          //
+          evaluateCoefficients(alphaBDF,
                                &q_vf[eN_k_nSpace],
 			       &q_vs[eN_k_nSpace],
 			       q_vos[eN_k],
@@ -349,38 +349,38 @@ namespace proteus
 	  q_u[eN_k] = u;
           for (int I=0;I<nSpace;I++)
             q_grad_u[eN_k_nSpace+I] = grad_u[I];
-	}
+        }
     }
-    
+
     void calculateResidual(//element
-			   double* mesh_trial_ref,
-			   double* mesh_grad_trial_ref,
-			   double* mesh_dof,
-			   int* mesh_l2g,
-			   double* dV_ref,
-			   double* u_trial_ref,
-			   double* u_grad_trial_ref,
-			   double* u_test_ref,
-			   double* u_grad_test_ref,
-			   //element boundary
-			   double* mesh_trial_trace_ref,
-			   double* mesh_grad_trial_trace_ref,
-			   double* dS_ref,
-			   double* u_trial_trace_ref,
-			   double* u_grad_trial_trace_ref,
-			   double* u_test_trace_ref,
-			   double* u_grad_test_trace_ref,
-			   double* normal_ref,
-			   double* boundaryJac_ref,
-			   //physics
-			   int nElements_global,
+                           double* mesh_trial_ref,
+                           double* mesh_grad_trial_ref,
+                           double* mesh_dof,
+                           int* mesh_l2g,
+                           double* dV_ref,
+                           double* u_trial_ref,
+                           double* u_grad_trial_ref,
+                           double* u_test_ref,
+                           double* u_grad_test_ref,
+                           //element boundary
+                           double* mesh_trial_trace_ref,
+                           double* mesh_grad_trial_trace_ref,
+                           double* dS_ref,
+                           double* u_trial_trace_ref,
+                           double* u_grad_trial_trace_ref,
+                           double* u_test_trace_ref,
+                           double* u_grad_test_trace_ref,
+                           double* normal_ref,
+                           double* boundaryJac_ref,
+                           //physics
+                           int nElements_global,
                            int* isDOFBoundary,
                            int* isFluxBoundary,
-			   int* u_l2g, 
-			   double* u_dof,
+                           int* u_l2g,
+                           double* u_dof,
                            double alphaBDF,
                            double* q_vf,
-			   double* q_divU,
+                           double* q_divU,
                            double* q_vs,
                            double* q_vos,
                            double rho_s,
@@ -450,38 +450,38 @@ namespace proteus
       //eN_k_j is the quadrature point index for a trial function
       //eN_k_i is the quadrature point index for a trial function
       for(int eN=0;eN<nElements_global;eN++)
-	{
-	  //declare local storage for element residual and initialize
-	  register double elementResidual_u[nDOF_test_element],element_u[nDOF_trial_element];
-	  for (int i=0;i<nDOF_test_element;i++)
-	    {
-	      register int eN_i=eN*nDOF_test_element+i;
-	      element_u[i] = u_dof[u_l2g[eN_i]];
-	    }//i
-	  calculateElementResidual(mesh_trial_ref,
-				   mesh_grad_trial_ref,
-				   mesh_dof,
-				   mesh_l2g,
-				   dV_ref,
-				   u_trial_ref,
-				   u_grad_trial_ref,
-				   u_test_ref,
-				   u_grad_test_ref,
-				   mesh_trial_trace_ref,
-				   mesh_grad_trial_trace_ref,
-				   dS_ref,
-				   u_trial_trace_ref,
-				   u_grad_trial_trace_ref,
-				   u_test_trace_ref,
-				   u_grad_test_trace_ref,
-				   normal_ref,
-				   boundaryJac_ref,
-				   nElements_global,
-				   u_l2g, 
-				   u_dof,
+        {
+          //declare local storage for element residual and initialize
+          register double elementResidual_u[nDOF_test_element],element_u[nDOF_trial_element];
+          for (int i=0;i<nDOF_test_element;i++)
+            {
+              register int eN_i=eN*nDOF_test_element+i;
+              element_u[i] = u_dof[u_l2g[eN_i]];
+            }//i
+          calculateElementResidual(mesh_trial_ref,
+                                   mesh_grad_trial_ref,
+                                   mesh_dof,
+                                   mesh_l2g,
+                                   dV_ref,
+                                   u_trial_ref,
+                                   u_grad_trial_ref,
+                                   u_test_ref,
+                                   u_grad_test_ref,
+                                   mesh_trial_trace_ref,
+                                   mesh_grad_trial_trace_ref,
+                                   dS_ref,
+                                   u_trial_trace_ref,
+                                   u_grad_trial_trace_ref,
+                                   u_test_trace_ref,
+                                   u_grad_test_trace_ref,
+                                   normal_ref,
+                                   boundaryJac_ref,
+                                   nElements_global,
+                                   u_l2g,
+                                   u_dof,
                                    alphaBDF,
                                    q_vf,
-				   q_divU,
+                                   q_divU,
                                    q_vs,
                                    q_vos,
                                    rho_s,
@@ -669,29 +669,29 @@ namespace proteus
     }
 
     inline void calculateElementJacobian(//element
-					 double* mesh_trial_ref,
-					 double* mesh_grad_trial_ref,
-					 double* mesh_dof,
-					 int* mesh_l2g,
-					 double* dV_ref,
-					 double* u_trial_ref,
-					 double* u_grad_trial_ref,
-					 double* u_test_ref,
-					 double* u_grad_test_ref,
-					 //element boundary
-					 double* mesh_trial_trace_ref,
-					 double* mesh_grad_trial_trace_ref,
-					 double* dS_ref,
-					 double* u_trial_trace_ref,
-					 double* u_grad_trial_trace_ref,
-					 double* u_test_trace_ref,
-					 double* u_grad_test_trace_ref,
-					 double* normal_ref,
-					 double* boundaryJac_ref,
-					 //physics
-					 int nElements_global,
-					 int* u_l2g,
-					 double* u_dof,
+                                         double* mesh_trial_ref,
+                                         double* mesh_grad_trial_ref,
+                                         double* mesh_dof,
+                                         int* mesh_l2g,
+                                         double* dV_ref,
+                                         double* u_trial_ref,
+                                         double* u_grad_trial_ref,
+                                         double* u_test_ref,
+                                         double* u_grad_test_ref,
+                                         //element boundary
+                                         double* mesh_trial_trace_ref,
+                                         double* mesh_grad_trial_trace_ref,
+                                         double* dS_ref,
+                                         double* u_trial_trace_ref,
+                                         double* u_grad_trial_trace_ref,
+                                         double* u_test_trace_ref,
+                                         double* u_grad_test_trace_ref,
+                                         double* normal_ref,
+                                         double* boundaryJac_ref,
+                                         //physics
+                                         int nElements_global,
+                                         int* u_l2g,
+                                         double* u_dof,
                                          double alphaBDF,
                                          double* q_vf,
                                          double* q_vs,
@@ -700,120 +700,120 @@ namespace proteus
                                          double* q_rho_f,
                                          double rho_s_min,
                                          double rho_f_min,
-					 double* elementJacobian_u_u,
-					 double* element_u,
-					 int eN)
+                                         double* elementJacobian_u_u,
+                                         double* element_u,
+                                         int eN)
     {
       for (int i=0;i<nDOF_test_element;i++)
-	for (int j=0;j<nDOF_trial_element;j++)
-	  {
-	    elementJacobian_u_u[i*nDOF_trial_element+j]=0.0;
-	  }
+        for (int j=0;j<nDOF_trial_element;j++)
+          {
+            elementJacobian_u_u[i*nDOF_trial_element+j]=0.0;
+          }
       for  (int k=0;k<nQuadraturePoints_element;k++)
-	{
-	  int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
-	    eN_k_nSpace = eN_k*nSpace;
-	    //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
-	  
-	  //declare local storage
-	  register double u=0.0,
-	    grad_u[nSpace],
+        {
+          int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
+            eN_k_nSpace = eN_k*nSpace;
+            //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
+
+          //declare local storage
+          register double u=0.0,
+            grad_u[nSpace],
             f[nSpace],
-	    a=0.0,
-	    jac[nSpace*nSpace],
-	    jacDet,
-	    jacInv[nSpace*nSpace],
-	    u_grad_trial[nDOF_trial_element*nSpace],
-	    dV,
-	    u_test_dV[nDOF_test_element],
-	    u_grad_test_dV[nDOF_test_element*nSpace],
-	    x,y,z,
-	    G[nSpace*nSpace],G_dd_G,tr_G;
-	  //
-	  //calculate solution and gradients at quadrature points
-	  //
-	  ck.calculateMapping_element(eN,
-				      k,
-				      mesh_dof,
-				      mesh_l2g,
-				      mesh_trial_ref,
-				      mesh_grad_trial_ref,
-				      jac,
-				      jacDet,
-				      jacInv,
-				      x,y,z);
-	  //get the physical integration weight
-	  dV = fabs(jacDet)*dV_ref[k];
-	  ck.calculateG(jacInv,G,G_dd_G,tr_G);
-	  //get the trial function gradients
-	  ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
-	  //get the solution 	
-	  ck.valFromElementDOF(element_u,&u_trial_ref[k*nDOF_trial_element],u);
-	  //get the solution gradients
-	  ck.gradFromElementDOF(element_u,u_grad_trial,grad_u);
-	  //precalculate test function products with integration weights
-	  for (int j=0;j<nDOF_trial_element;j++)
-	    {
-	      u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
-	      for (int I=0;I<nSpace;I++)
-		{
-		  u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
-		}
-	    }
-	  //
-	  //calculate pde coefficients and derivatives at quadrature points
-	  //
-	  evaluateCoefficients(alphaBDF,
+            a=0.0,
+            jac[nSpace*nSpace],
+            jacDet,
+            jacInv[nSpace*nSpace],
+            u_grad_trial[nDOF_trial_element*nSpace],
+            dV,
+            u_test_dV[nDOF_test_element],
+            u_grad_test_dV[nDOF_test_element*nSpace],
+            x,y,z,
+            G[nSpace*nSpace],G_dd_G,tr_G;
+          //
+          //calculate solution and gradients at quadrature points
+          //
+          ck.calculateMapping_element(eN,
+                                      k,
+                                      mesh_dof,
+                                      mesh_l2g,
+                                      mesh_trial_ref,
+                                      mesh_grad_trial_ref,
+                                      jac,
+                                      jacDet,
+                                      jacInv,
+                                      x,y,z);
+          //get the physical integration weight
+          dV = fabs(jacDet)*dV_ref[k];
+          ck.calculateG(jacInv,G,G_dd_G,tr_G);
+          //get the trial function gradients
+          ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+          //get the solution
+          ck.valFromElementDOF(element_u,&u_trial_ref[k*nDOF_trial_element],u);
+          //get the solution gradients
+          ck.gradFromElementDOF(element_u,u_grad_trial,grad_u);
+          //precalculate test function products with integration weights
+          for (int j=0;j<nDOF_trial_element;j++)
+            {
+              u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+              for (int I=0;I<nSpace;I++)
+                {
+                  u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+                }
+            }
+          //
+          //calculate pde coefficients and derivatives at quadrature points
+          //
+          evaluateCoefficients(alphaBDF,
                                &q_vf[eN_k_nSpace],
-			       &q_vs[eN_k_nSpace],
-			       q_vos[eN_k],
-			       rho_s_min,
-			       rho_f_min,
-			       f,
-			       a);
-	  for(int i=0;i<nDOF_test_element;i++)
-	    {
-	      //int eN_k_i=eN_k*nDOF_test_element+i;
-	      //int eN_k_i_nSpace=eN_k_i*nSpace;
-	      int i_nSpace=i*nSpace;
-	      for(int j=0;j<nDOF_trial_element;j++) 
-		{ 
-		  //int eN_k_j=eN_k*nDOF_trial_element+j;
-		  //int eN_k_j_nSpace = eN_k_j*nSpace;
-		  int j_nSpace = j*nSpace;		  
-		  elementJacobian_u_u[i*nDOF_trial_element+j] += 
-		    ck.NumericalDiffusionJacobian(a,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); 
-		}//j
-	    }//i
-	}//k
+                               &q_vs[eN_k_nSpace],
+                               q_vos[eN_k],
+                               rho_s_min,
+                               rho_f_min,
+                               f,
+                               a);
+          for(int i=0;i<nDOF_test_element;i++)
+            {
+              //int eN_k_i=eN_k*nDOF_test_element+i;
+              //int eN_k_i_nSpace=eN_k_i*nSpace;
+              int i_nSpace=i*nSpace;
+              for(int j=0;j<nDOF_trial_element;j++)
+                {
+                  //int eN_k_j=eN_k*nDOF_trial_element+j;
+                  //int eN_k_j_nSpace = eN_k_j*nSpace;
+                  int j_nSpace = j*nSpace;
+                  elementJacobian_u_u[i*nDOF_trial_element+j] +=
+                    ck.NumericalDiffusionJacobian(a,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
+                }//j
+            }//i
+        }//k
     }
 
     void calculateJacobian(//element
-			   double* mesh_trial_ref,
-			   double* mesh_grad_trial_ref,
-			   double* mesh_dof,
-			   int* mesh_l2g,
-			   double* dV_ref,
-			   double* u_trial_ref,
-			   double* u_grad_trial_ref,
-			   double* u_test_ref,
-			   double* u_grad_test_ref,
-			   //element boundary
-			   double* mesh_trial_trace_ref,
-			   double* mesh_grad_trial_trace_ref,
-			   double* dS_ref,
-			   double* u_trial_trace_ref,
-			   double* u_grad_trial_trace_ref,
-			   double* u_test_trace_ref,
-			   double* u_grad_test_trace_ref,
-			   double* normal_ref,
-			   double* boundaryJac_ref,
-			   //physics
-			   int nElements_global,
+                           double* mesh_trial_ref,
+                           double* mesh_grad_trial_ref,
+                           double* mesh_dof,
+                           int* mesh_l2g,
+                           double* dV_ref,
+                           double* u_trial_ref,
+                           double* u_grad_trial_ref,
+                           double* u_test_ref,
+                           double* u_grad_test_ref,
+                           //element boundary
+                           double* mesh_trial_trace_ref,
+                           double* mesh_grad_trial_trace_ref,
+                           double* dS_ref,
+                           double* u_trial_trace_ref,
+                           double* u_grad_trial_trace_ref,
+                           double* u_test_trace_ref,
+                           double* u_grad_test_trace_ref,
+                           double* normal_ref,
+                           double* boundaryJac_ref,
+                           //physics
+                           int nElements_global,
                            int* isDOFBoundary,
                            int* isFluxBoundary,
-			   int* u_l2g,
-			   double* u_dof,
+                           int* u_l2g,
+                           double* u_dof,
                            double alphaBDF,
                            double* q_vf,
                            double* q_vs,
@@ -826,46 +826,46 @@ namespace proteus
                            double* ebqe_vs,
                            double* ebqe_vos,
                            double* ebqe_rho_f,
-			   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-			   double* globalJacobian,
+                           int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+                           double* globalJacobian,
                            int nExteriorElementBoundaries_global,
                            int* exteriorElementBoundariesArray,
                            int* elementBoundaryElementsArray,
                            int* elementBoundaryLocalElementBoundariesArray,
-			   int* csrColumnOffsets_eb_u_u)
+                           int* csrColumnOffsets_eb_u_u)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //
       for(int eN=0;eN<nElements_global;eN++)
-	{
-	  register double  elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element];
-	  for (int j=0;j<nDOF_trial_element;j++)
-	    {
-	      register int eN_j = eN*nDOF_trial_element+j;
-	      element_u[j] = u_dof[u_l2g[eN_j]];
-	    }
-	  calculateElementJacobian(mesh_trial_ref,
-				   mesh_grad_trial_ref,
-				   mesh_dof,
-				   mesh_l2g,
-				   dV_ref,
-				   u_trial_ref,
-				   u_grad_trial_ref,
-				   u_test_ref,
-				   u_grad_test_ref,
-				   mesh_trial_trace_ref,
-				   mesh_grad_trial_trace_ref,
-				   dS_ref,
-				   u_trial_trace_ref,
-				   u_grad_trial_trace_ref,
-				   u_test_trace_ref,
-				   u_grad_test_trace_ref,
-				   normal_ref,
-				   boundaryJac_ref,
-				   nElements_global,
-				   u_l2g,
-				   u_dof,
+        {
+          register double  elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element];
+          for (int j=0;j<nDOF_trial_element;j++)
+            {
+              register int eN_j = eN*nDOF_trial_element+j;
+              element_u[j] = u_dof[u_l2g[eN_j]];
+            }
+          calculateElementJacobian(mesh_trial_ref,
+                                   mesh_grad_trial_ref,
+                                   mesh_dof,
+                                   mesh_l2g,
+                                   dV_ref,
+                                   u_trial_ref,
+                                   u_grad_trial_ref,
+                                   u_test_ref,
+                                   u_grad_test_ref,
+                                   mesh_trial_trace_ref,
+                                   mesh_grad_trial_trace_ref,
+                                   dS_ref,
+                                   u_trial_trace_ref,
+                                   u_grad_trial_trace_ref,
+                                   u_test_trace_ref,
+                                   u_grad_test_trace_ref,
+                                   normal_ref,
+                                   boundaryJac_ref,
+                                   nElements_global,
+                                   u_l2g,
+                                   u_dof,
                                    alphaBDF,
                                    q_vf,
                                    q_vs,
@@ -874,22 +874,22 @@ namespace proteus
                                    q_rho_f,
                                    rho_s_min,
                                    rho_f_min,
-				   elementJacobian_u_u,
-				   element_u,
-				   eN);
-	  //
-	  //load into element Jacobian into global Jacobian
-	  //
-	  for (int i=0;i<nDOF_test_element;i++)
-	    {
-	      int eN_i = eN*nDOF_test_element+i;
-	      for (int j=0;j<nDOF_trial_element;j++)
-		{
-		  int eN_i_j = eN_i*nDOF_trial_element+j;
-		  globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
-		}//j
-	    }//i
-	}//elements
+                                   elementJacobian_u_u,
+                                   element_u,
+                                   eN);
+          //
+          //load into element Jacobian into global Jacobian
+          //
+          for (int i=0;i<nDOF_test_element;i++)
+            {
+              int eN_i = eN*nDOF_test_element+i;
+              for (int j=0;j<nDOF_trial_element;j++)
+                {
+                  int eN_i_j = eN_i*nDOF_trial_element+j;
+                  globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
+                }//j
+            }//i
+        }//elements
       //
       //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
       //

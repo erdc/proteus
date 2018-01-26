@@ -1,3 +1,6 @@
+# A type of -*- python -*- file
+import proteus
+from proteus import Profiling
 import numpy
 cimport numpy
 
@@ -437,6 +440,7 @@ cdef class RANS3PSed:
                                   nContact,
                                   angFriction)
 
+
     def __dealloc__(self):
         del self.thisptr
 
@@ -609,10 +613,10 @@ cdef class RANS3PSed:
                                        < double * > p_grad_trial_ref.data,
                                        < double * > p_test_ref.data,
                                        < double * > p_grad_test_ref.data,
-                                        < double * > q_p.data,
-                                        < double * > q_grad_p.data,
-                                        < double * > ebqe_p.data,
-                                        < double * > ebqe_grad_p.data,
+                                       < double * > q_p.data,
+                                       < double * > q_grad_p.data,
+                                       < double * > ebqe_p.data,
+                                       < double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
                                        < double * > vel_test_ref.data,
@@ -1552,6 +1556,7 @@ cdef class RANS3PSed2D:
                                     mContact,
                                     nContact,
                                     angFriction)
+
 
     def __dealloc__(self):
         del self.thisptr
