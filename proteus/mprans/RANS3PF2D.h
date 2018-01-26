@@ -1562,6 +1562,102 @@ namespace proteus
             /* dmom_v_adv_v[1] += D_s * porosity * nu * phi_s_normal[1]; */
           }
       }
+      inline void compute_force_around_solid(const double dV,
+                                           const int nParticles,
+                                           const int sd_offset,
+                                           double *particle_signed_distances,
+                                           double *particle_signed_distance_normals,
+                                           double *particle_velocities,
+                                           double *particle_centroids,
+                                           const double penalty,
+                                           const double alpha,
+                                           const double beta,
+                                           const double eps_rho,
+                                           const double eps_mu,
+                                           const double rho_0,
+                                           const double nu_0,
+                                           const double rho_1,
+                                           const double nu_1,
+                                           const double useVF,
+                                           const double vf,
+                                           const double phi,
+                                           const double x,
+                                           const double y,
+                                           const double z,
+                                           const double p,
+                                           const double u,
+                                           const double v,
+                                           const double w,
+                                           const double uStar,
+                                           const double vStar,
+                                           const double wStar,
+                                           const double eps_s,
+                                           const double grad_u[nSpace],
+                                           const double grad_v[nSpace],
+                                           const double grad_w[nSpace],
+                                           double& Fx,
+                                           double& Fy)
+      {
+        double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
+        double *phi_s_normal;
+        double *vel;
+        H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
+        nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
+        rho = rho_0 * (1.0 - H_mu) + rho_1 * H_mu;
+        mu = rho_0 * nu_0 * (1.0 - H_mu) + rho_1 * nu_1 * H_mu;
+        C = 0.0;
+
+        phi_s = particle_signed_distances[0];
+        phi_s_normal = &particle_signed_distance_normals[0];
+        vel = &particle_velocities[0];
+        u_s = vel[0]; //particle_velocities[i*3+0];
+        v_s = vel[1]; //particle_velocities[i*3+1];
+        w_s = 0;
+        H_s = smoothedHeaviside(eps_s, phi_s);
+        D_s = smoothedDirac(eps_s, phi_s);
+        double rel_vel_norm = sqrt((uStar - u_s) * (uStar - u_s) +
+                                   (vStar - v_s) * (vStar - v_s) +
+                                   (wStar - w_s) * (wStar - w_s));
+
+        double C_surf = (phi_s > 0.0) ? 0.0 : nu * penalty;
+        double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
+
+        C = (D_s * C_surf + (1.0 - H_s) * C_vol);
+        force_x = dV * D_s * (p * phi_s_normal[0] - mu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]))
+                +dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
+
+        force_y = dV * D_s * (p * phi_s_normal[1] - mu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]))
+                +dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
+        if(0)
+        std::cout<<nu<<","
+                <<penalty<<","
+                <<phi_s<<","
+                <<C_surf<<","
+                <<C_vol<<","
+                <<dV<<","
+                <<D_s<<","
+                <<H_s<<","
+                <<p<<","
+                <<phi_s_normal[0]<<","
+                <<phi_s_normal[1]<<","
+                <<grad_u[0]<<","
+                <<grad_u[1]<<","
+                <<grad_v[0]<<","
+                <<grad_v[1]<<","
+                <<u<<","
+                <<v<<","
+                <<u_s<<","
+                <<v_s<<","
+                <<rho<<","
+                <<force_x<<","
+                <<force_y<<","
+                <<Fx<<","
+                <<Fy<<","
+                <<std::endl;
+
+        Fx += force_x;
+        Fy += force_y;
+      }
 
       inline
         void calculateCFL(const double& hFactor,
@@ -2397,6 +2493,8 @@ namespace proteus
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         std::vector<int> surrogate_boundaries, surrogate_boundary_elements;
         std::set<int> active_velocity_dof;
+        double Fx = 0.0;
+        double Fy = 0.0;
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
@@ -2769,7 +2867,7 @@ namespace proteus
                                                   dmom_v_source,
                                                   dmom_w_source);
                 double C_particles=0.0;
-                if(nParticles > 0)
+                if(0)if(nParticles > 0)
                   updateSolidParticleTerms(eN < nElements_owned,
                                            particle_nitsche,
                                            dV,
@@ -2827,6 +2925,41 @@ namespace proteus
                                            particle_netForces,
                                            particle_netMoments,
                                            particle_surfaceArea);
+                  compute_force_around_solid(dV,
+                                                             nParticles,
+                                                             nQuadraturePoints_global,
+                                                             &particle_signed_distances[eN_k],
+                                                             &particle_signed_distance_normals[eN_k_nSpace],
+                                                             particle_velocities,
+                                                             particle_centroids,
+                                                             particle_penalty_constant/h_phi,//penalty,
+                                                             particle_alpha,
+                                                             particle_beta,
+                                                             eps_rho,
+                                                             eps_mu,
+                                                             rho_0,
+                                                             nu_0,
+                                                             rho_1,
+                                                             nu_1,
+                                                             useVF,
+                                                             vf[eN_k],
+                                                             phi[eN_k],
+                                                             x,
+                                                             y,
+                                                             z,
+                                                             p,
+                                                             u,
+                                                             v,
+                                                             w,
+                                                             q_velocity_sge[eN_k_nSpace+0],
+                                                             q_velocity_sge[eN_k_nSpace+1],
+                                                             q_velocity_sge[eN_k_nSpace+1],
+                                                             particle_eps,
+                                                             grad_u,
+                                                             grad_v,
+                                                             grad_w,
+                                                             Fx,
+                                                             Fy);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -3132,10 +3265,10 @@ namespace proteus
         //
         //loop over the surrogate boundaries in SB method and assembly into residual
         //
-
+        std::cout<<"    yyForce use delta function    "<<Fx<<"\t"<<Fy<<std::endl;
         // LEO Initialization of the force to 0
-        double Fx = 0.0;
-        double Fy = 0.0;
+        Fx = 0.0;
+        Fy = 0.0;
         for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
           {
             register int ebN = surrogate_boundaries[ebN_s],
@@ -3344,12 +3477,12 @@ namespace proteus
                   double S_yy = 2*visco*grad_v_ext[1];
 
                   Fx -= p_ext*nx*dS;
-                  //Fx += (S_xx*nx + S_xy*ny)*dS;
+//                  Fx += (S_xx*nx + S_xy*ny)*dS;
                   Fx += dS*(C_adim*(u_ext - bc_u_ext)
                           - visco * (normal[0]*2*grad_u_ext[0] + normal[1]*(grad_u_ext[1]+grad_v_ext[0]))
                           + C_adim*dd1);
                   Fy -= p_ext*ny*dS;
-                  //Fy += (S_xy*nx + S_yy*ny)*dS;
+//                  Fy += (S_xy*nx + S_yy*ny)*dS;
                   Fy += dS*(C_adim*(v_ext - bc_v_ext)
                           - visco * (normal[0]*(grad_u_ext[1]+grad_v_ext[0]) + normal[1]*2*grad_v_ext[1])
                           + C_adim*dd2);
@@ -4849,7 +4982,7 @@ namespace proteus
                                                   dmom_v_source,
                                                   dmom_w_source);
                 double C_particles=0.0;
-                if(nParticles > 0)
+                if(0)if(nParticles > 0)
                   updateSolidParticleTerms(eN < nElements_owned,
                                            particle_nitsche,
                                            dV,

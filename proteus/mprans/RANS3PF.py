@@ -2260,6 +2260,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
         self.isActiveDOF = np.zeros_like(r);
+        print self.timeIntegration.t,
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
