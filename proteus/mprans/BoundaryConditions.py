@@ -1280,8 +1280,6 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.Ystar = self.Y * self.utStar / self.nu
         # Absolute value of the extracted velocity at y+ location.
         Up = np.sqrt(np.sum(self.tanU**2))
-        logEvent("self.kappa --> %s" % self.kappa)
-        logEvent("self.Ystar --> %s" % self.Ystar)
         # viscous layer
         if self.Ystar < 11.225:
             logEvent('Prescribed near-wall point outside log-law region!')
