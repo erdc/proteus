@@ -1623,11 +1623,14 @@ namespace proteus
         double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
 
         C = (D_s * C_surf + (1.0 - H_s) * C_vol);
-        force_x = dV * D_s * (p * phi_s_normal[0] - mu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]))
-                +dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
+        force_x = dV * D_s * (p * phi_s_normal[0] - mu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]));
+                //+dV*D_s*C_surf*rel_vel_norm*(u-u_s)*rho
+                //+dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
 
-        force_y = dV * D_s * (p * phi_s_normal[1] - mu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]))
-                +dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
+        force_y = dV * D_s * (p * phi_s_normal[1] - mu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]));
+                //+dV*D_s*C_surf*rel_vel_norm*(v-v_s)*rho
+                //+dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
+
         if(0)
         std::cout<<nu<<","
                 <<penalty<<","
@@ -3464,8 +3467,8 @@ namespace proteus
                 {
                     p_ext += p_dof[p_l2g[eN*nDOF_per_element_pressure+i]]*p_trial_trace_ref[ebN_local_kb*nDOF_per_element_pressure+i];
                 }
-                double nx = -normal[0] ; // need ext normal of the solid
-                double ny = -normal[1] ;
+                double nx = normal[0] ; // need ext normal of the solid
+                double ny = normal[1] ;
 //                for ( int i = 0 ; i < nDOF_test_element ; i++ ) {
 //                  int eN_i = eN*nDOF_test_element+i;
 //                  double phi_i = vel_test_dS[i];
@@ -3477,15 +3480,15 @@ namespace proteus
                   double S_yy = 2*visco*grad_v_ext[1];
 
                   Fx -= p_ext*nx*dS;
-//                  Fx += (S_xx*nx + S_xy*ny)*dS;
-                  Fx += dS*(C_adim*(u_ext - bc_u_ext)
-                          - visco * (normal[0]*2*grad_u_ext[0] + normal[1]*(grad_u_ext[1]+grad_v_ext[0]))
-                          + C_adim*dd1);
+                  Fx += (S_xx*nx + S_xy*ny)*dS;
+//                  Fx += dS*(C_adim*(u_ext - bc_u_ext)
+//                          - visco * (normal[0]*2*grad_u_ext[0] + normal[1]*(grad_u_ext[1]+grad_v_ext[0]))
+//                          + C_adim*dd1);
                   Fy -= p_ext*ny*dS;
-//                  Fy += (S_xy*nx + S_yy*ny)*dS;
-                  Fy += dS*(C_adim*(v_ext - bc_v_ext)
-                          - visco * (normal[0]*(grad_u_ext[1]+grad_v_ext[0]) + normal[1]*2*grad_v_ext[1])
-                          + C_adim*dd2);
+                  Fy += (S_xy*nx + S_yy*ny)*dS;
+//                  Fy += dS*(C_adim*(v_ext - bc_v_ext)
+//                          - visco * (normal[0]*(grad_u_ext[1]+grad_v_ext[0]) + normal[1]*2*grad_v_ext[1])
+//                          + C_adim*dd2);
 
 //                } // i
 
