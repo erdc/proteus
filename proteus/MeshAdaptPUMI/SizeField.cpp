@@ -775,7 +775,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     if (m->getDimension() == 2)
       h_old = sqrt(apf::measure(element) * 4 / sqrt(3));
     else
-      h_old = pow(apf::measure(element) * 6 * sqrt(2), 1.0 / 3.0); //edge of a regular tet
+      //h_old = pow(apf::measure(element) * 6 * sqrt(2), 1.0 / 3.0); //edge of a regular tet
+      h_old = apf::computeShortesHeightInTet(m,reg);
     apf::getVector(err_reg, reg, 0, err_vect);
     err_curr = err_vect[0];
     errRho_curr = apf::getScalar(errRho_reg, reg, 0);
@@ -783,7 +784,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     //h_new = h_old*sqrt(apf::measure(element))/sqrt(domainVolume)*target_error/err_curr;
     if (target_error == 0)
       target_error = err_total / sqrt(numel);
-    h_new = h_old * (target_error / err_curr);
+    h_new = h_old * pow((target_error / err_curr),2.0/(1.0+nsd));
     apf::setScalar(size_iso_reg, reg, 0, h_new);
     apf::destroyMeshElement(element);
   }
