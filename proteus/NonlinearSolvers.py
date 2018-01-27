@@ -408,6 +408,35 @@ class Newton(NonlinearSolver):
             self.u0 = numpy.zeros(self.F.dim,'d')
 
     def setLinearSolverTolerance(self,r):
+        """
+        This function dynamically sets the relative tolerance
+        of the linear solver associated with the non-linear iteration.
+        Set useEistenstatWalker=True in a simulation's numerics file
+        to ensure that this function is used.
+
+        Parameters
+        ----------
+        r : vector
+            non-linear residual vector
+
+        Notes
+        -----
+        The size of the relative reduction assigned to the linear
+        solver depends on two factors: (i) how far the non-linear
+        solver is from satifying its residual reductions and
+        (ii) how large the drop in the latest non-linear
+        residual was.
+
+        If the non-linear solver is both far from its residual
+        reduction targets and the latest non-linear residual showed
+        a big drop, then expect the algorithm to assign a large
+        relative reduction to the linear solver.
+
+        As the non-linear residual reduction targets get closer, or
+        the non-linear solver stagnates, the linear solver will be
+        assigned a smaller relative reduction up to a minimum of
+        0.001.
+        """
         self.norm_r = self.norm(r)
         gamma  = 0.0001
         etaMax = 0.001
@@ -419,7 +448,7 @@ class Newton(NonlinearSolver):
         if self.its > 1:
             etaA = gamma * self.norm_r**2/self.norm_r_last**2
             logEvent("etaA "+`etaA`)
-            logEvent("gama*self.etaLast**2 "+ `gamma*self.etaLast**2`)
+            logEvent("gamma*self.etaLast**2 "+ `gamma*self.etaLast**2`)
             if gamma*self.etaLast**2 < 0.1:
                 etaC = min(etaMax,etaA)
             else:
@@ -432,14 +461,21 @@ class Newton(NonlinearSolver):
         self.norm_r_last = self.norm_r
         self.linearSolver.setResTol(rtol=eta,atol=self.linearSolver.atol_r)
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        """
-        Solve F(u) = b
+        r""" Solves the non-linear system :math:`F(u) = b`.
 
-        b -- right hand side
-        u -- solution
-        r -- F(u) - b
+        Parameters
+        ----------
+        u : :class:`numpy.ndarray`
+           Solution vector.
+        r : :class:`numpy.ndarray`
+           Residual vector, :math:`r = b - F(u)`
+        b : :class:`numpy.ndarray` (ARB - not sure this is always true)
+           Right hand side vector
+        par_u : :class:`proteus.LinearAlgebraTools.ParVec_petsc4py`
+           Parallel solution vector.
+        par_r : :class:`proteus.LinearAlgebraTools.ParVec_petsc4py`
+           Parallel residual vector, :math:`r = b - F(u)`
         """
-
         import Viewers
         memory()
         if self.linearSolver.computeEigenvalues:
@@ -463,7 +499,7 @@ class Newton(NonlinearSolver):
         while (not self.converged(r) and
                not self.failed()):
             logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-                %(self.its-1, self.norm_r), level=1)            
+                %(self.its-1, self.norm_r), level=1)
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
                 % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
@@ -622,13 +658,13 @@ class Newton(NonlinearSolver):
                     Viewers.newWindow()
                 #raw_input("wait")
             logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-                %(self.its-1, self.norm_r), level=1)                
+                %(self.its-1, self.norm_r), level=1)
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             logEvent(memory("Newton","Newton"),level=4)
             return self.failedFlag
         logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-            %(self.its-1, self.norm_r), level=1)        
+            %(self.its-1, self.norm_r), level=1)
         logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
         logEvent(memory("Newton","Newton"),level=4)
@@ -974,7 +1010,7 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
                     # Compute the new sparse factor; i.e., self.F.MassMatrix_sparseFactor
                     self.linearSolver.prepare(b=r)
                 # Compute rhs for L2 projection and low (lumped) L2 projection
-                self.F.setMassQuadrature()
+                self.F.setMassQuadratureEdgeBasedStabilizationMethods()
                 r[:] = self.F.rhs_mass_correction
                 # Solve mass matrix for L2 projection
                 self.du[:]=0.0

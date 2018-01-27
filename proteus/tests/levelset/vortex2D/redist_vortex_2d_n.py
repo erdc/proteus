@@ -41,12 +41,14 @@ if cDegree_ls==0:
             femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}
         elementQuadrature = CubeGaussQuadrature(nd,vortex_quad_order)
         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,vortex_quad_order)
-    else:    
+    else:
         if pDegree_ls==1:
             femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
         elif pDegree_ls==2:
             femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
-        elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)    
+        base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
+        elementQuadrature = CompositeTriangle(base_quad_rule,hk)
+        #elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
     if LevelModelType == RDLS.LevelModel:
         subgridError = HamiltonJacobi_ASGS_opt(coefficients,nd,stabFlag='2',lag=False)
