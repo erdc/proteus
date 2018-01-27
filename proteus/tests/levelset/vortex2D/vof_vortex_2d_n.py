@@ -20,7 +20,7 @@ elif timeIntegration_vof == "rk":
     if cDegree_vof == -1:
         timeIntegration = LinearSSPRKPIintegration
     else:
-        timeIntegration = LinearSSPRKintegration        
+        timeIntegration = LinearSSPRKintegration
     stepController=Min_dt_RKcontroller
     #timeIntegration = ForwardEuler
     #stepController=Min_dt_controller
@@ -62,7 +62,9 @@ if useHex:
     elementQuadrature = CubeGaussQuadrature(nd,vortex_quad_order)
     elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,vortex_quad_order)
 else:
-    elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
+    base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
+    elementQuadrature = CompositeTriangle(base_quad_rule,hk)
+    #elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
 
 #elementQuadrature = SimplexLobattoQuadrature(nd,1)

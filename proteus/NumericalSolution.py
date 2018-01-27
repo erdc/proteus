@@ -67,9 +67,13 @@ class NS_base:  # (HasTraits):
         for p in pList:
             message += p.name+"\n"
         logEvent(message)
+        #: SplitOperator initialize file
         self.so=so
+        #: List of physics initialize files
         self.pList=pList
+        #: List of numerics initialize files
         self.nList=nList
+        #: Dictionary of command line arguments
         self.opts=opts
         self.simFlagsList=simFlagsList
         self.timeValues={}
@@ -319,9 +323,9 @@ class NS_base:  # (HasTraits):
                         logEvent("Warning: couldn't move {0:s}.1.neigh".format(fileprefix))
                         pass
                     try:
-                        logEvent("Warning: couldn't move {0:s}.1.edge".format(fileprefix))
                         check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
                     except:
+                        logEvent("Warning: couldn't move {0:s}.1.edge".format(fileprefix))
                         pass
                 comm.barrier()
                 logEvent("Initializing mesh and MultilevelMesh")
@@ -332,6 +336,8 @@ class NS_base:  # (HasTraits):
                                                              parallelPartitioningType=n.parallelPartitioningType)
                 if opts.generatePartitionedMeshFromFiles:
                     logEvent("Generating partitioned mesh from Tetgen files")
+                    if("f" not in n.triangleOptions or "ee" not in n.triangleOptions):
+                        sys.exit("ERROR: Remake the mesh with the `f` flag and `ee` flags in triangleOptions.")
                     mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix,nbase,mesh,n.nLevels,
                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                   parallelPartitioningType=n.parallelPartitioningType)
@@ -589,7 +595,7 @@ class NS_base:  # (HasTraits):
         self.modelList=[]
         self.lsList=[]
         self.nlsList=[]
-        
+
         for p,n,s,mlMesh,index \
             in zip(self.pList,self.nList,self.sList,self.mlMesh_nList,range(len(self.pList))):
 
@@ -763,8 +769,8 @@ class NS_base:  # (HasTraits):
                         nFile=n,
                         analyticalSolution=p.analyticalSolution))
                 model.simTools = self.simOutputList[-1]
-                
-                #Code to refresh attached gauges. The goal is to first purge 
+
+                #Code to refresh attached gauges. The goal is to first purge
                 #existing point gauge node associations as that may have changed
                 #If there is a line gauge, then all the points must be deleted
                 #and remade.
@@ -909,7 +915,7 @@ class NS_base:  # (HasTraits):
         n0 = self.nList[0]
         adaptMeshNow = False
         #will need to move this to earlier when the mesh is created
-        from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+        #from proteus.MeshAdaptPUMI import MeshAdaptPUMI
         if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
             import sys
             if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
@@ -965,7 +971,7 @@ class NS_base:  # (HasTraits):
                 for i in range(len(facetList)):
                   for j in range(maxFacetLength):
                     if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
-                      testSegment = [facetList[i][j],facetList[i][0]] 
+                      testSegment = [facetList[i][j],facetList[i][0]]
                     else:
                       testSegment = [facetList[i][j],facetList[i][j+1]]
                     try:
@@ -979,12 +985,12 @@ class NS_base:  # (HasTraits):
               mesh2Model_v = numpy.asarray(p0.domain.meshVertex2Model).astype("i")
               mesh2Model_e = numpy.asarray(p0.domain.meshEdge2Model).astype("i")
               mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
-            
+
             p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
             p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
         if (hasattr(p0.domain, 'PUMIMesh') and
             n0.adaptMesh and
-            self.so.useOneMesh and 
+            self.so.useOneMesh and
             self.nSolveSteps%n0.adaptMesh_nSteps==0):
             logEvent("Copying coordinates to PUMI")
             p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
@@ -1030,7 +1036,7 @@ class NS_base:  # (HasTraits):
                     del scalar
 
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-            # scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal           
+            # scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal
             # p0.domain.PUMIMesh.transferFieldToPUMI(
             #     'velocityError', scalar)
 
@@ -1055,7 +1061,7 @@ class NS_base:  # (HasTraits):
             sfConfig = p0.domain.PUMIMesh.size_field_config()
             if(sfConfig=="ERM"):
               errorTotal= p0.domain.PUMIMesh.get_local_error()
-              
+
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
@@ -1108,11 +1114,11 @@ class NS_base:  # (HasTraits):
         #code to suggest adapting until error is reduced;
         #not fully baked and can lead to infinite loops of adaptation
         #if(sfConfig=="ERM"):
-        #  p0.domain.PUMIMesh.get_local_error() 
+        #  p0.domain.PUMIMesh.get_local_error()
         #  while(p0.domain.PUMIMesh.willAdapt()):
         #    p0.domain.PUMIMesh.adaptPUMIMesh()
         #    p0.domain.PUMIMesh.get_local_error()
-        
+
         logEvent("Converting PUMI mesh to Proteus")
         #ibaned: PUMI conversion #2
         #TODO: this code is nearly identical to
@@ -1122,7 +1128,7 @@ class NS_base:  # (HasTraits):
           mesh = MeshTools.TetrahedralMesh()
         else:
           mesh = MeshTools.TriangularMesh()
-    
+
         mesh.convertFromPUMI(p0.domain.PUMIMesh,
                              p0.domain.faceList,
                              p0.domain.regList,
@@ -1146,14 +1152,21 @@ class NS_base:  # (HasTraits):
             if self.opts.hotStart:
                 logEvent("Setting initial conditions from hot start file for "+p.name)
                 tCount = int(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Name'])
+                offset=0
+                while tCount > 0:
+                    time = float(self.ar[index].tree.getroot()[-1][-1][-1-offset][0].attrib['Value'])
+                    if time < self.opts.hotStartTime:
+                        break
+                    else:
+                        tCount -=1
+                        offset +=1
                 self.ar[index].n_datasets = tCount + 1
-                time = float(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Value'])
-                if len(self.ar[index].tree.getroot()[-1][-1]) > 1:
-                    dt = time - float(self.ar[index].tree.getroot()[-1][-1][-2][0].attrib['Value'])
+                if len(self.ar[index].tree.getroot()[-1][-1]) - offset - 1 > 0:
+                    dt = time - float(self.ar[index].tree.getroot()[-1][-1][-1-offset-1][0].attrib['Value'])
                 else:
-                    logEvent("Only one step in hot start file, setting dt to 1.0")
+                    logEvent("Not enough steps in hot start file set set dt, setting dt to 1.0")
                     dt = 1.0
-                logEvent("Last time step in hot start file was t = "+`time`)
+                logEvent("Hot starting from time step t = "+`time`)
                 for lm,lu,lr in zip(m.levelModelList,m.uList,m.rList):
                     for cj in range(lm.coefficients.nc):
                         lm.u[cj].femSpace.readFunctionXdmf(self.ar[index],lm.u[cj],tCount)
@@ -1403,7 +1416,7 @@ class NS_base:  # (HasTraits):
                                 stepFailed = not self.systemStepController.retryModelStep_errorFailure(model)
                             else:
                                 #set up next step
-                                self.systemStepController.modelStepTaken(model,self.t_stepSequence)                                
+                                self.systemStepController.modelStepTaken(model,self.t_stepSequence)
                                 logEvent("Step Taken, t_stepSequence= %s Model step t=%12.5e, dt=%12.5e for model %s" % (self.t_stepSequence,
                                                                                                                          model.stepController.t_model,
                                                                                                                          model.stepController.dt_model,
@@ -1485,7 +1498,7 @@ class NS_base:  # (HasTraits):
             #h-adapt mesh, cekees modified from chitak
             #
             #assuming same for all physics and numerics  for now
-        
+
             #can only handle PUMIDomain's for now
             self.nSolveSteps += 1
             if(self.PUMI_estimateError()):
@@ -1617,20 +1630,21 @@ class NS_base:  # (HasTraits):
                                                                    res_name_base='phi_s')
             logEvent("Writing initial phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
-            pass  
+            pass
 
-        #For aux quantity of interest (MQL)        
+        #For aux quantity of interest (MQL)
         try:
-            quantDOFs = {}
-            quantDOFs[0] = model.levelModelList[-1].quantDOFs
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   quantDOFs,
-                                                                   res_name_base='quantDOFs_for_'+model.name)
-            logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                quantDOFs = {}
+                quantDOFs[0] = model.levelModelList[-1].quantDOFs
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='quantDOFs_for_'+model.name)
+                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
-            pass   
+            pass
 
         #Write bathymetry for Shallow water equations (MQL)
         try:
@@ -1736,16 +1750,17 @@ class NS_base:  # (HasTraits):
             logEvent("Writing phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass
-        
+
         try:
-            quantDOFs = {}
-            quantDOFs[0] = model.levelModelList[-1].quantDOFs
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   quantDOFs,
-                                                                   res_name_base='quantDOFs_for_'+model.name)        
-            logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                quantDOFs = {}
+                quantDOFs[0] = model.levelModelList[-1].quantDOFs
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='quantDOFs_for_'+model.name)
+                logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass
 
