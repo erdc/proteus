@@ -64,7 +64,7 @@ def Options(optionsList=None,mutable=False):
     """Construct an o
     from proteus.LinearAlgebraToptions object (named tuple)
     
-    :param optionsList: An iteratble of options tuples. Each option is
+    :param optionsList: An iterable of options tuples. Each option is
                         a 3-tuple, with the first entry the option
                         name string, the second entry the default
                         value, and the third entry a help string
