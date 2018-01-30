@@ -320,8 +320,9 @@ jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/lab/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip install configparser
-	pip install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.8.1 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0 hide_code==0.4.0 matplotlib ipympl ipymesh
+	pip install -U configparser
+#	pip install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.8.1 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0 hide_code==0.4.0 matplotlib ipympl ipymesh
+	pip install -U ipyparallel ipython terminado jupyter jupyterlab ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy bqplot hide_code matplotlib ipympl ipymesh
 	ipcluster nbextension enable --user
 	jupyter serverextension enable --py jupyterlab --sys-prefix
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
@@ -344,9 +345,10 @@ jupyter:
 	printf "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.MPIEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 lfs:
-	pip install pyliblzma
+	pip install -U pyliblzma
 	wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
 	tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
 	cd git-lfs-1.5.5 && PREFIX=${HOME} ./install.sh
