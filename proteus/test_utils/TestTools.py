@@ -24,12 +24,29 @@ def silent_rm(filename):
     except OSError:
         pass
 
-def removeFiles(filelist):
-    """ Remove a list of files. """
+def removeFiles(filelist=[],
+                prefix_ext_tuple=None):
+    """ Remove a list of files.
+
+    Attributes
+    ----------
+    filelist: lst
+       List of complete file names marked for removal
+    prefix: tuple
+       Tuple with two lists, the first is a list of file prefixes
+       while the second is a list of file extensions all marked for
+       removal.
+    """
     for file in filelist:
         if os.path.isfile(file):
             os.remove(file)
-    
+
+    if prefix_ext_tuple is not None:
+        for prefix in prefix_ext_tuple[0]:
+            for ext in prefix_ext_tuple[1]:
+                if os.path.isfile(prefix+'.'+ext):
+                    os.remove(prefix+'.'+ext)
+
 def addSubFolders(currentframe):
     """Add import_modules and comparison_files to sys.path
 
