@@ -785,7 +785,14 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     //h_new = h_old*sqrt(apf::measure(element))/sqrt(domainVolume)*target_error/err_curr;
     if (target_error == 0)
       target_error = err_total / sqrt(numel);
-    h_new = h_old * pow((target_error / err_curr),2.0/(1.0+nsd));
+
+    //error-to-size relationship should be different between anisotropic and isotropic cases
+    //consider moving this to where size frames are computed to get aspect ratio info
+    if (adapt_type_config == "anisotropic")
+      h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+    else
+      h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+
     apf::setScalar(size_iso_reg, reg, 0, h_new);
     apf::destroyMeshElement(element);
   }
