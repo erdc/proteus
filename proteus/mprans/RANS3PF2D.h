@@ -1623,11 +1623,15 @@ namespace proteus
         double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
 
         C = (D_s * C_surf + (1.0 - H_s) * C_vol);
-        force_x = dV * D_s * (p * phi_s_normal[0] - mu * (phi_s_normal[0] * 2* grad_u[0] + phi_s_normal[1] * (grad_u[1]+grad_v[0])));
+        force_x = dV * D_s * (p * phi_s_normal[0]
+                                               - mu * (phi_s_normal[0] * 2* grad_u[0] + phi_s_normal[1] * (grad_u[1]+grad_v[0]))
+                                               );
                 //+dV*D_s*C_surf*rel_vel_norm*(u-u_s)*rho
                 //+dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
 
-        force_y = dV * D_s * (p * phi_s_normal[1] - mu * (phi_s_normal[0] * (grad_u[1]+grad_v[0]) + phi_s_normal[1] * 2* grad_v[1]));
+        force_y = dV * D_s * (p * phi_s_normal[1]
+                                               - mu * (phi_s_normal[0] * (grad_u[1]+grad_v[0]) + phi_s_normal[1] * 2* grad_v[1])
+                                               );
                 //+dV*D_s*C_surf*rel_vel_norm*(v-v_s)*rho
                 //+dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
 
@@ -3423,12 +3427,12 @@ namespace proteus
                     globalResidual[GlobPos_v] += phi_i*C_adim*(v_ext - bc_v_ext);
 
                     // - < w , mu Gu.nt > (2)
-                    globalResidual[GlobPos_u] -= visco * phi_i*(normal[0]*2*grad_u_ext[0] + normal[1]*(grad_u_ext[1]+grad_v_ext[0]));
-                    globalResidual[GlobPos_v] -= visco * phi_i*(normal[0]*(grad_u_ext[1]+grad_v_ext[0]) + normal[1]*2*grad_v_ext[1]);
+                    globalResidual[GlobPos_u] -= visco * phi_i*(P_normal[0]*2*grad_u_ext[0] + P_normal[1]*(grad_u_ext[1]+grad_v_ext[0]));
+                    globalResidual[GlobPos_v] -= visco * phi_i*(P_normal[0]*(grad_u_ext[1]+grad_v_ext[0]) + P_normal[1]*2*grad_v_ext[1]);
 
                     // - < mu Gw.nt , u - uD > (3)
-                    globalResidual[GlobPos_u] -= visco * (2*Gxphi_i*normal[0] + Gxphi_i*normal[1] + Gyphi_i*normal[1])*(u_ext - bc_u_ext);
-                    globalResidual[GlobPos_v] -= visco * (Gxphi_i*normal[0] + Gyphi_i*normal[0] + 2*Gyphi_i*normal[1])*(v_ext - bc_v_ext);
+                    globalResidual[GlobPos_u] -= visco * (2*Gxphi_i*P_normal[0] + Gxphi_i*P_normal[1] + Gyphi_i*P_normal[1])*(u_ext - bc_u_ext);
+                    globalResidual[GlobPos_v] -= visco * (Gxphi_i*P_normal[0] + Gyphi_i*P_normal[0] + 2*Gyphi_i*P_normal[1])*(v_ext - bc_v_ext);
 
                     // second order Taylor expansion
                     //
@@ -3448,8 +3452,8 @@ namespace proteus
                     //
                     // missing part of (3)
                     // - < mu Gw.nt , Gu.d >
-                    globalResidual[GlobPos_u] -= visco*(2*Gxphi_i*normal[0] + Gxphi_i*normal[1] + Gyphi_i*normal[1])*dd1;
-                    globalResidual[GlobPos_v] -= visco*(Gxphi_i*normal[0] + Gyphi_i*normal[0] + 2*Gyphi_i*normal[1])*dd2;
+                    globalResidual[GlobPos_u] -= visco*(2*Gxphi_i*P_normal[0] + Gxphi_i*P_normal[1] + Gyphi_i*P_normal[1])*dd1;
+                    globalResidual[GlobPos_v] -= visco*(Gxphi_i*P_normal[0] + Gyphi_i*P_normal[0] + 2*Gyphi_i*P_normal[1])*dd2;
 
                     // the penalization on the tangential derivative
                     // B < Gw t , (Gu - GuD) t >
@@ -3467,31 +3471,23 @@ namespace proteus
                 {
                     p_ext += p_dof[p_l2g[eN*nDOF_per_element_pressure+i]]*p_trial_trace_ref[ebN_local_kb*nDOF_per_element_pressure+i];
                 }
-                double nx = normal[0] ; // need ext normal of the solid
-                double ny = normal[1] ;
-//                for ( int i = 0 ; i < nDOF_test_element ; i++ ) {
-//                  int eN_i = eN*nDOF_test_element+i;
-//                  double phi_i = vel_test_dS[i];
-//                  double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
-//                  double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
+                double nx = P_normal[0]; // YY: should we use normal or P_normal ? normal is arbitrary right now.
+                double ny = P_normal[1];
 
-                  double S_xx = 2*visco*grad_u_ext[0];
-                  double S_xy = visco*(grad_u_ext[1] + grad_v_ext[0]); // sym tensor -> S_yx = S_xy
-                  double S_yy = 2*visco*grad_v_ext[1];
+                double S_xx = 2*visco*grad_u_ext[0];
+                double S_xy = visco*(grad_u_ext[1] + grad_v_ext[0]); // sym tensor -> S_yx = S_xy
+                double S_yy = 2*visco*grad_v_ext[1];
 
-                  Fx -= p_ext*nx*dS;
-                  Fx += (S_xx*nx + S_xy*ny)*dS;
+                Fx -= p_ext*nx*dS;
+                Fx += (S_xx*nx + S_xy*ny)*dS;
 //                  Fx += dS*(C_adim*(u_ext - bc_u_ext)
 //                          - visco * (normal[0]*2*grad_u_ext[0] + normal[1]*(grad_u_ext[1]+grad_v_ext[0]))
 //                          + C_adim*dd1);
-                  Fy -= p_ext*ny*dS;
-                  Fy += (S_xy*nx + S_yy*ny)*dS;
+                Fy -= p_ext*ny*dS;
+                Fy += (S_xy*nx + S_yy*ny)*dS;
 //                  Fy += dS*(C_adim*(v_ext - bc_v_ext)
 //                          - visco * (normal[0]*(grad_u_ext[1]+grad_v_ext[0]) + normal[1]*2*grad_v_ext[1])
 //                          + C_adim*dd2);
-
-//                } // i
-
               }//kb
           }//ebN_s
         std::cout<<"force over solid is: "<<Fx<<"\t"<<Fy<<std::endl;
@@ -5566,26 +5562,26 @@ namespace proteus
                         // - < w , mu Gu.nt > (2)
                         // diag
                         globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
-                          visco * phi_i * (normal[0] * 2 * Gxphi_j + normal[1] * Gyphi_j);
+                          visco * phi_i * (P_normal[0] * 2 * Gxphi_j + P_normal[1] * Gyphi_j);
                         globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
-                          visco * phi_i * (normal[0] * Gxphi_j + normal[1] * 2 * Gyphi_j);
+                          visco * phi_i * (P_normal[0] * Gxphi_j + P_normal[1] * 2 * Gyphi_j);
                         // extra diag
                         globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
-                          visco * phi_i * normal[0] * Gyphi_j ;
+                          visco * phi_i * P_normal[0] * Gyphi_j ;
                         globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
-                          visco * phi_i * normal[1] * Gxphi_j ;
+                          visco * phi_i * P_normal[1] * Gxphi_j ;
 
                         // - < mu Gw.nt , u - uD > (3)
                         // diag
                         globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
-                          visco * (2*Gxphi_i * normal[0] + Gyphi_i * normal[1])* phi_j;
+                          visco * (2*Gxphi_i * P_normal[0] + Gyphi_i * P_normal[1])* phi_j;
                         globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
-                          visco * (Gxphi_i * normal[0] + 2*Gyphi_i * normal[1])* phi_j;
+                          visco * (Gxphi_i * P_normal[0] + 2*Gyphi_i * P_normal[1])* phi_j;
                         // extra diag
                         globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
-                          visco * Gyphi_i * normal[0] * phi_j;
+                          visco * Gyphi_i * P_normal[0] * phi_j;
                         globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
-                          visco * Gxphi_i * normal[1] * phi_j;
+                          visco * Gxphi_i * P_normal[1] * phi_j;
 
                         // second order Taylor expansion
                         // missing part of (1) :: C < w + Gw d , u + Gu d - ud >
@@ -5629,14 +5625,14 @@ namespace proteus
                         /* // missing part of (3) */
                         // - < mu Gw.nt , Gu.d >
                         globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
-                          visco*(2*normal[0]*Gxphi_i+normal[1]*Gyphi_i)*(dx*Gxphi_j + dy*Gyphi_j);
+                          visco*(2*P_normal[0]*Gxphi_i+P_normal[1]*Gyphi_i)*(dx*Gxphi_j + dy*Gyphi_j);
                         globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
-                          visco*(normal[0]*Gxphi_i+2*normal[1]*Gyphi_i)*(dx*Gxphi_j + dy*Gyphi_j);
+                          visco*(P_normal[0]*Gxphi_i+2*P_normal[1]*Gyphi_i)*(dx*Gxphi_j + dy*Gyphi_j);
                         // extra diag
                         globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
-                          visco*Gyphi_i * normal[0] *(dx*Gxphi_j + dy*Gyphi_j);
+                          visco*Gyphi_i * P_normal[0] *(dx*Gxphi_j + dy*Gyphi_j);
                         globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
-                          visco*Gxphi_i * normal[1] *(dx*Gxphi_j + dy*Gyphi_j);
+                          visco*Gxphi_i * P_normal[1] *(dx*Gxphi_j + dy*Gyphi_j);
 
                         // the penalization on the tangential derivative
                         // B < Gw t , (Gu - GuD) t >
