@@ -3373,8 +3373,8 @@ namespace proteus
                     for (int I=0;I<nSpace;I++)
                       vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
                   }
-                bc_u_ext = 0.0;//cek hack: this should be the solid velocity
-                bc_v_ext = 0.0;//cek hack:...
+                bc_u_ext = particle_velocities[0*3+0];//first particle
+                bc_v_ext = particle_velocities[0*3+1];
                 ck.calculateGScale(G,normal,h_penalty);
                 //
                 //update the element and global residual storage
