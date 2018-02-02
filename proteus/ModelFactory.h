@@ -394,6 +394,22 @@ namespace proteus
                   else
                     NO_INSTANCE;
                 }
+	      else if (nDOF_mesh_trial_elementIn == 4)//sub-parametric tets
+		{
+                  if (nDOF_trial_elementIn == 10)
+		    {
+		      if (nQuadraturePoints_elementIn == 24 && nQuadraturePoints_elementBoundaryIn == 12)
+                        {
+                          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,10,10>,3,24,4,10,10,12>());
+                        }
+		      else
+			{
+			  NO_INSTANCE;
+			}
+		    }
+		  else
+		    NO_INSTANCE;
+		}
               else
                 NO_INSTANCE;
             }
