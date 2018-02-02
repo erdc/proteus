@@ -361,6 +361,8 @@ namespace proteus
                     {
                       if (nQuadraturePoints_elementIn == 5)
                         return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,3,5,4,4,4,4>());
+		      else if (nQuadraturePoints_elementIn == 4)
+                        return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,3,4,4,4,4,3>());//added to pass: tests/griffiths_lane_6/test_griffiths_lane6.py
                       else
                         NO_INSTANCE;
                     }
@@ -400,7 +402,7 @@ namespace proteus
 		    {
 		      if (nQuadraturePoints_elementIn == 24 && nQuadraturePoints_elementBoundaryIn == 12)
                         {
-                          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,10,10>,3,24,4,10,10,12>());
+                          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,10,10>,3,24,4,10,10,12>());//added to pass: tests/griffiths_lane_6/test_griffiths_lane6.py
                         }
 		      else
 			{
@@ -454,9 +456,16 @@ namespace proteus
                         {
                           if (nQuadraturePoints_elementBoundaryIn == 3)
                             return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,4,3,3,3,3>());
-                          else
+			  else
                             NO_INSTANCE;
-                        }
+			}
+		      else if (nQuadraturePoints_elementIn == 6)
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 4)
+			    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,6,3,3,3,4>());//added to pass: tests/solver_tests_mprans/test_bochev_pressure_stabilization.py
+			  else
+			    NO_INSTANCE;
+			}
                       else
                         NO_INSTANCE;
                     }
