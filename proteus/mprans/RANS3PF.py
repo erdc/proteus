@@ -460,12 +460,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
            self.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
            self.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
         else:
-           self.vos_dof = modelList[self.VOF_model].u[0].dof.copy()
-           self.vos_dof[:] = 0.0
-           self.q_vos = modelList[self.VOF_model].coefficients.q_vos
-           self.q_dvos_dt = self.q_vos.copy()
-           self.q_dvos_dt[:] = 0.0
-           self.ebqe_vos = modelList[self.VOF_model].coefficients.ebqe_vos
+            if self.VOF_model is not None:
+                self.vos_dof = modelList[self.VOF_model].u[0].dof.copy()
+                self.vos_dof[:] = 0.0
+                self.q_vos = modelList[self.VOF_model].coefficients.q_vos
+                self.q_dvos_dt = self.q_vos.copy()
+                self.q_dvos_dt[:] = 0.0
+                self.ebqe_vos = modelList[self.VOF_model].coefficients.ebqe_vos
+
         if self.SED_model is not None:
             self.rho_s = modelList[self.SED_model].coefficients.rho_0
             self.q_velocity_solid = modelList[self.SED_model].q[('velocity',0)]
