@@ -467,6 +467,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.q_dvos_dt = self.q_vos.copy()
                 self.q_dvos_dt[:] = 0.0
                 self.ebqe_vos = modelList[self.VOF_model].coefficients.ebqe_vos
+            else:
+                self.q_vos = numpy.zeros(self.model.q[('u', 0)].shape, 'd')
+                self.q_dvos_dt = numpy.zeros(self.model.q[('u', 0)].shape, 'd')
+                self.ebqe_vos = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd')
 
         if self.SED_model is not None:
             self.rho_s = modelList[self.SED_model].coefficients.rho_0
