@@ -40,4 +40,6 @@ __all__ = ["RANS2PV2",
            "PresInit",
            "PresInc",
            "BoundaryConditions",
-           "SpatialTools"]
+           "SpatialTools",
+           "TIM",
+           "cTIM"]
