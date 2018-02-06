@@ -408,6 +408,35 @@ class Newton(NonlinearSolver):
             self.u0 = numpy.zeros(self.F.dim,'d')
 
     def setLinearSolverTolerance(self,r):
+        """
+        This function dynamically sets the relative tolerance
+        of the linear solver associated with the non-linear iteration.
+        Set useEistenstatWalker=True in a simulation's numerics file
+        to ensure that this function is used.
+
+        Parameters
+        ----------
+        r : vector
+            non-linear residual vector
+
+        Notes
+        -----
+        The size of the relative reduction assigned to the linear
+        solver depends on two factors: (i) how far the non-linear
+        solver is from satifying its residual reductions and
+        (ii) how large the drop in the latest non-linear
+        residual was.
+
+        If the non-linear solver is both far from its residual
+        reduction targets and the latest non-linear residual showed
+        a big drop, then expect the algorithm to assign a large
+        relative reduction to the linear solver.
+
+        As the non-linear residual reduction targets get closer, or
+        the non-linear solver stagnates, the linear solver will be
+        assigned a smaller relative reduction up to a minimum of
+        0.001.
+        """
         self.norm_r = self.norm(r)
         gamma  = 0.0001
         etaMax = 0.001
@@ -419,7 +448,7 @@ class Newton(NonlinearSolver):
         if self.its > 1:
             etaA = gamma * self.norm_r**2/self.norm_r_last**2
             logEvent("etaA "+`etaA`)
-            logEvent("gama*self.etaLast**2 "+ `gamma*self.etaLast**2`)
+            logEvent("gamma*self.etaLast**2 "+ `gamma*self.etaLast**2`)
             if gamma*self.etaLast**2 < 0.1:
                 etaC = min(etaMax,etaA)
             else:
@@ -432,14 +461,21 @@ class Newton(NonlinearSolver):
         self.norm_r_last = self.norm_r
         self.linearSolver.setResTol(rtol=eta,atol=self.linearSolver.atol_r)
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        """
-        Solve F(u) = b
+        r""" Solves the non-linear system :math:`F(u) = b`.
 
-        b -- right hand side
-        u -- solution
-        r -- F(u) - b
+        Parameters
+        ----------
+        u : :class:`numpy.ndarray`
+           Solution vector.
+        r : :class:`numpy.ndarray`
+           Residual vector, :math:`r = b - F(u)`
+        b : :class:`numpy.ndarray` (ARB - not sure this is always true)
+           Right hand side vector
+        par_u : :class:`proteus.LinearAlgebraTools.ParVec_petsc4py`
+           Parallel solution vector.
+        par_r : :class:`proteus.LinearAlgebraTools.ParVec_petsc4py`
+           Parallel residual vector, :math:`r = b - F(u)`
         """
-
         import Viewers
         memory()
         if self.linearSolver.computeEigenvalues:
@@ -463,7 +499,7 @@ class Newton(NonlinearSolver):
         while (not self.converged(r) and
                not self.failed()):
             logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-                %(self.its-1, self.norm_r), level=1)            
+                %(self.its-1, self.norm_r), level=1)
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
                 % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
@@ -622,16 +658,386 @@ class Newton(NonlinearSolver):
                     Viewers.newWindow()
                 #raw_input("wait")
             logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-                %(self.its-1, self.norm_r), level=1)                
+                %(self.its-1, self.norm_r), level=1)
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             logEvent(memory("Newton","Newton"),level=4)
             return self.failedFlag
         logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-            %(self.its-1, self.norm_r), level=1)        
+            %(self.its-1, self.norm_r), level=1)
         logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
         logEvent(memory("Newton","Newton"),level=4)
+
+class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
+    """
+    This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        ######################
+        # CALCULATE SOLUTION #
+        ######################
+        self.F.secondCallCalculateResidual = 0
+        self.computeResidual(u,r,b)
+        u[:] = r
+        
+        ############################
+        # FCT STEP ON WATER HEIGHT #
+        ############################
+        logEvent("   FCT Step", level=1)
+        self.F.FCTStep()
+
+        #############################################
+        # UPDATE SOLUTION THROUGH calculateResidual #
+        #############################################
+        self.F.secondCallCalculateResidual = 1
+        self.computeResidual(u,r,b)
+
+        self.F.check_positivity_water_height=True
+
+        # Compute infinity norm of vel-x. This is for 1D well balancing test
+        #exact_hu = 2 + 0.*self.F.u[1].dof
+        #error = numpy.abs(exact_hu - self.F.u[1].dof).max()
+        #self.F.inf_norm_hu.append(error)
+
+class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
+    """
+    This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        ######################
+        # CALCULATE SOLUTION #
+        ######################
+        self.F.secondCallCalculateResidual = 0
+        logEvent("   Entropy viscosity solution with consistent mass matrix", level=1)
+        self.computeResidual(u,r,b)
+        if self.updateJacobian or self.fullNewton:
+            self.updateJacobian = False
+            self.F.getJacobian(self.J)
+            self.linearSolver.prepare(b=r)
+        self.du[:]=0.0
+        if not self.directSolver:
+            if self.EWtol:
+                self.setLinearSolverTolerance(r)
+        if not self.linearSolverFailed:
+            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+            self.linearSolverFailed = self.linearSolver.failed()
+        u-=self.du
+        logEvent("   End of entropy viscosity solution", level=4)
+
+        ############################
+        # FCT STEP ON WATER HEIGHT #
+        ############################
+        logEvent("   FCT Step", level=1)
+        self.F.FCTStep()
+
+        # DISTRIBUTE SOLUTION FROM u to u[ci].dof
+        self.F.secondCallCalculateResidual = 1
+        self.computeResidual(u,r,b)
+        self.F.check_positivity_water_height=True
+
+class ExplicitLumpedMassMatrix(Newton):
+    """
+     This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):                                  
+        self.computeResidual(u,r,b)
+        u[:] = r
+        ############
+        # FCT STEP # 
+        ############
+        if hasattr(self.F.coefficients,'FCT') and self.F.coefficients.FCT==True:
+            self.F.FCTStep()
+        ###########################################
+        # DISTRUBUTE SOLUTION FROM u to u[ci].dof #
+        ###########################################
+        self.F.auxiliaryCallCalculateResidual = True
+        self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
+
+class ExplicitConsistentMassMatrixWithRedistancing(Newton):
+    """
+     This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        if (self.F.coefficients.DO_SMOOTHING and self.F.coefficients.pure_redistancing==False):
+            logEvent("***** Doing smoothing *****",2)
+            self.F.getRhsSmoothing(u,r)
+            if (self.F.SmoothingMatrix == None):
+                self.F.getSmoothingMatrix()
+                self.linearSolver.L = self.F.SmoothingMatrix          
+                # Save sparse factor for Jacobian
+                self.F.Jacobian_sparseFactor = self.linearSolver.sparseFactor
+                # create a new sparse factor. For now use the same as the Jacobian
+                self.F.SmoothingMatrix_sparseFactor = superluWrappers.SparseFactor(self.linearSolver.n)
+                # reference the self.linearSolver.sparseFactor to use the new sparse Factor
+                self.linearSolver.sparseFactor = self.F.SmoothingMatrix_sparseFactor
+                # Compute the new sparse factor; i.e., self.F.SmoothingMatrix_sparseFactor
+                self.linearSolver.prepare(b=r)
+            self.du[:]=0        
+            # Set sparse factors
+            self.linearSolver.L = self.F.SmoothingMatrix          
+            self.linearSolver.sparseFactor = self.F.SmoothingMatrix_sparseFactor
+            if not self.directSolver:
+                if self.EWtol:
+                    self.setLinearSolverTolerance(r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed()
+            u[:]=self.du
+            self.F.uStar_dof[:] = u
+        else:
+            self.F.uStar_dof[:] = self.F.u_dof_old[:]
+
+        #############################
+        ### COMPUTE MAIN SOLUTION ### 
+        #############################
+        if (self.F.coefficients.pure_redistancing==False):
+            self.computeResidual(u,r,b)        
+            if self.updateJacobian or self.fullNewton:            
+                self.F.getJacobian(self.J)
+                # set linear solver to be the jacobian
+                if (self.F.coefficients.DO_SMOOTHING):
+                    self.linearSolver.L = self.J
+                    # set space factors to be the jacobian factor 
+                    self.linearSolver.sparseFactor = self.F.Jacobian_sparseFactor
+                self.linearSolver.prepare(b=r)
+                self.updateJacobian = False
+            self.du[:]=0.0
+            if (self.F.coefficients.DO_SMOOTHING):
+                # Set sparse factors 
+                self.linearSolver.L = self.J
+                self.linearSolver.sparseFactor = self.F.Jacobian_sparseFactor
+            if not self.directSolver:
+                if self.EWtol:
+                    self.setLinearSolverTolerance(r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed()
+            u-=self.du
+            # DISTRIBUTE SOLUTION FROM u to u[ci].dof
+            self.F.auxiliaryCallCalculateResidual = True
+            self.computeResidual(u,r,b)
+            self.F.auxiliaryCallCalculateResidual = False
+            # self.F.setUnknowns(self.F.timeIntegration.u)
+
+        ############################
+        ##### Do re-distancing #####
+        ############################
+        logEvent("***** Starting re-distancing *****",2)
+        numIter=0
+        self.F.L2_norm_redistancing = self.F.getRedistancingResidual(u,r)
+        if(self.F.coefficients.DO_REDISTANCING):
+            if (self.F.coefficients.pure_redistancing==True):
+                self.F.coefficients.maxIter_redistancing=1
+            while (self.F.L2_norm_redistancing > self.F.coefficients.redistancing_tolerance*self.F.mesh.h
+                   and numIter < self.F.coefficients.maxIter_redistancing):
+                self.F.coefficients.u_dof_old = numpy.copy(self.F.u[0].dof)
+                self.F.getRedistancingResidual(u,r)
+                if self.updateJacobian or self.fullNewton:
+                    self.updateJacobian = False
+                    self.F.getJacobian(self.J)
+                    self.linearSolver.prepare(b=r)
+                self.du[:]=0.0
+                if not self.directSolver:
+                    if self.EWtol:
+                        self.setLinearSolverTolerance(r)
+                if not self.linearSolverFailed:
+                    self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                    self.linearSolverFailed = self.linearSolver.failed()
+                u-=self.du
+                self.F.L2_norm_redistancing = self.F.getRedistancingResidual(u,r)
+                numIter += 1
+            #self.F.redistancing_L2_norm_history.append(
+            #    (self.F.timeIntegration.t,
+            #     numIter,
+            #     self.F.L2_norm_redistancing, 
+            #     self.F.coefficients.redistancing_tolerance*self.F.mesh.h))
+        logEvent("***** Re-distancing finished. Number of iterations = "+str(numIter)
+                 + ". L2 norm of error: "+str(self.F.L2_norm_redistancing)
+                 + ". Tolerance: "+str(self.F.coefficients.redistancing_tolerance*self.F.mesh.h)
+                 ,2)        
+
+class ExplicitConsistentMassMatrixForVOF(Newton):
+    """
+     This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        #########################
+        # COMPUTE MAIN SOLUTION #
+        #########################
+        self.computeResidual(u,r,b)
+        if self.updateJacobian or self.fullNewton:            
+            self.F.getJacobian(self.J)
+            self.linearSolver.prepare(b=r)
+            self.updateJacobian = False
+        self.du[:]=0.0
+        # Set sparse factors 
+        if not self.directSolver:
+            if self.EWtol:
+                self.setLinearSolverTolerance(r)
+        if not self.linearSolverFailed:
+            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+            self.linearSolverFailed = self.linearSolver.failed()
+        u-=self.du
+        ############
+        # FCT STEP #
+        ############ 
+        if self.F.coefficients.FCT==True:
+            self.F.FCTStep()
+        ###########################################
+        # DISTRIBUTE SOLUTION FROM u to u[ci].dof #
+        ###########################################
+        self.F.auxiliaryCallCalculateResidual = True
+        self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
+
+class NewtonWithL2ProjectionForMassCorrection(Newton):
+    """
+     This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        """
+        Solve F(u) = b
+
+        b -- right hand side
+        u -- solution
+        r -- F(u) - b
+        """
+
+        import Viewers
+        memory()
+        if self.linearSolver.computeEigenvalues:
+            self.u0[:]=u
+        r=self.solveInitialize(u,r,b)
+        if par_u != None:
+            #allow linear solver to know what type of assembly to use
+            self.linearSolver.par_fullOverlap = self.par_fullOverlap
+            #no overlap
+            if not self.par_fullOverlap:
+                par_r.scatter_reverse_add()
+            else:
+                #no overlap or overlap (until we compute norms over only owned dof)
+                par_r.scatter_forward_insert()
+
+        self.norm_r0 = self.norm(r)
+        self.norm_r_hist = []
+        self.norm_du_hist = []
+        self.gammaK_max=0.0
+        self.linearSolverFailed = False
+        while (not self.converged(r) and
+               not self.failed()):
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+            if self.updateJacobian or self.fullNewton:
+                self.updateJacobian = False
+                self.F.getJacobian(self.J)
+                # Set linear solver to be the jacobian 
+                self.linearSolver.L = self.J
+                # Save sparse factor for Jacobian. Just for the first time
+                if (self.F.Jacobian_sparseFactor is None):
+                    self.F.Jacobian_sparseFactor = self.linearSolver.sparseFactor #(MQL)
+                # Set sparse factor to be the jacobian sparse factor 
+                self.linearSolver.sparseFactor = self.F.Jacobian_sparseFactor
+                if self.linearSolver.computeEigenvalues:
+                    logEvent("Calculating eigenvalues of J^t J")
+                    self.JLast[:]=self.J
+                    self.J_t_J[:]=self.J
+                    self.J_t_J *= numpy.transpose(self.J)
+                    self.JLsolver.prepare()#eigenvalue calc happens in prepare
+                    self.norm_2_J_current = sqrt(max(self.JLsolver.eigenvalues_r))
+                    try:
+                        self.norm_2_Jinv_current = 1.0/sqrt(min(self.JLsolver.eigenvalues_r))
+                    except:
+                        logEvent("Norm of J_inv_current is singular to machine prection 1/sqrt("+`min(self.JLsolver.eigenvalues_r)`+")")
+                        self.norm_2_Jinv_current = np.inf
+                    self.kappa_current = self.norm_2_J_current*self.norm_2_Jinv_current
+                    self.betaK_current = self.norm_2_Jinv_current
+                self.linearSolver.prepare(b=r)            
+            self.du[:]=0.0
+            # Set matrix of linear soler to be the Jacobian 
+            self.linearSolver.L = self.J
+            # Set sparse factor 
+            self.linearSolver.sparseFactor = self.F.Jacobian_sparseFactor
+            if not self.directSolver:
+                if self.EWtol:
+                    self.setLinearSolverTolerance(r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed()
+            u-=self.du
+            if par_u != None:
+                par_u.scatter_forward_insert()
+            self.computeResidual(u,r,b)
+            if par_r != None:
+                #no overlap
+                if not self.par_fullOverlap:
+                    par_r.scatter_reverse_add()
+                else:
+                    par_r.scatter_forward_insert()
+        else:
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+                     % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            logEvent(memory("Newton","Newton"),level=4)
+            if (self.failedFlag == True):
+                return self.failedFlag
+            else:
+                logEvent("+++++ L2 projection of mass-corrected VOF +++++",level=2)
+                if (self.F.MassMatrix is None): 
+                    self.F.getMassMatrix()
+                    # Set matrix of linear solver to be the Mass Matrix
+                    self.linearSolver.L = self.F.MassMatrix
+                    # Create a sparse factor for the Mass Matrix
+                    if (self.F.MassMatrix_sparseFactor is None):
+                        self.F.MassMatrix_sparseFactor = superluWrappers.SparseFactor(self.linearSolver.n)
+                    # reference the self.linearSolver.sparseFactor to use the new sparse Factor
+                    self.linearSolver.sparseFactor = self.F.MassMatrix_sparseFactor
+                    # Compute the new sparse factor; i.e., self.F.MassMatrix_sparseFactor
+                    self.linearSolver.prepare(b=r)
+                # Compute rhs for L2 projection and low (lumped) L2 projection
+                self.F.setMassQuadratureEdgeBasedStabilizationMethods()
+                r[:] = self.F.rhs_mass_correction
+                # Solve mass matrix for L2 projection
+                self.du[:]=0.0
+                # Set linear matrix to be Mass Matrix
+                self.linearSolver.L = self.F.MassMatrix
+                # Set sparse factors to be the sparse factors of the mass matrix
+                self.linearSolver.sparseFactor = self.F.MassMatrix_sparseFactor
+                if not self.directSolver:
+                    if self.EWtol:
+                        self.setLinearSolverTolerance(r)
+                if not self.linearSolverFailed:
+                    self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                    self.linearSolverFailed = self.linearSolver.failed()
+                # copy the solution to the L2p vector
+                self.F.L2p_vof_mass_correction[:] = self.du
+                # Perform limitation on L2 projection 
+                self.F.FCTStep()
+                # Pass the solution to the DOFs of the VOF model
+                #self.F.coefficients.vofModel.u[0].dof[:] = self.du
+                self.F.coefficients.vofModel.u[0].dof[:] = self.F.limited_L2p_vof_mass_correction
+
+        logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+        logEvent(memory("Newton","Newton"),level=4)
+
+        # Nonlinear solved finished. 
+        # L2 projection of corrected VOF solution at quad points 
 
 import deim_utils
 class POD_Newton(Newton):
@@ -2283,6 +2689,7 @@ class EikonalSolver:
        FMMEikonalSolver
        FSWEikonalSolver
 
+
     """
 #    TODO Feb 20
 #      Debug change in use truncation approach for positive and negative solutions
@@ -2706,7 +3113,19 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                      maxLSits=100,
                                      parallelUsesFullOverlap = True,
                                      nonlinearSolverNorm = l2Norm):
-    if (multilevelNonlinearSolverType == Newton or
+    if (levelNonlinearSolverType == ExplicitLumpedMassMatrixShallowWaterEquationsSolver):
+        levelNonlinearSolverType = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
+    elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixShallowWaterEquationsSolver):
+        levelNonlinearSolverType = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
+    elif (levelNonlinearSolverType == ExplicitLumpedMassMatrix):
+        levelNonlinearSolverType = ExplicitLumpedMassMatrix
+    elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixWithRedistancing):
+        levelNonlinearSolverType = ExplicitConsistentMassMatrixWithRedistancing
+    elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixForVOF):
+        levelNonlinearSolverType = ExplicitConsistentMassMatrixForVOF
+    elif (levelNonlinearSolverType == NewtonWithL2ProjectionForMassCorrection):
+        levelNonlinearSolverType = NewtonWithL2ProjectionForMassCorrection
+    elif (multilevelNonlinearSolverType == Newton or
         multilevelNonlinearSolverType == NLJacobi or
         multilevelNonlinearSolverType == NLGaussSeidel or
         multilevelNonlinearSolverType == NLStarILU):

@@ -67,9 +67,13 @@ class NS_base:  # (HasTraits):
         for p in pList:
             message += p.name+"\n"
         logEvent(message)
+        #: SplitOperator initialize file
         self.so=so
+        #: List of physics initialize files
         self.pList=pList
+        #: List of numerics initialize files
         self.nList=nList
+        #: Dictionary of command line arguments
         self.opts=opts
         self.simFlagsList=simFlagsList
         self.timeValues={}
@@ -268,17 +272,16 @@ class NS_base:  # (HasTraits):
                 else:
                     logEvent("Calling Triangle to generate 2D mesh for"+p.name)
                     tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
-                                                        nbase=1,
-                                                        verbose=10)
+                                                           nbase=1,
+                                                           verbose=10)
                     if comm.isMaster() and p.genMesh:
                         tmesh.readFromPolyFile(p.domain.polyfile)
                         tmesh.writeToFile(p.domain.polyfile)
-                        logEvent("Converting to Proteus Mesh")
-                        mesh=tmesh.convertToProteusMesh(verbose=1)
                     comm.barrier()
-                    if not comm.isMaster() or not p.genMesh:
-                        mesh = MeshTools.TriangularMesh()
-                        mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
+
+                    mesh = MeshTools.TriangularMesh()
+                    mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
+
                     mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
                                                                 nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                 parallelPartitioningType=n.parallelPartitioningType)
@@ -320,9 +323,9 @@ class NS_base:  # (HasTraits):
                         logEvent("Warning: couldn't move {0:s}.1.neigh".format(fileprefix))
                         pass
                     try:
-                        logEvent("Warning: couldn't move {0:s}.1.edge".format(fileprefix))
                         check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
                     except:
+                        logEvent("Warning: couldn't move {0:s}.1.edge".format(fileprefix))
                         pass
                 comm.barrier()
                 logEvent("Initializing mesh and MultilevelMesh")
@@ -333,6 +336,8 @@ class NS_base:  # (HasTraits):
                                                              parallelPartitioningType=n.parallelPartitioningType)
                 if opts.generatePartitionedMeshFromFiles:
                     logEvent("Generating partitioned mesh from Tetgen files")
+                    if("f" not in n.triangleOptions or "ee" not in n.triangleOptions):
+                        sys.exit("ERROR: Remake the mesh with the `f` flag and `ee` flags in triangleOptions.")
                     mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix,nbase,mesh,n.nLevels,
                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                   parallelPartitioningType=n.parallelPartitioningType)
@@ -590,7 +595,7 @@ class NS_base:  # (HasTraits):
         self.modelList=[]
         self.lsList=[]
         self.nlsList=[]
-        
+
         for p,n,s,mlMesh,index \
             in zip(self.pList,self.nList,self.sList,self.mlMesh_nList,range(len(self.pList))):
 
@@ -659,7 +664,8 @@ class NS_base:  # (HasTraits):
                 parallelUsesFullOverlap=(n.nLayersOfOverlapForParallel > 0 or n.parallelPartitioningType == MeshTools.MeshParallelPartitioningTypes.node),
                 par_duList=model.par_duList,
                 solver_options_prefix=linear_solver_options_prefix,
-                computeEigenvalues = n.computeEigenvalues)
+                computeEigenvalues = n.computeEigenvalues,
+                linearSmootherOptions = n.linearSmootherOptions)
             self.lsList.append(multilevelLinearSolver)
             Profiling.memory("MultilevelLinearSolver for "+p.name)
             logEvent("Setting up MultilevelNonLinearSolver for "+p.name)
@@ -747,6 +753,7 @@ class NS_base:  # (HasTraits):
         #(cut and pasted from init, need to cleanup)
         self.simOutputList = []
         self.auxiliaryVariables = {}
+        self.newAuxiliaryVariables = {}
         if self.simFlagsList is not None:
             for p, n, simFlags, model, index in zip(
                     self.pList,
@@ -762,6 +769,36 @@ class NS_base:  # (HasTraits):
                         nFile=n,
                         analyticalSolution=p.analyticalSolution))
                 model.simTools = self.simOutputList[-1]
+
+                #Code to refresh attached gauges. The goal is to first purge
+                #existing point gauge node associations as that may have changed
+                #If there is a line gauge, then all the points must be deleted
+                #and remade.
+                from collections import OrderedDict
+                for av in n.auxiliaryVariables:
+                  if hasattr(av,'adapted'):
+                    av.adapted=True
+                    for point, l_d in av.points.iteritems():
+                      if 'nearest_node' in l_d:
+                        l_d.pop('nearest_node')
+                    if(av.isLineGauge or av.isLineIntegralGauge): #if line gauges, need to remove all points
+                      av.points = OrderedDict()
+                    if(av.isGaugeOwner):
+                      if(self.comm.rank()==0 and not av.file.closed):
+                        av.file.close()
+                      for item in av.pointGaugeVecs:
+                        item.destroy()
+                      for item in av.pointGaugeMats:
+                        item.destroy()
+                      for item in av.dofsVecs:
+                        item.destroy()
+
+                      av.pointGaugeVecs = []
+                      av.pointGaugeMats = []
+                      av.dofsVecs = []
+                      av.field_ids=[]
+                      av.isGaugeOwner=False
+                ##reinitialize auxiliaryVariables
                 self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
         else:
             for p,n,s,model,index in zip(
@@ -817,6 +854,7 @@ class NS_base:  # (HasTraits):
             m.stepController.t_model = mOld.stepController.t_model
             m.stepController.t_model_last = mOld.stepController.t_model_last
             m.stepController.substeps = mOld.stepController.substeps
+        # logEvent("Evaluating residuals and time integration")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             logEvent("Attaching models to model "+ptmp.name)
             m.attachModels(self.modelList)
@@ -829,11 +867,9 @@ class NS_base:  # (HasTraits):
                 lm.initializeTimeHistory()
                 lm.timeIntegration.initializeSpaceHistory()
                 lm.getResidual(lu,lr)
-                #import pdb
-                #pdb.set_trace()
-                #assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
-                #assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
-                #assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
+                # assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+                # assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+                # assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
                 #lm.coefficients.evaluate(self.t_stepSequence,lm.q)
                 #lm.coefficients.evaluate(self.t_stepSequence,lm.ebqe)
                 #lm.timeIntegration.calculateElementCoefficients(lm.q)
@@ -879,11 +915,11 @@ class NS_base:  # (HasTraits):
         n0 = self.nList[0]
         adaptMeshNow = False
         #will need to move this to earlier when the mesh is created
-        from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+        #from proteus.MeshAdaptPUMI import MeshAdaptPUMI
         if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
             import sys
             if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
-                sys.exit("The mesh must be partitioned by elements and NOT nodes. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
+                sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
             p0.domain.PUMIMesh=n0.MeshAdaptMesh
             p0.domain.hasModel = n0.useModel
             numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
@@ -935,7 +971,7 @@ class NS_base:  # (HasTraits):
                 for i in range(len(facetList)):
                   for j in range(maxFacetLength):
                     if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
-                      testSegment = [facetList[i][j],facetList[i][0]] 
+                      testSegment = [facetList[i][j],facetList[i][0]]
                     else:
                       testSegment = [facetList[i][j],facetList[i][j+1]]
                     try:
@@ -949,12 +985,12 @@ class NS_base:  # (HasTraits):
               mesh2Model_v = numpy.asarray(p0.domain.meshVertex2Model).astype("i")
               mesh2Model_e = numpy.asarray(p0.domain.meshEdge2Model).astype("i")
               mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
-            
+
             p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
             p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
         if (hasattr(p0.domain, 'PUMIMesh') and
             n0.adaptMesh and
-            self.so.useOneMesh and 
+            self.so.useOneMesh and
             self.nSolveSteps%n0.adaptMesh_nSteps==0):
             logEvent("Copying coordinates to PUMI")
             p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
@@ -1000,13 +1036,14 @@ class NS_base:  # (HasTraits):
                     del scalar
 
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-            # scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal           
+            # scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal
             # p0.domain.PUMIMesh.transferFieldToPUMI(
             #     'velocityError', scalar)
 
-            scalar[:,0] = self.modelList[4].levelModelList[0].phisErrorNodal[:]
+            # This is hardcoded for the RANS3PF to be the 4th model
+            scalar[:,0] = self.modelList[4].levelModelList[0].coefficients.phi_s
             p0.domain.PUMIMesh.transferFieldToPUMI(
-                'phisError', scalar)
+                'phi_s', scalar)
 
             del scalar
             #Get Physical Parameters
@@ -1024,7 +1061,7 @@ class NS_base:  # (HasTraits):
             sfConfig = p0.domain.PUMIMesh.size_field_config()
             if(sfConfig=="ERM"):
               errorTotal= p0.domain.PUMIMesh.get_local_error()
-              
+
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
@@ -1077,11 +1114,11 @@ class NS_base:  # (HasTraits):
         #code to suggest adapting until error is reduced;
         #not fully baked and can lead to infinite loops of adaptation
         #if(sfConfig=="ERM"):
-        #  p0.domain.PUMIMesh.get_local_error() 
+        #  p0.domain.PUMIMesh.get_local_error()
         #  while(p0.domain.PUMIMesh.willAdapt()):
         #    p0.domain.PUMIMesh.adaptPUMIMesh()
         #    p0.domain.PUMIMesh.get_local_error()
-        
+
         logEvent("Converting PUMI mesh to Proteus")
         #ibaned: PUMI conversion #2
         #TODO: this code is nearly identical to
@@ -1091,7 +1128,7 @@ class NS_base:  # (HasTraits):
           mesh = MeshTools.TetrahedralMesh()
         else:
           mesh = MeshTools.TriangularMesh()
-    
+
         mesh.convertFromPUMI(p0.domain.PUMIMesh,
                              p0.domain.faceList,
                              p0.domain.regList,
@@ -1115,14 +1152,21 @@ class NS_base:  # (HasTraits):
             if self.opts.hotStart:
                 logEvent("Setting initial conditions from hot start file for "+p.name)
                 tCount = int(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Name'])
-                self.ar[index].n_datasets = tCount+1
-                time = float(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Value'])
-                if len(self.ar[index].tree.getroot()[-1][-1]) > 1:
-                    dt = time - float(self.ar[index].tree.getroot()[-1][-1][-2][0].attrib['Value'])
+                offset=0
+                while tCount > 0:
+                    time = float(self.ar[index].tree.getroot()[-1][-1][-1-offset][0].attrib['Value'])
+                    if time < self.opts.hotStartTime:
+                        break
+                    else:
+                        tCount -=1
+                        offset +=1
+                self.ar[index].n_datasets = tCount + 1
+                if len(self.ar[index].tree.getroot()[-1][-1]) - offset - 1 > 0:
+                    dt = time - float(self.ar[index].tree.getroot()[-1][-1][-1-offset-1][0].attrib['Value'])
                 else:
-                    logEvent("Only one step in hot start file, setting dt to 1.0")
+                    logEvent("Not enough steps in hot start file set set dt, setting dt to 1.0")
                     dt = 1.0
-                logEvent("Last time step in hot start file was t = "+`time`)
+                logEvent("Hot starting from time step t = "+`time`)
                 for lm,lu,lr in zip(m.levelModelList,m.uList,m.rList):
                     for cj in range(lm.coefficients.nc):
                         lm.u[cj].femSpace.readFunctionXdmf(self.ar[index],lm.u[cj],tCount)
@@ -1130,7 +1174,7 @@ class NS_base:  # (HasTraits):
                         lm.timeIntegration.tLast = time
                         lm.timeIntegration.t = time
                         lm.timeIntegration.dt = dt
-                self.tCount = tCount+1
+                self.tCount = tCount
             elif p.initialConditions is not None:
                 logEvent("Setting initial conditions for "+p.name)
                 m.setInitialConditions(p.initialConditions,self.tnList[0])
@@ -1302,7 +1346,7 @@ class NS_base:  # (HasTraits):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
-            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
+#            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
             if self.opts.save_dof:
                 for m in self.modelList:
                     for lm in m.levelModelList:
@@ -1311,7 +1355,6 @@ class NS_base:  # (HasTraits):
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
             while self.systemStepController.t_system_last < self.tn:
-
                 logEvent("System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
                                                               self.systemStepController.dt_system),level=3)
 
@@ -1320,10 +1363,10 @@ class NS_base:  # (HasTraits):
                     logEvent("Split operator iteration %i" % (self.systemStepController.its,),level=3)
                     self.nSequenceSteps += 1
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
-
+                        logEvent("NumericalAnalytics Model %s " % (model.name), level=0)
                         logEvent("Model: %s" % (model.name),level=1)
+                        logEvent("NumericalAnalytics Time Step " + `self.t_stepSequence`, level=0)
                         logEvent("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name),level=3)
-
                         for m in model.levelModelList:
                             if m.movingDomain and m.tLast_mesh != self.systemStepController.t_system_last:
                                 m.t_mesh = self.systemStepController.t_system_last
@@ -1339,7 +1382,6 @@ class NS_base:  # (HasTraits):
                         while (model.stepController.t_model_last < self.t_stepSequence and
                                not stepFailed and
                                not self.systemStepController.exitModelStep[model]):
-
                             logEvent("Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
                                                                                  model.stepController.dt_model,
                                                                                  model.name),level=3)
@@ -1376,9 +1418,9 @@ class NS_base:  # (HasTraits):
                                 #set up next step
                                 self.systemStepController.modelStepTaken(model,self.t_stepSequence)
                                 logEvent("Step Taken, t_stepSequence= %s Model step t=%12.5e, dt=%12.5e for model %s" % (self.t_stepSequence,
-                                                                                                                    model.stepController.t_model,
-                                                                                                                    model.stepController.dt_model,
-                                                                                                                    model.name),level=3)
+                                                                                                                         model.stepController.t_model,
+                                                                                                                         model.stepController.dt_model,
+                                                                                                                         model.name),level=3)
                         #end model step
                         if stepFailed:
                             logEvent("Sequence step failed")
@@ -1422,18 +1464,18 @@ class NS_base:  # (HasTraits):
                     self.systemStepController.updateTimeHistory()
                     #you're dead if retrySequence didn't work
                     logEvent("Step Failed, Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
-                                                                                      model.stepController.dt_model,
-                                                                                      model.name))
+                                                                                           model.stepController.dt_model,
+                                                                                           model.name))
                     break
                 else:
                     self.systemStepController.updateTimeHistory()
                     logEvent("Step Taken, System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
                                                                                    self.systemStepController.dt_system))
                     self.systemStepController.choose_dt_system()
+                    logEvent("Potential System time step t=%12.5e, dt=%12.5e for next step" % (self.systemStepController.t_system,
+                                                                                               self.systemStepController.dt_system))
                     if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                         self.systemStepController.stepExact_system(self.tn)
-                    logEvent("Potential System time step t=%12.5e, dt=%12.5e for next time step" % (self.systemStepController.t_system,
-                                                                                                    self.systemStepController.dt_system))
                 for model in self.modelList:
                     for av in self.auxiliaryVariables[model.name]:
                         av.calculate()
@@ -1456,7 +1498,7 @@ class NS_base:  # (HasTraits):
             #h-adapt mesh, cekees modified from chitak
             #
             #assuming same for all physics and numerics  for now
-        
+
             #can only handle PUMIDomain's for now
             self.nSolveSteps += 1
             if(self.PUMI_estimateError()):
@@ -1556,6 +1598,56 @@ class NS_base:  # (HasTraits):
             model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],self.tnList[0],self.tCount,
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
+        try:
+            phi_s = {}
+            phi_s[0] = model.levelModelList[-1].coefficients.phi_s
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   phi_s,
+                                                                   res_name_base='phi_s')
+            logEvent("Writing initial phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass
+
+        #For aux quantity of interest (MQL)
+        try:
+            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                quantDOFs = {}
+                quantDOFs[0] = model.levelModelList[-1].quantDOFs
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='quantDOFs_for_'+model.name)
+                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass
+
+        #Write bathymetry for Shallow water equations (MQL)
+        try:
+            bathymetry = {}
+            bathymetry[0] = model.levelModelList[-1].coefficients.b.dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   bathymetry,
+                                                                   res_name_base='bathymetry')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass
+        #write eta=h+bathymetry for SWEs (MQL)
+        try:
+            eta = {}
+            eta[0] = model.levelModelList[-1].coefficients.b.dof+model.levelModelList[-1].u[0].dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   eta,
+                                                                   res_name_base='eta')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass
 
         #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
@@ -1624,6 +1716,57 @@ class NS_base:  # (HasTraits):
             model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],t,self.tCount,
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=False,meshChanged=True)
+
+        try:
+            phi_s = {}
+            phi_s[0] = model.levelModelList[-1].coefficients.phi_s
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   phi_s,
+                                                                   res_name_base='phi_s')
+            logEvent("Writing phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass
+
+        try:
+            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                quantDOFs = {}
+                quantDOFs[0] = model.levelModelList[-1].quantDOFs
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='quantDOFs_for_'+model.name)
+                logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass
+
+        #Write bathymetry for Shallow water equations (MQL)
+        try:
+            bathymetry = {}
+            bathymetry[0] = model.levelModelList[-1].coefficients.b.dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   bathymetry,
+                                                                   res_name_base='bathymetry')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass
+        #write eta=h+bathymetry for SWEs (MQL)
+        try:
+            eta = {}
+            eta[0] = model.levelModelList[-1].coefficients.b.dof+model.levelModelList[-1].u[0].dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   eta,
+                                                                   res_name_base='eta')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass
+
         #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}

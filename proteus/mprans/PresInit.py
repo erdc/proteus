@@ -17,6 +17,7 @@ from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 
+
 class Coefficients(TC_base):
     r"""
     The coefficients for pressure solution
@@ -27,6 +28,7 @@ class Coefficients(TC_base):
 
        p^{k+1} - p^{k} - phi^{k+1} + \nabla\cdot(\mu \mathbf{u}^{k+1}) = 0
     """
+
     def __init__(self,
                  nd=2,
                  modelIndex=None,
@@ -39,24 +41,25 @@ class Coefficients(TC_base):
         """
         self.nd = nd
         if self.nd == 2:
-            sdInfo    = {(0,0):(np.array([0,1,2],dtype='i'),
-                                np.array([0,1],dtype='i'))}
+            sdInfo = {(0, 0): (np.array([0, 1, 2], dtype='i'),
+                               np.array([0, 1], dtype='i'))}
         else:
-            sdInfo    = {(0,0):(np.array([0,1,2,3],dtype='i'),
-                                np.array([0,1,2],dtype='i'))}
+            sdInfo = {(0, 0): (np.array([0, 1, 2, 3], dtype='i'),
+                               np.array([0, 1, 2], dtype='i'))}
         TC_base.__init__(self,
-                         nc = 1,
-                         variableNames = ['pInit'],
-                         advection = {0:{0:'constant'}},
-                         potential = {0:{0:'u'}},
-                         diffusion = {0:{0:{0:'linear'}}},
+                         nc=1,
+                         variableNames=['pInit'],
+                         advection={0: {0: 'constant'}},
+                         potential={0: {0: 'u'}},
+                         diffusion={0: {0: {0: 'linear'}}},
                          sparseDiffusionTensors=sdInfo,
-                         useSparseDiffusion = True)
+                         useSparseDiffusion=True)
         self.modelIndex = modelIndex
         self.fluidModelIndex = fluidModelIndex
         self.pressureModelIndex = pressureModelIndex
         self.useRotationalForm = useRotationalForm
-    def attachModels(self,modelList):
+
+    def attachModels(self, modelList):
         self.model = modelList[self.modelIndex]
         self.model.u[0].femSpace.elementMaps.getBasisValuesRef(
             self.model.elementQuadraturePoints)
@@ -77,76 +80,85 @@ class Coefficients(TC_base):
             self.pressureModelIndex]
         self.fluidModel = modelList[
             self.fluidModelIndex]
-    def initializeMesh(self,mesh):
+
+    def initializeMesh(self, mesh):
         """
         Give the TC object access to the mesh for any mesh-dependent information.
         """
         pass
-    def initializeElementQuadrature(self,t,cq):
+
+    def initializeElementQuadrature(self, t, cq):
         """
         Give the TC object access to the element quadrature storage
         """
         pass
-    def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
+
+    def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
         """
         Give the TC object access to the element boundary quadrature storage
         """
         pass
-    def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
+
+    def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
         """
         Give the TC object access to the exterior element boundary quadrature storage
         """
         pass
-    def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
+
+    def initializeGeneralizedInterpolationPointQuadrature(self, t, cip):
         """
         Give the TC object access to the generalized interpolation point storage. These points are used  to project nonlinear potentials (phi).
         """
         pass
-    def preStep(self,t,firstStep=False):
+
+    def preStep(self, t, firstStep=False):
         """
         Give the TC object an opportunity to modify itself before the time step.
         """
         copyInstructions = {}
         return copyInstructions
-    def postStep(self,t,firstStep=False):
+
+    def postStep(self, t, firstStep=False):
         """
         Give the TC object an opportunity to modify itself before the time step.
         """
         self.pressureModel.u[0].dof[:] = self.model.u[0].dof
-        self.pressureModel.q[('u',0)][:] = self.model.q[('u',0)]
-        self.pressureModel.q[('u_last',0)][:] = self.model.q[('u',0)]
-        self.pressureModel.ebqe[('u',0)][:] = self.model.ebqe[('u',0)]
-        self.pressureModel.ebqe[('u_last',0)][:] = self.model.ebqe[('u',0)]
-        self.pressureModel.q[('grad(u)',0)][:] = self.model.q[('grad(u)',0)]
-        self.pressureModel.ebqe[('grad(u)',0)][:] = self.model.ebqe[('grad(u)',0)]
+        self.pressureModel.q[('u', 0)][:] = self.model.q[('u', 0)]
+        self.pressureModel.q[('u_last', 0)][:] = self.model.q[('u', 0)]
+        self.pressureModel.ebqe[('u', 0)][:] = self.model.ebqe[('u', 0)]
+        self.pressureModel.ebqe[('u_last', 0)][:] = self.model.ebqe[('u', 0)]
+        self.pressureModel.q[('grad(u)', 0)][:] = self.model.q[('grad(u)', 0)]
+        self.pressureModel.ebqe[('grad(u)', 0)][:] = self.model.ebqe[('grad(u)', 0)]
         #
-        self.pressureModel.q_p_sharp[:] = self.model.q[('u',0)]
-        self.pressureModel.ebqe_p_sharp[:] = self.model.ebqe[('u',0)]
-        self.pressureModel.q_grad_p_sharp[:] = self.model.q[('grad(u)',0)]
-        self.pressureModel.ebqe_grad_p_sharp[:] = self.model.ebqe[('grad(u)',0)]
-        copyInstructions = {'copy_uList':True,
-                            'uList_model':self.pressureModelIndex}
+        self.pressureModel.q_p_sharp[:] = self.model.q[('u', 0)]
+        self.pressureModel.ebqe_p_sharp[:] = self.model.ebqe[('u', 0)]
+        self.pressureModel.q_grad_p_sharp[:] = self.model.q[('grad(u)', 0)]
+        self.pressureModel.ebqe_grad_p_sharp[:] = self.model.ebqe[('grad(u)', 0)]
+        copyInstructions = {'copy_uList': True,
+                            'uList_model': self.pressureModelIndex}
         copyInstructions = {}
         return copyInstructions
-    def evaluate(self,t,c):
+
+    def evaluate(self, t, c):
         """
         Evaluate the coefficients after getting the specified velocity and density
         """
         # precompute the shapes to extract things we need from self.c_name[] dictionaries
-        u_shape = c[('u',0)].shape
-        grad_shape = c[('grad(u)',0)].shape
-        if u_shape == self.pressureModel.q[('u',0)].shape:
+        u_shape = c[('u', 0)].shape
+        grad_shape = c[('grad(u)', 0)].shape
+        if u_shape == self.pressureModel.q[('u', 0)].shape:
             rho = self.fluidModel.coefficients.q_rho
             nu = self.fluidModel.coefficients.q_nu
-            velocity = self.fluidModel.q[('velocity',0)]
-        elif u_shape == self.pressureModel.ebqe[('u',0)].shape:
+            velocity = self.fluidModel.q[('velocity', 0)]
+        elif u_shape == self.pressureModel.ebqe[('u', 0)].shape:
             rho = self.fluidModel.coefficients.ebqe_rho
             nu = self.fluidModel.coefficients.ebqe_nu
-            velocity = self.fluidModel.ebqe[('velocity',0)]
-        for i in range(c[('f',0)].shape[-1]):
-            #need to add advective and viscous terms for non-zero IC
-            c[('f',0)][...,i] = self.fluidModel.coefficients.g[i]
-            c[('a',0,0)][...,i] = 1.0/rho
+            velocity = self.fluidModel.ebqe[('velocity', 0)]
+        for i in range(c[('f', 0)].shape[-1]):
+            # need to add advective and viscous terms for non-zero IC
+            c[('f', 0)][..., i] = self.fluidModel.coefficients.g[i]
+            c[('a', 0, 0)][..., i] = 1.0 / rho
+
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
@@ -716,5 +728,3 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def updateAfterMeshMotion(self):
         pass
-
-

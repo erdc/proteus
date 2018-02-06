@@ -149,6 +149,8 @@ computeEigenvectors = None#'left','right'
 
 linearSmoother = None
 
+linearSmootherOptions = ()
+
 linTolFac = 0.001
 
 conservativeFlux = None

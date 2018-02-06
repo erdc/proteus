@@ -359,6 +359,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       size_scale = m->findField("proteus_sizeScale");
       adapt_type_config = "anisotropic";
   }
+  else if (size_field_config == "test"){
+    testIsotropicSizeField();
+  }
   else {
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
