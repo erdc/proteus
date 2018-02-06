@@ -19,6 +19,7 @@ from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 import cVOF3P
 
+
 class SubgridError(SGE_base):
 
     def __init__(self, coefficients, nd):
@@ -112,7 +113,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             setParamsFunc=None,
             movingDomain=False,
             set_vos=None):
-        self.set_vos=set_vos
+        self.set_vos = set_vos
         self.useMetrics = useMetrics
         self.variableNames = ['vof']
         nc = 1
@@ -230,8 +231,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # VRANS
         self.flowCoefficients = modelList[self.V_model].coefficients
         if self.VOS_model is not None:
-            self.q_vos = modelList[self.VOS_model].q[('u',0)]
-            self.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
+            self.q_vos = modelList[self.VOS_model].q[('u', 0)]
+            self.ebqe_vos = modelList[self.VOS_model].ebqe[('u', 0)]
         else:
             self.q_porosity = numpy.ones(
                 modelList[
@@ -259,7 +260,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebq_vos = 1.0 - self.ebq_porosity
             if hasattr(self.flowCoefficients, 'ebqe_porosity'):
                 self.ebqe_porosity = self.flowCoefficients.ebqe_porosity
-                self.ebqe_vos = 1.0-self.ebqe_porosity
+                self.ebqe_vos = 1.0 - self.ebqe_porosity
             else:
                 self.ebqe_porosity = numpy.ones(
                     modelList[
@@ -270,7 +271,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         modelList[
                             self.LS_modelIndex].ebqe['x'],
                         self.ebqe_porosity)
-                self.ebqe_vos = 1.0-self.ebqe_porosity
+                self.ebqe_vos = 1.0 - self.ebqe_porosity
 
     def initializeElementQuadrature(self, t, cq):
         if self.V_model is None:
@@ -402,7 +403,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False):
+                 movingDomain=False,
+                 bdyNullSpace=False):
+        self.bdyNullSpace = bdyNullSpace
         #
         # set the objects describing the method and boundary conditions
         #
@@ -854,7 +857,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
 
         if self.coefficients.set_vos:
-            self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
+            self.coefficients.set_vos(self.q['x'], self.coefficients.q_vos)
         r.fill(0.0)
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()

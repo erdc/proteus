@@ -104,7 +104,7 @@ def readFun():
     for k in range(outputGrid.nz):
         for j in range(outputGrid.ny):
             for i in range(outputGrid.nx):
-                X = outputGrid.getNode(i,j,k)+offSet
+                X = outputGrid.get_node(i,j,k)+offSet
                 e = spaceMap.findElement(X)
                 eList[(i,j,k)]=e
                 if e!='OFFMESH':

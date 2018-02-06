@@ -19,6 +19,7 @@ from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 import cVOS3P
 
+
 class SubgridError(SGE_base):
 
     def __init__(self, coefficients, nd):
@@ -399,7 +400,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False):
+                 movingDomain=False,
+                 bdyNullSpace=False):
+        self.bdyNullSpace = bdyNullSpace
         #
         # set the objects describing the method and boundary conditions
         #
@@ -911,7 +914,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.sc_beta,
             # VRANS start
             self.coefficients.q_porosity,
-            self.q[('mt',0)],
+            self.q[('mt', 0)],
             # VRANS end
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,

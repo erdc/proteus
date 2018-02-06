@@ -2,9 +2,11 @@
 
 import os
 import sys
+import csv
 import inspect
 import pickle
 import petsc4py
+import numpy
 
 def get_include_dir():
     return os.path.dirname(os.path.realpath(__file__))
@@ -113,6 +115,7 @@ class NumericResults:
         NA_timesteps  = re.compile("Num Time Steps(.*)$")
         NA_precond    = re.compile("Preconditioner(.*)$")
         NA_pattern    = re.compile("NumericalAnalytics(.*)$")
+        NA_model      = re.compile("Model(.*)$")
         NA_time       = re.compile("Time Step(.*)$")
         NA_level      = re.compile("Newton iteration for level(.*)$")
         NA_newton     = re.compile("NewtonNorm: (.*)$")
@@ -142,32 +145,42 @@ class NumericResults:
             for match in re.finditer(NA_pattern,line):
                 new_line = NA_pattern.search(line).groups()[0]
 
+                for model_match in re.finditer(NA_model,new_line):
+                    model = str(NA_model.search(new_line).groups()[0])
+                    try:
+                        tmp = data_dictionary[model]
+                    except KeyError:
+                        data_dictionary[model] = {}
+
                 for time_match in re.finditer(NA_time,new_line):
                     time_match = float(NA_time.search(new_line).groups()[0])
-                    data_dictionary[time_match] = {}
+                    data_dictionary[model][time_match] = [[],{}]
 
                 for level_match in re.finditer(NA_level,new_line):
                     level_match = int(NA_level.search(new_line).groups()[0])
-                    data_dictionary[time_match][level_match] = [[],{}]
+                    data_dictionary[model][time_match][0].append(level_match)
+                    level_match_key = len(data_dictionary[model][time_match][0])-1
+                    data_dictionary[model][time_match][1][level_match_key] = [[],{}]
 
                 for newton_match in re.finditer(NA_newton,new_line):
                     newton_match = float(NA_newton.search(new_line).groups()[0])
-                    data_dictionary[time_match][level_match][0].append(newton_match)
-                    newton_it_key = len(data_dictionary[time_match][level_match][0])-1
-                    data_dictionary[time_match][level_match][1][newton_it_key] = [[],{}]
+                    data_dictionary[model][time_match][1][level_match_key][0].append(newton_match)
+                    newton_it_key = len(data_dictionary[model][time_match][1][level_match_key][0])-1
+                    data_dictionary[model][time_match][1][level_match_key][1][newton_it_key] = [[],{}]
                 
                 for outerksp_match in re.finditer(NA_outersolve,new_line):
                     outerksp_match = float(NA_outersolve.search(new_line).groups()[0])
-                    data_dictionary[time_match][level_match][1][newton_it_key][0].append(outerksp_match)
-                    outerksp_match_key = len(data_dictionary[time_match][level_match][1][newton_it_key][0])-1
-                    data_dictionary[time_match][level_match][1][newton_it_key][1][outerksp_match_key] = []
+                    data_dictionary[model][time_match][1][level_match][1][newton_it_key][0].append(outerksp_match)
+                    outerksp_match_key = len(data_dictionary[model][time_match][1][level_match][1][newton_it_key][0])-1
+                    data_dictionary[model][time_match][1][level_match][1][newton_it_key][1][outerksp_match_key] = []
                 
                 for innerksp_match in re.finditer(NA_innersolve,new_line):
                     innerksp_match = float(NA_innersolve.search(new_line).groups()[0])
-                    try:
-                        data_dictionary[time_match][level_match][1][newton_it_key][1][outerksp_match_key].append(innerksp_match)
-                    except UnboundLocalError:
-                        import pdb ; pdb.set_trace()
+                    data_dictionary[model][time_match][1][level_match][1][newton_it_key][1][outerksp_match_key].append(innerksp_match)
+                    # try:
+                    #     data_dictionary[time_match][level_match][1][newton_it_key][1][outerksp_match_key].append(innerksp_match)
+                    # except UnboundLocalError:
+                    #     import pdb ; pdb.set_trace()
         return data_dictionary, data_dictionary_header
 
     def pickle_data(self,filename):
@@ -246,7 +259,12 @@ class NumericResults:
             plt.xlim(axis[0],axis[1])
         plt.show() 
 
-    def ipython_plot_newton_it(self,time_level,axis=False):
+    def ipython_plot_newton_it(self,
+                               time_level,
+                               axis = False,
+                               user_legend = False,
+                               plot_relative = False,
+                               title = False):
         """ Plot the Newton iteration residual in a jupyter notebook.
 
         Parameters
@@ -256,18 +274,25 @@ class NumericResults:
         """
         plot_data = []
         legend = []
-        title = 'Residual From Newton Iterations'
+        if title is False:
+            title = 'Residual From Newton Iterations'
         axis_inline = axis
         
         for data_set in time_level:
             if data_set[0] in self.data_dictionary.keys():
                 if data_set[1] in self.data_dictionary[data_set[0]].keys():
-                    plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][0])
-                    legend.append((data_set[0],data_set[1]))
+                    if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
+                        plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0])
+                        legend.append((data_set[0],data_set[1]))
+                    else:
+                        print 'The third key ' + `data_set[1]` + ' is not valid.'
                 else:
                     print 'The second key ' + `data_set[1]` + ' is not valid.'
             else:
                 print 'The first key ' + `data_set[1]` + ' is not valid.'
+
+        if user_legend is True:
+            legend = user_legend
 
         if axis!=False:
             self._init_ipython_plot(plot_data,legend,title,axis_inline)
@@ -292,13 +317,15 @@ class NumericResults:
         for data_set in time_level:
             if data_set[0] in self.data_dictionary.keys():
                 if data_set[1] in self.data_dictionary[data_set[0]].keys():
-                    result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][0]))
-                    return_data.append(result)
+                    if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
+                        result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0]))
+                        return_data.append(result)
+                    else:
+                        print 'The third key ' + data_set[2] + 'is not valid.'
                 else:
                     print 'The second key ' + `data_set[1]` + 'is not valid.'
             else:
-                print 'The first key ' + `data_set[1]` + 'is not valid.'
-
+                print 'The first key ' + `data_set[0]` + 'is not valid.'
         return return_data
             
     def ipython_plot_ksp_residual(self,
@@ -323,8 +350,11 @@ class NumericResults:
             if data_set[0] in self.data_dictionary.keys():
                 if data_set[1] in self.data_dictionary[data_set[0]].keys():
                     if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
-                        plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0])
-                        legend.append((data_set[0],data_set[1],data_set[2]))
+                        if data_set[3] in self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys():
+                            plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]][0])
+                            legend.append((data_set[0],data_set[1],data_set[2]))
+                        else:
+                            print 'The fourth key ' + `data_set[3]` + ' is not valid.'
                     else:
                         print 'The third key ' + `data_set[1]` + ' is not valid.'
                 else:
@@ -339,7 +369,6 @@ class NumericResults:
             self._init_ipython_plot(plot_data,legend,title,axis,plot_relative=plot_relative)
         else:
             self._init_ipython_plot(plot_data,legend,title,plot_relative=plot_relative)
-
 
 
     def get_ksp_resid_it_info(self,time_level):
@@ -361,17 +390,48 @@ class NumericResults:
             if data_set[0] in self.data_dictionary.keys():
                 if data_set[1] in self.data_dictionary[data_set[0]].keys():
                     if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
-                        result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0]))
-                        return_data.append(result)
+                        if data_set[3] in self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys():
+                            result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]][0]))
+                            return_data.append(result)
+                        else:
+                            print 'The fourth key ' + `data_set[3]` + ' is not valid.'
                     else:
-                        print 'The third key ' + `data_set[1]` + 'is not valid.'
+                        print 'The third key ' + `data_set[2]` + 'is not valid.'
                 else:
                     print 'The second key ' + `data_set[1]` + 'is not valid.'
             else:
-                print 'The first key ' + `data_set[1]` + 'is not valid.'
+                print 'The first key ' + `data_set[0]` + 'is not valid.'
 
         return return_data
 
+    def get_ksp_resid_info(self,data_set):
+        """ Collect and return the ksp_residual information for a given timestep
+            and mesh level.
+
+        Parameters
+        ----------
+        data_set : tuples
+
+        Returns
+        -------
+        return_data :
+        """
+        return_data = []
+        data_set = data_set[0]
+        if data_set[0] in self.data_dictionary.keys():
+            if data_set[1] in self.data_dictionary[data_set[0]].keys():
+                if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
+                    if data_set[3] in self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys():
+                        return_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]][0])
+                    else:
+                        print 'The fourth key ' + `data_set[3]` + ' is not valid.'
+                else:
+                    print 'The third key ' + `data_set[2]` + ' is not valid.'
+            else:
+                print 'The second key ' + `data_set[1]` + ' is not valid.'
+        else:
+            print 'The first key ' + `data_set[0]` + ' is not valid.'
+        return return_data[0]
 
     def ipython_plot_ksp_schur_residual(self,time_level_it,axis=False):
         """ Plot the inner KSP residual in a jupyter notebook.
@@ -404,6 +464,73 @@ class NumericResults:
         else:
             self._init_ipython_plot(plot_data,legend,title)
 
+    def time_series_of_ksp_residuals(self,
+                                     model_key,
+                                     mesh_level = 0,
+                                     tnList=None):
+        """ Builds the ksp_iterations list to correspond at a specific time steps
+
+        Parameters
+        ----------
+        model_key : str
+            The model key
+        mesh_level : int
+            The desired mesh
+        tnList : lst
+            The set of time steps to save the ksp residuals
+        """
+        if tnList is None:
+            tnList = sorted(self.data_dictionary[model_key].keys())
+        
+        self.newton_steps = []
+        for t in tnList:
+            newton_steps_l = len(self.data_dictionary[model_key][t][1][mesh_level][0])-1
+            self.newton_steps.append(newton_steps_l)
+
+        self.ksp_iterations = []
+        for t, newton_steps_ell in zip(tnList,self.newton_steps):
+            ksp_steps_l = len(self.data_dictionary[model_key][t][1][mesh_level][1][newton_steps_ell-1][0]) - 1
+            self.ksp_iterations.append(ksp_steps_l)
+
+    def export_2_csv(self, data, file_name):
+        """ Exports a list of data to an external file in csv format.
+
+        Parameters
+        ----------
+        data : lst or tuple
+            A list or tuple of data to be exported.
+        file_name : str
+            A file name for exporting data.
+        """
+        with open(file_name+'.csv','w') as csvfile:
+            filewriter = csv.writer(csvfile, delimiter = ' ')
+            for item in data:
+                filewriter.writerow([item])
+            
+class NumericResults_Comparison_Tools():
+            
+    @staticmethod
+    def compareResidualVectors(x,y,instance):
+        """
+        Parameters
+        ----------
+        x: NumericResults
+        y: NumericResults
+        instance: tuple
+
+        Returns
+        -------
+        c : lst
+        """
+        a = numpy.asarray(x.get_ksp_resid_info(instance))
+        b = numpy.asarray(y.get_ksp_resid_info(instance))
+        min_len = min(len(a),len(b))
+        c = numpy.zeros(shape=(min_len,1))
+        for i in range(min_len):
+            c[i] = a[i] - b[i]
+        return c
+
+            
 class BasicTest():
     """ A base class for tests. """
     @classmethod
