@@ -61,6 +61,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double Cd_sge,
                                double C_dc,
                                double C_b,
+                               # VRANS start
                                double * eps_solid,
                                double * phi_solid,
                                double * q_velocity_solid,
@@ -73,6 +74,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_turb_var_1,
                                double * q_turb_var_grad_0,
                                double * q_eddy_viscosity,
+                               # VRANS end
                                int * p_l2g,
                                int * vel_l2g,
                                double * p_dof,
@@ -146,9 +148,11 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * bc_ebqe_phi_ext,
                                double * ebqe_normal_phi_ext,
                                double * ebqe_kappa_phi_ext,
+                               # VRANS start
                                double * ebqe_vos_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
+                               # VRANS end
                                int * isDOFBoundary_p,
                                int * isDOFBoundary_u,
                                int * isDOFBoundary_v,
@@ -294,6 +298,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double Cd_sge,
                                double C_dg,
                                double C_b,
+                               # VRANS start
                                double * eps_solid,
                                double * phi_solid,
                                double * q_velocity_solid,
@@ -315,8 +320,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * normal_phi,
                                double * kappa_phi,
                                double * q_mom_u_acc_beta_bdf,
-			       double * q_mom_v_acc_beta_bdf,
-			       double * q_mom_w_acc_beta_bdf,
+                               double * q_mom_v_acc_beta_bdf,
+                               double * q_mom_w_acc_beta_bdf,
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
@@ -359,9 +364,11 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * bc_ebqe_phi_ext,
                                double * ebqe_normal_phi_ext,
                                double * ebqe_kappa_phi_ext,
+                               # VRANS start
                                double * ebqe_vos_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
+                               # VRANS end
                                int * isDOFBoundary_p,
                                int * isDOFBoundary_u,
                                int * isDOFBoundary_v,
@@ -986,6 +993,7 @@ cdef class RANS3PF:
                           double Cd_sge,
                           double C_dc,
                           double C_b,
+                          # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
@@ -998,6 +1006,7 @@ cdef class RANS3PF:
                           numpy.ndarray q_turb_var_1,
                           numpy.ndarray q_turb_var_grad_0,
                           numpy.ndarray q_eddy_viscosity,
+                          # VRANS end
                           numpy.ndarray p_l2g,
                           numpy.ndarray vel_l2g,
                           numpy.ndarray p_dof,
@@ -1050,9 +1059,11 @@ cdef class RANS3PF:
                           numpy.ndarray bc_ebqe_phi_ext,
                           numpy.ndarray ebqe_normal_phi_ext,
                           numpy.ndarray ebqe_kappa_phi_ext,
+                          # VRANS start
                           numpy.ndarray ebqe_vos_ext,
                           numpy.ndarray ebqe_turb_var_0,
                           numpy.ndarray ebqe_turb_var_1,
+                          # VRANS end
                           numpy.ndarray isDOFBoundary_p,
                           numpy.ndarray isDOFBoundary_u,
                           numpy.ndarray isDOFBoundary_v,
@@ -1211,6 +1222,7 @@ cdef class RANS3PF:
                                         < double * > q_turb_var_1.data,
                                         < double * > q_turb_var_grad_0.data,
                                         < double * > q_eddy_viscosity.data,
+                                        # VRANS end
                                         < int * > p_l2g.data,
                                         < int * > vel_l2g.data,
                                         < double * > p_dof.data,
@@ -1263,9 +1275,11 @@ cdef class RANS3PF:
                                         < double * > bc_ebqe_phi_ext.data,
                                         < double * > ebqe_normal_phi_ext.data,
                                         < double * > ebqe_kappa_phi_ext.data,
+                                        # VRANS start
                                         < double * > ebqe_vos_ext.data,
                                         < double * > ebqe_turb_var_0.data,
                                         < double * > ebqe_turb_var_1.data,
+                                        # VRANS end
                                         < int * > isDOFBoundary_p.data,
                                         < int * > isDOFBoundary_u.data,
                                         < int * > isDOFBoundary_v.data,
@@ -1476,9 +1490,11 @@ cdef class RANS3PF:
                           numpy.ndarray bc_ebqe_phi_ext,
                           numpy.ndarray ebqe_normal_phi_ext,
                           numpy.ndarray ebqe_kappa_phi_ext,
+                          # VRANS start
                           numpy.ndarray ebqe_vos_ext,
                           numpy.ndarray ebqe_turb_var_0,
                           numpy.ndarray ebqe_turb_var_1,
+                          # VRANS end
                           numpy.ndarray isDOFBoundary_p,
                           numpy.ndarray isDOFBoundary_u,
                           numpy.ndarray isDOFBoundary_v,
@@ -2606,6 +2622,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double Cd_sge,
                                double C_dc,
                                double C_b,
+                               # VRANS start
                                double * eps_solid,
                                double * phi_solid,
                                double * q_velocity_solid,
@@ -2618,6 +2635,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * q_turb_var_1,
                                double * q_turb_var_grad_0,
                                double * q_eddy_viscosity,
+                               # VRANS end
                                int * p_l2g,
                                int * vel_l2g,
                                double * p_dof,
@@ -2641,8 +2659,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * q_mom_w_acc,
                                double * q_mass_adv,
                                double * q_mom_u_acc_beta_bdf,
-			       double * q_mom_v_acc_beta_bdf,
-			       double * q_mom_w_acc_beta_bdf,
+                               double * q_mom_v_acc_beta_bdf,
+                               double * q_mom_w_acc_beta_bdf,
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
@@ -2672,9 +2690,11 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * bc_ebqe_phi_ext,
                                double * ebqe_normal_phi_ext,
                                double * ebqe_kappa_phi_ext,
+                               # VRANS start
                                double * ebqe_vos_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
+                               # VRANS end
                                int * isDOFBoundary_p,
                                int * isDOFBoundary_u,
                                int * isDOFBoundary_v,
@@ -2820,6 +2840,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double Cd_sge,
                                double C_dg,
                                double C_b,
+                               # VRANS start
                                double * eps_solid,
                                double * phi_solid,
                                double * q_velocity_solid,
@@ -2831,6 +2852,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * q_turb_var_0,
                                double * q_turb_var_1,
                                double * q_turb_var_grad_0,
+                               # VRANS end
                                int * p_l2g,
                                int * vel_l2g,
                                double * p_dof, double * u_dof, double * v_dof, double * w_dof,
@@ -2841,8 +2863,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * normal_phi,
                                double * kappa_phi,
                                double * q_mom_u_acc_beta_bdf,
-			       double * q_mom_v_acc_beta_bdf,
-			       double * q_mom_w_acc_beta_bdf,
+                               double * q_mom_v_acc_beta_bdf,
+                               double * q_mom_w_acc_beta_bdf,
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
@@ -2885,9 +2907,11 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * bc_ebqe_phi_ext,
                                double * ebqe_normal_phi_ext,
                                double * ebqe_kappa_phi_ext,
+                               # VRANS start
                                double * ebqe_vos_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
+                               # VRANS end
                                int * isDOFBoundary_p,
                                int * isDOFBoundary_u,
                                int * isDOFBoundary_v,
@@ -3023,6 +3047,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                                  double Cd_sge,
                                                  double C_dc,
                                                  double C_b,
+                                                 # VRANS start
                                                  double * eps_solid,
                                                  double * phi_solid,
                                                  double * q_velocity_solid,
@@ -3035,6 +3060,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                                  double * q_turb_var_1,
                                                  double * q_turb_var_grad_0,
                                                  double * q_eddy_viscosity,
+                                                 # VRANS end
                                                  int * p_l2g,
                                                  int * vel_l2g,
                                                  double * p_dof,
@@ -3057,8 +3083,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                                  double * q_mom_v_acc,
                                                  double * q_mom_w_acc,
                                                  double * q_mass_adv,
-                                                 double * q_mom_u_acc_beta_bdf, double *
-                                                 q_mom_v_acc_beta_bdf, double * q_mom_w_acc_beta_bdf,
+                                                 double * q_mom_u_acc_beta_bdf, 
+                                                 double * q_mom_v_acc_beta_bdf, 
+                                                 double * q_mom_w_acc_beta_bdf,
                                                  double * q_dV,
                                                  double * q_dV_last,
                                                  double * q_velocity_sge,
@@ -3088,9 +3115,11 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                                  double * bc_ebqe_phi_ext,
                                                  double * ebqe_normal_phi_ext,
                                                  double * ebqe_kappa_phi_ext,
+                                                 # VRANS start
                                                  double * ebqe_vos_ext,
                                                  double * ebqe_turb_var_0,
                                                  double * ebqe_turb_var_1,
+                                                 # VRANS end
                                                  int * isDOFBoundary_p,
                                                  int * isDOFBoundary_u,
                                                  int * isDOFBoundary_v,
@@ -3254,8 +3283,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                                  double * phi,
                                                  double * normal_phi,
                                                  double * kappa_phi,
-                                                 double * q_mom_u_acc_beta_bdf, double *
-                                                 q_mom_v_acc_beta_bdf, double * q_mom_w_acc_beta_bdf,
+                                                 double * q_mom_u_acc_beta_bdf,
+                                                 double * q_mom_v_acc_beta_bdf,
+                                                 double * q_mom_w_acc_beta_bdf,
                                                  double * q_dV,
                                                  double * q_dV_last,
                                                  double * q_velocity_sge,
@@ -3490,6 +3520,7 @@ cdef class RANS3PF2D:
                           double Cd_sge,
                           double C_dc,
                           double C_b,
+                          # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
@@ -3502,6 +3533,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray q_turb_var_1,
                           numpy.ndarray q_turb_var_grad_0,
                           numpy.ndarray q_eddy_viscosity,
+                          # VRANS end
                           numpy.ndarray p_l2g,
                           numpy.ndarray vel_l2g,
                           numpy.ndarray p_dof,
@@ -3554,9 +3586,11 @@ cdef class RANS3PF2D:
                           numpy.ndarray bc_ebqe_phi_ext,
                           numpy.ndarray ebqe_normal_phi_ext,
                           numpy.ndarray ebqe_kappa_phi_ext,
+                          # VRANS start
                           numpy.ndarray ebqe_vos_ext,
                           numpy.ndarray ebqe_turb_var_0,
                           numpy.ndarray ebqe_turb_var_1,
+                          # VRANS end
                           numpy.ndarray isDOFBoundary_p,
                           numpy.ndarray isDOFBoundary_u,
                           numpy.ndarray isDOFBoundary_v,
@@ -3917,6 +3951,7 @@ cdef class RANS3PF2D:
                           double Cd_sge,
                           double C_dg,
                           double C_b,
+                          # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
@@ -3928,6 +3963,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray q_turb_var_0,
                           numpy.ndarray q_turb_var_1,
                           numpy.ndarray q_turb_var_grad_0,
+                          # VRANS end
                           numpy.ndarray p_l2g,
                           numpy.ndarray vel_l2g,
                           numpy.ndarray p_dof, numpy.ndarray u_dof, numpy.ndarray v_dof, numpy.ndarray w_dof,
@@ -3980,9 +4016,11 @@ cdef class RANS3PF2D:
                           numpy.ndarray bc_ebqe_phi_ext,
                           numpy.ndarray ebqe_normal_phi_ext,
                           numpy.ndarray ebqe_kappa_phi_ext,
+                          # VRANS start
                           numpy.ndarray ebqe_vos_ext,
                           numpy.ndarray ebqe_turb_var_0,
                           numpy.ndarray ebqe_turb_var_1,
+                          # VRANS end
                           numpy.ndarray isDOFBoundary_p,
                           numpy.ndarray isDOFBoundary_u,
                           numpy.ndarray isDOFBoundary_v,
@@ -4324,6 +4362,7 @@ cdef class RANS3PF2D:
                                             double Cd_sge,
                                             double C_dc,
                                             double C_b,
+                                            # VRANS start
                                             numpy.ndarray eps_solid,
                                             numpy.ndarray phi_solid,
                                             numpy.ndarray q_velocity_solid,
@@ -4336,6 +4375,7 @@ cdef class RANS3PF2D:
                                             numpy.ndarray q_turb_var_1,
                                             numpy.ndarray q_turb_var_grad_0,
                                             numpy.ndarray q_eddy_viscosity,
+                                            # VRANS end
                                             numpy.ndarray p_l2g,
                                             numpy.ndarray vel_l2g,
                                             numpy.ndarray p_dof,
@@ -4388,9 +4428,11 @@ cdef class RANS3PF2D:
                                             numpy.ndarray bc_ebqe_phi_ext,
                                             numpy.ndarray ebqe_normal_phi_ext,
                                             numpy.ndarray ebqe_kappa_phi_ext,
+                                            # VRANS start
                                             numpy.ndarray ebqe_vos_ext,
                                             numpy.ndarray ebqe_turb_var_0,
                                             numpy.ndarray ebqe_turb_var_1,
+                                            # VRANS end
                                             numpy.ndarray isDOFBoundary_p,
                                             numpy.ndarray isDOFBoundary_u,
                                             numpy.ndarray isDOFBoundary_v,
@@ -4747,6 +4789,7 @@ cdef class RANS3PF2D:
                                             double Cd_sge,
                                             double C_dg,
                                             double C_b,
+                                            # VRANS start
                                             numpy.ndarray eps_solid,
                                             numpy.ndarray phi_solid,
                                             numpy.ndarray q_velocity_solid,
@@ -4758,6 +4801,7 @@ cdef class RANS3PF2D:
                                             numpy.ndarray q_turb_var_0,
                                             numpy.ndarray q_turb_var_1,
                                             numpy.ndarray q_turb_var_grad_0,
+                                            # VRANS end
                                             numpy.ndarray p_l2g,
                                             numpy.ndarray vel_l2g,
                                             numpy.ndarray p_dof, numpy.ndarray u_dof, numpy.ndarray v_dof, numpy.ndarray w_dof,
@@ -4810,9 +4854,11 @@ cdef class RANS3PF2D:
                                             numpy.ndarray bc_ebqe_phi_ext,
                                             numpy.ndarray ebqe_normal_phi_ext,
                                             numpy.ndarray ebqe_kappa_phi_ext,
+                                            # VRANS start
                                             numpy.ndarray ebqe_vos_ext,
                                             numpy.ndarray ebqe_turb_var_0,
                                             numpy.ndarray ebqe_turb_var_1,
+                                            # VRANS end
                                             numpy.ndarray isDOFBoundary_p,
                                             numpy.ndarray isDOFBoundary_u,
                                             numpy.ndarray isDOFBoundary_v,

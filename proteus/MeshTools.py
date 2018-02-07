@@ -1059,23 +1059,20 @@ class Mesh:
         self.hasGeometricInfo = False
         logEvent(memory("buildFromCNoArrays","MeshTools"),level=4)
     def buildNodeStarArrays(self):
+        import itertools
         if self.nodeStarArray is None:
-            #cek old
             self.nodeStarList=[]
             for n in range(self.nNodes_global):
-                self.nodeStarList.append([])
-            for eNodes in self.edgeNodesArray:
-                self.nodeStarList[eNodes[0]].append(eNodes[1])
-                self.nodeStarList[eNodes[1]].append(eNodes[0])
-            #cek new
+                self.nodeStarList.append(set())
+            for i_ele in range(self.nElements_global): #: is this OK for parallel mesh?
+                for n1,n2 in itertools.permutations(self.elementNodesArray[i_ele],2):#: works for combination of triangle and quadrilateral 
+                    #: if n1<self.nNodes_global: #: Saving only locally owned node is not enough; should include ghost node
+                    self.nodeStarList[n1].add(n2) #: does not contain itself; use set() instead of list since each pair is visited 1 or 2 times for 2D mesh
             self.nodeStarOffsets = np.zeros((self.nNodes_global+1,),'i')
             lenNodeStarArray=0
             for nN in range(1,self.nNodes_global+1):
-                self.nodeStarOffsets[nN] = self.nodeStarOffsets[nN-1] + len(self.nodeStarList[nN])
-            self.nodeStarArray = np.array((self.nodeStarOffsets[-1],),'i')
-            for nN in range(self.nNodes_global):
-                for nN_star,offset in enumerate(range(self.nodeStarOffsets[nN],self.nodeStarOffsets[nN+1])):
-                    self.nodeStarArray[offset] = self.nodeStarList[nN][nN_star]
+                self.nodeStarOffsets[nN] = self.nodeStarOffsets[nN-1] + len(self.nodeStarList[nN-1])
+            self.nodeStarArray =np.fromiter(itertools.chain.from_iterable(self.nodeStarList),'i')
             del self.nodeStarList
     def buildArraysFromLists(self):
         #nodes
@@ -4904,10 +4901,13 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                     self.meshList[0].nodeNumbering_subdomain2global.itemset(node,node)
                 for element in range(self.meshList[0].nElements_global):
                     self.meshList[0].elementNumbering_subdomain2global.itemset(element,element)
+
+                self.meshList[0].buildNodeStarArrays()
                 for l in range(1,refinementLevels):
                     self.refine()
                     self.meshList[l].subdomainMesh = self.meshList[l]
                     logEvent(self.meshList[-1].meshInfo())
+                    self.meshList[l].buildNodeStarArrays()
                 self.buildArrayLists()
 
     def refine(self):

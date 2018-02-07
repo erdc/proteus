@@ -67,9 +67,13 @@ class NS_base:  # (HasTraits):
         for p in pList:
             message += p.name+"\n"
         logEvent(message)
+        #: SplitOperator initialize file
         self.so=so
+        #: List of physics initialize files
         self.pList=pList
+        #: List of numerics initialize files
         self.nList=nList
+        #: Dictionary of command line arguments
         self.opts=opts
         self.simFlagsList=simFlagsList
         self.timeValues={}
@@ -850,6 +854,7 @@ class NS_base:  # (HasTraits):
             m.stepController.t_model = mOld.stepController.t_model
             m.stepController.t_model_last = mOld.stepController.t_model_last
             m.stepController.substeps = mOld.stepController.substeps
+        # logEvent("Evaluating residuals and time integration")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             logEvent("Attaching models to model "+ptmp.name)
             m.attachModels(self.modelList)
@@ -862,6 +867,9 @@ class NS_base:  # (HasTraits):
                 lm.initializeTimeHistory()
                 lm.timeIntegration.initializeSpaceHistory()
                 lm.getResidual(lu,lr)
+                # assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+                # assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+                # assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
                 #lm.coefficients.evaluate(self.t_stepSequence,lm.q)
                 #lm.coefficients.evaluate(self.t_stepSequence,lm.ebqe)
                 #lm.timeIntegration.calculateElementCoefficients(lm.q)
@@ -1028,13 +1036,6 @@ class NS_base:  # (HasTraits):
                     del scalar
 
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-            # scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal           
-            # p0.domain.PUMIMesh.transferFieldToPUMI(
-            #     'velocityError', scalar)
-
-            scalar[:,0] = self.modelList[4].levelModelList[0].phisErrorNodal[:]
-            p0.domain.PUMIMesh.transferFieldToPUMI(
-                'phisError', scalar)
 
             del scalar
             #Get Physical Parameters

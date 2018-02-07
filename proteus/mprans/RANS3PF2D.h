@@ -282,7 +282,9 @@ namespace proteus
                                    double* dynamic_viscosity_as_function,
                                    double* ebqe_density_as_function,
                                    double* ebqe_dynamic_viscosity_as_function,
-                                   double order_polynomial
+                                   double order_polynomial,
+                                   double* phisError,
+                                   double* phisErrorNodal
                                    )=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
@@ -1036,7 +1038,6 @@ namespace proteus
           d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
         return d;
       }
-
       inline
         void evaluateCoefficients(const double eps_rho,
                                   const double eps_mu,
@@ -1505,11 +1506,13 @@ namespace proteus
             double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
 
             C = (D_s * C_surf + (1.0 - H_s) * C_vol);
-            force_x = dV * D_s * (p * phi_s_normal[0] - porosity * mu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]) + C_surf * (u - u_s) * rho) +
-              dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
+//            force_x = dV * D_s * (p * phi_s_normal[0] - porosity * mu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]) + C_surf * (u - u_s) * rho) +
+//              dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
+//            force_y = dV * D_s * (p * phi_s_normal[1] - porosity * mu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]) + C_surf * (v - v_s) * rho) +
+//              dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
+            force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*rel_vel_norm*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
+            force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*rel_vel_norm*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
 
-            force_y = dV * D_s * (p * phi_s_normal[1] - porosity * mu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]) + C_surf * (v - v_s) * rho) +
-              dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
 
             //always 3D for particle centroids
             r_x = x - particle_centroids[i * 3 + 0];
@@ -1564,10 +1567,11 @@ namespace proteus
         for(int I=0;I<nSpace;I++)
           nrm_df+=df[I]*df[I];
         nrm_df = sqrt(nrm_df);
-	if (density > 1.0e-8)
-	  cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
-	else
-	  cfl = nrm_df/h;
+        if (density > 1.0e-8)
+          cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
+        else 
+          cfl = nrm_df/h;
+        //cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
       }
 
       inline void updateTurbulenceClosure(const int turbulenceClosureModel,
@@ -2716,63 +2720,63 @@ namespace proteus
                                                   dmom_w_source);
                 double C_particles=0.0;
                 if(nParticles > 0)
-		  updateSolidParticleTerms(eN < nElements_owned,
-					   particle_nitsche,
-					   dV,
-					   nParticles,
-					   nQuadraturePoints_global,
-					   &particle_signed_distances[eN_k],
-					   &particle_signed_distance_normals[eN_k_nSpace],
-					   &particle_velocities[eN_k_nSpace],
-					   particle_centroids,
-					   porosity,
-					   particle_penalty_constant/h_phi,//penalty,
-					   particle_alpha,
-					   particle_beta,
-					   eps_rho,
-					   eps_mu,
-					   rho_0,
-					   nu_0,
-					   rho_1,
-					   nu_1,
-					   useVF,
-					   vf[eN_k],
-					   phi[eN_k],
-					   x,
-					   y,
-					   z,
-					   p,
-					   u,
-					   v,
-					   w,
-					   q_velocity_sge[eN_k_nSpace+0],
-					   q_velocity_sge[eN_k_nSpace+1],
-					   q_velocity_sge[eN_k_nSpace+1],
-					   particle_eps,
-					   grad_u,
-					   grad_v,
-					   grad_w,
-					   mom_u_source,
-					   mom_v_source,
-					   mom_w_source,
-					   dmom_u_source,
-					   dmom_v_source,
-					   dmom_w_source,
-					   mom_u_adv,
-					   mom_v_adv,
-					   mom_w_adv,
-					   dmom_u_adv_u,
-					   dmom_v_adv_v,
-					   dmom_w_adv_w,
-					   mom_u_ham,
-					   dmom_u_ham_grad_u,
-					   mom_v_ham,
-					   dmom_v_ham_grad_v,
-					   mom_w_ham,
-					   dmom_w_ham_grad_w,
-					   particle_netForces,
-					   particle_netMoments,
-					   particle_surfaceArea);
+                  updateSolidParticleTerms(eN < nElements_owned,
+                                           particle_nitsche,
+                                           dV,
+                                           nParticles,
+                                           nQuadraturePoints_global,
+                                           &particle_signed_distances[eN_k],
+                                           &particle_signed_distance_normals[eN_k_nSpace],
+                                           particle_velocities,
+                                           particle_centroids,
+                                           porosity,
+                                           particle_penalty_constant/h_phi,//penalty,
+                                           particle_alpha,
+                                           particle_beta,
+                                           eps_rho,
+                                           eps_mu,
+                                           rho_0,
+                                           nu_0,
+                                           rho_1,
+                                           nu_1,
+                                           useVF,
+                                           vf[eN_k],
+                                           phi[eN_k],
+                                           x,
+                                           y,
+                                           z,
+                                           p,
+                                           u,
+                                           v,
+                                           w,
+                                           q_velocity_sge[eN_k_nSpace+0],
+                                           q_velocity_sge[eN_k_nSpace+1],
+                                           q_velocity_sge[eN_k_nSpace+1],
+                                           particle_eps,
+                                           grad_u,
+                                           grad_v,
+                                           grad_w,
+                                           mom_u_source,
+                                           mom_v_source,
+                                           mom_w_source,
+                                           dmom_u_source,
+                                           dmom_v_source,
+                                           dmom_w_source,
+                                           mom_u_adv,
+                                           mom_v_adv,
+                                           mom_w_adv,
+                                           dmom_u_adv_u,
+                                           dmom_v_adv_v,
+                                           dmom_w_adv_w,
+                                           mom_u_ham,
+                                           dmom_u_ham_grad_u,
+                                           mom_v_ham,
+                                           dmom_v_ham_grad_v,
+                                           mom_w_ham,
+                                           dmom_w_ham_grad_w,
+                                           particle_netForces,
+                                           particle_netMoments,
+                                           particle_surfaceArea);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -3028,7 +3032,7 @@ namespace proteus
                       /* ck.Diffusion_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
                       ck.Reaction_weak(mom_u_source,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) +
-                      ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
+                      //ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
                       ck.SubgridError(subgridError_u,Lstar_u_u[i]) +
                       ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]);
 
@@ -3040,7 +3044,7 @@ namespace proteus
                       /* ck.Diffusion_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
                       ck.Reaction_weak(mom_v_source,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) +
-                      ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
+                      //ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
                       ck.SubgridError(subgridError_v,Lstar_v_v[i]) +
                       ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]);
 
@@ -4522,63 +4526,63 @@ namespace proteus
                                                   dmom_w_source);
                 double C_particles=0.0;
                 if(nParticles > 0)
-		  updateSolidParticleTerms(eN < nElements_owned,
-					   particle_nitsche,
-					   dV,
-					   nParticles,
-					   nQuadraturePoints_global,
-					   &particle_signed_distances[eN_k],
-					   &particle_signed_distance_normals[eN_k_nSpace],
-					   &particle_velocities[eN_k_nSpace],
-					   particle_centroids,
-					   porosity,
-					   particle_penalty_constant/h_phi,//penalty,
-					   particle_alpha,
-					   particle_beta,
-					   eps_rho,
-					   eps_mu,
-					   rho_0,
-					   nu_0,
-					   rho_1,
-					   nu_1,
-					   useVF,
-					   vf[eN_k],
-					   phi[eN_k],
-					   x,
-					   y,
-					   z,
-					   p,
-					   u,
-					   v,
-					   w,
-					   q_velocity_sge[eN_k_nSpace+0],
-					   q_velocity_sge[eN_k_nSpace+1],
-					   q_velocity_sge[eN_k_nSpace+1],
-					   particle_eps,
-					   grad_u,
-					   grad_v,
-					   grad_w,
-					   mom_u_source,
-					   mom_v_source,
-					   mom_w_source,
-					   dmom_u_source,
-					   dmom_v_source,
-					   dmom_w_source,
-					   mom_u_adv,
-					   mom_v_adv,
-					   mom_w_adv,
-					   dmom_u_adv_u,
-					   dmom_v_adv_v,
-					   dmom_w_adv_w,
-					   mom_u_ham,
-					   dmom_u_ham_grad_u,
-					   mom_v_ham,
-					   dmom_v_ham_grad_v,
-					   mom_w_ham,
-					   dmom_w_ham_grad_w,
-					   &particle_netForces[0],
-					   &particle_netMoments[0],
-					   &particle_surfaceArea[0]);
+                  updateSolidParticleTerms(eN < nElements_owned,
+                                           particle_nitsche,
+                                           dV,
+                                           nParticles,
+                                           nQuadraturePoints_global,
+                                           &particle_signed_distances[eN_k],
+                                           &particle_signed_distance_normals[eN_k_nSpace],
+                                           particle_velocities,
+                                           particle_centroids,
+                                           porosity,
+                                           particle_penalty_constant/h_phi,//penalty,
+                                           particle_alpha,
+                                           particle_beta,
+                                           eps_rho,
+                                           eps_mu,
+                                           rho_0,
+                                           nu_0,
+                                           rho_1,
+                                           nu_1,
+                                           useVF,
+                                           vf[eN_k],
+                                           phi[eN_k],
+                                           x,
+                                           y,
+                                           z,
+                                           p,
+                                           u,
+                                           v,
+                                           w,
+                                           q_velocity_sge[eN_k_nSpace+0],
+                                           q_velocity_sge[eN_k_nSpace+1],
+                                           q_velocity_sge[eN_k_nSpace+1],
+                                           particle_eps,
+                                           grad_u,
+                                           grad_v,
+                                           grad_w,
+                                           mom_u_source,
+                                           mom_v_source,
+                                           mom_w_source,
+                                           dmom_u_source,
+                                           dmom_v_source,
+                                           dmom_w_source,
+                                           mom_u_adv,
+                                           mom_v_adv,
+                                           mom_w_adv,
+                                           dmom_u_adv_u,
+                                           dmom_v_adv_v,
+                                           dmom_w_adv_w,
+                                           mom_u_ham,
+                                           dmom_u_ham_grad_u,
+                                           mom_v_ham,
+                                           dmom_v_ham_grad_v,
+                                           mom_w_ham,
+                                           dmom_w_ham_grad_w,
+                                           &particle_netForces[0],
+                                           &particle_netMoments[0],
+                                           &particle_surfaceArea[0]);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -4855,16 +4859,16 @@ namespace proteus
                           //VRANS
                           ck.ReactionJacobian_weak(dmom_u_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           //
-                          ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
+                          //ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
                           ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) +
                           ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]);
                         elementJacobian_u_v[i][j] +=
                           ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
                           ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
                           //VRANS
-                          ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
-                          //
-                          ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]);
+                          ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i])
+                          //+ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i])
+                          ;
                         /* elementJacobian_u_w[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +  */
                         /*      ck.SimpleDiffusionJacobian_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +  */
                         /*      //VRANS */
@@ -4878,9 +4882,9 @@ namespace proteus
                           ck.AdvectionJacobian_weak(dmom_v_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
                           ck.SimpleDiffusionJacobian_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
                           //VRANS
-                          ck.ReactionJacobian_weak(dmom_v_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
-                          //
-                          ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
+                          ck.ReactionJacobian_weak(dmom_v_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i])
+                          //+ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i])
+                          ;
                         elementJacobian_v_v[i][j] +=
                           ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           ck.HamiltonianJacobian_weak(dmom_v_ham_grad_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]) +
@@ -4889,7 +4893,7 @@ namespace proteus
                           //VRANS
                           ck.ReactionJacobian_weak(dmom_v_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           //
-                          ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
+                          //ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
                           ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) +
                           ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]);
                         /* elementJacobian_v_w[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +   */
