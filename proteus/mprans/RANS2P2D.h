@@ -4885,7 +4885,6 @@ namespace proteus
                                         int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
                                         int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
                                         double* advection_matrix)
-
       {
         for (int eN=0 ; eN < nElements_global ; ++eN)
           {
