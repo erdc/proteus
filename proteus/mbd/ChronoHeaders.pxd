@@ -37,6 +37,7 @@ cdef extern from "ChMoorings.h":
 
     cdef cppclass ChMatrixDynamic[double](ChMatrix):
         ChMatrixDynamic()
+        ChMatrixDynamic(const int row, const int col)
         ChMatrixDynamic operator=(const ChMatrix& matbis)
         ChMatrixDynamic operator+(const ChMatrix& matbis)
         ChVector Get_A_Xaxis()
