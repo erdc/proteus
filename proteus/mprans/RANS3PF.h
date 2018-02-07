@@ -254,6 +254,8 @@ namespace proteus
                                    double* particle_netMoments,
                                    double* particle_surfaceArea,
                                    double particle_nitsche,
+                                   double* phisError,
+                                   double* phisErrorNodal,
                                    int STABILIZATION_TYPE,
                                    double areaRefElement,
                                    double cMax,
@@ -1052,7 +1054,7 @@ namespace proteus
                                   const double n[nSpace],
                                   const int nParticles,
                                   const int sd_offset,
-                                  const double *particle_signed_distances,
+                                  const double* particle_signed_distances,
                                   const double& kappa,
                                   const double porosity,//VRANS specific
                                   const double& p,
@@ -1684,7 +1686,10 @@ namespace proteus
         for(int I=0;I<nSpace;I++)
           nrm_df+=df[I]*df[I];
         nrm_df = sqrt(nrm_df);
-        cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
+        if (density > 1.0e-8)//cek hack
+          cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
+        else//catch case where we've turned off everything but the solid velocity penalty
+          cfl = nrm_df/(h);//this is really cfl/dt, but that's what we want to know, the step controller expect this
         oneByAbsdt =  fabs(dmt);
         tau_v = 1.0/(4.0*viscosity/(h*h) + 2.0*nrm_df/h + oneByAbsdt);
         tau_p = (4.0*viscosity + 2.0*nrm_df*h + oneByAbsdt*h*h)/pfac;
@@ -2325,6 +2330,8 @@ namespace proteus
                              double* particle_netMoments,
                              double* particle_surfaceArea,
                              double particle_nitsche,
+                             double* phisError,
+                             double* phisErrorNodal,
                              // PARAMETERS FOR ENTROPY VISCOSITY
                              int STABILIZATION_TYPE,
                              double areaRefElement,
@@ -3263,7 +3270,7 @@ namespace proteus
 
                 eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-                double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 //compute shape and solution information
                 //shape
                 /* ck.gradTrialFromRef(&p_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,p_grad_trial_trace); */
@@ -4502,63 +4509,63 @@ namespace proteus
                                                   dmom_w_source);
                 double C_particles=0.0;
                 if (nParticles > 0)
-                  updateSolidParticleTerms(eN < nElements_owned,
-                                           particle_nitsche,
-                                           dV,
-                                           nParticles,
-                                           nQuadraturePoints_global,
-                                           &particle_signed_distances[eN_k],
-                                           &particle_signed_distance_normals[eN_k_nSpace],
-                                           particle_velocities,
-                                           particle_centroids,
-                                           porosity,
-                                           particle_penalty_constant/h_phi,//penalty,
-                                           particle_alpha,
-                                           particle_beta,
-                                           eps_rho,
-                                           eps_mu,
-                                           rho_0,
-                                           nu_0,
-                                           rho_1,
-                                           nu_1,
-                                           useVF,
-                                           vf[eN_k],
-                                           phi[eN_k],
-                                           x,
-                                           y,
-                                           z,
-                                           p,
-                                           u,
-                                           v,
-                                           w,
-                                           q_velocity_sge[eN_k_nSpace+0],
-                                           q_velocity_sge[eN_k_nSpace+1],
-                                           q_velocity_sge[eN_k_nSpace+1],
-                                           particle_eps,
-                                           grad_u,
-                                           grad_v,
-                                           grad_w,
-                                           mom_u_source,
-                                           mom_v_source,
-                                           mom_w_source,
-                                           dmom_u_source,
-                                           dmom_v_source,
-                                           dmom_w_source,
-                                           mom_u_adv,
-                                           mom_v_adv,
-                                           mom_w_adv,
-                                           dmom_u_adv_u,
-                                           dmom_v_adv_v,
-                                           dmom_w_adv_w,
-                                           mom_u_ham,
-                                           dmom_u_ham_grad_u,
-                                           mom_v_ham,
-                                           dmom_v_ham_grad_v,
-                                           mom_w_ham,
-                                           dmom_w_ham_grad_w,
-                                           &particle_netForces[0],
-                                           &particle_netMoments[0],
-                                           &particle_surfaceArea[0]);
+		  updateSolidParticleTerms(eN < nElements_owned,
+					   particle_nitsche,
+					   dV,
+					   nParticles,
+					   nQuadraturePoints_global,
+					   &particle_signed_distances[eN_k],
+					   &particle_signed_distance_normals[eN_k_nSpace],
+					   &particle_velocities[eN_k_nSpace],
+					   particle_centroids,
+					   porosity,
+					   particle_penalty_constant/h_phi,//penalty,
+					   particle_alpha,
+					   particle_beta,
+					   eps_rho,
+					   eps_mu,
+					   rho_0,
+					   nu_0,
+					   rho_1,
+					   nu_1,
+					   useVF,
+					   vf[eN_k],
+					   phi[eN_k],
+					   x,
+					   y,
+					   z,
+					   p,
+					   u,
+					   v,
+					   w,
+					   q_velocity_sge[eN_k_nSpace+0],
+					   q_velocity_sge[eN_k_nSpace+1],
+					   q_velocity_sge[eN_k_nSpace+1],
+					   particle_eps,
+					   grad_u,
+					   grad_v,
+					   grad_w,
+					   mom_u_source,
+					   mom_v_source,
+					   mom_w_source,
+					   dmom_u_source,
+					   dmom_v_source,
+					   dmom_w_source,
+					   mom_u_adv,
+					   mom_v_adv,
+					   mom_w_adv,
+					   dmom_u_adv_u,
+					   dmom_v_adv_v,
+					   dmom_w_adv_w,
+					   mom_u_ham,
+					   dmom_u_ham_grad_u,
+					   mom_v_ham,
+					   dmom_v_ham_grad_v,
+					   mom_w_ham,
+					   dmom_w_ham_grad_w,
+					   &particle_netForces[0],
+					   &particle_netMoments[0],
+					   &particle_surfaceArea[0]);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
