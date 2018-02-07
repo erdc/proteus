@@ -13,7 +13,7 @@ from proteus import LinearSolvers as LS
 import os
 import sys
 import inspect
-import petsc4py
+import petsc4py as p4pyPETSc
 import numpy as np
 import pytest
 import pickle
@@ -22,6 +22,137 @@ from petsc4py import PETSc as p4pyPETSc
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 
+def create_petsc_vecs(matrix_A):
+    """
+    Creates a right-hand-side and solution PETSc4Py vector for
+    testing ksp solves.
+
+    Parameters
+    ----------
+    matrix_A: :class:`p4pyPETSc.Mat`
+        Global matrix object
+
+    Returns
+    -------
+    vec_lst: tuple
+        This is a list of :class:`pypyPETSc.Vec` where the first is
+        a vector of ones (usually to act as a RHS-vector) while the
+        second vector is a vector of zeros (usually to act as a
+        storage vector for the solution).
+    """
+    b = p4pyPETSc.Vec().create()
+    x = p4pyPETSc.Vec().create()
+    b.createWithArray(np.ones(matrix_A.getSizes()[0][0]))
+    x.createWithArray(np.zeros(matrix_A.getSizes()[0][0]))
+    return (b, x)
+
+def initialize_schur_ksp_obj(matrix_A, schur_approx):
+    """
+    Creates a right-hand-side and solution PETSc4Py vector for
+    testing ksp solves.
+
+    Parameters
+    ----------
+    matrix_A: :class:`p4pyPETSc.Mat`
+        Global matrix object.
+    schur_approx: :class:`LS.SchurPrecon`
+
+    Returns
+    -------
+    ksp_obj: :class:`p4pyPETSc.KSP`
+    """
+    ksp_obj = p4pyPETSc.KSP().create()
+    ksp_obj.setOperators(matrix_A,matrix_A)
+    pc = schur_approx.pc
+    ksp_obj.setPC(pc)
+    ksp_obj.setFromOptions()
+    pc.setFromOptions()
+    pc.setOperators(matrix_A,matrix_A)
+    pc.setUp()
+    schur_approx.setUp(ksp_obj)
+    ksp_obj.setUp()
+    ksp_obj.pc.setUp()
+    return ksp_obj
+
+@pytest.fixture()
+def initialize_petsc_options(request):
+    """Initializes schur complement petsc options. """
+    petsc_options = p4pyPETSc.Options()
+    petsc_options.setValue('ksp_type','gmres')
+    petsc_options.setValue('ksp_gmres_restart',500)
+    petsc_options.setValue('ksp_atol',1e-20)
+    petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
+    petsc_options.setValue('pc_fieldsplit_type','schur')
+    petsc_options.setValue('pc_fieldsplit_schur_fact_type','upper')
+    petsc_options.setValue('pc_fieldsplit_schur_precondition','user')
+    petsc_options.setValue('fieldsplit_velocity_ksp_type','preonly')
+    petsc_options.setValue('fieldsplit_velocity_pc_type', 'lu')
+    petsc_options.setValue('fieldsplit_pressure_ksp_type','preonly')
+
+@pytest.fixture()
+def load_nse_cavity_matrix(request):
+    """Loads a Navier-Stokes matrix drawn from the MPRANS module. """
+    A = LAT.petsc_load_matrix(os.path.join
+                              (os.path.dirname(__file__),
+                               'import_modules/NSE_cavity_matrix'))
+    yield A
+
+@pytest.fixture()
+def load_nse_step_matrix(request):
+    """
+    Loads a Navier-Stokes matrix for the backwards step problem from
+    the MPRANS module.  This matrix is constructed using no-slip
+    boundary conditions, and weakly enforced Dirichlet conditions.
+    """
+    A = LAT.petsc_load_matrix(os.path.join
+                              (os.path.dirname(__file__),
+                               'import_modules/NSE_step_no_slip'))
+    yield A
+
+@pytest.mark.LinearSolvers
+@pytest.mark.skip(reason='this test is completed in a different PR')
+def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
+                                          initialize_petsc_options):
+    """Tests a KSP solve using the Sp Schur complement approximation.
+    For this test, the global matrix has a null space because the
+    boundary conditions are pure Dirichlet. """
+    mat_A = load_nse_cavity_matrix
+    b, x = create_petsc_vecs(mat_A)
+    petsc_options = initialize_petsc_options
+
+    solver_info = LS.ModelInfo(3,'interlaced')
+    schur_approx = LS.Schur_Sp(mat_A,
+                               '',
+                               True,
+                               solver_info=solver_info)
+    ksp_obj = initialize_schur_ksp_obj(mat_A,schur_approx)
+    ksp_obj.solve(b,x)
+
+    assert ksp_obj.converged == True
+    assert ksp_obj.its == 35
+    assert np.allclose(ksp_obj.norm, 0.0007464632)
+    assert ksp_obj.reason == 2
+
+@pytest.mark.LinearSolvers
+@pytest.mark.skip(reason='this test is completed in a different PR')
+def test_Schur_Sp_solve(load_nse_step_matrix,
+                        initialize_petsc_options):
+    """Tests a KSP solve using the Sp Schur complement approximation.
+       For this test, the global matrix does not have a null space."""
+    mat_A = load_nse_step_matrix
+    b, x = create_petsc_vecs(mat_A)
+
+    solver_info = LS.ModelInfo(3, 'interlaced')
+    schur_approx = LS.Schur_Sp(mat_A,
+                               '',
+                               solver_info=solver_info)
+    ksp_obj = initialize_schur_ksp_obj(mat_A, schur_approx)
+    ksp_obj.solve(b,x)
+
+    assert ksp_obj.converged == True
+    assert ksp_obj.its == 45
+    assert np.allclose(ksp_obj.norm, 394.7036050627)
+    assert ksp_obj.reason == 2
 
 class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
 
@@ -85,6 +216,6 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
         expected = np.load(os.path.join(self._scriptdir,'import_modules/sol_20_lst.npy'))
         for i,item in enumerate(expected):
             assert np.allclose(item,solver.iteration_results[i],1e-12)
-        
+
 if __name__ == '__main__':
     pass
