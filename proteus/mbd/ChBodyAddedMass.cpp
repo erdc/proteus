@@ -54,20 +54,24 @@ namespace chrono {
     }
 
     void ChBodyAddedMass::SetMfullmass(ChMatrixDynamic<> Mfullmass_in) {
+        assert(Mfullmass_in.GetRows() == variables.Get_ndof());
+        assert(Mfullmass_in.GetColums() == variables.Get_ndof());
         ChMatrix<>& Mm = variables.GetMfullmass();
         for (int i = 0; i < 6; i++) {
-        for (int j = 0; j < 6; j++) {
-            Mm.SetElement(i, j, Mfullmass_in(i, j));
-        }
+            for (int j = 0; j < 6; j++) {
+                Mm.SetElement(i, j, Mfullmass_in.GetElement(i, j));
+            }
         }
     }
 
     void ChBodyAddedMass::SetInvMfullmass(ChMatrixDynamic<> inv_Mfullmass_in) {
+        assert(Mfullmass_in.GetRows() == variables.Get_ndof());
+        assert(Mfullmass_in.GetColums() == variables.Get_ndof());
         ChMatrix<>& Mm = variables.GetInvMfullmass();
         for (int i = 0; i < 6; i++) {
-        for (int j = 0; j < 6; j++) {
-            Mm(i, j) = inv_Mfullmass_in(i, j);
-        }
+            for (int j = 0; j < 6; j++) {
+                Mm(i, j) = inv_Mfullmass_in.GetElement(i, j);
+            }
         }
     }
 //// STATE BOOKKEEPING FUNCTIONS

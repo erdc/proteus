@@ -608,19 +608,15 @@ cdef class ProtChBody:
         FM += MM
         # inverse of full mass matrix
         inv_FM = np.linalg.inv(FM)
-        print("FM", FM)
-        print("inv_FM", inv_FM)
         #set it to chrono variable
-        cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic()
-        cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic()
+        cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic[double](6, 6)
+        cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic[double](6, 6)
         for i in range(6):
             for j in range(6):
                 chFM.SetElement(i, j, FM[i, j])
                 inv_chFM.SetElement(i, j, inv_FM[i, j])
         self.ChBody.SetMfullmass(chFM)
-        self.ChBody.SetInvMfullmass(chFM)
-
-                
+        self.ChBody.SetInvMfullmass(inv_chFM)
                 
 
     def getPressureForces(self):
@@ -1197,7 +1193,6 @@ cdef class ProtChBody:
             self.record_file = os.path.join(Profiling.logDir, 'record_' + 'body' + '.csv')
         t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
         if self.ProtChSystem.model is not None:
-            print("HAS MODEL")
             t_last = self.ProtChSystem.model.stepController.t_model_last
             try:
                 dt_last = self.ProtChSystem.model.levelModelList[-1].dt_last
@@ -1206,7 +1201,6 @@ cdef class ProtChBody:
             t = t_last
         else:
             t = t_chrono
-        print("ttt = ", t)
         t_sim = Profiling.time()-Profiling.startTime
         values_towrite = [t, t_chrono, t_sim]
         if t == 0:
