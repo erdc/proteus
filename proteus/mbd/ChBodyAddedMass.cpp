@@ -1,4 +1,3 @@
-
 #include "ChBodyAddedMass.h"
 #include "ChVariablesBodyAddedMass.h"
 
@@ -84,7 +83,6 @@ void ChBodyAddedMass::IntToDescriptor(const unsigned int off_v,  // offset in v,
                              const unsigned int off_L,  // offset in L, Qc
                              const ChVectorDynamic<>& L,
                              const ChVectorDynamic<>& Qc) {
-    GetLog() << "FUN1\n";
     this->variables.Get_qb().PasteClippedMatrix(v, off_v, 0, 6, 1, 0, 0);  // for solver warm starting only
     this->variables.Get_fb().PasteClippedMatrix(R, off_v, 0, 6, 1, 0, 0);  // solver known term
 }
@@ -93,26 +91,22 @@ void ChBodyAddedMass::IntFromDescriptor(const unsigned int off_v,  // offset in 
                                ChStateDelta& v,
                                const unsigned int off_L,  // offset in L
                                ChVectorDynamic<>& L) {
-    GetLog() << "FUN2\n";
     v.PasteMatrix(this->variables.Get_qb(), off_v, 0);
 }
 
 ////
 
 void ChBodyAddedMass::InjectVariables(ChSystemDescriptor& mdescriptor) {
-    GetLog() << "FUN3\n";
     this->variables.SetDisabled(!this->IsActive());
 
     mdescriptor.InsertVariables(&this->variables);
 }
 
 void ChBodyAddedMass::VariablesFbReset() {
-    GetLog() << "FUN4\n";
     this->variables.Get_fb().FillElem(0.0);
 }
 
 void ChBodyAddedMass::VariablesFbLoadForces(double factor) {
-    GetLog() << "FUN5\n";
     // add applied forces to 'fb' vector
     this->variables.Get_fb().PasteSumVector(Xforce * factor, 0, 0);
 
@@ -124,19 +118,16 @@ void ChBodyAddedMass::VariablesFbLoadForces(double factor) {
 }
 
 void ChBodyAddedMass::VariablesFbIncrementMq() {
-    GetLog() << "FUN6\n";
     this->variables.Compute_inc_Mb_v(this->variables.Get_fb(), this->variables.Get_qb());
 }
 
 void ChBodyAddedMass::VariablesQbLoadSpeed() {
-    GetLog() << "FUN7\n";
     // set current speed in 'qb', it can be used by the solver when working in incremental mode
     this->variables.Get_qb().PasteVector(GetCoord_dt().pos, 0, 0);
     this->variables.Get_qb().PasteVector(GetWvel_loc(), 3, 0);
 }
 
 void ChBodyAddedMass::VariablesQbSetSpeed(double step) {
-    GetLog() << "FUN8\n";
     ChCoordsys<> old_coord_dt = this->GetCoord_dt();
 
     // from 'qb' vector, sets body speed, and updates auxiliary data
@@ -157,7 +148,6 @@ void ChBodyAddedMass::VariablesQbSetSpeed(double step) {
 }
 
 void ChBodyAddedMass::VariablesQbIncrementPosition(double dt_step) {
-    GetLog() << "FUN9\n";
     if (!this->IsActive())
         return;
 

@@ -9,7 +9,7 @@
 // http://projectchrono.org/license-chrono.txt.
 //
 // =============================================================================
-// Authors: Alessandro Tasora, Radu Serban
+// Authors: Tristan de Lataillade
 // =============================================================================
 
 #ifndef CHVARIABLESBODYADDEDMASS_H
@@ -22,9 +22,8 @@ namespace chrono {
 	/// Specialized class for representing a 6-DOF item for a
 	/// system, that is a 3D rigid body, with mass matrix and
 	/// associate variables (a 6 element vector, ex.speed)
-	/// Differently from the 'naive' implementation ChVariablesGeneric,
-	/// here a full 6x6 mass matrix is not built, since only the 3x3
-	/// inertia matrix and the mass value are enough.
+    /// A full 6x6 matrix is used for the mass matrix, but forces
+    /// still computed using the "mass" variable of ChVariablesBodyOwnMass
 
 	class ChApi ChVariablesBodyAddedMass : public ChVariablesBodyOwnMass {
 

@@ -240,7 +240,7 @@ cdef class ProtChBody:
         self.thisptr = newRigidBody(system.thisptr)
         self.ChBody = pych.ChBodyAddedMass()
         self.thisptr.body = self.ChBody.sharedptr_chbody  # give pointer to cpp class
-        self.ProtChSystem.thisptr.system.AddBody(self.thisptr.body)
+        self.ProtChSystem.thisptr.system.AddBody(self.ChBody.sharedptr_chbody)
         self.Shape = None
         self.setRotation(np.array([1.,0.,0.,0.]))  # initialise rotation (nan otherwise)
         self.attachShape(shape)  # attach shape (if any)
@@ -589,6 +589,16 @@ cdef class ProtChBody:
         deref(self.thisptr.body).SetMass(mass)
 
     def setAddedMass(self, double[:,:] added_mass):
+        """
+        Sets the added mass matrix of the body
+
+        Parameters
+        ----------
+        added_mass: array_like
+            Added mass matrix (must be 6x6 array!)
+        """
+        assert added_mass.shape[0] == 6, 'Added mass matrix must be 6x6 (np)'
+        assert added_mass.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
         # added mass matrix
         cdef np.ndarray AM = np.zeros((6,6))
         AM += added_mass
@@ -617,7 +627,6 @@ cdef class ProtChBody:
                 inv_chFM.SetElement(i, j, inv_FM[i, j])
         self.ChBody.SetMfullmass(chFM)
         self.ChBody.SetInvMfullmass(inv_chFM)
-                
 
     def getPressureForces(self):
         """Gives pressure forces from fluid (Proteus) acting on body.
