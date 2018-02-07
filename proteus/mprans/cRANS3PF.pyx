@@ -2753,7 +2753,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * dynamic_viscosity_as_function,
                                double * ebqe_density_as_function,
                                double * ebqe_dynamic_viscosity_as_function,
-                               double order_polynomial)
+                               double order_polynomial,
+                               double* phisError,
+                               double* phisErrorNodal)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -3632,7 +3634,9 @@ cdef class RANS3PF2D:
                           numpy.ndarray dynamic_viscosity_as_function,
                           numpy.ndarray ebqe_density_as_function,
                           numpy.ndarray ebqe_dynamic_viscosity_as_function,
-                          double order_polynomial):
+                          double order_polynomial,
+                          numpy.ndarray phisError,
+                          numpy.ndarray phisErrorNodal):
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                         < double * > mesh_grad_trial_ref.data,
                                         < double * > mesh_dof.data,
@@ -3843,7 +3847,9 @@ cdef class RANS3PF2D:
                                         < double * > dynamic_viscosity_as_function.data,
                                         < double * > ebqe_density_as_function.data,
                                         < double * > ebqe_dynamic_viscosity_as_function.data,
-                                        order_polynomial)
+                                        order_polynomial,
+                                        < double * > phisError.data,
+                                        < double * > phisErrorNodal.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
