@@ -28,6 +28,7 @@ from proteus.mbd cimport pyChronoCore as pych
 from proteus.mprans import BodyDynamics as bd
 
 
+
 cdef extern from "ChRigidBody.h":
     cdef cppclass cppMesh:
         shared_ptr[ch.ChMesh] mesh
@@ -188,7 +189,7 @@ cdef class ProtChBody:
       double width_2D
       object record_dict
       object prescribed_motion_function
-      pych.ChBody ChBody
+      pych.ChBodyAddedMass ChBody
       np.ndarray position
       np.ndarray position_last
       np.ndarray F
@@ -237,7 +238,7 @@ cdef class ProtChBody:
                   nd=None, sampleRate=0):
         self.ProtChSystem = system
         self.thisptr = newRigidBody(system.thisptr)
-        self.ChBody = pych.ChBody()
+        self.ChBody = pych.ChBodyAddedMass()
         self.thisptr.body = self.ChBody.sharedptr_chbody  # give pointer to cpp class
         self.ProtChSystem.thisptr.system.AddBody(self.thisptr.body)
         self.Shape = None
@@ -586,6 +587,41 @@ cdef class ProtChBody:
             mass of the body
         """
         deref(self.thisptr.body).SetMass(mass)
+
+    def setAddedMass(self, double[:,:] added_mass):
+        # added mass matrix
+        cdef np.ndarray AM = np.zeros((6,6))
+        AM += added_mass
+        # mass matrix
+        cdef double mass = self.ChBody.GetMass()
+        cdef np.ndarray iner = self.ChBody.GetInertia()
+        cdef np.ndarray MM = np.zeros((6,6))
+        MM[0,0] = mass
+        MM[1,1] = mass
+        MM[2,2] = mass
+        for i in range(3):
+            for j in range(3):
+                MM[i+3, j+3] = iner[i, j]
+        # full mass
+        cdef np.ndarray FM = np.zeros((6,6))
+        FM += AM
+        FM += MM
+        # inverse of full mass matrix
+        inv_FM = np.linalg.inv(FM)
+        print("FM", FM)
+        print("inv_FM", inv_FM)
+        #set it to chrono variable
+        cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic()
+        cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic()
+        for i in range(6):
+            for j in range(6):
+                chFM.SetElement(i, j, FM[i, j])
+                inv_chFM.SetElement(i, j, inv_FM[i, j])
+        self.ChBody.SetMfullmass(chFM)
+        self.ChBody.SetInvMfullmass(chFM)
+
+                
+                
 
     def getPressureForces(self):
         """Gives pressure forces from fluid (Proteus) acting on body.
@@ -1161,6 +1197,7 @@ cdef class ProtChBody:
             self.record_file = os.path.join(Profiling.logDir, 'record_' + 'body' + '.csv')
         t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
         if self.ProtChSystem.model is not None:
+            print("HAS MODEL")
             t_last = self.ProtChSystem.model.stepController.t_model_last
             try:
                 dt_last = self.ProtChSystem.model.levelModelList[-1].dt_last
@@ -1169,6 +1206,7 @@ cdef class ProtChBody:
             t = t_last
         else:
             t = t_chrono
+        print("ttt = ", t)
         t_sim = Profiling.time()-Profiling.startTime
         values_towrite = [t, t_chrono, t_sim]
         if t == 0:
