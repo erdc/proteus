@@ -1971,7 +1971,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q['velocityError'][:] = self.q[('velocity', 0)]
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
         self.q['velocityError'] -= self.q[('velocity', 0)]
-
     def updateAfterMeshMotion(self):
         pass
 
