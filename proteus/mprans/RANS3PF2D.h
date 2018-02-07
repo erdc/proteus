@@ -282,9 +282,7 @@ namespace proteus
                                    double* dynamic_viscosity_as_function,
                                    double* ebqe_density_as_function,
                                    double* ebqe_dynamic_viscosity_as_function,
-                                   double order_polynomial,
-                                   double* phisError,
-                                   double* phisErrorNodal
+                                   double order_polynomial
                                    )=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
