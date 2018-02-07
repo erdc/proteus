@@ -280,7 +280,9 @@ namespace proteus
                                    double* dynamic_viscosity_as_function,
                                    double* ebqe_density_as_function,
                                    double* ebqe_dynamic_viscosity_as_function,
-                                   double order_polynomial
+                                   double order_polynomial,
+                                   double* phisError,
+                                   double* phisErrorNodal
                                    )=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
@@ -2366,7 +2368,9 @@ namespace proteus
                              double* dynamic_viscosity_as_function,
                              double* ebqe_density_as_function,
                              double* ebqe_dynamic_viscosity_as_function,
-                             double order_polynomial)
+                             double order_polynomial,
+                             double* phisError,
+                             double* phisErrorNodal)
       {
         //
         //loop over elements to compute volume integrals and load them into element and global residual
@@ -2384,6 +2388,7 @@ namespace proteus
               elementResidual_u[nDOF_test_element],
               elementResidual_v[nDOF_test_element],
               //elementResidual_w[nDOF_test_element],
+              phisErrorElement[nDOF_test_element],
               eps_rho,eps_mu;
             const double* elementResidual_w(NULL);
             double mesh_volume_conservation_element=0.0,
@@ -2397,6 +2402,7 @@ namespace proteus
                 elementResidual_u[i]=0.0;
                 elementResidual_v[i]=0.0;
                 /* elementResidual_w[i]=0.0; */
+                phisErrorElement[i]=0.0;
               }//i
             //
             //loop over quadrature points and compute integrands
@@ -2992,6 +2998,7 @@ namespace proteus
                 for(int i=0;i<nDOF_test_element;i++)
                   {
                     register int i_nSpace=i*nSpace;
+                    phisErrorElement[i]+=std::abs(phisError[eN_k_nSpace+0])*p_test_dV[i];
                     /* std::cout<<"elemRes_mesh "<<mesh_vel[0]<<'\t'<<mesh_vel[2]<<'\t'<<p_test_dV[i]<<'\t'<<(q_dV_last[eN_k]/dV)<<'\t'<<dV<<std::endl; */
                     /* elementResidual_mesh[i] += ck.Reaction_weak(1.0,p_test_dV[i]) - */
                     /*   ck.Reaction_weak(1.0,p_test_dV[i]*q_dV_last[eN_k]/dV) - */
@@ -3052,6 +3059,7 @@ namespace proteus
             for(int i=0;i<nDOF_test_element;i++)
               {
                 register int eN_i=eN*nDOF_test_element+i;
+                phisErrorNodal[vel_l2g[eN_i]]+= phisErrorElement[i];
 
                 /* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
                 /* mesh_volume_conservation_element_weak += elementResidual_mesh[i]; */
