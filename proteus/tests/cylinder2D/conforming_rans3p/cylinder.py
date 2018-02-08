@@ -16,7 +16,7 @@ movingDomain = False
 useOldPETSc = False
 useSuperlu = True#False
 timeDiscretization = 'vbdf'#vbdf'#'vbdf'  # 'vbdf', 'be', 'flcbdf'
-spaceOrder = 2
+spaceOrder = 1
 pspaceOrder = 1
 useHex = False
 useRBLES = 0.0
@@ -104,7 +104,7 @@ domain = symmetric2D(box=(2.2,0.41),
                      C = (0.2,0.2),
                      DX = DX,
                      refinement_length=0.5,
-                     DX_coarse = DX*4.0)
+                     DX_coarse = DX)
 domain.boundaryFlags['top']=domain.boundaryFlags['back']
 domain.boundaryFlags['bottom']=domain.boundaryFlags['front']
 #print domain.boundaryFlags
