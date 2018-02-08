@@ -106,19 +106,13 @@ namespace proteus
     }
 
     inline
-      void exteriorNumericalDiffusiveFlux(const int flag,
-					  const double n[nSpace],
+      void exteriorNumericalDiffusiveFlux(const double n[nSpace],
 					  const double a[nSpace],
 					  double& flux)
     {
-      if(flag == 9)
-	{
-	  flux=0.0;
-	  for (int I=0;I<nSpace;I++)
-	    flux -= a[I]*n[I];
-	}
-      else
-	flux=0.0;
+      flux=0.0;
+      for (int I=0;I<nSpace;I++)
+	flux -= a[I]*n[I];
     }
 
     inline void calculateElementResidual(//element
@@ -438,44 +432,47 @@ namespace proteus
               ry = y_ext-barycenters[3*eBMT+1];
               rz = z_ext-barycenters[3*eBMT+2];
               double added_mass_a[3] = {0.0, 0.0, 0.0};
-              switch (added_mass_i)
-                {
-                case 0:
-                  added_mass_a[0] = 1.0;
-                  break;
-                case 1:
-                  added_mass_a[1] = 1.0;
-                  break;
-                case 2:
-                  added_mass_a[2] = 1.0;
-                  break;
-                  // from here down we really need to pass in center of gravity and form unit angular accelerations about axes and convert to bdry acceleration
-                case 3:
-                  added_mass_a[1] += rz;
-                  added_mass_a[2] += -ry;
-                  break;
-                case 4:
-                  added_mass_a[0] += -rz;
-                  added_mass_a[2] += rx;
-                  break;
-                case 5:
-                  added_mass_a[0] += ry;
-                  added_mass_a[1] += -rx;
-                  break;
-                default:
-                  assert(0);
-                }
+	      if (eBMT > 0)
+		{
+		  switch (added_mass_i)
+		    {
+		    case 0:
+		      added_mass_a[0] = 1.0;
+		      break;
+		    case 1:
+		      added_mass_a[1] = 1.0;
+		      break;
+		    case 2:
+		      added_mass_a[2] = 1.0;
+		      break;
+		    case 3:
+		      added_mass_a[1] += rz;
+		      added_mass_a[2] += -ry;
+		      break;
+		    case 4:
+		      added_mass_a[0] += -rz;
+		      added_mass_a[2] += rx;
+		      break;
+		    case 5:
+		      added_mass_a[0] += ry;
+		      added_mass_a[1] += -rx;
+		      break;
+		    default:
+		      assert(0);
+		    }
+		}
               // normalise unit accelerations (necessary for angular ones)
-              double added_mass_a_tot = sqrt(added_mass_a[0]*added_mass_a[0]+
-                                             added_mass_a[1]*added_mass_a[1]+
-                                             added_mass_a[2]*added_mass_a[2]);
-              added_mass_a[0] = added_mass_a[0]/added_mass_a_tot;
-              added_mass_a[1] = added_mass_a[1]/added_mass_a_tot;
-              added_mass_a[2] = added_mass_a[2]/added_mass_a_tot;
-               
-		  
-              exteriorNumericalDiffusiveFlux(elementBoundaryMaterialTypesArray[ebN],
-                                             normal,
+	      //I think we want the angular acceleration to be 1
+	      //but the flux uses whatever the linear acceleration works
+	      //out to be, so I'm commenting this out for now
+              /* double added_mass_a_tot = sqrt(added_mass_a[0]*added_mass_a[0]+ */
+              /*                                added_mass_a[1]*added_mass_a[1]+ */
+              /*                                added_mass_a[2]*added_mass_a[2]); */
+              /* added_mass_a[0] = added_mass_a[0]/added_mass_a_tot; */
+              /* added_mass_a[1] = added_mass_a[1]/added_mass_a_tot; */
+              /* added_mass_a[2] = added_mass_a[2]/added_mass_a_tot; */
+	      
+              exteriorNumericalDiffusiveFlux(normal,
                                              added_mass_a,
                                              diff_flux_ext);
               //
