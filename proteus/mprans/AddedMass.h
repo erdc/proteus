@@ -43,9 +43,10 @@ namespace proteus
                                    int* exteriorElementBoundariesArray,
                                    int* elementBoundaryElementsArray,
                                    int* elementBoundaryLocalElementBoundariesArray,
-				   int* elementBoundaryMaterialTypesArray,
-				   double* Aij,
-				   int added_mass_i)=0;
+                                   int* elementBoundaryMaterialTypesArray,
+                                   double* Aij,
+                                   int added_mass_i,
+                                   double* barycenters)=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -257,9 +258,10 @@ namespace proteus
                            int* exteriorElementBoundariesArray,
                            int* elementBoundaryElementsArray,
                            int* elementBoundaryLocalElementBoundariesArray,
-			   int* elementBoundaryMaterialTypesArray,
-			   double* Aij,
-			   int added_mass_i)
+                           int* elementBoundaryMaterialTypesArray,
+                           double* Aij,
+                           int added_mass_i,
+                           double* barycenters)
     {
       for(int eN=0;eN<nElements_global;eN++)
         {
@@ -430,35 +432,51 @@ namespace proteus
               //
               //calculate the numerical fluxes
               //
-	      double added_mass_a[3] = {0.0, 0.0, 0.0};
-	      switch (added_mass_i)
-		{
-		case 0:
-		  added_mass_a[0] = 1.0;
-		  break;
-		case 1:
-		  added_mass_a[1] = 1.0;
-		  break;
-		case 2:
-		  added_mass_a[2] = 1.0;
-		  break;
-		  // from here down we really need to pass in center of gravity and form unit angular accelerations about axes and convert to bdry acceleration
-		case 3:
-		  added_mass_a[0] = 1.0;
-		  break;
-		case 4:
-		  added_mass_a[0] = 1.0;
-		  break;
-		case 5:
-		  added_mass_a[0] = 1.0;
-		      break;
-		default:
-		  assert(0);
-		}
+              int eBMT = elementBoundaryMaterialTypesArray[ebN];
+              double rx, ry, rz;
+              rx = x_ext-barycenters[3*eBMT+0];
+              ry = y_ext-barycenters[3*eBMT+1];
+              rz = z_ext-barycenters[3*eBMT+2];
+              double added_mass_a[3] = {0.0, 0.0, 0.0};
+              switch (added_mass_i)
+                {
+                case 0:
+                  added_mass_a[0] = 1.0;
+                  break;
+                case 1:
+                  added_mass_a[1] = 1.0;
+                  break;
+                case 2:
+                  added_mass_a[2] = 1.0;
+                  break;
+                  // from here down we really need to pass in center of gravity and form unit angular accelerations about axes and convert to bdry acceleration
+                case 3:
+                  added_mass_a[1] += rz;
+                  added_mass_a[2] += -ry;
+                  break;
+                case 4:
+                  added_mass_a[0] += -rz;
+                  added_mass_a[2] += rx;
+                  break;
+                case 5:
+                  added_mass_a[0] += ry;
+                  added_mass_a[1] += -rx;
+                  break;
+                default:
+                  assert(0);
+                }
+              // normalise unit accelerations (necessary for angular ones)
+              double added_mass_a_tot = sqrt(added_mass_a[0]*added_mass_a[0]+
+                                             added_mass_a[1]*added_mass_a[1]+
+                                             added_mass_a[2]*added_mass_a[2]);
+              added_mass_a[0] = added_mass_a[0]/added_mass_a_tot;
+              added_mass_a[1] = added_mass_a[1]/added_mass_a_tot;
+              added_mass_a[2] = added_mass_a[2]/added_mass_a_tot;
+               
 		  
               exteriorNumericalDiffusiveFlux(elementBoundaryMaterialTypesArray[ebN],
-					     normal,
-					     added_mass_a,
+                                             normal,
+                                             added_mass_a,
                                              diff_flux_ext);
               //
               //update residuals
@@ -468,27 +486,29 @@ namespace proteus
                   elementResidual_u[i] +=
                     + ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]);
                 }//i
-	      //calculate Aij
-	      if (elementBoundaryMaterialTypesArray[ebN] == 9)
-		{
-		  for (int i=0;i<3;i++)
-		    Aij[added_mass_i*6 + i] += u_ext*normal[i]*dS;
-		  for (int i=0;i<3;i++)
-		    {
-		      Aij[added_mass_i*6 + 3 + i] = -9999999;
-		    }
-		}
-            }//kb
-          //
-          //update the element and global residual storage
-          //
-          for (int i=0;i<nDOF_test_element;i++)
-            {
-              int eN_i = eN*nDOF_test_element+i;
-              globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
-            }//i
-        }//ebNE
+              //calculate Aij
+              double px, py, pz;
+              px = u_ext*normal[0];
+              py = u_ext*normal[1];
+              pz = u_ext*normal[2];
+              Aij[36*eBMT+added_mass_i+6*0] += px*dS;
+              Aij[36*eBMT+added_mass_i+6*1] += py*dS;
+              Aij[36*eBMT+added_mass_i+6*2] += pz*dS;
+              Aij[36*eBMT+added_mass_i+6*3] += (ry*pz-rz*py)*dS;
+              Aij[36*eBMT+added_mass_i+6*4] += (rz*px-rx*pz)*dS;
+              Aij[36*eBMT+added_mass_i+6*5] += (rx*py-ry*px)*dS;
+              //
+              //update the element and global residual storage
+              //
+              for (int i=0;i<nDOF_test_element;i++)
+                {
+                  int eN_i = eN*nDOF_test_element+i;
+                  globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+                }//i
+            }//ebNE
+        }
     }
+
 
     inline void calculateElementJacobian(//element
                                          double* mesh_trial_ref,
