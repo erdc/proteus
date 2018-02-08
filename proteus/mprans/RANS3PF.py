@@ -2278,6 +2278,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
 
+        self.pressureModel.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
+        self.pressureModel.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
+        self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2487,6 +2491,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_netMoments,
             self.coefficients.particle_surfaceArea,
             self.coefficients.particle_nitsche,
+            self.q['phisError'],
+            self.phisErrorNodal,
             self.STABILIZATION_TYPE,
             self.elementQuadratureWeights[('u', 0)].sum(),
             self.coefficients.cMax,

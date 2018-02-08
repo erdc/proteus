@@ -1036,14 +1036,6 @@ class NS_base:  # (HasTraits):
                     del scalar
 
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-            # scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal
-            # p0.domain.PUMIMesh.transferFieldToPUMI(
-            #     'velocityError', scalar)
-
-            # This is hardcoded for the RANS3PF to be the 4th model
-            scalar[:,0] = self.modelList[4].levelModelList[0].coefficients.phi_s
-            p0.domain.PUMIMesh.transferFieldToPUMI(
-                'phi_s', scalar)
 
             del scalar
             #Get Physical Parameters
