@@ -59,6 +59,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   size_scale = 0;
   size_frame = 0;
   err_reg = 0;
+  vmsErrH1 = 0;
   errRho_reg = 0;
   errRel_reg = 0;
   gmi_register_mesh();
@@ -88,6 +89,7 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
  */
 {
   freeField(err_reg);
+  freeField(vmsErrH1);
   freeField(errRho_reg);
   freeField(errRel_reg);
   freeField(size_iso);
@@ -346,7 +348,11 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       myfile << t2-t1<<std::endl;
       myfile.close();
     }
-  }  
+  } 
+  else if(size_field_config == "VMS"){
+    assert(vmsErrH1);
+    getERMSizeField(total_error);
+  }
   else if (size_field_config == "meshQuality"){
     size_iso = samSz::isoSize(m);
   }
@@ -375,6 +381,10 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     char namebuffer[20];
     sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
+  }
+  if(size_field_config=="VMS"){
+    freeField(vmsErrH1);
+    std::cout<<"cleared VMS field\n";
   }
 
   // These are relics from an attempt to pass BCs from proteus into the error estimator.

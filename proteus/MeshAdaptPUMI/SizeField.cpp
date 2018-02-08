@@ -127,7 +127,6 @@ void MeshAdaptPUMIDrvr::averageToEntity(apf::Field *ef, apf::Field *vf,
   return;
 }
 
-/*
 void minToEntity(apf::Field* ef, apf::Field* vf,
     apf::MeshEntity* ent)
 {
@@ -144,7 +143,6 @@ void minToEntity(apf::Field* ef, apf::Field* vf,
   apf::setScalar(vf, ent, 0, s);
   return;
 }
-*/
 
 void MeshAdaptPUMIDrvr::volumeAverageToEntity(apf::Field *ef, apf::Field *vf,
                                               apf::MeshEntity *ent)
@@ -155,19 +153,19 @@ void MeshAdaptPUMIDrvr::volumeAverageToEntity(apf::Field *ef, apf::Field *vf,
   apf::MeshElement *testElement;
   m->getAdjacent(ent, m->getDimension(), elements);
   double s = 0;
-  double invVolumeTotal = 0;
+  double VolumeTotal = 0;
   for (std::size_t i = 0; i < elements.getSize(); ++i)
   {
     testElement = apf::createMeshElement(m, elements[i]);
-    s += apf::getScalar(ef, elements[i], 0) / apf::measure(testElement);
-    invVolumeTotal += 1.0 / apf::measure(testElement);
+    s += apf::getScalar(ef, elements[i], 0)*apf::measure(testElement);
+    VolumeTotal += apf::measure(testElement);
     if (comm_rank == 0)
     {
       std::cout << "What is s " << s << " Volume? " << apf::measure(testElement) << " scale? " << apf::getScalar(ef, elements[i], 0) << std::endl;
     }
     apf::destroyMeshElement(testElement);
   }
-  s /= invVolumeTotal;
+  s /= VolumeTotal;
   if (comm_rank == 0)
   {
     std::cout << "What is s final? " << s << std::endl;
@@ -175,6 +173,31 @@ void MeshAdaptPUMIDrvr::volumeAverageToEntity(apf::Field *ef, apf::Field *vf,
   apf::setScalar(vf, ent, 0, s);
   return;
 }
+
+void errorAverageToEntity(apf::Field *ef, apf::Field *vf, apf::Field* err, apf::MeshEntity *ent)
+//Serves the same purpose as averageToEntity but considers a error-weighted average
+{
+  apf::Mesh *m = apf::getMesh(ef);
+  apf::Adjacent elements;
+  m->getAdjacent(ent, m->getDimension(), elements);
+  double s = 0;
+  double errorTotal = 0;
+  for (std::size_t i = 0; i < elements.getSize(); ++i)
+  {
+    s += apf::getScalar(ef, elements[i], 0)*apf::getScalar(err,elements[i],0);
+    errorTotal += apf::getScalar(err,elements[i],0);
+  }
+  s /= errorTotal;
+/*
+  if (comm_rank == 0)
+  {
+    std::cout << "What is s final? " << s << std::endl;
+  }
+*/
+  apf::setScalar(vf, ent, 0, s);
+  return;
+}
+
 
 static apf::Field *extractSpeed(apf::Field *velocity)
 //Function used to convert the velocity field into a speed field
@@ -616,7 +639,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   freeField(size_iso);
 
   //Initialize fields and needed types/variables
-  apf::Mesh *m = apf::getMesh(err_reg);
+  apf::Mesh *m = apf::getMesh(vmsErrH1);
   apf::MeshIterator *it;
   apf::MeshEntity *v;
   apf::MeshElement *element;
@@ -660,15 +683,25 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     if (m->getDimension() == 2)
       h_old = sqrt(apf::measure(element) * 4 / sqrt(3));
     else
-      h_old = pow(apf::measure(element) * 6 * sqrt(2), 1.0 / 3.0); //edge of a regular tet
-    apf::getVector(err_reg, reg, 0, err_vect);
-    err_curr = err_vect[0];
-    errRho_curr = apf::getScalar(errRho_reg, reg, 0);
+      //h_old = pow(apf::measure(element) * 6 * sqrt(2), 1.0 / 3.0); //edge of a regular tet
+      h_old = apf::computeShortesHeightInTet(m,reg);
+    err_curr = apf::getScalar(vmsErrH1, reg, 0);
+    //err_curr = err_vect[0];
+    //errRho_curr = apf::getScalar(errRho_reg, reg, 0);
     //h_new = h_old*errRho_target/errRho_curr;
     //h_new = h_old*sqrt(apf::measure(element))/sqrt(domainVolume)*target_error/err_curr;
     if (target_error == 0)
       target_error = err_total / sqrt(numel);
-    h_new = h_old * (target_error / err_curr);
+    //error-to-size relationship should be different between anisotropic and isotropic cases
+    //consider moving this to where size frames are computed to get aspect ratio info
+    if (adapt_type_config == "anisotropic")
+      if(target_error/err_curr <= 1)
+        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+1.0)); //refinement
+      else
+        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+3.0)); //coarsening
+    else //isotropic
+      h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+
     apf::setScalar(size_iso_reg, reg, 0, h_new);
     apf::destroyMeshElement(element);
   }
@@ -678,7 +711,10 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   it = m->begin(0);
   while ((v = m->iterate(it)))
   {
-    averageToEntity(size_iso_reg, size_iso, v);
+    //averageToEntity(size_iso_reg, size_iso, v);
+    //volumeAverageToEntity(size_iso_reg, size_iso, v);
+    errorAverageToEntity(size_iso_reg, size_iso,vmsErrH1, v);
+    //minToEntity(size_iso_reg, size_iso, v);
   }
   m->end(it);
 

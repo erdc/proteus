@@ -48,6 +48,7 @@ inline void getProps(double*rho,double*nu)
 
 void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error) 
 {
+  std::cout<<"The beginning of the VMS\n";
   getProps(rho,nu);
   approx_order = approximation_order; 
   int_order = integration_order;
@@ -62,12 +63,17 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
   assert(pref);
   //*****               *****//
 
+  std::cout<<"Got the solution fields\n";
   //***** Compute the viscosity field *****//
   apf::Field* visc = getViscosityField(voff);
+  std::cout<<"Got viscosity fields \n";
+  freeField(vmsErrH1);
 
   apf::Field* vmsErr = apf::createField(m,"VMSL2",apf::SCALAR,apf::getVoronoiShape(nsd,1));
-  apf::Field* vmsErrH1 = apf::createField(m,"VMSH1",apf::SCALAR,apf::getVoronoiShape(nsd,1));
+  //vmsErrH1 = apf::createField(m,"VMSH1",apf::SCALAR,apf::getVoronoiShape(nsd,1));
+  vmsErrH1 = apf::createField(m,"VMSH1",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   
+  std::cout<<"Created the error fields\n";
   //Start computing element quantities
   int numqpt; //number of quadrature points
   int nshl; //number of local shape functions
@@ -282,8 +288,10 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     count++;
   } //end loop over elements
 
-    std::cout<<std::scientific<<std::setprecision(15)<<std::cout<<"Total Error L2 "<<sqrt(VMSerrTotalL2)<<" H1 "<<sqrt(VMSerrTotalH1)<<std::endl;
+    std::cout<<std::scientific<<std::setprecision(15)<<"Total Error L2 "<<sqrt(VMSerrTotalL2)<<" H1 "<<sqrt(VMSerrTotalH1)<<std::endl;
     total_error = sqrt(VMSerrTotalH1);
+    apf::destroyField(vmsErr);
+    apf::destroyField(visc);
 } //end function
 
 double get_nu_err(struct Inputs info){
