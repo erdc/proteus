@@ -2,17 +2,10 @@ from proteus import *
 from proteus.default_p import *
 from proteus import Domain
 import stokesDrivenCavity_2d
-from proteus import Context
-Context.setFromModule(stokesDrivenCavity_2d)
-ct=Context.get()
-
+ct = stokesDrivenCavity_2d.opts
 """
-Stokes Driven Cavity Flow - the file contains the physics
-corresponding to a Stokes Driven Cavity Flow.  See notes
-for a detailed description.
-
-This model is being used to study the preformance of
-Schur complement preconditioners.
+Stokes Driven Cavity Flow - this file contains the physics
+corresponding to a Stokes Driven Cavity Flow test simulation.
 """
 
 #######################################################

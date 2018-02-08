@@ -169,6 +169,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         # set the objects describing the method and boundary conditions
         #
+        self.bdyNullSpace=bdyNullSpace
         self.moveCalls = 0
         self.movingDomain = movingDomain
         self.tLast_mesh = None
