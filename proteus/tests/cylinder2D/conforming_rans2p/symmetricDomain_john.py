@@ -50,7 +50,7 @@ def symmetric2D(box=(1.0,0.41),
     arclength= 0.5*math.pi*r
     nPoints_cyl = int(math.ceil(arclength/DX))
     #DX_cyl = arclength/float(nPoints_cyl)
-
+    nPoints_cyl = max([nPoints_cyl,10])
     # cyl
     for i in range(nPoints_cyl):
         vertices0.append((r*math.cos(float(i)/float(nPoints_cyl)*0.5*math.pi),r*math.sin(float(i)/float(nPoints_cyl)*0.5*math.pi)))

@@ -2245,7 +2245,6 @@ namespace proteus
         //ebNE is the Exterior element boundary INdex
         //ebN is the element boundary INdex
         //eN is the element index
-        double Fx=0.0, Fy=0.0;
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
             register int ebN = exteriorElementBoundariesArray[ebNE],
@@ -2984,22 +2983,6 @@ namespace proteus
                                                                      &vel_grad_test_dS[i*nSpace]);
                       }//i
                   }//if boundary flag positive
-                if (boundaryFlags[ebN]==5)//YY:since cylinder boundary has label=5
-                {
-                    double nx = -normal[0] ; // need ext normal of the solid
-                    double ny = -normal[1] ;
-                    double visco = nu_0*rho_0;
-                    for ( int i = 0 ; i < nDOF_test_element ; i++ )
-                    {
-                      double S_xx = 2*visco*grad_u_ext[0];
-                      double S_xy = visco*(grad_u_ext[1] + grad_v_ext[0]); // sym tensor -> S_yx = S_xy
-                      double S_yy = 2*visco*grad_v_ext[1];
-                      Fx -= p_ext*nx*dS;
-                      Fx += (S_xx*nx + S_xy*ny)*dS;
-                      Fy -= p_ext*ny*dS;
-                      Fy += (S_xy*nx + S_yy*ny)*dS;
-                    }//
-                }
               }//kb
             //
             //update the element and global residual storage
@@ -3015,7 +2998,6 @@ namespace proteus
                 globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
               }//i
           }//ebNE
-        std::cout<<"    yyForce    "<<Fx<<"\t"<<Fy<<std::endl;
 
         /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
         /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */

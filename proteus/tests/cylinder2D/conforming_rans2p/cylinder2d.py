@@ -66,8 +66,8 @@ boundaryTags=domain.boundaryFlags
 # Time stepping
 T= 8.0
 runCFL = 0.9
-dt_fixed = 2.5e-1
-dt_init = 1.0e-3
+dt_fixed = 0.005
+dt_init = 0.0025
 nDTout = int(T/dt_fixed)
 dt_init = min(dt_init,0.5*dt_fixed)
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)] 
