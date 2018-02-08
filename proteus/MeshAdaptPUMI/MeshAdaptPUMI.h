@@ -22,6 +22,7 @@ class MeshAdaptPUMIDrvr{
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
+  void writeMesh(const char* meshFile);
 
   //Functions to construct proteus mesh data structures
   int reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int hasModel);
@@ -89,6 +90,9 @@ class MeshAdaptPUMIDrvr{
   void removeBCData();
   char* modelFileName; 
   
+  //VMS
+  void get_VMS_error(double& total_error);
+  
   //tags used to identify types of BC
   apf::MeshTag* BCtag;
   apf::MeshTag* DBCtag[4];
@@ -125,6 +129,7 @@ class MeshAdaptPUMIDrvr{
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* err_reg; //error field from ERM
+  apf::Field* vmsErrH1; //error field for VMS
   apf::Field* errRho_reg; //error-density field from ERM
   apf::Field* errRel_reg; //relative error field from ERM
   /* this field stores isotropic size */

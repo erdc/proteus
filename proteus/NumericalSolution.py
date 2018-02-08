@@ -1094,7 +1094,11 @@ class NS_base:  # (HasTraits):
             sfConfig = p0.domain.PUMIMesh.size_field_config()
             if(sfConfig=="ERM"):
               errorTotal= p0.domain.PUMIMesh.get_local_error()
-
+              if(p0.domain.PUMIMesh.willAdapt()):
+                adaptMeshNow=True
+                logEvent("Need to Adapt")
+            elif(sfConfig=="VMS"):
+              errorTotal = p0.domain.PUMIMesh.get_VMS_error()
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
@@ -1419,8 +1423,10 @@ class NS_base:  # (HasTraits):
        #     print "Min / Max residual %s / %s" %(lr.min(),lr.max())
 
         self.nSequenceSteps = 0
-        self.nSolveSteps=self.nList[0].adaptMesh_nSteps-1
-        for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
+        self.nSolveSteps=self.nList[0].adaptMesh_nSteps-3
+        for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]): 
+            #if(self.tn < 8.0):
+            #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
@@ -1578,10 +1584,32 @@ class NS_base:  # (HasTraits):
             #assuming same for all physics and numerics  for now
 
             #can only handle PUMIDomain's for now
-            self.nSolveSteps += 1
-            if(self.PUMI_estimateError()):
-              self.PUMI_adaptMesh()
+            #self.nSolveSteps += 1
+            #if(self.PUMI_estimateError()):
+            #  self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
+
+        if(hasattr(self.pList[0].domain,"PUMIMesh")):
+        #Transfer solution to PUMI mesh for output
+          for m in self.modelList:
+            for lm in m.levelModelList:
+              coef = lm.coefficients
+              if coef.vectorComponents is not None:
+                vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+                for vci in range(len(coef.vectorComponents)):
+                  vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
+                self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                   coef.vectorName, vector)
+                del vector
+              for ci in range(coef.nc):
+                if coef.vectorComponents is None or \
+                  ci not in coef.vectorComponents:
+                  scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+                  scalar[:,0] = lm.u[ci].dof[:]
+                  self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                      coef.variableNames[ci], scalar)
+                  del scalar
+          self.pList[0].domain.PUMIMesh.writeMesh("finalMesh.smb")
 
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)

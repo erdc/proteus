@@ -22,7 +22,7 @@ int int_order; //integration order
 double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
 
-void getProps(double*rho,double*nu)
+inline void getProps(double*rho,double*nu)
 //Function used to transfer MeshAdaptPUMIDrvr variables into global variables
 {
   rho_0 = rho[0];
@@ -405,6 +405,7 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
         Jdet=fabs(apf::getJacobianDeterminant(J,nsd-1));
         bqptl=apf::boundaryToElementXi(m,bent,ent,bqpt); 
         apf::getVectorGrad(tempvelo,bqptl,tempgrad_velo);
+        tempgrad_velo = apf::transpose(tempgrad_velo);
 
         apf::ModelEntity* me=m->toModel(bent);
         int tag = m->getModelTag(me);
@@ -694,9 +695,12 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
   freeField(err_reg);
   freeField(errRho_reg);
   freeField(errRel_reg);
-  err_reg = apf::createField(m,"ErrorRegion",apf::VECTOR,apf::getConstant(nsd));
-  errRho_reg = apf::createField(m,"ErrorDensity",apf::SCALAR,apf::getConstant(nsd));
-  errRel_reg = apf::createField(m,"RelativeError",apf::SCALAR,apf::getConstant(nsd));
+  //err_reg = apf::createField(m,"ErrorRegion",apf::VECTOR,apf::getConstant(nsd));
+  std::cout<<"FLAG1\n";
+  err_reg = apf::createField(m,"ErrorRegion",apf::SCALAR,apf::getVoronoiShape(nsd,1));
+  errRho_reg = apf::createField(m,"ErrorDensity",apf::SCALAR,apf::getVoronoiShape(nsd,1));
+  errRel_reg = apf::createField(m,"RelativeError",apf::SCALAR,apf::getVoronoiShape(nsd,1));
+  std::cout<<"FLAG2\n";
 
   //Start computing element quantities
   int numqpt; //number of quadrature points
@@ -909,7 +913,8 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
     err_est = sqrt(Acomp); 
 
     apf::Vector3 err_in(err_est,Acomp,Bcomp);
-    apf::setVector(err_reg,ent,0,err_in);
+    //apf::setVector(err_reg,ent,0,err_in);
+    apf::setScalar(err_reg,ent,0,err_est);
     double errRho = err_est/sqrt(apf::measure(element));
     apf::setScalar(errRho_reg,ent,0,errRho);
     if(errRho>errRho_max)

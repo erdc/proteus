@@ -5,6 +5,7 @@
 #include <maShape.h>
 #include <apfMDS.h>
 #include <PCU.h>
+#include <apf.h>
 
 #include <iostream>
 #include <fstream>
@@ -58,6 +59,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   size_scale = 0;
   size_frame = 0;
   err_reg = 0;
+  vmsErrH1 = 0;
   errRho_reg = 0;
   errRel_reg = 0;
   gmi_register_mesh();
@@ -87,8 +89,8 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
  * Destructor for MeshAdaptPUMIDrvr
  */
 {
-
   freeField(err_reg);
+  freeField(vmsErrH1);
   freeField(errRho_reg);
   freeField(errRel_reg);
   freeField(size_iso);
@@ -343,7 +345,11 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       myfile << t2-t1<<std::endl;
       myfile.close();
     }
-  }  
+  } 
+  else if(size_field_config == "VMS"){
+    assert(vmsErrH1);
+    getERMSizeField(total_error);
+  }
   else if (size_field_config == "meshQuality"){
     size_iso = samSz::isoSize(m);
   }
@@ -358,6 +364,11 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   }
   else if (size_field_config == "test"){
     testIsotropicSizeField();
+  }
+  else if(size_field_config == "uniform"){
+      //special situation where I only care about err_reg
+      freeField(errRho_reg); 
+      freeField(errRel_reg); 
   }
   else {
     std::cerr << "unknown size field config " << size_field_config << '\n';
@@ -399,6 +410,10 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       freeField(errRho_reg); 
       freeField(errRel_reg); 
   }
+  if(size_field_config=="VMS"){
+    freeField(vmsErrH1);
+    std::cout<<"cleared VMS field\n";
+  }
 
   std::cout<<"Flag 2\n";
   // These are relics from an attempt to pass BCs from proteus into the error estimator.
@@ -417,7 +432,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   std::cout<<"Flag 4\n";
 
   /// Adapt the mesh
-  assert(size_iso || (size_scale && size_frame));
+
   ma::Input* in;
   if(adapt_type_config=="anisotropic" || size_field_config== "interface"){
     //in = ma::configure(m, size_scale, size_frame);
@@ -542,3 +557,10 @@ double MeshAdaptPUMIDrvr::getTotalMass()
   return mass;
 }
 /** @} */
+
+//Save mesh with solution
+
+void MeshAdaptPUMIDrvr::writeMesh(const char* meshFile){
+  m->writeNative(meshFile);
+  apf::writeVtkFiles(meshFile,m);
+}
