@@ -200,6 +200,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  nContact=5.0,
                  angFriction=pi/6.0,
                  vos_function=None,
+                 staticSediment=False,
                  ):
         self.aDarcy=aDarcy
         self.betaForch=betaForch
@@ -218,6 +219,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.angFriction=angFriction
         self.PSTAB=PSTAB
         self.vos_function=vos_function
+        self.staticSediment=staticSediment
         self.barycenters = barycenters
         self.smagorinskyConstant = smagorinskyConstant
         self.turbulenceClosureModel = turbulenceClosureModel
@@ -399,7 +401,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.q_vos = self.model.q_vos
             self.q_dvos_dt = self.model.q_dvos_dt
             self.ebqe_vos = self.model.ebqe_vos   
-            self.ebq_vos = self.model.ebq_vos       
+            self.ebq_vos = self.model.ebq_vos   
+            self.q_grad_vos = modelList[self.VOS_model].q[('grad(u)',0)]
         if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u', 0)]
             if modelList[self.LS_model].ebq.has_key(('u', 0)):
@@ -1854,6 +1857,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q_velocity_fluid,
             self.q_vos,
             self.q_dvos_dt,
+            self.coefficients.q_grad_vos,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,
             self.q[('r', 0)],
@@ -2084,6 +2088,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q_velocity_fluid,
             self.q_vos,
             self.q_dvos_dt,
+            self.coefficients.q_grad_vos,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,
             self.pressureModel.q[('r', 0)],

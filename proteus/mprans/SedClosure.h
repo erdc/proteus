@@ -498,25 +498,42 @@ public:
 
       return k_diff;
     }
-  
+   
     inline double p_friction(double sedF)
 
     {
+      double sedBound = 0.05;
       double pf = 0.;
-      if ((sedF > frFraction_) && (sedF < maxFraction_ ))
-
+      double sedD = 0.;
+      //if ((sedF > frFraction_) && (sedF < maxFraction_ ))
+      if (sedF > frFraction_)
 	{
-	  pf =std::min( fContact_*pow(sedF-frFraction_,mContact_) / ( pow(maxFraction_ - sedF,nContact_) + small_), notSoLarge_);
+      sedD = std::max((maxFraction_ - sedF), sedBound);
+      pf =std::min( fContact_ * pow(std::min(sedF,maxFraction_)-frFraction_,mContact_) / pow(sedD, nContact_), notSoLarge_ );
 	} 
 
-//      printf("frFraction_ --> %2.9f", frFraction_);
-//      printf("maxFraction_ --> %2.9f", maxFraction_);
-//
-//      printf("fContact_ --> %2.9f", fContact_);
-//      printf("mContact_ --> %2.9f", mContact_);
-//      printf("nContact_ --> %2.9f", nContact_);
 	  
       return pf;
+    } 
+   
+    inline double gradp_friction(double sedF)
+
+    {
+      double pf = p_friction(sedF);
+      double lim = 0.05;
+      double den1 = 0.0;
+      double den2 = 0.0;
+      double coeff = 0.0;
+      //if ((sedF > frFraction_) && (sedF < maxFraction_ ))
+      if (sedF > frFraction_) 
+	{
+     den1 = std::max(sedF-frFraction_,lim);
+     den2 = std::max(maxFraction_-sedF,lim);
+     coeff = pf *( (mContact_/den1) + (nContact_/den2) );
+	} 
+
+	  
+      return coeff;
     }
 
     inline double mu_fr(double sedF,
@@ -539,7 +556,11 @@ public:
       double s13 = 0.5*(du_dz + dw_dx);
       double s23 = 0.5*(dv_dz + dw_dy);
       double sumS = s11*s11 + s22*s22 + s33*s33 + 2.*s12*s12 + 2.*s13*s13 + 2.*s23*s23;
-      double mu_sf = pf * sqrt(2.) * sin(angFriction_) / (2 * sqrt(sumS) + small_);
+      double mu_sf = pf * sqrt(2.) * sin(angFriction_) / (2 * sqrt(sumS) + small_); 
+      //printf("pf --> %2.20f", pf);
+      //printf("angFriction_ --> %2.20f", angFriction_);
+      //printf("sumS --> %2.20f", sumS);
+      //printf("---------------");
       return mu_sf;
     }
 

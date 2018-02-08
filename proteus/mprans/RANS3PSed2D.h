@@ -88,6 +88,7 @@ namespace proteus
                                    const double* q_velocity_fluid,
                                    const double* q_vos,//sed fraction - gco check
                                    const double* q_dvos_dt,
+                                   const double* q_grad_vos,
                                    const double* q_dragAlpha,
                                    const double* q_dragBeta,
                                    const double* q_mass_source,
@@ -264,6 +265,7 @@ namespace proteus
                                    const double* q_velocity_fluid,
                                    const double* q_vos,//sed fraction - gco check
                                    const double* q_dvos_dt,
+                                   const double* q_grad_vos,
                                    const double* q_dragAlpha,
                                    const double* q_dragBeta,
                                    const double* q_mass_source,
@@ -868,40 +870,56 @@ namespace proteus
 
     inline
       void updateFrictionalPressure(const double vos,
+                                    const double grad_vos[nSpace],
                                     double& mom_u_source,
                                     double& mom_v_source,
                                     double& mom_w_source)
     {
-      double p_sf = closure.p_friction(vos);
+      double coeff = closure.gradp_friction(vos);
 
-      mom_u_source += p_sf;
-      mom_v_source += p_sf;
-      //mom_w_source += p_sf;
-      //printf("p_sf --> %2.9f", p_sf);
+      mom_u_source += coeff * grad_vos[0];
+      mom_v_source += coeff * grad_vos[1];
+      //mom_w_source += coeff * grad_vos[2];
 
     }  
 
     inline
       void updateFrictionalStress(const double vos,
-                                    const double grad_u[nSpace],
-                                    const double grad_v[nSpace],
-                                    const double grad_w[nSpace], 
-                                    double mom_uu_diff_ten[nSpace],
-                                    double mom_uv_diff_ten[1],
-                                    double mom_uw_diff_ten[1],
-                                    double mom_vv_diff_ten[nSpace],
-                                    double mom_vu_diff_ten[1],
-                                    double mom_vw_diff_ten[1],
-                                    double mom_ww_diff_ten[nSpace],
-                                    double mom_wu_diff_ten[1],
-                                    double mom_wv_diff_ten[1])
+                                  const double eps_rho,
+                                  const double eps_mu,
+                                  const double rho_0,
+                                  const double nu_0,
+                                  const double rho_1,
+                                  const double nu_1,
+                                  const double rho_s,
+                                  const double useVF,
+                                  const double vf,
+                                  const double phi,
+                                  const double grad_u[nSpace],
+                                  const double grad_v[nSpace],
+                                  const double grad_w[nSpace], 
+                                  double mom_uu_diff_ten[nSpace],
+                                  double mom_uv_diff_ten[1],
+                                  double mom_uw_diff_ten[1],
+                                  double mom_vv_diff_ten[nSpace],
+                                  double mom_vu_diff_ten[1],
+                                  double mom_vw_diff_ten[1],
+                                  double mom_ww_diff_ten[nSpace],
+                                  double mom_wu_diff_ten[1],
+                                  double mom_wv_diff_ten[1])
     {
-      double mu_sf = closure.mu_fr(vos,
+      double H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+      double H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+      double rho_fluid = rho_0*(1.0-H_rho)+rho_1*H_rho;
+      double nu_fluid  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+      double mu_fr = closure.mu_fr(vos,
                                    grad_u[0], grad_u[1], grad_u[2], 
                                    grad_v[0], grad_v[1], grad_v[2], 
                                    grad_w[0], grad_w[1], grad_w[2]);
+      double rho_solid = rho_s;
+      double mu_sf = std::max(mu_fr, 1e06*nu_fluid*rho_solid);
 
-      mom_uu_diff_ten[0] += mu_sf * (2.);// - 2./3.); 
+      mom_uu_diff_ten[0] += 2. * mu_sf * (2./3.); 
       mom_uu_diff_ten[1] += mu_sf;
       /*mom_uu_diff_ten[2] += mu_sf; */
 
@@ -909,7 +927,7 @@ namespace proteus
       /*mom_uw_diff_ten[0] += mu_sf; */
 
       mom_vv_diff_ten[0] += mu_sf; 
-      mom_vv_diff_ten[1] += mu_sf * (2.);// - 2./3.) - 2./3.);
+      mom_vv_diff_ten[1] += 2. * mu_sf * (2./3.);
       /*mom_vv_diff_ten[2] += mu_sf; */
 
       mom_vu_diff_ten[0] += mu_sf;
@@ -917,12 +935,13 @@ namespace proteus
 
       /*mom_ww_diff_ten[0] += mu_sf;  */
       /*mom_ww_diff_ten[1] += mu_sf; */
-      /*mom_ww_diff_ten[2] += mu_sf * (2. - 2./3.); */
+      /*mom_ww_diff_ten[2] += 2. * mu_sf * (2./3.); */
 
       /*mom_wu_diff_ten[0] += mu_sf; */
       /*mom_wv_diff_ten[0] += mu_sf; */
 
-      //printf("mu_sf --> %2.9f", mu_sf);
+      //printf("mu_sf --> %2.20f", mu_sf);
+      //printf("---------------");
     }
 
 
@@ -1460,7 +1479,7 @@ namespace proteus
           }
         else
           {
-            std::cerr<<"warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl;
+            //std::cerr<<"warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl;
             flux = 0.0;
           }
       }
@@ -1563,6 +1582,7 @@ namespace proteus
                              const double* q_velocity_fluid,
                              const double* q_vos,//sed fraction - gco check
                              const double* q_dvos_dt,
+                             const double* q_grad_vos,
                              const double* q_dragAlpha,
                              const double* q_dragBeta,
                              const double* q_mass_source,
@@ -1698,7 +1718,7 @@ namespace proteus
                   eN_k_3d     = eN_k*3,
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
                 register double p=0.0,u=0.0,v=0.0,w=0.0,
-                  grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
+                  grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],grad_vos[nSpace],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
                   mom_v_acc=0.0,
@@ -1829,6 +1849,8 @@ namespace proteus
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p); */
                 for (int I=0;I<nSpace;I++)
                   grad_p[I] = q_grad_p[eN_k_nSpace + I];
+                for (int I=0;I<nSpace;I++)
+                  grad_vos[I] = q_grad_vos[eN_k_nSpace + I];
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
                 /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w); */
@@ -1979,10 +2001,21 @@ namespace proteus
                                                   dmom_v_source,
                                                   dmom_w_source);
                 updateFrictionalPressure(vos,
+                        grad_vos,
 						mom_u_source,
 						mom_v_source,
 						mom_w_source);      
                 updateFrictionalStress(vos,
+                                 eps_rho,
+                                 eps_mu,
+                                 rho_0,
+                                 nu_0,
+                                 rho_1,
+                                 nu_1,
+                                 rho_s,
+                                 useVF,
+                                 vf[eN_k],
+                                 phi[eN_k],
                                   grad_u,
                                   grad_v,
                                   grad_w, 
@@ -3220,6 +3253,7 @@ namespace proteus
                              const double* q_velocity_fluid,
                              const double* q_vos,//sed fraction - gco check
                              const double* q_dvos_dt,
+                             const double* q_grad_vos,
                              const double* q_dragAlpha,
                              const double* q_dragBeta,
                              const double* q_mass_source,
@@ -3378,7 +3412,7 @@ namespace proteus
 
                 //declare local storage
                 register double p=0.0,u=0.0,v=0.0,w=0.0,
-                  grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
+                  grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],grad_vos[nSpace],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
                   mom_v_acc=0.0,
@@ -3523,6 +3557,8 @@ namespace proteus
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p); */
                 for (int I=0;I<nSpace;I++)
                   grad_p[I] = q_grad_p[eN_k_nSpace+I];
+                for (int I=0;I<nSpace;I++)
+                  grad_vos[I] = q_grad_vos[eN_k_nSpace + I];
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
                 /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w); */
@@ -3670,10 +3706,21 @@ namespace proteus
                                                   dmom_v_source,
                                                   dmom_w_source);
                 updateFrictionalPressure(vos,
+                        grad_vos,
 						mom_u_source,
 						mom_v_source,
 						mom_w_source);      
                 updateFrictionalStress(vos,
+                                 eps_rho,
+                                 eps_mu,
+                                 rho_0,
+                                 nu_0,
+                                 rho_1,
+                                 nu_1,
+                                 rho_s,
+                                 useVF,
+                                 vf[eN_k],
+                                 phi[eN_k],
                                   grad_u,
                                   grad_v,
                                   grad_w, 

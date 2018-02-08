@@ -52,7 +52,7 @@ class Coefficients(TC_base):
                  modelIndex = None,
                  fluidModelIndex = None, 
                  sedModelIndex = None, 
-                 fixNullSpace=False, 
+                 fixNullSpace=False,
                  INTEGRATE_BY_PARTS_DIV_U=True):
         """Construct a coefficients object
 
@@ -152,7 +152,7 @@ class Coefficients(TC_base):
                 self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * (1.0 - q_vos) * q_a 
                 self.fluidModel.ebqe[('velocity',0)][...,i] = (1.0-ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]                
                 self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * (q_vos) * q_a
-                self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]                
+                self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]   
             self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
             self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
             if self.sedModelIndex is not None:
@@ -162,6 +162,15 @@ class Coefficients(TC_base):
                 self.sedModel.coefficients.ebqe_velocity_last[:] = self.sedModel.ebqe[('velocity',0)]
                 assert(self.fluidModel.coefficients.q_velocity_solid is self.sedModel.q[('velocity',0)])
                 assert(self.fluidModel.coefficients.ebqe_velocity_solid is self.sedModel.ebqe[('velocity',0)])
+                # This is for disabling the motion of sediment when it's needed
+                if self.sedModel.coefficients.staticSediment:
+                    for i in range(self.sedModel.q[('velocity',0)].shape[-1]):
+                        self.sedModel.q[('velocity',0)][...,i] = 0.0
+                        self.sedModel.ebqe[('velocity',0)][...,i] = 0.0  
+                        self.fluidModel.coefficients.q_velocity_solid[...,i] = 0.0
+                        self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = 0.0   
+
+
         copyInstructions = {}
         return copyInstructions
 
