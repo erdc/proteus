@@ -171,8 +171,6 @@ cdef extern from "ChRigidBody.h":
                                        vector[double] ang3, double t_max)
         void setPrescribedMotionPoly(double coeff1)
         void setPrescribedMotionSine(double a, double f)
-
-
     cppRigidBody * newRigidBody(cppSystem* system)
 
 cdef class ProtChBody:
@@ -230,6 +228,7 @@ cdef class ProtChBody:
       np.ndarray h_predict_last  # predicted displacement
       double h_ang_predict_last  # predicted angular displacement (angle)
       np.ndarray h_ang_vel_predict_last  # predicted angular velocity
+      np.ndarray Aij
       # np.ndarray free_r
       # np.ndarray free_x
     def __cinit__(self,
@@ -267,6 +266,7 @@ cdef class ProtChBody:
         self.predicted = False
         self.adams_vel = np.zeros((5, 3))
         self.ChBody.SetBodyFixed(False)
+        self.Aij = np.zeros((6, 6))  # added mass array
         # if self.nd is None:
         #     assert nd is not None, "must set nd if SpatialTools.Shape is not passed"
         #     self.nd = nd
@@ -612,10 +612,13 @@ cdef class ProtChBody:
         for i in range(3):
             for j in range(3):
                 MM[i+3, j+3] = iner[i, j]
+        print("MM", MM)
         # full mass
+        print("AM", AM)
         cdef np.ndarray FM = np.zeros((6,6))
         FM += AM
         FM += MM
+        print("FM", FM)
         # inverse of full mass matrix
         inv_FM = np.linalg.inv(FM)
         #set it to chrono variable
@@ -732,6 +735,12 @@ cdef class ProtChBody:
         #     # if self.ProtChSystem.step_nb > self.ProtChSystem.step_start:
         #     self.ChBody.SetBodyFixed(False)
         if self.ProtChSystem.model is not None:
+            if self.ProtChSystem.model_addedmass is not None:
+                am = self.ProtChSystem.model_addedmass.levelModelList[-1]
+                self.Aij[:] = 0
+                for i in range(self.i_start, self.i_end):
+                    self.Aij += am.Aij[i]
+                self.setAddedMass(self.Aij)
             self.F_prot = self.getPressureForces()+self.getShearForces()
             self.M_prot = self.getMoments()
             if self.ProtChSystem.first_step is True:
@@ -829,6 +838,9 @@ cdef class ProtChBody:
         self.thisptr.rotq_last = rotq_last
         self.thisptr.pos = pos
         self.thisptr.pos_last = pos_last
+        if self.ProtChSystem.model_addedmass is not None:
+            am = self.ProtChSystem.model_addedmass.levelModelList[-1]
+            am.barycenters[self.i_start:self.i_end] = self.ChBody.GetPos()
 
     def prediction(self):
         comm = Comm.get().comm.tompi4py()
@@ -1297,6 +1309,8 @@ cdef class ProtChSystem:
         double next_sample
         bool record_values
         object model_mesh
+        object model_addedmass
+        ProtChAddedMass ProtChAddedMass
 
     def __cinit__(self, np.ndarray gravity, int nd=3, dt_init=0., sampleRate=0):
         self.thisptr = newSystem(<double*> gravity.data)
@@ -1324,11 +1338,12 @@ cdef class ProtChSystem:
         self.proteus_dt_next = 0.
         self.dt = 0.
         self.step_nb = 0
-        self.step_start = 3
+        self.step_start = 0
         self.sampleRate = sampleRate
         self.next_sample = 0.
         self.record_values = True
         self.t = 0.
+        self.ProtChAddedMass = ProtChAddedMass(self)
 
     def GetChTime(self):
         """Gives time of Chrono system simulation
@@ -1383,7 +1398,7 @@ cdef class ProtChSystem:
             nb_steps = self.min_nb_steps
         # solve Chrono system
         self.step_nb += 1
-        if self.step_nb > -self.step_start:
+        if self.step_nb > self.step_start:
             # self.thisptr.system.setChTime()
             comm = Comm.get().comm.tompi4py()
             t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
@@ -2674,3 +2689,32 @@ cpdef void attachNodeToNode(ProtChMoorings cable1, int node1, ProtChMoorings cab
         cppAttachNodeToNodeFEAxyzD(cable1.thisptr, node1, cable2.thisptr, node2)
     elif cable1.beam_type == "BeamEuler":
         cppAttachNodeToNodeFEAxyzrot(cable1.thisptr, node1, cable2.thisptr, node2)
+
+cdef class ProtChAddedMass:
+    """
+    Class (hack) to attach added mass model to ProtChSystem
+    This auxiliary variable is ONLY used to attach the AddedMass
+    model to a ProtChSystem
+    """
+    cdef public:
+        object model
+        ProtChSystem ProtChSystem
+
+    def __cinit__(self,
+                  system):
+        self.ProtChSystem = system
+
+    def attachModel(self, model, ar):
+        """Attaches Proteus model to auxiliary variable
+        """
+        self.ProtChSystem.model_addedmass = model
+        return self
+
+    def attachAuxiliaryVariables(self,avDict):
+        pass
+
+    def calculate_init(self):
+        pass
+
+    def calculate(self):
+        pass
