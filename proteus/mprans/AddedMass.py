@@ -35,7 +35,8 @@ class Coefficients(TC_base):
 
     def __init__(self,
                  nd=2,
-                 V_model=None):
+                 V_model=None,
+                 barycenters=None):
         """
         TODO
         """
@@ -55,6 +56,8 @@ class Coefficients(TC_base):
                          sparseDiffusionTensors=sdInfo,
                          useSparseDiffusion=True)
         self.flowModelIndex=V_model
+        self.barycenters = barycenters
+
     def attachModels(self, modelList):
         """
         Attach the model for velocity and density to PresureIncrement model
@@ -66,7 +69,7 @@ class Coefficients(TC_base):
         """
         Give the TC object access to the mesh for any mesh-dependent information.
         """
-        pass
+        self.mesh = mesh
 
     def initializeElementQuadrature(self, t, cq):
         """
@@ -352,7 +355,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # simplified allocations for test==trial and also check if space is mixed or not
         #
         self.added_mass_i = 0;
-        self.Aij = numpy.zeros((6,6),'d')
+        nBoundariesMax = int(globalMax(max(self.mesh.elementBoundaryMaterialTypes))) + 1
+        self.Aij = np.zeros((nBoundariesMax, 6, 6), 'd')
         self.q = {}
         self.ebq = {}
         self.ebq_global = {}
@@ -640,7 +644,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         # Load the unknowns into the finite element dof
         self.setUnknowns(u)
-        self.Aij[self.added_mass_i,:]=0.0
+        self.Aij[:,:,self.added_mass_i]=0.0
         self.addedMass.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -674,7 +678,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.mesh.elementBoundaryMaterialTypes,
             self.Aij,
-            self.added_mass_i)
+            self.added_mass_i,
+            self.coefficients.barycenters)
         logEvent("Added Mass Tensor " +`self.Aij`)
         logEvent("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1
