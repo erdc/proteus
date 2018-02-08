@@ -720,9 +720,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
-
-        if self.model.hasForceTermsAsFunctions:
-            self.model.updateForceTerms()
         pass
         # if self.comm.isMaster():
         # print "wettedAreas"
@@ -866,11 +863,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
-
-        self.hasForceTermsAsFunctions = False
-        if ('forceTerms') in dir(options):
-            self.forceTerms = options.forceTerms
-            self.hasForceTermsAsFunctions = True
         #
         # calculate some dimensions
         #
@@ -1365,30 +1357,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.velocityErrorNodal = self.u[0].dof.copy()
         logEvent('WARNING: The boundary fluxes at interpart boundaries are skipped if elementBoundaryMaterialType is 0 for RANS2P-based models. This means that DG methods are currently incompatible with RANS2P.')
 
-        if self.hasForceTermsAsFunctions:
-            self.elementForceResidual = self.elementResidual[0].copy()
-            self.q[('force', 0)] = numpy.zeros(
-                (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-            self.q[('force', 1)] = numpy.zeros(
-                (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-            self.q[('force', 2)] = numpy.zeros(
-                (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-            self.updateForceTerms()
-
-    def updateForceTerms(self):
-        x = self.q[('x')][:, :, 0]
-        y = self.q[('x')][:, :, 1]
-        z = self.q[('x')][:, :, 2]
-        X = {0: x,
-             1: y,
-             2: z}
-        t = self.timeIntegration.t
-        self.q[('force', 0)][:] = self.forceTerms[0](X, t)
-        self.q[('force', 1)][:] = self.forceTerms[1](X, t)
-        try:
-            self.q[('force', 2)][:] = self.forceTerms[2](X, t)
-        except:
-            pass
     def getResidual(self, u, r):
         """
         Calculate the element residuals and add in to the global residual
@@ -1439,7 +1407,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     else:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],
                                                  self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
-        print 't= ',self.timeIntegration.t,
         self.rans2p.calculateResidual(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
@@ -1604,22 +1571,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.netMoments,
                                       self.q['velocityError'],
                                       self.velocityErrorNodal)
-
-        if self.hasForceTermsAsFunctions:
-            for ci in [1,2]:
-                self.elementForceResidual.fill(0.0)
-                fdv = -self.q[('force',ci-1)]*self.q['dV']
-                cfemIntegrals.updateReaction_weak(fdv,
-                                                self.q[('v',0)],
-                                                self.elementForceResidual)
-                cfemIntegrals.updateGlobalResidualFromElementResidual(self.offset[ci],
-                                                                      self.stride[ci],
-                                                                      self.l2g[ci]['nFreeDOF'],
-                                                                      self.l2g[ci]['freeLocal'],
-                                                                      self.l2g[ci]['freeGlobal'],
-                                                                      self.elementForceResidual,
-                                                                      r);
-
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
