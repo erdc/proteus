@@ -626,6 +626,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
             self.nElementBoundaryQuadraturePoints_elementBoundary,
             compKernelFlag)
+        self.barycenters = self.coefficients.barycenters
 
     def calculateCoefficients(self):
         pass
@@ -679,7 +680,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryMaterialTypes,
             self.Aij,
             self.added_mass_i,
-            self.coefficients.barycenters)
+            self.barycenters)
         logEvent("Added Mass Tensor " +`self.Aij`)
         logEvent("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1

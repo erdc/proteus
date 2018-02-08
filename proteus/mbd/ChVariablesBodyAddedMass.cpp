@@ -129,10 +129,8 @@ void ChVariablesBodyAddedMass::MultiplyAndAdd(ChMatrix<double>& result,
 // will use the ChVariable offset (that must be already updated) as index.
 void ChVariablesBodyAddedMass::DiagonalAdd(ChMatrix<double>& result, const double c_a) const {
     assert(result.GetColumns() == 1);
-    ChMatrixDynamic<> fullM;
-    fullM = Mmass + Maddedmass;
-    for (int i = 0; i < fullM.GetRows(); i++) {
-        result(this->offset + i) += c_a * fullM(i, i);
+    for (int i = 0; i < Mfullmass.GetRows(); i++) {
+        result(this->offset + i) += c_a * Mfullmass(i, i);
     }
 }
 
