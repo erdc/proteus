@@ -351,7 +351,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         # simplified allocations for test==trial and also check if space is mixed or not
         #
-        self.Aij = numpy.zeros((6,),'d')
+        self.added_mass_i = 0;
+        self.Aij = numpy.zeros((6,6),'d')
         self.q = {}
         self.ebq = {}
         self.ebq_global = {}
@@ -639,7 +640,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         # Load the unknowns into the finite element dof
         self.setUnknowns(u)
-        self.Aij.fill(0.0)
+        self.Aij[self.added_mass_i,:]=0.0
         self.addedMass.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -672,7 +673,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.mesh.elementBoundaryMaterialTypes,
-            self.Aij)
+            self.Aij,
+            self.added_mass_i)
         logEvent("Added Mass Tensor " +`self.Aij`)
         logEvent("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1

@@ -44,7 +44,8 @@ namespace proteus
                                    int* elementBoundaryElementsArray,
                                    int* elementBoundaryLocalElementBoundariesArray,
 				   int* elementBoundaryMaterialTypesArray,
-				   double* Aij)=0;
+				   double* Aij,
+				   int added_mass_i)=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -106,10 +107,15 @@ namespace proteus
     inline
       void exteriorNumericalDiffusiveFlux(const int flag,
 					  const double n[nSpace],
+					  const double a[nSpace],
 					  double& flux)
     {
       if(flag == 9)
-	flux = -n[2];
+	{
+	  flux=0.0;
+	  for (int I=0;I<nSpace;I++)
+	    flux -= a[I]*n[I];
+	}
       else
 	flux=0.0;
     }
@@ -252,7 +258,8 @@ namespace proteus
                            int* elementBoundaryElementsArray,
                            int* elementBoundaryLocalElementBoundariesArray,
 			   int* elementBoundaryMaterialTypesArray,
-			   double* Aij)
+			   double* Aij,
+			   int added_mass_i)
     {
       for(int eN=0;eN<nElements_global;eN++)
         {
@@ -423,8 +430,35 @@ namespace proteus
               //
               //calculate the numerical fluxes
               //
+	      double added_mass_a[3] = {0.0, 0.0, 0.0};
+	      switch (added_mass_i)
+		{
+		case 0:
+		  added_mass_a[0] = 1.0;
+		  break;
+		case 1:
+		  added_mass_a[1] = 1.0;
+		  break;
+		case 2:
+		  added_mass_a[2] = 1.0;
+		  break;
+		  // from here down we really need to pass in center of gravity and form unit angular accelerations about axes and convert to bdry acceleration
+		case 3:
+		  added_mass_a[0] = 1.0;
+		  break;
+		case 4:
+		  added_mass_a[0] = 1.0;
+		  break;
+		case 5:
+		  added_mass_a[0] = 1.0;
+		      break;
+		default:
+		  assert(0);
+		}
+		  
               exteriorNumericalDiffusiveFlux(elementBoundaryMaterialTypesArray[ebN],
 					     normal,
+					     added_mass_a,
                                              diff_flux_ext);
               //
               //update residuals
@@ -436,7 +470,14 @@ namespace proteus
                 }//i
 	      //calculate Aij
 	      if (elementBoundaryMaterialTypesArray[ebN] == 9)
-		Aij[2] += u_ext*normal[2]*dS;
+		{
+		  for (int i=0;i<3;i++)
+		    Aij[added_mass_i*6 + i] += u_ext*normal[i]*dS;
+		  for (int i=0;i<3;i++)
+		    {
+		      Aij[added_mass_i*6 + 3 + i] = -9999999;
+		    }
+		}
             }//kb
           //
           //update the element and global residual storage
