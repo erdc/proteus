@@ -465,6 +465,8 @@ namespace proteus
                         return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,3,5,4,4,4,4>());
                       else if (nQuadraturePoints_elementIn == 4)
                         return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,3,4,4,4,4,3>());//added to pass: tests/griffiths_lane_6/test_griffiths_lane6.py
+		      else if (nQuadraturePoints_elementIn == 24 && nQuadraturePoints_elementBoundaryIn == 12)
+			return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,3,24,4,4,4,12>());
                       else
                         {
                           NO_INSTANCE;

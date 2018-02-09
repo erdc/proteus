@@ -782,6 +782,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('advectiveFlux', 0)],
             self.ebqe[('diffusiveFlux', 0, 0)],
+            self.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('diffusiveFlux_bc', 0, 0)],
             self.offset[0], self.stride[0],
             r,
