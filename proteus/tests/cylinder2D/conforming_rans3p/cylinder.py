@@ -125,7 +125,7 @@ runCFL=0.33
 nDTout = int(round(T/dt_fixed))
 
 # Numerical parameters
-ns_forceStrongDirichlet = True#False
+ns_forceStrongDirichlet = False
 ns_sed_forceStrongDirichlet = False
 if useMetrics:
     ns_shockCapturingFactor  = 0.5
