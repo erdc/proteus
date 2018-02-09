@@ -36,7 +36,8 @@ cdef extern from "mprans/AddedMass.h" namespace "proteus":
                                int * elementBoundaryMaterialTypesArray,
                                double* Aij,
                                int added_mass_i,
-                               double * barycenters)
+                               double * barycenters,
+                               int * flags_rigidbody)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -130,7 +131,8 @@ cdef class AddedMass:
                           numpy.ndarray elementBoundaryMaterialTypesArray,
                           numpy.ndarray Aij,
                           int added_mass_i,
-                          numpy.ndarray barycenters):
+                          numpy.ndarray barycenters,
+                          numpy.ndarray flags_rigidbody):
         self.thisptr.calculateResidual(< double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -163,7 +165,8 @@ cdef class AddedMass:
                                        < int *> elementBoundaryMaterialTypesArray.data,
                                        < double* > Aij.data,
                                        added_mass_i,
-                                       < double *> barycenters.data)
+                                       < double *> barycenters.data,
+                                       < int *> flags_rigidbody.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,

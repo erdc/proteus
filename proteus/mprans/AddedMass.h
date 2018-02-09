@@ -5,6 +5,8 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+using namespace std;
+
 namespace proteus
 {
   class cppAddedMass_base
@@ -46,7 +48,8 @@ namespace proteus
                                    int* elementBoundaryMaterialTypesArray,
                                    double* Aij,
                                    int added_mass_i,
-                                   double* barycenters)=0;
+                                   double* barycenters,
+                                   int* flags_rigidbody)=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -107,12 +110,16 @@ namespace proteus
 
     inline
       void exteriorNumericalDiffusiveFlux(const double n[nSpace],
-					  const double a[nSpace],
-					  double& flux)
+                                          const double a[nSpace],
+                                          int isBodyBoundary,
+                                          double& flux)
     {
       flux=0.0;
-      for (int I=0;I<nSpace;I++)
-	flux -= a[I]*n[I];
+      if (isBodyBoundary == 1) {
+        for (int I=0;I<nSpace;I++) {
+          flux -= a[I]*n[I];
+        }
+      }
     }
 
     inline void calculateElementResidual(//element
@@ -255,7 +262,8 @@ namespace proteus
                            int* elementBoundaryMaterialTypesArray,
                            double* Aij,
                            int added_mass_i,
-                           double* barycenters)
+                           double* barycenters,
+                           int* flags_rigidbody)
     {
       for(int eN=0;eN<nElements_global;eN++)
         {
@@ -474,6 +482,7 @@ namespace proteus
 	      
               exteriorNumericalDiffusiveFlux(normal,
                                              added_mass_a,
+                                             flags_rigidbody[eBMT],
                                              diff_flux_ext);
               //
               //update residuals
