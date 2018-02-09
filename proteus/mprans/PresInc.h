@@ -635,7 +635,7 @@ namespace proteus
                                              u_ext,
                                              bc_u_ext,
                                              bc_diff_flux[ebNE_kb],
-                                             penalty,
+                                             100.0*penalty,
                                              diff_flux_ext);
               if (isDOFBoundary[ebNE_kb] != 1)
                 diff_flux_ext = 0.0; // mql: don't consider diffusive flux unless Dirichlet BC
@@ -1015,7 +1015,7 @@ namespace proteus
                                                                a_ext,
                                                                u_trial_trace_ref[ebN_local_kb_j],
                                                                &u_grad_trial_trace[j_nSpace],
-                                                               penalty)*u_test_dS[i]
+                                                               100.0*penalty)*u_test_dS[i]
                         +
                         ck.ExteriorElementBoundaryScalarDiffusionAdjointJacobian
                         (isDOFBoundary[ebNE_kb],

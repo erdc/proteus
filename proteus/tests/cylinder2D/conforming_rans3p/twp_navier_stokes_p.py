@@ -45,7 +45,7 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     turbulenceClosureModel=ns_closure,
                                     movingDomain=movingDomain,
                                     dragAlpha=dragAlpha,
-                                    PSTAB=1.0)
+                                    PSTAB=0.0)
 
 
 def getDBC_u(x,flag):
