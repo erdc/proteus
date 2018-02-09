@@ -30,13 +30,27 @@ class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exter
 
 class Coefficients(TC_base):
     """
-    TODO
+    Parameters
+    ----------
+    nd: int
+        Number of space dimensions.
+    V_model: int
+        Index of Navier-Stokes model.
+    barycenters: array_like
+        List of domain barycenters.
+    flags_rigidbody: array_like
+        Array of integers of length at least as long as maximum domain flag,
+        with 0 at indices corresponding to flags for fixed walls, and 1 at
+        indices corresponding to flags for rigid bodies.
+        e.g. if only flag 2 is rigid body, and the max value of flag is 5,
+        the array will look like np.array([0,0,1,0,0,0])
     """
 
     def __init__(self,
                  nd=2,
                  V_model=None,
-                 barycenters=None):
+                 barycenters=None,
+                 flags_rigidbody=None):
         """
         TODO
         """
@@ -57,6 +71,15 @@ class Coefficients(TC_base):
                          useSparseDiffusion=True)
         self.flowModelIndex=V_model
         self.barycenters = barycenters
+        if flags_rigidbody is not None:
+            self.flags_rigidbody = flags_rigidbody
+        else:
+            Profiling.logEvent("Warning: flags_rigidbody was not set for"+
+                               "AddedMass model, using a zero array of length"+
+                               "1000, this sets all boundaries as fixed walls"+
+                               "for the added mass model and might cause"+
+                               " issues if the domain contains more flags")
+            self.flags_rigidbody = np.zeros(1000, dtype='int32')
 
     def attachModels(self, modelList):
         """
@@ -627,6 +650,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.nElementBoundaryQuadraturePoints_elementBoundary,
             compKernelFlag)
         self.barycenters = self.coefficients.barycenters
+        self.flags_rigidbody = self.coefficients.flags_rigidbody
 
     def calculateCoefficients(self):
         pass
@@ -680,7 +704,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryMaterialTypes,
             self.Aij,
             self.added_mass_i,
-            self.barycenters)
+            self.barycenters,
+            self.flags_rigidbody)
         logEvent("Added Mass Tensor " +`self.Aij`)
         logEvent("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1

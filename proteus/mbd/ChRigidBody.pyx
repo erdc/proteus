@@ -736,11 +736,11 @@ cdef class ProtChBody:
         #     self.ChBody.SetBodyFixed(False)
         if self.ProtChSystem.model is not None:
             if self.ProtChSystem.model_addedmass is not None:
-                am = self.ProtChSystem.model_addedmass.levelModelList[-1]
+                # getting added mass matrix
                 self.Aij[:] = 0
+                am = self.ProtChSystem.model_addedmass.levelModelList[-1]
                 for i in range(self.i_start, self.i_end):
                     self.Aij += am.Aij[i]
-                self.setAddedMass(self.Aij)
             self.F_prot = self.getPressureForces()+self.getShearForces()
             self.M_prot = self.getMoments()
             if self.ProtChSystem.first_step is True:
@@ -774,6 +774,8 @@ cdef class ProtChBody:
                     F_body = 2*F_bar-self.F_applied_last
                     M_body = 2*M_bar-self.M_applied_last
             self.setExternalForces(F_body, M_body)
+        # setting added mass
+        self.setAddedMass(self.Aij)
         self.predicted = False
 
     def setExternalForces(self, np.ndarray forces, np.ndarray moments):
@@ -1276,7 +1278,6 @@ cdef class ProtChBody:
 cdef class ProtChSystem:
     cdef cppSystem * thisptr
     cdef public object model
-    cdef object subcomponents
     cdef public double dt_init
     cdef double proteus_dt
     cdef double proteus_dt_last
@@ -1295,6 +1296,7 @@ cdef class ProtChSystem:
     cdef double dt_last
     cdef double t
     cdef public:
+        cdef object subcomponents
         double chrono_dt
         bool build_kdtree
         bool dist_search
@@ -1398,27 +1400,26 @@ cdef class ProtChSystem:
             nb_steps = self.min_nb_steps
         # solve Chrono system
         self.step_nb += 1
-        if self.step_nb > self.step_start:
-            # self.thisptr.system.setChTime()
-            comm = Comm.get().comm.tompi4py()
-            t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
-            Profiling.logEvent('Solving Chrono system from t='
-                            +str(t)
-                            +' with dt='+str(self.dt)
-                            +'('+str(nb_steps)+' substeps)')
-            if comm.rank == self.chrono_processor and dt > 0:
-                dt_substep = self.dt/nb_steps
-                for i in range(nb_steps):
-                    self.thisptr.step(<double> dt_substep, 1)
-                    # tri: hack to update forces on cables
-                    for s in self.subcomponents:
-                        if type(s) is ProtChMoorings:
-                            # update forces keeping same fluid vel/acc
-                            s.updateForces()
-            t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
-            Profiling.logEvent('Solved Chrono system to t='+str(t))
-            if self.scheme == "ISS":
-                Profiling.logEvent('Chrono system to t='+str(t+self.dt_fluid_next/2.))
+        # self.thisptr.system.setChTime()
+        comm = Comm.get().comm.tompi4py()
+        t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
+        Profiling.logEvent('Solving Chrono system from t='
+                        +str(t)
+                        +' with dt='+str(self.dt)
+                        +'('+str(nb_steps)+' substeps)')
+        if comm.rank == self.chrono_processor and dt > 0:
+            dt_substep = self.dt/nb_steps
+            for i in range(nb_steps):
+                self.thisptr.step(<double> dt_substep, 1)
+                # tri: hack to update forces on cables
+                for s in self.subcomponents:
+                    if type(s) is ProtChMoorings:
+                        # update forces keeping same fluid vel/acc
+                        s.updateForces()
+        t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
+        Profiling.logEvent('Solved Chrono system to t='+str(t))
+        if self.scheme == "ISS":
+            Profiling.logEvent('Chrono system to t='+str(t+self.dt_fluid_next/2.))
 
     def calculate(self, proteus_dt=None):
         """Does chrono system calculation for a Proteus time step
@@ -2707,6 +2708,8 @@ cdef class ProtChAddedMass:
     def attachModel(self, model, ar):
         """Attaches Proteus model to auxiliary variable
         """
+        self.model = model
+        # attaching model to ProtChSystem to access Aij
         self.ProtChSystem.model_addedmass = model
         return self
 
