@@ -1491,6 +1491,8 @@ def _generateMesh(domain):
     # --------------------------- #
     # ----- MESH GENERATION ----- #
     # --------------------------- #
+    from proteus import Comm
+    comm = Comm.get()
     mesh = domain.MeshOptions
     if comm.isMaster():
         if mesh.outputFiles['poly'] is True:
@@ -1501,6 +1503,7 @@ def _generateMesh(domain):
             domain.writeAsymptote(mesh.outputFiles_name)
         if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
             domain.writeGeo(mesh.outputFiles_name)
+    domain.polyfile=mesh.outputFiles_name
     mesh.setTriangleOptions()
 
 
