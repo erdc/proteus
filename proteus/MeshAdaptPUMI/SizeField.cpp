@@ -880,4 +880,3 @@ int MeshAdaptPUMIDrvr::gradeMesh()
   if(comm_rank==0)
     std::cout<<"Completed grading\n";
 }
-

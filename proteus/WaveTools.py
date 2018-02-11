@@ -711,6 +711,15 @@ class  SteadyCurrent:
                  rampTime = 0.):
         self.mwl = mwl
         self.U = U
+        try:
+            if len(self.U)!=3:
+                logEvent("ERROR! Wavetools.py: SteadyCurrent velocity argument needs to be a vector with length = 3")
+                sys.exit(1)
+
+        except:
+            logEvent("ERROR! Wavetools.py: SteadyCurrent velocity argument needs to be a vector with length = 3")
+            sys.exit(1)
+
         self.ramp = rampTime
     def eta(self,x,t):
         """Calculates free surface elevation (SolitaryWave class)
@@ -727,7 +736,7 @@ class  SteadyCurrent:
             Free-surface elevation as a float
 
         """
-        return  self.mwl
+        return 0.
     def u(self,x,t):
         """Calculates wave velocity vector (SolitaryWave class).
         Parameters

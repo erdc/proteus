@@ -18,6 +18,7 @@ from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 import cMCorr3P
 
+
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import levelSetConservationCoefficientsEvaluate
     from proteus.ctransportCoefficients import levelSetConservationCoefficientsEvaluate_sd
@@ -28,11 +29,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             epsFactHeaviside=0.0,
             epsFactDirac=1.0,
             epsFactDiffusion=2.0,
-            LS_model=3,
-            V_model=2,
-            ME_model=5,
-            VOS_model=0,
-            VOF_model=4,
+            LS_model=None,
+            V_model=None,
+            ME_model=None,
+            VOS_model=None,
+            VOF_model=None,
             checkMass=True,
             sd=True,
             nd=None,
@@ -40,7 +41,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             useMetrics=0.0,
             useConstantH=False,
             set_vos=None):
-        self.set_vos=set_vos
+        self.set_vos = set_vos
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
         self.sd = sd
@@ -120,8 +121,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # volume of fluid
         self.vofModel = modelList[self.VOF_model]
         self.q_H_vof = modelList[self.VOF_model].q[('u', 0)]
-        if  self.VOS_model is not None:
-            self.q_vos = modelList[self.VOS_model].q[('u',0)]
+        if self.VOS_model is not None:
+            self.q_vos = modelList[self.VOS_model].q[('u', 0)]
         else:
             self.q_vos = self.vofModel.coefficients.q_vos
         self.ebqe_H_vof = modelList[self.VOF_model].ebqe[('u', 0)]
@@ -308,7 +309,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  sd=True,
                  movingDomain=False,
                  bdyNullSpace=False):
-        self.bdyNullSpace=bdyNullSpace
+        self.bdyNullSpace = bdyNullSpace
         self.useConstantH = coefficients.useConstantH
         from proteus import Comm
         #
@@ -516,7 +517,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             elif self.nSpace_global == 1:
                 assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 1)
 
-        # pdb.set_trace()
         #
         # simplified allocations for test==trial and also check if space is mixed or not
         #
@@ -693,7 +693,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
         if self.coefficients.set_vos:
-            self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
+            self.coefficients.set_vos(self.q['x'], self.coefficients.q_vos)
         r.fill(0.0)
         # Load the unknowns into the finite element dof
         self.setUnknowns(u)
@@ -1402,6 +1402,7 @@ class GlobalConstantNewton(proteus.NonlinearSolvers.NonlinearSolver):
         self.F.globalConstantSolve(u, r)
         self.failedFlag = False
         return self.failedFlag
+
 
 from proteus.flcbdfWrappers import globalSum
 
