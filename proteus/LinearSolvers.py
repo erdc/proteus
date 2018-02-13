@@ -1601,6 +1601,9 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
          * mass form - This flag allows the user to specify what form
            the mass matrix takes, lumped (True) or full (False).
 
+         * number chebyshev its - This integer allows the user to
+           specify how many Chebyshev its to use if a full mass matrix
+           is used and a direct solver is not applied.
     """
     def __init__(self,
                  L,
@@ -1636,7 +1639,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
             a chebyshev semi-iteration.  0  indicates the semi-
             iteration should not be used, where as a number 1,2,...
             indicates the number of iterations the method should take.
-
         """
         NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
         # Initialize the discrete operators
