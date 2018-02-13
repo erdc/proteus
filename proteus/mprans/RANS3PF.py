@@ -801,9 +801,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             mesh_l2g=None):
         if c.has_key('x') and len(c['x'].shape) == 3:
             if self.nd == 2:
-                # mwf debug
-                #import pdb
-                # pdb.set_trace()
                 c[('r', 0)].fill(0.0)
                 eps_source = self.eps_source
                 if self.waveFlag == 1:  # secondOrderStokes:
@@ -852,15 +849,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                     c['x'],
                                                     c[('r', 0)],
                                                     t)
-
-                # mwf debug
-                if numpy.isnan(c[('r', 0)].any()):
-                    import pdb
-                    pdb.set_trace()
             else:
-                # mwf debug
-                #import pdb
-                # pdb.set_trace()
                 c[('r', 0)].fill(0.0)
                 eps_source = self.eps_source
                 if self.waveFlag == 1:  # secondOrderStokes:
@@ -2238,6 +2227,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
 
+        self.pressureModel.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
+        self.pressureModel.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
+        self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2447,6 +2440,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_netMoments,
             self.coefficients.particle_surfaceArea,
             self.coefficients.particle_nitsche,
+            self.q['phisError'],
+            self.phisErrorNodal,
             self.STABILIZATION_TYPE,
             self.elementQuadratureWeights[('u', 0)].sum(),
             self.coefficients.cMax,

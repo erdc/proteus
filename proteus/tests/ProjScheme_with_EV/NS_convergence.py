@@ -71,8 +71,8 @@ elif spaceOrder == 2:
         elementBoundaryQuadrature = CubeGaussQuadrature(nd - 1, 4)
     else:
         basis = C0_AffineQuadraticOnSimplexWithNodalBasis
-        elementQuadrature = SimplexGaussQuadrature(nd, 4)
-        elementBoundaryQuadrature = SimplexGaussQuadrature(nd - 1, 4)
+        elementQuadrature = SimplexGaussQuadrature(nd, 5)
+        elementBoundaryQuadrature = SimplexGaussQuadrature(nd - 1, 5)
 
 if pspaceOrder == 1:
     if useHex:
