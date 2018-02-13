@@ -221,7 +221,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # COMPUTE NEW VELOCITY (if given by user) #
         if self.model.hasVelocityFieldAsFunction:
             self.model.updateVelocityFieldAsFunction()
-            
+
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,
@@ -355,7 +355,7 @@ class LevelModel(OneLevelTransport):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[
                     0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         self.u_dof_old = None
-        
+
         # Simplicial Mesh
         # assume the same mesh for  all components for now
         self.mesh = self.u[0].femSpace.mesh
@@ -621,7 +621,7 @@ class LevelModel(OneLevelTransport):
         self.vectors_elementBoundaryQuadrature = set()
         self.tensors_elementBoundaryQuadrature = set()
         #
-        # allocate residual and Jacobian storage        
+        # allocate residual and Jacobian storage
         #
         self.inflowBoundaryBC = {}
         self.inflowBoundaryBC_values = {}
@@ -777,7 +777,7 @@ class LevelModel(OneLevelTransport):
         if ('velocityField') in dir(options):
             self.velocityField = options.velocityField
             self.hasVelocityFieldAsFunction = True
-            
+
     # mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
@@ -817,7 +817,7 @@ class LevelModel(OneLevelTransport):
         if self.u_dof_old is None:
             # Pass initial condition to u_dof_old
             self.u_dof_old = numpy.copy(self.u[0].dof)
-            
+
         r.fill(0.0)
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()

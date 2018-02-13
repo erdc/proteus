@@ -236,7 +236,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #2: Linear elliptic re-distancing via C0 normal reconstruction and single pot.
         #3: Non-linear elliptic re-distancing via C0 normal reconstruction and single pot.
         self.alpha=alpha
-        
+
     def attachModels(self, modelList):
         if self.nModelId is not None:
             self.nModel = modelList[self.nModelId]
@@ -287,7 +287,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # COMPUTE NORMAL RECONSTRUCTION
         if self.ELLIPTIC_REDISTANCING == True and self.ELLIPTIC_REDISTANCING_TYPE == 2: # linear via C0 normal reconstruction
             self.rdModel.getNormalReconstruction()
-            
+
         if self.nModel is not None:
             log("resetting signed distance level set to current level set", level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
@@ -878,7 +878,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.lumped_qz = numpy.zeros(self.u[0].dof.shape,'d')
         self.ellipticStage = 1
         self.auxEllipticFlag = 1
-        
+
         log(memory("stride+offset", "OneLevelTransport"), level=4)
         if numericalFluxType is not None:
             if options is None or options.periodicDirichletConditions is None:
@@ -1001,7 +1001,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.offset[0],self.stride[0],
             self.nFreeDOF_global[0], #numDOFs
             self.abs_grad_u)
-        
+
     def getNormalReconstruction(self):
         self.rdls3p.normalReconstruction(#element
             self.u[0].femSpace.elementMaps.psi,
@@ -1021,7 +1021,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_qx,
             self.lumped_qy,
             self.lumped_qz)
-        
+
     def getResidual(self, u, r):
         import pdb
         import copy
@@ -1069,7 +1069,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             self.calculateResidual = self.rdls3p.calculateResidual
             self.calculateJacobian = self.rdls3p.calculateJacobian
-            
+
         self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1142,7 +1142,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 2 and self.ellipticStage == 1:
             self.ellipticStage = 2
-            
+
         # print "m_tmp",self.timeIntegration.m_tmp[0]
         # print "dH",self.q[('dH',0,0)]
         # print "dH_sge",self.q[('dH_sge',0,0)]
@@ -1175,7 +1175,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             alpha_bdf = self.timeIntegration.dt
             beta_bdf = self.timeIntegration.m_last
-            
+
         self.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1233,7 +1233,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ELLIPTIC_REDISTANCING_TYPE,
             self.abs_grad_u,
             self.coefficients.alpha)
-        
+
         log("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
