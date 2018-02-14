@@ -1489,7 +1489,7 @@ namespace proteus
                   eN_k_nSpace = eN_k*nSpace,
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
                 register double
-                  coeff, delta, hK,
+                  coeff, delta,
                   abs_grad_u, qx, qy, qz, normalReconstruction[nSpace],
                   u=0,grad_u[nSpace],
                   m=0.0,
@@ -1583,7 +1583,6 @@ namespace proteus
                 // COMPUTE DELTA FUNCTION //
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi
                                                  +(1.0-useMetrics)*elementDiameter[eN]);
-                hK = useMetrics*h_phi + (1.0-useMetrics)*elementDiameter[eN];
                 delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
 
                 // UPDATE ELEMENT RESIDUAL //
@@ -1597,8 +1596,8 @@ namespace proteus
                       elementResidual_u[i] +=
                         ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace])
                         -ck.NumericalDiffusion(1.0,normalReconstruction,&u_grad_test_dV[i_nSpace])
-                        //+alpha/hK*(u-phi_ls[eN_k])*delta*u_test_dV[i]; // consistent mass matrix
-                        +alpha/hK*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i]; //lumped mass matrix
+                        //+alpha*(u-phi_ls[eN_k])*delta*u_test_dV[i]; // consistent mass matrix
+                        +alpha*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i]; //lumped mass matrix
                     }
                 else // =1. Nonlinear via single or double pot., with(out) |grad(u)| reconstructed
                   for(int i=0;i<nDOF_test_element;i++)
@@ -1609,8 +1608,8 @@ namespace proteus
 
                       elementResidual_u[i] +=
                         ck.NumericalDiffusion(coeff,grad_u,&u_grad_test_dV[i_nSpace])
-                        //+alpha/hK*(u-phi_ls[eN_k])*delta*u_test_dV[i]; // consistent mass matrix
-                        + alpha/hK*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i]; //lumped mass matrix
+                        //+alpha*(u-phi_ls[eN_k])*delta*u_test_dV[i]; // consistent mass matrix
+                        + alpha*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i]; //lumped mass matrix
                     }//i
               }//k
             //
@@ -1702,7 +1701,7 @@ namespace proteus
                   eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
                 //declare local storage
                 register double
-                  coeff1, coeff2, delta, abs_grad_u, hK,
+                  coeff1, coeff2, delta, abs_grad_u,
                   grad_u[nSpace],
                   jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
                   u_grad_trial[nDOF_trial_element*nSpace],
@@ -1778,7 +1777,6 @@ namespace proteus
                 // COMPUTE DELTA FUNCTION //
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi
                                                  +(1.0-useMetrics)*elementDiameter[eN]);
-                hK = useMetrics*h_phi + (1.0-useMetrics)*elementDiameter[eN];
                 delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
 
                 for(int i=0;i<nDOF_test_element;i++)
@@ -1798,8 +1796,8 @@ namespace proteus
                             + coeff2*dV*
                             ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[i_nSpace])*
                             ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[j_nSpace]) )
-                          //+alpha/hK*u_trial_ref[k*nDOF_trial_element+j]*delta*u_test_dV[i];//cons.
-                          + (i == j ? alpha/hK*delta*u_test_dV[i] : 0.); //lumped
+                          //+alpha*u_trial_ref[k*nDOF_trial_element+j]*delta*u_test_dV[i];//cons.
+                          + (i == j ? alpha*delta*u_test_dV[i] : 0.); //lumped
                       }//j
                   }//i
               }//k

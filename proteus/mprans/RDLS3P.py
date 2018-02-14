@@ -193,7 +193,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             # Parameters for elliptic re-distancing
             ELLIPTIC_REDISTANCING=False,
             ELLIPTIC_REDISTANCING_TYPE=2, #Linear elliptic re-distancing by default
-            alpha=100.0): #penalization param for elliptic re-distancing
+            alpha=1000.0): #penalization param for elliptic re-distancing
 
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
@@ -1138,7 +1138,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_qx,
             self.lumped_qy,
             self.lumped_qz,
-            self.coefficients.alpha)
+            self.coefficients.alpha/self.elementDiameter.min())
 
         if self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 2 and self.ellipticStage == 1:
             self.ellipticStage = 2
@@ -1232,7 +1232,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # elliptic re-distancing
             self.coefficients.ELLIPTIC_REDISTANCING_TYPE,
             self.abs_grad_u,
-            self.coefficients.alpha)
+            self.coefficients.alpha/self.elementDiameter.min())
 
         log("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
