@@ -4,10 +4,15 @@ from proteus import Domain
 from proteus.default_n import *
 from proteus.Profiling import logEvent
 
-#  Discretization -- input options
-#Refinement = 20#45min on a single core for spaceOrder=1, useHex=False
-Refinement = 8
-DX=0.04
+from proteus import Context
+
+ct = Context.Options([
+    ("T", 4.0, "Time interval [0, T]"),
+    ("he",0.04, "maximum size of edges"),
+    ("vspaceOrder",1,"FE space for velocity"),
+    ("pspaceOrder",1,"FE space for pressure")
+], mutable=True)
+
 
 sedimentDynamics=False
 genMesh = True
@@ -16,8 +21,8 @@ movingDomain = False
 useOldPETSc = False
 useSuperlu = True#False
 timeDiscretization = 'vbdf'#vbdf'#'vbdf'  # 'vbdf', 'be', 'flcbdf'
-spaceOrder = 2
-pspaceOrder = 1
+spaceOrder = ct.vspaceOrder
+pspaceOrder = ct.pspaceOrder
 useHex = False
 useRBLES = 0.0
 useMetrics = 1.0
@@ -42,7 +47,6 @@ if useMetrics not in [0.0, 1.0]:
     print "INVALID: useMetrics"
     sys.exit()
 
-#  Discretization
 nd = 2
 
 if spaceOrder == 1:
@@ -77,24 +81,16 @@ elif pspaceOrder == 2:
     else:
         pbasis = C0_AffineQuadraticOnSimplexWithNodalBasis
 
-# Domain and mesh
-#L = (0.584,0.350)
-L = (2.2, 0.41)
-he = L[0]/float(4*Refinement-1)
-he*=0.5
-he*=0.5
-#he*=0.5
-#he*=0.5
-#he*=0.5
-#he*=0.5
-#he*=0.5
+
 weak_bc_penalty_constant = 100.0
 nLevels = 1
 #parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
 parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.node
 nLayersOfOverlapForParallel = 0
 structured = False
-he=DX
+
+he=ct.he
+DX=he 
 from symmetricDomain_john import symmetric2D
 
 domain = symmetric2D(box=(2.2,0.41),
@@ -118,7 +114,7 @@ triangleOptions= "VApq30Dena"
 
 logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 # Time stepping
-T=8.0
+T=ct.T
 dt_fixed = 0.005#0.03
 dt_init = 0.0025#min(0.1*dt_fixed,0.001)
 runCFL=0.33
@@ -230,23 +226,4 @@ dragAlpha = 0.0
 g = [0.0, 0.0]
 
 Um = 1.5
-# Um = 1/0.41**2
-# import math
-# def velRamp(t):
-#     if t < 1.0:
-#         return Um*(1.0+math.cos((t-1.0)*math.pi/1.0))/2.0
-#     else:
-#         return Um
-# 
-# print "U",velRamp(10.0)*6.0*(fl_H/2.0)*(fl_H-fl_H/2.0)
-# def signedDistance(x):
-#     return x[1] - L[1]/2.
 
-# def particle_sdf(t, x):
-#     cx = 0.2# + t*2.2/8.0
-#     cy = 0.2
-#     r = math.sqrt( (x[0]-cx)**2 + (x[1]-cy)**2)
-#     n = ((cx-x[0])/r,(cy-x[1])/r)
-#     if r < 1.0e-16:
-#         n = (1.0,0.0)
-#     return  r - 0.05,n
