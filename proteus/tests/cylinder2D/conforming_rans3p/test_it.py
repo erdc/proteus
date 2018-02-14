@@ -41,17 +41,16 @@ class TestIT():
             else:
                 pass
 
-    def test_ex1(self):
-        self.compare_name = "T1P1"
-        self.example_setting("T=1.0 vspaceOrder=1")
+#     def test_ex1(self):
+#         self.compare_name = "T8P2"
+#         self.example_setting("T=8.0 vspaceOrder=2 onlySaveFinalSolution=True")
 
     def test_ex2(self):
-        self.compare_name = "T1P2"
-        self.example_setting("T=1.0 vspaceOrder=2")
+        self.compare_name = "T4P2"
+        self.example_setting("T=4.0 vspaceOrder=2 onlySaveFinalSolution=True")
 
 
     def example_setting(self, pre_setting):
-
         Context.contextOptionsString = pre_setting
 
         import cylinder
