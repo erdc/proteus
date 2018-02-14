@@ -5,7 +5,7 @@ import tables
 
 
 comm = Comm.get()
-Profiling.logLevel = 2
+Profiling.logLevel = 7
 Profiling.verbose = False
 import numpy as np
 
@@ -42,12 +42,12 @@ class TestIT():
                 pass
 
     def test_ex1(self):
-        self.example_setting("T=1.0 vspaceOrder=1")
         self.compare_name = "T1P1"
+        self.example_setting("T=1.0 vspaceOrder=1")
 
-#     def test_ex2(self):
-#         self.example_setting("T=1.0 vspaceOrder=2")
-#         self.compare_name = "T1P2"
+    def test_ex2(self):
+        self.compare_name = "T1P2"
+        self.example_setting("T=1.0 vspaceOrder=2")
 
 
     def example_setting(self, pre_setting):
@@ -81,13 +81,9 @@ class TestIT():
                 sList.append(s)
         else:
             sList = my_so.sList
-        
-        so = default_so
-        so.name = my_so.name
-        so.tnList = my_so.tnList
 
         # NUMERICAL SOLUTION #
-        ns = proteus.NumericalSolution.NS_base(so,
+        ns = proteus.NumericalSolution.NS_base(my_so,
                                                pList,
                                                nList,
                                                sList,
