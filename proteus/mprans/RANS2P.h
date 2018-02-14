@@ -17,6 +17,7 @@ namespace proteus
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
+				   double PRESSURE_PROJECTION_STABLIZATION,
                                    double* numerical_viscosity,
                                    //element
                                    double* mesh_trial_ref,
@@ -175,6 +176,7 @@ namespace proteus
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
+				   double PRESSURE_PROJECTION_STABLIZATION,
                                    //element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -1794,6 +1796,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
+                             double PRESSURE_PROJECTION_STABLIZATION,
                              double* numerical_viscosity,
                              //element
                              double* mesh_trial_ref,
@@ -3591,6 +3594,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
+                             double PRESSURE_PROJECTION_STABLIZATION,
                              //element
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
