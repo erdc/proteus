@@ -631,6 +631,52 @@ static void SmoothField(apf::Field *f)
   op.applyToDimension(0);
 }
 
+void getTargetError(apf::Mesh* m, double &target_error){
+  //Implemented for 3D and for serial case only so far
+  assert(m->getDimension()==3);
+  std::cout<<"Enter target Error\n";
+  //apf::Field* errField = m->findField("ErrorRegion");
+  apf::Field* errField = m->findField("VMSH1");
+  apf::Field* interfaceField = m->findField("vof");
+  apf::Field* targetField = apf::createField(m,"targetError",apf::SCALAR,apf::getVoronoiShape(m->getDimension(),1));
+  apf::MeshEntity* ent;
+  apf::MeshIterator* it = m->begin(m->getDimension());
+  apf::MeshElement* element;
+  apf::Element* vofElem;
+  std::vector <double> errVect;
+  while( (ent = m->iterate(it))){
+    element = apf::createMeshElement(m, ent);
+    vofElem = apf::createElement(interfaceField,element);
+    double vofVal = apf::getScalar(vofElem,apf::Vector3(1./3.,1./3.,1./3.));
+    if(vofVal < 0.9 && vofVal > 0.1){ //at the interface
+      double errorValue = apf::getScalar(errField,ent,0);
+      errVect.push_back(errorValue);    
+      apf::setScalar(targetField,ent,0,errorValue);
+    }
+    else{
+      apf::setScalar(targetField,ent,0,0.0);
+    }
+  }
+  m->end(it);
+  std::cout<<"Past creation of vector\n";
+  std::ofstream myfile;
+  myfile.open("interfaceErrors.txt", std::ios::app );
+  for(int i=0;i<errVect.size();i++){
+    myfile << errVect[i]<<std::endl;
+  }
+  myfile.close();
+  std::sort(errVect.begin(),errVect.end());
+  int vectorSize = errVect.size();
+  if(vectorSize %2 ==0){
+    int idx1 = vectorSize/2-1;
+    target_error = (errVect[idx1]+errVect[idx1+1])/2; //get average
+  }
+  else
+    target_error = errVect[(vectorSize-1)/2];
+  std::cout<<"The estimated target error is "<<target_error<<std::endl;
+  //std::abort();
+}
+
 int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 //High level function that obtains the size scales and the size frames for ERM-based adapt and uses the computed total error
 {
