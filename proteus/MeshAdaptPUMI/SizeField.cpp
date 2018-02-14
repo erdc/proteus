@@ -702,8 +702,10 @@ void getTargetError(apf::Mesh* m, double &target_error){
   //Implemented for 3D and for serial case only so far
   assert(m->getDimension()==3);
   std::cout<<"Enter target Error\n";
-  apf::Field* errField = m->findField("ErrorRegion");
+  //apf::Field* errField = m->findField("ErrorRegion");
+  apf::Field* errField = m->findField("VMSH1");
   apf::Field* interfaceField = m->findField("vof");
+  apf::Field* targetField = apf::createField(m,"targetError",apf::SCALAR,apf::getVoronoiShape(m->getDimension(),1));
   apf::MeshEntity* ent;
   apf::MeshIterator* it = m->begin(m->getDimension());
   apf::MeshElement* element;
@@ -713,9 +715,13 @@ void getTargetError(apf::Mesh* m, double &target_error){
     element = apf::createMeshElement(m, ent);
     vofElem = apf::createElement(interfaceField,element);
     double vofVal = apf::getScalar(vofElem,apf::Vector3(1./3.,1./3.,1./3.));
-    if(vofVal < 0.6 && vofVal > 0.4){ //at the interface
+    if(vofVal < 0.9 && vofVal > 0.1){ //at the interface
       double errorValue = apf::getScalar(errField,ent,0);
       errVect.push_back(errorValue);    
+      apf::setScalar(targetField,ent,0,errorValue);
+    }
+    else{
+      apf::setScalar(targetField,ent,0,0.0);
     }
   }
   m->end(it);
