@@ -30,6 +30,7 @@ struct Inputs{
   apf::Element* velo_elem;
   apf::Element* vof_elem;
   apf::Matrix3x3 KJ;
+  double* g;
 };
 
 double get_nu_err(struct Inputs info);
@@ -238,6 +239,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     info.KJ = KJ;
     info.nsd = nsd;
     info.density = density;
+    info.g = &g[0];
 
 /*
     double pressure = apf::getScalar(pres_elem,qpt);
@@ -327,6 +329,7 @@ apf::Vector3 getResidual(apf::Vector3 qpt,struct Inputs &info){
       for(int j=0;j<info.nsd;j++){
         tempConv[i] = tempConv[i] + vel_vect[j]*grad_vel[i][j];
       }
+      tempConv[i] = tempConv[i] - info.g[i]; //body force contribution
     }
     apf::Vector3 tempResidual = (tempConv + grad_pres/info.density);
 
