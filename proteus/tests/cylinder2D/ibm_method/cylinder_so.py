@@ -63,7 +63,7 @@ if cylinder.useRANS > 0:
     pnList.append(("dissipation_p",
                    "dissipation_n"))
 name = "cylinder"
-
+soname=name
 #modelSpinUpList = [cylinder.VOF_model, cylinder.LS_model, cylinder.V_model, cylinder.PINIT_model]
 modelSpinUpList = [cylinder.PINIT_model]
 
@@ -89,7 +89,7 @@ systemStepControllerType = Sequential_MinAdaptiveModelStepPS
 needEBQ_GLOBAL = False
 needEBQ = False
 
-tnList = [0.0,cylinder.dt_init]+[i*cylinder.dt_fixed for i in range(1,cylinder.nDTout+1)]
-
+# tnList = [0.0,cylinder.dt_init]+[i*cylinder.dt_fixed for i in range(1,cylinder.nDTout+1)]
+tnList = cylinder.tnList
 info = open("TimeList.txt","w")
 #archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
