@@ -692,6 +692,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             # physics
             self.mesh.nElements_global,
+            self.mesh.nElementBoundaries_owned,
             self.u[0].femSpace.dofMap.l2g,
             self.u[0].dof,
             self.coefficients.q_rho,
@@ -706,7 +707,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.added_mass_i,
             self.barycenters,
             self.flags_rigidbody)
-        logEvent("Added Mass Tensor " +`self.Aij`)
+        for k in range(self.Aij.shape[0]):
+            for j in range(self.Aij.shape[2]):
+                self.Aij[k,j,self.added_mass_i] = globalSum(
+                    self.Aij[k,j,self.added_mass_i])
+        for i,flag in enumerate(self.flags_rigidbody):
+            if flag==1:
+                numpy.set_printoptions(precision=2, linewidth=160)
+                logEvent("Added Mass Tensor for rigid body i" + `i`)
+                logEvent("Aij = \n"+str(self.Aij[i]))
         logEvent("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1
 
