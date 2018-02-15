@@ -2,17 +2,27 @@ from math import *
 import proteus.MeshTools
 from proteus import Domain
 from proteus.default_n import *  
+from proteus import Context
 
 '''
 flow around a 2D cylinder  benchmark problem.
 '''
+
+ct = Context.Options([
+    ("T", 4.0, "Time interval [0, T]"),
+    ("he",0.04, "maximum size of edges"),
+    ("backwardEuler",False,"use backward Euler or not"),
+    ("onlySaveFinalSolution",False,"Only save the final solution")
+], mutable=True)
+
+
 
 nd = 2
 spaceOrder=1
 Refinement=1
 useHex=False
 points_on_grain = 21
-DX = 0.04
+DX = ct.he
 usePETSc = False#True
 
 
@@ -64,16 +74,18 @@ domain = symmetric2D(box=(2.2,0.41),
 boundaryTags=domain.boundaryFlags
 
 # Time stepping
-T= 8.0
+T= ct.T
 runCFL = 0.9
 dt_fixed = 0.005
 dt_init = 0.0025
 nDTout = int(T/dt_fixed)
 dt_init = min(dt_init,0.5*dt_fixed)
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)] 
-#tnList = [0.0,dt_init,T]
-useBackwardEuler = True
+if ct.onlySaveFinalSolution == True:
+    tnList = [0.0,dt_init,ct.T]
 
+
+useBackwardEuler = True
 # Numerical parameters
 ns_shockCapturingFactor  = 0.0
 ns_lag_shockCapturing = True#False
