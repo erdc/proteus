@@ -3,17 +3,11 @@ from proteus.default_p import *
 from proteus import Domain
 import nseDrivenCavity_2d
 from TwophaseNavierStokes_ST_LS_SO_VV import TwophaseNavierStokes_ST_LS_SO_VV
-from proteus import Context
-Context.setFromModule(nseDrivenCavity_2d)
-ct=Context.get()
+ct = nseDrivenCavity_2d.opts
 
 """
-Stokes Driven Cavity Flow - the file contains the physics
-corresponding to a Stokes Driven Cavity Flow.  See notes
-for a detailed description.
-
-This model is being used to study the preformance of
-Schur complement preconditioners.
+Navier-Stokes Driven Cavity Flow - this file contains the physics
+for a NSE Driven Cavity test simulation.
 """
 
 #######################################################
@@ -54,7 +48,7 @@ class uTrue_RE_through_bdy:
         return 1.
     def uOfXT(self,x,t):
         return (10.0**max(0.0,t-1))*(1 - x[0]**4)
-    
+
 class vTrue:
     def __init__(self):
         pass
@@ -63,17 +57,14 @@ class vTrue:
     def uOfXT(self,x,t):
         return self.vOfX(x)
 
-# dirichlet boundary condition functions pressure: (x=-1,y),velocity inflow: (x=1,y)
+# dirichlet boundary condition functions pressure: (x=-1,y),velocity
+# inflow: (x=1,y)
 
 eps = 1.0e-8
-#he = 0.5
 he = 0.01
 he *=0.5
 he *=0.5
 he *=0.5
-#he *=0.5
-#he *=0.5
-
 
 vent=False
 
@@ -97,7 +88,7 @@ def bottom(x,flag):
         return True
     else:
         return False
-        
+
 def getDBCp(x,flag):
     pass
 
@@ -112,14 +103,14 @@ def getDBCu_RE_through_bdy(x,flag):
         return lambda x,t: 0.0
     elif top(x,flag):
         return lambda x,t: uTrue_RE_through_bdy().uOfXT(x,t)
-    
+
 def getDBCv(x,flag):
     if (top(x,flag) or sides(x,flag) or bottom(x,flag)):
         return lambda x,t: 0.0
 
 def getAdvFluxBCp(x,flag):
     pass
-    
+
 def getAdvFluxBCu(x,flag):
     pass
 

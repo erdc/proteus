@@ -17,6 +17,7 @@ namespace proteus
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
+				   double PRESSURE_PROJECTION_STABLIZATION,
                                    double* numerical_viscosity,
                                    //element
                                    double* mesh_trial_ref,
@@ -175,6 +176,7 @@ namespace proteus
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
+				   double PRESSURE_PROJECTION_STABLIZATION,
                                    //element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -1794,6 +1796,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
+                             double PRESSURE_PROJECTION_STABLIZATION,
                              double* numerical_viscosity,
                              //element
                              double* mesh_trial_ref,
@@ -3219,7 +3222,7 @@ namespace proteus
                 //calculate the numerical fluxes
                 //
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 exteriorNumericalAdvectiveFlux(NONCONSERVATIVE_FORM,
                                                isDOFBoundary_p[ebNE_kb],
                                                isDOFBoundary_u[ebNE_kb],
@@ -3591,6 +3594,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
+                             double PRESSURE_PROJECTION_STABLIZATION,
                              //element
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
@@ -5188,7 +5192,7 @@ namespace proteus
                 //calculate the flux jacobian
                 //
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 if (boundaryFlags[ebN] > 0)
                   {
                     for (int j=0;j<nDOF_trial_element;j++)

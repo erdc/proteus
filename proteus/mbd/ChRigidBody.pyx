@@ -28,6 +28,7 @@ from proteus.mbd cimport pyChronoCore as pych
 from proteus.mprans import BodyDynamics as bd
 
 
+
 cdef extern from "ChRigidBody.h":
     cdef cppclass cppMesh:
         shared_ptr[ch.ChMesh] mesh
@@ -170,8 +171,6 @@ cdef extern from "ChRigidBody.h":
                                        vector[double] ang3, double t_max)
         void setPrescribedMotionPoly(double coeff1)
         void setPrescribedMotionSine(double a, double f)
-
-
     cppRigidBody * newRigidBody(cppSystem* system)
 
 cdef class ProtChBody:
@@ -188,7 +187,7 @@ cdef class ProtChBody:
       double width_2D
       object record_dict
       object prescribed_motion_function
-      pych.ChBody ChBody
+      pych.ChBodyAddedMass ChBody
       np.ndarray position
       np.ndarray position_last
       np.ndarray F
@@ -229,6 +228,7 @@ cdef class ProtChBody:
       np.ndarray h_predict_last  # predicted displacement
       double h_ang_predict_last  # predicted angular displacement (angle)
       np.ndarray h_ang_vel_predict_last  # predicted angular velocity
+      np.ndarray Aij
       # np.ndarray free_r
       # np.ndarray free_x
     def __cinit__(self,
@@ -237,9 +237,9 @@ cdef class ProtChBody:
                   nd=None, sampleRate=0):
         self.ProtChSystem = system
         self.thisptr = newRigidBody(system.thisptr)
-        self.ChBody = pych.ChBody()
+        self.ChBody = pych.ChBodyAddedMass()
         self.thisptr.body = self.ChBody.sharedptr_chbody  # give pointer to cpp class
-        self.ProtChSystem.thisptr.system.AddBody(self.thisptr.body)
+        self.ProtChSystem.thisptr.system.AddBody(self.ChBody.sharedptr_chbody)
         self.Shape = None
         self.setRotation(np.array([1.,0.,0.,0.]))  # initialise rotation (nan otherwise)
         self.attachShape(shape)  # attach shape (if any)
@@ -266,6 +266,7 @@ cdef class ProtChBody:
         self.predicted = False
         self.adams_vel = np.zeros((5, 3))
         self.ChBody.SetBodyFixed(False)
+        self.Aij = np.zeros((6, 6))  # added mass array
         # if self.nd is None:
         #     assert nd is not None, "must set nd if SpatialTools.Shape is not passed"
         #     self.nd = nd
@@ -587,6 +588,49 @@ cdef class ProtChBody:
         """
         deref(self.thisptr.body).SetMass(mass)
 
+    def setAddedMass(self, double[:,:] added_mass):
+        """
+        Sets the added mass matrix of the body
+
+        Parameters
+        ----------
+        added_mass: array_like
+            Added mass matrix (must be 6x6 array!)
+        """
+        assert added_mass.shape[0] == 6, 'Added mass matrix must be 6x6 (np)'
+        assert added_mass.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
+        # added mass matrix
+        cdef np.ndarray AM = np.zeros((6,6))
+        AM += added_mass
+        # mass matrix
+        cdef double mass = self.ChBody.GetMass()
+        cdef np.ndarray iner = self.ChBody.GetInertia()
+        cdef np.ndarray MM = np.zeros((6,6))
+        MM[0,0] = mass
+        MM[1,1] = mass
+        MM[2,2] = mass
+        for i in range(3):
+            for j in range(3):
+                MM[i+3, j+3] = iner[i, j]
+        print("MM", MM)
+        # full mass
+        print("AM", AM)
+        cdef np.ndarray FM = np.zeros((6,6))
+        FM += AM
+        FM += MM
+        print("FM", FM)
+        # inverse of full mass matrix
+        inv_FM = np.linalg.inv(FM)
+        #set it to chrono variable
+        cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic[double](6, 6)
+        cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic[double](6, 6)
+        for i in range(6):
+            for j in range(6):
+                chFM.SetElement(i, j, FM[i, j])
+                inv_chFM.SetElement(i, j, inv_FM[i, j])
+        self.ChBody.SetMfullmass(chFM)
+        self.ChBody.SetInvMfullmass(inv_chFM)
+
     def getPressureForces(self):
         """Gives pressure forces from fluid (Proteus) acting on body.
         (!) Only works during proteus simulation
@@ -691,6 +735,12 @@ cdef class ProtChBody:
         #     # if self.ProtChSystem.step_nb > self.ProtChSystem.step_start:
         #     self.ChBody.SetBodyFixed(False)
         if self.ProtChSystem.model is not None:
+            if self.ProtChSystem.model_addedmass is not None:
+                # getting added mass matrix
+                self.Aij[:] = 0
+                am = self.ProtChSystem.model_addedmass.levelModelList[-1]
+                for i in range(self.i_start, self.i_end):
+                    self.Aij += am.Aij[i]
             self.F_prot = self.getPressureForces()+self.getShearForces()
             self.M_prot = self.getMoments()
             if self.ProtChSystem.first_step is True:
@@ -724,6 +774,8 @@ cdef class ProtChBody:
                     F_body = 2*F_bar-self.F_applied_last
                     M_body = 2*M_bar-self.M_applied_last
             self.setExternalForces(F_body, M_body)
+        # setting added mass
+        self.setAddedMass(self.Aij)
         self.predicted = False
 
     def setExternalForces(self, np.ndarray forces, np.ndarray moments):
@@ -788,6 +840,9 @@ cdef class ProtChBody:
         self.thisptr.rotq_last = rotq_last
         self.thisptr.pos = pos
         self.thisptr.pos_last = pos_last
+        if self.ProtChSystem.model_addedmass is not None:
+            am = self.ProtChSystem.model_addedmass.levelModelList[-1]
+            am.barycenters[self.i_start:self.i_end] = self.ChBody.GetPos()
 
     def prediction(self):
         comm = Comm.get().comm.tompi4py()
@@ -1223,7 +1278,6 @@ cdef class ProtChBody:
 cdef class ProtChSystem:
     cdef cppSystem * thisptr
     cdef public object model
-    cdef object subcomponents
     cdef public double dt_init
     cdef double proteus_dt
     cdef double proteus_dt_last
@@ -1242,6 +1296,7 @@ cdef class ProtChSystem:
     cdef double dt_last
     cdef double t
     cdef public:
+        cdef object subcomponents
         double chrono_dt
         bool build_kdtree
         bool dist_search
@@ -1256,6 +1311,8 @@ cdef class ProtChSystem:
         double next_sample
         bool record_values
         object model_mesh
+        object model_addedmass
+        ProtChAddedMass ProtChAddedMass
 
     def __cinit__(self, np.ndarray gravity, int nd=3, dt_init=0., sampleRate=0):
         self.thisptr = newSystem(<double*> gravity.data)
@@ -1283,11 +1340,12 @@ cdef class ProtChSystem:
         self.proteus_dt_next = 0.
         self.dt = 0.
         self.step_nb = 0
-        self.step_start = 3
+        self.step_start = 0
         self.sampleRate = sampleRate
         self.next_sample = 0.
         self.record_values = True
         self.t = 0.
+        self.ProtChAddedMass = ProtChAddedMass(self)
 
     def GetChTime(self):
         """Gives time of Chrono system simulation
@@ -1342,27 +1400,26 @@ cdef class ProtChSystem:
             nb_steps = self.min_nb_steps
         # solve Chrono system
         self.step_nb += 1
-        if self.step_nb > -self.step_start:
-            # self.thisptr.system.setChTime()
-            comm = Comm.get().comm.tompi4py()
-            t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
-            Profiling.logEvent('Solving Chrono system from t='
-                            +str(t)
-                            +' with dt='+str(self.dt)
-                            +'('+str(nb_steps)+' substeps)')
-            if comm.rank == self.chrono_processor and dt > 0:
-                dt_substep = self.dt/nb_steps
-                for i in range(nb_steps):
-                    self.thisptr.step(<double> dt_substep, 1)
-                    # tri: hack to update forces on cables
-                    for s in self.subcomponents:
-                        if type(s) is ProtChMoorings:
-                            # update forces keeping same fluid vel/acc
-                            s.updateForces()
-            t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
-            Profiling.logEvent('Solved Chrono system to t='+str(t))
-            if self.scheme == "ISS":
-                Profiling.logEvent('Chrono system to t='+str(t+self.dt_fluid_next/2.))
+        # self.thisptr.system.setChTime()
+        comm = Comm.get().comm.tompi4py()
+        t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
+        Profiling.logEvent('Solving Chrono system from t='
+                        +str(t)
+                        +' with dt='+str(self.dt)
+                        +'('+str(nb_steps)+' substeps)')
+        if comm.rank == self.chrono_processor and dt > 0:
+            dt_substep = self.dt/nb_steps
+            for i in range(nb_steps):
+                self.thisptr.step(<double> dt_substep, 1)
+                # tri: hack to update forces on cables
+                for s in self.subcomponents:
+                    if type(s) is ProtChMoorings:
+                        # update forces keeping same fluid vel/acc
+                        s.updateForces()
+        t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
+        Profiling.logEvent('Solved Chrono system to t='+str(t))
+        if self.scheme == "ISS":
+            Profiling.logEvent('Chrono system to t='+str(t+self.dt_fluid_next/2.))
 
     def calculate(self, proteus_dt=None):
         """Does chrono system calculation for a Proteus time step
@@ -2633,3 +2690,34 @@ cpdef void attachNodeToNode(ProtChMoorings cable1, int node1, ProtChMoorings cab
         cppAttachNodeToNodeFEAxyzD(cable1.thisptr, node1, cable2.thisptr, node2)
     elif cable1.beam_type == "BeamEuler":
         cppAttachNodeToNodeFEAxyzrot(cable1.thisptr, node1, cable2.thisptr, node2)
+
+cdef class ProtChAddedMass:
+    """
+    Class (hack) to attach added mass model to ProtChSystem
+    This auxiliary variable is ONLY used to attach the AddedMass
+    model to a ProtChSystem
+    """
+    cdef public:
+        object model
+        ProtChSystem ProtChSystem
+
+    def __cinit__(self,
+                  system):
+        self.ProtChSystem = system
+
+    def attachModel(self, model, ar):
+        """Attaches Proteus model to auxiliary variable
+        """
+        self.model = model
+        # attaching model to ProtChSystem to access Aij
+        self.ProtChSystem.model_addedmass = model
+        return self
+
+    def attachAuxiliaryVariables(self,avDict):
+        pass
+
+    def calculate_init(self):
+        pass
+
+    def calculate(self):
+        pass

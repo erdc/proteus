@@ -5,6 +5,8 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+using namespace std;
+
 namespace proteus
 {
   class cppAddedMass_base
@@ -33,6 +35,7 @@ namespace proteus
                                    double* boundaryJac_ref,
                                    //physics
                                    int nElements_global,
+                                   int nElementBoundaries_owned,
                                    int* u_l2g,
                                    double* u_dof,
                                    double* q_rho,
@@ -43,8 +46,11 @@ namespace proteus
                                    int* exteriorElementBoundariesArray,
                                    int* elementBoundaryElementsArray,
                                    int* elementBoundaryLocalElementBoundariesArray,
-				   int* elementBoundaryMaterialTypesArray,
-				   double* Aij)=0;
+                                   int* elementBoundaryMaterialTypesArray,
+                                   double* Aij,
+                                   int added_mass_i,
+                                   double* barycenters,
+                                   int* flags_rigidbody)=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -104,14 +110,17 @@ namespace proteus
     }
 
     inline
-      void exteriorNumericalDiffusiveFlux(const int flag,
-					  const double n[nSpace],
-					  double& flux)
+      void exteriorNumericalDiffusiveFlux(const double n[nSpace],
+                                          const double a[nSpace],
+                                          int isBodyBoundary,
+                                          double& flux)
     {
-      if(flag == 9)
-	flux = -n[2];
-      else
-	flux=0.0;
+      flux=0.0;
+      if (isBodyBoundary == 1) {
+        for (int I=0;I<nSpace;I++) {
+          flux -= a[I]*n[I];
+        }
+      }
     }
 
     inline void calculateElementResidual(//element
@@ -241,6 +250,7 @@ namespace proteus
                            double* boundaryJac_ref,
                            //physics
                            int nElements_global,
+                           int nElementBoundaries_owned,
                            int* u_l2g,
                            double* u_dof,
                            double* q_rho,
@@ -251,8 +261,11 @@ namespace proteus
                            int* exteriorElementBoundariesArray,
                            int* elementBoundaryElementsArray,
                            int* elementBoundaryLocalElementBoundariesArray,
-			   int* elementBoundaryMaterialTypesArray,
-			   double* Aij)
+                           int* elementBoundaryMaterialTypesArray,
+                           double* Aij,
+                           int added_mass_i,
+                           double* barycenters,
+                           int* flags_rigidbody)
     {
       for(int eN=0;eN<nElements_global;eN++)
         {
@@ -423,8 +436,55 @@ namespace proteus
               //
               //calculate the numerical fluxes
               //
-              exteriorNumericalDiffusiveFlux(elementBoundaryMaterialTypesArray[ebN],
-					     normal,
+              int eBMT = elementBoundaryMaterialTypesArray[ebN];
+              double rx, ry, rz;
+              rx = x_ext-barycenters[3*eBMT+0];
+              ry = y_ext-barycenters[3*eBMT+1];
+              rz = z_ext-barycenters[3*eBMT+2];
+              double added_mass_a[3] = {0.0, 0.0, 0.0};
+	      if (eBMT > 0)
+		{
+		  switch (added_mass_i)
+		    {
+		    case 0:
+		      added_mass_a[0] = 1.0;
+		      break;
+		    case 1:
+		      added_mass_a[1] = 1.0;
+		      break;
+		    case 2:
+		      added_mass_a[2] = 1.0;
+		      break;
+		    case 3:
+		      added_mass_a[1] = -rz;
+		      added_mass_a[2] =  ry;
+		      break;
+		    case 4:
+		      added_mass_a[0] =  rz;
+		      added_mass_a[2] = -rx;
+		      break;
+		    case 5:
+		      added_mass_a[0] = -ry;
+		      added_mass_a[1] =  rx;
+		      break;
+		    default:
+		      assert(0);
+		    }
+		}
+              // normalise unit accelerations (necessary for angular ones)
+	      //I think we want the angular acceleration to be 1
+	      //but the flux uses whatever the linear acceleration works
+	      //out to be, so I'm commenting this out for now
+              /* double added_mass_a_tot = sqrt(added_mass_a[0]*added_mass_a[0]+ */
+              /*                                added_mass_a[1]*added_mass_a[1]+ */
+              /*                                added_mass_a[2]*added_mass_a[2]); */
+              /* added_mass_a[0] = added_mass_a[0]/added_mass_a_tot; */
+              /* added_mass_a[1] = added_mass_a[1]/added_mass_a_tot; */
+              /* added_mass_a[2] = added_mass_a[2]/added_mass_a_tot; */
+	      
+              exteriorNumericalDiffusiveFlux(normal,
+                                             added_mass_a,
+                                             flags_rigidbody[eBMT],
                                              diff_flux_ext);
               //
               //update residuals
@@ -434,20 +494,32 @@ namespace proteus
                   elementResidual_u[i] +=
                     + ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]);
                 }//i
-	      //calculate Aij
-	      if (elementBoundaryMaterialTypesArray[ebN] == 9)
-		Aij[2] += u_ext*normal[2]*dS;
-            }//kb
-          //
-          //update the element and global residual storage
-          //
-          for (int i=0;i<nDOF_test_element;i++)
-            {
-              int eN_i = eN*nDOF_test_element+i;
-              globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
-            }//i
-        }//ebNE
+              //calculate Aij
+              if (ebN < nElementBoundaries_owned)
+                {
+                  double px, py, pz;
+                  px = u_ext*normal[0];
+                  py = u_ext*normal[1];
+                  pz = u_ext*normal[2];
+                  Aij[36*eBMT+added_mass_i+6*0] += px*dS;
+                  Aij[36*eBMT+added_mass_i+6*1] += py*dS;
+                  Aij[36*eBMT+added_mass_i+6*2] += pz*dS;
+                  Aij[36*eBMT+added_mass_i+6*3] += (ry*pz-rz*py)*dS;
+                  Aij[36*eBMT+added_mass_i+6*4] += (rz*px-rx*pz)*dS;
+                  Aij[36*eBMT+added_mass_i+6*5] += (rx*py-ry*px)*dS;
+                }
+              //
+              //update the element and global residual storage
+              //
+              for (int i=0;i<nDOF_test_element;i++)
+                {
+                  int eN_i = eN*nDOF_test_element+i;
+                  globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+                }//i
+            }//ebNE
+        }
     }
+
 
     inline void calculateElementJacobian(//element
                                          double* mesh_trial_ref,
