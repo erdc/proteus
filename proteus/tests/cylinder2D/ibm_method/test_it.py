@@ -46,8 +46,8 @@ class TestIT():
 #         self.example_setting("T=8.0 vspaceOrder=2 onlySaveFinalSolution=True")
 
     def test_ex2(self):
-        self.compare_name = "T4_rans3p"
-        self.example_setting("T=4.0 onlySaveFinalSolution=True")
+        self.compare_name = "T1_rans3p"
+        self.example_setting("T=1.0 onlySaveFinalSolution=True")
 
 
     def example_setting(self, pre_setting):
