@@ -202,7 +202,7 @@ class Shape(object):
         """
         Indicates that this shape is within another shape
         (this function or setChildShape is necessary for gmsh)
-        Sets the shape within 
+        Sets the shape within
 
         Parameters
         ----------
@@ -835,7 +835,7 @@ class Cylinder(Shape):
         vert_bottom = np.array(vert)
         facets += [[[i for i in range(0, len(vert_bottom))]]]
         vert_top = np.array(vert)+h_offset
-        segs_top = np.array(segs)+len(vert) 
+        segs_top = np.array(segs)+len(vert)
         nvb = len(vert_bottom)
         facets += [[[i+nvb for i in range(0, len(vert_top))]]]
         for i in range(len(vert_bottom)-1):
@@ -904,7 +904,7 @@ class Circle(Shape):
         seg_last=[nVertices-1,0]
         segm.append(seg_last,)
         self.segments=np.array(segm)
-        
+
         # facets
         facets=[]
         for kkk in range(nVertices):
@@ -1374,7 +1374,7 @@ def _assembleGeometry(domain, BC_class):
               domain.facetFlags += (shape.facetFlags+start_flag).tolist()
         if shape.holes is not None:
             domain.holes += (shape.holes).tolist()
-    
+
     domain.holes_ind = []
     if domain.nd == 2 and shape.facets is not None:
         domain.facets = []
@@ -1402,7 +1402,7 @@ def _assembleGeometry(domain, BC_class):
                                         fn = child_seg[(fac[j-1], fac[j])]
                                         f_to_merge = child.facets[fn][0].tolist()
                                         # reverse list
-                                        f_to_merge = f_to_merge[::-1] 
+                                        f_to_merge = f_to_merge[::-1]
                                         # shift lists
                                         f_to_merge = list(deque(f_to_merge).rotate(-f_to_merge.index(fac[j-1])))
                                         fac = list(deque(fac).rotate(-fac.index(fac[j])))
@@ -1492,6 +1492,7 @@ def _generateMesh(domain):
     # ----- MESH GENERATION ----- #
     # --------------------------- #
     mesh = domain.MeshOptions
+    comm = Comm.get()
     if comm.isMaster():
         if mesh.outputFiles['poly'] is True:
             domain.writePoly(mesh.outputFiles_name)
