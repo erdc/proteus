@@ -53,25 +53,38 @@ class TestIT():
     def example_setting(self, pre_setting):
         Context.contextOptionsString = pre_setting
 
-        import cylinder
-        import cylinder_so as my_so
+        from . import cylinder
+        from . import cylinder_so as my_so
+        from . import twp_navier_stokes_n as ns_n
+        from . import twp_navier_stokes_p as ns_p
+        from . import pressureincrement_n as pInc_n
+        from . import pressureincrement_p as pInc_p
+        from . import pressureInitial_n as pInit_n
+        from . import pressureInitial_p as pInit_p
+        from . import pressure_n as p_n
+        from . import pressure_p as p_p
         reload(cylinder)  # Serious error
         reload(my_so)  # Serious error
+        reload(ns_n)
+        reload(ns_p)
+        reload(pInc_n)
+        reload(pInc_p)
+        reload(pInit_n)
+        reload(pInit_p)
+        reload(p_n)
+        reload(p_p)
 
         # defined in iproteus
         opts.profile = False
         opts.gatherArchive = True
-        
-        pList=[]
-        nList=[]
+                
+        pList=[ns_p,pInc_p,p_p,pInit_p]
+        nList=[ns_n,pInc_n,p_n,pInit_n]
         sList=[]
-        for (pModule,nModule) in my_so.pnList:
-            pList.append(__import__(pModule))
-            if pList[-1].name == None:
-                pList[-1].name = pModule
-            nList.append(__import__(nModule))
-            reload(pList[-1])  # Serious error
-            reload(nList[-1])
+        for pModule in pList:
+            if pModule.name == None:
+                pModule.name = "ibm_"+pList.index(pModule, )
+
 
         if my_so.sList == []:
             for i in range(len(my_so.pnList)):

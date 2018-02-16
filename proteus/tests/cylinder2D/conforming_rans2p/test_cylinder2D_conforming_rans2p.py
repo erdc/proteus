@@ -3,7 +3,6 @@ from proteus import Comm
 from proteus import Context
 import tables
 
-
 comm = Comm.get()
 Profiling.logLevel = 7
 Profiling.verbose = False
@@ -53,26 +52,22 @@ class TestIT():
     def example_setting(self, pre_setting):
         Context.contextOptionsString = pre_setting
 
-        import cylinder2d as cylinder
-        import cylinder_so as my_so
-        reload(cylinder)  # Serious error
-        reload(my_so)  # Serious error
+        from . import cylinder2d as cylinder
+        from . import cylinder_so as my_so
+        from . import twp_navier_stokes_cylinder_2d_n as ns_n
+        from . import twp_navier_stokes_cylinder_2d_p as ns_p
 
         # defined in iproteus
         opts.profile = False
         opts.gatherArchive = True
-        
-        pList=[]
-        nList=[]
-        sList=[]
 
-        for (pModule,nModule) in my_so.pnList:
-            pList.append(__import__(pModule))
-            if pList[-1].name == None:
-                pList[-1].name = pModule
-            nList.append(__import__(nModule))
-            reload(pList[-1])  # Serious error
-            reload(nList[-1])
+
+        pList=[ns_p]
+        nList=[ns_n]
+        sList=[]
+        for pModule in pList:
+            if pModule.name == None:
+                pModule.name = "ran2p_"+pList.index(pModule, )
 
         if my_so.sList == []:
             for i in range(len(my_so.pnList)):
