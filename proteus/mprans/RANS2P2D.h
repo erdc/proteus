@@ -1320,6 +1320,8 @@ namespace proteus
             if (flowSpeedNormal >= 0.0)
               {
                 dflux_umom_du += n[0]*df_umom_du[0];
+                dflux_umom_dv += n[0]*df_umom_dv[0];
+                
                 dflux_vmom_du += n[0]*df_vmom_du[0];
                 dflux_vmom_dv += n[0]*df_vmom_dv[0];
               }
@@ -1331,6 +1333,8 @@ namespace proteus
             if (flowSpeedNormal >= 0.0)
               {
                 dflux_umom_du += n[0]*df_umom_du[0];
+                dflux_umom_dv += n[0]*df_umom_dv[0];
+                
                 dflux_vmom_du += n[0]*df_vmom_du[0];
                 dflux_vmom_dv += n[0]*df_vmom_dv[0];
               }
@@ -1347,6 +1351,8 @@ namespace proteus
               {
                 dflux_umom_du += n[1]*df_umom_du[1];
                 dflux_umom_dv += n[1]*df_umom_dv[1];
+                
+                dflux_vmom_du += n[1]*df_vmom_du[1];
                 dflux_vmom_dv += n[1]*df_vmom_dv[1];
               }
           }
@@ -1358,6 +1364,8 @@ namespace proteus
               {
                 dflux_umom_du += n[1]*df_umom_du[1];
                 dflux_umom_dv += n[1]*df_umom_dv[1];
+
+                dflux_vmom_du += n[1]*df_vmom_du[1];
                 dflux_vmom_dv += n[1]*df_vmom_dv[1];
               }
             else
