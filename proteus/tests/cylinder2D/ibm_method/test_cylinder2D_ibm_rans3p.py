@@ -65,7 +65,6 @@ class TestIT():
         pList=[]
         nList=[]
         sList=[]
-
         for (pModule,nModule) in my_so.pnList:
             pList.append(__import__(pModule))
             if pList[-1].name == None:
@@ -80,6 +79,7 @@ class TestIT():
                 sList.append(s)
         else:
             sList = my_so.sList
+        my_so.name += "_ibm_"+self.compare_name #save data with different filename
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(my_so,
                                                pList,
@@ -87,7 +87,7 @@ class TestIT():
                                                sList,
                                                opts)
         self.aux_names.append(ns.modelList[0].name)
-        ns.calculateSolution(my_so.soname)
+        ns.calculateSolution(my_so.name)
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/' + self.compare_name + '.h5'
         with tables.open_file(os.path.join(self._scriptdir, expected_path)) as expected, \
