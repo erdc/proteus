@@ -55,6 +55,7 @@ cdef extern from "mprans/NCLS3P.h" namespace "proteus":
                                double * ebqe_rd_u_ext,
                                double * ebqe_bc_u_ext,
                                double * ebqe_u,
+                               double * interface_locator,
                                int PURE_BDF)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -234,6 +235,7 @@ cdef class NCLS3P:
                           numpy.ndarray ebqe_rd_u_ext,
                           numpy.ndarray ebqe_bc_u_ext,
                           numpy.ndarray ebqe_u,
+                          numpy.ndarray interface_locator,
                           int PURE_BDF):
         self.thisptr.calculateResidual(< double*>mesh_trial_ref.data,
                                        < double * >mesh_grad_trial_ref.data,
@@ -288,6 +290,7 @@ cdef class NCLS3P:
                                        < double * >ebqe_rd_u_ext.data,
                                        < double * >ebqe_bc_u_ext.data,
                                        < double * >ebqe_u.data,
+                                       < double * >interface_locator.data,
                                        PURE_BDF)
 
     def calculateJacobian(self,

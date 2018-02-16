@@ -102,8 +102,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  useMetrics=0.0, sc_uref=1.0, sc_beta=1.0,
                  waterline_interval=-1,
                  movingDomain=False,
-                 PURE_BDF=False):
-
+                 PURE_BDF=False,
+                 outputQuantDOFs=False):
+        
+        self.outputQuantDOFs=outputQuantDOFs
         self.PURE_BDF=PURE_BDF
         self.movingDomain = movingDomain
         self.useMetrics = useMetrics
@@ -778,6 +780,10 @@ class LevelModel(OneLevelTransport):
             self.velocityField = options.velocityField
             self.hasVelocityFieldAsFunction = True
 
+        # interface locator
+        self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+        
     # mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
@@ -819,6 +825,7 @@ class LevelModel(OneLevelTransport):
             self.u_dof_old = numpy.copy(self.u[0].dof)
 
         r.fill(0.0)
+        self.interface_locator.fill(0.0) 
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -894,8 +901,11 @@ class LevelModel(OneLevelTransport):
             self.coefficients.rdModel.ebqe[('u', 0)],
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('u', 0)],
+            self.interface_locator,
             self.coefficients.PURE_BDF)
 
+        self.quantDOFs[:] = self.interface_locator
+        
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0

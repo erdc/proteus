@@ -5,6 +5,8 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+#define Sign(z) (z >= 0.0 ? 1.0 : -1.0)
+
 namespace proteus
 {
   class cppNCLS3P_base
@@ -66,6 +68,7 @@ namespace proteus
                                    double* ebqe_rd_u_ext,
                                    double* ebqe_bc_u_ext,
                                    double* ebqe_u,
+				   double* interface_locator,
                                    // TO KILL SUPG AND SHOCK CAPTURING
                                    int PURE_BDF)=0;
     virtual void calculateJacobian(//element
@@ -343,6 +346,7 @@ namespace proteus
                              double* ebqe_rd_u_ext,
                              double* ebqe_bc_u_ext,
                              double* ebqe_u,
+			     double* interface_locator,
                              int PURE_BDF)
       {
         //cek should this be read in?
@@ -506,8 +510,6 @@ namespace proteus
                 //
                 //calculate shock capturing diffusion
                 //
-
-
                 ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u,grad_u,numDiff0);
                 //ck.calculateNumericalDiffusion(shockCapturingDiffusion,G,pdeResidual_u,grad_u_old,numDiff1);
                 ck.calculateNumericalDiffusion(shockCapturingDiffusion,sc_uref, sc_alpha,G,G_dd_G,pdeResidual_u,grad_u,numDiff1);
@@ -516,8 +518,18 @@ namespace proteus
                 //
                 //update element residual
                 //
+		double sign;
+		int same_sign=1;
                 for(int i=0;i<nDOF_test_element;i++)
                   {
+		    int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
+		    if (i==0)
+		      sign = Sign(u_dof[gi]);
+		    else if (same_sign==1)
+		      {
+			same_sign = sign == Sign(u_dof[gi]) ? 1 : 0;
+			sign = Sign(u_dof[gi]);
+		      }
                     //register int eN_k_i=eN_k*nDOF_test_element+i,
                     // eN_k_i_nSpace = eN_k_i*nSpace;
                     register int  i_nSpace=i*nSpace;
@@ -532,6 +544,12 @@ namespace proteus
                                              &u_grad_test_dV[i_nSpace]));
 
                   }//i
+		if (same_sign == 0) // This cell contains the interface
+		  for(int i=0;i<nDOF_test_element;i++)
+		    {
+		      int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
+		      interface_locator[gi] = 1.0;
+		    }
                 //
                 //cek/ido todo, get rid of m, since u=m
                 //save momentum for time history and velocity for subgrid error
