@@ -10,4 +10,7 @@
 *.gif	filter=lfs diff=lfs merge=lfs -crlf
 *.jpg	filter=lfs diff=lfs merge=lfs -crlf
 *.jpeg	filter=lfs diff=lfs merge=lfs -crlf
-
+proteus/tests/cylinder2D/ibm_method/comparison_files/T4_rans3p.h5 filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/ibm_method/comparison_files/T1_rans3p.h5 filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/conforming_rans2p/comparison_files/T1_rans2p.h5 filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/conforming_rans3p/comparison_files/T1P1.h5 filter=lfs diff=lfs merge=lfs -text
