@@ -1,3 +1,4 @@
+"""Tests for 2d flow around an immersed boundary cylinder with rans3p"""
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import Context
@@ -42,9 +43,7 @@ class Test_ibm():
     def example_setting(self, pre_setting):
         Context.contextOptionsString = pre_setting
 
-        cylinder = importlib.import_module('cylinder')
-        my_so = importlib.import_module('cylinder_so')
-        reload(cylinder)
+        from . import cylinder_so as my_so
         reload(my_so)
         # defined in iproteus
         opts.profile = False
@@ -54,8 +53,12 @@ class Test_ibm():
         nList=[]
         sList=[]
         for (pModule,nModule) in my_so.pnList:
-            pList.append(importlib.import_module(pModule))
-            nList.append(importlib.import_module(nModule))
+            pList.append(
+                importlib.import_module("."+pModule,
+                                        "proteus.tests.cylinder2D.ibm_method"))
+            nList.append(
+                importlib.import_module("."+nModule,
+                                        "proteus.tests.cylinder2D.ibm_method"))
             if pList[-1].name == None:
                 pList[-1].name = pModule
             reload(pList[-1])  # Serious error
