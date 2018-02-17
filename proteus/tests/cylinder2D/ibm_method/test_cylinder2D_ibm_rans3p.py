@@ -1,7 +1,9 @@
+"""Tests for 2d flow around an immersed boundary cylinder with rans3p"""
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import Context
 import tables
+import importlib
 
 
 comm = Comm.get()
@@ -10,55 +12,39 @@ Profiling.verbose = False
 import numpy as np
 
 
-class TestIT():
+class Test_ibm():
 
     @classmethod
     def setup_class(cls):
-        pass
-
+        cls._scriptdir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0,cls._scriptdir)
     @classmethod
     def teardown_class(cls):
+        sys.path.remove(cls._scriptdir)
         pass
 
     def setup_method(self, method):
         """Initialize the test problem. """
         self.aux_names = []
-        self.meshdir = os.path.dirname(os.path.abspath(__file__))
-        self._scriptdir = os.path.dirname(os.path.abspath(__file__))
 
     def teardown_method(self, method):
-        return
-        filenames = []
-        for aux_name in self.aux_names:
-            filenames.extend([aux_name + '.' + ext for ext in ['h5', 'xmf']])
-        filenames.append('proteus.log')
-        for f in filenames:
-            if os.path.exists(f):
-                try:
-                    os.remove(f)
-                except OSError, e:
-                    print ("Error: %s - %s" % (e.filename, e.strerror))
-            else:
-                pass
+        pass
 
-    def test_ex1(self):
-        self.compare_name = "T1P1"
-        self.example_setting("T=1.0 vspaceOrder=1")
+
+#     def test_ex1(self):
+#         self.compare_name = "T8P2"
+#         self.example_setting("T=8.0 vspaceOrder=2 onlySaveFinalSolution=True")
 
     def test_ex2(self):
-        self.compare_name = "T1P2"
-        self.example_setting("T=1.0 vspaceOrder=2")
+        self.compare_name = "T1_rans3p"
+        self.example_setting("T=1.0 onlySaveFinalSolution=True")
 
 
     def example_setting(self, pre_setting):
-
         Context.contextOptionsString = pre_setting
 
-        import cylinder
-        import cylinder_so as my_so
-        reload(cylinder)  # Serious error
-        reload(my_so)  # Serious error
-
+        from . import cylinder_so as my_so
+        reload(my_so)
         # defined in iproteus
         opts.profile = False
         opts.gatherArchive = True
@@ -66,12 +52,15 @@ class TestIT():
         pList=[]
         nList=[]
         sList=[]
-
         for (pModule,nModule) in my_so.pnList:
-            pList.append(__import__(pModule))
+            pList.append(
+                importlib.import_module("."+pModule,
+                                        "proteus.tests.cylinder2D.ibm_method"))
+            nList.append(
+                importlib.import_module("."+nModule,
+                                        "proteus.tests.cylinder2D.ibm_method"))
             if pList[-1].name == None:
                 pList[-1].name = pModule
-            nList.append(__import__(nModule))
             reload(pList[-1])  # Serious error
             reload(nList[-1])
 
@@ -81,7 +70,7 @@ class TestIT():
                 sList.append(s)
         else:
             sList = my_so.sList
-
+        my_so.name += "_ibm_"+self.compare_name #save data with different filename
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(my_so,
                                                pList,
@@ -89,11 +78,11 @@ class TestIT():
                                                sList,
                                                opts)
         self.aux_names.append(ns.modelList[0].name)
-        ns.calculateSolution(my_so.soname)
+        ns.calculateSolution(my_so.name)
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/' + self.compare_name + '.h5'
         with tables.open_file(os.path.join(self._scriptdir, expected_path)) as expected, \
-                tables.open_file(os.path.join(self._scriptdir + '/' + my_so.name + '.h5')) as actual:
+                tables.open_file( my_so.name + '.h5') as actual:
             assert np.allclose(expected.root.u_t2,
                                actual.root.u_t2,
                                atol=1e-10)

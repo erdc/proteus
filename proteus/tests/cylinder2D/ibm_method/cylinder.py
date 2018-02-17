@@ -4,9 +4,20 @@ from proteus import Domain
 from proteus.default_n import *
 from proteus.Profiling import logEvent
 
+
+from proteus import Context
+
+ct = Context.Options([
+    ("T", 4.0, "Time interval [0, T]"),
+    ("Refinement",8, "refinement"),
+    ("onlySaveFinalSolution",False,"Only save the final solution"),
+    ("vspaceOrder",1,"FE space for velocity"),
+    ("pspaceOrder",1,"FE space for pressure")
+], mutable=True)
+
 #  Discretization -- input options
 #Refinement = 20#45min on a single core for spaceOrder=1, useHex=False
-Refinement = 8
+Refinement = ct.Refinement
 sedimentDynamics=False
 genMesh = True
 movingDomain = False
@@ -14,8 +25,8 @@ applyRedistancing = True
 useOldPETSc = False
 useSuperlu = True
 timeDiscretization = 'vbdf'#vbdf'#'vbdf'  # 'vbdf', 'be', 'flcbdf'
-spaceOrder = 1
-pspaceOrder = 1
+spaceOrder = ct.vspaceOrder
+pspaceOrder = ct.pspaceOrder
 useHex = False
 useRBLES = 0.0
 useMetrics = 1.0
@@ -61,8 +72,8 @@ elif spaceOrder == 2:
         elementBoundaryQuadrature = CubeGaussQuadrature(nd - 1, 4)
     else:
         basis = C0_AffineQuadraticOnSimplexWithNodalBasis
-        elementQuadrature = SimplexGaussQuadrature(nd, 4)
-        elementBoundaryQuadrature = SimplexGaussQuadrature(nd - 1, 4)
+        elementQuadrature = SimplexGaussQuadrature(nd, 5)
+        elementBoundaryQuadrature = SimplexGaussQuadrature(nd - 1, 5)
 
 if pspaceOrder == 1:
     if useHex:
@@ -193,12 +204,15 @@ else:
 
 logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 # Time stepping
-T=8.0
+T=ct.T
 dt_fixed = 0.01#0.03
 dt_init = 0.005#min(0.1*dt_fixed,0.001)
 runCFL=0.33
 nDTout = int(round(T/dt_fixed))
+tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)]
 
+if ct.onlySaveFinalSolution == True:
+    tnList = [0.0,dt_init,ct.T]
 # Numerical parameters
 ns_forceStrongDirichlet = True
 ns_sed_forceStrongDirichlet = False
