@@ -1,24 +1,16 @@
 from proteus.iproteus import *
 from proteus import Comm
+from proteus import Context
 import tables
+import importlib
+
 comm = Comm.get()
 Profiling.logLevel = 7
 Profiling.verbose = False
 import numpy as np
-import importlib
 
-# from . import cylinder
-# from . import cylinder_so as my_so
-# from . import twp_navier_stokes_n as ns_n
-# from . import twp_navier_stokes_p as ns_p
-# from . import pressureincrement_n as pInc_n
-# from . import pressureincrement_p as pInc_p
-# from . import pressureInitial_n as pInit_n
-# from . import pressureInitial_p as pInit_p
-# from . import pressure_n as p_n
-# from . import pressure_p as p_p
 
-class TestIT():
+class Test_rans3p():
 
     @classmethod
     def setup_class(cls):

@@ -11,7 +11,7 @@ Profiling.verbose = False
 import numpy as np
 
 
-class TestIT():
+class Test_ibm():
 
     @classmethod
     def setup_class(cls):

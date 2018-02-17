@@ -10,7 +10,7 @@ Profiling.verbose = False
 import numpy as np
 
 
-class TestIT():
+class Test_rans2p():
 
     @classmethod
     def setup_class(cls):
@@ -35,7 +35,6 @@ class TestIT():
     def test_ex2(self):
         self.compare_name = "T1_rans2p"
         self.example_setting("T=1.0 onlySaveFinalSolution=True")
-
 
     def example_setting(self, pre_setting):
         Context.contextOptionsString = pre_setting
