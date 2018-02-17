@@ -6,7 +6,7 @@ from proteus.default_p import *
 import sys
 from cylinder2d import *
 from proteus.mprans import RANS2P
-
+name="rans2p"
 bcsTimeDependent = True
 LevelModelType = RANS2P.LevelModel
 coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
