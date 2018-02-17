@@ -345,8 +345,7 @@ namespace proteus
                 ebNE_kb_nSpace = ebNE_kb*nSpace,
                 ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                 ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-              register double penalty=0.0,
-                u_ext=0.0,
+              register double u_ext=0.0,
                 bc_u_ext=0.0,
                 adv_flux_ext=0.0,
                 diff_flux_ext=0.0,
@@ -390,7 +389,6 @@ namespace proteus
               //get the metric tensor
               //cek todo use symmetry
               ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
-              ck.calculateGScale(G,normal,penalty);
               //compute shape and solution information
               //shape
               ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
