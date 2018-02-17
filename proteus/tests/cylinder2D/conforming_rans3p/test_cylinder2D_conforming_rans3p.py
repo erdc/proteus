@@ -1,45 +1,40 @@
 from proteus.iproteus import *
 from proteus import Comm
-from proteus import Context
 import tables
-
-
 comm = Comm.get()
 Profiling.logLevel = 7
 Profiling.verbose = False
 import numpy as np
+import importlib
 
+# from . import cylinder
+# from . import cylinder_so as my_so
+# from . import twp_navier_stokes_n as ns_n
+# from . import twp_navier_stokes_p as ns_p
+# from . import pressureincrement_n as pInc_n
+# from . import pressureincrement_p as pInc_p
+# from . import pressureInitial_n as pInit_n
+# from . import pressureInitial_p as pInit_p
+# from . import pressure_n as p_n
+# from . import pressure_p as p_p
 
 class TestIT():
 
     @classmethod
     def setup_class(cls):
-        pass
-
+        cls._scriptdir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0,cls._scriptdir)
     @classmethod
     def teardown_class(cls):
+        sys.path.remove(cls._scriptdir)
         pass
 
     def setup_method(self, method):
         """Initialize the test problem. """
         self.aux_names = []
-        self.meshdir = os.path.dirname(os.path.abspath(__file__))
-        self._scriptdir = os.path.dirname(os.path.abspath(__file__))
 
     def teardown_method(self, method):
-        return
-        filenames = []
-        for aux_name in self.aux_names:
-            filenames.extend([aux_name + '.' + ext for ext in ['h5', 'xmf']])
-        filenames.append('proteus.log')
-        for f in filenames:
-            if os.path.exists(f):
-                try:
-                    os.remove(f)
-                except OSError, e:
-                    print ("Error: %s - %s" % (e.filename, e.strerror))
-            else:
-                pass
+        pass
 
 #     def test_ex1(self):
 #         self.compare_name = "T8P2"
@@ -52,38 +47,24 @@ class TestIT():
 
     def example_setting(self, pre_setting):
         Context.contextOptionsString = pre_setting
-
-        from . import cylinder
-        from . import cylinder_so as my_so
-        from . import twp_navier_stokes_n as ns_n
-        from . import twp_navier_stokes_p as ns_p
-        from . import pressureincrement_n as pInc_n
-        from . import pressureincrement_p as pInc_p
-        from . import pressureInitial_n as pInit_n
-        from . import pressureInitial_p as pInit_p
-        from . import pressure_n as p_n
-        from . import pressure_p as p_p
-        reload(cylinder)  # Serious error
-        reload(my_so)  # Serious error
-        reload(ns_n)
-        reload(ns_p)
-        reload(pInc_n)
-        reload(pInc_p)
-        reload(pInit_n)
-        reload(pInit_p)
-        reload(p_n)
-        reload(p_p)
-        
+        cylinder = importlib.import_module('cylinder')
+        my_so = importlib.import_module('cylinder_so')
+        reload(cylinder)
+        reload(my_so)
         # defined in iproteus
         opts.profile = False
         opts.gatherArchive = True
         
-        pList=[ns_p,pInc_p,p_p,pInit_p]
-        nList=[ns_n,pInc_n,p_n,pInit_n]
+        pList=[]
+        nList=[]
         sList=[]
-        for pModule in pList:
-            if pModule.name == None:
-                pModule.name = "ran3p_"+pList.index(pModule, )
+        for (pModule,nModule) in my_so.pnList:
+            pList.append(importlib.import_module(pModule))
+            nList.append(importlib.import_module(nModule))
+            if pList[-1].name == None:
+                pList[-1].name = pModule
+            reload(pList[-1])  # Serious error
+            reload(nList[-1])
 
         if my_so.sList == []:
             for i in range(len(my_so.pnList)):
