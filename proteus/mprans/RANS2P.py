@@ -973,6 +973,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('m', 1)] = self.q[('u', 1)]
         self.q[('m', 2)] = self.q[('u', 2)]
         self.q[('m', 3)] = self.q[('u', 3)]
+        self.q['rho'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_last', 1)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_last', 2)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_last', 3)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
@@ -1493,6 +1494,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.u[3].dof,
                                       self.coefficients.g,
                                       self.coefficients.useVF,
+                                      self.q['rho'],
                                       self.coefficients.q_vf,
                                       self.coefficients.q_phi,
                                       self.coefficients.q_n,
