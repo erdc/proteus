@@ -17,7 +17,7 @@ if useRANS >= 1:
 else:
     Closure_0_model = None
     Closure_1_model = None
-
+name = "momentum"
 coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     sigma=0.0,
                                     rho_0 = rho_0,

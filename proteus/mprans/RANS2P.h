@@ -17,6 +17,7 @@ namespace proteus
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
+				   double PRESSURE_PROJECTION_STABLIZATION,
                                    double* numerical_viscosity,
                                    //element
                                    double* mesh_trial_ref,
@@ -91,6 +92,7 @@ namespace proteus
                                    double* w_dof,
                                    double* g,
                                    const double useVF,
+				   double* q_rho,
                                    double* vf,
                                    double* phi,
                                    double* normal_phi,
@@ -174,6 +176,7 @@ namespace proteus
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
+				   double PRESSURE_PROJECTION_STABLIZATION,
                                    //element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -611,9 +614,10 @@ namespace proteus
                                   double dmom_w_ham_grad_w[nSpace],
                                   double& dmom_w_ham_u,
                                   double& dmom_w_ham_v,
-                                  double& dmom_w_ham_w)
+                                  double& dmom_w_ham_w,
+				  double& rho)
       {
-        double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
+        double nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
         d_rho = (1.0-useVF)*smoothedDirac(eps_rho,phi);
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -1572,9 +1576,15 @@ namespace proteus
             if (flowSpeedNormal >= 0.0)
               {
                 dflux_umom_du += n[0]*df_umom_du[0];
+                dflux_umom_dv += n[0]*df_umom_dv[0];
+                dflux_umom_dw += n[0]*df_umom_dw[0];
+
                 dflux_vmom_du += n[0]*df_vmom_du[0];
                 dflux_vmom_dv += n[0]*df_vmom_dv[0];
+                dflux_vmom_dw += n[0]*df_vmom_dw[0];
+                
                 dflux_wmom_du += n[0]*df_wmom_du[0];
+                dflux_wmom_dv += n[0]*df_wmom_dv[0];
                 dflux_wmom_dw += n[0]*df_wmom_dw[0];
               }
           }
@@ -1585,9 +1595,15 @@ namespace proteus
             if (flowSpeedNormal >= 0.0)
               {
                 dflux_umom_du += n[0]*df_umom_du[0];
+                dflux_umom_dv += n[0]*df_umom_dv[0];
+                dflux_umom_dw += n[0]*df_umom_dw[0];
+                
                 dflux_vmom_du += n[0]*df_vmom_du[0];
                 dflux_vmom_dv += n[0]*df_vmom_dv[0];
+                dflux_vmom_dw += n[0]*df_vmom_dw[0];
+                
                 dflux_wmom_du += n[0]*df_wmom_du[0];
+                dflux_wmom_dv += n[0]*df_wmom_dv[0];
                 dflux_wmom_dw += n[0]*df_wmom_dw[0];
               }
             else
@@ -1605,9 +1621,15 @@ namespace proteus
               {
                 dflux_umom_du += n[1]*df_umom_du[1];
                 dflux_umom_dv += n[1]*df_umom_dv[1];
+                dflux_umom_dw += n[1]*df_umom_dw[1];
+                
+                dflux_vmom_du += n[1]*df_vmom_du[1];
                 dflux_vmom_dv += n[1]*df_vmom_dv[1];
-                dflux_wmom_dw += n[1]*df_wmom_dw[1];
+                dflux_vmom_dw += n[1]*df_vmom_dw[1];
+                
+                dflux_wmom_du += n[1]*df_wmom_du[1];
                 dflux_wmom_dv += n[1]*df_wmom_dv[1];
+                dflux_wmom_dw += n[1]*df_wmom_dw[1];
               }
           }
         else
@@ -1618,9 +1640,15 @@ namespace proteus
               {
                 dflux_umom_du += n[1]*df_umom_du[1];
                 dflux_umom_dv += n[1]*df_umom_dv[1];
+                dflux_umom_dw += n[1]*df_umom_dw[1];
+
+                dflux_vmom_du += n[1]*df_vmom_du[1];
                 dflux_vmom_dv += n[1]*df_vmom_dv[1];
-                dflux_wmom_dw += n[1]*df_wmom_dw[1];
+                dflux_vmom_dw += n[1]*df_vmom_dw[1];
+                
+                dflux_wmom_du += n[1]*df_wmom_du[1];
                 dflux_wmom_dv += n[1]*df_wmom_dv[1];
+                dflux_wmom_dw += n[1]*df_wmom_dw[1];
               }
             else
               {
@@ -1636,9 +1664,15 @@ namespace proteus
             if (flowSpeedNormal >= 0.0)
               {
                 dflux_umom_du += n[2]*df_umom_du[2];
+                dflux_umom_dv += n[2]*df_umom_dv[2];
                 dflux_umom_dw += n[2]*df_umom_dw[2];
+
+                dflux_vmom_du += n[2]*df_vmom_du[2];
                 dflux_vmom_dv += n[2]*df_vmom_dv[2];
                 dflux_vmom_dw += n[2]*df_vmom_dw[2];
+                
+                dflux_wmom_du += n[2]*df_wmom_du[2];
+                dflux_wmom_dv += n[2]*df_wmom_dv[2];
                 dflux_wmom_dw += n[2]*df_wmom_dw[2];
               }
           }
@@ -1649,9 +1683,15 @@ namespace proteus
             if (flowSpeedNormal >= 0.0)
               {
                 dflux_umom_du += n[2]*df_umom_du[2];
+                dflux_umom_dv += n[2]*df_umom_dv[2];
                 dflux_umom_dw += n[2]*df_umom_dw[2];
+
+                dflux_vmom_du += n[2]*df_vmom_du[2];
                 dflux_vmom_dv += n[2]*df_vmom_dv[2];
                 dflux_vmom_dw += n[2]*df_vmom_dw[2];
+
+                dflux_wmom_du += n[2]*df_wmom_du[2];
+                dflux_wmom_dv += n[2]*df_wmom_dv[2];
                 dflux_wmom_dw += n[2]*df_wmom_dw[2];
               }
             else
@@ -1792,6 +1832,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
+                             double PRESSURE_PROJECTION_STABLIZATION,
                              double* numerical_viscosity,
                              //element
                              double* mesh_trial_ref,
@@ -1867,6 +1908,7 @@ namespace proteus
                              double* w_dof,
                              double* g,
                              const double useVF,
+			     double* q_rho,
                              double* vf,
                              double* phi,
                              double* normal_phi,
@@ -2245,7 +2287,8 @@ namespace proteus
                                      dmom_w_ham_grad_w,
                                      dmom_w_ham_u,
                                      dmom_w_ham_v,
-                                     dmom_w_ham_w);
+                                     dmom_w_ham_w,
+				     q_rho[eN_k]);
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not?
@@ -2885,6 +2928,7 @@ namespace proteus
                 //calculate the pde coefficients using the solution and the boundary values for the solution
                 //
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
+		double rho;
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
@@ -2965,7 +3009,8 @@ namespace proteus
                                      dmom_w_ham_grad_w_ext,
                                      dmom_w_ham_u_ext,
                                      dmom_w_ham_v_ext,
-                                     dmom_w_ham_w_ext);
+                                     dmom_w_ham_w_ext,
+				     rho);
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
@@ -3046,7 +3091,8 @@ namespace proteus
                                      bc_dmom_w_ham_grad_w_ext,
                                      bc_dmom_w_ham_u_ext,
                                      bc_dmom_w_ham_v_ext,
-                                     bc_dmom_w_ham_w_ext);
+                                     bc_dmom_w_ham_w_ext,
+				     rho);
 
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
@@ -3584,6 +3630,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
+                             double PRESSURE_PROJECTION_STABLIZATION,
                              //element
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
@@ -3982,6 +4029,7 @@ namespace proteus
                 //calculate pde coefficients and derivatives at quadrature points
                 //
                 double eddy_viscosity(0.);//not really interested in saving eddy_viscosity in jacobian
+		double rho;
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
@@ -4062,7 +4110,8 @@ namespace proteus
                                      dmom_w_ham_grad_w,
                                      dmom_w_ham_u,
                                      dmom_w_ham_v,
-                                     dmom_w_ham_w);
+                                     dmom_w_ham_w,
+				     rho);
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not
@@ -4794,6 +4843,7 @@ namespace proteus
                 //calculate the internal and external trace of the pde coefficients
                 //
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.);//not interested in saving boundary eddy viscosity for now
+		double rho;
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
@@ -4874,7 +4924,8 @@ namespace proteus
                                      dmom_w_ham_grad_w_ext,
                                      dmom_w_ham_u_ext,
                                      dmom_w_ham_v_ext,
-                                     dmom_w_ham_w_ext);
+                                     dmom_w_ham_w_ext,
+				     rho);
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
@@ -4955,7 +5006,8 @@ namespace proteus
                                      bc_dmom_w_ham_grad_w_ext,
                                      bc_dmom_w_ham_u_ext,
                                      bc_dmom_w_ham_v_ext,
-                                     bc_dmom_w_ham_w_ext);
+                                     bc_dmom_w_ham_w_ext,
+				     rho);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
