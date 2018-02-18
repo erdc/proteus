@@ -20,13 +20,13 @@ For boundary condition, the 'left' side is of inflow type, the 'right' side is o
 
 This problem can be run using the following command
 ```bash
-    parun -v -l 5 cylinder_so.py -C "he=0.01"
+    parun -v -l 5 cylinder_so.py -C "Refinement=7"
 ```
 
 
 ## Postprocessing
 
-Several physics parameters can be used to evaluate the computation [1]. One is the drag/lift coefficient. The drag/lift coefficient is sensitive and gives us the direction to find the bug relating the penalty coefficient in Nitsches' term. It is computed in *plot-lift-drag-force-from-pv.ipynb* by using the file *forceHistory_p.txt* and *forceHistory_p.txt*. 
+Several physics parameters can be used to evaluate the computation [1]. One is the drag/lift coefficient. The drag/lift coefficient is sensitive and gives us the direction to find the bug relating the penalty coefficient in Nitsches' term. It is computed in *plot_lift_drag_force_from_particle.ipynb* by using the file *particle_forceHistory.txt*. 
 
 
 

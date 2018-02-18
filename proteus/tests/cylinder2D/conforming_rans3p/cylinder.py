@@ -9,7 +9,8 @@ from proteus import Context
 ct = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
     ("he",0.04, "maximum size of edges"),
-    ("vspaceOrder",1,"FE space for velocity"),
+    ("onlySaveFinalSolution",False,"Only save the final solution"),
+    ("vspaceOrder",2,"FE space for velocity"),
     ("pspaceOrder",1,"FE space for pressure")
 ], mutable=True)
 
@@ -119,6 +120,11 @@ dt_fixed = 0.005#0.03
 dt_init = 0.0025#min(0.1*dt_fixed,0.001)
 runCFL=0.33
 nDTout = int(round(T/dt_fixed))
+tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)]
+
+if ct.onlySaveFinalSolution == True:
+    tnList = [0.0,dt_init,ct.T]
+
 
 # Numerical parameters
 ns_forceStrongDirichlet = False
