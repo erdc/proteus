@@ -1780,7 +1780,7 @@ namespace proteus
             penaltyFlux = max_a*penalty*(u-bc_u);
             flux += penaltyFlux;
             //contact line slip
-            //flux*=(smoothedDirac(eps,0) - smoothedDirac(eps,phi))/smoothedDirac(eps,0);
+            flux*=(smoothedDirac(eps,0) - smoothedDirac(eps,phi))/smoothedDirac(eps,0);
           }
         else
           {
@@ -1818,7 +1818,7 @@ namespace proteus
               }
             tmp +=max_a*penalty*v;
             //contact line slip
-            //tmp*=(smoothedDirac(eps,0) - smoothedDirac(eps,phi))/smoothedDirac(eps,0);
+            tmp*=(smoothedDirac(eps,0) - smoothedDirac(eps,phi))/smoothedDirac(eps,0);
           }
         return tmp;
       }
