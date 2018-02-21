@@ -9,10 +9,8 @@ namespace chrono {
     ChBodyAddedMass::ChBodyAddedMass() {
         ChBody::variables = variables;
 	}
-    void ChBodyAddedMass::SetMass(double newmass) {
-        if (newmass > 0.)
-            variables.SetBodyMass(newmass);
-    ChBody::variables.SetBodyMass(newmass);
+  void ChBodyAddedMass::SetMass(double newmass) {
+        variables.SetBodyMass(newmass);
     }
     void ChBodyAddedMass::SetInertia(const ChMatrix33<>& newXInertia) {
         variables.SetBodyInertia(newXInertia);
@@ -98,7 +96,6 @@ void ChBodyAddedMass::IntFromDescriptor(const unsigned int off_v,  // offset in 
 
 void ChBodyAddedMass::InjectVariables(ChSystemDescriptor& mdescriptor) {
     this->variables.SetDisabled(!this->IsActive());
-
     mdescriptor.InsertVariables(&this->variables);
 }
 
@@ -169,5 +166,30 @@ void ChBodyAddedMass::VariablesQbIncrementPosition(double dt_step) {
     mdeltarot.Q_from_AngAxis(mangle, newwel_abs);
     ChQuaternion<> mnewrot = mdeltarot % moldrot;
     this->SetRot(mnewrot);
+}
+void ChBodyAddedMass::IntLoadResidual_F(const unsigned int off,  // offset in R residual
+                               ChVectorDynamic<>& R,    // result: the R residual, R += c*F
+                               const double c           // a scaling factor
+                               ) {
+    // add applied forces to 'fb' vector
+    R.PasteSumVector(Xforce * c, off, 0);
+    // add applied torques to 'fb' vector, including gyroscopic torque
+    if (this->GetNoGyroTorque())
+        R.PasteSumVector((Xtorque)*c, off + 3, 0);
+    else
+        R.PasteSumVector((Xtorque - gyro) * c, off + 3, 0);
+}
+
+void ChBodyAddedMass::IntLoadResidual_Mv(const unsigned int off,      // offset in R residual
+                                ChVectorDynamic<>& R,        // result: the R residual, R += c*M*v
+                                const ChVectorDynamic<>& w,  // the w vector
+                                const double c               // a scaling factor
+                                ) {
+  ChMatrixDynamic<> ww = ChMatrixDynamic<>(6, 1);
+  for (int i=0; i < 6; i++) {
+    ww.SetElement(i, 0, w(i));
+  }
+  R += variables.GetMfullmass()*ww;
+  R *= c;
 }
 }  // end namespace chrono

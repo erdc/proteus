@@ -240,7 +240,6 @@ cdef class ProtChBody:
         self.ChBody = pych.ChBodyAddedMass()
         self.thisptr.body = self.ChBody.sharedptr_chbody  # give pointer to cpp class
         self.ProtChSystem.thisptr.system.AddBody(self.ChBody.sharedptr_chbody)
-        self.Shape = None
         self.setRotation(np.array([1.,0.,0.,0.]))  # initialise rotation (nan otherwise)
         self.attachShape(shape)  # attach shape (if any)
         self.ProtChSystem.addSubcomponent(self)  # add body to system (for pre and post steps)
@@ -597,33 +596,35 @@ cdef class ProtChBody:
         added_mass: array_like
             Added mass matrix (must be 6x6 array!)
         """
+
         assert added_mass.shape[0] == 6, 'Added mass matrix must be 6x6 (np)'
         assert added_mass.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
-        # added mass matrix
-        cdef np.ndarray AM = np.zeros((6,6))
-        AM += added_mass
-        # mass matrix
         cdef double mass = self.ChBody.GetMass()
         cdef np.ndarray iner = self.ChBody.GetInertia()
-        cdef np.ndarray MM = np.zeros((6,6))
+        cdef np.ndarray MM = np.zeros((6,6))  # mass matrix
+        cdef np.ndarray AM = np.zeros((6,6))  # added mass matrix
+        cdef np.ndarray FM = np.zeros((6,6))  # full mass matrix
+        cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic[double](6, 6)
+        cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic[double](6, 6)
+        # added mass matrix
+        AM += added_mass
+        self.Aij[:] = AM
+        # mass matrix
         MM[0,0] = mass
         MM[1,1] = mass
         MM[2,2] = mass
         for i in range(3):
             for j in range(3):
                 MM[i+3, j+3] = iner[i, j]
-        print("MM", MM)
         # full mass
-        print("AM", AM)
-        cdef np.ndarray FM = np.zeros((6,6))
         FM += AM
         FM += MM
-        print("FM", FM)
+        Profiling.logEvent('Mass Matrix:\n'+str(MM))
+        Profiling.logEvent('Added Mass Matrix:\n'+str(AM))
+        Profiling.logEvent('Full Mass Matrix:\n'+str(FM))
         # inverse of full mass matrix
         inv_FM = np.linalg.inv(FM)
         #set it to chrono variable
-        cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic[double](6, 6)
-        cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic[double](6, 6)
         for i in range(6):
             for j in range(6):
                 chFM.SetElement(i, j, FM[i, j])
@@ -1241,6 +1242,22 @@ cdef class ProtChBody:
         with open(self.record_file, 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(values_towrite)
+        ## added mass
+        #if t == 0:
+        #    headers = ['t', 't_ch', 't_sim']
+        #    for i in range(6):
+        #        for j in range(6):
+        #            headers += ['A'+str(i)+str(j)]
+        #    with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'w') as csvfile:
+        #        writer = csv.writer(csvfile, delimiter=',')
+        #        writer.writerow(headers)
+        #values_towrite = [t, t_chrono, t_sim]
+        #for i in range(6):
+        #    for j in range(6):
+        #        values_towrite += [self.Aij[i, j]]
+        #with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'a') as csvfile:
+        #    writer = csv.writer(csvfile, delimiter=',')
+        #    writer.writerow(values_towrite)
 
     def addPrismaticLinksWithSpring(self, np.ndarray pris1,
                                     np.ndarray pris2, double stiffness, double damping,
