@@ -187,7 +187,7 @@ void ChBodyAddedMass::IntLoadResidual_Mv(const unsigned int off,      // offset 
                                 ) {
   ChMatrixDynamic<> ww = ChMatrixDynamic<>(6, 1);
   for (int i=0; i < 6; i++) {
-    ww.SetElement(i, 0, w(i));
+    ww.SetElement(i, 0, w(off+i));
   }
   R += variables.GetMfullmass()*ww;
   R *= c;
