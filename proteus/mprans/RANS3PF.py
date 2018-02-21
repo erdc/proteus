@@ -2231,6 +2231,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.pressureModel.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
+
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2746,6 +2747,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_centroids,
             self.coefficients.particle_nitsche,
             self.KILL_PRESSURE_TERM,
+            self.timeIntegration.dt,
             self.hasMaterialParametersAsFunctions,
             self.q['density'],
             self.q['dynamic_viscosity'],
