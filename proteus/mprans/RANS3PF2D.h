@@ -3,6 +3,8 @@
 #include <cmath>
 #include <valarray>
 #include <iostream>
+#include <vector>
+#include <set>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
@@ -57,6 +59,7 @@ namespace proteus
                                    double PSTAB,
                                    int *mesh_l2g,
                                    double *dV_ref,
+                                   int nDOF_per_element_pressure,
                                    double *p_trial_ref,
                                    double *p_grad_trial_ref,
                                    double *p_test_ref,
@@ -107,6 +110,9 @@ namespace proteus
                                    double C_dc,
                                    double C_b,
                                    const double* eps_solid,
+                                   const double* ebq_global_phi_solid,
+                                   const double* ebq_global_grad_phi_solid,
+                                   const double* phi_solid_nodes,
                                    const double* phi_solid,
                                    const double* q_velocity_solid,
                                    const double* q_vos,
@@ -183,6 +189,7 @@ namespace proteus
                                    double *globalResidual,
                                    int nExteriorElementBoundaries_global,
                                    int* exteriorElementBoundariesArray,
+                                   int* elementBoundariesArray,
                                    int* elementBoundaryElementsArray,
                                    int* elementBoundaryLocalElementBoundariesArray,
                                    double* ebqe_vf_ext,
@@ -282,7 +289,9 @@ namespace proteus
                                    double* dynamic_viscosity_as_function,
                                    double* ebqe_density_as_function,
                                    double* ebqe_dynamic_viscosity_as_function,
-                                   double order_polynomial
+                                   double order_polynomial,
+                                   double* isActiveDOF,
+                                   int USE_SBM
                                    )=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
@@ -345,6 +354,9 @@ namespace proteus
                                    double C_b,
                                    //VRANS
                                    const double *eps_solid,
+                                   const double *ebq_global_phi_solid,
+                                   const double *ebq_global_grad_phi_solid,
+                                   const double *phi_solid_nodes,
                                    const double *phi_solid,
                                    const double *q_velocity_solid,
                                    const double *q_vos,
@@ -399,6 +411,7 @@ namespace proteus
                                    double *globalJacobian,
                                    int nExteriorElementBoundaries_global,
                                    int *exteriorElementBoundariesArray,
+                                   int *elementBoundariesArray,
                                    int *elementBoundaryElementsArray,
                                    int *elementBoundaryLocalElementBoundariesArray,
                                    double *ebqe_vf_ext,
@@ -467,7 +480,8 @@ namespace proteus
                                    double* density_as_function,
                                    double* dynamic_viscosity_as_function,
                                    double* ebqe_density_as_function,
-                                   double* ebqe_dynamic_viscosity_as_function)=0;
+                                   double* ebqe_dynamic_viscosity_as_function,
+                                   int USE_SBM)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           int *exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -2168,6 +2182,7 @@ namespace proteus
                              double PSTAB,
                              int* mesh_l2g,
                              double* dV_ref,
+                             int nDOF_per_element_pressure,
                              double* p_trial_ref,
                              double* p_grad_trial_ref,
                              double* p_test_ref,
@@ -2221,6 +2236,9 @@ namespace proteus
                              double C_b,
                              //VRANS
                              const double* eps_solid,
+                             const double* ebq_global_phi_solid,
+                             const double* ebq_global_grad_phi_solid,
+                             const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
                              const double* q_vos,
@@ -2277,6 +2295,7 @@ namespace proteus
                              double* globalResidual,
                              int nExteriorElementBoundaries_global,
                              int* exteriorElementBoundariesArray,
+                             int* elementBoundariesArray,
                              int* elementBoundaryElementsArray,
                              int* elementBoundaryLocalElementBoundariesArray,
                              double* ebqe_vf_ext,
@@ -2378,7 +2397,9 @@ namespace proteus
                              double* dynamic_viscosity_as_function,
                              double* ebqe_density_as_function,
                              double* ebqe_dynamic_viscosity_as_function,
-                             double order_polynomial)
+                             double order_polynomial,
+                             double* isActiveDOF,
+                             int USE_SBM)
       {
         //
         //loop over elements to compute volume integrals and load them into element and global residual
@@ -4040,6 +4061,9 @@ namespace proteus
                              double C_b,
                              //VRANS
                              const double* eps_solid,
+                             const double* ebq_global_phi_solid,
+                             const double* ebq_global_grad_phi_solid,
+                             const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
                              const double* q_vos,
@@ -4095,6 +4119,7 @@ namespace proteus
                              double* globalJacobian,
                              int nExteriorElementBoundaries_global,
                              int* exteriorElementBoundariesArray,
+                             int* elementBoundariesArray,
                              int* elementBoundaryElementsArray,
                              int* elementBoundaryLocalElementBoundariesArray,
                              double* ebqe_vf_ext,
@@ -4163,7 +4188,8 @@ namespace proteus
                              double* density_as_function,
                              double* dynamic_viscosity_as_function,
                              double* ebqe_density_as_function,
-                             double* ebqe_dynamic_viscosity_as_function)
+                             double* ebqe_dynamic_viscosity_as_function,
+                             int USE_SBM)
       {
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian

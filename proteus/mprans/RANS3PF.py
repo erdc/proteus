@@ -2231,6 +2231,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.pressureModel.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.isActiveDOF = np.zeros_like(r);
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2240,6 +2241,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.PSTAB,
             self.mesh.elementNodesArray,
             self.elementQuadratureWeights[('u', 0)],
+            self.pressureModel.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,#: dim of FE space of pressure
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
             self.pressureModel.u[0].femSpace.psi,
@@ -2294,6 +2296,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.shockCapturing.shockCapturingFactor,
             self.numericalFlux.penalty_constant,
             self.coefficients.epsFact_solid,
+            self.coefficients.ebq_global_phi_s,
+            self.coefficients.ebq_global_grad_phi_s,
+            self.coefficients.phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
             self.coefficients.q_vos,
@@ -2370,6 +2375,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             r,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
+            self.mesh.elementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_vf,
@@ -2469,7 +2475,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dynamic_viscosity'],
             self.ebqe['density'],
             self.ebqe['dynamic_viscosity'],
-            self.u[0].femSpace.order)
+            self.u[0].femSpace.order,
+            self.isActiveDOF,
+            0)
+        r*=self.isActiveDOF
 
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):
@@ -2602,6 +2611,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.penalty_constant,
             # VRANS start
             self.coefficients.epsFact_solid,
+            self.coefficients.ebq_global_phi_s,
+            self.coefficients.ebq_global_grad_phi_s,
+            self.coefficients.phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
             self.coefficients.q_vos,
@@ -2682,6 +2694,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             jacobian,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
+            self.mesh.elementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_vf,
