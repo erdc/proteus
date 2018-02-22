@@ -159,7 +159,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  computeMetrics = False,
                  ELLIPTIC_REDISTANCING=False,
                  ELLIPTIC_REDISTANCING_TYPE=2, #Linear elliptic re-distancing by default
-                 alpha=1000.0): #penalization param for elliptic re-distancing
+                 alpha=1.0E9): #penalization param for elliptic re-distancing
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
         variableNames = ['phid']
@@ -742,7 +742,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.lumped_qz = numpy.zeros(self.u[0].dof.shape,'d')
         self.ellipticStage = 1
         self.auxEllipticFlag = 1
-
+        # ASSERT: if order>1 and elliptic redistancing is true then use bernstein polynomials
+        if self.coefficients.ELLIPTIC_REDISTANCING==True and self.u[0].femSpace.order>1:            
+            isBernsteinOnCube = isinstance(self.u[0].femSpace,
+                                           proteus.FemTools.C0_AffineBernsteinOnCube)
+            isBernsteinOnSimplex = isinstance(self.u[0].femSpace,
+                                              proteus.FemTools.C0_AffineBernsteinOnSimplex)
+            isBernstein = isBernsteinOnCube or isBernsteinOnSimplex
+            assert isBernstein==True, "If order>1 and ELLIPTIC_REDISTANCING=True, use Bernstein polynomials"
+            
         logEvent(memory("stride+offset", "OneLevelTransport"), level=4)
         if numericalFluxType is not None:
             if options is None or options.periodicDirichletConditions is None:
