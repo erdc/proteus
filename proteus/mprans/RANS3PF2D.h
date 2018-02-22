@@ -1567,7 +1567,109 @@ namespace proteus
             dmom_v_adv_v[1] += D_s * porosity * nu * phi_s_normal[1];
           }
       }
+      inline void compute_force_around_solid(const double dV,
+                                           const int nParticles,
+                                           const int sd_offset,
+                                           double *particle_signed_distances,
+                                           double *particle_signed_distance_normals,
+                                           double *particle_velocities,
+                                           double *particle_centroids,
+                                           const double penalty,
+                                           const double alpha,
+                                           const double beta,
+                                           const double eps_rho,
+                                           const double eps_mu,
+                                           const double rho_0,
+                                           const double nu_0,
+                                           const double rho_1,
+                                           const double nu_1,
+                                           const double useVF,
+                                           const double vf,
+                                           const double phi,
+                                           const double x,
+                                           const double y,
+                                           const double z,
+                                           const double p,
+                                           const double u,
+                                           const double v,
+                                           const double w,
+                                           const double uStar,
+                                           const double vStar,
+                                           const double wStar,
+                                           const double eps_s,
+                                           const double grad_u[nSpace],
+                                           const double grad_v[nSpace],
+                                           const double grad_w[nSpace],
+                                           double& Fx,
+                                           double& Fy)
+      {
+        double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
+        double *phi_s_normal;
+        double *vel;
+        H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
+        nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
+        rho = rho_0 * (1.0 - H_mu) + rho_1 * H_mu;
+        mu = rho_0 * nu_0 * (1.0 - H_mu) + rho_1 * nu_1 * H_mu;
+        C = 0.0;
 
+        phi_s = particle_signed_distances[0];
+        phi_s_normal = &particle_signed_distance_normals[0];
+        vel = &particle_velocities[0];
+        u_s = vel[0]; //particle_velocities[i*3+0];
+        v_s = vel[1]; //particle_velocities[i*3+1];
+        w_s = 0;
+        H_s = smoothedHeaviside(eps_s, phi_s);
+        D_s = smoothedDirac(eps_s, phi_s);
+        double rel_vel_norm = sqrt((uStar - u_s) * (uStar - u_s) +
+                                   (vStar - v_s) * (vStar - v_s) +
+                                   (wStar - w_s) * (wStar - w_s));
+
+        double C_surf = (phi_s > 0.0) ? 0.0 : nu * penalty;
+        double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
+
+        C = (D_s * C_surf + (1.0 - H_s) * C_vol);
+        force_x = dV * D_s * (p * phi_s_normal[0]
+                                               - mu * (phi_s_normal[0] * 2* grad_u[0] + phi_s_normal[1] * (grad_u[1]+grad_v[0]))
+                                               );
+                //+dV*D_s*C_surf*rel_vel_norm*(u-u_s)*rho
+                //+dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
+
+        force_y = dV * D_s * (p * phi_s_normal[1]
+                                               - mu * (phi_s_normal[0] * (grad_u[1]+grad_v[0]) + phi_s_normal[1] * 2* grad_v[1])
+                                               );
+                //+dV*D_s*C_surf*rel_vel_norm*(v-v_s)*rho
+                //+dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
+
+        if(0)
+        std::cout<<nu<<","
+                <<penalty<<","
+                <<phi_s<<","
+                <<C_surf<<","
+                <<C_vol<<","
+                <<dV<<","
+                <<D_s<<","
+                <<H_s<<","
+                <<p<<","
+                <<phi_s_normal[0]<<","
+                <<phi_s_normal[1]<<","
+                <<grad_u[0]<<","
+                <<grad_u[1]<<","
+                <<grad_v[0]<<","
+                <<grad_v[1]<<","
+                <<u<<","
+                <<v<<","
+                <<u_s<<","
+                <<v_s<<","
+                <<rho<<","
+                <<force_x<<","
+                <<force_y<<","
+                <<Fx<<","
+                <<Fy<<","
+                <<std::endl;
+
+        Fx += force_x;
+        Fy += force_y;
+      }
       inline
         void calculateCFL(const double& hFactor,
                           const double& elementDiameter,
@@ -2410,6 +2512,11 @@ namespace proteus
           mesh_volume_conservation_err_max_weak=0.0;
         double globalConservationError=0.0;
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
+        std::vector<int> surrogate_boundaries, surrogate_boundary_elements;
+        //std::set<int> active_velocity_dof;
+        double Fx = 0.0;
+        double Fy = 0.0;
+        double element_active=1;//use 1 since by default it is ibm
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
@@ -2433,6 +2540,58 @@ namespace proteus
                 phisErrorElement[i]=0.0;
                 /* elementResidual_w[i]=0.0; */
               }//i
+            if(USE_SBM>0)
+            {
+                //since by default it has value 1 and it is ibm.
+                for (int i=0;i<nDOF_test_element;i++)
+                {
+                    isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + i]]=0.0;
+                    isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + i]]=0.0;
+                }
+                //
+                //detect cut cells
+                //
+                int pos_counter=0;
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                  {
+                    /* std::cout<<"eN,I,nN "<<eN<<','<<I<<','<<mesh_l2g[eN*nDOF_mesh_trial_element+I]<<" phi = "<<phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]<<std::endl; */
+                    if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] >= 0)
+                      pos_counter++;
+                  }
+                if (pos_counter == 2)
+                  {
+                    element_active=0.0;
+                    //std::cout<<"Identified cut cell"<<std::endl;
+                    int opp_node=-1;
+                    for (int I=0;I<nDOF_mesh_trial_element;I++)
+                      {
+                        if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] < 0)
+                          opp_node = I;
+                      }
+                    assert(opp_node >=0);
+                    assert(opp_node <nDOF_mesh_trial_element);
+                    int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+                    surrogate_boundaries.push_back(ebN);
+                    //now find which element neighbor this element is
+                    if (eN == elementBoundaryElementsArray[eN*2+0])
+                      surrogate_boundary_elements.push_back(1);
+                    else
+                      surrogate_boundary_elements.push_back(0);
+                  }
+                else if (pos_counter == 3)
+                  {
+                    element_active=1.0;
+                    for (int i=0;i<nDOF_test_element;i++)
+                      {
+                        isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + i]]=1.0;
+                        isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + i]]=1.0;
+                      }
+                  }
+                else
+                  {
+                    element_active=0.0;
+                  }
+            }
             //
             //loop over quadrature points and compute integrands
             //
@@ -2740,7 +2899,7 @@ namespace proteus
                                                   dmom_v_source,
                                                   dmom_w_source);
                 double C_particles=0.0;
-                if(nParticles > 0)
+                if(nParticles > 0 && USE_SBM==0)
                   updateSolidParticleTerms(eN < nElements_owned,
                                            particle_nitsche,
                                            dV,
@@ -2798,6 +2957,42 @@ namespace proteus
                                            particle_netForces,
                                            particle_netMoments,
                                            particle_surfaceArea);
+                compute_force_around_solid(dV,
+                                           nParticles,
+                                           nQuadraturePoints_global,
+                                           &particle_signed_distances[eN_k],
+                                           &particle_signed_distance_normals[eN_k_nSpace],
+                                           particle_velocities,
+                                           particle_centroids,
+                                           particle_penalty_constant/h_phi,//penalty,
+                                           particle_alpha,
+                                           particle_beta,
+                                           eps_rho,
+                                           eps_mu,
+                                           rho_0,
+                                           nu_0,
+                                           rho_1,
+                                           nu_1,
+                                           useVF,
+                                           vf[eN_k],
+                                           phi[eN_k],
+                                           x,
+                                           y,
+                                           z,
+                                           p,
+                                           u,
+                                           v,
+                                           w,
+                                           q_velocity_sge[eN_k_nSpace+0],
+                                           q_velocity_sge[eN_k_nSpace+1],
+                                           q_velocity_sge[eN_k_nSpace+1],
+                                           particle_eps,
+                                           grad_u,
+                                           grad_v,
+                                           grad_w,
+                                           Fx,
+                                           Fy);
+              //Turbulence closure model
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -3092,8 +3287,8 @@ namespace proteus
                 /* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
                 /* mesh_volume_conservation_element_weak += elementResidual_mesh[i]; */
                 /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
-                globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=elementResidual_u[i];
-                globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
+                globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=element_active*elementResidual_u[i];
+                globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=element_active*elementResidual_v[i];
                 /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
               }//i
             /* mesh_volume_conservation += mesh_volume_conservation_element; */
@@ -3102,6 +3297,225 @@ namespace proteus
             /* mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak)); */
           }//elements
         //
+        //loop over the surrogate boundaries in SB method and assembly into residual
+        //
+        std::cout<<"    Force use delta function    "<<Fx<<"\t"<<Fy<<std::endl;
+        if(USE_SBM>0)
+        {
+            // Initialization of the force to 0
+            Fx = 0.0;
+            Fy = 0.0;
+            for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
+            {
+                register int ebN = surrogate_boundaries[ebN_s],
+                  eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
+                  ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
+                  eN_nDOF_trial_element = eN*nDOF_trial_element;
+                register double elementResidual_mesh[nDOF_test_element],
+                  elementResidual_p[nDOF_test_element],
+                  elementResidual_u[nDOF_test_element],
+                  elementResidual_v[nDOF_test_element],
+                  //elementResidual_w[nDOF_test_element],
+                  eps_rho,eps_mu;
+                //std::cout<<"Surrogate edge "<<ebN<<" element neighbor "<<eN<<" local element boundary "<<ebN_local<<std::endl;
+                for (int i=0;i<nDOF_test_element;i++)
+                  {
+                    elementResidual_mesh[i]=0.0;
+                    elementResidual_p[i]=0.0;
+                    elementResidual_u[i]=0.0;
+                    elementResidual_v[i]=0.0;
+                    /* elementResidual_w[i]=0.0; */
+                  }
+                for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+                  {
+                    register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
+                      /* ebNE_kb_nSpace = ebNE_kb*nSpace, */
+                      ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                      ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+                    register double
+                      u_ext=0.0,
+                      v_ext=0.0,
+                      bc_u_ext=0.0,
+                      bc_v_ext=0.0,
+                      grad_u_ext[nSpace],
+                      grad_v_ext[nSpace],
+                      jac_ext[nSpace*nSpace],
+                      jacDet_ext,
+                      jacInv_ext[nSpace*nSpace],
+                      boundaryJac[nSpace*(nSpace-1)],
+                      metricTensor[(nSpace-1)*(nSpace-1)],
+                      metricTensorDetSqrt,
+                      dS,p_test_dS[nDOF_test_element],vel_test_dS[nDOF_test_element],
+                      p_grad_trial_trace[nDOF_trial_element*nSpace],vel_grad_trial_trace[nDOF_trial_element*nSpace],
+                      vel_grad_test_dS[nDOF_trial_element*nSpace],
+                      normal[2],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
+                      G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty,
+                      force_x,force_y,force_z,force_p_x,force_p_y,force_p_z,force_v_x,force_v_y,force_v_z,r_x,r_y,r_z;
+                    //compute information about mapping from reference element to physical element
+                    ck.calculateMapping_elementBoundary(eN,
+                                                        ebN_local,
+                                                        kb,
+                                                        ebN_local_kb,
+                                                        mesh_dof,
+                                                        mesh_l2g,
+                                                        mesh_trial_trace_ref,
+                                                        mesh_grad_trial_trace_ref,
+                                                        boundaryJac_ref,
+                                                        jac_ext,
+                                                        jacDet_ext,
+                                                        jacInv_ext,
+                                                        boundaryJac,
+                                                        metricTensor,
+                                                        metricTensorDetSqrt,
+                                                        normal_ref,
+                                                        normal,
+                                                        x_ext,y_ext,z_ext);
+                    ck.calculateMappingVelocity_elementBoundary(eN,
+                                                                ebN_local,
+                                                                kb,
+                                                                ebN_local_kb,
+                                                                mesh_velocity_dof,
+                                                                mesh_l2g,
+                                                                mesh_trial_trace_ref,
+                                                                xt_ext,yt_ext,zt_ext,
+                                                                normal,
+                                                                boundaryJac,
+                                                                metricTensor,
+                                                                integralScaling);
+                    dS = metricTensorDetSqrt*dS_ref[kb];
+                    //get the metric tensor
+                    ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+                    //compute shape and solution information
+                    //shape
+                    ck.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,vel_grad_trial_trace);
+                    //solution and gradients
+                    ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+                    ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_ext);
+
+                    ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
+                    ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
+                    //precalculate test function products with integration weights
+                    for (int j=0;j<nDOF_trial_element;j++)
+                      {
+                        vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+                        for (int I=0;I<nSpace;I++)
+                          vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
+                      }
+                    bc_u_ext = particle_velocities[0*3+0];//first particle
+                    bc_v_ext = particle_velocities[0*3+1];
+                    ck.calculateGScale(G,normal,h_penalty);
+                    //
+                    //update the element and global residual storage
+                    //
+
+                    double dist = ebq_global_phi_solid[ebN_kb];
+                    double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
+                    P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
+                    P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
+                    distance[0] = -P_normal[0]*dist;
+                    distance[1] = -P_normal[1]*dist;
+                    P_tangent[0] = -P_normal[1];
+                    P_tangent[1] = P_normal[0];
+                    double dx = distance[0];
+                    double dy = distance[1];
+
+                    double visco = nu_0*rho_0;
+                    double Csb=10;
+                    double C_adim = Csb*visco/h_penalty;
+                    //std::cout << "C_adim "<< C_adim << std::endl;
+                    double beta = 0.0;
+                    double beta_adim = beta*h_penalty*visco;
+
+                    double dd1 = dx*grad_u_ext[0] + dy*grad_u_ext[1];
+                    double dd2 = dx*grad_v_ext[0] + dy*grad_v_ext[1];
+                    double dt1 = P_tangent[0]*grad_u_ext[0] + P_tangent[1]*grad_u_ext[1];
+                    double dt2 = P_tangent[0]*grad_v_ext[0] + P_tangent[1]*grad_v_ext[1];
+                    for (int i=0;i<nDOF_test_element;i++)
+                      {
+                        int eN_i = eN*nDOF_test_element+i;
+                        //globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=
+                        //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*Csb*(u_ext - bc_u_ext)*dS/h_penalty;
+                        //globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=
+                        //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*Csb*(v_ext - bc_u_ext)*dS/h_penalty;
+
+                        int GlobPos_u = offset_u+stride_u*vel_l2g[eN_i];
+                        int GlobPos_v = offset_v+stride_v*vel_l2g[eN_i];
+                        double phi_i = vel_test_dS[i];
+                        double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
+                        double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
+
+                        // Classical Nitsche
+                        // C < w , u - uD > (1)
+                        globalResidual[GlobPos_u] += phi_i*C_adim*(u_ext - bc_u_ext);
+                        globalResidual[GlobPos_v] += phi_i*C_adim*(v_ext - bc_v_ext);
+
+                        // - < w , mu Gu.nt > (2)
+                        globalResidual[GlobPos_u] -= visco * phi_i*(P_normal[0]*2*grad_u_ext[0] + P_normal[1]*(grad_u_ext[1]+grad_v_ext[0]));
+                        globalResidual[GlobPos_v] -= visco * phi_i*(P_normal[0]*(grad_u_ext[1]+grad_v_ext[0]) + P_normal[1]*2*grad_v_ext[1]);
+
+                        // - < mu Gw.nt , u - uD > (3)
+                        globalResidual[GlobPos_u] -= visco * (2*Gxphi_i*P_normal[0] + Gxphi_i*P_normal[1] + Gyphi_i*P_normal[1])*(u_ext - bc_u_ext);
+                        globalResidual[GlobPos_v] -= visco * (Gxphi_i*P_normal[0] + Gyphi_i*P_normal[0] + 2*Gyphi_i*P_normal[1])*(v_ext - bc_v_ext);
+
+                        // second order Taylor expansion
+                        //
+                        // missing part of (1) :: C < w + Gw d , u + Gu d - ud >
+                        // C < Gw d , u - uD >
+                        globalResidual[GlobPos_u] += C_adim*(dx*Gxphi_i + dy*Gyphi_i)*(u_ext - bc_u_ext);
+                        globalResidual[GlobPos_v] += C_adim*(dx*Gxphi_i + dy*Gyphi_i)*(v_ext - bc_v_ext);
+
+                        // C < Gv d , Gu d >
+                        globalResidual[GlobPos_u] += C_adim*(dx*Gxphi_i + dy*Gyphi_i)*dd1;
+                        globalResidual[GlobPos_v] += C_adim*(dx*Gxphi_i + dy*Gyphi_i)*dd2;
+
+                        // C < v , Gu d >
+                        globalResidual[GlobPos_u] += C_adim*phi_i*dd1;
+                        globalResidual[GlobPos_v] += C_adim*phi_i*dd2;
+
+                        //
+                        // missing part of (3)
+                        // - < mu Gw.nt , Gu.d >
+                        globalResidual[GlobPos_u] -= visco*(2*Gxphi_i*P_normal[0] + Gxphi_i*P_normal[1] + Gyphi_i*P_normal[1])*dd1;
+                        globalResidual[GlobPos_v] -= visco*(Gxphi_i*P_normal[0] + Gyphi_i*P_normal[0] + 2*Gyphi_i*P_normal[1])*dd2;
+
+                        // the penalization on the tangential derivative
+                        // B < Gw t , (Gu - GuD) t >
+                        globalResidual[GlobPos_u] += beta_adim*dt1*(Gxphi_i*P_tangent[0] + Gyphi_i*P_tangent[1]);
+                        globalResidual[GlobPos_v] += beta_adim*dt2*(Gxphi_i*P_tangent[0] + Gyphi_i*P_tangent[1]);
+
+                      }//i
+
+                    //
+                    // Forces
+                    //
+                    //compute pressure at the quadrature point of the edge from dof-value of the pressure
+                    double p_ext = 0.0;
+                    for (int i=0; i<nDOF_per_element_pressure;++i)
+                    {
+                        p_ext += p_dof[p_l2g[eN*nDOF_per_element_pressure+i]]*p_trial_trace_ref[ebN_local_kb*nDOF_per_element_pressure+i];
+                    }
+                    double nx = P_normal[0]; // YY: normal or P_normal ? normal is arbitrary right now.
+                    double ny = P_normal[1];
+
+                    double S_xx = 2*visco*grad_u_ext[0];
+                    double S_xy = visco*(grad_u_ext[1] + grad_v_ext[0]); // sym tensor -> S_yx = S_xy
+                    double S_yy = 2*visco*grad_v_ext[1];
+
+                    Fx -= p_ext*nx*dS;
+                    Fx += (S_xx*nx + S_xy*ny)*dS;
+    //                  Fx += dS*(C_adim*(u_ext - bc_u_ext)
+    //                          - visco * (normal[0]*2*grad_u_ext[0] + normal[1]*(grad_u_ext[1]+grad_v_ext[0]))
+    //                          + C_adim*dd1);
+                    Fy -= p_ext*ny*dS;
+                    Fy += (S_xy*nx + S_yy*ny)*dS;
+    //                  Fy += dS*(C_adim*(v_ext - bc_v_ext)
+    //                          - visco * (normal[0]*(grad_u_ext[1]+grad_v_ext[0]) + normal[1]*2*grad_v_ext[1])
+    //                          + C_adim*dd2);
+                  }//kb
+              }//ebN_s
+            std::cout<<" sbm force over solid is: "<<Fx<<"\t"<<Fy<<std::endl;
+            //
+        }
         //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
         //
         //ebNE is the Exterior element boundary INdex
@@ -4196,6 +4610,10 @@ namespace proteus
         //
         std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3), particle_netMoments(nParticles*3);
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
+        std::vector<int> surrogate_boundaries, surrogate_boundary_elements;
+        //std::set<int> active_velocity_dof;
+        double element_active=1.0;//value 1 is because it is ibm by default
+
         for(int eN=0;eN<nElements_global;eN++)
           {
             register double eps_rho,eps_mu;
@@ -4236,6 +4654,47 @@ namespace proteus
                   elementJacobian_w_v[i][j]=0.0;
                   elementJacobian_w_w[i][j]=0.0;
                 }
+            //
+            //detect cut cells
+            //
+            if(USE_SBM>0)
+            {
+                int pos_counter=0;
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                  {
+                    //std::cout<<"eN,I,nN "<<eN<<','<<I<<','<<mesh_l2g[eN*nDOF_mesh_trial_element+I]<<" phi = "<<phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]<<std::endl;
+                    if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] >= 0)
+                      pos_counter++;
+                  }
+                if (pos_counter == 2)
+                  {
+                    element_active=0.0;
+                    //std::cout<<"Identified cut cell"<<std::endl;
+                    int opp_node=-1;
+                    for (int I=0;I<nDOF_mesh_trial_element;I++)
+                      {
+                        if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] < 0)
+                          opp_node = I;
+                      }
+                    assert(opp_node >=0);
+                    assert(opp_node <nDOF_mesh_trial_element);
+                    int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+                    surrogate_boundaries.push_back(ebN);
+                    //now find which element neighbor this element is
+                    if (eN == elementBoundaryElementsArray[eN*2+0])
+                      surrogate_boundary_elements.push_back(1);
+                    else
+                      surrogate_boundary_elements.push_back(0);
+                  }
+                else if (pos_counter == 3)
+                  {
+                    element_active=1.0;
+                  }
+                else
+                  {
+                    element_active=0.0;
+                  }
+            }
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
@@ -4551,7 +5010,7 @@ namespace proteus
                                                   dmom_v_source,
                                                   dmom_w_source);
                 double C_particles=0.0;
-                if(nParticles > 0)
+                if(nParticles > 0 && USE_SBM==0)
                   updateSolidParticleTerms(eN < nElements_owned,
                                            particle_nitsche,
                                            dV,
@@ -4971,13 +5430,13 @@ namespace proteus
                     /* globalJacobian[csrRowIndeces_p_w[eN_i] + csrColumnOffsets_p_w[eN_i_j]] += elementJacobian_p_w[i][j]; */
 
                     /* globalJacobian[csrRowIndeces_u_p[eN_i] + csrColumnOffsets_u_p[eN_i_j]] += elementJacobian_u_p[i][j]; */
-                    globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
-                    globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_u_v[eN_i_j]] += elementJacobian_u_v[i][j];
+                    globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += element_active*elementJacobian_u_u[i][j];
+                    globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_u_v[eN_i_j]] += element_active*elementJacobian_u_v[i][j];
                     /* globalJacobian[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_u_w[eN_i_j]] += elementJacobian_u_w[i][j]; */
 
                     /* globalJacobian[csrRowIndeces_v_p[eN_i] + csrColumnOffsets_v_p[eN_i_j]] += elementJacobian_v_p[i][j]; */
-                    globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_v_u[eN_i_j]] += elementJacobian_v_u[i][j];
-                    globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += elementJacobian_v_v[i][j];
+                    globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_v_u[eN_i_j]] += element_active*elementJacobian_v_u[i][j];
+                    globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += element_active*elementJacobian_v_v[i][j];
                     /* globalJacobian[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_v_w[eN_i_j]] += elementJacobian_v_w[i][j]; */
 
                     /* globalJacobian[csrRowIndeces_w_p[eN_i] + csrColumnOffsets_w_p[eN_i_j]] += elementJacobian_w_p[i][j]; */
@@ -4987,6 +5446,241 @@ namespace proteus
                   }//j
               }//i
           }//elements
+        if(USE_SBM>0)
+        {
+            //loop over the surrogate boundaries in SB method and assembly into jacobian
+            //
+            for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
+              {
+                register int ebN = surrogate_boundaries[ebN_s],
+                  eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
+                  ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
+                  eN_nDOF_trial_element = eN*nDOF_trial_element;
+                register double eps_rho,eps_mu;
+                for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+                  {
+                    register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
+                      ebN_kb_nSpace = ebN_kb*nSpace,
+                      ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                      ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+
+                    register double u_ext=0.0,
+                      v_ext=0.0,
+                      bc_u_ext=0.0,
+                      bc_v_ext=0.0,
+                      grad_u_ext[nSpace],
+                      grad_v_ext[nSpace],
+                      jac_ext[nSpace*nSpace],
+                      jacDet_ext,
+                      jacInv_ext[nSpace*nSpace],
+                      boundaryJac[nSpace*(nSpace-1)],
+                      metricTensor[(nSpace-1)*(nSpace-1)],
+                      metricTensorDetSqrt,
+                      vel_grad_trial_trace[nDOF_trial_element*nSpace],
+                      dS,
+                      vel_test_dS[nDOF_test_element],
+                      normal[2],
+                      x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
+                      vel_grad_test_dS[nDOF_trial_element*nSpace],
+                      G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty;
+                    ck.calculateMapping_elementBoundary(eN,
+                                                        ebN_local,
+                                                        kb,
+                                                        ebN_local_kb,
+                                                        mesh_dof,
+                                                        mesh_l2g,
+                                                        mesh_trial_trace_ref,
+                                                        mesh_grad_trial_trace_ref,
+                                                        boundaryJac_ref,
+                                                        jac_ext,
+                                                        jacDet_ext,
+                                                        jacInv_ext,
+                                                        boundaryJac,
+                                                        metricTensor,
+                                                        metricTensorDetSqrt,
+                                                        normal_ref,
+                                                        normal,
+                                                        x_ext,y_ext,z_ext);
+                    ck.calculateMappingVelocity_elementBoundary(eN,
+                                                                ebN_local,
+                                                                kb,
+                                                                ebN_local_kb,
+                                                                mesh_velocity_dof,
+                                                                mesh_l2g,
+                                                                mesh_trial_trace_ref,
+                                                                xt_ext,yt_ext,zt_ext,
+                                                                normal,
+                                                                boundaryJac,
+                                                                metricTensor,
+                                                                integralScaling);
+                    dS = metricTensorDetSqrt*dS_ref[kb];
+                    ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+                    //compute shape and solution information
+                    //shape
+                    ck.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,vel_grad_trial_trace);
+                    //solution and gradients
+                    ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+                    ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_ext);
+
+                    ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
+                    ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
+                    //precalculate test function products with integration weights
+                    for (int j=0;j<nDOF_trial_element;j++)
+                      {
+                        vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+                        for (int I=0;I<nSpace;I++)
+                          vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
+                      }
+                    //
+                    //load the boundary values
+                    //
+                    bc_u_ext = 0.0;
+                    bc_v_ext = 0.0;
+                    ck.calculateGScale(G,normal,h_penalty);
+                    penalty = h_penalty;
+                    //
+                    //update the global Jacobian from the flux Jacobian
+                    //
+                    double dist = ebq_global_phi_solid[ebN_kb];
+                    double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
+                    P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
+                    P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
+                    distance[0] = -P_normal[0]*dist;
+                    distance[1] = -P_normal[1]*dist;
+                    P_tangent[0] = -P_normal[1];
+                    P_tangent[1] = P_normal[0];
+                    double dx = distance[0];
+                    double dy = distance[1];
+                    double tx = P_tangent[0] ; double ty = P_tangent[1];
+                    double visco = nu_0*rho_0;
+                    double Csb=10;
+                    double C_adim = Csb*visco/h_penalty;
+                    double beta = 0.0;
+                    double beta_adim = beta*h_penalty*visco;
+
+                    for (int i=0;i<nDOF_test_element;i++)
+                      {
+                        register int eN_i = eN*nDOF_test_element+i;
+                        double phi_i = vel_test_dS[i];
+                        double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
+                        double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
+
+                        for (int j=0;j<nDOF_trial_element;j++)
+                          {
+                            register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j,
+                              ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
+
+                            //globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                            //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*
+                            //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+j]*Csb*dS/h_penalty;
+                            //globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                            //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*
+                            //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+j]*Csb*dS/h_penalty;
+
+                            double phi_j = vel_test_dS[j]/dS;
+                            double Gxphi_j = vel_grad_test_dS[j*nSpace+0]/dS;
+                            double Gyphi_j = vel_grad_test_dS[j*nSpace+1]/dS;
+
+                            // Classical Nitsche
+                            // C < w , u - uD > (1)
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                              phi_i*phi_j*C_adim;
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                              phi_i*phi_j*C_adim;
+
+                            // - < w , mu Gu.nt > (2)
+                            // diag
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
+                              visco * phi_i * (P_normal[0] * 2 * Gxphi_j + P_normal[1] * Gyphi_j);
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
+                              visco * phi_i * (P_normal[0] * Gxphi_j + P_normal[1] * 2 * Gyphi_j);
+                            // extra diag
+                            globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+                              visco * phi_i * P_normal[0] * Gyphi_j ;
+                            globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+                              visco * phi_i * P_normal[1] * Gxphi_j ;
+
+                            // - < mu Gw.nt , u - uD > (3)
+                            // diag
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
+                              visco * (2*Gxphi_i * P_normal[0] + Gyphi_i * P_normal[1])* phi_j;
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
+                              visco * (Gxphi_i * P_normal[0] + 2*Gyphi_i * P_normal[1])* phi_j;
+                            // extra diag
+                            globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+                              visco * Gyphi_i * P_normal[0] * phi_j;
+                            globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+                              visco * Gxphi_i * P_normal[1] * phi_j;
+
+                            // second order Taylor expansion
+                            // missing part of (1) :: C < w + Gw d , u + Gu d - ud >
+
+                            // C < Gw d , u - uD >
+                            // diag
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                              C_adim*(dx*Gxphi_i+dy*Gyphi_i)*phi_j;
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                              C_adim*(dx*Gxphi_i+dy*Gyphi_i)*phi_j;
+    //                        //extra diag
+    //                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+    //                          C_adim*dx*Gyphi_i*phi_j;
+    //                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+    //                          C_adim*dy*Gxphi_i*phi_j;
+
+                            // C < Gv d , Gu d >
+                            // diag
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                              C_adim*(dx*Gxphi_i+dy*Gyphi_i)*(dx*Gxphi_j + dy*Gyphi_j);
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                              C_adim*(dx*Gxphi_i+dy*Gyphi_i)*(dx*Gxphi_j + dy*Gyphi_j);
+                            // extra diag
+    //                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+    //                          C_adim*dx*(Gxphi_i*dy*Gxphi_j + Gyphi_i*dy*Gyphi_j);
+    //                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+    //                          C_adim*dy*(Gxphi_i*dx*Gxphi_j + Gyphi_i*dx*Gyphi_j);
+
+                            // C < v , Gu d >
+                            // diag
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                              C_adim*phi_i*(dx*Gxphi_j + dy*Gyphi_j);
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                              C_adim*phi_i*(dx*Gxphi_j + dy*Gyphi_j);
+                            // extra diag
+    //                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+    //                          C_adim*phi_i*dy*Gxphi_j;
+    //                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+    //                          C_adim*phi_i*dx*Gyphi_j;
+
+                            /* // missing part of (3) */
+                            // - < mu Gw.nt , Gu.d >
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
+                              visco*(2*P_normal[0]*Gxphi_i+P_normal[1]*Gyphi_i)*(dx*Gxphi_j + dy*Gyphi_j);
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
+                              visco*(P_normal[0]*Gxphi_i+2*P_normal[1]*Gyphi_i)*(dx*Gxphi_j + dy*Gyphi_j);
+                            // extra diag
+                            globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+                              visco*Gyphi_i * P_normal[0] *(dx*Gxphi_j + dy*Gyphi_j);
+                            globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+                              visco*Gxphi_i * P_normal[1] *(dx*Gxphi_j + dy*Gyphi_j);
+
+                            // the penalization on the tangential derivative
+                            // B < Gw t , (Gu - GuD) t >
+                            // diag
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                              beta_adim*(tx*Gxphi_i+ ty*Gyphi_i)*(tx*Gxphi_j+ ty*Gyphi_j);
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                              beta_adim*(tx*Gxphi_i+ ty*Gyphi_i)*(tx*Gxphi_j+ ty*Gyphi_j);
+    //                        // extra diag
+    //                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+    //                          beta_adim*tx*(Gxphi_i*ty*Gxphi_j + Gyphi_i*ty*Gyphi_j);
+    //                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+    //                          beta_adim*ty*(Gxphi_i*tx*Gxphi_j + Gyphi_i*tx*Gyphi_j);
+
+                          }//j
+                      }//i
+                  }//kb
+              }//ebN_s
+        }
         //
         //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
         //
