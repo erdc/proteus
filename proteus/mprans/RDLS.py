@@ -736,6 +736,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions, "You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
         # add some structures for elliptic re-distancing
+        self.interface_locator = None
         self.abs_grad_u = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qx = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qy = numpy.zeros(self.u[0].dof.shape,'d')
@@ -946,6 +947,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getResidual(self, u, r):
         import pdb
         import copy
+
+        if self.interface_locator is None:
+            if self.coefficients.nModel is not None:
+                self.interface_locator = self.coefficients.nModel.interface_locator
+            else:
+                self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')
+                
         # try to use 1d,2d,3d specific modules
         # mwf debug
         # pdb.set_trace()
@@ -992,6 +1000,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.calculateResidual = self.rdls.calculateResidual
             self.calculateJacobian = self.rdls.calculateJacobian
 
+        # FREEZE INTERFACE #
+        if self.coefficients.alpha == 0:
+            for gi in range(len(self.u[0].dof)):
+                if self.interface_locator[gi] == 1.0:
+                    self.u[0].dof[gi] = self.coefficients.dof_u0[gi]
+        # END OF FREEZING INTERFACE #
+        
         self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1062,6 +1077,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_qz,
             self.coefficients.alpha/self.elementDiameter.min())
 
+        # FREEZE INTERFACE #
+        if self.coefficients.alpha == 0:
+            for gi in range(len(self.u[0].dof)):
+                if self.interface_locator[gi] == 1.0:
+                    r[gi] = 0
+        # END OF FREEZING INTERFACE #
+        
         if self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 2 and self.ellipticStage == 1:
             self.ellipticStage = 2
 
@@ -1156,6 +1178,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.abs_grad_u,
             self.coefficients.alpha/self.elementDiameter.min())
 
+        # FREEZING INTERFACE #
+        if self.coefficients.alpha == 0:
+            for gi in range(len(self.u[0].dof)):
+                if self.interface_locator[gi] == 1.0:
+                    for i in range(self.rowptr[gi], self.rowptr[gi + 1]):
+                        if (self.colind[i] == gi):
+                            self.nzval[i] = 1.0
+                        else:
+                            self.nzval[i] = 0.0
+        # END OF FREEZING INTERFACE #
+        
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
