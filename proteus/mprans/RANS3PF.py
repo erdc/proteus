@@ -2757,6 +2757,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_centroids,
             self.coefficients.particle_nitsche,
             self.KILL_PRESSURE_TERM,
+            self.timeIntegration.dt,
             self.hasMaterialParametersAsFunctions,
             self.q['density'],
             self.q['dynamic_viscosity'],
