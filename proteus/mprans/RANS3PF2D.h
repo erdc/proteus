@@ -696,6 +696,8 @@ namespace proteus
                                                      double* particle_netMoments,
                                                      double* particle_surfaceArea,
                                                      double particle_nitsche,
+                                                     double* phisError,
+                                                     double* phisErrorNodal,
                                                      int STABILIZATION_TYPE,
                                                      double areaRefElement,
                                                      double cMax,
@@ -1524,10 +1526,10 @@ namespace proteus
             double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
 
             C = (D_s * C_surf + (1.0 - H_s) * C_vol);
-//            force_x = dV * D_s * (p * phi_s_normal[0] - porosity * mu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]) + C_surf * (u - u_s) * rho) +
-//              dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
-//            force_y = dV * D_s * (p * phi_s_normal[1] - porosity * mu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]) + C_surf * (v - v_s) * rho) +
-//              dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
+            //            force_x = dV * D_s * (p * phi_s_normal[0] - porosity * mu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]) + C_surf * (u - u_s) * rho) +
+            //              dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
+            //            force_y = dV * D_s * (p * phi_s_normal[1] - porosity * mu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]) + C_surf * (v - v_s) * rho) +
+            //              dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
             force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*rel_vel_norm*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
             force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*rel_vel_norm*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
 
@@ -1587,7 +1589,7 @@ namespace proteus
         nrm_df = sqrt(nrm_df);
         if (density > 1.0e-8)
           cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
-        else 
+        else
           cfl = nrm_df/h;
         //cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
       }
@@ -3662,7 +3664,7 @@ namespace proteus
                 //calculate the numerical fluxes
                 //
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 exteriorNumericalAdvectiveFlux(isDOFBoundary_p[ebNE_kb],
                                                isDOFBoundary_u[ebNE_kb],
                                                isDOFBoundary_v[ebNE_kb],
@@ -5631,7 +5633,7 @@ namespace proteus
                 //calculate the flux jacobian
                 //
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
                     register int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
@@ -6239,6 +6241,8 @@ namespace proteus
                                                double* particle_netMoments,
                                                double* particle_surfaceArea,
                                                double particle_nitsche,
+                                               double* phisError,
+                                               double* phisErrorNodal,
                                                int STABILIZATION_TYPE,
                                                double areaRefElement,
                                                double cMax,
@@ -7750,7 +7754,7 @@ namespace proteus
                 //calculate the numerical fluxes
                 //
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 exteriorNumericalAdvectiveFlux(isDOFBoundary_p[ebNE_kb],
                                                isDOFBoundary_u[ebNE_kb],
                                                isDOFBoundary_v[ebNE_kb],
@@ -9731,7 +9735,7 @@ namespace proteus
                 //calculate the flux jacobian
                 //
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
                     register int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;

@@ -801,9 +801,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             mesh_l2g=None):
         if c.has_key('x') and len(c['x'].shape) == 3:
             if self.nd == 2:
-                # mwf debug
-                #import pdb
-                # pdb.set_trace()
                 c[('r', 0)].fill(0.0)
                 eps_source = self.eps_source
                 if self.waveFlag == 1:  # secondOrderStokes:
@@ -852,15 +849,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                     c['x'],
                                                     c[('r', 0)],
                                                     t)
-
-                # mwf debug
-                if numpy.isnan(c[('r', 0)].any()):
-                    import pdb
-                    pdb.set_trace()
             else:
-                # mwf debug
-                #import pdb
-                # pdb.set_trace()
                 c[('r', 0)].fill(0.0)
                 eps_source = self.eps_source
                 if self.waveFlag == 1:  # secondOrderStokes:
