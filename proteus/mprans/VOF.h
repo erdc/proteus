@@ -1764,12 +1764,12 @@ namespace proteus
           edge_based_cfl[i] = 2.*fabs(dLii)/mi;
           low_order_solution[i] = u_dof_old[i] - dt/mi*(ith_flux_term
                                                         + boundary_integral[i]
-                                                        - ith_low_order_dissipative_term);
+                                                        - ith_low_order_dissipative_term); //printf("%e %e %e %e %e %e %e \n",low_order_solution[i],u_dof_old[i],dt,mi,ith_flux_term,boundary_integral[i],ith_low_order_dissipative_term);
           // update residual
           if (LUMPED_MASS_MATRIX==1)
             globalResidual[i] = u_dof_old[i] - dt/mi*(ith_flux_term + boundary_integral[i] - ith_dissipative_term);
           else
-            globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term);
+            globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term); 
         }
     }
 

@@ -1074,9 +1074,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ML = np.zeros((self.nFreeDOF_global[0],),'d')
             for i in range(self.nFreeDOF_global[0]):
                 self.ML[i] = self.MC_a[rowptr[i]:rowptr[i+1]].sum()
-            np.testing.assert_almost_equal(self.ML.sum(),
-                                           self.mesh.volume,
-                                           err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
+            #np.testing.assert_almost_equal(self.ML.sum(),
+            #                               self.mesh.volume,
+            #                               err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
             for d in range(self.nSpace_global): #spatial dimensions
                 #C matrices
                 self.cterm[d] = np.zeros((self.mesh.nElements_global,
@@ -1197,6 +1197,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             self.calculateResidual = self.vof.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.vof.calculateMassMatrix
+
+        #import pdb; 
+        #pdb.set_trace()
 
         self.calculateResidual(#element
             self.timeIntegration.dt,

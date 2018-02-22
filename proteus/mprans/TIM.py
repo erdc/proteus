@@ -371,16 +371,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #     self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
         #                                              self.model.q[('m',0)],
         #                                              self.model.mesh.nElements_owned)
-        #     logEvent("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_pre,),level=2)
+        #     logEvent("Attach Models TIM: Phase  0 mass after TIM step = %12.5e" % (self.m_pre,),level=2)
         #     self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
         #                                              self.model.q[('m',0)],
         #                                              self.model.mesh.nElements_owned)
-        #     logEvent("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
+        #     logEvent("Attach Models TIM: Phase  0 mass after TIM step = %12.5e" % (self.m_post,),level=2)
         #     if self.model.ebqe.has_key(('advectiveFlux',0)):
         #         self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
         #                                                              self.model.ebqe[('advectiveFlux',0)],
         #                                                              self.model.mesh)
-        #         logEvent("Attach Models VOF: Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+        #         logEvent("Attach Models TIM: Phase  0 mass conservation after TIM step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
         #VRANS
         self.flowCoefficients = modelList[self.flowModelIndex].coefficients
         if hasattr(self.flowCoefficients,'q_porosity'):
@@ -449,7 +449,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #     self.m_last = Norms.scalarDomainIntegral(self.model.q['dV'],
         #                                              self.model.timeIntegration.m_last[0],
         #                                              self.model.mesh.nElements_owned)
-        #     logEvent("Phase  0 mass before VOF (m_last) step = %12.5e" % (self.m_last,),level=2)
+        #     logEvent("Phase  0 mass before TIM (m_last) step = %12.5e" % (self.m_last,),level=2)
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
@@ -462,8 +462,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
             #                                                     self.model.ebqe[('advectiveFlux',0)],
             #                                                     self.model.mesh)
-            #logEvent("Phase  0 mass flux boundary integral after VOF step = %12.5e" % (self.fluxIntegral,),level=2)
-            #logEvent("Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+            #logEvent("Phase  0 mass flux boundary integral after TIM step = %12.5e" % (self.fluxIntegral,),level=2)
+            #logEvent("Phase  0 mass conservation after TIM step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
             #divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.model.ebqe['dS'],
             #                                                        self.ebqe_v,
             #                                                        self.model.ebqe['n'],
@@ -476,7 +476,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
     def evaluate(self,t,c):
         #mwf debug
-        #print "VOFcoeficients eval t=%s " % t
+        #print "TIMcoeficients eval t=%s " % t
         if c[('f',0)].shape == self.q_v.shape:
             v = self.q_v
             phi = self.q_phi
@@ -494,7 +494,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             phi=None
             porosity=None
         if v is not None:
-            # self.VOFCoefficientsEvaluate(self.eps,
+            # self.TIMCoefficientsEvaluate(self.eps,
             #                              v,
             #                              phi,
             #                              c[('u',0)],
@@ -847,6 +847,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
+
         if numericalFluxType is not None:
             if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
@@ -952,7 +953,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              2:self.q[('x')][:,:,2]}
         t = self.timeIntegration.t
         self.coefficients.q_v[...,0] = self.velocityFieldAsFunction[0](X,t)
-        self.coefficients.q_v[...,1] = self.velocityFieldAsFunction[1](X,t)
+        if (self.nSpace_global==2):
+            self.coefficients.q_v[...,1] = self.velocityFieldAsFunction[1](X,t)
         if (self.nSpace_global==3):
             self.coefficients.q_v[...,2] = self.velocityFieldAsFunction[2](X,t)
 
@@ -961,7 +963,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                   1:self.ebqe['x'][:,:,1],
                   2:self.ebqe['x'][:,:,2]}
         self.coefficients.ebqe_v[...,0] = self.velocityFieldAsFunction[0](ebqe_X,t)
-        self.coefficients.ebqe_v[...,1] = self.velocityFieldAsFunction[1](ebqe_X,t)
+        if (self.nSpace_global==2):
+            self.coefficients.ebqe_v[...,1] = self.velocityFieldAsFunction[1](ebqe_X,t)
         if (self.nSpace_global==3):
             self.coefficients.ebqe_v[...,2] = self.velocityFieldAsFunction[2](ebqe_X,t)
 
@@ -1043,6 +1046,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                           self.q['abs(det(J))'],
                                                           self.q[('grad(w)',0)],
                                                           self.q[('grad(w)*dV_f',0)])
+
             ##########################
             ### LUMPED MASS MATRIX ###
             ##########################
@@ -1133,13 +1137,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                           self.cterm_global_transpose[d])
 
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
-        rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
+        if (self.nSpace_global==2):
+            rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
+        else:
+            Cy = numpy.zeros(Cx.shape,'d')
         if (self.nSpace_global==3):
             rowptr, colind, Cz = self.cterm_global[2].getCSRrepresentation()
         else:
             Cz = numpy.zeros(Cx.shape,'d')
         rowptr, colind, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
-        rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
+        if (self.nSpace_global==2):
+            rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
+        else:
+            CTy = numpy.zeros(CTx.shape,'d')
         if (self.nSpace_global==3):
             rowptr, colind, CTz = self.cterm_global_transpose[2].getCSRrepresentation()
         else:

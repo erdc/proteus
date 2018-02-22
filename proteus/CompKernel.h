@@ -71,6 +71,19 @@ public:
     HXHX(0)
   {}
 };
+
+template<>
+class EIndex<1>
+{
+public:
+  const int X;
+  EIndex():
+    X(0)
+  {}
+};
+
+
+
 //I separated the space mapping part of the kernel so I could partially specialize the template on NSPACE
 template<int NSPACE, int NDOF_MESH_TRIAL_ELEMENT>
 class CompKernelSpaceMapping
@@ -509,6 +522,32 @@ public:
 			     0.0);
   }
 
+  inline void calculateMapping_element(const int eN,
+				       const int k,
+				       double* mesh_dof,
+				       int* mesh_l2g,
+				       double* mesh_trial_ref,
+				       double* mesh_grad_trial_ref,
+				       double* jac,
+				       double& jacDet,
+				       double* jacInv,
+				       double& x)
+  {
+    calculateMapping_element(eN,
+			     k,
+			     mesh_dof,
+			     mesh_l2g,
+			     mesh_trial_ref,
+			     mesh_grad_trial_ref,
+			     jac,
+			     jacDet,
+			     jacInv,
+			     x,
+			     0.0,
+			     0.0);
+  }
+
+
   inline void calculateMappingVelocity_element(const int eN,
 					       const int k,
 					       double* mesh_velocity_dof,
@@ -525,7 +564,25 @@ public:
 				     xt,
 				     yt,
 				     0.0);
-  }
+ }
+
+  inline void calculateMappingVelocity_element(const int eN,
+					       const int k,
+					       double* mesh_velocity_dof,
+					       int* mesh_l2g,
+					       double* mesh_trial_ref,
+					       double& xt)
+  {
+    calculateMappingVelocity_element(eN,
+				     k,
+				     mesh_velocity_dof,
+				     mesh_l2g,
+				     mesh_trial_ref,
+				     xt,
+				     0.0,
+				     0.0);
+ }
+
   inline void calculateMapping_elementBoundary(const int eN,
 					       const int ebN_local,
 					       const int kb,
@@ -567,6 +624,49 @@ public:
 				     y,
 				     0.0);  
   }
+
+  inline void calculateMapping_elementBoundary(const int eN,
+					       const int ebN_local,
+					       const int kb,
+					       const int ebN_local_kb,
+					       double* mesh_dof,
+					       int* mesh_l2g,
+					       double* mesh_trial_trace_ref,
+					       double* mesh_grad_trial_trace_ref,
+					       double* boundaryJac_ref,
+					       double* jac,
+					       double& jacDet,
+					       double* jacInv,
+					       double* boundaryJac,
+					       double* metricTensor,
+					       double& metricTensorDetSqrt,
+					       double* normal_ref,
+					       double* normal,
+					       double& x)
+  {
+    calculateMapping_elementBoundary(eN,
+				     ebN_local,
+				     kb,
+				     ebN_local_kb,
+				     mesh_dof,
+				     mesh_l2g,
+				     mesh_trial_trace_ref,
+				     mesh_grad_trial_trace_ref,
+				     boundaryJac_ref,
+				     jac,
+				     jacDet,
+				     jacInv,
+				     boundaryJac,
+				     metricTensor,
+				     metricTensorDetSqrt,
+				     normal_ref,
+				     normal,
+				     x,
+				     0.0,
+				     0.0);  
+  }
+
+
   inline void calculateMappingVelocity_elementBoundary(const int eN,
 						       const int ebN_local,
 						       const int kb,
@@ -596,6 +696,36 @@ public:
 					     metricTensor,
 					     metricTensorDetSqrt);
   }
+
+  inline void calculateMappingVelocity_elementBoundary(const int eN,
+						       const int ebN_local,
+						       const int kb,
+						       const int ebN_local_kb,
+						       double* mesh_velocity_dof,
+						       int* mesh_l2g,
+						       double* mesh_trial_trace_ref,
+						       double& xt,
+						       double* normal,
+						       double* boundaryJac,						       
+						       double* metricTensor,
+						       double& metricTensorDetSqrt)
+  {
+    calculateMappingVelocity_elementBoundary(eN,
+					     ebN_local,
+					     kb,
+					     ebN_local_kb,
+					     mesh_velocity_dof,
+					     mesh_l2g,
+					     mesh_trial_trace_ref,
+					     xt,
+					     0.0,
+					     0.0,
+					     normal,
+					     boundaryJac,						       
+					     metricTensor,
+					     metricTensorDetSqrt);
+  }
+
 
 };
 
@@ -2602,4 +2732,1106 @@ public:
     return dstressFlux*disp_test_dS;
   }
 };
+
+
+//specialization for 1D
+template<int NDOF_MESH_TRIAL_ELEMENT>
+class CompKernelSpaceMapping<1,NDOF_MESH_TRIAL_ELEMENT>
+{
+public:
+  const int X;
+  CompKernelSpaceMapping():
+    X(0)
+  {}
+  inline void calculateMapping_element(const int eN,
+				       const int k,
+				       double* mesh_dof,
+				       int* mesh_l2g,
+				       double* mesh_trial_ref,
+				       double* mesh_grad_trial_ref,
+				       double* jac,
+				       double& jacDet,
+				       double* jacInv,
+				       double& x)
+  {
+    register double Grad_x[1],oneOverJacDet;
+    
+    //
+    //mapping of reference element to physical element
+    //
+    x=0.0; Grad_x[0]=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      {
+	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
+	x += mesh_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+	for (int I=0;I<1;I++)
+	  {	  
+	    Grad_x[I] += mesh_dof[mesh_l2g[eN_j]*3+0]*mesh_grad_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j+I];
+	  }
+      }
+    jac[0] = Grad_x[0];
+    jacDet = jac[0];
+    jacInv[0] = 1./jac[0];
+  }
+  
+  inline void calculateH_element(const int eN,
+				 const int k,
+				 double* h_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_ref,
+				 double& h)
+  {
+    h=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      {
+	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
+	h += h_dof[mesh_l2g[eN_j]]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+      }
+  }
+  
+  inline void calculateMappingVelocity_element(const int eN,
+					       const int k,
+					       double* mesh_velocity_dof,
+					       int* mesh_l2g,
+					       double* mesh_trial_ref,
+					       double& xt)
+  {
+    //
+    //time derivative of mapping of reference element to physical element
+    //
+    xt=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      {
+	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
+	/* xt += mesh_velocity_dof[mesh_l2g[eN_j]*2+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j]; */
+	xt += mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+      }
+  }
+
+  inline void calculateMapping_elementBoundary(const int eN,
+					       const int ebN_local,
+					       const int kb,
+					       const int ebN_local_kb,
+					       double* mesh_dof,
+					       int* mesh_l2g,
+					       double* mesh_trial_trace_ref,
+					       double* mesh_grad_trial_trace_ref,
+					       double* boundaryJac_ref,
+					       double* jac,
+					       double& jacDet,
+					       double* jacInv,
+					       double* boundaryJac,
+					       double* metricTensor,
+					       double& metricTensorDetSqrt,
+					       double* normal_ref,
+					       double* normal,
+					       double& x)
+  {
+    const int ebN_local_kb_nSpace = ebN_local_kb,
+      ebN_local_kb_nSpace_nSpacem1 = 0;
+  
+    register double Grad_x_ext[1],oneOverJacDet,norm_normal=0.0;
+    // 
+    //calculate mapping from the reference element to the physical element
+    // 
+    x=0.0; Grad_x_ext[0] = 0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++) 
+      { 
+	int eN_j = eN*NDOF_MESH_TRIAL_ELEMENT+j;
+	int ebN_local_kb_j = ebN_local_kb*NDOF_MESH_TRIAL_ELEMENT+j;
+	int ebN_local_kb_j_nSpace = ebN_local_kb_j;
+	/* x += mesh_dof[mesh_l2g[eN_j]*2+0]*mesh_trial_trace_ref[ebN_local_kb_j];  */
+	/* for (int I=0;I<1;I++) */
+	/*   { */
+	/*     Grad_x_ext[I] += mesh_dof[mesh_l2g[eN_j]*2+0]*mesh_grad_trial_trace_ref[ebN_local_kb_j_nSpace+I]; */
+	/*   }  */
+	x += mesh_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_trace_ref[ebN_local_kb_j]; 
+	for (int I=0;I<1;I++)
+	  {
+	    Grad_x_ext[I] += mesh_dof[mesh_l2g[eN_j]*3+0]*mesh_grad_trial_trace_ref[ebN_local_kb_j_nSpace+I];
+	  } 
+      }
+    //Space Mapping Jacobian
+    jac[0] = Grad_x_ext[0];
+    jacDet = jac[0];
+    jacInv[0] = 1./jacDet;
+    //normal
+    norm_normal=0.0;
+    normal[0] = 0.0;
+    for (int I=0;I<1;I++)
+      {
+	for (int J=0;J<1;J++)
+	  {
+	    normal[I] += jacInv[J+I]*normal_ref[ebN_local_kb_nSpace+J];
+	  }
+	norm_normal+=normal[I]*normal[I];
+      }
+    norm_normal = sqrt(norm_normal);
+    for (int I=0;I<1;I++)
+      {
+	normal[I] /= norm_normal;
+      }
+    //metric tensor and determinant 
+    boundaryJac[0] = jac[0]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1];
+    metricTensor[0] = 1.0;
+    metricTensorDetSqrt = 1.0;
+  }
+
+  inline void calculateMappingVelocity_elementBoundary(const int eN,
+						       const int ebN_local,
+						       const int kb,
+						       const int ebN_local_kb,
+						       double* mesh_velocity_dof,
+						       int* mesh_l2g,
+						       double* mesh_trial_trace_ref,
+						       double& xt,
+						       double* normal,
+						       double* boundaryJac,						       
+						       double* metricTensor,
+						       double& metricTensorDetSqrt)
+  {
+    //const int ebN_local_kb_nSpace = ebN_local_kb*2,
+    //  ebN_local_kb_nSpace_nSpacem1 = ebN_local_kb*2*2;
+    // 
+    //calculate velocity of mapping from the reference element to the physical element
+    // 
+    xt=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++) 
+      { 
+	int eN_j = eN*NDOF_MESH_TRIAL_ELEMENT+j;
+	int ebN_local_kb_j = ebN_local_kb*NDOF_MESH_TRIAL_ELEMENT+j;
+	/* xt += mesh_velocity_dof[mesh_l2g[eN_j]*2+0]*mesh_trial_trace_ref[ebN_local_kb_j];  */
+	xt += mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_trace_ref[ebN_local_kb_j]; 
+      }
+    //modify the metricTensorDetSqrt to include the effect of the moving domain
+    //it's not exactly the Sqrt(Det(G_tr_G)) now, see notes
+    //just do it brute force
+    double 
+      Gy_tr_Gy_00 = 1.0 + xt*xt,
+      Gy_tr_Gy_01 = boundaryJac[0]*xt,
+      Gy_tr_Gy_10 = Gy_tr_Gy_01,
+      Gy_tr_Gy_11 = metricTensor[0],
+      xt_dot_n = xt*normal[0];
+      metricTensorDetSqrt=sqrt((Gy_tr_Gy_00*Gy_tr_Gy_11 - Gy_tr_Gy_01*Gy_tr_Gy_10) / (1.0+xt_dot_n*xt_dot_n));
+  }
+
+  inline void valFromDOF(const double* dof,const int* l2g_element,const double* trial_ref,double& val)
+  {
+    val=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      val+=dof[l2g_element[j]]*trial_ref[j];
+  }
+  
+  inline void gradFromDOF(const double* dof,const int* l2g_element,const double* grad_trial,double* grad)
+  {
+    for(int I=0;I<1;I++)
+      grad[I] = 0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      for(int I=0;I<1;I++)
+	grad[I] += dof[l2g_element[j]]*grad_trial[j+I];
+  }
+
+  inline void hessFromDOF(const double* dof,const int* l2g_element,const double* hess_trial,double* hess)
+  {
+    for(int I=0;I<1;I++)
+      for(int J=0;J<1;J++)
+	hess[I+J] = 0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      for(int I=0;I<1;I++)
+	for(int J=0;J<1;J++)
+	  hess[I+J] += dof[l2g_element[j]]*hess_trial[j*2+I+J];
+  }
+  
+  inline void calculateMapping_element(const int eN,
+				       const int k,
+				       double* mesh_dof,
+				       int* mesh_l2g,
+				       double* mesh_trial_ref,
+				       double* mesh_grad_trial_ref,
+				       double* jac,
+				       double& jacDet,
+				       double* jacInv,
+				       double& x,
+				       double& y,
+				       double& z)
+  {
+    calculateMapping_element(eN,
+			     k,
+			     mesh_dof,
+			     mesh_l2g,
+			     mesh_trial_ref,
+			     mesh_grad_trial_ref,
+			     jac,
+			     jacDet,
+			     jacInv,
+			     x);
+  }
+  inline void calculateMappingVelocity_element(const int eN,
+					       const int k,
+					       double* mesh_velocity_dof,
+					       int* mesh_l2g,
+					       double* mesh_trial_ref,
+					       double& xt,
+					       double& yt,
+					       double& zt)
+  {
+    calculateMappingVelocity_element(eN,
+				     k,
+				     mesh_velocity_dof,
+				     mesh_l2g,
+				     mesh_trial_ref,
+				     xt);
+  }
+  inline void calculateMapping_elementBoundary(const int eN,
+					       const int ebN_local,
+					       const int kb,
+					       const int ebN_local_kb,
+					       double* mesh_dof,
+					       int* mesh_l2g,
+					       double* mesh_trial_trace_ref,
+					       double* mesh_grad_trial_trace_ref,
+					       double* boundaryJac_ref,
+					       double* jac,
+					       double& jacDet,
+					       double* jacInv,
+					       double* boundaryJac,
+					       double* metricTensor,
+					       double& metricTensorDetSqrt,
+					       double* normal_ref,
+					       double* normal,
+					       double& x,
+					       double& y,
+					       double& z)
+  {
+    calculateMapping_elementBoundary(eN,
+				     ebN_local,
+				     kb,
+				     ebN_local_kb,
+				     mesh_dof,
+				     mesh_l2g,
+				     mesh_trial_trace_ref,
+				     mesh_grad_trial_trace_ref,
+				     boundaryJac_ref,
+				     jac,
+				     jacDet,
+				     jacInv,
+				     boundaryJac,
+				     metricTensor,
+				     metricTensorDetSqrt,
+				     normal_ref,
+				     normal,
+				     x);  
+  }
+  inline void calculateMappingVelocity_elementBoundary(const int eN,
+						       const int ebN_local,
+						       const int kb,
+						       const int ebN_local_kb,
+						       double* mesh_velocity_dof,
+						       int* mesh_l2g,
+						       double* mesh_trial_trace_ref,
+						       double& xt,
+						       double& yt,
+						       double& zt,
+						       double* normal,
+						       double* boundaryJac,						       
+						       double* metricTensor,
+						       double& metricTensorDetSqrt)
+  {
+    calculateMappingVelocity_elementBoundary(eN,
+					     ebN_local,
+					     kb,
+					     ebN_local_kb,
+					     mesh_velocity_dof,
+					     mesh_l2g,
+					     mesh_trial_trace_ref,
+					     xt,
+					     normal,
+					     boundaryJac,						       
+					     metricTensor,
+					     metricTensorDetSqrt);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+//specialization for 1D
+template<int NDOF_MESH_TRIAL_ELEMENT, int NDOF_TRIAL_ELEMENT, int NDOF_TEST_ELEMENT>
+class CompKernel<1,NDOF_MESH_TRIAL_ELEMENT,NDOF_TRIAL_ELEMENT,NDOF_TEST_ELEMENT>
+{
+public:
+  CompKernelSpaceMapping<1,NDOF_MESH_TRIAL_ELEMENT> mapping;
+  const int X;
+  CompKernel():
+    X(mapping.X)
+  {}
+    inline void calculateG(double* jacInv,double* G,double& G_dd_G, double& tr_G)
+    {
+      //get the metric tensor
+      //cek todo use symmetry
+      for (int I=0;I<1;I++)
+	for (int J=0;J<1;J++)
+	  {
+	    G[I*1+J] = 0.0;
+	    for (int K=0;K<1;K++)
+	      G[I*1+J] += jacInv[K*1+I]*jacInv[K*1+J];
+	  }
+      G_dd_G = 0.0;
+      tr_G = 0.0;
+      for (int I=0;I<1;I++)
+	{
+	  tr_G += G[I*1+I];
+	  for (int J=0;J<1;J++)
+	    {
+	      G_dd_G += G[I*1+J]*G[I*1+J];
+	    }
+	}
+    }
+  inline void calculateGScale(double* G,double* v,double& h)
+  {
+    h = 0.0;
+    for (int I=0;I<1;I++)
+      for (int J=0;J<1;J++)
+	h += v[I]*G[I*1+J]*v[J];
+    h = 1.0/sqrt(h+1.0e-16);//cek hack
+  }
+  inline void valFromDOF(const double* dof,const int* l2g_element,const double* trial_ref,double& val)
+  {
+    val=0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      val+=dof[l2g_element[j]]*trial_ref[j];
+  }
+
+  inline void gradFromDOF(const double* dof,const int* l2g_element,const double* grad_trial,double* grad)
+  {
+    for(int I=0;I<1;I++)
+      grad[I] = 0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<1;I++)
+	grad[I] += dof[l2g_element[j]]*grad_trial[j*1+I];
+  }
+
+  inline void hessFromDOF(const double* dof,const int* l2g_element,const double* hess_trial,double* hess)
+  {
+    const int NSPACE2=1;
+    for(int I=0;I<1;I++)
+      for(int J=0;J<1;J++)
+	hess[I+J] = 0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<1;I++)
+	for(int J=0;J<1;J++)
+	  hess[I+J] += dof[l2g_element[j]]*hess_trial[j*NSPACE2+I+J];
+  }
+
+  inline void valFromElementDOF(const double* dof,const double* trial_ref,double& val)
+  {
+    val=0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      val+=dof[j]*trial_ref[j];
+  }
+
+  inline void gradFromElementDOF(const double* dof,const double* grad_trial,double* grad)
+  {
+    for(int I=0;I<1;I++)
+      grad[I] = 0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<1;I++)
+	grad[I] += dof[j]*grad_trial[j+I];
+  }
+
+  inline void gradTrialFromRef(const double* grad_trial_ref, const double* jacInv, double* grad_trial)
+  {
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<1;I++)
+	grad_trial[j+I] = 0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<1;I++)
+	for(int J=0;J<1;J++)
+	  grad_trial[j+I] += jacInv[J+I]*grad_trial_ref[j+J];
+  }
+  
+  inline void hessTrialFromRef(const double* hess_trial_ref, const double* jacInv, double* hess_trial)
+  {
+    const int NSPACE2=1;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<1;I++)
+	hess_trial[j+I] = 0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<1;I++)
+	for(int J=0;J<1;J++)
+	  for(int K=0;K<1;K++)
+	    for(int L=0;L<1;L++)
+	      hess_trial[j*NSPACE2+I+J] += hess_trial_ref[j*NSPACE2+K+L]*jacInv[L+J]*jacInv[K+I];
+  }
+  
+  inline void gradTestFromRef(const double* grad_test_ref, const double* jacInv, double* grad_test)
+  {
+    for (int i=0;i<NDOF_TEST_ELEMENT;i++)
+      for(int I=0;I<1;I++)
+	grad_test[i+I] = 0.0;
+    for (int i=0;i<NDOF_TEST_ELEMENT;i++)
+      for(int I=0;I<1;I++)
+	for(int J=0;J<1;J++)
+	  grad_test[i+I] += jacInv[J+I]*grad_test_ref[i+J];
+  }
+  
+  inline void backwardEuler(const double& dt, const double& m_old, const double& m, const double& dm, double& mt, double& dmt)
+  {  
+    mt =(m-m_old)/dt;
+    dmt = dm/dt;
+  }
+
+  inline void bdf(const double& alpha, const double& beta, const double& m, const double& dm, double& mt, double& dmt)
+  {  
+    mt =alpha*m + beta;
+    dmt = alpha*dm;
+  }
+  inline void bdfC2(const double& alpha, const double& beta, const double& m, const double& dm, const double& dm2, double& mt, double& dmt, double& dm2t)
+  {  
+    mt =alpha*m + beta;
+    dmt = alpha*dm;
+    dm2t = alpha*dm2;
+  }
+
+  inline double Mass_weak(const double& mt, const double& w_dV)
+  {
+    return mt*w_dV;
+  }
+
+  inline double MassJacobian_weak(const double& dmt,
+				  const double& v,
+				  const double& w_dV)
+  {
+    return dmt*v*w_dV;
+  }
+
+  inline double Mass_strong(const double& mt)
+  {
+    return mt; 
+  }
+
+  inline double MassJacobian_strong(const double& dmt,
+				    const double& v)
+  {
+    return dmt*v;
+  }
+
+  inline double Mass_adjoint(const double& dmt,
+			     const double& w_dV)
+  {
+    return dmt*w_dV;
+  }
+
+  inline double Advection_weak(const double  f[1],
+			       const double grad_w_dV[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      tmp -= f[I]*grad_w_dV[I];
+    return tmp;
+  }
+
+  inline double AdvectionJacobian_weak(const double df[1],
+				       const double& v,
+				       const double grad_w_dV[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      tmp -= df[I]*v*grad_w_dV[I];
+    return tmp;
+  }
+
+  inline double Advection_strong(const double df[1],
+				 const double grad_u[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      tmp += df[I]*grad_u[I];
+    return tmp;
+  }
+
+  inline double AdvectionJacobian_strong(const double df[1],
+					 const double grad_v[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      tmp += df[I]*grad_v[I];
+    return tmp;
+  }
+
+  inline double Advection_adjoint(const double df[1],
+				  const double grad_w_dV[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      tmp -= df[I]*grad_w_dV[I];
+    return tmp;
+  }
+
+  inline double Hamiltonian_weak(const double& H,
+				 const double& w_dV)
+  {
+    return H*w_dV;
+  }
+
+  inline double HamiltonianJacobian_weak(const double dH[1],
+					 const double grad_v[1],
+					 const double& w_dV)
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      tmp += dH[I]*grad_v[I]*w_dV;
+    return tmp;
+  }
+
+  inline double Hamiltonian_strong(const double dH[1],
+				   const double grad_u[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      tmp += dH[I]*grad_u[I];
+    return tmp;
+  }
+
+  inline double HamiltonianJacobian_strong(const double dH[1],
+					   const double grad_v[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      tmp += dH[I]*grad_v[I];
+    return tmp;
+  }
+
+  inline double Hamiltonian_adjoint(const double dH[1],
+				    const double grad_w_dV[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      tmp -= dH[I]*grad_w_dV[I];
+    return tmp;
+  }
+
+  inline double Diffusion_weak(int* rowptr,
+			       int* colind,
+			       double* a,
+			       const double grad_phi[1],
+			       const double grad_w_dV[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	tmp += a[m]*grad_phi[colind[m]]*grad_w_dV[I];
+    return tmp;
+  }
+
+  inline double DiffusionJacobian_weak(int* rowptr,
+				       int* colind,
+				       double* a,
+				       double* da,
+				       const double grad_phi[1],
+				       const double grad_w_dV[1],
+				       const double& dphi,
+				       const double& v,
+				       const double grad_v[1])
+  {
+    double daProduct=0.0,dphiProduct=0.0;
+    for (int I=0;I<1;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	{
+	  daProduct += da[m]*grad_phi[colind[m]]*grad_w_dV[I];
+	  dphiProduct += a[m]*grad_v[colind[m]]*grad_w_dV[I];
+	}
+    return daProduct*v+dphiProduct*dphi;
+  }
+
+  inline double SimpleDiffusionJacobian_weak(int* rowptr,
+					     int* colind,
+					     double* a,
+					     const double grad_v[1],
+					     const double grad_w_dV[1])
+  {
+    double dphiProduct=0.0;
+    for (int I=0;I<1;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	{
+	  dphiProduct += a[m]*grad_v[colind[m]]*grad_w_dV[I];
+	}
+    return dphiProduct;
+  }
+
+  inline double Reaction_weak(const double& r,
+			      const double& w_dV)
+  {
+    return r*w_dV;
+  }
+  
+  inline double ReactionJacobian_weak(const double& dr,
+				      const double& v,
+				      const double& w_dV)
+  {
+    return dr*v*w_dV;
+  }
+
+  inline double Reaction_strong(const double& r)
+  {
+    return r; 
+  }
+
+  inline double ReactionJacobian_strong(const double& dr,
+					const double& v)
+  {
+    return dr*v;
+  }
+
+  inline double Reaction_adjoint(const double& dr,
+				 const double& w_dV)
+  {
+    return dr*w_dV;
+  }
+  
+  inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
+					  const double& elementDiameter,
+					  const double& strong_residual,
+					  const double grad_u[1],
+					  double& numDiff)
+  {
+    double h,
+      num,
+      den,
+      n_grad_u;
+    h = elementDiameter;
+    n_grad_u = 0.0;
+    for (int I=0;I<1;I++)
+      n_grad_u += grad_u[I]*grad_u[I];
+    num = shockCapturingDiffusion*0.5*h*fabs(strong_residual);
+    den = sqrt(n_grad_u+1.0e-12);
+    numDiff = num/den;
+  }
+
+
+  inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
+					  const double  G[1*1],
+					  const double& strong_residual,
+					  const double grad_u[1],
+					  double& numDiff)
+  {
+    double  den = 0.0;
+    for (int I=0;I<1;I++)
+      for (int J=0;J<1;J++)
+        den += grad_u[I]*G[I*1+J]*grad_u[J];
+    numDiff = shockCapturingDiffusion*fabs(strong_residual)/(sqrt(den+1.0e-12));
+  }
+
+  inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
+                                          const double& uref, const double& beta,
+					  const double  G[1],
+					  const double& G_dd_G,
+					  const double& strong_residual,
+					  const double grad_u[1],
+					  double& numDiff)
+  {
+    double  den = 0.0;    
+    for (int I=0;I<1;I++)
+      for (int J=0;J<1;J++)
+        den += grad_u[I]*G[I+J]*grad_u[J];
+
+    double h2_uref_1 = 1.0/(sqrt(den+1.0e-12));
+    double h2_uref_2 = 1.0/(uref*sqrt(G_dd_G+1.0e-12));
+    numDiff = shockCapturingDiffusion*fabs(strong_residual)*pow(h2_uref_1, 2.0-beta)*pow(h2_uref_2,beta-1.0);
+  }
+
+
+
+  inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
+					  const double  G[1],
+					  const double& strong_residual,
+					  const double  vel[1],
+					  const double  grad_u[1],
+					  double& numDiff)
+  {
+    double  den1 = 0.0,den2=0.0, nom=0.0;
+    for (int I=0;I<1;I++)
+      {
+      nom += vel[I]*vel[I];
+      den2+= grad_u[I]*grad_u[I]; 
+      for (int J=0;J<1;J++)
+        den1 += vel[I]*G[I+J]*vel[J];
+      }
+    numDiff = shockCapturingDiffusion*fabs(strong_residual)*(sqrt(nom/(den1*den2 + 1.0e-12)));
+  }
+
+
+  inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
+					  const double& elementDiameter,
+					  const double& strong_residual,
+					  const double grad_u[1],
+					  double& gradNorm,
+					  double& gradNorm_last,
+					  double& numDiff)
+  {
+    double h,
+      num,
+      n_grad_u;
+    h = elementDiameter;
+    n_grad_u = 0.0;
+    for (int I=0;I<1;I++)
+      n_grad_u += grad_u[I]*grad_u[I];
+    num = shockCapturingDiffusion*0.5*h*fabs(strong_residual);
+    gradNorm = sqrt(n_grad_u+1.0e-12);
+    //cek hack shockCapturingDiffusion*fabs(strong_residual)*grad_phi_G_grad_phi    
+    numDiff = num/gradNorm_last;
+  }
+
+  inline double SubgridError(const double& error,
+			     const double& Lstar_w_dV)
+  {
+    return error*Lstar_w_dV;
+  }
+
+  inline double SubgridErrorJacobian(const double& derror,
+				     const double& Lstar_w_dV)
+  {
+    return derror*Lstar_w_dV;
+  }
+
+  inline double NumericalDiffusion(const double& numDiff,
+				   const double grad_u[1],
+				   const double grad_w_dV[1])
+  {
+    double tmp=0.0;
+    for (int I=0;I<1;I++)
+      tmp +=  numDiff*grad_u[I]*grad_w_dV[I];
+    return tmp;
+  }
+
+  inline double NumericalDiffusionJacobian(const double& numDiff,
+					   const double grad_v[1],
+					   const double grad_w_dV[1])
+  {
+    double tmp=0.0;
+    for (int I=0;I<1;I++)
+      tmp += numDiff*grad_v[I]*grad_w_dV[I];
+    return tmp;
+  }
+
+ 
+
+  inline double ExteriorElementBoundaryFlux(const double& flux,
+					    const double& w_dS)
+  {
+    return flux*w_dS;
+  }
+
+  inline double InteriorElementBoundaryFlux(const double& flux,
+					    const double& w_dS)
+  {
+    return flux*w_dS;
+  }
+
+  inline double ExteriorNumericalAdvectiveFluxJacobian(const double& dflux_left,
+						       const double& v)
+  {
+    return dflux_left*v;
+  }
+
+  inline double InteriorNumericalAdvectiveFluxJacobian(const double& dflux_left,
+						       const double& v)
+  {
+    return dflux_left*v;
+  }
+
+  inline double ExteriorElementBoundaryScalarDiffusionAdjoint(const int& isDOFBoundary,
+							      const int& isFluxBoundary,
+							      const double& sigma,
+							      const double& u,
+							      const double& bc_u,
+							      const double normal[1],
+							      const double& a,
+							      const double grad_w_dS[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      {
+	tmp += normal[I]*grad_w_dS[I];
+      }
+    tmp *= (1.0-isFluxBoundary)*isDOFBoundary*sigma*(u-bc_u)*a;
+    return tmp;
+  }
+  
+  inline double ExteriorElementBoundaryScalarDiffusionAdjointJacobian(const int& isDOFBoundary,
+								      const int& isFluxBoundary,
+								      const double& sigma,
+								      const double& v,
+								      const double normal[1],
+								      const double& a,
+								      const double grad_w_dS[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      {
+	tmp += normal[I]*grad_w_dS[I];
+      }
+    tmp *= (1.0-isFluxBoundary)*isDOFBoundary*sigma*v*a;
+    return tmp;
+  }
+
+  inline double ExteriorElementBoundaryDiffusionAdjoint(const int& isDOFBoundary,
+							const int& isFluxBoundary,
+							const double& sigma,
+							const double& u,
+							const double& bc_u,
+							const double normal[1],
+							int* rowptr,
+							int* colind,
+							double* a,
+							const double grad_w_dS[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	tmp += (1.0-isFluxBoundary)*isDOFBoundary*sigma*(u-bc_u)*a[m]*normal[colind[m]]*grad_w_dS[I];
+    return tmp;
+  }
+
+  inline double ExteriorElementBoundaryDiffusionAdjointJacobian(const int& isDOFBoundary,
+								const int& isFluxBoundary,
+								const double& sigma,
+								const double& v,
+								const double normal[1],
+								int* rowptr,
+								int* colind,
+								double* a,
+								const double grad_w_dS[1])
+  {
+    double tmp=0.0;
+    for(int I=0;I<1;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	tmp += (1.0-isFluxBoundary)*isDOFBoundary*sigma*v*a[m]*normal[colind[m]]*grad_w_dS[I];
+    return tmp;
+  }
+
+  inline void calculateMapping_element(const int eN,
+				       const int k,
+				       double* mesh_dof,
+				       int* mesh_l2g,
+				       double* mesh_trial_ref,
+				       double* mesh_grad_trial_ref,
+				       double* jac,
+				       double& jacDet,
+				       double* jacInv,
+				       double& x)
+  {
+    mapping.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x);
+  }
+
+  inline void calculateH_element(const int eN,
+				 const int k,
+				 double* h_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_ref,
+				 double& h)
+  {
+    mapping.calculateH_element(eN,
+			       k,
+			       h_dof,
+			       mesh_l2g,
+			       mesh_trial_ref,
+			       h);
+  }
+
+  inline void calculateMapping_element(const int eN,
+				       const int k,
+				       double* mesh_dof,
+				       int* mesh_l2g,
+				       double* mesh_trial_ref,
+				       double* mesh_grad_trial_ref,
+				       double* jac,
+				       double& jacDet,
+				       double* jacInv,
+				       double& x,
+				       double& y,
+				       double& z)
+  {
+    mapping.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
+  }
+
+  inline void calculateMappingVelocity_element(const int eN,
+					       const int k,
+					       double* meshVelocity_dof,
+					       int* mesh_l2g,
+					       double* mesh_trial_ref,
+					       double& xt)
+  {
+    mapping.calculateMappingVelocity_element(eN,k,meshVelocity_dof,mesh_l2g,mesh_trial_ref,xt);
+  }
+
+  inline void calculateMappingVelocity_element(const int eN,
+					       const int k,
+					       double* meshVelocity_dof,
+					       int* mesh_l2g,
+					       double* mesh_trial_ref,
+					       double& xt,
+					       double& yt,
+					       double& zt)
+  {
+    mapping.calculateMappingVelocity_element(eN,k,meshVelocity_dof,mesh_l2g,mesh_trial_ref,xt,yt,zt);
+  }
+
+  inline 
+  void calculateMapping_elementBoundary(const int eN,
+					const int ebN_local,
+					const int kb,
+					const int ebN_local_kb,
+					double* mesh_dof,
+					int* mesh_l2g,
+					double* mesh_trial_trace_ref,
+					double* mesh_grad_trial_trace_ref,
+					double* boundaryJac_ref,
+					double* jac,
+					double& jacDet,
+					double* jacInv,
+					double* boundaryJac,
+					double* metricTensor,
+					double& metricTensorDetSqrt,
+					double* normal_ref,
+					double* normal,
+					double& x)
+  {
+    mapping.calculateMapping_elementBoundary(eN,
+					     ebN_local,
+					     kb,
+					     ebN_local_kb,
+					     mesh_dof,
+					     mesh_l2g,
+					     mesh_trial_trace_ref,
+					     mesh_grad_trial_trace_ref,
+					     boundaryJac_ref,
+					     jac,
+					     jacDet,
+					     jacInv,
+					     boundaryJac,
+					     metricTensor,
+					     metricTensorDetSqrt,
+					     normal_ref,
+					     normal,
+					     x);
+  }
+
+inline
+  void calculateMapping_elementBoundary(const int eN,
+					const int ebN_local,
+					const int kb,
+					const int ebN_local_kb,
+					double* mesh_dof,
+					int* mesh_l2g,
+					double* mesh_trial_trace_ref,
+					double* mesh_grad_trial_trace_ref,
+					double* boundaryJac_ref,
+					double* jac,
+					double& jacDet,
+					double* jacInv,
+					double* boundaryJac,
+					double* metricTensor,
+					double& metricTensorDetSqrt,
+					double* normal_ref,
+					double* normal,
+					double& x,
+					double& y,
+					double& z)
+  {
+    mapping.calculateMapping_elementBoundary(eN,
+					     ebN_local,
+					     kb,
+					     ebN_local_kb,
+					     mesh_dof,
+					     mesh_l2g,
+					     mesh_trial_trace_ref,
+					     mesh_grad_trial_trace_ref,
+					     boundaryJac_ref,
+					     jac,
+					     jacDet,
+					     jacInv,
+					     boundaryJac,
+					     metricTensor,
+					     metricTensorDetSqrt,
+					     normal_ref,
+					     normal,
+					     x,
+					     y,
+					     z);
+  }
+
+  inline 
+    void calculateMappingVelocity_elementBoundary(const int eN,
+						  const int ebN_local,
+						  const int kb,
+						  const int ebN_local_kb,
+						  double* mesh_velocity_dof,
+						  int* mesh_l2g,
+						  double* mesh_trial_trace_ref,
+						  double& xt,
+						  double* normal,
+						  double* boundaryJac,						       
+						  double* metricTensor,
+						  double& metricTensorDetSqrt)
+  {
+    mapping.calculateMappingVelocity_elementBoundary(eN,
+						     ebN_local,
+						     kb,
+						     ebN_local_kb,
+						     mesh_velocity_dof,
+						     mesh_l2g,
+						     mesh_trial_trace_ref,
+						     xt,
+						     normal,
+						     boundaryJac,
+						     metricTensor,
+						     metricTensorDetSqrt);
+  }
+
+inline
+    void calculateMappingVelocity_elementBoundary(const int eN,
+						  const int ebN_local,
+						  const int kb,
+						  const int ebN_local_kb,
+						  double* mesh_velocity_dof,
+						  int* mesh_l2g,
+						  double* mesh_trial_trace_ref,
+						  double& xt,
+						  double& yt,
+						  double& zt,
+						  double* normal,
+						  double* boundaryJac,
+						  double* metricTensor,
+						  double& metricTensorDetSqrt)
+  {
+    mapping.calculateMappingVelocity_elementBoundary(eN,
+						     ebN_local,
+						     kb,
+						     ebN_local_kb,
+						     mesh_velocity_dof,
+						     mesh_l2g,
+						     mesh_trial_trace_ref,
+						     xt,
+						     yt,
+						     zt,
+						     normal,
+						     boundaryJac,
+						     metricTensor,
+						     metricTensorDetSqrt);
+
+}
+};
+
+
+
 #endif
+
+

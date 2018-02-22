@@ -572,7 +572,7 @@ namespace proteus
       //////////////////
       // LOOP in DOFs //
       //////////////////
-      int ij=0; printf("FCT!!!!!!! %e \n",solH[0]);
+      int ij=0;
       for (int i=0; i<numDOFs; i++)
         {
           //read some vectors
@@ -1515,7 +1515,6 @@ namespace proteus
               //precalculate test function products with integration weights
               for (int j=0;j<nDOF_trial_element;j++)
                 u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
-
               //VRANS
               porosity_ext = ebqe_porosity_ext[ebNE_kb];
               //
@@ -1633,7 +1632,7 @@ namespace proteus
               double porosity_times_solnj = porosity_dof[j]*u_dof_old[j];
               // Update Cij matrices
               Cij[0] = Cx[ij];
-              Cij[1] = Cy[ij];
+			if (nSpace == 2) Cij[1] = Cy[ij];
 #if nSpace == 3
               Cij[2] = Cz[ij];
 #endif
@@ -2479,8 +2478,18 @@ namespace proteus
                                 int nQuadraturePoints_elementBoundaryIn,
                                 int CompKernelFlag)
   {
+
+
     if (nSpaceIn == 2)
       return proteus::chooseAndAllocateDiscretization2D<TIM_base,TIM,CompKernel>(nSpaceIn,
+                                                                                 nQuadraturePoints_elementIn,
+                                                                                 nDOF_mesh_trial_elementIn,
+                                                                                 nDOF_trial_elementIn,
+                                                                                 nDOF_test_elementIn,
+                                                                                 nQuadraturePoints_elementBoundaryIn,
+                                                                                 CompKernelFlag);
+    else if (nSpaceIn == 1)
+      return proteus::chooseAndAllocateDiscretization1D<TIM_base,TIM,CompKernel>(nSpaceIn,
                                                                                  nQuadraturePoints_elementIn,
                                                                                  nDOF_mesh_trial_elementIn,
                                                                                  nDOF_trial_elementIn,
