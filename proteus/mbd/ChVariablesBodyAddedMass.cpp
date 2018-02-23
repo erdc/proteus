@@ -45,46 +45,47 @@ ChVariablesBodyAddedMass& ChVariablesBodyAddedMass::operator=(const ChVariablesB
     return *this;
 }
 
-/// Set the inertia matrix
-void ChVariablesBodyAddedMass::SetBodyInertia(const ChMatrix33<>& minertia) {
-    ChVariablesBodyOwnMass::SetBodyInertia(minertia);
-    /// Add inertia to mass matrix
-    ChMatrix33<>& bodyinertia = ChVariablesBodyOwnMass::GetBodyInertia();
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            Mmass(3 + i, 3 + j) = bodyinertia(i, j);
-        }
-    }
-    Mfullmass = Mmass + Maddedmass;
-}
+// /// Set the inertia matrix
+// void ChVariablesBodyAddedMass::SetBodyInertia(const ChMatrix33<>& minertia) {
+//     ChVariablesBodyOwnMass::SetBodyInertia(minertia);
+//     /// Add inertia to mass matrix
+//     ChMatrix33<>& bodyinertia = ChVariablesBodyOwnMass::GetBodyInertia();
+//     for (int i = 0; i < 3; i++) {
+//         for (int j = 0; j < 3; j++) {
+//             Mmass(3 + i, 3 + j) = bodyinertia(i, j);
+//         }
+//     }
+//     Mfullmass = Mmass + Maddedmass;
+// }
 
 
-/// Set the mass associated with translation of body
-void ChVariablesBodyAddedMass::SetBodyMass(const double mmass) {
-    /// Value of mass as double
-    ChVariablesBodyOwnMass::SetBodyMass(mmass);
-    /// Value of mass in mass matrix
-    Mmass(0, 0) = mmass;
-    Mmass(1, 1) = mmass;
-    Mmass(2, 2) = mmass;
-    /// rebuild full mass matrix
-    Mfullmass = Mmass + Maddedmass;
-}
+// /// Set the mass associated with translation of body
+// void ChVariablesBodyAddedMass::SetBodyMass(const double mmass) {
+//     /// Value of mass as double
+//     ChVariablesBodyOwnMass::SetBodyMass(mmass);
+//     /// Value of mass in mass matrix
+//     Mmass(0, 0) = mmass;
+//     Mmass(1, 1) = mmass;
+//     Mmass(2, 2) = mmass;
+//     /// rebuild full mass matrix
+//     Mfullmass = Mmass + Maddedmass;
+// }
 
-/// Set the added mass matrix of the body (6x6)
-void ChVariablesBodyAddedMass::SetBodyAddedMass(ChMatrixDynamic<>& Maddedmass_in) {
-    assert(Maddedmass_in.GetRows() == Get_ndof());
-    assert(Maddedmass_in.GetColums() == Get_ndof());
-    Maddedmass.CopyFromMatrix(Maddedmass_in);
-    /// rebuild full mass matrix
-    Mfullmass = Mmass + Maddedmass;
-}
+// /// Set the added mass matrix of the body (6x6)
+// void ChVariablesBodyAddedMass::SetBodyAddedMass(ChMatrixDynamic<>& Maddedmass_in) {
+//     assert(Maddedmass_in.GetRows() == Get_ndof());
+//     assert(Maddedmass_in.GetColums() == Get_ndof());
+//     Maddedmass.CopyFromMatrix(Maddedmass_in);
+//     /// rebuild full mass matrix
+//     Mfullmass = Mmass + Maddedmass;
+// }
 
 // Computes the product of the inverse mass matrix by a
 // vector, and set in result: result = [invMb]*vect
 void ChVariablesBodyAddedMass::Compute_invMb_v(ChMatrix<double>& result, const ChMatrix<double>& vect) const {
     assert(result.GetRows() == vect.GetRows());
     assert(vect.GetRows() == Get_ndof());
+    ChMatrix<> vv = vect;
     result = inv_Mfullmass * vect;
 }
 

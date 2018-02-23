@@ -44,27 +44,27 @@ namespace chrono {
 		/// Assignment operator: copy from other object
 		ChVariablesBodyAddedMass& operator=(const ChVariablesBodyAddedMass& other);
 
-		/// Access the inertia matrix
-		ChMatrix<>& GetMaddedmass() { return Maddedmass; }
+		/* /// Access the inertia matrix */
+		/* ChMatrix<>& GetMaddedmass() { return Maddedmass; } */
+
+		/* /// Access the inertia matrix */
+		/* ChMatrix<>& GetMmass() { return Mmass; } */
 
 		/// Access the inertia matrix
-		ChMatrix<>& GetMmass() { return Mmass; }
-
-		/// Access the inertia matrix
-		ChMatrix<>& GetMfullmass() { return Mfullmass; }
+		ChMatrixDynamic<>& GetMfullmass() { return Mfullmass; }
 
 		/// Access the inverted inertia matrix
-		ChMatrix<>& GetInvMfullmass() { return inv_Mfullmass; }
+		ChMatrixDynamic<>& GetInvMfullmass() { return inv_Mfullmass; }
 
-		/// Set the inertia matrix
-		void SetBodyInertia(const ChMatrix33<>& minertia);
+		/* /// Set the inertia matrix */
+		/* void SetBodyInertia(const ChMatrix33<>& minertia); */
 
-		/// Set the mass associated with translation of body
-		void SetBodyMass(const double mmass);
+		/* /// Set the mass associated with translation of body */
+		/* void SetBodyMass(const double mmass); */
 
-		/// Set the mass associated with translation of body
-		void SetBodyAddedMass(ChMatrixDynamic<>& Maddedmass_in);
-
+		/* /// Set the mass associated with translation of body */
+		/* void SetBodyAddedMass(ChMatrixDynamic<>& Maddedmass_in); */
+    
 		/// Computes the product of the inverse mass matrix by a
 		/// vector, and set in result: result = [invMb]*vect
 		virtual void Compute_invMb_v(ChMatrix<double>& result, const ChMatrix<double>& vect) const override;
@@ -98,7 +98,9 @@ namespace chrono {
 		/// Note, most iterative solvers don't need to know mass matrix explicitly.
 		/// Optimized: doesn't fill unneeded elements except mass and 3x3 inertia.
 		virtual void Build_M(ChSparseMatrix& storage, int insrow, int inscol, const double c_a) override;
+
 };
+
 
 }  // end namespace chrono
 
