@@ -7951,9 +7951,7 @@ namespace proteus
                                                                  sdInfo_w_w_colind,
                                                                  mom_ww_diff_ten_ext,
                                                                  &vel_grad_test_dS[i*nSpace]);
-                    //////////////////////////////////////////////////////
                     // ***** ADD CONTRIBUTION ON ENTROPY RESIDUAL ***** //
-                    //////////////////////////////////////////////////////
                     elementEntropyResidual[i] += (diffusive_flux_dot_solution +
                                                   diffusive_symmetric_flux_dot_solution)*vel_test_dS[i];
                   }//i
@@ -7980,9 +7978,7 @@ namespace proteus
         /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
         /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
         /* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
-        ///////////////////////////////////////
         // MAX ENTROPY RESIDUAL AT EACH CELL // max_{i\in K} (R_i)
-        ///////////////////////////////////////
         for(int eN=0;eN<nElements_global;eN++)
           {
             double entropyResidualAtCurrentCell = 0.;

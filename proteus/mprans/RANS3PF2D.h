@@ -6344,112 +6344,10 @@ namespace proteus
           }
         // END OF COMPUTING EV VIA STRONG RESIDUAL //
 
-        ////////////////////////////
-        // CALCULATE grad vectors //
-        ////////////////////////////
-        /*
-          register double u_gx[numDOFsPerEqn], u_gy[numDOFsPerEqn], v_gx[numDOFsPerEqn], v_gy[numDOFsPerEqn];
-          int ij = 0.;
-          for (int i=0; i<numDOFsPerEqn; i++)
-          {
-          // initialize vectors to zero
-          u_gx[i] = 0.;
-          u_gy[i] = 0.;
-          v_gx[i] = 0.;
-          v_gy[i] = 0.;
-
-          for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
-          {
-          int j = csrColumnOffsets_DofLoops[offset];
-          double uj = u_dof_old[j];
-          double vj = v_dof_old[j];
-
-          u_gx[i] += Cx[ij]*uj;
-          u_gy[i] += Cy[ij]*uj;
-          v_gx[i] += Cx[ij]*vj;
-          v_gy[i] += Cy[ij]*vj;
-
-          //update ij
-          ij+=1;
-          }
-          // sacale by mi^-1
-          double mi = ML[i];
-          u_gx[i] /= mi;
-          u_gy[i] /= mi;
-          v_gx[i] /= mi;
-          v_gy[i] /= mi;
-          }
-        */
-
-        //////////////////////////////////
-        // COMPUTE SMOOTHNESS INDICATOR //
-        //////////////////////////////////
+        // INIT ENTROPY RESIDUAL PER NODE //
         register double entropyResidualPerNode[numDOFsPerEqn];
         for (int i=0; i<numDOFsPerEqn; i++)
           entropyResidualPerNode[i] = 0.0;
-        /*
-          register double u_psi[numDOFsPerEqn], v_psi[numDOFsPerEqn], entropyResidualPerNode[numDOFsPerEqn];
-          for (int i=0; i<numDOFsPerEqn; i++)
-          {
-          // initialize entropyResidual
-          entropyResidualPerNode[i] = 0.0;
-
-          double u_alphai, v_alphai; // smoothness indicator of solution
-          double ui = u_dof_old[i]; // solution at time tn for the ith DOF
-          double vi = v_dof_old[i];
-
-          // FOR SMOOTHNESS INDICATOR //
-          double u_alpha_numerator = 0, u_alpha_denominator = 0;
-          double v_alpha_numerator = 0, v_alpha_denominator = 0;
-
-          for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
-          { //loop in j (sparsity pattern)
-          int j = csrColumnOffsets_DofLoops[offset];
-          double uj = u_dof_old[j];
-          double vj = v_dof_old[j];
-
-          // FOR SMOOTHNESS INDICATOR //
-          u_alpha_numerator += uj - ui;
-          u_alpha_denominator += fabs(uj - ui);
-          v_alpha_numerator += vj - vi;
-          v_alpha_denominator += fabs(vj - vi);
-          }
-          //////////////////////////////////
-          // COMPUTE SMOOTHNESS INDICATOR //
-          //////////////////////////////////
-          u_alphai = fmax(u_alpha_min,fabs(u_alpha_numerator)/(u_alpha_denominator+1E-15));
-          v_alphai = fmax(v_alpha_min,fabs(v_alpha_numerator)/(v_alpha_denominator+1E-15));
-
-          if (POWER_SMOOTHNESS_INDICATOR==0)
-          {
-          u_psi[i] = 1.0;
-          v_psi[i] = 1.0;
-          }
-          else
-          {
-          u_psi[i] = std::pow(u_alphai,POWER_SMOOTHNESS_INDICATOR);
-          v_psi[i] = std::pow(v_alphai,POWER_SMOOTHNESS_INDICATOR);
-          }
-          }
-          // compute linear artificial viscosity scaling factor per cell //
-          register double u_smoothnessIndicatorAtCell[nElements_global], v_smoothnessIndicatorAtCell[nElements_global];
-          for(int eN=0;eN<nElements_global;eN++)
-          {
-          double u_smoothnessIndicatorAtCurrentCell = 0.;
-          double v_smoothnessIndicatorAtCurrentCell = 0.;
-          // loop on quad points
-          for (int i=0;i<nDOF_test_element;i++)
-          {
-          int eN_i = eN*nDOF_test_element+i;
-          int gi = vel_l2g[eN_i];
-          u_smoothnessIndicatorAtCurrentCell  += u_psi[gi];
-          v_smoothnessIndicatorAtCurrentCell  += v_psi[gi];
-          }
-          u_smoothnessIndicatorAtCell[eN] = u_smoothnessIndicatorAtCurrentCell/nDOF_test_element;
-          v_smoothnessIndicatorAtCell[eN] = v_smoothnessIndicatorAtCurrentCell/nDOF_test_element;
-          }
-        */
-        // ********** END OF COMPUTING SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
 
         for (int i=0; i<nDOF_test_element; i++)
           //
@@ -7088,14 +6986,6 @@ namespace proteus
                 q_numDiff_u[eN_k] = fmin(linear_viscosity, entropy_viscosity);
                 q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
                 /* q_numDiff_w[eN_k] = q_numDiff_u[eN_k]; */
-
-                //////////////////////////////////////////////////
-                // NUMERICAL DIFUSSION VIA SMOOTHNESS INDICATOR //
-                //////////////////////////////////////////////////
-                //q_numDiff_u[eN_k] = linear_viscosity*u_smoothnessIndicatorAtCell[eN];//*ug_smoothnessIndicatorAtCell[eN];
-                //q_numDiff_v[eN_k] = linear_viscosity*u_smoothnessIndicatorAtCell[eN];//*vg_smoothnessIndicatorAtCell[eN];
-                /* q_numDiff_w[eN_k] = linear_viscosity*w_smoothnessIndicatorAtCell[eN]; */
-                // END OF COMPUTING NUMERICAL DISSIPATION //
 
                 //
                 //update element residual
