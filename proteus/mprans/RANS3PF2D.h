@@ -4297,7 +4297,7 @@ namespace proteus
                     /* elementResidual_p[i] -= DM*ck.ExteriorElementBoundaryFlux(MOVING_DOMAIN*(xt_ext*normal[0]+yt_ext*normal[1]),p_test_dS[i]); */
                     /* globalConservationError += ck.ExteriorElementBoundaryFlux(flux_mass_ext,p_test_dS[i]); */
                     elementResidual_u[i] +=
-                      ck.ExteriorElementBoundaryFlux(flux_mom_u_adv_ext,vel_test_dS[i])+
+                      //ck.ExteriorElementBoundaryFlux(flux_mom_u_adv_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_uu_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_uv_diff_ext,vel_test_dS[i])+
                       /* ck.ExteriorElementBoundaryFlux(flux_mom_uw_diff_ext,vel_test_dS[i])+ */
@@ -4331,7 +4331,7 @@ namespace proteus
                     /*                                         sdInfo_u_w_colind, */
                     /*                                         mom_uw_diff_ten_ext, */
                     /*                                         &vel_grad_test_dS[i*nSpace]); */
-                    elementResidual_v[i] += ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) +
+                    elementResidual_v[i] += //ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) +
                       ck.ExteriorElementBoundaryFlux(flux_mom_vu_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_vv_diff_ext,vel_test_dS[i])+
                       /* ck.ExteriorElementBoundaryFlux(flux_mom_vw_diff_ext,vel_test_dS[i])+ */
@@ -6291,7 +6291,7 @@ namespace proteus
 
                     /* fluxJacobian_u_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]); */
                     fluxJacobian_u_u[j] =
-                      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+                      //ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
                       ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
                                                              ebqe_phi_ext[ebNE_kb],
                                                              sdInfo_u_u_rowptr,
@@ -6304,7 +6304,7 @@ namespace proteus
                                                              &vel_grad_trial_trace[j_nSpace],
                                                              penalty);//ebqe_penalty_ext[ebNE_kb]);
                     fluxJacobian_u_v[j]=
-                      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+                      //ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
                       ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
                                                              ebqe_phi_ext[ebNE_kb],
                                                              sdInfo_u_v_rowptr,
