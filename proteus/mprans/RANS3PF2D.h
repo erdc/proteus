@@ -1137,7 +1137,8 @@ namespace proteus
                                   double forcez,
                                   int MATERIAL_PARAMETERS_AS_FUNCTION,
                                   double density_as_function,
-                                  double dynamic_viscosity_as_function)
+                                  double dynamic_viscosity_as_function,
+                                  int USE_SBM)
       {
         double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -1209,7 +1210,8 @@ namespace proteus
           }
 
         double phi_s_effect = (phi_s > 0.0) ? 1.0 : 0.0;
-
+        if(USE_SBM>0)
+            phi_s_effect = 1.0;
         //u momentum accumulation
         mom_u_acc=phi_s_effect * u;//trick for non-conservative form
         dmom_u_acc_u=phi_s_effect * rho*porosity;
@@ -2516,7 +2518,6 @@ namespace proteus
         //std::set<int> active_velocity_dof;
         double Fx = 0.0;
         double Fy = 0.0;
-        double element_active=1;//use 1 since by default it is ibm
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
@@ -2526,11 +2527,12 @@ namespace proteus
               phisErrorElement[nDOF_test_element],
               //elementResidual_w[nDOF_test_element],
               eps_rho,eps_mu;
-            const double* elementResidual_w(NULL);
+            //const double* elementResidual_w(NULL);
+            double element_active=1;//use 1 since by default it is ibm
             double mesh_volume_conservation_element=0.0,
               mesh_volume_conservation_element_weak=0.0;
             for (int i=0;i<nDOF_test_element;i++)
-              {
+            {
                 int eN_i = eN*nDOF_test_element+i;
                 elementResidual_p_save[eN_i]=0.0;
                 elementResidual_mesh[i]=0.0;
@@ -2539,7 +2541,7 @@ namespace proteus
                 elementResidual_v[i]=0.0;
                 phisErrorElement[i]=0.0;
                 /* elementResidual_w[i]=0.0; */
-              }//i
+            }//i
             if(USE_SBM>0)
             {
                 //since by default it has value 1 and it is ibm.
@@ -2554,7 +2556,6 @@ namespace proteus
                 int pos_counter=0;
                 for (int I=0;I<nDOF_mesh_trial_element;I++)
                   {
-                    /* std::cout<<"eN,I,nN "<<eN<<','<<I<<','<<mesh_l2g[eN*nDOF_mesh_trial_element+I]<<" phi = "<<phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]<<std::endl; */
                     if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] >= 0)
                       pos_counter++;
                   }
@@ -2862,7 +2863,8 @@ namespace proteus
                                      forcez[eN_k],
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      density_as_function[eN_k],
-                                     dynamic_viscosity_as_function[eN_k]);
+                                     dynamic_viscosity_as_function[eN_k],
+                                     USE_SBM);
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not?
@@ -3401,8 +3403,14 @@ namespace proteus
                         for (int I=0;I<nSpace;I++)
                           vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
                       }
-                    bc_u_ext = particle_velocities[0*3+0];//first particle
-                    bc_v_ext = particle_velocities[0*3+1];
+                    bc_u_ext = particle_velocities[0*nElements_global*nQuadraturePoints_element*2
+                                                   +eN*nQuadraturePoints_element*2
+                                                   +kb*2
+                                                   +0];//first particle
+                    bc_v_ext = particle_velocities[0*nElements_global*nQuadraturePoints_element*2
+                                                   +eN*nQuadraturePoints_element*2
+                                                   +kb*2
+                                                   +1];
                     ck.calculateGScale(G,normal,h_penalty);
                     //
                     //update the element and global residual storage
@@ -3418,7 +3426,6 @@ namespace proteus
                     P_tangent[1] = P_normal[0];
                     double dx = distance[0];
                     double dy = distance[1];
-
                     double visco = nu_0*rho_0;
                     double Csb=10;
                     double C_adim = Csb*visco/h_penalty;
@@ -3847,7 +3854,8 @@ namespace proteus
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      ebqe_density_as_function[ebNE_kb],
-                                     ebqe_dynamic_viscosity_as_function[ebNE_kb]);
+                                     ebqe_dynamic_viscosity_as_function[ebNE_kb],
+                                     USE_SBM);
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
@@ -3934,7 +3942,8 @@ namespace proteus
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      ebqe_density_as_function[ebNE_kb],
-                                     ebqe_dynamic_viscosity_as_function[ebNE_kb]);
+                                     ebqe_dynamic_viscosity_as_function[ebNE_kb],
+                                     USE_SBM);
 
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
@@ -4612,11 +4621,11 @@ namespace proteus
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         std::vector<int> surrogate_boundaries, surrogate_boundary_elements;
         //std::set<int> active_velocity_dof;
-        double element_active=1.0;//value 1 is because it is ibm by default
 
         for(int eN=0;eN<nElements_global;eN++)
           {
             register double eps_rho,eps_mu;
+            double element_active=1.0;//value 1 is because it is ibm by default
 
             register double  elementJacobian_p_p[nDOF_test_element][nDOF_trial_element],
               elementJacobian_p_u[nDOF_test_element][nDOF_trial_element],
@@ -4973,7 +4982,8 @@ namespace proteus
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      density_as_function[eN_k],
-                                     dynamic_viscosity_as_function[eN_k]);
+                                     dynamic_viscosity_as_function[eN_k],
+                                     USE_SBM);
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not
@@ -6011,7 +6021,8 @@ namespace proteus
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      ebqe_density_as_function[ebNE_kb],
-                                     ebqe_dynamic_viscosity_as_function[ebNE_kb]);
+                                     ebqe_dynamic_viscosity_as_function[ebNE_kb],
+                                     USE_SBM);
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
@@ -6098,7 +6109,8 @@ namespace proteus
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      ebqe_density_as_function[ebNE_kb],
-                                     ebqe_dynamic_viscosity_as_function[ebNE_kb]);
+                                     ebqe_dynamic_viscosity_as_function[ebNE_kb],
+                                     USE_SBM);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -7399,7 +7411,8 @@ namespace proteus
                                      forcez[eN_k],
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      density_as_function[eN_k],
-                                     dynamic_viscosity_as_function[eN_k]);
+                                     dynamic_viscosity_as_function[eN_k],
+                                     0);
 
                 //VRANS
                 mass_source = q_mass_source[eN_k];
@@ -8194,7 +8207,8 @@ namespace proteus
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      ebqe_density_as_function[ebNE_kb],
-                                     ebqe_dynamic_viscosity_as_function[ebNE_kb]);
+                                     ebqe_dynamic_viscosity_as_function[ebNE_kb],
+                                     0);
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
@@ -8281,7 +8295,8 @@ namespace proteus
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      ebqe_density_as_function[ebNE_kb],
-                                     ebqe_dynamic_viscosity_as_function[ebNE_kb]);
+                                     ebqe_dynamic_viscosity_as_function[ebNE_kb],
+                                     0);
 
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
@@ -9306,7 +9321,8 @@ namespace proteus
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      density_as_function[eN_k],
-                                     dynamic_viscosity_as_function[eN_k]);
+                                     dynamic_viscosity_as_function[eN_k],
+                                     0);
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //Todo: decide if these should be lagged or not
@@ -10112,7 +10128,8 @@ namespace proteus
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      ebqe_density_as_function[ebNE_kb],
-                                     ebqe_dynamic_viscosity_as_function[ebNE_kb]);
+                                     ebqe_dynamic_viscosity_as_function[ebNE_kb],
+                                     0);
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
@@ -10199,7 +10216,8 @@ namespace proteus
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      ebqe_density_as_function[ebNE_kb],
-                                     ebqe_dynamic_viscosity_as_function[ebNE_kb]);
+                                     ebqe_dynamic_viscosity_as_function[ebNE_kb],
+                                     0);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {

@@ -212,7 +212,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_sdfList=[],
                  particle_velocityList=[],
                  granular_sdf_Calc=None,
-                 granular_vel_Calc=None
+                 granular_vel_Calc=None,
+                 use_sbm=0
                  ):
         self.CORRECT_VELOCITY = CORRECT_VELOCITY
         self.nParticles = nParticles
@@ -306,6 +307,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nonlinearDragFactor = 1.0
         if self.killNonlinearDrag:
             self.nonlinearDragFactor = 0.0
+        #
+        self.use_sbm = use_sbm
+        #
         mass = {}
         advection = {}
         diffusion = {}
@@ -462,6 +466,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         self.particle_velocities[i, eN, k] = vel(0, self.model.q['x'][eN, k])
                 self.model.q[('phis', i)] = self.particle_signed_distances[i]
                 self.model.q[('phis_vel', i)] = self.particle_velocities[i]
+                for ebN in range(self.model.ebq_global['x'].shape[0]):
+                    for kb in range(self.model.ebq_global['x'].shape[1]):
+                        sdf_ebN_kb,sdNormals = sdf(0,self.model.ebq_global['x'][ebN,kb],)
+                        if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                            self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
+                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
 
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
@@ -588,7 +598,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         ), "epsFact_solid  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
 
     def initializeMesh(self, mesh):
-        self.phi_s = numpy.zeros(mesh.nodeArray.shape[0], 'd')*1e10
+        self.phi_s = numpy.ones(mesh.nodeArray.shape[0], 'd')*1e10
 
         if self.granular_sdf_Calc is not None:
             print ("updating", self.nParticles, " particles...")
@@ -2498,9 +2508,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe['dynamic_viscosity'],
             self.u[0].femSpace.order,
             self.isActiveDOF,
-            0)
+            self.coefficients.use_sbm)
         r*=self.isActiveDOF
-
+#         print "***********",np.amin(r),np.amax(r),np.amin(self.isActiveDOF),np.amax(self.isActiveDOF)
+#         import pdb
+#         pdb.set_trace()
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):
             self.q[('u', dim)][:] = self.q[('velocity', 0)][:, :, dim]
@@ -2785,7 +2797,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dynamic_viscosity'],
             self.ebqe['density'],
             self.ebqe['dynamic_viscosity'],
-            0)
+            self.coefficients.use_sbm)
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(
