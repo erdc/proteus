@@ -2516,8 +2516,7 @@ namespace proteus
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         std::vector<int> surrogate_boundaries, surrogate_boundary_elements;
         //std::set<int> active_velocity_dof;
-        double Fx = 0.0;
-        double Fy = 0.0;
+        double Fx = 0.0,Fy = 0.0,Fx2=0.0,Fy2=0.0;
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
@@ -2992,8 +2991,8 @@ namespace proteus
                                            grad_u,
                                            grad_v,
                                            grad_w,
-                                           Fx,
-                                           Fy);
+                                           Fx2,
+                                           Fy2);
               //Turbulence closure model
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
@@ -3301,7 +3300,7 @@ namespace proteus
         //
         //loop over the surrogate boundaries in SB method and assembly into residual
         //
-        std::cout<<"    Force use delta function    "<<Fx<<"\t"<<Fy<<std::endl;
+        //std::cout<<"    Force use delta function    "<<Fx2<<"\t"<<Fy2<<std::endl;
         if(USE_SBM>0)
         {
             // Initialization of the force to 0
@@ -3501,8 +3500,8 @@ namespace proteus
                     {
                         p_ext += p_dof[p_l2g[eN*nDOF_per_element_pressure+i]]*p_trial_trace_ref[ebN_local_kb*nDOF_per_element_pressure+i];
                     }
-                    double nx = P_normal[0]; // YY: normal or P_normal ? normal is arbitrary right now.
-                    double ny = P_normal[1];
+                    double nx = -P_normal[0]; //YY: normal direction outward of the solid. Use normal or P_normal ? normal is arbitrary now.
+                    double ny = -P_normal[1];
 
                     double S_xx = 2*visco*grad_u_ext[0];
                     double S_xy = visco*(grad_u_ext[1] + grad_v_ext[0]); // sym tensor -> S_yx = S_xy
@@ -3520,7 +3519,7 @@ namespace proteus
     //                          + C_adim*dd2);
                   }//kb
               }//ebN_s
-            std::cout<<" sbm force over solid is: "<<Fx<<"\t"<<Fy<<std::endl;
+            //std::cout<<" sbm force over surrogate boundary is: "<<Fx<<"\t"<<Fy<<std::endl;
             //
         }
         //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
@@ -4297,7 +4296,7 @@ namespace proteus
                     /* elementResidual_p[i] -= DM*ck.ExteriorElementBoundaryFlux(MOVING_DOMAIN*(xt_ext*normal[0]+yt_ext*normal[1]),p_test_dS[i]); */
                     /* globalConservationError += ck.ExteriorElementBoundaryFlux(flux_mass_ext,p_test_dS[i]); */
                     elementResidual_u[i] +=
-                      //ck.ExteriorElementBoundaryFlux(flux_mom_u_adv_ext,vel_test_dS[i])+
+                      ck.ExteriorElementBoundaryFlux(flux_mom_u_adv_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_uu_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_uv_diff_ext,vel_test_dS[i])+
                       /* ck.ExteriorElementBoundaryFlux(flux_mom_uw_diff_ext,vel_test_dS[i])+ */
@@ -4331,7 +4330,7 @@ namespace proteus
                     /*                                         sdInfo_u_w_colind, */
                     /*                                         mom_uw_diff_ten_ext, */
                     /*                                         &vel_grad_test_dS[i*nSpace]); */
-                    elementResidual_v[i] += //ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) +
+                    elementResidual_v[i] += ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) +
                       ck.ExteriorElementBoundaryFlux(flux_mom_vu_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_vv_diff_ext,vel_test_dS[i])+
                       /* ck.ExteriorElementBoundaryFlux(flux_mom_vw_diff_ext,vel_test_dS[i])+ */
@@ -4417,6 +4416,13 @@ namespace proteus
                 /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
               }//i
           }//ebNE
+        if(USE_SBM>0)//TODO: only for 1 particle now.
+        {
+            particle_netForces[0] = Fx;//Method1: integral over surrogate boundary
+            particle_netForces[1] = Fy;
+            particle_netMoments[0] = Fx2;//Method2: integral using delta function
+            particle_netMoments[1] = Fy2;
+        }
         /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
         /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
         /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
@@ -6291,7 +6297,7 @@ namespace proteus
 
                     /* fluxJacobian_u_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]); */
                     fluxJacobian_u_u[j] =
-                      //ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+                      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
                       ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
                                                              ebqe_phi_ext[ebNE_kb],
                                                              sdInfo_u_u_rowptr,
@@ -6304,7 +6310,7 @@ namespace proteus
                                                              &vel_grad_trial_trace[j_nSpace],
                                                              penalty);//ebqe_penalty_ext[ebNE_kb]);
                     fluxJacobian_u_v[j]=
-                      //ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+                      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
                       ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
                                                              ebqe_phi_ext[ebNE_kb],
                                                              sdInfo_u_v_rowptr,
