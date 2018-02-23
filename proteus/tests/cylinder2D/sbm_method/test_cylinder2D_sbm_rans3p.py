@@ -12,7 +12,7 @@ Profiling.verbose = False
 import numpy as np
 
 
-class Test_ibm():
+class Test_sbm():
 
     @classmethod
     def setup_class(cls):
@@ -70,7 +70,7 @@ class Test_ibm():
                 sList.append(s)
         else:
             sList = my_so.sList
-        my_so.name += "_ibm_"+self.compare_name #save data with different filename
+        my_so.name += "_sbm_"+self.compare_name #save data with different filename
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(my_so,
                                                pList,
