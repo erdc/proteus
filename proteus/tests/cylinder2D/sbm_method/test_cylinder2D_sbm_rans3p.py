@@ -43,7 +43,9 @@ class Test_sbm():
     def example_setting(self, pre_setting):
         Context.contextOptionsString = pre_setting
 
-        from . import cylinder_so as my_so
+        #from . import cylinder_so as my_so
+        my_so = importlib.import_module(".cylinder_so",
+                                        "proteus.tests.cylinder2D.sbm_method")
         reload(my_so)
         # defined in iproteus
         opts.profile = False
