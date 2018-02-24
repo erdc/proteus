@@ -392,7 +392,7 @@ namespace proteus
                 u_test_dS[nDOF_test_element],
                 u_grad_trial_trace[nDOF_trial_element*nSpace],
                 u_grad_test_dS[nDOF_test_element*nSpace],
-                normal[nSpace],x_ext,y_ext,z_ext,
+                normal[nSpace],x_ext,y_ext,z_ext=0.0,
                 G[nSpace*nSpace],G_dd_G,tr_G;
               //
               //calculate the solution and gradients at quadrature points
@@ -500,7 +500,10 @@ namespace proteus
                   double px, py, pz;
                   px = u_ext*normal[0];
                   py = u_ext*normal[1];
-                  pz = u_ext*normal[2];
+                  if (nSpace==3)
+                    pz = u_ext*normal[2];
+                  else
+                    pz=0.0;
                   Aij[36*eBMT+added_mass_i+6*0] += px*dS;
                   Aij[36*eBMT+added_mass_i+6*1] += py*dS;
                   Aij[36*eBMT+added_mass_i+6*2] += pz*dS;
@@ -609,8 +612,7 @@ namespace proteus
           //
           //calculate pde coefficients and derivatives at quadrature points
           //
-          evaluateCoefficients(q_rho[eN_k],
-                               a);
+          evaluateCoefficients(q_rho[eN_k], a);
           for(int i=0;i<nDOF_test_element;i++)
             {
               //int eN_k_i=eN_k*nDOF_test_element+i;
