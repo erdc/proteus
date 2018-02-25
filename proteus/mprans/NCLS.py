@@ -927,7 +927,6 @@ class LevelModel(OneLevelTransport):
 
         # pdb.set_trace()
         r.fill(0.0)
-        self.interface_locator.fill(0.0) 
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -1179,7 +1178,7 @@ class LevelModel(OneLevelTransport):
 
         # zero out residual
         r.fill(0.0)
-
+        self.interface_locator.fill(0.0) 
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
