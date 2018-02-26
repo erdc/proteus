@@ -5398,6 +5398,34 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                   u.name+' '+filename+u.name+'.scl****\n')
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
         self.XdmfWriter.writeFunctionXdmf_C0P2Lagrange(ar,u,tCount=tCount,init=init)
+    def readFunctionXdmf(self,ar,u,tCount=0):
+        import pdb
+        pdb.set_trace()
+        u.dof[:] = ar.hdfFile["/"+u.name+"_t"+str(tCount)].value
+        return 
+        if ar.hdfFile is not None:
+            if ar.hdfFileGlb is not None:
+                map = self.mesh.globalMesh.nodeNumbering_subdomain2global
+                array=ar.hdfFileGlb.get_node("/",u.name+str(tCount))
+                for i in range(len(map)):
+                    u.dof[i] = array[map[i]]
+                del array
+            else:
+                if ar.has_h5py:
+                    if ar.global_sync:
+                        #this is known to be slow but it scales with
+                        #respect to memory (as opposed to the faster
+                        #approach of pulling in the entire array)
+                        permute = np.argsort(self.mesh.globalMesh.nodeNumbering_subdomain2global)
+                        u.dof[permute] = ar.hdfFile["/"+u.name+"_t"+str(tCount)][self.mesh.globalMesh.nodeNumbering_subdomain2global[permute].tolist()]
+                        #faster way
+                        #u.dof[:] = ar.hdfFile["/"+u.name+"_t"+str(tCount)].value[self.mesh.globalMesh.nodeNumbering_subdomain2global]                        
+                    else:
+                        u.dof[:]=ar.hdfFile["/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)]
+                else:
+                    u.dof[:]=ar.hdfFile.get_node("/",u.name+str(tCount))
+        else:
+            assert(False)
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"c0p2_Lagrange",tCount=tCount,init=init)
 
