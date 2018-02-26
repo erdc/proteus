@@ -1,4 +1,4 @@
-"""Tests for 2d flow around an immersed boundary cylinder with rans3p"""
+"""Tests for 2d flow around a cylinder with shifted boundary method"""
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import Context
