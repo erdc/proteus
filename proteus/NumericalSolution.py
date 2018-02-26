@@ -1147,7 +1147,7 @@ class NS_base:  # (HasTraits):
                 offset=0
                 while tCount > 0:
                     time = float(self.ar[index].tree.getroot()[-1][-1][-1-offset][0].attrib['Value'])
-                    if time < self.opts.hotStartTime:
+                    if time <= self.opts.hotStartTime:
                         break
                     else:
                         tCount -=1
@@ -1180,8 +1180,9 @@ class NS_base:  # (HasTraits):
             if time >= self.tnList[-1] - 1.0e-5:
                 logEvent("Modifying time interval to be tnList[-1] + tnList since tnList hasn't been modified already")
                 ndtout = len(self.tnList)
-                dtout = (self.tnList[-1] - self.tnList[0])/float(ndtout-1)
-                self.tnList = [time + i*dtout for i in range(ndtout)]
+                #dtout = (self.tnList[-1] - self.tnList[0])/float(ndtout-1)
+                #self.tnList = [time + i*dtout for i in range(ndtout)]
+                self.tnList = [time + i for i in self.tnList]
                 logEvent("New tnList"+`self.tnList`)
             else:
                 tnListNew=[time]
