@@ -458,10 +458,12 @@ namespace proteus
           if (nSpaceIn == 3) // 3D
             {
               if (nDOF_mesh_trial_elementIn == nDOF_trial_elementIn)//iso-parametric
-                {
+                {		  		  
                   if (nDOF_mesh_trial_elementIn == 4) // P1 FE-space.
-                    {
-                      if (nQuadraturePoints_elementIn == 5)
+                    {		      		      
+		      if (nQuadraturePoints_elementIn == 15 && nQuadraturePoints_elementBoundaryIn == 7)
+			return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,3,15,4,4,4,7>());//3D, for pressure on p1 while vel on p2
+                      else if (nQuadraturePoints_elementIn == 5)
                         return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,3,5,4,4,4,4>());
                       else if (nQuadraturePoints_elementIn == 4)
                         return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,3,4,4,4,4,3>());//added to pass: tests/griffiths_lane_6/test_griffiths_lane6.py
@@ -525,7 +527,11 @@ namespace proteus
                 {
                   if (nDOF_trial_elementIn == 10)
                     {
-                      if (nQuadraturePoints_elementIn == 24 && nQuadraturePoints_elementBoundaryIn == 12)
+		      if (nQuadraturePoints_elementIn == 15 && nQuadraturePoints_elementBoundaryIn == 7) //3D, for velocity on p2 while pressure on p1
+			{
+			  return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,10,10>,3,15,4,10,10,7>());
+			}
+                      else if (nQuadraturePoints_elementIn == 24 && nQuadraturePoints_elementBoundaryIn == 12)
                         {
                           return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,10,10>,3,24,4,10,10,12>());//added to pass: tests/griffiths_lane_6/test_griffiths_lane6.py
                         }
