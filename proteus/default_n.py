@@ -118,7 +118,7 @@ multilevelNonlinearSolver  = NLNI
 levelNonlinearSolver = Newton
 """A nonlinear solver class of type :class:`proteus.NonlinearSolvers.NonlinearSolver`"""
 
-nonlinearSmoother = NLGaussSeidel
+nonlinearSmoother = None
 """A nonlinear solver class of type :class:`proteus.NonlinearSolvers.NonlinearSolver`"""
 
 fullNewtonFlag = True
@@ -147,7 +147,9 @@ computeEigenvalues = False
 
 computeEigenvectors = None#'left','right'
 
-linearSmoother = StarILU#GaussSeidel
+linearSmoother = None
+
+linearSmootherOptions = ()
 
 linTolFac = 0.001
 
@@ -214,7 +216,7 @@ auxiliaryVariables=[]
 periodicDirichletConditions=None
 
 restrictFineSolutionToAllMeshes=False
-parallelPartitioningType = MeshParallelPartitioningTypes.element
+parallelPartitioningType = MeshParallelPartitioningTypes.node
 #default number of layers to use > 1 with element partition means
 #C0P1 methods don't need to do communication in global element assembly
 #nodal partitioning does not need communication for C0P1 (has overlap 1) regardless
@@ -231,3 +233,12 @@ linearSolverConvergenceTest = 'r' #r,its,r-true for true residual
 
 bcsTimeDependent = True
 """Allow optimizations if boundary conditions are not time dependent"""
+
+adaptMesh = False
+"""Adaptively refine the mesh in space"""
+
+adaptMesh_nSteps = 10
+"""Adapt the mesh every nSteps"""
+
+adaptMesh_numIter = 2
+"""If the mesh adaption  algorithm is iterative, do this many iterates"""

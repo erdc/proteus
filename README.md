@@ -1,17 +1,18 @@
-# Proteus: Computational Methods and Simulation Toolkit [![Build Status Shippable](https://api.shippable.com/projects/545531c244927f89db3e7d70/badge/master)](https://app.shippable.com/projects/545531c244927f89db3e7d70) [![Build Status Travis](https://img.shields.io/travis/erdc-cm/proteus.svg)](https://travis-ci.org/erdc-cm/proteus)
+# Proteus: Computational Methods and Simulation Toolkit [![Build Status](https://travis-ci.org/erdc/proteus.svg?branch=master)](https://travis-ci.org/erdc/proteus) [![Binder](http://mybinder.org/badge.svg)](https://beta.mybinder.org/v2/gh/erdc/proteus/master) [![DOI](https://zenodo.org/badge/2212385.svg)](https://zenodo.org/badge/latestdoi/2212385)
 
-Proteus (http://proteus.usace.army.mil) is a Python package for
+
+Proteus (http://proteustoolkit.org) is a Python package for
 rapidly developing computer models and numerical methods.
 
 # Installation
 
 ```bash
-make
-make check
+make develop
+make test
 ```
-https://github.com/erdc-cm/proteus/wiki/How-to-Build-Proteus-Using-HashDist
+https://github.com/erdc/proteus/wiki/How-to-Build-Proteus-Using-HashDist
 
 # Developer Information
 
 The source code, wiki, and issue tracker are on GitHub at
-https://github.com/erdc-cm/proteus.
+https://github.com/erdc/proteus.

@@ -51,6 +51,12 @@ parser.add_option("-C", "--context-options",
                   type="string",
                   dest="contextOptions",
                   default=None)
+parser.add_option("-o", "--context-options-file",
+                  help="Text file of variables to set in user's global context",
+                  action="store",
+                  type="string",
+                  dest="contextOptionsFile",
+                  default=None)
 parser.add_option("-P", "--petsc-options",
                   help="Options to pass to PETSc",
                   action="store",
@@ -149,12 +155,21 @@ parser.add_option("-s","--subdomainArchives",
                   dest="subdomainArchives",
                   action="store_true",
                   help="""write xmf files for every processor's subdomain""")
+parser.add_option("-n","--no_global_sync",
+                  default=True,
+                  dest="global_sync",
+                  action="store_false",
+                  help="""don't use a single hdf5 archive""")
 parser.add_option("-H","--hotStart",
-                  default=False,
                   dest="hotStart",
                   action="store_true",
-                  help="""Use the last step in the archive as the initial condition and continue appending to the
-                  archive""")
+                  help="""Use the last step in the archive as the initial condition and continue appending to the archive""")
+parser.add_option("-t","--hotStartTime",
+                  dest="hotStartTime",
+                  action="store",
+                  type="float",
+                  default=float('inf'),
+                  help="""Use the last step in the archive before t as the initial condition and continue appending to the archive""")
 parser.add_option("-B","--writeVelocityPostProcessor",
                   default=False,
                   dest="writeVPP",
@@ -259,6 +274,10 @@ if probDir not in sys.path:
 log("Loading problem-specific modules")
 if opts.contextOptions:
     Context.contextOptionsString=opts.contextOptions
+elif opts.contextOptionsFile != None:
+    f = open(opts.contextOptionsFile, 'r')
+    Context.contextOptionsString = f.read()
+    f.close()
 
 pList = []
 nList = []
@@ -327,6 +346,10 @@ elif len(args) == 2: #p and n modules provided
     sList.append(s)
     try:
         so.systemStepControllerType = nList[0].systemStepControllerType
+    except:
+        pass
+    try:
+        so.systemStepExact = nList[0].systemStepExact
     except:
         pass
     try:

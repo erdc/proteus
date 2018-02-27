@@ -40,6 +40,9 @@ genMesh = True
 L=(1.0,1.0,1.0)
 """Tuple of dimensions for simple box shaped domain"""
 
+x0=(0.0, 0.0, 0.0)
+"""Tuple of coordinates for corner of simple box shaped domain"""
+
 analyticalSolution = {}
 """Dictionary of analytical solutions for each component
 
@@ -52,6 +55,9 @@ The object should be of type :class:`proteus.TransportCoefficients.TC_base`"""
 
 dirichletConditions = {}
 """Dictionary of Dirichlet conditions for each component"""
+
+boundaryCreatesNullSpace = False
+"""Indicates Dirichlet boundary conditions create global null space. """
 
 periodicDirichletConditions = None
 """Dictionary of periodic boundary conditions for each component"""

@@ -18,6 +18,7 @@ def test_wdot():
     test.description = 'test_wdot'
     yield test, t1, t2
 
-for test, v1, v2 in test_wdot():
-    print test.description
-    test(v1,v2)
+if __name__ == '__main__':
+    for test, v1, v2 in test_wdot():
+        print test.description
+        test(v1,v2)

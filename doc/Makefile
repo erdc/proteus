@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = build
+BUILDDIR      = ../../proteus-website
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -50,21 +50,16 @@ clean:
 	rm -rf $(BUILDDIR)/*
 	rm -rf source/api
 
-html: source/api/modules.rst build/html/capi/html/files.html
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+html: source/api/modules.rst $(BUILDDIR)/capi/html/files.html
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)
 	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)."
 
-source/api/modules.rst: proteus
-	sphinx-apidoc --output-dir=source/api proteus --separate --force 
+source/api/modules.rst:
+	sphinx-apidoc --output-dir=source/api ../proteus --separate -M
 
-proteus:
-	ln -s ../proteus proteus
-
-build/html/capi/html/files.html:
-	-mkdir -p build/html/capi
+$(BUILDDIR)/capi/html/files.html:
 	doxygen
-	cp doxygenIndexRedirect.html build/html/capi/html/index.html
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
@@ -187,3 +182,6 @@ pseudoxml:
 	$(SPHINXBUILD) -b pseudoxml $(ALLSPHINXOPTS) $(BUILDDIR)/pseudoxml
 	@echo
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
+
+serve:
+	cd build/html && python -m SimpleHTTPServer 8000

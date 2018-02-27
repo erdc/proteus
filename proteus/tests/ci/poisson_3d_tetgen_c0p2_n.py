@@ -28,7 +28,7 @@ shockCapturing = None
 multilevelNonlinearSolver  = Newton
 levelNonlinearSolver = Newton
 #linear problem so force 1 iteration allowed
-maxNonlinearIts = 2
+maxNonlinearIts = 1
 maxLineSearches = 1
 fullNewtonFlag = True
 #absolute nonlinear solver residual tolerance
@@ -61,7 +61,7 @@ if parallel:
     parallelPartitioningType = MeshParallelPartitioningTypes.node
     #parallelPartitioningType = MeshParallelPartitioningTypes.element
     #have to have a numerical flux in parallel
-    numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
+    numericalFluxType = ConstantAdvection_Diffusion_SIPG_exterior#Advection_DiagonalUpwind_Diffusion_IIPG_exterior
     #for true residual test
     linearSolverConvergenceTest = 'r-true'
     #to allow multiple models to set different ksp options
@@ -70,11 +70,15 @@ if parallel:
 else:
     multilevelLinearSolver = LU
     levelLinearSolver = LU
-    numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
+    numericalFluxType = ConstantAdvection_Diffusion_SIPG_exterior
 
+#linear solver parameters
+linearSmoother = None
 #linear solver relative convergence test
 linTolFac = 0.0
 #linear solver absolute convergence test
 l_atol_res = 1.0e-10
 
-#conservativeFlux =  {0:'pwl'}
+conservativeFlux =  None
+cfluxtag = None
+conservativeFlux =  {0:'pwl-bdm2'}

@@ -261,8 +261,78 @@ static PyObject* ctransportCoefficientsGroundwaterBiodegradation01EvaluateFC(PyO
   return Py_None;
 }
 
+static PyObject* ctransportCoefficientsTwoPhaseAdvection_2D_Evaluate(PyObject* self,
+                                                                    PyObject* args)
+{
+  int i,nPoints=1;
+  double eps, rho_0, nu_0, rho_1, nu_1;
+  PyObject *phi,
+    *p,
+    *u,
+    *v,
+    *mass_adv,
+    *dmass_adv_p,
+    *dmass_adv_u,
+    *dmass_adv_v,
+    *mom_u_adv,
+    *dmom_u_adv_u,
+    *dmom_u_adv_v,
+    *mom_v_adv,
+    *dmom_v_adv_u,
+    *dmom_v_adv_v;
+  
+  if (!PyArg_ParseTuple(args,"dddddOOOOOOOOOOOOOO",
+                       &eps,
+                       &rho_0,
+                       &nu_0,
+                       &rho_1,
+                       &nu_1,
+                       &phi,
+                       &p,
+                       &u,
+                       &v,
+                       &mass_adv,
+                       &mom_u_adv,
+                       &mom_v_adv,
+                       &dmass_adv_p,
+                       &dmass_adv_u,
+                       &dmass_adv_v,
+                       &dmom_u_adv_u,
+                       &dmom_u_adv_v,
+                       &dmom_v_adv_u,
+                       &dmom_v_adv_v))
+  return NULL;
+
+  for (i=0;i<ND(p);i++)
+    nPoints *= SHAPE(p)[i];
+
+
+  TwoPhaseAdvection_2D_Evaluate(nPoints,
+				eps,
+				rho_0,
+				nu_0,
+				rho_1,
+				nu_1,
+				DDATA(phi),
+                               DDATA(p),
+                               DDATA(u),
+                               DDATA(v),
+                               DDATA(mass_adv),
+                               DDATA(dmass_adv_p),
+                               DDATA(dmass_adv_u),
+                               DDATA(dmass_adv_v),
+                               DDATA(mom_u_adv),
+                               DDATA(dmom_u_adv_u),
+                               DDATA(dmom_u_adv_v),
+                               DDATA(mom_v_adv),
+                               DDATA(dmom_v_adv_u),
+                               DDATA(dmom_v_adv_v));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
 static PyObject* ctransportCoefficientsGroundwaterBryantDawsonIonExEvaluateFC(PyObject* self, 
-									      PyObject* args)
+								      PyObject* args)
 {
   int i,nPoints=1;
   double omega,d_m,d_h,alpha_L,alpha_T,K_m,K_h,K_w,Z_tot;
@@ -2834,6 +2904,172 @@ static PyObject* ctransportCoefficientsConservativeHeadRichardsBCBfromMVGHomEval
   return Py_None;
 }
 
+static PyObject* ctransportCoefficientsMass_2D_Evaluate(PyObject* self,
+							PyObject* args)
+{
+  int i,nPoints=1;
+  double rho;
+  PyObject *p,
+    *u,
+    *v,
+    *mom_p_acc,
+    *mom_u_acc,
+    *mom_v_acc,
+    *dmom_p_acc_p,
+    *dmom_u_acc_u,
+    *dmom_v_acc_v;
+
+  if(!PyArg_ParseTuple(args,"dOOOOOOOOO",
+		       &rho,
+		       &p,
+		       &u,
+		       &v,
+		       &mom_p_acc,
+		       &mom_u_acc,
+		       &mom_v_acc,
+		       &dmom_p_acc_p,
+		       &dmom_u_acc_u,
+		       &dmom_v_acc_v))
+    
+  return NULL;
+  for(i=0;i<ND(p);i++)
+    nPoints*=SHAPE(p)[i];
+
+  Mass_2D_Evaluate(nPoints,
+		   rho,
+		   DDATA(p),
+		   DDATA(u),
+		   DDATA(v),
+		   DDATA(mom_p_acc),
+		   DDATA(mom_u_acc),
+		   DDATA(mom_v_acc),
+		   DDATA(dmom_p_acc_p),
+		   DDATA(dmom_u_acc_u),
+		   DDATA(dmom_v_acc_v));
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject* ctransportCoefficientsMass_3D_Evaluate(PyObject* self,
+							PyObject* args)
+{
+  int i,nPoints=1;
+  double rho;
+  PyObject *p,
+    *u,
+    *v,
+    *w,
+    *mom_p_acc,
+    *mom_u_acc,
+    *mom_v_acc,
+    *mom_w_acc,
+    *dmom_p_acc_p,
+    *dmom_u_acc_u,
+    *dmom_v_acc_v,
+    *dmom_w_acc_w;
+
+  if(!PyArg_ParseTuple(args,"dOOOOOOOOOOOO",
+		       &rho,
+		       &p,
+		       &u,
+		       &v,
+		       &w,
+		       &mom_p_acc,
+		       &mom_u_acc,
+		       &mom_v_acc,
+		       &mom_w_acc,
+		       &dmom_p_acc_p,
+		       &dmom_u_acc_u,
+		       &dmom_v_acc_v,
+		       &dmom_w_acc_w))
+    
+  return NULL;
+  for(i=0;i<ND(p);i++)
+    nPoints*=SHAPE(p)[i];
+
+  Mass_3D_Evaluate(nPoints,
+		   rho,
+		   DDATA(p),
+		   DDATA(u),
+		   DDATA(v),
+		   DDATA(w),
+		   DDATA(mom_p_acc),
+		   DDATA(mom_u_acc),
+		   DDATA(mom_v_acc),
+		   DDATA(mom_w_acc),
+		   DDATA(dmom_p_acc_p),
+		   DDATA(dmom_u_acc_u),
+		   DDATA(dmom_v_acc_v),
+		   DDATA(dmom_w_acc_w));
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
+static PyObject* ctransportCoefficientsLaplace_2D_Evaluate(PyObject* self,
+							PyObject* args)
+{
+  // Need to double check I'm not adding too many attributes here.
+  int i,nPoints=1;
+  PyObject *u,*v,*p,*mom_u_diff_ten,*mom_v_diff_ten,*mom_p_diff_ten ;
+
+  if (!PyArg_ParseTuple(args,"OOOOOO",
+			&p,
+			&u,
+			&v,
+			&mom_p_diff_ten,
+			&mom_u_diff_ten,
+			&mom_v_diff_ten))
+  return NULL;
+
+  for (i=0;i<ND(p);i++){
+    nPoints *= SHAPE(p)[i];
+  }
+
+  Laplace_Evaluate2D(nPoints,
+		   DDATA(mom_p_diff_ten),
+		   DDATA(mom_u_diff_ten),
+		   DDATA(mom_v_diff_ten));
+
+  Py_INCREF(Py_None);
+  return Py_None;	
+}
+
+static PyObject* ctransportCoefficientsLaplace_3D_Evaluate(PyObject* self,
+							PyObject* args)
+{
+  int i,nPoints=1;
+  PyObject *u,*v,*w,*p,*mom_u_diff_ten,*mom_v_diff_ten,
+           *mom_w_diff_ten, *mom_p_diff_ten ;
+
+  if (!PyArg_ParseTuple(args,"OOOOOOOO",
+			&p,
+			&u,
+			&v,
+			&w,
+			&mom_p_diff_ten,
+			&mom_u_diff_ten,
+			&mom_v_diff_ten,
+			&mom_w_diff_ten))
+  return NULL;
+
+  for (i=0;i<ND(p);i++){
+    nPoints *= SHAPE(p)[i];
+  }
+
+  Laplace_Evaluate3D(nPoints,
+		   DDATA(mom_p_diff_ten),
+		   DDATA(mom_u_diff_ten),
+		   DDATA(mom_v_diff_ten),
+		   DDATA(mom_w_diff_ten));
+
+  Py_INCREF(Py_None);
+  return Py_None;	
+}
+
+
 static PyObject* ctransportCoefficientsNavierStokes_2D_Evaluate(PyObject* self, 
                                                                 PyObject* args)
 {
@@ -3684,6 +3920,7 @@ static PyObject* ctransportCoefficientsTwophaseNavierStokes_ST_LS_SO_2D_Evaluate
     *dmom_u_ham_grad_p,
     *mom_v_ham,
     *dmom_v_ham_grad_p;
+
   if(!PyArg_ParseTuple(args,"dddddddOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
                        &eps_density,
                        &eps_viscosity,
@@ -3724,6 +3961,7 @@ static PyObject* ctransportCoefficientsTwophaseNavierStokes_ST_LS_SO_2D_Evaluate
                        &mom_v_ham,
                        &dmom_v_ham_grad_p))
     return NULL;
+
   for(i=0;i<ND(p);i++)
       nPoints *= SHAPE(p)[i];
   TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(nPoints,
@@ -9686,7 +9924,15 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
   { "conservativeHeadRichardsJLeverettAniEvaluate", 
     ctransportCoefficientsConservativeHeadRichardsJLeverettAniEvaluate,
     METH_VARARGS, 
-    "evaluate the coefficients  of Richards' equation"}, 
+    "evaluate the coefficients  of Richards' equation"},
+  { "Mass_2D_Evaluate", 
+    ctransportCoefficientsMass_2D_Evaluate,
+    METH_VARARGS, 
+    "evaluate the coefficients of the a 2D mass matrix"}, 
+  { "Mass_3D_Evaluate", 
+    ctransportCoefficientsMass_3D_Evaluate,
+    METH_VARARGS, 
+    "evaluate the coefficients  of a 3D mass matrix"},
   { "NavierStokes_2D_Evaluate", 
     ctransportCoefficientsNavierStokes_2D_Evaluate,
     METH_VARARGS, 
@@ -9698,7 +9944,15 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
   { "Stokes_2D_Evaluate", 
     ctransportCoefficientsStokes_2D_Evaluate,
     METH_VARARGS, 
-    "evaluate the coefficients  of the 2D Stokes equations"}, 
+    "evaluate the coefficients  of the 2D Stokes equations"},
+  { "Laplace_2D_Evaluate",
+    ctransportCoefficientsLaplace_2D_Evaluate,
+    METH_VARARGS,
+    "evaluate the coefficients of the distcrete 2D Laplace operator"},
+  { "Laplace_3D_Evaluate",
+    ctransportCoefficientsLaplace_3D_Evaluate,
+    METH_VARARGS,
+    "evaluate the coefficients of the discrete 3D Laplace operator"},
   { "StokesP_2D_Evaluate", 
     ctransportCoefficientsStokesP_2D_Evaluate,
     METH_VARARGS, 
@@ -9974,7 +10228,11 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
   { "ReynoldsAveragedNavierStokes_kEpsilon_2D_Update_sd", 
     ctransportCoefficientsReynoldsAveragedNavierStokes_kEpsilon_2D_Update_sd, 
     METH_VARARGS, 
-    "Update the NS coefficients for RANS terms in standard incompressible flow k-epsilon model"}, 
+    "Update the NS coefficients for RANS terms in standard incompressible flow k-epsilon model"},
+  { "TwoPhaseAdvection_2D_Evaluate", 
+    ctransportCoefficientsTwoPhaseAdvection_2D_Evaluate,
+    METH_VARARGS, 
+    "evaluate the coefficients  of the 2D Advection equations"},
   { "ReynoldsAveragedNavierStokes_kEpsilon_3D_Update", 
     ctransportCoefficientsReynoldsAveragedNavierStokes_kEpsilon_3D_Update, 
     METH_VARARGS, 

@@ -1,0 +1,17 @@
+*.dmg	filter=lfs diff=lfs merge=lfs -crlf
+*.geo	filter=lfs diff=lfs merge=lfs -crlf
+*.msh	filter=lfs diff=lfs merge=lfs -crlf
+*.smb	filter=lfs diff=lfs merge=lfs -crlf
+*.smd	filter=lfs diff=lfs merge=lfs -crlf
+*.sms	filter=lfs diff=lfs merge=lfs -crlf
+*.x_t	filter=lfs diff=lfs merge=lfs -crlf
+*.h5	filter=lfs diff=lfs merge=lfs -crlf
+*.png	filter=lfs diff=lfs merge=lfs -crlf
+*.gif	filter=lfs diff=lfs merge=lfs -crlf
+*.jpg	filter=lfs diff=lfs merge=lfs -crlf
+*.jpeg	filter=lfs diff=lfs merge=lfs -crlf
+proteus/tests/cylinder2D/ibm_method/comparison_files/T4_rans3p.h5 filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/ibm_method/comparison_files/T1_rans3p.h5 filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/conforming_rans2p/comparison_files/T1_rans2p.h5 filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/conforming_rans3p/comparison_files/T1P1.h5 filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/sbm_method/comparison_files/T1_sbm_rans3p.h5 filter=lfs diff=lfs merge=lfs -text

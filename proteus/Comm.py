@@ -1,12 +1,15 @@
 """
 Module for controlling MPI
+
+.. inheritance-diagram:: proteus.Comm
+   :parts: 1
 """
 
 import ctypes
 import sys
 
 import petsc4py
-from .Profiling import logEvent as log
+from .Profiling import logEvent
 
 
 # Special workaround for broken MPI on certain Cray systems
@@ -34,6 +37,8 @@ def init():
                 if i+1 < narg and  argv[i+1][0] is not '-':
                     value = argv[i+1]
                     OptDB.setValue(name,value)
+        if not OptDB.hasName("options_left"):
+            OptDB.setValue("options_left",False)
     new_comm = Comm()
     if not comm:
         comm = new_comm
@@ -41,7 +46,7 @@ def init():
 
 def get():
     if comm is None:
-        log("Comm.get called before init, init is being called for you.", 3)
+        logEvent("Comm.get called before init, init is being called for you.", 3)
         return init()
     return comm
 

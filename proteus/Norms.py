@@ -1,5 +1,8 @@
 """
 Tools for calculating norms on function spaces.
+
+.. inheritance-diagram:: proteus.Norms
+   :parts: 1
 """
 from FemTools import *
 from Quadrature import *
@@ -195,7 +198,7 @@ def L1errorVFEM2(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T
 #just compute the mass in the domain
 def scalarDomainIntegral(dV,nValueArray,nElements=None):
     if useC:
-        if nElements == None:
+        if nElements is None:
             partialSum = cfemIntegrals.scalarDomainIntegral(dV,nValueArray,nValueArray.shape[0])
         else:
             partialSum = cfemIntegrals.scalarDomainIntegral(dV,nValueArray,nElements)
@@ -208,13 +211,13 @@ def scalarDomainIntegral(dV,nValueArray,nElements=None):
     return globalSum(partialSum)
 
 def scalarHeavisideDomainIntegral(dV,nValueArray,nElements=None):
-    if nElements == None:
+    if nElements is None:
         partialSum = cfemIntegrals.scalarHeavisideDomainIntegral(dV,nValueArray,nValueArray.shape[0])
     else:
         partialSum = cfemIntegrals.scalarHeavisideDomainIntegral(dV,nValueArray,nElements)
     return globalSum(partialSum)
 def scalarSmoothedHeavisideDomainIntegral(epsFact,elementDiameters,dV,nValueArray,nElements=None):
-    if nElements == None:
+    if nElements is None:
         partialSum = cfemIntegrals.scalarSmoothedHeavisideDomainIntegral(epsFact,elementDiameters,dV,nValueArray,nValueArray.shape[0])
     else:
         partialSum = cfemIntegrals.scalarSmoothedHeavisideDomainIntegral(epsFact,elementDiameters,dV,nValueArray,nElements)

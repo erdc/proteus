@@ -3,19 +3,20 @@ Classes for implementing the coefficients of transport equations.
 
 TC_base defines the interface. The classes derived from TC_base in
 this module define common PDE's.
+
+.. inheritance-diagram:: proteus.TransportCoefficients
+   :parts: 1
 """
 from math import *
+from warnings import warn
 import numpy
 import Norms
-import Profiling
-
-log = Profiling.logEvent
+from Profiling import logEvent
+from warnings import warn
 
 ## \file TransportCoefficients.py
 #
 #@{
-
-log = Profiling.logEvent
 
 ##\brief Base class for transport coefficients classes
 #
@@ -106,7 +107,7 @@ class TC_base:
         of diffusion tensors may also be provided.
         """
         self.nc = nc
-        if variableNames == None:
+        if variableNames is None:
             self.variableNames = ['u'+`i` for i in range(nc)]
         else:
             self.variableNames=variableNames
@@ -151,7 +152,7 @@ class TC_base:
                 self.elementIntegralKeys.append(('a',ci,ck))
                 self.elementBoundaryIntegralKeys.append(('a',ci,ck))
                 if not self.potential.has_key(ck):
-                    warn("""a[ci=%d][ck=%d] is non-zero but phi[ck=%d] is undefined. Setting
+                    logEvent("""a[ci=%d][ck=%d] is non-zero but phi[ck=%d] is undefined. Setting
                     phi[ck=%d]=u[ck=%d], the potential definition
                     should be corrected in the future\n""" % (ci,ck,ck,ck,ck))
                     self.potential[ck]='u'
@@ -185,6 +186,7 @@ class TC_base:
         for ci in range(self.nc):
             self.elementIntegralKeys.append(('u',ci))
             self.elementBoundaryIntegralKeys.append(('u',ci))
+
     def evaluate(self,t,c):
         """
         Evaluate the coefficients at a given time, t, using the coefficient storage passed in as the dictionary c.
@@ -245,7 +247,7 @@ class TC_base:
         Allocate some coefficient dictionaries to use for viewing the coefficients
         """
         import copy
-        if c == None:
+        if c is None:
             ctemp = {}
             for ci in range(self.nc):
                 ctemp[('u',ci)] = numpy.zeros(nPoints,'d')
@@ -396,7 +398,7 @@ class LinearVADR_ConstantCoefficients(TC_base):
                                                         c[('a',i,i)],
                                                         c[('r',i)],c[('dr',i,i)])
             nSpace=c['x'].shape[-1]
-            if self.rFunc != None:
+            if self.rFunc is not None:
                 for n in range(len(c[('u',i)].flat)):
                     c[('r',i)].flat[n] = self.rFunc[i].rOfUX(c[('u',i)].flat[n],c['x'].flat[n*nSpace:(n+1)*nSpace])
                     c[('dr',i,i)].flat[n] = self.rFunc[i].drOfUX(c[('u',i)].flat[n],c['x'].flat[n*nSpace:(n+1)*nSpace])
@@ -1103,17 +1105,19 @@ class NavierStokes(TC_base):
                                           c[('dH',3,0)])
 
 class ShallowWater(TC_base):
-    """
-    The coefficients for the shallow water equations.
+    r"""The coefficients for the shallow water equations.
 
-    right hand side for bed friction looks like
-     -\tau_b / \rho
+    Right hand side for bed friction looks like :math:`-\tau_b/\rho`
     where the bed friction stress is
-     \tau_b = \rho C_f \vec u \|\vec u\|
-    C_f = g b/h^{a}
 
-    b = n^2 for Mannings law --> bedFrictionCoefficient
-    a = 1/3 for Mannings law --> bedFrictionPower
+    .. math::
+
+       \tau_b = \rho C_f \vec u \|\vec u\|
+       C_f = g b/h^{a}
+
+    :math:`b = n^2` for Mannings law --> bedFrictionCoefficient
+    :math:`a = 1/3` for Mannings law --> bedFrictionPower
+
     """
     from ctransportCoefficients import shallowWater_1D_Evaluate
     from ctransportCoefficients import shallowWater_2D_Evaluate
@@ -1137,8 +1141,8 @@ class ShallowWater(TC_base):
         hamiltonian={}
         self.bathymetryFunc=bathymetryFunc
         self.bathymetryGradientFunc=bathymetryGradientFunc
-        assert ((self.bathymetryFunc == None and self.bathymetryGradientFunc == None) or
-                (self.bathymetryFunc != None and self.bathymetryGradientFunc != None))
+        assert ((self.bathymetryFunc is None and self.bathymetryGradientFunc is None) or
+                (self.bathymetryFunc is not None and self.bathymetryGradientFunc is not None))
         #index of bathymetry values in spatial points
         self.bind = 2;
         if self.nd == 1:
@@ -1288,7 +1292,7 @@ class ShallowWater(TC_base):
             grad_b = self.ebq_grad_b
         elif  c['x'].shape[0:-1] == self.ebq_global_grad_b.shape[0:-1]:
             grad_b = self.ebq_global_grad_b
-        assert grad_b != None
+        assert grad_b is not None
         #total elevation
         if not c.has_key(('H',0)) and c.has_key(('u',0)):
             c[('H',0)] = numpy.copy(c[('u',0)])
@@ -1403,6 +1407,100 @@ class ShallowWater(TC_base):
 #                                           c[('H',3)],
 #                                           c[('dH',3,0)])
 
+class DiscreteLaplaceOperator(TC_base):
+    r""" A coefficient class to construct the discrete Laplace Operator.
+    
+    This class defines the coefficients necessary to construct the
+    discrete Laplace operator :math:`A` where
+
+    .. math::
+    
+        a^{c}_{i,j} = \int_{T} \nabla \phi^{c}_{i} \cdot \nabla \phi^{c}_{j} dT
+
+    for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
+    :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
+    """
+    from ctransportCoefficients import Laplace_2D_Evaluate
+    from ctransportCoefficients import Laplace_3D_Evaluate
+    def __init__(self,nd=2,nu=1.0):
+        self.nd=nd
+        self.nu=nu # ... Detail I need to worry about later ...
+        mass = {}
+        advection = {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if nd==2:
+            variableNames=['p','u','v']
+            diffusion = {0:{0:{0:'constant'}},
+                         1:{1:{1:'constant'}},
+                         2:{2:{2:'constant'}}}
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
+                         2:{2:'u'}}
+            sdInfo    = {(0,0):(numpy.array([0,1,2],dtype='i'),
+                                numpy.array([0,1],dtype='i')),
+                         (1,1):(numpy.array([0,1,2],dtype='i'),
+                                numpy.array([0,1],dtype='i')),
+                         (2,2):(numpy.array([0,1,2],dtype='i'),
+                                numpy.array([0,1],dtype='i'))}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors=sdInfo,
+                             useSparseDiffusion=True)
+            self.vectorComponents=[1,2]
+        if nd==3:
+            variableNames=['p','u','v','w']
+            diffusion ={0:{0:{0:'constant'}},
+                        1:{1:{1:'constant'}},
+                        2:{2:{2:'constant'}},
+                        3:{3:{3:'constant'}}}
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
+                         2:{2:'u'},
+                         3:{3:'u'}}
+            sdInfo  = {(0,0):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
+                       (1,1):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
+                       (2,2):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
+                       (3,3):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i'))}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors=sdInfo,
+                             useSparseDiffusion=True)
+            self.vectorComponents=[1,2,3]
+    def evaluate(self,t,c):
+        if self.nd==2:
+            self.Laplace_2D_Evaluate(c[('u',0)],
+                                     c[('u',1)],
+                                     c[('u',2)],
+                                     c[('a',0,0)],
+                                     c[('a',1,1)],
+                                     c[('a',2,2)])
+        if self.nd==3:
+            self.Laplace_3D_Evaluate(c[('u',0)],
+                                     c[('u',1)],
+                                     c[('u',2)],
+                                     c[('u',3)],
+                                     c[('a',0,0)],
+                                     c[('a',1,1)],
+                                     c[('a',2,2)],
+                                     c[('a',3,3)])
+
 ##\brief Incompressible Stokes equations
 #
 #The equations are formulated as
@@ -1433,19 +1531,24 @@ class Stokes(TC_base):
         hamiltonian={}
         if nd==2:
             variableNames=['p','u','v']
-            mass={1:{1:'linear'},
+            mass={0:{0:'linear'},
+                  1:{1:'linear'},
                   2:{2:'linear'}}
             if not weakBoundaryConditions:
-                advection = {0:{1:'linear',
+                advection = {0:{0:'linear',
+                                1:'linear',
                                 2:'linear'}}
             else:
-                advection = {0:{1:'linear',
+                advection = {0:{0:'linear',
+                                1:'linear',
                                 2:'linear'},
                              1:{0:'linear'},
                              2:{0:'linear'}}
-            diffusion = {1:{1:{1:'constant'}},
+            diffusion = {0:{0:{0:'constant'}},
+                         1:{1:{1:'constant'}},
                          2:{2:{2:'constant'}}}
-            potential = {1:{1:'u'},
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
                          2:{2:'u'}}
             reaction = {1:{1:'constant'},
                         2:{2:'constant'}}
@@ -1459,28 +1562,34 @@ class Stokes(TC_base):
                              potential,
                              reaction,
                              hamiltonian,
-                             variableNames)
+                             variableNames,
+                             useSparseDiffusion=True)
             self.vectorComponents=[1,2]
         elif nd==3:
             variableNames=['p','u','v','w']
-            mass={1:{1:'linear'},
+            mass={0:{0:'linear'},
+                  1:{1:'linear'},
                   2:{2:'linear'},
                   3:{3:'linear'}}
             if not weakBoundaryConditions:
-                advection = {0:{1:'linear',
+                advection = {0:{0:'linear',
+                                1:'linear',
                                 2:'linear',
                                 3:'linear'}}
             else:
-                advection = {0:{1:'linear',
+                advection = {0:{0:'linear',
+                                1:'linear',
                                 2:'linear',
                                 3:'linear'},
                              1:{0:'linear'},
                              2:{0:'linear'},
                              3:{0:'linear'}}
-            diffusion = {1:{1:{1:'constant'}},
+            diffusion = {0:{0:{0:'constant'}},
+                         1:{1:{1:'constant'}},
                          2:{2:{2:'constant'}},
                          3:{3:{3:'constant'}}}
-            potential = {1:{1:'u'},
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
                          2:{2:'u'},
                          3:{3:'u'}}
             reaction = {1:{1:'constant'},
@@ -1497,8 +1606,13 @@ class Stokes(TC_base):
                              potential,
                              reaction,
                              hamiltonian,
-                             variableNames)
+                             variableNames,
+                             useSparseDiffusion=True)
             self.vectorComponents=[1,2,3]
+
+    def attachModels(self,modelList):
+        modelList[0].pp_hasConstantNullSpace = False
+
     def evaluate(self,t,c):
         if self.nd==2:
             self.Stokes_2D_Evaluate(self.rho,
@@ -1806,7 +1920,7 @@ class TwophaseNavierStokes_LS_SO(TC_base):
                              variableNames)
             self.vectorComponents=[1,2,3]
     def attachModels(self,modelList):
-        if self.LS_model != None:
+        if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u',0)]
             self.ebqe_phi = modelList[self.LS_model].ebqe[('u',0)]
             self.ebq_phi = None
@@ -1964,7 +2078,7 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                  useRBLES=0.0):
         self.useRBLES=useRBLES
         self.sd=sd
-        if epsFact_density != None:
+        if epsFact_density is not None:
             self.epsFact_density = epsFact_density
         else:
             self.epsFact_density = epsFact
@@ -2096,7 +2210,7 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
     def attachModels(self,modelList):
         #level set
         self.model = modelList[0]
-        if self.LS_model != None:
+        if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u',0)]
             if modelList[self.LS_model].ebq.has_key(('u',0)):
                 self.ebq_phi = modelList[self.LS_model].ebq[('u',0)]
@@ -2111,7 +2225,7 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                 self.ebq_n   = None
             self.ebqe_n    = modelList[self.LS_model].ebqe[('grad(u)',0)]
         #curvature
-        if self.KN_model != None:
+        if self.KN_model is not None:
             self.q_kappa    = modelList[self.KN_model].q[('u',0)]
             self.ebqe_kappa = modelList[self.KN_model].ebqe[('u',0)]
             if modelList[self.KN_model].ebq.has_key(('u',0)):
@@ -2124,28 +2238,28 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
         self.eps_viscosity = self.epsFact*mesh.h
     #initialize so it can run as single phase
     def initializeElementQuadrature(self,t,cq):
-        if self.LS_model == None:
+        if self.LS_model is None:
             self.q_phi = -numpy.ones(cq[('u',1)].shape,'d')
             self.q_n = -numpy.ones(cq[('velocity',0)].shape,'d')
-        if self.KN_model == None:
+        if self.KN_model is None:
             self.q_kappa = -numpy.zeros(cq[('u',1)].shape,'d')
         #VRANS
         self.q_porosity = numpy.ones(cq[('u',1)].shape,'d')
         self.q_meanGrain= numpy.ones(cq[('u',1)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.LS_model == None:
+        if self.LS_model is None:
             self.ebq_phi = -numpy.ones(cebq[('u',1)].shape,'d')
             self.ebq_n = -numpy.ones(cebq[('velocity',0)].shape,'d')
-        if self.KN_model == None:
+        if self.KN_model is None:
             self.ebq_kappa = -numpy.zeros(cebq[('u',1)].shape,'d')
         #VRANS
         self.ebq_porosity = numpy.ones(cebq[('u',1)].shape,'d')
         self.ebq_meanGrain= numpy.ones(cebq[('u',1)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.LS_model == None:
+        if self.LS_model is None:
             self.ebqe_phi = -numpy.ones(cebqe[('u',1)].shape,'d')
             self.ebqe_n = -numpy.ones(cebqe[('velocity',0)].shape,'d')
-        if self.KN_model == None:
+        if self.KN_model is None:
             self.ebqe_kappa = -numpy.zeros(cebqe[('u',1)].shape,'d')
         #VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u',1)].shape,'d')
@@ -2429,7 +2543,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                  ptsFile=None,
                  boundaryPenaltyCoef=1.0,
                  volumePenaltyCoef=1000.0):
-        if epsFact_density != None:
+        if epsFact_density is not None:
             self.epsFact_density = epsFact_density
         else:
             self.epsFact_density = epsFact
@@ -2532,7 +2646,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                              hamiltonian,
                              variableNames)
             self.vectorComponents=[1,2,3]
-        if ptsFile != None:
+        if ptsFile is not None:
             self.ptsFile=ptsFile
             self.readPTS(self.ptsFile)
     def readPTS(self,ptsFile):
@@ -2579,7 +2693,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
         return sd
     def attachModels(self,modelList):
         #level set
-        if self.LS_model != None:
+        if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u',0)]
             if modelList[self.LS_model].ebq.has_key(('u',0)):
                 self.ebq_phi = modelList[self.LS_model].ebq[('u',0)]
@@ -2594,7 +2708,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                 self.ebq_n   = None
             self.ebqe_n    = modelList[self.LS_model].ebqe[('grad(u)',0)]
         #curvature
-        if self.KN_model != None:
+        if self.KN_model is not None:
             self.q_kappa    = modelList[self.KN_model].q[('u',0)]
             self.ebqe_kappa = modelList[self.KN_model].ebqe[('u',0)]
             if modelList[self.KN_model].ebq.has_key(('u',0)):
@@ -2612,7 +2726,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
         self.q_kappa = numpy.zeros(cq[('u',0)].shape,'d')
         self.q_phi_s = numpy.ones(cq[('u',0)].shape,'d')
         self.q_n_s = numpy.ones(cq[('f',0)].shape,'d')
-        if self.defaultSolidProfile == None:
+        if self.defaultSolidProfile is None:
             if self.nd==2:
                 for i in range(len(cq[('u',0)].flat)):
                     x = cq['x'].flat[i*3+0]
@@ -2630,7 +2744,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     phi,n = self.defaultSolidProfile(cq['x'].flat[3*i:3*(i+1)])
                     self.q_phi_s.flat[i] = phi
                     self.q_n_s.flat[self.nd*i:self.nd*(i+1)] = n[:]
-        if self.defaultFluidProfile != None:
+        if self.defaultFluidProfile is not None:
             try:
                 self.defaultFluidProfile(t,cq['x'],self.q_phi,self.q_n)
             except TypeError:
@@ -2645,7 +2759,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
         self.ebq_kappa = numpy.zeros(cebq[('u',0)].shape,'d')
         self.ebq_phi_s = numpy.ones(cebq[('u',0)].shape,'d')
         self.ebq_n_s = numpy.ones(cebq[('f',0)].shape,'d')
-        if self.defaultSolidProfile == None:
+        if self.defaultSolidProfile is None:
             if self.nd==2:
                 for i in range(len(cebq[('u',0)].flat)):
                     x = cebq['x'].flat[i*3+0]
@@ -2663,7 +2777,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     phi,n = self.defaultSolidProfile(cebq['x'].flat[3*i:3*(i+1)])
                     self.ebq_phi_s.flat[i] = phi
                     self.ebq_n_s.flat[self.nd*i:self.nd*(i+1)] = n[:]
-        if self.defaultFluidProfile != None:
+        if self.defaultFluidProfile is not None:
             try:
                 self.defaultFluidProfile(t,cebq['x'],self.ebq_phi,self.ebq_n)
             except TypeError:
@@ -2678,7 +2792,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
         self.ebqe_kappa = numpy.zeros(cebqe[('u',0)].shape,'d')
         self.ebqe_phi_s = numpy.ones(cebqe[('u',0)].shape,'d')
         self.ebqe_n_s = numpy.ones(cebqe[('f',0)].shape,'d')
-        if self.defaultSolidProfile == None:
+        if self.defaultSolidProfile is None:
             if self.nd==2:
                 for i in range(len(cebqe[('u',0)].flat)):
                     x = cebqe['x'].flat[i*3+0]
@@ -2696,7 +2810,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     phi,n = self.defaultSolidProfile(cebqe['x'].flat[3*i:3*(i+1)])
                     self.ebqe_phi_s.flat[i] = phi
                     self.ebqe_n_s.flat[self.nd*i:self.nd*(i+1)] = n[:]
-        if self.defaultFluidProfile == None:
+        if self.defaultFluidProfile is None:
             try:
                 self.defaultFluidProfile(t,cebqe['x'],self.ebqe_phi,self.ebqe_n)
             except TypeError:
@@ -2997,14 +3111,14 @@ class TwophaseStokes_LS_SO(TC_base):
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def initializeElementQuadrature(self,t,cq):
-        if self.levelSetModelIndex == None:
+        if self.levelSetModelIndex is None:
             self.q_phi = numpy.ones(cq[('u',0)].shape,'d')
 #         for eN in range(cq['x'].shape[0]):
 #             for q in range(cq['x'].shape[1]):
 #                 if cq['x'][eN,q,1] <= self.dummyWaterLevel:
 #                     self.q_phi[eN,q] = cq['x'][eN,q,1] -self.dummyWaterLevel
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.levelSetModelIndex == None:
+        if self.levelSetModelIndex is None:
             self.ebq_phi = numpy.ones(cebq[('u',0)].shape,'d')
 #         for eN in range(cebq['x'].shape[0]):
 #             for ebN in range(cebq['x'].shape[1]):
@@ -3012,7 +3126,7 @@ class TwophaseStokes_LS_SO(TC_base):
 #                     if cebq['x'][eN,ebN,q,1] <= self.dummyWaterLevel:
 #                         self.ebq_phi[eN,q] = cebq['x'][eN,ebN,q,1]-self.dummyWaterLevel
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.levelSetModelIndex == None:
+        if self.levelSetModelIndex is None:
             self.ebqe_phi = numpy.ones(cebqe[('u',0)].shape,'d')
     def evaluate(self,t,c):
         if c[('u',0)].shape == self.q_phi.shape:
@@ -3436,7 +3550,7 @@ class TwophaseStokes_VOF_SO(TC_base):
                 else:
                     self.ebqe_vof[ebNE,q] = 1.0
     def evaluate(self,t,c):
-        if self.q_vof == None:
+        if self.q_vof is None:
             vof = numpy.zeros(c[('u',0)].shape,'d')
         else:
             if c[('u',0)].shape == self.q_vof.shape:
@@ -3551,7 +3665,7 @@ class NCLevelSetCoefficients(TC_base):
         #mwf added
         self.eikonalSolverFlag = EikonalSolverFlag
         if self.eikonalSolverFlag >= 1: #FMM
-            assert self.RD_modelIndex==None, "no redistance with eikonal solver too"
+            assert self.RD_modelIndex is None, "no redistance with eikonal solver too"
         self.checkMass = checkMass
     def attachModels(self,modelList):
         #the level set model
@@ -3571,7 +3685,7 @@ class NCLevelSetCoefficients(TC_base):
             if self.flowModel.ebq.has_key(('v',1)):
                 self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
                 self.model.u[0].getGradientValuesTrace(self.flowModel.ebq[('grad(v)',1)],self.model.ebq[('grad(u)',0)])
-        if self.RD_modelIndex != None:
+        if self.RD_modelIndex is not None:
             #print self.RD_modelIndex,len(modelList)
             self.rdModel = modelList[self.RD_modelIndex]
         if self.eikonalSolverFlag == 2: #FSW
@@ -3597,7 +3711,7 @@ class NCLevelSetCoefficients(TC_base):
                                                                      self.model.q['dV'],
                                                                      self.model.q[('u',0)],
                                                                      self.model.mesh.nElements_owned)
-            log("Attach Models NCLS: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Attach Models NCLS: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
             self.totalFluxGlobal=0.0
             self.lsGlobalMassArray = [self.m_pre]
             self.lsGlobalMassErrorArray = [0.0]
@@ -3605,13 +3719,13 @@ class NCLevelSetCoefficients(TC_base):
             self.timeArray = [self.model.timeIntegration.t]
             self.ebqe_dS = self.model.ebqe['dS']
     def initializeElementQuadrature(self,t,cq):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.q_v = numpy.zeros(cq[('grad(u)',0)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebq_v = numpy.zeros(cebq[('grad(u)',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebqe_v = numpy.zeros(cebqe[('grad(u)',0)].shape,'d')
     def preStep(self,t,firstStep=False):
         if self.checkMass:
@@ -3620,14 +3734,14 @@ class NCLevelSetCoefficients(TC_base):
                                                                      self.model.q['dV'],
                                                                      self.model.q[('u',0)],
                                                                      self.model.mesh.nElements_owned)
-            log("Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
             self.m_last = self.m_pre
             # self.m_last = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
             #                                                           self.model.mesh.elementDiametersArray,
             #                                                           self.model.q['dV'],
             #                                                           self.model.timeIntegration.m_last[0],
             #                                                           self.model.mesh.nElements_owned)
-            # log("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
+            # logEvent("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
         #cek todo why is this here
         if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
             self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
@@ -3641,14 +3755,14 @@ class NCLevelSetCoefficients(TC_base):
                                                                       self.model.q['dV'],
                                                                       self.model.q[('u',0)],
                                                                       self.model.mesh.nElements_owned)
-            log("Phase  0 mass after NCLS step = %12.5e" % (self.m_post,),level=2)
+            logEvent("Phase  0 mass after NCLS step = %12.5e" % (self.m_post,),level=2)
             #need a flux here not a velocity
             self.fluxIntegral = Norms.fluxDomainBoundaryIntegralFromVector(self.ebqe_dS,
                                                                            self.ebqe_v,
                                                                            self.model.ebqe['n'],
                                                                            self.model.mesh)
-            log("Flux integral = %12.5e" % (self.fluxIntegral,),level=2)
-            log("Phase  0 mass conservation after NCLS step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+            logEvent("Flux integral = %12.5e" % (self.fluxIntegral,),level=2)
+            logEvent("Phase  0 mass conservation after NCLS step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
             self.lsGlobalMass = self.m_post
             self.fluxGlobal = self.fluxIntegral*self.model.timeIntegration.dt
             self.totalFluxGlobal += self.fluxGlobal
@@ -3670,11 +3784,11 @@ class NCLevelSetCoefficients(TC_base):
             v = self.q_v
         elif c[('dH',0,0)].shape == self.ebqe_v.shape:
             v = self.ebqe_v
-        elif self.ebq_v != None and c[('dH',0,0)].shape == self.ebq_v.shape:
+        elif self.ebq_v is not None and c[('dH',0,0)].shape == self.ebq_v.shape:
             v = self.ebq_v
         else:
             raise RuntimeError,"don't have v for NC Level set of shape = " +`c[('dH',0,0)].shape`
-        if v != None:
+        if v is not None:
             self.ncLevelSetCoefficientsEvaluate(v,
                                                 c[('u',0)],
                                                 c[('grad(u)',0)],
@@ -3741,13 +3855,13 @@ class CLevelSetCoefficients(TC_base):
                                                     useLocalPWLreconstruction = False)
 
     def initializeElementQuadrature(self,t,cq):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebq_v = numpy.ones(cebq[('f',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebqe_v = numpy.ones(cebqe[('f',0)].shape,'d')
     def preStep(self,t,firstStep=False):
 #         if self.RD_modelIndex >= 0:
@@ -3909,29 +4023,29 @@ class VOFCoefficients(TC_base):
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
                                                      self.model.mesh.nElements_owned)
-            log("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_pre,),level=2)
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
                                                      self.model.mesh.nElements_owned)
-            log("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
+            logEvent("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
             if self.model.ebqe.has_key(('advectiveFlux',0)):
                 self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
                                                                      self.model.ebqe[('advectiveFlux',0)],
                                                                      self.model.mesh)
-                log("Attach Models VOF: Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+                logEvent("Attach Models VOF: Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
 
     def initializeElementQuadrature(self,t,cq):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
         #VRANS
         self.q_porosity = numpy.ones(cq[('u',0)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebq_v = numpy.ones(cebq[('f',0)].shape,'d')
         #VRANS
         self.ebq_porosity = numpy.ones(cebq[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebqe_v = numpy.ones(cebqe[('f',0)].shape,'d')
         #VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
@@ -3940,11 +4054,11 @@ class VOFCoefficients(TC_base):
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                     self.model.q[('m',0)],
                                                     self.model.mesh.nElements_owned)
-            log("Phase  0 mass before VOF step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Phase  0 mass before VOF step = %12.5e" % (self.m_pre,),level=2)
             self.m_last = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.timeIntegration.m_last[0],
                                                      self.model.mesh.nElements_owned)
-            log("Phase  0 mass before VOF (m_last) step = %12.5e" % (self.m_last,),level=2)
+            logEvent("Phase  0 mass before VOF (m_last) step = %12.5e" % (self.m_last,),level=2)
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
@@ -3952,17 +4066,17 @@ class VOFCoefficients(TC_base):
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
                                                      self.model.mesh.nElements_owned)
-            log("Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
+            logEvent("Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
             self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
                                                                  self.model.ebqe[('advectiveFlux',0)],
                                                                  self.model.mesh)
-            log("Phase  0 mass flux boundary integral after VOF step = %12.5e" % (self.fluxIntegral,),level=2)
-            log("Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+            logEvent("Phase  0 mass flux boundary integral after VOF step = %12.5e" % (self.fluxIntegral,),level=2)
+            logEvent("Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
             divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.model.ebqe['dS'],
                                                                     self.ebqe_v,
                                                                     self.model.ebqe['n'],
                                                                     self.model.mesh)
-            log("Divergence = %12.5e" % (divergence,),level=2)
+            logEvent("Divergence = %12.5e" % (divergence,),level=2)
         copyInstructions = {}
         return copyInstructions
     def updateToMovingDomain(self,t,c):
@@ -3977,13 +4091,13 @@ class VOFCoefficients(TC_base):
         elif c[('f',0)].shape == self.ebqe_v.shape:
             v = self.ebqe_v
             phi = self.ebqe_phi
-        elif ((self.ebq_v != None and self.ebq_phi != None) and c[('f',0)].shape == self.ebq_v.shape):
+        elif ((self.ebq_v is not None and self.ebq_phi is not None) and c[('f',0)].shape == self.ebq_v.shape):
             v = self.ebq_v
             phi = self.ebq_phi
         else:
             v=None
             phi=None
-        if v != None:
+        if v is not None:
             self.VOFCoefficientsEvaluate(self.eps,
                                          v,
                                          phi,
@@ -3993,7 +4107,7 @@ class VOFCoefficients(TC_base):
                                          c[('f',0)],
                                          c[('df',0,0)])
         if self.checkMass:
-            log("Phase  0 mass in eavl = %12.5e" % (Norms.scalarDomainIntegral(self.model.q['dV'],
+            logEvent("Phase  0 mass in eavl = %12.5e" % (Norms.scalarDomainIntegral(self.model.q['dV'],
                                                                                self.model.q[('m',0)],
                                                                                self.model.mesh.nElements_owned),),level=2)
 
@@ -4032,7 +4146,7 @@ class LevelSetNormalCoefficients(TC_base):
     def initializeElementQuadrature(self,t,cq):
         #initialize so it can run without a flow model
         self.q_r = numpy.ones(cq[('u',0)].shape,'d')
-        if self.phi_func != None:
+        if self.phi_func is not None:
             self.phi_func(cq['x'],self.q_r)
         for eN in range(cq[('a',0,0)].shape[0]):
             for k in range(cq[('a',0,0)].shape[1]):
@@ -4041,7 +4155,7 @@ class LevelSetNormalCoefficients(TC_base):
         cq[('dr',0,0)].flat[:]=1.0
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         self.ebq_r = numpy.ones(cebq[('u',0)].shape,'d')
-        if self.phi_func != None:
+        if self.phi_func is not None:
             self.phi_func(cebq['x'],self.ebq_r)
         for eN in range(cebq[('a',0,0)].shape[0]):
             for ebN in range(cebq[('a',0,0)].shape[1]):
@@ -4051,7 +4165,7 @@ class LevelSetNormalCoefficients(TC_base):
         cebq[('dr',0,0)].flat[:]=1.0
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         self.ebqe_r = numpy.ones(cebqe[('u',0)].shape,'d')
-        if self.phi_func != None:
+        if self.phi_func is not None:
             self.phi_func(cebqe['x'],self.ebqe_r)
         for ebNE in range(cebqe[('a',0,0)].shape[0]):
             for k in range(cebqe[('a',0,0)].shape[1]):
@@ -4084,7 +4198,7 @@ class LevelSetCurvatureCoefficients(TC_base):
         potential={0:{0:'u'}}
         reaction={0:{0:'linear'}}
         if self.sd:
-            assert nd!=None,"You must set the number of dimensions to use sparse diffusion in LevelSetCurvatureCoefficients"
+            assert nd is not None,"You must set the number of dimensions to use sparse diffusion in LevelSetCurvatureCoefficients"
             sdInfo = {(0,0):(numpy.arange(start=0,stop=nd+1,step=1,dtype='i'),
                              numpy.arange(start=0,stop=nd,step=1,dtype='i'))}
         else:
@@ -4105,7 +4219,7 @@ class LevelSetCurvatureCoefficients(TC_base):
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def attachModels(self,modelList):
-        log("Attaching \grad \phi in curvature model")
+        logEvent("Attaching \grad \phi in curvature model")
         self.q_grad_phi    = modelList[self.levelSetModelIndex].q[('grad(u)',0)]
         self.ebqe_grad_phi = modelList[self.levelSetModelIndex].ebqe[('grad(u)',0)]
         if modelList[self.levelSetModelIndex].ebq.has_key(('grad(u)',0)):
@@ -4113,9 +4227,9 @@ class LevelSetCurvatureCoefficients(TC_base):
         else:
             self.ebq_grad_phi  = None
     def initializeElementQuadrature(self,t,cq):
-        if self.levelSetModelIndex == None:
+        if self.levelSetModelIndex is None:
             self.q_grad_phi = numpy.ones(cq[('f',0)].shape,'d')
-            if self.grad_phi_func != None:
+            if self.grad_phi_func is not None:
                 self.grad_phi_func(cq['x'],self.q_grad_phi)
             if self.sd:
                 cq[('a',0,0)].fill(self.eps)
@@ -4126,9 +4240,9 @@ class LevelSetCurvatureCoefficients(TC_base):
                             cq[('a',0,0)][eN,k,I,I]=self.eps
             cq[('df',0,0)].fill(0.0)
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.levelSetModelIndex == None:
+        if self.levelSetModelIndex is None:
             self.ebq_grad_phi = numpy.ones(cebq[('f',0)].shape,'d')
-            if self.grad_phi_func != None:
+            if self.grad_phi_func is not None:
                 self.grad_phi_func(cebq['x'],self.ebq_grad_phi)
             if self.sd:
                 cebq[('a',0,0)].fill(self.eps)
@@ -4140,9 +4254,9 @@ class LevelSetCurvatureCoefficients(TC_base):
                                 cebq[('a',0,0)][eN,ebN,k,I,I]=self.eps
             cebq[('df',0,0)].fill(0.0)
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.levelSetModelIndex == None:
+        if self.levelSetModelIndex is None:
             self.ebqe_grad_phi = numpy.ones(cebqe[('f',0)].shape,'d')
-            if self.grad_phi_func != None:
+            if self.grad_phi_func is not None:
                 self.grad_phi_func(cebqe['x'],self.ebqe_grad_phi)
             if self.sd:
                 cebqe[('a',0,0)].fill(self.eps)
@@ -4181,7 +4295,7 @@ class LevelSetConservation(TC_base):
         reaction={0:{0:'nonlinear'}}
         #reaction={}
         if self.sd:
-            assert nd!=None,"You must set the number of dimensions to use sparse diffusion in LevelSetConservationCoefficients"
+            assert nd is not None,"You must set the number of dimensions to use sparse diffusion in LevelSetConservationCoefficients"
             sdInfo = {(0,0):(numpy.arange(start=0,stop=nd+1,step=1,dtype='i'),
                              numpy.arange(start=0,stop=nd,step=1,dtype='i'))}
         else:
@@ -4217,7 +4331,7 @@ class LevelSetConservation(TC_base):
         self.epsDiffusion = self.epsFactDiffusion*mesh.h
     def attachModels(self,modelList):
         import copy
-        log("Attaching models in LevelSetConservation")
+        logEvent("Attaching models in LevelSetConservation")
         #level set
         self.lsModel = modelList[self.levelSetModelIndex]
         self.q_u_ls    = modelList[self.levelSetModelIndex].q[('u',0)]
@@ -4245,7 +4359,7 @@ class LevelSetConservation(TC_base):
                 self.lsGlobalMass = Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
                                                                         self.lsModel.q[('u',0)],
                                                                         self.massCorrModel.mesh.nElements_owned)
-                log("Attach Models MCorr: mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+                logEvent("Attach Models MCorr: mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                 self.massCorrModel.q[('r',0)],
                                                                                                 self.massCorrModel.mesh.nElements_owned),),level=2)
                 self.fluxGlobal = 0.0
@@ -4256,10 +4370,10 @@ class LevelSetConservation(TC_base):
                 self.lsGlobalMassErrorArray = [self.lsGlobalMass - self.lsGlobalMassArray[0] + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral]
                 self.fluxArray = [self.vofModel.coefficients.fluxIntegral]
                 self.timeArray = [self.vofModel.timeIntegration.t]
-                log("Attach Models MCorr: Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
-                log("Attach Models MCorr: Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
-                log("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
-                log("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
+                logEvent("Attach Models MCorr: Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
+                logEvent("Attach Models MCorr: Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
+                logEvent("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
+                logEvent("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
     def initializeElementQuadrature(self,t,cq):
         if self.sd and cq.has_key(('a',0,0)):
             cq[('a',0,0)].fill(self.epsDiffusion)
@@ -4271,10 +4385,10 @@ class LevelSetConservation(TC_base):
             cebqe[('a',0,0)].fill(self.epsDiffusion)
     def preStep(self,t,firstStep=False):
         if self.checkMass:
-            log("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                  self.vofModel.q[('m',0)],
                                                                                                  self.massCorrModel.mesh.nElements_owned),),level=2)
-            log("Phase 0 mass before mass correction (LS) %12.5e" % (Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass before mass correction (LS) %12.5e" % (Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
                                                                                                          self.lsModel.q[('m',0)],
                                                                                                          self.massCorrModel.mesh.nElements_owned),),level=2)
         copyInstructions = {'clear_uList':True}
@@ -4303,7 +4417,7 @@ class LevelSetConservation(TC_base):
                 self.lsGlobalMass = Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
                                                                         self.lsModel.q[('u',0)],
                                                                         self.massCorrModel.mesh.nElements_owned)
-                log("mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+                logEvent("mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                            self.massCorrModel.q[('r',0)],
                                                                            self.massCorrModel.mesh.nElements_owned),),level=2)
                 self.fluxGlobal = self.vofModel.coefficients.fluxIntegral*self.vofModel.timeIntegration.dt
@@ -4314,10 +4428,10 @@ class LevelSetConservation(TC_base):
                 self.lsGlobalMassErrorArray.append(self.lsGlobalMass - self.lsGlobalMassArray[0] + self.totalFluxGlobal)
                 self.fluxArray.append(self.vofModel.coefficients.fluxIntegral)
                 self.timeArray.append(self.vofModel.timeIntegration.t)
-                log("Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
-                log("Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
-                log("Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_last + self.fluxGlobal,),level=2)
-                log("Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_last + self.fluxGlobal,),level=2)
+                logEvent("Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
+                logEvent("Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
+                logEvent("Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_last + self.fluxGlobal,),level=2)
+                logEvent("Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_last + self.fluxGlobal,),level=2)
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):
@@ -4328,14 +4442,14 @@ class LevelSetConservation(TC_base):
         elif c[('u',0)].shape == self.ebqe_u_ls.shape:
             u_ls = self.ebqe_u_ls
             H_vof = self.ebqe_H_vof
-        elif self.ebq_u_ls != None and c[('u',0)].shape == self.ebq_u_ls.shape:
+        elif self.ebq_u_ls is not None and c[('u',0)].shape == self.ebq_u_ls.shape:
             u_ls = self.ebq_u_ls
             H_vof = self.ebq_H_vof
         else:
             #\todo trap errors in TransportCoefficients.py
             u_ls = None
             H_vof = None
-        if u_ls != None and H_vof != None:
+        if u_ls is not None and H_vof is not None:
             if self.useC:
                 if self.sd:
                     self.levelSetConservationCoefficientsEvaluate_sd(self.epsHeaviside,
@@ -4358,10 +4472,10 @@ class LevelSetConservation(TC_base):
         if (self.checkMass and c[('u',0)].shape == self.q_u_ls.shape):
             self.m_tmp[:] = H_vof
             self.m_tmp += self.massCorrModel.q[('r',0)]
-            log("mass correction during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("mass correction during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                      self.massCorrModel.q[('r',0)],
                                                                                      self.massCorrModel.mesh.nElements_owned),),level=2)
-            log("Phase 0 mass during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                  self.m_tmp,
                                                                                   self.massCorrModel.mesh.nElements_owned),),level=2)
 
@@ -5239,7 +5353,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
             ebN = mesh.exteriorElementBoundariesArray[ebNE]
             eN  = mesh.elementBoundaryElementsArray[ebN,0]
             self.exteriorElementBoundaryTypes[ebNE] = self.elementMaterialTypes[eN]
-        if self.getSeepageFace != None:
+        if self.getSeepageFace is not None:
             for ebNE in range(mesh.nExteriorElementBoundaries_global):
                 ebN = mesh.exteriorElementBoundariesArray[ebNE]
                 eN  = mesh.elementBoundaryElementsArray[ebN,0]
@@ -5370,7 +5484,7 @@ class SeepageBrezis(TC_base):
             ebN = mesh.exteriorElementBoundariesArray[ebNE]
             eN  = mesh.elementBoundaryElementsArray[ebN,0]
             self.exteriorElementBoundaryTypes[ebNE] = self.elementMaterialTypes[eN]
-        if self.getSeepageFace != None:
+        if self.getSeepageFace is not None:
             for ebNE in range(mesh.nExteriorElementBoundaries_global):
                 ebN = mesh.exteriorElementBoundariesArray[ebNE]
                 eN  = mesh.elementBoundaryElementsArray[ebN,0]
@@ -5834,7 +5948,7 @@ class RedistanceLevelSet(TC_base):
         self.weakBC_on=True#False
         self.penaltyParameter=penaltyParameter
     def attachModels(self,modelList):
-        if self.nModelId != None:
+        if self.nModelId is not None:
             self.nModel = modelList[self.nModelId]
             self.q_u0 =   self.nModel.q[('u',0)]
             if self.nModel.ebq.has_key(('u',0)):
@@ -5848,31 +5962,31 @@ class RedistanceLevelSet(TC_base):
         self.h=mesh.h
         self.eps = self.epsFact*mesh.h
     def initializeElementQuadrature(self,t,cq):
-        if self.nModelId == None:
-            if self.q_u0 == None:
+        if self.nModelId is None:
+            if self.q_u0 is None:
                 self.q_u0 = numpy.zeros(cq[('u',0)].shape,'d')
-            if self.u0 != None:
+            if self.u0 is not None:
                 for i in range(len(cq[('u',0)].flat)):
                     self.q_u0.flat[i]=self.u0.uOfXT(cq['x'].flat[3*i:3*(i+1)],0.)
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.nModelId == None:
-            if self.ebq_u0 == None:
+        if self.nModelId is None:
+            if self.ebq_u0 is None:
                 self.ebq_u0 = numpy.zeros(cebq[('u',0)].shape,'d')
-            if self.u0 != None:
+            if self.u0 is not None:
                 for i in range(len(cebq[('u',0)].flat)):
                     self.ebq_u0.flat[i]=self.u0.uOfXT(cebq['x'].flat[3*i:3*(i+1)],0.)
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.nModelId == None:
-            if self.ebqe_u0 == None:
+        if self.nModelId is None:
+            if self.ebqe_u0 is None:
                 self.ebqe_u0 = numpy.zeros(cebqe[('u',0)].shape,'d')
-            if self.u0 != None:
+            if self.u0 is not None:
                 for i in range(len(cebqe[('u',0)].flat)):
                     self.ebqe_u0.flat[i]=self.u0.uOfXT(cebqe['x'].flat[3*i:3*(i+1)],0.)
     def preStep(self,t,firstStep=False):
         import pdb
         #pdb.set_trace()
-        if self.nModel != None:
-            log("resetting signed distance level set to current level set",level=2)
+        if self.nModel is not None:
+            logEvent("resetting signed distance level set to current level set",level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
             self.rdModel.calculateCoefficients()
             self.rdModel.calculateElementResidual()
@@ -5893,9 +6007,9 @@ class RedistanceLevelSet(TC_base):
         else:
             return {}
     def postStep(self,t,firstStep=False):
-        if self.nModel != None:
+        if self.nModel is not None:
             if self.applyRedistancing == True:
-                log("resetting level set to signed distance")
+                logEvent("resetting level set to signed distance")
                 self.nModel.u[0].dof.flat[:]  = self.rdModel.u[0].dof.flat[:]
                 self.nModel.calculateCoefficients()
                 self.nModel.calculateElementResidual()
@@ -5917,7 +6031,7 @@ class RedistanceLevelSet(TC_base):
             u0 = self.ebqe_u0
         else:
             u0 = self.ebq_u0
-        assert u0 != None
+        assert u0 is not None
         ##\todo make redistancing epsilon depend on local element diamater instead of global max
         self.redistanceLevelSetCoefficientsEvaluate(self.eps,
                                                     u0,
@@ -6095,7 +6209,7 @@ class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
             u0 = self.ebqe_u0
         else:
             u0 = self.ebq_u0
-        assert u0 != None
+        assert u0 is not None
         ##\todo make redistancing epsilon depend on local element diamater instead of global max
         self.redistanceLevelSetCoefficientsWithWeakPenaltyEvaluate(self.eps,
                                                                    self.penaltyParameter,
@@ -6280,7 +6394,8 @@ class PoissonEquationCoefficients(TC_base):
                          diffusion,
                          potential,
                          reaction,
-                         hamiltonian)
+                         hamiltonian,
+                         sparseDiffusionTensors={})
     def initializeElementQuadrature(self,t,cq):
         nd = self.nd
         for ci in range(self.nc):
@@ -6289,7 +6404,7 @@ class PoissonEquationCoefficients(TC_base):
                 cq[('r',ci)].flat[i] = -self.fOfX[ci](cq['x'].flat[3*i:3*(i+1)])
                 cq[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](cq['x'].flat[3*i:3*(i+1)]).flat
 
-            if self.l2proj != None and self.l2proj[ci] == True:
+            if self.l2proj is not None and self.l2proj[ci] == True:
                 if cq.has_key(('dV_u',ci)):
                     assert cq[('r',ci)].shape == cq[('dV_u',ci)].shape, "wrong scalar shape"
                     self.L2projectEvaluate(0,cq[('dV_u',ci)],cq[('r',ci)])
@@ -6305,7 +6420,7 @@ class PoissonEquationCoefficients(TC_base):
                     for i in range(len(c[('u',ci)].flat)):
                         c[('r',ci)].flat[i] = -self.fOfX[ci](c['x'].flat[3*i:3*(i+1)])
                         c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](c['x'].flat[3*i:3*(i+1)]).flat
-                    if self.l2proj != None and self.l2proj[ci] == True:
+                    if self.l2proj is not None and self.l2proj[ci] == True:
                         assert c[('r',ci)].shape == c[('dS_u',ci)].shape, "wrong scalar shape"
                         self.L2projectEvaluate(0,c[('dS_u',ci)],c[('r',ci)])
                         self.L2projectEvaluate(1,c[('dS_u',ci)],c[('f',ci)])
@@ -6319,7 +6434,7 @@ class PoissonEquationCoefficients(TC_base):
                     for i in range(len(c[('u',ci)].flat)):
                         c[('r',ci)].flat[i] = -self.fOfX[ci](c['x'].flat[3*i:3*(i+1)])
                         c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](c['x'].flat[3*i:3*(i+1)]).flat
-                    if self.l2proj != None and self.l2proj[ci] == True:
+                    if self.l2proj is not None and self.l2proj[ci] == True:
                         assert c[('r',ci)].shape == c[('dS_u',ci)].shape, "wrong scalar shape"
                         self.L2projectEvaluate(0,c[('dS_u',ci)],c[('r',ci)])
                         self.L2projectEvaluate(1,c[('dS_u',ci)],c[('f',ci)])
@@ -6334,7 +6449,7 @@ class PoissonEquationCoefficients(TC_base):
                     c[('r',ci)].flat[i] = -self.fOfX[ci](c['x'].flat[3*i:3*(i+1)])
                     c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](c['x'].flat[3*i:3*(i+1)]).flat
                 #end i
-                if self.l2proj != None and self.l2proj[ci] == True:
+                if self.l2proj is not None and self.l2proj[ci] == True:
                     if c.has_key(('dV_u',ci)):
                         assert c[('r',ci)].shape == c[('dV_u',ci)].shape, "wrong scalar shape"
                         self.L2projectEvaluate(0,c[('dV_u',ci)],c[('r',ci)])
@@ -6589,64 +6704,72 @@ class MovingMesh(TC_base):
 
 
 class kEpsilon(TC_base):
-    """
-Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
+    r"""Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
 
-\bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
-\vec v^{'}   = turbulent fluctuation
-assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
+    :math:`\bar{\vec v} = <\vec v>` Reynolds-averaged (mean) velocity
+    :math:`\vec v^{'}   =` turbulent fluctuation
 
-Reynolds averaged NS equations
+    assume :math:`\vec v = <\vec v> + \vec v^{'}`, with :math:`<\vec v^{'}> = 0`
 
-\deld \bar{\vec v} = 0
+    Reynolds averaged NS equations
 
-\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+    .. math::
+
+       \deld \bar{\vec v} = 0
+    
+    .. math::
+
+       \pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
                -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
                - \frac{1}{rho}\deld \ten{R} = 0
 
-Reynolds stress term
+    Reynolds stress term
 
-\ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
-\frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+    .. math::
 
-D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
-\ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
+       \ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
+       \frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+       D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
+       \ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
 
+    k-epsilon tranport equations
 
+    .. math::
 
-k-epsilon tranport equations
+       \pd{k}{t} + \deld (k\bar{\vec v})
+       - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
+       - 4\nu_t \Pi_{D} + \epsilon = 0
 
-\pd{k}{t} + \deld (k\bar{\vec v})
-          - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
-          - 4\nu_t \Pi_{D} + \epsilon = 0
+    .. math::
 
-\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
-          - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
-          - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
-
-
-k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
-\varepsilon    -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
-
-\nu            -- kinematic viscosity (\mu/\rho)
-\nu_t          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
-
-
-\Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
-\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
-                                        1/2 (u_y + v_x)^2 \right]
-
-4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
-                                1/2 (u_y + v_x)^2 \right]
-          = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
-
-\sigma_k -- Prandtl number \approx 1
-\sigma_e -- c_{\mu}/c_e
-
-c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
-
-
+       \pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
+       - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
+       - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
+    
     """
+
+# k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
+# \varepsilon    -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
+
+# \nu            -- kinematic viscosity (\mu/\rho)
+# \nu_t          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
+
+
+# \Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
+# \ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+#                                         1/2 (u_y + v_x)^2 \right]
+
+# 4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+#                                 1/2 (u_y + v_x)^2 \right]
+#           = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
+
+# \sigma_k -- Prandtl number \approx 1
+# \sigma_e -- c_{\mu}/c_e
+
+# c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
+
+
+#     """
     from proteus.ctransportCoefficients import kEpsilon_2D_Evaluate
     from proteus.ctransportCoefficients import kEpsilon_2D_Evaluate_sd
     from proteus.ctransportCoefficients import kEpsilon_3D_Evaluate_sd
@@ -6730,7 +6853,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                         'gradw':('grad(u)',3)}
 
     def attachModels(self,modelList):
-        if self.flowModelID != None:
+        if self.flowModelID is not None:
             terms = ['velocity','gradu','gradv']
             if self.nd == 3: terms.append('gradw')
             for quad in ['q','ebq','ebqe','ebq_global']:
@@ -6925,63 +7048,68 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                 c[('dr',1,1)].flat[:] = 0.0
 
 class kEpsilon_k(TC_base):
-    """
-Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
- but solves for just k assuming epsilon computed independently and lagged in time
+    r"""Basic k-epsilon model for incompressible flow from Hutter etal
+    Chaper 11 but solves for just k assuming epsilon computed
+    independently and lagged in time
 
-\bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
-\vec v^{'}   = turbulent fluctuation
-assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
+    
+    :math:`\bar{\vec v} = <\vec v>` Reynolds-averaged (mean) velocity
 
-Reynolds averaged NS equations
+    :math:`\vec v^{'}   =` turbulent fluctuation
 
-\deld \bar{\vec v} = 0
+    assume :math:`\vec v = <\vec v> + \vec v^{'}`, with :math:`<\vec v^{'}> = 0`
 
-\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+    Reynolds averaged NS equations
+
+    .. math::
+    
+       \deld \bar{\vec v} = 0
+       \pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
                -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
                - \frac{1}{rho}\deld \ten{R} = 0
 
-Reynolds stress term
+    Reynolds stress term
 
-\ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
-\frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+    .. math::
 
-D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
-\ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
+       \ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
+       \frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+       D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
+       \ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
 
+    k-epsilon tranport equations
 
+    .. math::
 
-k-epsilon tranport equations
-
-\pd{k}{t} + \deld (k\bar{\vec v})
+        \pd{k}{t} + \deld (k\bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
           - 4\nu_t \Pi_{D} + \epsilon = 0
-
-\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
+        \pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
           - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
 
 
-k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
-\varepsilon    -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
 
-\nu            -- kinematic viscosity (\mu/\rho)
-\nu_t          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
+    :math:`k`              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
+    :math:`\varepsilon`   -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
+    :math:`\nu`            -- kinematic viscosity (\mu/\rho)
+    :math:`\nu_t`          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
 
+    .. math::
 
-\Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
-\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+       \Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
+       \ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                         1/2 (u_y + v_x)^2 \right]
-
-4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+       4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                 1/2 (u_y + v_x)^2 \right]
           = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
+   
+    :math:`\sigma_k` -- Prandtl number \approx 1
+    :math:`\sigma_e` -- c_{\mu}/c_e
 
-\sigma_k -- Prandtl number \approx 1
-\sigma_e -- c_{\mu}/c_e
+    .. math::
 
-c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
-
+       c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
 
     """
     from proteus.ctransportCoefficients import kEpsilon_k_2D_Evaluate_sd
@@ -7048,7 +7176,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                         'epsilon':('u',0)}
 
     def attachModels(self,modelList):
-        if self.flowModelID != None:
+        if self.flowModelID is not None:
             terms = ['velocity','gradu','gradv']
             if self.nd == 3: terms.append('gradw')
             for quad in ['q','ebq','ebqe','ebq_global']:
@@ -7064,7 +7192,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
             #import pdb
             #pdb.set_trace()
             self.flowModel=modelList[self.flowModelID]#debug
-        if self.epsilonModelID != None:
+        if self.epsilonModelID is not None:
             terms = ['epsilon']
             for quad in ['q','ebq','ebqe','ebq_global']:
                 for term in terms:
@@ -7203,63 +7331,65 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
             c[('dr',0,0)].flat[:] = 0.0
 
 class kEpsilon_epsilon(TC_base):
-    """
-Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
-  but solves for just epsilon assuming k lagged
+    r"""Basic k-epsilon model for incompressible flow from Hutter etal
+    Chaper 11 but solves for just epsilon assuming k lagged
 
-\bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
-\vec v^{'}   = turbulent fluctuation
-assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
+    :math:`\bar{\vec v} = <\vec v>` Reynolds-averaged (mean) velocity
 
-Reynolds averaged NS equations
+    :math:`\vec v^{'}`   = turbulent fluctuation
 
-\deld \bar{\vec v} = 0
+    assume :math:`\vec v = <\vec v> + \vec v^{'}`, with :math:`<\vec v^{'}> = 0`
 
-\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+    Reynolds averaged NS equations
+
+    .. math::
+
+       \deld \bar{\vec v} = 0
+       \pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
                -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
                - \frac{1}{rho}\deld \ten{R} = 0
+    
+    Reynolds stress term
 
-Reynolds stress term
+    .. math::
 
-\ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
-\frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+       \ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
+       \frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+       D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
+       \ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
 
-D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
-\ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
+    k-epsilon tranport equations
 
-
-
-k-epsilon tranport equations
-
-\pd{k}{t} + \deld (k\bar{\vec v})
+    .. math::
+       \pd{k}{t} + \deld (k\bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
           - 4\nu_t \Pi_{D} + \epsilon = 0
 
-\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
+    .. math::
+
+       \pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
           - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
 
 
-k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
-\varepsilon    -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
+    :math:`k`              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
+    :math:`\varepsilon`    -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
+    :math:`\nu`            -- kinematic viscosity (\mu/\rho)
+    :math:`\nu_t`          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
 
-\nu            -- kinematic viscosity (\mu/\rho)
-\nu_t          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
-
-
-\Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
-\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+    .. math::
+       \Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
+       \ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                         1/2 (u_y + v_x)^2 \right]
 
-4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+        4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                 1/2 (u_y + v_x)^2 \right]
           = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
 
-\sigma_k -- Prandtl number \approx 1
-\sigma_e -- c_{\mu}/c_e
+    :math:`\sigma_k` -- Prandtl number \approx 1
+    :math:`\sigma_e` -- :math:`c_{\mu}/c_e`
 
-c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
-
+    :math:c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07`
 
     """
     from proteus.ctransportCoefficients import kEpsilon_epsilon_2D_Evaluate_sd
@@ -7332,7 +7462,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                         'k':('u',0)}
 
     def attachModels(self,modelList):
-        if self.flowModelID != None:
+        if self.flowModelID is not None:
             terms = ['velocity','gradu','gradv']
             if self.nd == 3: terms.append('gradw')
             for quad in ['q','ebq','ebqe','ebq_global']:
@@ -7348,7 +7478,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
             #import pdb
             #pdb.set_trace()
             self.flowModel=modelList[self.flowModelID]#debug
-        if self.kModelID != None:
+        if self.kModelID is not None:
             terms = ['k']
             for quad in ['q','ebq','ebqe','ebq_global']:
                 for term in terms:
@@ -7519,7 +7649,7 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
                  c_mu=0.09,
                  KEmodelID=None):
         self.KEmodelID=KEmodelID
-        if self.KEmodelID != None and len(self.KEmodelID)==2:
+        if self.KEmodelID is not None and len(self.KEmodelID)==2:
             self.KEmodelSplit=True
         else:
             self.KEmodelSplit=False
@@ -7556,7 +7686,7 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
                 setattr(self,term,None)
 
     def attachModels(self,modelList):
-        if self.KEmodelID != None:
+        if self.KEmodelID is not None:
             for quad in ['q','ebq','ebqe','ebq_global']:
                 for term in self.kEpsilonTerms:
                     if not self.KEmodelSplit:
@@ -7630,7 +7760,7 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
                 setattr(self,name,numpy.zeros(tuple(dims),'d'))
     def evaluate(self,t,c):
         TwophaseNavierStokes_ST_LS_SO.evaluate(self,t,c)
-        if self.KEmodelID == None:
+        if self.KEmodelID is None:
             return
         k = None; epsilon = None; grad_k = None
         if c['x'].shape[:-1] == self.q_grad_k.shape[:-1]:
@@ -7800,20 +7930,20 @@ class TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes
     #initialize so it can run as single phase
     def initializeElementQuadrature(self,t,cq):
         TwophaseNavierStokes_ST_LS_SO.initializeElementQuadrature(self,t,cq)
-        if self.turbulenceClosureFlag != None:
+        if self.turbulenceClosureFlag is not None:
             self.q_nu_t = numpy.zeros(cq[('u',1)].shape,'d')
             self.q      = cq
 
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         TwophaseNavierStokes_ST_LS_SO.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
-        #if self.turbulenceClosureFlag != None:
+        #if self.turbulenceClosureFlag is not None:
         #    self.ebq_nu_t = numpy.zeros(cebq[('u',0)].shape,'d')
         #    self.ebq_global_nu_t = numpy.zeros(cebq_global[('u',0)].shape,'d')
         #    self.ebq = cebq
         #    self.ebq_global = cebq_global
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         TwophaseNavierStokes_ST_LS_SO.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
-        #if self.turbulenceClosureFlag != None:
+        #if self.turbulenceClosureFlag is not None:
         #    self.ebqe_nu_t = numpy.zeros(cebqe[('u',0)].shape,'d')
         #    self.ebqe = cebqe
     def preStep(self,t,firstStep=False):
@@ -7874,7 +8004,7 @@ class TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes
     def evaluate(self,t,c):
         TwophaseNavierStokes_ST_LS_SO.evaluate(self,t,c)
         #update viscosity with eddy viscosity
-        if self.turbulenceClosureFlag != None:
+        if self.turbulenceClosureFlag is not None:
             nu_t = None
             if c['x'].shape[:-1] == self.q_nu_t.shape[:]:
                 nu_t = self.q_nu_t;
@@ -8208,13 +8338,13 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
         self.q_porosity = numpy.ones(cq[('u',0)].shape,'d')
         self.q_meanGrain= numpy.ones(cq[('u',0)].shape,'d')
         self.q_meanGrain.flat[:] = self.meanGrainSize
-        if self.setParamsFunc != None:
+        if self.setParamsFunc is not None:
             self.setParamsFunc(cq['x'],self.q_porosity,self.q_meanGrain)
         else:
-            if self.porosityTypes != None:
+            if self.porosityTypes is not None:
                 for eN in range(self.q_porosity.shape[0]):
                     self.q_porosity[eN,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-            if self.meanGrainSizeTypes != None:
+            if self.meanGrainSizeTypes is not None:
                 for eN in range(self.q_meanGrain.shape[0]):
                     self.q_meanGrain[eN,:] = self.meanGrainSizeTypes[self.elementMaterialTypes[eN]]
         #
@@ -8227,12 +8357,12 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
         self.ebq_global_porosity = numpy.ones(cebq_global[('u',0)].shape,'d')
         self.ebq_global_meanGrain = numpy.ones(cebq_global[('u',0)].shape,'d')
         self.ebq_global_meanGrain.flat[:] = self.meanGrainSize
-        if self.setParamsFunc != None:
+        if self.setParamsFunc is not None:
             self.setParamsFunc(cebq['x'],self.ebq_porosity,self.ebq_meanGrain)
             self.setParamsFunc(cebq_global['x'],self.ebq_global_porosity,self.ebq_global_meanGrain)
         else:
             #\todo which mean to use or leave discontinuous, add ebq_global
-            if self.porosityTypes != None:
+            if self.porosityTypes is not None:
                 for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
                     ebN = self.mesh.interiorElementBoundariesArray[ebNI]
                     eN_left  = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -8248,7 +8378,7 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
                     eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
                     ebN_element = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
                     self.ebq_porosity[eN,ebN_element,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-            if self.meanGrainSizeTypes != None:
+            if self.meanGrainSizeTypes is not None:
                 for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
                     ebN = self.mesh.interiorElementBoundariesArray[ebNI]
                     eN_left  = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -8268,15 +8398,15 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
         self.ebqe_meanGrain= numpy.ones(cebqe[('u',0)].shape,'d')
-        if self.setParamsFunc != None:
+        if self.setParamsFunc is not None:
             self.setParamsFunc(cebqe['x'],self.ebqe_porosity,self.ebqe_meanGrain)
         else:
-            if self.porosityTypes != None:
+            if self.porosityTypes is not None:
                 for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                     ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                     eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
                     self.ebqe_porosity[ebNE,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-            if self.meanGrainSizeTypes != None:
+            if self.meanGrainSizeTypes is not None:
                 for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                     ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                     eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -8286,13 +8416,13 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
         self.ip_porosity = numpy.ones(cip[('u',0)].shape,'d')
         self.ip_meanGrain= numpy.ones(cip[('u',0)].shape,'d')
         self.ip_meanGrain.flat[:] = self.meanGrainSize
-        if self.setParamsFunc != None:
+        if self.setParamsFunc is not None:
             self.setParamsFunc(cip['x'],self.ip_porosity,self.ip_meanGrain)
         else:
-            if self.porosityTypes != None:
+            if self.porosityTypes is not None:
                 for eN in range(self.ip_porosity.shape[0]):
                     self.ip_porosity[eN,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-            if self.meanGrainSizeTypes != None:
+            if self.meanGrainSizeTypes is not None:
                 for eN in range(self.ip_meanGrain.shape[0]):
                     self.ip_meanGrain[eN,:] = self.meanGrainSizeTypes[self.elementMaterialTypes[eN]]
         #
@@ -8562,14 +8692,14 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
         self.q_porosity = numpy.ones(cq[('u',1)].shape,'d')
         self.q_meanGrain= numpy.ones(cq[('u',1)].shape,'d')
         self.q_meanGrain.fill(self.meanGrainSize)
-        if self.setParamsFunc != None:
+        if self.setParamsFunc is not None:
             self.setParamsFunc(cq['x'],self.q_porosity,self.q_meanGrain)
         else:
             #TODO make loops faster
-            if self.porosityTypes != None:
+            if self.porosityTypes is not None:
                 for eN in range(self.q_porosity.shape[0]):
                     self.q_porosity[eN,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-            if self.meanGrainSizeTypes != None:
+            if self.meanGrainSizeTypes is not None:
                 for eN in range(self.q_meanGrain.shape[0]):
                     self.q_meanGrain[eN,:] = self.meanGrainSizeTypes[self.elementMaterialTypes[eN]]
         #
@@ -8578,11 +8708,11 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
         self.ebq_porosity = numpy.ones(cebq[('u',1)].shape,'d')
         self.ebq_meanGrain = numpy.ones(cebq[('u',1)].shape,'d')
         self.ebq_meanGrain.fill(self.meanGrainSize)
-        if self.setParamsFunc != None:
+        if self.setParamsFunc is not None:
             self.setParamsFunc(cebq['x'],self.ebq_porosity,self.ebq_meanGrain)
         #TODO which mean to use or leave discontinuous
         #TODO make loops faster
-        if self.porosityTypes != None:
+        if self.porosityTypes is not None:
             for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
                 ebN = self.mesh.interiorElementBoundariesArray[ebNI]
                 eN_left  = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -8598,7 +8728,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                 eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
                 ebN_element = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
                 self.ebq_porosity[eN,ebN_element,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-        if self.meanGrainSizeTypes != None:
+        if self.meanGrainSizeTypes is not None:
             for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
                 ebN = self.mesh.interiorElementBoundariesArray[ebNI]
                 eN_left  = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -8621,15 +8751,15 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
         self.ebqe_meanGrain = numpy.ones(cebqe[('u',1)].shape,'d')
         self.ebqe_meanGrain.fill(self.meanGrainSize)
         #TODO make loops faster
-        if self.setParamsFunc != None:
+        if self.setParamsFunc is not None:
             self.setParamsFunc(cebqe['x'],self.ebqe_porosity,self.ebqe_meanGrain)
         else:
-            if self.porosityTypes != None:
+            if self.porosityTypes is not None:
                 for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                     ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                     eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
                     self.ebqe_porosity[ebNE,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-            if self.meanGrainSizeTypes != None:
+            if self.meanGrainSizeTypes is not None:
                 for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                     ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                     eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -8638,7 +8768,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
     def preStep(self,t,firstStep=False):
         TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.preStep(self,t,firstStep=firstStep)
         #TODO really need to modify turbulence model in porous region, account for mean grain size etc
-        if self.turbulenceClosureFlag != None:
+        if self.turbulenceClosureFlag is not None:
             self.q_nu_t *= self.q_porosity
     def evaluateForcingTerms(self,t,c,mesh=None,mesh_trial_ref=None,mesh_l2g=None):
         if c.has_key('x') and len(c['x'].shape) == 3:
@@ -8759,9 +8889,9 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                                                       t)
 
         else:
-            assert mesh != None
-            assert mesh_trial_ref != None
-            assert mesh_l2g != None
+            assert mesh is not None
+            assert mesh_trial_ref is not None
+            assert mesh_l2g is not None
             self.calculateWaveFunction3d_ref(mesh_trial_ref,
                                              mesh.nodeArray,
                                              mesh_l2g,
@@ -8803,7 +8933,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
             meanGrain= self.ebq_meanGrain
         #
         #mwf debug
-        if phi == None or n == None or kappa == None or porosity == None or meanGrain == None:
+        if phi is None or n is None or kappa is None or porosity is None or meanGrain is None:
             pdb.set_trace()
         #pdb.set_trace()
         if self.nd==2:
@@ -9047,7 +9177,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                                                                              c[('dH',3,0)])
 
         #update viscosity with eddy viscosity
-        if self.turbulenceClosureFlag != None:
+        if self.turbulenceClosureFlag is not None:
             nu_t = None
             if c['x'].shape[:-1] == self.q_nu_t.shape[:]:
                 nu_t = self.q_nu_t;
@@ -9252,7 +9382,7 @@ class VolumeAveragedVOFCoefficients(VOFCoefficients):
         else:
             self.q_porosity = numpy.ones(modelList[self.modelIndex].q[('u',0)].shape,
                                            'd')
-            if self.setParamsFunc != None:
+            if self.setParamsFunc is not None:
                 self.setParamsFunc(modelList[self.modelIndex].q['x'],self.q_porosity)
             #
         #
@@ -9261,7 +9391,7 @@ class VolumeAveragedVOFCoefficients(VOFCoefficients):
         elif modelList[self.modelIndex].ebq.has_key(('u',0)):
             self.ebq_porosity = numpy.ones(modelList[self.modelIndex].ebq[('u',0)].shape,
                                            'd')
-            if self.setParamsFunc != None:
+            if self.setParamsFunc is not None:
                 self.setParamsFunc(modelList[self.modelIndex].ebq['x'],self.ebq_porosity)
             #
         #
@@ -9270,7 +9400,7 @@ class VolumeAveragedVOFCoefficients(VOFCoefficients):
         else:
             self.ebqe_porosity = numpy.ones(modelList[self.LS_modelIndex].ebqe[('u',0)].shape,
                                             'd')
-            if self.setParamsFunc != None:
+            if self.setParamsFunc is not None:
                 self.setParamsFunc(modelList[self.LS_modelIndex].ebqe['x'],self.ebqe_porosity)
             #
         #
@@ -9287,7 +9417,7 @@ class VolumeAveragedVOFCoefficients(VOFCoefficients):
             v = self.ebqe_v
             phi = self.ebqe_phi
             porosity  = self.ebq_porosity
-        elif ((self.ebq_v != None and self.ebq_phi != None) and c[('f',0)].shape == self.ebq_v.shape):
+        elif ((self.ebq_v is not None and self.ebq_phi is not None) and c[('f',0)].shape == self.ebq_v.shape):
             v = self.ebq_v
             phi = self.ebq_phi
             porosity  = self.ebq_porosity
@@ -9295,7 +9425,7 @@ class VolumeAveragedVOFCoefficients(VOFCoefficients):
             v=None
             phi=None
             porosity=None
-        if v != None:
+        if v is not None:
             self.VolumeAveragedVOFCoefficientsEvaluate(self.eps,
                                                        v,
                                                        phi,
@@ -9638,7 +9768,6 @@ class GroundwaterBryantDawsonIonExCoefficients(TC_base):
                                                         c[('dr',1,0)],
                                                         c[('dr',1,1)])
 
-from proteus import FemTools
 class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
     """
     version of Re where element material type id's used in evals
@@ -10070,8 +10199,8 @@ class DiffusiveWave_2D(TC_base):
                          hamiltonian={})
         self.bathymetryFunc=bathymetryFunc
         self.bathymetryGradientFunc=bathymetryGradientFunc
-        assert ((self.bathymetryFunc == None and self.bathymetryGradientFunc == None) or
-                (self.bathymetryFunc != None and self.bathymetryGradientFunc != None))
+        assert ((self.bathymetryFunc is None and self.bathymetryGradientFunc is None) or
+                (self.bathymetryFunc is not None and self.bathymetryGradientFunc is not None))
         self.bind=2
 
     def initializeMesh(self,mesh):
@@ -10385,3 +10514,256 @@ class SinglePhaseDarcyCoefficients(TC_base):
     def evaluate(self,t,c):
         pass #need to put in eval for time varying coefficients
     #end def
+
+class DiscreteMassMatrix(TC_base):
+    r"""Coefficients class for the discrete Mass Operator.
+    
+    This class defines the coefficients necessary to construct the
+    discrete mass operator :math:`A` where
+
+    .. math::
+    
+        a^{c}_{i,j} = \int_{T} \phi^{c}_{i} \phi^{c}_{j} dT
+
+    for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
+    :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
+    """
+    from ctransportCoefficients import Mass_2D_Evaluate
+    from ctransportCoefficients import Mass_3D_Evaluate
+    def __init__(self,rho=1.0,nd=2):
+        self.rho = rho
+        self.nd = nd
+        mass = {}
+        advection= {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if nd==2:
+            variableNames = ['p','u','v']
+            mass = {0:{0:'linear'},
+                    1:{1:'linear'},
+                    2:{2:'linear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors={})
+            self.vectorComponents = [1,2]
+        elif nd==3:
+            variableNames = ['p','u','v','w']
+            mass = {0:{0:'linear'},
+                    1:{1:'linear'},
+                    2:{2:'linear'},
+                    3:{3:'linear'}}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents=[1,2,3]
+    def evaluate(self,t,c):
+        if self.nd==2:
+            self.Mass_2D_Evaluate(self.rho,
+                                  c[('u',0)],
+                                  c[('u',1)],
+                                  c[('u',2)],
+                                  c[('m',0)],
+                                  c[('m',1)],
+                                  c[('m',2)],
+                                  c[('dm',0,0)],
+                                  c[('dm',1,1)],
+                                  c[('dm',2,2)])
+        elif self.nd==3:
+            self.Mass_3D_Evaluate(self.rho,
+                                  c[('u',0)],
+                                  c[('u',1)],
+                                  c[('u',2)],
+                                  c[('u',3)],
+                                  c[('m',0)],
+                                  c[('m',1)],
+                                  c[('m',2)],
+                                  c[('m',3)],
+                                  c[('dm',0,0)],
+                                  c[('dm',1,1)],
+                                  c[('dm',2,2)],
+                                  c[('dm',3,3)])
+
+class DiscreteTwoPhaseAdvectionOperator(TC_base):
+    r""" A coefficient class to build the discrete advection operator.
+
+    This class defines the coefficients necessary to construct the
+    discrete advection operator :math:`N` where
+    
+    .. math::
+
+       n^{c}_{i,j} = \int_{T} (\mathbf{w}_{h} \phi_{j}) \cdot
+       \nabla \phi_{i} d T
+
+    for all :math:`T \in \Omega`, :math:`c = 0,...nc-1` and
+    :math:`phi^{c}_{i}`, `i=0,\cdot k-1` is a basis component for
+    :math:`c`.  Also note, :math:`\mathbf{w}_{h}` is a vector field 
+    (often the solution from the last non-linear iteration).
+    
+    Parameters
+    ----------
+    nd : int
+        The dimension of the physical domain
+    u : numpy array
+        An array of arrays with the advective field evaluated at the 
+        quadrature points.
+    """
+    from ctransportCoefficients import TwoPhaseAdvection_2D_Evaluate
+#    from ctransportCoefficients import TwoPhaseAdvection_3D_Evaluate
+    def __init__(self,
+                 u,
+                 nd=2,
+                 rho_0 = 1.0,
+                 nu_0 = 1.0,
+                 rho_1 = 1.0,
+                 nu_1 = 1.0,
+                 eps = 0.00000001,
+                 LS_model = None,
+                 phase_function = None):
+        self.nd=nd
+        self.advection_field_u = numpy.copy(u[0])
+        self.advection_field_v = numpy.copy(u[1])
+        if self.nd==3:
+            self.advection_field_w = numpy.copy(u[2])
+        self.eps = eps
+        self.rho_0 = rho_0
+        self.nu_0 = nu_0
+        self.rho_1 = rho_1
+        self.nu_1 = nu_1
+        self.LS_model = LS_model
+        import pdb ; pdb.set_trace()
+        self.phase_function = phase_function
+        mass = {}
+        advection = {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if self.nd==2:
+            variableNames=['p','u','v']
+            advection = {0:{0:'linear',
+                            1:'linear',
+                            2:'linear'},
+                         1:{1:'nonlinear',
+                            2:'nonlinear'},
+                         2:{1:'nonlinear',
+                            2:'nonlinear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors={})
+            self.vectorComponents = [1,2]
+        # if self.nd==3:
+        #     variableNames=['p','u','v','w']
+        #     advection = {0:{0:'linear',
+        #                     1:'linear',
+        #                     2:'linear',
+        #                     3:'linear'},
+        #                  1:{1:'nonlinear',
+        #                     2:'nonlinear',
+        #                     3:'nonlinear'},
+        #                  2:{1:'nonlinear',
+        #                     2:'nonlinear',
+        #                     3:'nonlinear'},
+        #                   3:{1:'nonlinear',
+        #                      2:'nonlinear',
+        #                      3:'nonlinear'}}
+        #     TC_base.__init__(self,
+        #                      3,
+        #                      mass,
+        #                      advection,
+        #                      diffusion,
+        #                      potential,
+        #                      reaction,
+        #                      hamiltonian,
+        #                      variableNames)
+        #     self.vectorComponents = [1,2,3]
+    def attachModels(self,modelList):
+        if self.LS_model != None:
+            self.q_phi = modelList[self.LS_model].q[('u',0)]
+            self.ebqe_phi = modelList[self.LS_model].ebqe[('u',0)]
+            self.ebq_phi = None
+
+    def initializeQuadratureWithPhaseFunction(self,c):
+        self.q_phi = c[('u',0)].copy()
+        for i, element in enumerate(c['x']):
+            for j,pt in enumerate(c['x'][i]):
+                self.q_phi[i][j] = self.phase_function(pt)
+
+    def evaluate(self,t,c):
+        if self.phase_function != None:
+            self.initializeQuadratureWithPhaseFunction(c)
+
+        if c[('u',0)].shape == self.q_phi.shape:
+            phi = self.q_phi
+        else:
+            phi = self.ebq_phi
+            
+        if self.nd==2:
+            self.TwoPhaseAdvection_2D_Evaluate(self.eps,
+                                               self.rho_0,
+                                               self.nu_0,
+                                               self.rho_1,
+                                               self.nu_1,
+                                               phi,
+                                               c[('u',0)],
+                                               self.advection_field_u,
+                                               self.advection_field_v,
+                                               c[('f',0)],
+                                               c[('f',1)],
+                                               c[('f',2)],
+                                               c[('df',0,0)],
+                                               c[('df',0,1)],
+                                               c[('df',0,2)],
+                                               c[('df',1,1)],
+                                               c[('df',1,2)],
+                                               c[('df',2,1)],
+                                               c[('df',2,2)])
+        elif self.nd==3:
+            self.TwoPhaseAdvection_3D_Evaluate(self.eps,
+                                               self.rho_0,
+                                               self.nu_0,
+                                               self.rho_1,
+                                               self.nu_1,
+                                               phi,
+                                               c[('u',0)],
+                                               self.advection_field_u,
+                                               self.advection_field_v,
+                                               self.advection_field_w,
+                                               c[('f',0)],
+                                               c[('f',1)],
+                                               c[('f',2)],
+                                               c[('f',3)],
+                                               c[('df',0,0)],
+                                               c[('df',0,1)],
+                                               c[('df',0,2)],
+                                               c[('df',0,3)],
+                                               c[('df',1,1)],
+                                               c[('df',1,2)],
+                                               c[('df',1,3)],
+                                               c[('df',2,1)],
+                                               c[('df',2,2)],
+                                               c[('df',2,3)],
+                                               c[('df',3,1)],
+                                               c[('df',3,2)],
+                                               c[('df',3,3)])

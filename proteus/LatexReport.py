@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 """
 Class and script for generating a report from simulation data.
+
+.. inheritance-diagram:: proteus.LatexReport
+   :parts: 1
 """
+
+from .Profiling import logEvent
 
 def openLatexReport(filename,reportname):
     latexReport = open(filename,'w')
@@ -54,7 +59,7 @@ class LatexResultsSummary:
             return True
         import shelve
         self.results = shelve.open(self.resFileName)
-        if self.repName == None:
+        if self.repName is None:
             repRaw = self.results['flags']['simulationName']
             self.repName = repRaw.replace('_','-')
         self.report = openLatexReport(self.repFileName,self.repName)
@@ -89,7 +94,7 @@ class LatexResultsSummary:
         tabcols = "|l|c|c|"
         rowform0 = """%s[%d] & %s & %g """
         for enorm in self.results['flags']['errorNorms']:
-            if enorm != None:
+            if enorm is not None:
                 tabcols += "c|c|"
         #
         #treat mass conservation results differently for now
@@ -102,7 +107,7 @@ class LatexResultsSummary:
         rowtitle = """err. comp & level & h """
         #assumes every component and velocity gets same error norms
         for enorm in self.results['flags']['errorNorms']:
-            if enorm != None:
+            if enorm is not None:
                 rowtitle += " & "
                 rowtitle += enorm.replace('_','-')
                 rowtitle += """ & rate """
@@ -145,7 +150,7 @@ class LatexResultsSummary:
                     h  = self.results['simulationData']['spatialMesh'][il]['h'][-1]
                     row = rowform0 % (elabelBase,ci,il,h)
                     for enorm in self.results['flags']['errorNorms']:
-                        if enorm != None:
+                        if enorm is not None:
                             elabel = elabelBase+' '+enorm
                             ekey   = ekeyBase+'_'+enorm
                             exkey  = exKeyBase+'_'+enorm

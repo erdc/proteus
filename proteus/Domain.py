@@ -1,32 +1,340 @@
 """
 A class hierarchy and tools for building domains of PDE's.
+
+.. inheritance-diagram:: proteus.Domain
+   :parts: 1
 """
+
+import sys
+import numpy as np
+from proteus.Profiling import logEvent
+from proteus import MeshTools
 
 class D_base:
     """
     The base class for domains
     """
-    def __init__(self,nd,name="defaultDomain",units="m"):
+    def __init__(self, nd, name="defaultDomain", units="m"):
         """
         Set dimensions (nd), name string, and units string
         """
         if nd not in [1,2,3]:
             raise RuntimeError("Domain object must have dimension 1,2, or 3")
-        self.nd=nd
-        self.name=name
-        self.units=units
-        self.x=[]#minx,miny,minz
-        self.L=[]#bounding box when self.x is origin
+        self.nd = nd
+        self.name = name
+        self.units = units
+        # make default empty list for parameters
+        self.vertices = []
+        self.vertexFlags = []
+        self.segments = []
+        self.segmentFlags = []
+        self.facets = []  # necessary in 2D for gmsh
+        self.facetFlags = []
+        self.holes = []
+        self.holes_ind = []  # for gmsh: index of hole (2D: facet; 3D: volume)
+        self.regions = []
+        self.regionFlags = []
+        self.volumes = []  # only for gmsh: loop of facets
+        # for bounding box
+        self.x = []
+        self.L = []
+        # list of shape instances (from proteus.SpatialTools.py)
+        self.shape_list = []
+        # list of boundary conditions
+        self.bc = []
+        # list of auxiliaryVariables
+        self.auxiliaryVariables = []
+        # needed for gmsh
+        self.volumes = []
+        self.boundaryTags = {}
+        self.BC = {}
+        self.BCbyFlag = {}
+        # use_gmsh hack
+        self.use_gmsh = False
+        self.MeshOptions = MeshTools.MeshOptions(self)
+        # for PUMI compatibility
+        self.faceList=[] #list of the boundary IDs that have corresponding BCs, might be the same as self.facets[]
+        self.regList=[] # list of regions in the domain, this might be the same as self.regions[]
+
+    #Get the mesh entity to model entity classification for every entity
+    def isOnLine(self,pointA,pointB,testPoint):
+      pointA_np = np.asarray(pointA).astype('d')
+      pointB_np = np.asarray(pointB).astype('d')
+      vector1 = testPoint-pointA_np
+      vector2 = pointB_np-pointA_np
+      value = np.cross(vector1,vector2)
+      if(np.linalg.norm(value)<1e-13): #is the point collinear
+        if(abs(vector1[0]) >= abs(vector1[1]) and abs(vector1[0]) >= abs(vector1[2])):
+          if((vector1[0]<0)==(vector2[0]<0) and abs(vector1[0])<abs(vector2[0])):
+            return 1
+        elif(abs(vector1[1]) >= abs(vector1[0]) and abs(vector1[1]) >= abs(vector1[2])):
+          if((vector1[1]<0)==(vector2[1]<0) and abs(vector1[1])<abs(vector2[1])):
+            return 1
+        elif(abs(vector1[2]) >= abs(vector1[1]) and abs(vector1[2]) >= abs(vector1[0])):
+          if((vector1[2]<0)==(vector2[2]<0) and abs(vector1[2])<abs(vector2[2])):
+            return 1
+        else:
+          return 0
+
+    def getMesh2ModelClassification(self,mesh):
+      #There is an implicit assumption that the mesh comprises simplices  
+
+      from scipy import spatial
+      #initialize the necessary list
+      vertexClassifyChecklist = [0]*mesh.nNodes_owned
+      edgeClassifyChecklist = [0]*mesh.nEdges_owned
+      boundaryClassifyChecklist = [0]*mesh.nElementBoundaries_global
+      #self.meshVertex2Model= [0]*mesh.nNodes_owned
+      #self.meshEdge2Model=[(0,0)]*mesh.nEdges_owned
+      #self.meshBoundary2Model=[0]*mesh.nElementBoundaries_global
+
+      #identify model vertices with a k-d tree
+      meshVertexTree = spatial.cKDTree(mesh.nodeArray)
+      for idx,vertex in enumerate(self.vertices):
+        if(self.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
+          vertex.append(0.0) #need to make a 3D coordinate
+        closestVertex = meshVertexTree.query(vertex)
+        self.meshVertex2Model[closestVertex[1]] = (idx,0) #in cpp will make this a 1D array?
+        vertexClassifyChecklist[closestVertex[1]] = 1 #mark mesh vertex as having found a classification
+        
+      #Construct Model vertices 
+      modelPoints = []
+      for i in range(len(self.vertices)):
+        point = np.asarray([self.vertices[i][0],self.vertices[i][1],self.vertices[i][2]]).astype('d')
+        modelPoints.append(point)
+
+      #find faces
+      #self.meshEdge2Model 
+      for i in range(mesh.nExteriorElementBoundaries_global):
+        idx = mesh.exteriorElementBoundariesArray[i]
+        testPoint = np.asarray([mesh.elementBoundaryBarycentersArray[idx][0],mesh.elementBoundaryBarycentersArray[idx][1],mesh.elementBoundaryBarycentersArray[idx][2]]).astype('d')
+        for idxBoundary,modelBoundary in enumerate(self.segments):
+          if(self.isOnLine(self.vertices[modelBoundary[0]],self.vertices[modelBoundary[1]],testPoint)):
+            self.meshBoundary2Model[idx] = (idxBoundary,self.nd-1)
+            boundaryClassifyChecklist[idx] = 1            
+            #if vertex is not classified as model vertex, the adjacent vertices of the exterior mesh boundary in 2D must be on a model boundary 
+            for vID in mesh.elementBoundaryNodesArray[idx]:
+            #in 3D, I will need to add an additional function to check if a vertex is on model edges as well
+              if (not vertexClassifyChecklist[vID]):
+                self.meshVertex2Model[vID] = (idxBoundary,self.nd-1)
+                vertexClassifyChecklist[vID] = 1
+            break
+      ##interior entities
+      for i in range(mesh.nInteriorElementBoundaries_global):
+        idx = mesh.interiorElementBoundariesArray[i]
+        if(mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[idx][0]] != mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[idx][1]]):
+          testPoint = np.asarray([mesh.elementBoundaryBarycentersArray[idx][0],mesh.elementBoundaryBarycentersArray[idx][1],mesh.elementBoundaryBarycentersArray[idx][2]]).astype('d')
+          for idxBoundary,modelBoundary in enumerate(self.segments):
+            if(self.isOnLine(self.vertices[modelBoundary[0]],self.vertices[modelBoundary[1]],testPoint)):
+              self.meshBoundary2Model[idx] = (idxBoundary,self.nd-1)
+          boundaryClassifyChecklist[idx] = 1            
+          for vID in mesh.elementBoundaryNodesArray[idx]:
+            if (vertexClassifyChecklist[vID] != 1): #it can be 0 or it can be 2 
+              self.meshVertex2Model[vID] = (idxBoundary,self.nd-1)
+              vertexClassifyChecklist[vID]=1
+        else:
+          regionID = mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[idx][0]]
+          self.meshBoundary2Model[idx] = (regionID,self.nd)
+          boundaryClassifyChecklist[idx] = 1            
+          for vID in mesh.elementBoundaryNodesArray[idx]:
+            if (not vertexClassifyChecklist[vID]):
+              self.meshVertex2Model[vID] = (regionID,self.nd)
+              vertexClassifyChecklist[vID]=2
+  
+      assert(len(boundaryClassifyChecklist)==sum(boundaryClassifyChecklist))
+      assert(min(boundaryClassifyChecklist)==1)
+
     def writeAsymptote(self, fileprefix):
         """
         Write a representation of the domain to file using the Asymptote vector graphics language.
         """
         raise UserWarning("Asymptote output not implemented")
+
     def writeXdmf(self,ar):
         """
         Store the domain in an Xdmf file.
         """
         raise UserWarning("Xdmf output not implemented")
+
+    def getBoundingBox(self):
+        """
+        Get the bounding box of a set of vertices.
+        """
+        if self.x or self.L:
+            self.x = []
+            self.L = []
+        for d in range(self.nd):
+            xMax = max(row[d] for row in self.vertices)
+            xMin = min(row[d] for row in self.vertices)
+            self.x += [xMin]
+            self.L += [xMax-xMin]
+
+    def writeGeo(self, fileprefix, group_names=False, he_max=None):
+        """
+        Writes a Gmsh .geo file based on the geometrical information of the
+        Domain.
+
+        Parameters
+        ----------
+        fileprefix: str
+            Name of the file to save (prefix without .geo)
+        group_names: Optional[bool]
+            True to write name of physical groups in .geo (default: False) 
+        he_max: Optional[double]
+            Size of the maximum characteristic element size. Should be set
+            for meshes using a uniform refinement.
+        """
+        self.geofile = fileprefix
+        self.polyfile = fileprefix
+        geo = open(self.geofile+'.geo','w')
+        pp = {}  # physical points
+        pl = {}  # physical lines
+        ps = {}  # physical surfaces
+        pv = {}  # physical volume
+        sN = len(self.segments)
+
+        # Vertices
+        geo.write('\n// Points\n')
+        z = 0
+        for i, v in enumerate(self.vertices):
+            if self.nd == 3:
+                z = v[2]
+            geo.write("Point(%d) = {%g,%g,%g};\n" % (i+1,v[0],v[1], z))
+            if self.vertexFlags:
+                flag = self.vertexFlags[i]
+                if flag in pp:
+                    pp[flag] += [i+1]
+                else:
+                    pp[flag] = [i+1]
+        nb_points = i+1
+
+        lines_dict = {}
+        for i in range(nb_points):
+            lines_dict[i] = {}
+
+        # Lines
+        geo.write('\n// Lines\n')
+        # line_list = []
+        for i, s in enumerate(self.segments):
+            geo.write("Line(%d) = {%d,%d};\n" % (i+1,s[0]+1,s[1]+1))
+            # add segments in dictionary
+            lines_dict[s[0]][s[1]] = i
+            if self.segmentFlags:
+                flag = self.segmentFlags[i]
+                if flag in pl:
+                    pl[flag] += [i+1]
+                else:
+                    pl[flag] = [i+1]
+
+        # Surfaces
+        geo.write('\n// Surfaces\n')
+        lines = 0
+        lineloop_count = 0
+        surface_line_list = []  # need to store for mesh constraints later
+        # facet
+        for i, f in enumerate(self.facets):
+            seg_flag = sN+i+1
+            lineloop = []
+            lineloops = []
+            lineloops_list = []
+            line_list = []
+            # subfacet
+            if self.nd == 3 or (self.nd == 2 and i not in self.holes_ind):
+                for j, subf in enumerate(f):
+                    lineloop = []
+                    # vertices in facet
+                    for k, ver in enumerate(subf):
+                        if ver in lines_dict[subf[k-1]].keys():
+                            lineloop += [lines_dict[subf[k-1]][ver]+1]
+                        elif subf[k-1] in lines_dict[ver].keys():
+                            # reversed
+                            lineloop += [-(lines_dict[ver][subf[k-1]]+1)]
+                        else:
+                            ind = seg_flag+lines
+                            lines += 1
+                            geo.write('Line(%d) = {%d,%d};\n' % (ind, subf[k-1]+1, ver+1))
+                            lineloop += [ind]
+                    line_list += lineloop
+                    geo.write('Line Loop(%d) = {%s};\n' % (lineloop_count+1, str(lineloop)[1:-1]))
+                    lineloops += [lineloop_count+1]
+                    lineloop_count += 1
+                    # print i, j
+                surface_line_list += [line_list]
+                geo.write('Plane Surface(%d) = {%s};\n' % (i+1, str(lineloops)[1:-1]))
+                if self.facetFlags:
+                    flag = self.facetFlags[i]
+                    if flag in ps:
+                        ps[flag] += [i+1]
+                    else:
+                        ps[flag] = [i+1]
+
+        # Volumes
+        geo.write('\n// Volumes\n')
+        for i, V in enumerate(self.volumes):
+            surface_loops = []
+            if i not in self.holes_ind:
+                for j, sV in enumerate(V):
+                    lineloop_count += 1
+                    geo.write('Surface Loop(%d) = {%s};\n' % (lineloop_count, str((np.array(sV)+1).tolist())[1:-1]))
+                    surface_loops += [lineloop_count]
+                geo.write('Volume(%d) = {%s};\n' % (i+1, str(surface_loops)[1:-1]))
+                flag = self.regionFlags[i]
+                if self.regionFlags:
+                    if flag in pv:
+                        pv[flag] += [i+1]
+                    else:
+                        pv[flag] = [i+1]
+
+        # Physical Groups
+        geo.write('\n// Physical Groups\n')
+        if self.boundaryTags:
+            inv_bt = {v: k for k, v in self.boundaryTags.iteritems()}
+        for flag in pp:
+            ind = pp[flag]
+            if self.boundaryTags and group_names is True:
+                flag = '"'+inv_bt[flag]+'", '+str(flag)
+            geo.write("Physical Point({0}) = {{{1}}};\n".format(str(flag), str(ind)[1:-1]))
+        for flag in pl:
+            ind = pl[flag]
+            if self.boundaryTags and group_names is True:
+                flag = '"'+inv_bt[flag]+'", '+str(flag)
+            geo.write("Physical Line({0}) = {{{1}}};\n".format(str(flag), str(ind)[1:-1]))
+        for flag in ps:
+            ind = ps[flag]
+            if self.boundaryTags and group_names is True:
+                flag = '"'+inv_bt[flag]+'", '+str(flag)
+            geo.write("Physical Surface({0}) = {{{1}}};\n".format(str(flag), str(ind)[1:-1]))
+        for flag in pv:
+            ind = pv[flag]
+            if self.boundaryTags and group_names is True:
+                flag = '"'+inv_bt[flag]+'", '+str(flag)
+            geo.write("Physical Volume({0}) = {{{1}}};\n".format(str(flag), str(ind)[1:-1]))
+
+        geo.write('\n// Other Options\n')
+        if he_max is not None:
+            geo.write('Mesh.CharacteristicLengthMax = {0};\n'.format(he_max))
+        geo.write('Coherence;\n')
+
+
+    def gmsh2proteus(self, geofile, BC_class):
+        """
+        Populates the boundaryTags and BC dictionaries of the domain by importing tag and 
+        flags from .geo file.
+
+        Parameters
+        ----------
+        geofile: str
+            Name of the geofile
+        BC_class: proteus.BoundaryConditions.BC_Base
+            Bounday Conditions class to populate BC dictionaries 
+        """
+        self.boundaryTags = getGmshPhysicalGroups(geofile)
+        self.BC = {}
+        self.BCbyFlag = {}
+        for tag, flag in self.boundaryTags.items():
+            self.BC[tag] = BC_class(nd=self.nd)
+            self.BCbyFlag[flag] = self.BC[tag]
+
 
 class RectangularDomain(D_base):
     """
@@ -38,6 +346,7 @@ class RectangularDomain(D_base):
                  name="DefaultRectangularDomain",
                  units="m"):
         D_base.__init__(self,len(L),name,units)
+        self.polyfile = None
         self.boundaryTags = {'left':3,
                              'right':5,
                              'front':2,
@@ -56,6 +365,7 @@ class RectangularDomain(D_base):
         """
         Write the RectangularDomain using the poly format.
         """
+        self.polyfile = fileprefix #[temp] see PSLG for better implementation that checks if it already exists
         self.boundaryLegend = self.boundaryTags
         unitesize=4.0/self.L[0]
         f = open(fileprefix+".poly",'w')
@@ -65,9 +375,9 @@ class RectangularDomain(D_base):
 # vertices
 4 2 0 1
 1 %(x0)f %(x1)f 1
-2 %(x0pL0)f %(x1)f 2
+2 %(x0pL0)f %(x1)f 1
 3 %(x0pL0)f %(x1pL1)f 3
-4 %(x0)f %(x1pL1)f 4
+4 %(x0)f %(x1pL1)f 3
 # segments
 4 1
 1 1 2 1
@@ -223,40 +533,112 @@ shipout();
     def writeXdmf(self,ar):
         raise UserWarning("Xdmf output not implemented")
 
+def unitSimplex(nd=2):
+    """Builds a 2 or 3 dimension reference element.
+    
+    Parameters
+    ----------
+    nd : int
+        The elements dimension (must be 2 or 3)
+
+    Returns
+    -------
+    reference_element
+    """
+    if nd!=2 and nd!=3:
+        logEvent("ERROR - Reference element must have dimension 2 or 3")
+        sys.exit(1)
+
+    if nd==2:
+        return PlanarStraightLineGraphDomain(vertices=[[0. , 0.], 
+                                                       [0. , 1.], 
+                                                       [1. , 0.]],
+                                             segments = [[0, 1],
+                                                         [1, 2],
+                                                         [2, 0]],
+                                             name="Reference Triangle")
+    if nd==3:
+       boundaryTags = {'bottom':1,'front':2,'side':3,'back':4}
+       return PiecewiseLinearComplexDomain(vertices=[[0.0 , 0.0 , 0.0], 
+                                                     [1.0 , 0.0 , 0.0],
+                                                     [0.0 , 1.0 , 0.0], 
+                                                     [0.0 , 0.0 , 1.0] ],
+                                           facets = [[[0, 2, 3]],
+                                                     [[0, 1, 2]],
+                                                     [[0, 1, 3]],
+                                                     [[1, 2, 3]]],
+                                           # facetFlags=[boundaryTags['bottom'],
+                                           #             boundaryTags['front'],
+                                           #             boundaryTags['side'],
+                                           #             boundaryTags['back']],                                                       
+                                           name="Reference Simplex")
+
+class GMSH_3D_Domain(D_base):
+    """
+    A domain described by a gmsh .geo file
+
+    Parameters
+    ----------
+    geofile : str
+              The base filename of the main .geo file
+    he : float
+         The maximum element diameter (this should go way)
+    name : str
+           A name for the domain
+    units : str
+            The units of length
+    """
+    def __init__(self, geofile, he,
+                 name="GMSH_Domain",
+                 units="m",
+                 length_scale=1.0,
+                 permute_dims=[0,1,2]):
+        D_base.__init__(self, 2, name, units)
+        self.geofile=geofile+".geo"
+        self.polyfile=geofile
+        self.he = he
+        self.length_scale=length_scale
+        self.permute_dims=permute_dims
+
 class PlanarStraightLineGraphDomain(D_base):
     """
     2D domains described by planar straight line graphs.
     """
-    def __init__(self,fileprefix=None,vertices=None,segments=None,
-                 holes=None,regions=None,vertexFlags=None,segmentFlags=None,regionFlags=None,regionConstraints=None,
-                 name="DefaultPSLGDomain",units="m"):
+
+    def __init__(self, fileprefix=None, vertices=None, segments=None, facets=None, holes=None, regions=None, vertexFlags=None,
+                 segmentFlags=None, regionFlags=None, regionConstraints=None, bc=None, name="DefaultPSLGDomain", units="m"):
         """
         Construct the PSLG from lists of vertices, segments, etc. If no vertex or segment flags are given, then they are assigned as zero.
         """
-        D_base.__init__(self,2,name,units)
-        if fileprefix != None:
+        D_base.__init__(self, 2, name, units)
+        if fileprefix:
             self.readPoly(fileprefix)
         else:
-            self.polyfile=None
-            self.vertices=vertices
-            self.segments=segments
-            self.holes=holes
-            self.regions=regions
-            self.vertexFlags=vertexFlags
-            self.segmentFlags=segmentFlags
-            self.regionFlags=regionFlags
-            self.regionConstraints=regionConstraints
-            if self.regionConstraints != None:
-                assert(self.regionFlags != None)
-            if self.vertices != None:
+            self.polyfile = None
+            self.vertices = vertices or []
+            self.segments = segments or []
+            self.facets = facets or []
+            self.holes = holes or []
+            self.regions = regions or []
+            self.vertexFlags = vertexFlags or []
+            self.segmentFlags = segmentFlags or []
+            self.regionFlags = regionFlags or []
+            self.regionConstraints = regionConstraints or []
+            self.update()
+
+    def update(self):
+            if self.regionConstraints:
+                assert (self.regionFlags)
+            if self.vertices:
                 self.getBoundingBox()
-            if self.segmentFlags != None:
+            if self.segmentFlags:
                 self.getSegmentPartition()
             else:
-                if self.segments != None:
-                    self.sMin=0
-                    self.sMax=len(self.segments)-1
-                    self.segmentFlags=[i for i in range(self.sMax+1)]
+                if self.segments:
+                    self.sMin = 0
+                    self.sMax = len(self.segments) - 1
+                    self.segmentFlags = [i for i in range(self.sMax + 1)]
+
     def getSegmentPartition(self):
         self.sMin=self.sMax=self.segmentFlags[0]
         for s in self.segmentFlags:
@@ -264,23 +646,7 @@ class PlanarStraightLineGraphDomain(D_base):
                 self.sMax=s
             if s < self.sMin:
                 self.sMin=s
-    def getBoundingBox(self):
-        """
-        Determine the bounding box of the domain.
-        """
-        xMax=xMin=self.vertices[0][0]
-        yMax=yMin=self.vertices[0][1]
-        for v in self.vertices:
-            if v[0] > xMax:
-                xMax=v[0]
-            if v[1] > yMax:
-                yMax=v[1]
-            if v[0] < xMin:
-                xMin=v[0]
-            if v[1] < yMin:
-                yMin=v[1]
-        self.x=[xMin,yMin]
-        self.L=[xMax-xMin,yMax-yMin]
+
     def readPoly(self,fileprefix):
         """
         Read in the PSLG using the poly format.
@@ -306,7 +672,7 @@ class PlanarStraightLineGraphDomain(D_base):
             line = f.readline().split()
             while len(line) == 0 or line[0][0] == '#':
                 line = f.readline().split()
-            if self.base == None:
+            if not self.base:
                 self.base = int(line[0])
             self.vertices.append([float(line[1]),float(line[2])])
             for j in range(nVertexAttributes):
@@ -357,22 +723,22 @@ class PlanarStraightLineGraphDomain(D_base):
                     if line[4][0] != '#':
                         self.areaConstraints.append(float(line[4]))
         self.getBoundingBox()
-        if self.segmentFlags != None:
+        if self.segmentFlags :
             self.getSegmentPartition()
         f.close()
     def writePoly(self,fileprefix):
         """
         Write the PSLG using the poly format.
         """
-        if self.polyfile == None:
+        if not self.polyfile:
             self.polyfile = fileprefix
             pf = open(fileprefix+'.poly','w')
             #write first line of poly file
-            if self.vertexFlags != None:
+            if self.vertexFlags :
                 hasVertexFlags=1
             else:
                 hasVertexFlags=0
-            if self.segmentFlags != None:
+            if self.segmentFlags :
                 hasSegmentFlags=1
             else:
                 hasSegmentFlags=0
@@ -381,7 +747,7 @@ class PlanarStraightLineGraphDomain(D_base):
             for vN,v in enumerate(self.vertices):
                 pf.write('%d %21.16e %21.16e ' % (vN+1,v[0],v[1]))
                 #import pdb; pdb.set_trace()
-                if self.vertexFlags != None:#write vertex flag if we have vertexFlags
+                if self.vertexFlags :#write vertex flag if we have vertexFlags
                     pf.write('%d\n' % (self.vertexFlags[vN],))
                 else:
                     pf.write('\n')
@@ -389,11 +755,11 @@ class PlanarStraightLineGraphDomain(D_base):
             pf.write('%d %d \n' % (len(self.segments),hasSegmentFlags))
             for sN,s in enumerate(self.segments):
                 pf.write('%d %d %d ' % (sN+1,s[0]+1,s[1]+1))
-                if self.segmentFlags != None:
+                if self.segmentFlags :
                     pf.write('%d \n' % (self.segmentFlags[sN],))
                 else:
                     pf.write('\n')
-            if self.holes != None:
+            if self.holes :
                 pf.write('%d\n' % (len(self.holes),))
                 for hN,h in enumerate(self.holes):
                     pf.write('%d %21.16e %21.16e \n' % (hN+1,
@@ -401,15 +767,15 @@ class PlanarStraightLineGraphDomain(D_base):
                                                       h[1]))
             else:
                 pf.write('%d\n' % (0,))
-            if self.regions != None:
+            if self.regions :
                 pf.write('%d\n' % (len(self.regions),))
                 for rN,r in enumerate(self.regions):
                     pf.write('%d %21.16e %21.16e ' % (rN+1,
                                                    r[0],
                                                    r[1]))
-                    if self.regionConstraints != None:
-                        pf.write('%d %21.16e\n' % (self.regionFlags[rN],self.regionConstraints[rN]))                        
-                    elif self.regionFlags != None:
+                    if self.regionConstraints:
+                        pf.write('%d %21.16e\n' % (self.regionFlags[rN],self.regionConstraints[rN]))
+                    elif self.regionFlags:
                         pf.write('%d\n' % (self.regionFlags[rN]))
                     else:
                         pf.write('\n')
@@ -460,11 +826,11 @@ for(int i=0;i<%(nSegmentFlags)d+1;++i)
         """
         if True:#overwrite
             pf = open(fileprefix+'.ply','w')
-            if self.vertexFlags !=None:
+            if self.vertexFlags :
                 hasVertexFlags=1
             else:
                 hasVertexFlags=0
-            if self.segmentFlags != None:
+            if self.segmentFlags :
                 hasSegmentFlags=1
             else:
                 hasSegmentFlags=0
@@ -511,118 +877,12 @@ property float z
         Store the PSLG domain in an XDMF file. For now we store the information on holes in and Information element.
         """
         raise UserWarning("Xdmf output not implemented")
-    def writeGeo(self,fileprefix,dummyAxis=2,xref=0.):
-        """
-        Write the planar straight line graph domain in the gmsh geo format.
-        dummyAxis (0,1,2) is the remaining axis for
-        embedding the 2d geometry in 3d and xref is the constant value
-        for that axis
-        """
-        if True:#overwrite
-            pf = open(fileprefix+'.geo','w')
-            if self.vertexFlags !=None:
-                hasVertexFlags=1
-            else:
-                hasVertexFlags=0
-            if self.segmentFlags != None:
-                hasSegmentFlags=1
-            else:
-                hasSegmentFlags=0
-            #hack
-            hasSegmentFlags=False
-            hasVertexFlags=False
-            pf.write("""
-//format gmsh geo
-//comment author: Proteus
-//comment object: %s
-""" % (self.name,))
-
-            #write the vertices
-            if dummyAxis == 0:
-                for vN,v in enumerate(self.vertices):
-                    pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,xref,v[0],v[1]))
-            elif dummyAxis == 1:
-                for vN,v in enumerate(self.vertices):
-                    pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,v[0],xref,v[1]))
-            else:
-                for vN,v in enumerate(self.vertices):
-                    pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,v[0],v[1],xref))
-            # find point indices => physical point
-            if self.vertexFlags != None:
-                vertFlagDict={}
-                for vN,v in enumerate(self.vertices):
-                    if not vertFlagDict.has_key(self.vertexFlags[vN]):
-                        vertFlagDict[self.vertexFlags[vN]] = []
-
-                    vertFlagDict[self.vertexFlags[vN]].append(vN+1)
-
-                # Physical Surfaces
-                pvN=0
-                for pv in vertFlagDict:
-                    pvN+=1
-                    pf.write('Physical Point(%d) = {%d' % (pvN,vertFlagDict[pv][0]) )
-                    for vN in range(1,len(vertFlagDict[pv])):
-                        pf.write(',%d' %(vertFlagDict[pv][vN]))
-                    pf.write('};\n' )
-
-
-            #write the facets
-            lN = 0
-            fNN = 0
-
-            lineLoop={}
-            #write the lines
-            for vN in range(0,len(self.segments)):
-                lN+=1
-                pf.write('Line(%d) = {%d,%d};\n'% (lN,self.segments[vN][0]+1,self.segments[vN][1]+1))
-                lineLoop[vN] = lN;
-
-            #write the lineloop
-            fNN+=1
-            pf.write('Line Loop(%d) = {%d' % (fNN,lineLoop[0]) )
-            for vN in range(1,len(self.segments)):
-                pf.write(',%d' %(lineLoop[vN]))
-            pf.write('};\n' )
-
-            #write the surface
-            pf.write('Plane Surface(%d) = {%d};\n'% (fNN,fNN))
-
-            #todo add physical surfaces or lines?
-            pf.close()
-        else:
-            print "File already exists, not writing polyfile: " +`self.polyfile`
-    def writeGMSH(self,fileprefix,dummyAxis=2,xref=0.):
-        """
-        Write the PSLG using gmsh geo format incomplete write now
-        probably run into problems with orientation, no concept of a
-        line loop dummyAxis (0,1,2) is the remaining axis for
-        embedding the 2d geometry in 3d and xref is the constant value
-        for that axis
-        """
-        base =1
-        assert dummyAxis in [0,1,2]
-        pf = open(fileprefix+'.geo','w')
-        if dummyAxis == 0:
-            for vN,v in enumerate(self.vertices):
-                pf.write("Point(%d) = {%g,%g,%g}; \n" % (vN+base,xref,v[0],v[1]))
-        elif dummyAxis == 1:
-            for vN,v in enumerate(self.vertices):
-                pf.write("Point(%d) = {%g,%g,%g}; \n" % (vN+base,v[0],xref,v[1]))
-        else:
-            for vN,v in enumerate(self.vertices):
-                pf.write("Point(%d) = {%g,%g,%g}; \n" % (vN+base,v[0],v[1],xref))
-
-        #
-        for sN,s in enumerate(self.segments):
-            pf.write("Line(%d) = {%d,%d}; \n" % (sN+base,s[0]+base,s[1]+base))
-        pf.close()
 
 class InterpolatedBathymetryDomain(PlanarStraightLineGraphDomain):
     """
     2D domains with an attached bathymetry data set.
-
     Meshes are generated by locally refining the PSLG until the interpolation error for a bathymetry point cloud meets a prescribed tolerance.
-    
+
     Intial support measures interpolation error in the :math:`L_{\infty}` norm.
     """
     def __init__(self,fileprefix=None,vertices=None,segments=None,
@@ -634,6 +894,7 @@ class InterpolatedBathymetryDomain(PlanarStraightLineGraphDomain):
                                                holes=holes,regions=regions,vertexFlags=vertexFlags,segmentFlags=segmentFlags,regionFlags=regionFlags,name=name,units=units)
         self.bathy=bathy
         self.bathyGridDim=bathyGridDim
+
 
 class TriangulatedSurfaceDomain(D_base):
     """
@@ -660,6 +921,7 @@ class TriangulatedSurfaceDomain(D_base):
         """
         raise UserWarning("Xdmf output not implemented")
 
+
 class Mesh2DMDomain(D_base):
     """
     2D domains from ADH mesh files
@@ -667,6 +929,7 @@ class Mesh2DMDomain(D_base):
     def __init__(self,fileprefix):
         D_base.__init__(self,2,name=fileprefix)
         self.meshfile=fileprefix
+
 
 class Mesh3DMDomain(D_base):
     """
@@ -676,6 +939,7 @@ class Mesh3DMDomain(D_base):
         D_base.__init__(self,3,name=fileprefix)
         self.meshfile=fileprefix
 
+
 class MeshHexDomain(D_base):
     """
     3D domains from Hex mesh files
@@ -683,6 +947,7 @@ class MeshHexDomain(D_base):
     def __init__(self,fileprefix):
         D_base.__init__(self,3,name=fileprefix)
         self.meshfile=fileprefix
+
 
 class MeshTetgenDomain(D_base):
     """
@@ -692,67 +957,68 @@ class MeshTetgenDomain(D_base):
         D_base.__init__(self,3,name=fileprefix)
         self.meshfile=fileprefix
 
+class PUMIDomain(D_base):
+  """
+  3d domains from PUMI mesh files
+
+  faceList -- defines face classification in simmetrix  mesh
+  PUMIMesh -- the MeshAdapt object
+  """
+  def __init__(self, name="PUMIDomain", dim=3):
+      D_base.__init__(self,dim,name)
+      self.faceList=[]
+      self.regList=[]
+      self.PUMIMesh=None
+      #
+      #it would be useful to define a dictionary mapping strings to faces
+      #boundariesTags={'bottom':3,'top':5,'front':1,'back':6,'left':2,'right':4}
+
 class PiecewiseLinearComplexDomain(D_base):
     """
     3D domains desribed by closed surfaces made up of general polygonal facets.
     """
-    def __init__(self,fileprefix=None,vertices=None,facets=None,
-                 facetHoles=None,holes=None,regions=None,vertexFlags=None,facetFlags=None,regionFlags=None,regionConstraints=None,
-                 name="PLCDomain",units="m"):
+    def __init__(self, fileprefix=None, vertices=None, facets=None,
+                 facetHoles=None, holes=None, regions=None, vertexFlags=None, facetFlags=None,
+                 regionFlags=None, regionConstraints=None, bc=None, name="PLCDomain", units="m"):
         """
         Read  the PLC domain from lists. If no flags are given, then default flags of 0 are assigned.
         """
-        D_base.__init__(self,3,name,units)
-        if fileprefix!=None:
+        D_base.__init__(self, 3, name, units)
+        if fileprefix:
             self.readPoly(fileprefix)
-            self.regionLegend={}
-            self.regionConstraints={}
-            self.boundaryFlags={}
+            self.regionLegend = {}
+            self.regionConstraints = {}
+            self.boundaryFlags = {}
         else:
-            self.polyfile=None
-            self.vertices=vertices
-            self.facets=facets
-            self.facetHoles=facetHoles
-            self.holes=holes
-            self.regions=regions
-            self.vertexFlags=vertexFlags
-            self.facetFlags=facetFlags
-            self.regionFlags=regionFlags
-            self.regionConstraints=regionConstraints
-            if self.vertices != None:
-                self.getBoundingBox()
-            self.regionLegend={}
-            self.boundaryFlags={}
-    def getBoundingBox(self):
+            self.polyfile = None
+            self.vertices = vertices or []
+            self.facets = facets or []
+            self.facetHoles = facetHoles or []
+            self.holes = holes or []
+            self.regions = regions or []
+            self.vertexFlags = vertexFlags or []
+            self.facetFlags = facetFlags or []
+            self.regionFlags = regionFlags or []
+            self.regionConstraints = regionConstraints or []
+            self.regionLegend = {}
+            self.boundaryFlags = {}
+            self.update()
+
+    def update(self):
         """
-        Get the bounding box of the 3D domain.
+        Function to call when new vertices are added to the domain
         """
-        xMax=xMin=self.vertices[0][0]
-        yMax=yMin=self.vertices[0][1]
-        zMax=zMin=self.vertices[0][2]
-        for v in self.vertices:
-            if v[0] > xMax:
-                xMax=v[0]
-            if v[1] > yMax:
-                yMax=v[1]
-            if v[2] > zMax:
-                zMax=v[2]
-            if v[0] < xMin:
-                xMin=v[0]
-            if v[1] < yMin:
-                yMin=v[1]
-            if v[2] < zMin:
-                zMin=v[2]
-        self.x=[xMin,yMin,zMin]
-        self.L=[xMax-xMin,yMax-yMin,zMax-zMin]
+        if self.vertices:
+            self.getBoundingBox()
+
     def readPoly(self,fileprefix):
         """
         Read in the PLC domain from a file in poly format.
         """
         self.polyfile = fileprefix
-        self.name=fileprefix
+        self.name = fileprefix
         f = open(self.polyfile+".poly",'r')
-        firstLine=f.readline().split()
+        firstLine = f.readline().split()
         while len(firstLine) == 0 or firstLine[0][0] == '#':
             firstLine = f.readline().split()
         nVertices = int(firstLine[0])
@@ -761,16 +1027,16 @@ class PiecewiseLinearComplexDomain(D_base):
         nVertexAttributes = int(firstLine[2])
         self.vertexAttributes = [[] for j in range(nVertexAttributes)]
         hasVertexFlag = bool(int(firstLine[3]))
-        self.vertices=[]
-        self.base=None
-        self.vertexFlags=None
+        self.vertices = []
+        self.base = None
+        self.vertexFlags = None
         if hasVertexFlag:
-            self.vertexFlags=[]
+            self.vertexFlags = []
         for i in range(nVertices):
             line = f.readline().split()
             while len(line) == 0 or line[0][0] == '#':
                 line = f.readline().split()
-            if self.base == None:
+            if not self.base:
                 self.base = int(line[0])
             self.vertices.append([float(line[1]),float(line[2]),float(line[3])])
             for j in range(nVertexAttributes):
@@ -782,11 +1048,11 @@ class PiecewiseLinearComplexDomain(D_base):
             facetLine = f.readline().split()
         nFacets = int(facetLine[0])
         hasFacetFlag = bool(int(facetLine[1]))
-        self.facets=[]
-        self.facetHoles=[]
-        self.facetFlags= None
+        self.facets = []
+        self.facetHoles = []
+        self.facetFlags = None
         if hasFacetFlag:
-            self.facetFlags=[]
+            self.facetFlags = []
         for i in range(nFacets):
             line = f.readline().split()
             while len(line) == 0 or line[0][0] == '#':
@@ -814,7 +1080,7 @@ class PiecewiseLinearComplexDomain(D_base):
         while len(holeLine) == 0 or holeLine[0][0] == '#':
             holeLine = f.readline().split()
         nHoles = int(holeLine[0])
-        self.holes=[]
+        self.holes = []
         for i in range(nHoles):
             line =  f.readline().split()
             while len(line) == 0 or line[0][0] == '#':
@@ -824,9 +1090,9 @@ class PiecewiseLinearComplexDomain(D_base):
         while len(regionLine) == 0 or regionLine[0][0] == '#':
             regionLine = f.readline().split()
         nRegions = int(regionLine[0])
-        self.regions=[]
-        self.regionFlags=[]
-        self.areaConstraints=[]
+        self.regions = []
+        self.regionFlags = []
+        self.areaConstraints = []
         for i in range(nRegions):
             line =  f.readline().split()
             while len(line) == 0 or line[0][0] == '#':
@@ -838,92 +1104,79 @@ class PiecewiseLinearComplexDomain(D_base):
                 self.areaConstraints.append(float(line[5]))
         self.getBoundingBox()
         f.close()
-    def writePoly(self,fileprefix):
+
+    def writePoly(self, fileprefix):
         """
         Write the PLC domain in the poly format.
         """
-        if self.polyfile == None:
+        if not self.polyfile:
             self.polyfile = fileprefix
             pf = open(fileprefix+'.poly','w')
             #write first line of poly file
-            if self.vertexFlags !=None:
-                hasVertexFlags=1
-            else:
-                hasVertexFlags=0
-            if self.facetFlags != None:
-                hasFacetFlags=1
-            else:
-                hasFacetFlags=0
-            pf.write("%d %d %d %d \n" % (len(self.vertices),3,0,hasVertexFlags))
+            pf.write("%d %d %d %d \n" % (len(self.vertices), 3, 0, int(bool(self.vertexFlags))))
             #write the vertices
-            for vN,v in enumerate(self.vertices):
-                pf.write('%d %21.16e %21.16e %21.16e ' % (vN+1,v[0],v[1],v[2]))
-                if self.vertexFlags != None:#write vertex flag if we have vertexFlags
+            for vN, v in enumerate(self.vertices):
+                pf.write('%d %21.16e %21.16e %21.16e ' % (vN+1, v[0], v[1], v[2]))
+                if self.vertexFlags :#write vertex flag if we have vertexFlags
                     pf.write('%d\n' % (self.vertexFlags[vN]))
                 else:
                     pf.write('\n')
             #write the facets
-            pf.write('%d %d \n' % (len(self.facets),hasFacetFlags))
-            for fN,f in enumerate(self.facets):
-                if self.facetHoles != None:
+            pf.write('%d %d \n' % (len(self.facets), int(bool(self.facetFlags))))
+            for fN, f in enumerate(self.facets):
+                if self.facetHoles:
                     nFacetHoles = len(self.facetHoles[fN])
                 else:
-                    nFacetHoles=0
-                if hasFacetFlags:
-                    pf.write('%d %d %d\n' % (len(f),nFacetHoles,self.facetFlags[fN]))
+                    nFacetHoles = 0
+                if self.facetFlags:
+                    pf.write('%d %d %d\n' % (len(f), nFacetHoles, self.facetFlags[fN]))
                 else:
-                    pf.write('%d %d\n' % (len(f),nFacetHoles))
+                    pf.write('%d %d\n' % (len(f), nFacetHoles))
                 for segmentList in f:
                     pf.write(`len(segmentList)`+" ")
                     for vN in segmentList:
                         pf.write(`vN+1`+" ")
                     pf.write('\n')
-                if self.facetHoles != None:
-                    for hN,h in enumerate(self.facetHoles[fN]):
-                        pf.write(`hN+1`+' %f %f %f\n' % h)
-            if self.holes != None:
+                if self.facetHoles:
+                    for hN, h in enumerate(self.facetHoles[fN]):
+                        pf.write(`hN+1`+' %f %f %f\n' % (h[0],h[1],h[2]))
+            if self.holes:
                 pf.write('%d\n' % (len(self.holes),))
-                for hN,h in enumerate(self.holes):
+                for hN, h in enumerate(self.holes):
                     pf.write('%d %21.16e %21.16e %21.16e \n' % (hN+1,
-                                                             h[0],
-                                                             h[1],
-                                                             h[2]))
+                                                                h[0],
+                                                                h[1],
+                                                                h[2]))
             else:
                 pf.write('%d\n' % (0,))
-            if self.regions != None:
+            if self.regions:
                 pf.write('%d\n' % (len(self.regions),))
                 for rN,r in enumerate(self.regions):
                     pf.write('%d %21.16e %21.16e %21.16e ' % (rN+1,
-                                                            r[0],
-                                                            r[1],
-                                                            r[2]))
-                    if self.regionFlags != None:
+                                                              r[0],
+                                                              r[1],
+                                                              r[2]))
+                    if self.regionFlags:
                         pf.write('%d ' % (self.regionFlags[rN]))
-                    if self.regionConstraints != None:
+                    if self.regionConstraints:
                         pf.write('%21.16e' % (self.regionConstraints[rN]))
                     pf.write('\n')
-
             else:
                 pf.write('%d\n' % (0,))
             pf.close()
         else:
             print "File already exists, not writing polyfile: " +`self.polyfile`
-    def writePLY(self,fileprefix):
+
+    def writePLY(self, fileprefix):
         """
         Write the PLC domain in the Stanford PLY format.
         """
         if True:#overwrite
             pf = open(fileprefix+'.ply','w')
-            if self.vertexFlags !=None:
-                hasVertexFlags=1
-            else:
-                hasVertexFlags=0
-            if self.facetFlags != None:
-                hasFacetFlags=1
-            else:
-                hasFacetFlags=0
+            hasVertexFlags = int(bool(self.vertexFlags))
+            hasFacetFlags=int(bool(self.facetFlags))
             hasFacetFlags=False
-            hasVertexFlags=False
+            hasVertexFlags=False # ?????
             pf.write("""ply
 format ascii 1.0
 comment author: Proteus
@@ -964,17 +1217,18 @@ property float z
             pf.close()
         else:
             print "File already exists, not writing polyfile: " +`self.polyfile`
-    def writeAsymptote(self,fileprefix):
+
+    def writeAsymptote(self, fileprefix):
         """
         Write a representation of the domain in the Asymptote vector graphics language.
         """
-        f = open(fileprefix+'.asy','w')
-        if self.regionFlags == None:
+        f = open(fileprefix+'.asy', 'w')
+        if not self.regionFlags:
             nM = 0
         else:
             nM = len(self.regionFlags)
 #currentprojection=perspective(-2,-2,1,up=Z,target=(%(xc)f,%(yc)f,%(zc)f),showtarget=true,autoadjust=true,center=false);
-        fileString="""import three;
+        fileString = """import three;
 import palette;
 pen[] allPens=Wheel();
 pen[] materialPens = new pen[%(nM)i];
@@ -1034,7 +1288,7 @@ for(int i=0;i< %(nFlags)i;++i)
                 #else:
                 #    f.write("dot((%f,%f,%f));" % tuple(self.vertices[vertexList[0]]))
             #f.write("purge(10);\n")
-        if self.regions != None and self.regionFlags != None:
+        if self.regions and self.regionFlags :
             for region,regionFlag in zip(self.regions,self.regionFlags):
                 f.write("dot((%f,%f,%f),materialPens[%i]);" % (region[0],region[1],region[2],regionFlag))
         f.close()
@@ -1056,108 +1310,10 @@ dotfactor=12;
             if bN != 0:
                 f_bl.write("dot((12,%f),myPens[%i],L=Label(\"$%s$\",black));" % (bN*12,bN,bT))
         f_bl.close()
+
     def writeXdmf(self,fileprefix):
         pass
-    def writeGeo(self,fileprefix):
-        """
-        Write the PLC domain in the gmsh geo format.
-        """
-        if True:#overwrite
-            pf = open(fileprefix+'.geo','w')
-            if self.vertexFlags !=None:
-                hasVertexFlags=1
-            else:
-                hasVertexFlags=0
-            if self.facetFlags != None:
-                hasFacetFlags=1
-            else:
-                hasFacetFlags=0
-            hasFacetFlags=False
-            hasVertexFlags=False
-            pf.write("""
-//format gmsh geo
-//comment author: Proteus
-//comment object: %s
-""" % (self.name,))
 
-            #write the vertices
-            for vN,v in enumerate(self.vertices):
-                pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,v[0],v[1],v[2]))
-
-            # find point indices => physical point
-            if self.vertexFlags != None:
-                vertFlagDict={}
-                for vN,v in enumerate(self.vertices):
-                    if not vertFlagDict.has_key(self.vertexFlags[vN]):
-                        vertFlagDict[self.vertexFlags[vN]] = []
-
-                    vertFlagDict[self.vertexFlags[vN]].append(vN+1)
-
-                print  "vertexFlags"
-                print  vertFlagDict
-                # Physical Surfaces
-                pvN=0
-                for pv in vertFlagDict:
-                    pvN+=1
-                    pf.write('Physical Point(%d) = {%d' % (pvN,vertFlagDict[pv][0]) )
-                    for vN in range(1,len(vertFlagDict[pv])):
-                        pf.write(',%d' %(vertFlagDict[pv][vN]))
-                    pf.write('};\n' )
-
-
-            #write the facets
-            lN = 0
-            fNN = 0
-            for fN,f in enumerate(self.facets):
-                for segmentList in f:
-                    lineLoop={}
-                    #write the lines
-                    for vN in range(0,len(segmentList)):
-                        lN+=1
-                        pf.write('Line(%d) = {%d,%d};\n'% (lN,segmentList[vN-1]+1,segmentList[vN]+1))
-                        lineLoop[vN] = lN;
-
-                    #write the lineloop
-                    fNN+=1
-                    pf.write('Line Loop(%d) = {%d' % (fNN,lineLoop[0]) )
-                    for vN in range(1,len(segmentList)):
-                        pf.write(',%d' %(lineLoop[vN]))
-                    pf.write('};\n' )
-
-                    #write the surface
-                    pf.write('Plane Surface(%d) = {%d};\n'% (fNN,fNN))
-
-            # Find Face indices   => Physical Surfaces
-            if self.facetFlags != None:
-                facetFlagDict={}
-
-                fNN = 0
-                for fN,f in enumerate(self.facets):
-                    if not facetFlagDict.has_key(self.facetFlags[fN]):
-                        facetFlagDict[self.facetFlags[fN]] = []
-
-                    for segmentList in f:
-                        fNN+=1
-                        facetFlagDict[self.facetFlags[fN]].append(fNN)
-
-                print  "facetFlags"
-                print  facetFlagDict
-
-                # Physical Surfaces
-                psN=0
-                for ps in facetFlagDict:
-                    psN+=1
-                    pf.write('Physical Surface(%d) = {%d' % (psN,facetFlagDict[ps][0]) )
-                    for vN in range(1,len(facetFlagDict[ps])):
-                        pf.write(',%d' %(facetFlagDict[ps][vN]))
-                    pf.write('};\n' )
-
-
-
-
-            pf.close()
-        else:
-            print "File already exists, not writing polyfile: " +`self.polyfile`
 
 
 
@@ -1228,3 +1384,26 @@ if __name__ == "__main__":
 #    plcFromFile.readPoly('Container06.GF')
 #    plcFromFile.writeAsymptote('Container06.GF')
 #    os.system("asy -V Container06.GF")
+
+def getGmshPhysicalGroups(geofile):
+    boundaryTags = {}
+    import re
+    # gmsh_cmd = "gmsh {0:s} -0".format(geofile)
+    # check_call(gmsh_cmd, shell=True)
+    with open(geofile, 'r') as f:
+        for line in f:
+            if line.startswith("Physical "):
+                words = line.lstrip().split('=', 1)
+                tagflag = re.search(r'\((.*?)\)', words[0]).group(1).split(',')
+                if len(tagflag) == 2:
+                    tag = tagflag[0]
+                    boundaryTags[tag] = None  # add empty BC holder
+                    flag = int(tagflag[1])
+                    print tagflag
+                else:
+                    try:
+                        flag = tag = int(tagflag[0])
+                    except:
+                        flag = tag = tagflag[0]
+                boundaryTags[tag] = flag  # add empty BC holder
+    return boundaryTags

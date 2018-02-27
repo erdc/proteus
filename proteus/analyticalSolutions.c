@@ -841,7 +841,7 @@ int LinearADR_Sine_diffusiveVelocity(int *iwork, double *rwork, int nPoints, dou
     
   where
 
-   \f[ u(x)  = sin[\vec \omega \cdot \vec x + \omega_0) ] = sin(Ax - b)
+   \f[ u(x)  = sin[\vec \omega \cdot \vec x + \omega_0) ] = sin(Ax - b) \f
    \f[r(u,x) = - ((\ddot a \vec \omega) \cdot \vec \omega) u - (\vec b \cdot \vec \omega) cos(Ax - b)\f]
    \f[       = c u + D cos(Ax - b) \f]
    \f[       = cu + d \f]

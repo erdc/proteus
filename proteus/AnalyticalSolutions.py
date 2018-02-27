@@ -1,5 +1,8 @@
 """
 Classes representing analytical solutions of differential and partial differential equations.
+
+.. inheritance-diagram:: proteus.AnalyticalSolutions
+   :parts: 1
 """
 from math import *
 from EGeometry import *

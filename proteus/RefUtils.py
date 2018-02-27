@@ -2,6 +2,9 @@
 """
 Classes, functions, and some global data that are useful
 for doing FEM calculations on reference elements, etc
+
+.. inheritance-diagram:: proteus.RefUtils
+   :parts: 1
 """
 from EGeometry import *
 from Quadrature import *
@@ -68,6 +71,20 @@ p2refNodes.append(numpy.array([[0.0,   0.0,   0.0],
                                  [0.0,   0.0,   0.5]]))#(0,3)
 #todo generate these for use in interpolation conditions
 q2refNodes = []
+q2refNodes.append(numpy.array([[-1.0],
+                               [ 1.0],
+                               [ 0.5]]))
+
+q2refNodes.append(numpy.array([[-1.0, -1.0],
+                               [-1.0,  1.0],
+                               [ 1.0,  1.0],
+                               [ 1.0, -1.0],
+                               [-1.0,  0.0],
+                               [ 0.0,  1.0],
+                               [ 1.0,  0.0],
+                               [ 0.0, -1.0],
+                               [ 0.0,  0.0]]))
+
 q2refNodes.append(numpy.array([[-1.0,   -1.0,   -1.0],#nodes on bottom
                                [ 1.0,   -1.0,   -1.0],
                                [ 1.0,    1.0,   -1.0],
@@ -102,6 +119,7 @@ q2refNodes.append(numpy.array([[-1.0,   -1.0,   -1.0],#nodes on bottom
 
                                [ 0.0,    0.0,    0.0]])) #node on element center
 
+
 #which local boundaries are ref nodes "on"
 p2tetrahedronLocalBoundaryLookup = {0:[1,2,3],
                                     1:[0,2,3],
@@ -114,6 +132,57 @@ p2tetrahedronLocalBoundaryLookup = {0:[1,2,3],
                                     8:[0,2],
                                     9:[1,2]}
 
+quadrilateralLocalBoundaryLookup = {0:[3,0],
+                                    1:[0,1],
+                                    2:[1,2],
+                                    3:[2,3]}
+
+hexahedronLocalBoundaryLookup = {0:[0,1,4],
+                                 1:[0,1,2],
+                                 2:[0,2,3],
+                                 3:[0,3,4],
+                                 4:[1,4,5],
+                                 5:[1,2,5],
+                                 6:[2,3,5],
+                                 7:[3,4,5]}
+
+q2quadrilateralLocalBoundaryLookup = {0:[3,0],
+                                      1:[0,1],
+                                      2:[1,2],
+                                      3:[2,3],
+                                      4:[0],
+                                      5:[1],
+                                      6:[2],
+                                      7:[3],
+                                      8:[]}
+
+q2hexahedronLocalBoundaryLookup = {0:[0,1,4],#corner nodes
+                                   1:[0,1,2],
+                                   2:[0,2,3],
+                                   3:[0,3,4],
+                                   4:[1,4,5],
+                                   5:[1,2,5],
+                                   6:[2,3,5],
+                                   7:[3,4,5],
+                                   8:[3,4,5],#edge nodes
+                                   9:[3,4,5],
+                                   10:[3,4,5],
+                                   11:[3,4,5],
+                                   12:[3,4,5],
+                                   13:[3,4,5],
+                                   14:[3,4,5],
+                                   15:[3,4,5],
+                                   16:[3,4,5],
+                                   17:[3,4,5],
+                                   18:[3,4,5],
+                                   19:[3,4,5],
+                                   20:[3,4,5],# face nodes
+                                   21:[3,4,5],
+                                   22:[3,4,5],
+                                   23:[3,4,5],
+                                   24:[3,4,5],
+                                   25:[3,4,5],
+                                   26:[]}#center node
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #local convenience functions
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

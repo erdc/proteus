@@ -7183,180 +7183,7 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokesP3D(int nExteriorElement
         }
     }
 }
-/**
-   \brief Apply basic pressure boundary penalty term for Stokes
-   \todo add penalty coefficient
- */
 
-void calculateExteriorNumericalAdvectiveFluxStokes2D(int nExteriorElementBoundaries_global,
-						     int nElementBoundaries_element,
-						     int nQuadraturePoints_elementBoundary,
-						     int nSpace,
-						     int* exteriorElementBoundaries,
-						     int* elementBoundaryElements,
-						     int* elementBoundaryLocalElementBoundaries,
-						     int *isDOFBoundary_p,
-						     int *isDOFBoundary_u,
-						     int *isDOFBoundary_v,
-						     double* n,
-						     double* bc_p,
-						     double* bc_f_mass,
-						     double* p,
-						     double* f_mass,
-						     double* df_mass_du,
-						     double* df_mass_dv,
-						     double* flux_mass,
-						     double* flux_umom,
-						     double* flux_vmom,
-						     double* dflux_mass_du,
-						     double* dflux_mass_dv,
-						     double* dflux_umom_dp,
-						     double* dflux_vmom_dp)
-                                                     
-{
-  int ebNE,ebN,eN_global,ebN_element,k;
-  for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
-    {
-      ebN = exteriorElementBoundaries[ebNE];
-      eN_global = elementBoundaryElements[ebN*2+0];
-      ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
-      for(k=0;k<nQuadraturePoints_elementBoundary;k++)
-        {
-	  flux_umom[ebN*nQuadraturePoints_elementBoundary+
-                    k] = 0.0;
-	  flux_vmom[ebN*nQuadraturePoints_elementBoundary+
-                    k] = 0.0;
-	  flux_mass[ebN*nQuadraturePoints_elementBoundary+
-                    k]  = 0.0;
-          if (isDOFBoundary_u[ebNE*nQuadraturePoints_elementBoundary+k] != 1)
-            {
-              dflux_mass_du[ebN*nQuadraturePoints_elementBoundary+
-                            k]
-                = 
-                n[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-                  ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                  k*nSpace+
-                  0]
-                *
-                df_mass_du[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-                           ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                           k*nSpace+
-                           0];
-              flux_mass[ebN*nQuadraturePoints_elementBoundary+
-                        k]+= 
-                n[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-                  ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                  k*nSpace+
-		  0]
-                *
-                f_mass[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-                       ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                       k*nSpace+
-                       0];
-            }
-          else
-            {
-              flux_mass[ebN*nQuadraturePoints_elementBoundary+
-                        k]
-		+= 
-                n[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-                  ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                  k*nSpace+
-		  0]
-                *
-                bc_f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-                          k*nSpace+
-                          0];
-            }
-          if (isDOFBoundary_v[ebNE*nQuadraturePoints_elementBoundary+k] != 1)
-            {
-              dflux_mass_dv[ebN*nQuadraturePoints_elementBoundary+
-                            k]
-                = 
-                n[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-                  ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                  k*nSpace+
-                  1]
-                *
-                df_mass_dv[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-                           ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                           k*nSpace+
-                           1];
-              flux_mass[ebN*nQuadraturePoints_elementBoundary+
-                        k]+= 
-                n[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-                  ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                  k*nSpace+
-		  1]
-                *
-                f_mass[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-                       ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                       k*nSpace+
-                       1];
-            }
-          else
-            {
-              flux_mass[ebN*nQuadraturePoints_elementBoundary+
-                        k]
-		+= 
-                n[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-                  ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                  k*nSpace+
-		  1]
-                *
-                bc_f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-                          k*nSpace+
-                          1];
-            }
-          if (isDOFBoundary_p[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
-            {
-              dflux_umom_dp[ebN*nQuadraturePoints_elementBoundary+
-                            k]
-                = 
-                -n[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-		   ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		   k*nSpace+
-		   0];
-              flux_umom[ebN*nQuadraturePoints_elementBoundary+
-                        k]
-		+= 
-                n[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-                  ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                  k*nSpace+
-		  0]
-                *
-                (bc_p[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-                      ebN_element*nQuadraturePoints_elementBoundary+
-                      k]
-                 -
-                 p[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-                   ebN_element*nQuadraturePoints_elementBoundary+
-                   k]);
-              dflux_vmom_dp[ebN*nQuadraturePoints_elementBoundary+
-                            k]
-                = 
-                -n[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-		   ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		   k*nSpace+
-		   1];
-              flux_vmom[ebN*nQuadraturePoints_elementBoundary+
-                        k]+= 
-                n[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-                  ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                  k*nSpace+
-		  1]
-                *
-                (bc_p[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-                      ebN_element*nQuadraturePoints_elementBoundary+
-                      k]
-                 -
-                 p[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-                   ebN_element*nQuadraturePoints_elementBoundary+
-                   k]);
-            }
-        }
-    }
-}
 /**
    \brief Apply basic pressure boundary penalty term for Stokes
    \todo add penalty coefficient?
@@ -7383,11 +7210,11 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokes2D(int nExteriorElementB
 							   double* dflux_mass_du,
 							   double* dflux_mass_dv,
 							   double* dflux_umom_dp,
-							   double* dflux_vmom_dp)
+							   double* dflux_vmom_dp,
+                                                           double* velocity)
                                                            
 {
   int ebNE,k;
-  double flowDirection;
   for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
     {
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
@@ -7408,23 +7235,14 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokes2D(int nExteriorElementB
 	  dflux_vmom_dp[ebNE*nQuadraturePoints_elementBoundary+
                     k] = 0.0;
 
-          flowDirection=n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-                          k*nSpace+
-                          0]
-            *
-            f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-                   k*nSpace+
-                   0]
-            +
-	    n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-	      k*nSpace+
-	      1]
-            *
-            f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-                   k*nSpace+
-                   1];
           if (isDOFBoundary_u[ebNE*nQuadraturePoints_elementBoundary+k] != 1)
             {
+              velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       0] =
+                f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       0];
               flux_mass[ebNE*nQuadraturePoints_elementBoundary+
                         k]
                 +=
@@ -7448,6 +7266,12 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokes2D(int nExteriorElementB
             }
           else
             {
+              velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       0] =
+                bc_f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                          k*nSpace+
+                          0];
               flux_mass[ebNE*nQuadraturePoints_elementBoundary+
                         k]
 		+=
@@ -7461,6 +7285,12 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokes2D(int nExteriorElementB
             }
           if (isDOFBoundary_v[ebNE*nQuadraturePoints_elementBoundary+k] != 1)
             {
+              velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       1] =
+                f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       1];
               flux_mass[ebNE*nQuadraturePoints_elementBoundary+
                         k]
 		+=
@@ -7484,6 +7314,12 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokes2D(int nExteriorElementB
             }
           else
             {
+              velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       1] =
+                bc_f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                          k*nSpace+
+                          1];
               flux_mass[ebNE*nQuadraturePoints_elementBoundary+
                         k]
 		+=
@@ -7562,7 +7398,8 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokes3D(int nExteriorElementB
 							   double* dflux_mass_dw,
 							   double* dflux_umom_dp,
 							   double* dflux_vmom_dp,
-							   double* dflux_wmom_dp)
+							   double* dflux_wmom_dp,
+                                                           double* velocity)
                                                            
 {
   int ebNE,k;
@@ -7578,24 +7415,30 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokes3D(int nExteriorElementB
 			k]  = 0.0;
 	  dflux_mass_dw[ebNE*nQuadraturePoints_elementBoundary+
 			k]  = 0.0;
-
+          
 	  flux_umom[ebNE*nQuadraturePoints_elementBoundary+
                     k] = 0.0;
 	  dflux_umom_dp[ebNE*nQuadraturePoints_elementBoundary+
                         k] = 0.0;
-
+          
 	  flux_vmom[ebNE*nQuadraturePoints_elementBoundary+
                     k] = 0.0;
 	  dflux_vmom_dp[ebNE*nQuadraturePoints_elementBoundary+
 			k] = 0.0;
-
+          
 	  flux_wmom[ebNE*nQuadraturePoints_elementBoundary+
                     k] = 0.0;
 	  dflux_wmom_dp[ebNE*nQuadraturePoints_elementBoundary+
 			k] = 0.0;
-
+          
           if (isDOFBoundary_u[ebNE*nQuadraturePoints_elementBoundary+k] != 1)
             {
+              velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       0] =
+                f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       0];
               flux_mass[ebNE*nQuadraturePoints_elementBoundary+
                         k]
                 +=
@@ -7619,6 +7462,12 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokes3D(int nExteriorElementB
             }
           else
             {
+              velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       0] =
+                bc_f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                          k*nSpace+
+                          0];
               flux_mass[ebNE*nQuadraturePoints_elementBoundary+
                         k]
 		+=
@@ -7632,6 +7481,12 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokes3D(int nExteriorElementB
             }
           if (isDOFBoundary_v[ebNE*nQuadraturePoints_elementBoundary+k] != 1)
             {
+              velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       1] =
+                f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       1];
               flux_mass[ebNE*nQuadraturePoints_elementBoundary+
                         k]
 		+=
@@ -7655,6 +7510,12 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokes3D(int nExteriorElementB
             }
           else
             {
+              velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       1] =
+                bc_f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                          k*nSpace+
+                          1];
               flux_mass[ebNE*nQuadraturePoints_elementBoundary+
                         k]
 		+=
@@ -7668,6 +7529,12 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokes3D(int nExteriorElementB
             }
           if (isDOFBoundary_w[ebNE*nQuadraturePoints_elementBoundary+k] != 1)
             {
+              velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       2] =
+                f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       2];
               flux_mass[ebNE*nQuadraturePoints_elementBoundary+
                         k]
 		+=
@@ -7691,6 +7558,12 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokes3D(int nExteriorElementB
             }
           else
             {
+              velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       2] =
+                f_mass[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       2];
               flux_mass[ebNE*nQuadraturePoints_elementBoundary+
                         k]
 		+=

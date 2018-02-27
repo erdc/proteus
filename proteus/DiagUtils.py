@@ -1,5 +1,8 @@
 """
 Module for diagnostic utilities
+
+.. inheritance-diagram:: proteus.DiagUtils
+   :parts: 1
 """
 from EGeometry import *
 from MeshTools import *

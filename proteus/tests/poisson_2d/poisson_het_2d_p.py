@@ -1,5 +1,6 @@
 from proteus import *
 from proteus.default_p import *
+reload(default_p)
 """
 Heterogeneous Poisson's equations for one component (uncoupled) in 2D
 """
@@ -22,6 +23,8 @@ initialConditions = None
 sd=True
 Ident = numpy.zeros((nd,nd),'d')
 Ident[0,0]=1.0; Ident[1,1] = 1.0
+domain = None
+polyfile = None
 
 class velEx:
     def __init__(self,duex,aex):

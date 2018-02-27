@@ -1550,57 +1550,57 @@ csubgridErrorCalculateSubgridErrorNavierStokes3D_GLS_tauRes(PyObject* self,
 }
 
 static PyObject*
-csubgridErrorCalculateSubgridErrorStokes2D_GLS_tau(PyObject* self,
-                                                         PyObject* args)
+csubgridErrorCalculateSubgridErrorStokes_GLS_tau(PyObject* self,
+                                                 PyObject* args)
 {
   PyObject *elementDiameter,
-    *dmt,
+    *dH,
     *a,
     *tau0,
     *tau1;
   if(!PyArg_ParseTuple(args,"OOOOO",
                        &elementDiameter,
-                       &dmt,
+                       &dH,
                        &a,
                        &tau0,
                        &tau1))
     return NULL;
-  calculateSubgridErrorStokes2D_GLS_tau(SHAPE(dmt)[0],
-                                        SHAPE(dmt)[1],
-                                        2,
-                                        DDATA(elementDiameter),
-                                        DDATA(dmt),
-                                        DDATA(a),
-                                        DDATA(tau0),
-                                        DDATA(tau1));
+  calculateSubgridErrorStokes_GLS_tau(SHAPE(dH)[0],
+                                      SHAPE(dH)[1],
+                                      SHAPE(dH)[2],
+                                      DDATA(elementDiameter),
+                                      DDATA(dH),
+                                      DDATA(a),
+                                      DDATA(tau0),
+                                      DDATA(tau1));
   Py_INCREF(Py_None);
   return Py_None;
 }
 
 static PyObject*
-csubgridErrorCalculateSubgridErrorStokes2D_GLS_tau_sd(PyObject* self,
-                                                         PyObject* args)
+csubgridErrorCalculateSubgridErrorStokes_GLS_tau_sd(PyObject* self,
+                                                    PyObject* args)
 {
   PyObject *elementDiameter,
-    *dmt,
+    *dH,
     *a,
     *tau0,
     *tau1;
   if(!PyArg_ParseTuple(args,"OOOOO",
                        &elementDiameter,
-                       &dmt,
+                       &dH,
                        &a,
                        &tau0,
                        &tau1))
     return NULL;
-  calculateSubgridErrorStokes2D_GLS_tau_sd(SHAPE(dmt)[0],
-                                        SHAPE(dmt)[1],
-                                        2,
-                                        DDATA(elementDiameter),
-                                        DDATA(dmt),
-                                        DDATA(a),
-                                        DDATA(tau0),
-                                        DDATA(tau1));
+  calculateSubgridErrorStokes_GLS_tau_sd(SHAPE(dH)[0],
+                                         SHAPE(dH)[1],
+                                         SHAPE(dH)[2],
+                                         DDATA(elementDiameter),
+                                         DDATA(dH),
+                                         DDATA(a),
+                                         DDATA(tau0),
+                                         DDATA(tau1));
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -2190,14 +2190,14 @@ static PyMethodDef csubgridErrorMethods[] = {
     csubgridErrorCalculateSubgridErrorNavierStokes3D_GLS_tauRes, 
     METH_VARARGS, 
     "Calculate the subgrid error approximation for the 2D NavierStokes equation using GLS formula for velocity and pressure"},
-  { "calculateSubgridErrorStokes2D_GLS_tau", 
-    csubgridErrorCalculateSubgridErrorStokes2D_GLS_tau, 
+  { "calculateSubgridErrorStokes_GLS_tau", 
+    csubgridErrorCalculateSubgridErrorStokes_GLS_tau, 
     METH_VARARGS, 
-    "Calculate the subgrid error approximation for the 2D Stokes equation using GLS formula for velocity and pressure"},
-  { "calculateSubgridErrorStokes2D_GLS_tau_sd", 
-    csubgridErrorCalculateSubgridErrorStokes2D_GLS_tau_sd, 
+    "Calculate the subgrid error approximation for the Stokes equation using GLS formula for velocity and pressure"},
+  { "calculateSubgridErrorStokes_GLS_tau_sd", 
+    csubgridErrorCalculateSubgridErrorStokes_GLS_tau_sd, 
     METH_VARARGS, 
-    "Calculate the subgrid error approximation for the 2D Stokes equation using GLS formula for velocity and pressure"},
+    "Calculate the subgrid error approximation for the Stokes equation using GLS formula for velocity and pressure"},
   { "calculateSubgridErrorStokes2D_GLS_tauRes", 
     csubgridErrorCalculateSubgridErrorStokes2D_GLS_tauRes, 
     METH_VARARGS, 

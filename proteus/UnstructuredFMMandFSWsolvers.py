@@ -1,5 +1,8 @@
 """
 Fast marching and fast sweeping solvers
+
+.. inheritance-diagram:: proteus.UnstructuredFMMandFSWsolvers
+   :parts: 1
 """
 import numpy
 import math
@@ -11,23 +14,28 @@ import StupidHeap as SHeap
 #solvers
 ########################################################################
 class FMMEikonalSolver:
-    """
-    Encapsulate naive implementation of Fast Marching Methods on unstructured grids
-      for
+    """Encapsulate naive implementation of Fast Marching Methods on
+unstructured grids for
+
+    .. math::
+
       \|\grad T\| = 1/F
 
-      T = 0 on \Gamma
+    :math:`T = 0` on :math:`\Gamma`
 
     1d local solver is standard upwind approximation
-    2d local solver variations:
-       acute triangulations version 1 or version 2 from Qian Zhang etal 07
-       obtuse triangulation not implemented
+
+    2d local solver variations: acute triangulations version 1 or
+    version 2 from Qian Zhang etal 07 obtuse triangulation not
+    implemented
+
     3d local solver varitions: not fully checked
 
     For now, the input should be non-negative!
-    TODO:
-       3D version needs to be tested more
+
     """
+#    TODO:
+#       3D version needs to be tested more
     from proteus import cfmmfsw
     def __init__(self,mesh,dofMap,nSpace,localSolverType='QianEtalV2',frontInitType='magnitudeOnly',#'magnitudeOnly',
                  debugLevel=3):
@@ -92,7 +100,7 @@ class FMMEikonalSolver:
         #import pdb
         #pdb.set_trace()
         failed = False
-        if nodalSpeeds == None:
+        if nodalSpeeds is None:
             speed = self.unitNodalSpeeds
         else:
             speed = nodalSpeeds
@@ -106,24 +114,29 @@ class FMMEikonalSolver:
 
 
 class FSWEikonalSolver:
-    """
-    Encapsulate naive implementation of Fast Marching Methods on unstructured grids
+    """Encapsulate naive implementation of Fast Marching Methods on unstructured grids
       for
-      \|\grad T\| = 1/F
 
-      T = 0 on \Gamma
+    .. math::
+
+        \|\grad T\| = 1/F
+
+    :math:`T = 0` on :math:`\Gamma`
 
     1d local solver is standard upwind approximation
-    2d local solver variations:
-       acute triangulations version 1 or version 2 from Qian Zhang etal 07
-       obtuse triangulation not implemented
+
+    2d local solver variations: acute triangulations version 1 or
+    version 2 from Qian Zhang etal 07 obtuse triangulation not
+    implemented
+
     3d local solver variations: not fully checked
 
 
     For now, the input should be non-negative!
-    TODO:
-       3D version needs to be tested more
+
     """
+#    TODO:
+#       3D version needs to be tested more
     from proteus import cfmmfsw
 
     def __init__(self,mesh,dofMap,nSpace,iterAtol=1.0e-8,iterRtol=0.0,maxIts=100,
@@ -140,7 +153,7 @@ class FSWEikonalSolver:
         self.debugLevel  = debugLevel
         self.xRefOrderingPoints = refPoints
         self.nRefOrderingPoints = None
-        if self.xRefOrderingPoints != None:
+        if self.xRefOrderingPoints is not None:
             self.nRefOrderingPoints = len(self.xRefOrderingPoints)
         #reality check
         assert 1 <= self.nSpace and self.nSpace <= 3, "1d,2d, and 3d only right now"
@@ -154,7 +167,7 @@ class FSWEikonalSolver:
             self.frontInitFlag = 0
         self.csolver = None
 
-        if self.xRefOrderingPoints == None:
+        if self.xRefOrderingPoints is None:
             self.csolver = FSWEikonalSolver.cfmmfsw.FSWEikonalSolver(self.nSpace,self.mesh.cmesh,
                                                                      atol=self.iterAtol,rtol=self.iterRtol,
                                                                      maxIts=self.maxIts,
@@ -208,7 +221,7 @@ class FSWEikonalSolver:
         assert len(T) == self.mesh.nNodes_global, "FemSpaces must be C0 P1"
 
         failed = False
-        if nodalSpeeds == None:
+        if nodalSpeeds is None:
             speed = self.unitNodalSpeeds
         else:
             speed = nodalSpeeds

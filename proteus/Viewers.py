@@ -5,6 +5,9 @@ Some simple modules for doing runtime visualization
 
    Added support for image cache and some global data structure that provides a map into the image cache
    Clean up Viewers.py
+
+.. inheritance-diagram:: proteus.Viewers
+   :parts: 1
 """
 import  subprocess
 import numpy
@@ -88,11 +91,11 @@ class V_base:
                  p=None,
                  n=None,
                  s=None):
-        if p == None:
+        if p is None:
             import default_p as p
-        if n == None:
+        if n is None:
             import default_n as n
-        if s == None:
+        if s is None:
             import default_s as s
         global cmdFile,datFile,datFilename,viewerPipe,viewerType,plotNumber,windowNumber,meshDataStructuresWritten
         self.cmdFile=cmdFile
@@ -105,15 +108,15 @@ class V_base:
         self.p=p
         self.n=n
         self.s=s
-        if n.nnx != None:
+        if n.nnx is not None:
             self.dgridx = (n.nnx-1)*(2**n.nLevels)
         else:
             self.dgridx = 1.0
-        if n.nny != None:
+        if n.nny is not None:
             self.dgridy = (n.nny-1)*(2**n.nLevels)
         else:
             self.dgridy = 1.0
-        if n.nnz != None:
+        if n.nnz is not None:
             self.dgridz = (n.nnz-1)*(2**n.nLevels)
         else:
             self.dgridz = 1.0
@@ -135,7 +138,7 @@ class V_base:
              tsim in self.s.viewTimes)
             and
             'u' in self.s.viewQuantities):
-            if self.plotOffSet == None:
+            if self.plotOffSet is None:
                 self.plotOffSet = self.windowNumber()
             self.windowNumberTmp= mlvt.levelModelList[-1].viewSolution(plotOffSet=self.plotOffSet,
                                                                        titleModifier='',
@@ -155,16 +158,14 @@ class V_base:
             tsim in self.s.viewTimes):
             self.stepProcessPlot(mlvt,tsim)
     def stepProcessPlot(self,mlvt,tsim):
-        """
-        plot desired quantities for a single step
-        input :
-          p    --- problem definition
-          n    --- numerics definition
-          mlvt --- multilevel vector transport that holds the quantities to measure
-          tsim --- simulation time
+        """plot desired quantities for a single step
+        
+        Parameters
+        ----------
+           mlvt : multilevel vector transport that holds the quantities to measure
+           tsim : simulation time
 
         assumes this is the correct time to plot
-        TO DO:
 
         """
         import pdb
@@ -173,26 +174,25 @@ class V_base:
             self.windowNumberSave = self.windowNumber()
             mlvt.levelModelList[-1].viewSolution(plotOffSet=self.plotOffSet,titleModifier='',
                                                  dgridnx=self.dgridx,dgridny=self.dgridy,pause=self.s.viewerPause)
-            if self.plotOffSet == None:
+            if self.plotOffSet is None:
                 self.plotOffSet = self.windowNumberSave
         #end if
 
         self.stepPlotExact(mlvt,tsim)
         self.stepPlotElementQuantities(mlvt,tsim)
     def stepPlotExact(self,mlvt,tsim):
-        """
-        plot 'exact' value of desired quantities for a single step
-        input :
-          p    --- problem definition
-          n    --- numerics definition
-          mlvt --- multilevel vector transport that holds the quantities to measure
-          tsim --- simulation time
+        """plot 'exact' value of desired quantities for a single step
+
+        Parameters
+        ----------
+           mlvt :  multilevel vector transport that holds the quantities to measure
+           tsim : simulation time
 
         assumes this is the correct time to plot
         and plotOffSet is set correctly
-        TO DO: Fix scaling for exact vector components to match Transport
 
         """
+#        TO DO: Fix scaling for exact vector components to match Transport
         #mwf taking a lot of time on jade
         if ('u_exact' not in self.s.viewQuantities) and ('velocity_exact' not in self.s.viewQuantities):
             return
@@ -210,9 +210,9 @@ class V_base:
         for ci in range(self.p.coefficients.nc):
             if (ci in self.s.viewComponents):
                 plotExact= 'u_exact' in self.s.viewQuantities and \
-                           self.p.analyticalSolution != None and \
+                           self.p.analyticalSolution is not None and \
                            self.p.analyticalSolution.has_key(ci)  and \
-                           self.p.analyticalSolution[ci] != None
+                           self.p.analyticalSolution[ci] is not None
                 if plotExact:
                 #copy the code from VectorTransport.viewSolution as much as possibe
                     if self.viewerType == 'gnuplot':
@@ -322,7 +322,7 @@ class V_base:
                 #end plotExact
                 plotExactVel = ('velocity_exact' in self.s.viewQuantities and
                                 'p.analyticalSolutionVelocity' in dir(p) and
-                                self.p.p.analyticalSolutionVelocity != None and
+                                self.p.p.analyticalSolutionVelocity is not None and
                                 vt.q.has_key(('velocity',ci)))
                 if plotExactVel:
                     import math
@@ -463,14 +463,14 @@ class V_base:
             #end components
         #end ci
         #vector components
-        if vt.coefficients.vectorComponents != None:
+        if vt.coefficients.vectorComponents is not None:
             title = 'velocity_exact : t=%12.5e' % tsim
             if vt.nSpace_global == 2:
                 uci = vt.coefficients.vectorComponents[0]; vci = vt.coefficients.vectorComponents[1]
                 plotVector = (uci in self.s.viewComponents and vci in self.s.viewComponents and
-                              self.p.analyticalSolution != None and
+                              self.p.analyticalSolution is not None and
                               self.p.analyticalSolution.has_key(uci) and self.p.analyticalSolution.has_key(vci) and
-                              self.p.analyticalSolution[uci] != None and self.p.analyticalSolution[vci] != None)
+                              self.p.analyticalSolution[uci] is not None and self.p.analyticalSolution[vci] is not None)
                 if plotVector and self.viewerType == 'gnuplot':
                     for x in vt.mesh.nodeArray[:,:]:
                         uex = self.p.analyticalSolution[uci].uOfXT(x,tsim)
@@ -490,12 +490,12 @@ class V_base:
                 uci = vt.coefficients.vectorComponents[0]; vci = vt.coefficients.vectorComponents[1]
                 wci = vt.coefficients.vectorComponents[2]
                 plotVector = (uci in self.s.viewComponents and vci in self.s.viewComponents and
-                              wci in self.s.viewComponents and self.p.analyticalSolution != None and
-                              self.p.analyticalSolution != None and
+                              wci in self.s.viewComponents and self.p.analyticalSolution is not None and
+                              self.p.analyticalSolution is not None and
                               self.p.analyticalSolution.has_key(uci) and self.p.analyticalSolution.has_key(vci) and
                               self.p.analyticalSolution.has_key(wci) and
-                              self.p.analyticalSolution[uci] != None and self.p.analyticalSolution[vci] != None and
-                              self.p.analyticalSolution[wci] != None)
+                              self.p.analyticalSolution[uci] is not None and self.p.analyticalSolution[vci] is not None and
+                              self.p.analyticalSolution[wci] is not None)
 
                 if plotVector and self.viewerType == 'gnuplot':
                     for x in vt.mesh.nodeArray[:,:]:
@@ -592,14 +592,13 @@ class V_base:
             self.stepPlotCalled['elementQuantities'] = True
     #
     def plotScalarElementQuantity(self,ckey,mlvt,tsim):
-        """
-        plotting routine to look at scalar quantity stored in element quad dictionary q
-        input :
-          ckey --- what should be plotted
-          p    --- problem definition
-          n    --- numerics definition
-          mlvt --- multilevel vector transport that holds the quantities to measure
-          tsim --- simulation time
+        """plotting routine to look at scalar quantity stored in element quad dictionary q
+
+        Parameters
+        -----------
+          ckey : what should be plotted
+          mlvt : multilevel vector transport that holds the quantities to measure
+          tsim : simulation time
         assumes this is the correct time to plot
         and plotOffSet is set correctly
 
@@ -732,14 +731,14 @@ class V_base:
 
     #def
     def plotVectorGlobalElementBoundaryQuantity(self,ckey,mlvt,tsim):
-        """
-        plotting routine to look at vector quantity stored in global elementBoundary quad dictionary ebq_global
-        input :
-          ckey --- what should be plotted
-          p    --- problem definition
-          n    --- numerics definition
-          mlvt --- multilevel vector transport that holds the quantities to measure
-          tsim --- simulation time
+        """plotting routine to look at vector quantity stored in global elementBoundary quad dictionary ebq_global
+
+        Parameters
+        -----------
+          ckey : what should be plotted
+          mlvt : multilevel vector transport that holds the quantities to measure
+          tsim : simulation time
+
         assumes this is the correct time to plot
         and plotOffSet is set correctly
 
@@ -1240,11 +1239,11 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 """
 
         ###
-        if name == None:
+        if name is None:
             name = ckey[0];
             for i in range(len(ckey)-1):
                 name += "_%s" % ckey[1+i]
-        if title == None:
+        if title is None:
             title = name
         assert q.has_key(ckey), " ckey = %s missing from q " % ckey
         assert len(q[ckey].shape) == 2, " q[%s].shape= %s should be ( , ) " % (ckey,q[ckey].shape)
@@ -1364,11 +1363,11 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 """
 
         ###
-        if name == None:
+        if name is None:
             name = ckey[0];
             for i in range(len(ckey)-1):
                 name += "_%s" % ckey[1+i]
-        if title == None:
+        if title is None:
             title = name
         assert q.has_key(ckey), " ckey = %s missing from q " % ckey
         assert len(q[ckey].shape) == 3, " q[%s].shape= %s should be ( , , ) " % (ckey,q[ckey].shape)
@@ -1507,11 +1506,11 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %s_qg = griddata3(%s_x_q(:,1),%s_x_q(:,2),%s_x_q(:,3),%s_q,%s_qxg,%s_qyg,%s_qzg);
 """
         nplotted = 0
-        if name == None:
+        if name is None:
             name = ckey[0];
             for i in range(len(ckey)-1):
                 name += "_%s" % ckey[1+i]
-        if title == None:
+        if title is None:
             title = name
         assert q.has_key(ckey), " ckey = %s missing from q " % ckey
         assert len(q[ckey].shape) == 2, " q[%s].shape= %s should be ( , ) " % (ckey,q[ckey].shape)
@@ -1634,7 +1633,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 """
 
         ###
-        if title == None:
+        if title is None:
             title = name
 
         nPoints = 1
@@ -1647,7 +1646,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             #
             cmdFile.write("];")
         #
-        if elementNodesConnectivity != None:
+        if elementNodesConnectivity is not None:
             assert len(elementNodesConnectivity.shape) == 2
             cmdFile.write("tri_%s_ex = [ ... \n" % name)
             for eN in range(elementNodesConnectivity.shape[0]):
@@ -1671,7 +1670,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmdFile.write(cmd)
             nplotted = 1
         elif nSpace == 2:
-            if elementNodesConnectivity == None:
+            if elementNodesConnectivity is None:
                 cmd = cmd2dData % (name,name,name)
                 cmdFile.write(cmd)
             cmd = cmd2dView % (figureNumber,name,name,name,name,title)
@@ -1684,7 +1683,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmdFile.write(cmd)
             nplotted = 1
         else:
-            if elementNodesConnectivity == None:
+            if elementNodesConnectivity is None:
                 cmd = cmd3dData % (name,name,name,name)
                 cmdFile.write(cmd)
             cmd = cmd3dView % (figureNumber,name,name,title)
@@ -1768,7 +1767,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 
 
         ###
-        if title == None:
+        if title is None:
             title = name
 
         nPoints = 1
@@ -1782,7 +1781,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             #
             cmdFile.write("];")
         #
-        if elementNodesConnectivity != None:
+        if elementNodesConnectivity is not None:
             assert len(elementNodesConnectivity.shape) == 2
             cmdFile.write("tri_%s_ex = [ ... \n" % name)
             for eN in range(elementNodesConnectivity.shape[0]):
@@ -1808,7 +1807,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmdFile.write(cmd)
             nplotted = 1
         elif nSpace == 2:
-            if elementNodesConnectivity == None:
+            if elementNodesConnectivity is None:
                 cmd = cmd2dData % (name,name,name)
                 cmdFile.write(cmd)
             cmd = cmd2dView % (name,name,name,
@@ -1822,7 +1821,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmdFile.write(cmd)
             nplotted = 1
         else:
-            if elementNodesConnectivity == None:
+            if elementNodesConnectivity is None:
                 cmd = cmd3dData % (name,name,name,name)
                 cmdFile.write(cmd)
             cmd = cmd3dView % (name,name,name,name,
@@ -1842,25 +1841,23 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 
     def viewScalar_LagrangeC0P1(self,cmdFile,nSpace,nodeArray,elementNodesArray,u_dof,
                                 name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        given C0 P1 function with nodal Lagrange representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """given C0 P1 function with nodal Lagrange representation generate a
+        # matlab representation that is as faithful as possible to the
+        # actual finite element function structure
 
-        C0-P1 output:
-           mesh vertices and element connectivity
-           degrees of freedom at vertices
+        # C0-P1 output: mesh vertices and element connectivity degrees of freedom at vertices
 
-        scalar data is stored in
-            name
+        # scalar data is stored in name
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name_v  -- element-node representation
+        # if storeMeshData = True, writes out
+        
+        # name_x      -- mesh vertices
+        
+        # tri_name_v  -- element-node representation
 
-        returns number of figures actually plotted
-
-        """
+        # returns number of figures actually plotted
+        
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -1901,7 +1898,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 [%s_xg,%s_yg,%s_zg] = meshgrid(XYZ(1,1):dx:XYZ(1,2),XYZ(2,1):dy:XYZ(2,2),XYZ(3,1):dz:XYZ(3,2));
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
 
         nNodes_global = nodeArray.shape[0]; nElements_global = elementNodesArray.shape[0]
@@ -1964,26 +1961,26 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewVector_LagrangeC0P1(self,cmdFile,nSpace,nodeArray,elementNodesArray,
                                 u_dof,v_dof=None,w_dof=None,
                                 name="velocity",storeMeshData=True,figureNumber=1,title=None):
-        """
-        given a vector valued C0 P1 function with nodal Lagrange representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """
+        # given a vector valued C0 P1 function with nodal Lagrange representation
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        Assumes 1 <= number of components <= nSpace
-        C0-P1 output:
-           mesh vertices and element connectivity
-           degrees of freedom at vertices
+        # Assumes 1 <= number of components <= nSpace
+        # C0-P1 output:
+        #    mesh vertices and element connectivity
+        #    degrees of freedom at vertices
 
-        vector data is stored in
-            name which is [nNodes,nCoord]
+        # vector data is stored in
+        #     name which is [nNodes,nCoord]
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name_v  -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices
+        #     tri_name_v  -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -2028,17 +2025,17 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %s_gycoord = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s(:,2),%s_xg,%s_yg,%s_zg);
 %s_gzcoord = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s(:,3),%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
         #
         nNodes_global = nodeArray.shape[0]; nElements_global = elementNodesArray.shape[0]
         nNodes_element= elementNodesArray.shape[1]
         assert nNodes_element == nSpace+1, "affine simplicial geometry only"
         nCoords = 1
-        if v_dof != None:
+        if v_dof is not None:
             nCoords += 1
             assert v_dof.shape == u_dof.shape
-        if w_dof != None:
+        if w_dof is not None:
             nCoords += 1
             assert w_dof.shape == u_dof.shape
         assert (1 <= nCoords and nCoords <= nSpace), "nCoords= %s nSpace= %s wrong " % (nCoords,nSpace)
@@ -2109,28 +2106,26 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewScalar_LagrangeC0P2(self,cmdFile,nSpace,lagrangeNodesArray,elementNodesArray,
                                 l2g,u_dof,
                                 name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        TODO 3D
-        given C0 P2 function with nodal Lagrange representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """TODO 3D
+        # given C0 P2 function with nodal Lagrange representation
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        C0-P2 output:
-           matlab mesh vertices stored according [geometric vertices, midNodesVertices]
-           and element connectivity for refined mesh
-           degrees of freedom at all vertices
-           'mid-edge' vertices stored in midNodesArray
+        # C0-P2 output: matlab mesh vertices stored according [geometric
+        # vertices, midNodesVertices] and element connectivity for
+        # refined mesh degrees of freedom at all vertices 'mid-edge'
+        # vertices stored in midNodesArray
 
-        scalar data is stored in
-            name
+        # scalar data is stored in
+        #     name
 
-        if storeMeshData = True, writes out
-            name_x      -- matlab mesh vertices
-            tri_name_v  -- matlab element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- matlab mesh vertices
+        #     tri_name_v  -- matlab element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -2171,7 +2166,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 [%s_xg,%s_yg,%s_zg] = meshgrid(XYZ(1,1):dx:XYZ(1,2),XYZ(2,1):dy:XYZ(2,2),XYZ(3,1):dz:XYZ(3,2));
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
 
 
@@ -2268,30 +2263,30 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewVector_LagrangeC0P2(self,cmdFile,nSpace,lagrangeNodesArray,elementNodesArray,
                                 l2g,u_dof,v_dof=None,w_dof=None,
                                 name="velocity",storeMeshData=True,figureNumber=1,title=None):
-        """
-        TODO: 3D
+        # """
+        # TODO: 3D
 
-        given a vector valued C0 P2 function with nodal Lagrange representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # given a vector valued C0 P2 function with nodal Lagrange representation
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        Assumes 1 <= number of components <= nSpace
-        C0-P2 output:
-           matlab mesh vertices stored according [geometric vertices, midNodesVertices]
-           and element connectivity for refined mesh
-           degrees of freedom at all vertices
-           'mid-edge' vertices stored in midNodesArray
+        # Assumes 1 <= number of components <= nSpace
+        # C0-P2 output:
+        #    matlab mesh vertices stored according [geometric vertices, midNodesVertices]
+        #    and element connectivity for refined mesh
+        #    degrees of freedom at all vertices
+        #    'mid-edge' vertices stored in midNodesArray
 
-        vector data is stored in
-            name which is [nNodes,nCoord]
+        # vector data is stored in
+        #     name which is [nNodes,nCoord]
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name_v  -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices
+        #     tri_name_v  -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -2336,7 +2331,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %s_gycoord = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s(:,2),%s_xg,%s_yg,%s_zg);
 %s_gzcoord = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s(:,3),%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
         #
         nLagrangeNodes_global = lagrangeNodesArray.shape[0]; nElements_global = elementNodesArray.shape[0]
@@ -2348,10 +2343,10 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         nMidNodes_element = int((nSpace+2)*(nSpace+1)/2) - nNodes_element
 
         nCoords = 1
-        if v_dof != None:
+        if v_dof is not None:
             nCoords += 1
             assert v_dof.shape == u_dof.shape
-        if w_dof != None:
+        if w_dof is not None:
             nCoords += 1
             assert w_dof.shape == u_dof.shape
         assert (1 <= nCoords and nCoords <= nSpace), "nCoords= %s nSpace= %s wrong " % (nCoords,nSpace)
@@ -2452,26 +2447,26 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     #
     def viewScalar_DGP0(self,cmdFile,nSpace,nodeArray,elementNodesArray,l2g,u_dof,
                         name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        given DG P0 function
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """
+        # given DG P0 function
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        Assumes local dof associated with local node numbering
-        DG-P0 output:
-           element-wise list of vertices and local elemntwise-connectivity matrices
-           degrees of freedom at element vertices (as if a DG-P1 function)
+        # Assumes local dof associated with local node numbering
+        # DG-P0 output:
+        #    element-wise list of vertices and local elemntwise-connectivity matrices
+        #    degrees of freedom at element vertices (as if a DG-P1 function)
 
-        scalar data is stored in
-            name
+        # scalar data is stored in
+        #     name
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name    -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices
+        #     tri_name    -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -2545,7 +2540,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %%note, uses average of duplicate values
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
 
         nNodes_global = nodeArray.shape[0]; nElements_global = l2g.shape[0]
@@ -2640,26 +2635,26 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 
     def viewScalar_LagrangeDGP1(self,cmdFile,nSpace,nodeArray,elementNodesArray,l2g,u_dof,
                                 name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        given DG P1 function with nodal Lagrange representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """
+        # given DG P1 function with nodal Lagrange representation
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        Assumes local dof associated with local node numbering
-        DG-P1 output:
-           element-wise list of vertices and local elemntwise-connectivity matrices
-           degrees of freedom at vertices
+        # Assumes local dof associated with local node numbering
+        # DG-P1 output:
+        #    element-wise list of vertices and local elemntwise-connectivity matrices
+        #    degrees of freedom at vertices
 
-        scalar data is stored in
-            name
+        # scalar data is stored in
+        #     name
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name    -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices
+        #     tri_name    -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -2733,7 +2728,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %%note, uses average of duplicate values
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
 
         nNodes_global = nodeArray.shape[0]; nElements_global = l2g.shape[0]
@@ -2827,31 +2822,31 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewScalar_LagrangeDGP2(self,cmdFile,nSpace,nodeArray,elementNodesArray,midNodesArray,
                                 l2g,cg_l2g,u_dof,
                                 name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        TODO: 3d
-        given DG P1 function with nodal Lagrange representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """
+        # TODO: 3d
+        # given DG P1 function with nodal Lagrange representation
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        Assumes local dof associated with local node numbering
-        and then local edge numbering
+        # Assumes local dof associated with local node numbering
+        # and then local edge numbering
 
-        uses cg numbering for accessing mid-edge vertices
-        DG-P2 output:
-           element-wise list of vertices and mid-edge vertices along
-           with local elemntwise-connectivity matrices
-           degrees of freedom at vertices and mid-edge vertices
+        # uses cg numbering for accessing mid-edge vertices
+        # DG-P2 output:
+        #    element-wise list of vertices and mid-edge vertices along
+        #    with local elemntwise-connectivity matrices
+        #    degrees of freedom at vertices and mid-edge vertices
 
-        scalar data is stored in
-            name
+        # scalar data is stored in
+        #     name
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices and mid-edge vertices
-            tri_name    -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices and mid-edge vertices
+        #     tri_name    -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -2895,7 +2890,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %%note, uses average of duplicate values
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
 
         nNodes_global = nodeArray.shape[0]; nElements_global = l2g.shape[0]
@@ -2996,27 +2991,27 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     #
     def viewScalar_CrouzeixRaviartP1(self,cmdFile,nSpace,nodeArray,elementNodesArray,l2g,u_dof,
                                      name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        given FEM function with local Crouzeix-Raviart representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """
+        # given FEM function with local Crouzeix-Raviart representation
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        Assumes local dof associated with local node numbering
-        CR output:
-           Just treat as a DGP1 function
-           element-wise list of vertices and local elemntwise-connectivity matrices
-           degrees of freedom at vertices instead of face barycenters
+        # Assumes local dof associated with local node numbering
+        # CR output:
+        #    Just treat as a DGP1 function
+        #    element-wise list of vertices and local elemntwise-connectivity matrices
+        #    degrees of freedom at vertices instead of face barycenters
 
-        scalar data is stored in
-            name
+        # scalar data is stored in
+        #     name
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name    -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices
+        #     tri_name    -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -3083,7 +3078,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
         import numpy
-        if title == None:
+        if title is None:
             title = name
 
         nNodes_global = nodeArray.shape[0]; nElements_global = l2g.shape[0]
@@ -3208,27 +3203,27 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewScalar_MonomialDGPK(self,cmdFile,nSpace,nodeArray,elementNodesArray,
                                 interpolationPoints,u_interpolationPoints,
                                 name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        given DG PK function with monomial basis
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """
+        # given DG PK function with monomial basis
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        input is u values at interpolation points (not dof)
-        Generates an array of triangulations of interpolation points on each element
-        DG-PK output:
-           element-wise list of interpolation points and local elementwise-connectivity matrices
-           degrees of freedom at interpolation points
+        # input is u values at interpolation points (not dof)
+        # Generates an array of triangulations of interpolation points on each element
+        # DG-PK output:
+        #    element-wise list of interpolation points and local elementwise-connectivity matrices
+        #    degrees of freedom at interpolation points
 
-        scalar data is stored in
-            name
+        # scalar data is stored in
+        #     name
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name    -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices
+        #     tri_name    -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         #1d
         cmd1dData = """
 nElements_global = %i; nPoints_element = %i;
@@ -3293,7 +3288,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
         nplotted = 0
-        if title == None:
+        if title is None:
             title = name
 
         nElements_global = interpolationPoints.shape[0]; nPoints_element = interpolationPoints.shape[1];

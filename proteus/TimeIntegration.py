@@ -1,10 +1,13 @@
 """
 A class hierarchy of time discretizations
+
+.. inheritance-diagram:: proteus.TimeIntegration
+   :parts: 1
 """
 from LinearAlgebraTools import *
 import sys,math
 import Profiling
-log = Profiling.logEvent
+from .Profiling import logEvent
 from flcbdfWrappers import globalMax
 
 class TI_base:
@@ -79,6 +82,7 @@ class TI_base:
                                          #this capability out of
                                          #TimeIntegration
         self.provides_initialGuess = False #does this method compute its own initialGuess for new solution
+        self.isSSP=False
         self.alpha_bdf = 0.0
         self.beta_bdf  = {}
         self.m_tmp  = {}
@@ -325,7 +329,7 @@ class BackwardEuler_cfl(BackwardEuler):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
                 #print "mac cfl component ci",maxCFL,ci
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -351,6 +355,19 @@ class BackwardEuler_cfl(BackwardEuler):
         """
         if 'runCFL' in dir(nOptions):
             self.runCFL = nOptions.runCFL
+
+class SSP(BackwardEuler_cfl):
+    def __init__(self,transport,runCFL=0.9,integrateInterpolationPoints=False):
+        BackwardEuler.__init__(self,transport,integrateInterpolationPoints=integrateInterpolationPoints)
+        self.runCFL=runCFL
+        self.dtLast=None
+        self.dtRatioMax = 2.0
+        self.cfl = {}
+        for ci in range(self.nc):
+            if transport.q.has_key(('cfl',ci)):
+                self.cfl[ci] = transport.q[('cfl',ci)]
+        self.isAdaptive=True
+        self.isSSP=True
 
 class FLCBDF(TI_base):
     import flcbdfWrappers
@@ -388,7 +405,7 @@ class FLCBDF(TI_base):
     def initialize_dt(self,t0,tOut,q):
         self.tLast = t0
         self.dt = min([self.flcbdf[ci].initialize_dt(t0,tOut,q[('m',ci)],q[('mt',ci)]) for ci in self.massComponents])
-        log("Warning!!! FLDBDF initial dt will be different in parallel until we fix estimate_mt!")
+        logEvent("Warning!!! FLDBDF initial dt will be different in parallel until we fix estimate_mt!")
         #mwf hack
         #import Comm
         #comm = Comm.get()
@@ -400,13 +417,13 @@ class FLCBDF(TI_base):
         for ci in range(self.nc): self.flcbdf[('u',ci)].initialize_dt(t0,tOut,self.transport.u[ci].dof,self.Ddof_Dt[ci])
         self.t = self.tLast + self.dt
     def initializeTimeHistory(self,resetFromDOF=False):
-        log("Initializing FLCBDF time history")
+        logEvent("Initializing FLCBDF time history")
         self.initCalls +=1
         for ci in self.massComponents:
             self.flcbdf[ci].initializeTimeHistory(self.transport.q[('m',ci)],self.transport.q[('mt',ci)])
         for ci in range(self.nc): self.flcbdf[('u',ci)].initializeTimeHistory(self.transport.u[ci].dof,self.Ddof_Dt[ci])
     def calculateCoefs(self):
-        log("Calculating alpha_bdf and beta_bdf for FLCBDF")
+        logEvent("Calculating alpha_bdf and beta_bdf for FLCBDF")
         for ci in self.massComponents:
             self.alpha_bdf = self.flcbdf[ci].getCurrentAlpha()
             self.flcbdf[ci].calculate_yprime(self.beta_bdf_dummy,self.beta_bdf_dummy,self.beta_bdf[ci],self.beta_bdf_dummy2)
@@ -434,7 +451,7 @@ class FLCBDF(TI_base):
                     q[('dmt',ci,cj)].flat[:] = q[('dm',ci,cj)].flat
                     q[('dmt',ci,cj)] *= alpha
                     #mwf debug
-                    log("FLCBDF calculateElementCoefficients t= %s dt= %s alpha= %s " % (self.t,self.dt,alpha))
+                    logEvent("FLCBDF calculateElementCoefficients t= %s dt= %s alpha= %s " % (self.t,self.dt,alpha))
                 if q.has_key(('dmt_sge',ci,cj)):
                     #mwf debug
                     #import pdb
@@ -460,18 +477,18 @@ class FLCBDF(TI_base):
         for ci in range(self.nc):
             self.flcbdf[('u',ci)].calculate_yprime(self.transport.u[ci].dof,self.dummy[ci],self.Ddof_Dt[ci],self.dummy[ci])
     def choose_dt(self):
-        log("choosing dt for FLCBDF")
+        logEvent("choosing dt for FLCBDF")
         self.dt = min([self.flcbdf[ci].choose_dt(self.tLast,self.tLast+100.0*self.dt) for ci in self.massComponents])
         for ci in range(self.nc): self.flcbdf[('u',ci)].choose_dt(self.tLast,self.tLast+100.0*self.dt)
         self.t = self.tLast + self.dt
     def set_dt(self,DTSET):
-        log("setting dt for FLCBDF")
+        logEvent("setting dt for FLCBDF")
         self.dt = DTSET
         self.t = self.tLast + self.dt
         for ci in self.massComponents: self.flcbdf[ci].set_dt(DTSET)
         for ci in range(self.nc): self.flcbdf[('u',ci)].set_dt(DTSET)
     def updateTimeHistory(self,resetFromDOF=False):
-        log("updating time history for FLCBDF")
+        logEvent("updating time history for FLCBDF")
         self.tLast = self.t
         for ci in self.massComponents: self.flcbdf[ci].stepTaken(self.m[ci])
         for ci in range(self.nc): self.flcbdf[('u',ci)].stepTaken(self.transport.u[ci].dof)
@@ -488,7 +505,7 @@ class FLCBDF(TI_base):
         """
         pass
     def lastStepErrorOk(self):
-        log("checking error for FLCBDF")
+        logEvent("checking error for FLCBDF")
         OK=True
         for ci in self.massComponents:
             OK = (OK and bool(self.flcbdf[ci].lastStepErrorOk(self.m[ci])))
@@ -548,7 +565,7 @@ class PsiTCtte(BackwardEuler_cfl):
         self.tLast = self.t
         #mwf to check how many times update history called
         if self.updateHistoryJustCalled:
-            log("""WARNING PsiTCtte in updateHistory historyJustCalled is True
+            logEvent("""WARNING PsiTCtte in updateHistory historyJustCalled is True
 dt_history[0]=%g dt_history[1]=%g nsteps=%d """ %(self.dt_history[0],self.dt_history[1],
                                                   self.nsteps))
 
@@ -599,7 +616,7 @@ class PsiTCtte_new(BackwardEuler):
             self.dt_history[1] = self.dt_history[0]
             self.dt_history[0] = self.dt
             self.nsteps+=1
-            log("PsiTC (first 2 steps) choose_dt dt=%f" % self.dt)
+            logEvent("PsiTC (first 2 steps) choose_dt dt=%f" % self.dt)
             return
         dtmax = 0.0
         for ci in self.massComponents:
@@ -617,7 +634,7 @@ class PsiTCtte_new(BackwardEuler):
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
             self.mt_history[1][ci].flat[:]= self.mt_history[0][ci].flat[:]
             self.mt_history[0][ci].flat[:]= self.mt_tmp[ci].flat[:]
-        log("PsiTC choose_dt dt=%f" % self.dt)
+        logEvent("PsiTC choose_dt dt=%f" % self.dt)
     def resetTimeHistory(self,resetFromDOF=False):
         for ci in self.massComponents:
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
@@ -640,7 +657,7 @@ class ForwardEuler(TI_base):
         self.m_tmp={}
         self.r_last={}
         self.r_tmp={}
-        if transport.stabilization != None:
+        if transport.stabilization is not None:
             self.strong_r_last={}
             self.strong_r_tmp={}
         self.runCFL=runCFL
@@ -652,7 +669,7 @@ class ForwardEuler(TI_base):
                 self.m_tmp[ci] = numpy.array(transport.q[('m',ci)])
                 self.r_last[ci] = numpy.array(transport.elementResidual[ci])
                 self.r_tmp[ci] = numpy.array(transport.elementResidual[ci])
-                if self.transport.stabilization != None:
+                if self.transport.stabilization is not None:
                     self.strong_r_last[ci] = numpy.array(transport.q[('pdeResidual',ci)])
                     self.strong_r_tmp[ci] = numpy.array(transport.q[('pdeResidual',ci)])
                 self.advectionIsImplicit[ci]      = False
@@ -700,7 +717,7 @@ class ForwardEuler(TI_base):
                         q[('dmt',ci,cj)][:] = q[('dm',ci,cj)]
                         q[('dmt',ci,cj)] /= self.dt
     def calculateStrongElementSpatialResidual(self,q):
-        if self.transport.stabilization != None:
+        if self.transport.stabilization is not None:
             for ci in self.r_tmp.keys():
                 self.strong_r_tmp[ci][:]=q[('pdeResidual',ci)]
                 q[('pdeResidual',ci)][:]=self.strong_r_last[ci]
@@ -717,7 +734,7 @@ class ForwardEuler(TI_base):
             if self.cfl.has_key(ci):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -734,7 +751,7 @@ class ForwardEuler(TI_base):
         self.dtLast = self.dt
         for ci in self.m_last.keys():
             self.r_last[ci].flat[:] = self.r_tmp[ci].flat
-            if self.transport.stabilization != None:
+            if self.transport.stabilization is not None:
                 self.strong_r_last[ci].flat[:] = self.strong_r_tmp[ci].flat
     def updateTimeHistory(self,resetFromDOF=False):
         self.tLast = self.t
@@ -742,7 +759,7 @@ class ForwardEuler(TI_base):
         for ci in self.m_last.keys():
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
             self.r_last[ci].flat[:] = self.r_tmp[ci].flat
-            if self.transport.stabilization != None:
+            if self.transport.stabilization is not None:
                 self.strong_r_last[ci].flat[:] = self.strong_r_tmp[ci].flat
     def setFromOptions(self,nOptions):
         """
@@ -775,7 +792,7 @@ class ForwardEuler_A(TI_base):
         #
         self.limiter=None; self.uLimDof = None
         self.limiterType = limiterType
-        if self.limiterType != None:
+        if self.limiterType is not None:
             self.limiter = limiterType(transport.mesh,transport.nSpace_global,
                                        transport.u,
                                        transport=transport)
@@ -898,7 +915,7 @@ class ForwardEuler_A(TI_base):
             if self.cfl.has_key(ci):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -912,12 +929,12 @@ class ForwardEuler_A(TI_base):
         #pdb.set_trace()
         #mwf hack
         #grad_phi = numpy.array(self.transport.q[('grad(phi)',0)])
-        if self.limiterType != None:
+        if self.limiterType is not None:
             self.limiter.applySlopeLimiting(self.transport.u,
                                             self.uLimDof)
             for ci in range(self.nc):
                 self.transport.u[ci].dof.flat[:] = self.uLimDof[ci].flat[:]
-                assert self.transport.u[ci].par_dof != None
+                assert self.transport.u[ci].par_dof is not None
                 self.transport.u[ci].par_dof.scatter_forward_insert()
         #if
 
@@ -963,7 +980,7 @@ class ForwardEuler_A(TI_base):
         if 'runCFL' in dir(nOptions):
             self.runCFL = nOptions.runCFL
 
-        if 'limiterType' in dir(nOptions) and nOptions.limiterType != None:
+        if 'limiterType' in dir(nOptions) and nOptions.limiterType is not None:
             self.limiter = None; self.limiterType = None; self.uLimDof = {}
             self.limiterType = nOptions.limiterType
             self.limiter = self.limiterType(self.transport.mesh,
@@ -1097,7 +1114,7 @@ class ForwardEuler_H(TI_base):
                 maxCFL=globalMax(self.cfl[ci].max())
             #end has key
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -1108,14 +1125,14 @@ class ForwardEuler_H(TI_base):
         self.m_last.flat[:] = self.m_tmp.flat
         self.H_last.flat[:] = self.H_tmp.flat
         self.dH_last.flat[:] = self.dH_tmp.flat
-        if self.grad_u_last != None:
+        if self.grad_u_last is not None:
             self.grad_u_last.flat[:] = self.grad_u_tmp.flat
     def initializeSpaceHistory(self,resetFromDOF=False):
         self.tLast = self.t
         self.dtLast = self.dt
         self.H_last.flat[:] = self.H_tmp.flat
         self.dH_last.flat[:] = self.dH_tmp.flat
-        if self.grad_u_last != None:
+        if self.grad_u_last is not None:
             self.grad_u_last.flat[:] = self.grad_u_tmp.flat
     def updateStage(self):
         """
@@ -1251,7 +1268,7 @@ class OuterTheta(TI_base):
             if self.cfl.has_key(ci):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -1371,7 +1388,7 @@ class VBDF(TI_base):
         #pdb.set_trace()
         self.calculateCoefs()
         #mwf debug
-        log("VBDF calculateElementCoefficients t= %s dt= %s alpha= %s " % (self.t,self.dt,self.alpha_bdf))
+        logEvent("VBDF calculateElementCoefficients t= %s dt= %s alpha= %s " % (self.t,self.dt,self.alpha_bdf))
         for ci in self.massComponents:
             self.m_tmp[ci][:] = q[('m',ci)]
             self.mt_tmp[ci][:]= q[('m',ci)]#self.alpha_bdf*q[('m',ci)]
@@ -1393,7 +1410,7 @@ class VBDF(TI_base):
 
         Controller now has to take care of self.t and self.dt
         """
-        log("VBDF initialize_dt tLast= %s t=%s dt=%s t0=%s tOut=%s " % (self.tLast,self.t,self.dt,t0,tOut))
+        logEvent("VBDF initialize_dt tLast= %s t=%s dt=%s t0=%s tOut=%s " % (self.tLast,self.t,self.dt,t0,tOut))
         self.tLast=t0
         self.t = tOut
         self.dt = tOut - t0
@@ -1425,7 +1442,7 @@ class VBDF(TI_base):
         self.computeErrorEstimate()
         return True
     def initializeTimeHistory(self,resetFromDOF=True):
-        log("VBDF initialTimeHistory call %s tLast=%s t=%s dt= %s dt_history[0] = %s " % (self.nUpdatesTimeHistoryCalled,
+        logEvent("VBDF initialTimeHistory call %s tLast=%s t=%s dt= %s dt_history[0] = %s " % (self.nUpdatesTimeHistoryCalled,
                                                                                           self.tLast,self.t,self.dt,self.dt_history[0]),1)
         for n in range(self.max_order-1):
             for ci in self.massComponents:
@@ -1442,7 +1459,7 @@ class VBDF(TI_base):
         #self.computeErrorEstimate()
         self.nUpdatesTimeHistoryCalled  += 1
         #what to do about first call?, getting multiple calls
-        log("VBDF updateTimeHistory call %s tLast=%s t=%s dt= %s dt_history[0] = %s " % (self.nUpdatesTimeHistoryCalled,
+        logEvent("VBDF updateTimeHistory call %s tLast=%s t=%s dt= %s dt_history[0] = %s " % (self.nUpdatesTimeHistoryCalled,
                                                                                                self.tLast,self.t,self.dt,self.dt_history[0]),1)
         self.tLast = self.t
         for n in range(self.max_order-1):
@@ -1462,17 +1479,24 @@ class VBDF(TI_base):
         self.chooseOrder()
     #
     def computeErrorEstimate(self):
-        """
-         calculate \vec{e}^{n+1}
-         depending on order of approximation
-         To be consistent, this must be called after step taken but before
-         update time history
+        """calculate :math:`\vec{e}^{n+1}`
 
-         Initially, use (\vec y^{n+1}-\vec y^{n+1,p})/2 for first order
-         and
-         r/(1+r)(\vec y^{n+1}-(1+r)\vec y^{n}+r\vec y^{n-1}) for second order
-         sets variables
-         error_estimate
+        depending on order of approximation To be consistent, this
+        must be called after step taken but before update time history
+
+        Initially, use
+
+        .. math::
+        
+            (\vec y^{n+1}-\vec y^{n+1,p})/2
+
+        for first order and
+
+        .. math:
+        
+            r/(1+r)(\vec y^{n+1}-(1+r)\vec y^{n}+r\vec y^{n-1})
+
+        for second order.
 
         """
         #mwf debug
@@ -1504,7 +1528,7 @@ class VBDF(TI_base):
             self.m_pred[ci].flat[:] = self.mt_history[0][ci].flat
             self.m_pred[ci]   *= self.dt
             self.m_pred[ci]   += self.m_history[0][ci]
-        log("VBDF calculatePredictor tLast= %s t= %s dt= %s " % (self.tLast,self.t,self.dt),1)
+        logEvent("VBDF calculatePredictor tLast= %s t= %s dt= %s " % (self.tLast,self.t,self.dt),1)
 
     def calculateCoefs(self):
         if self.needToCalculateBDFCoefs:
@@ -1721,19 +1745,27 @@ class ExplicitRK_base(TI_base):
         #end ci
     #
     def setCoefficients(self):
-        """
-        set alpha,beta, d for
+        """set alpha,beta, d for
 
-        u^0 = u^n
-        u^l = \sum_{k=0}^{l-1}\alpha_{l,k}u^k + \beta_{l,k} \Delta t L(u^{k},t^n + d_{k} \Delta t^n)
-        u^{n+1} = u^{m}
+        .. math::
+
+            u^0 = u^n
+            u^l = \sum_{k=0}^{l-1}\alpha_{l,k}u^k + \beta_{l,k} \Delta t L(u^{k},t^n + d_{k} \Delta t^n)
+            u^{n+1} = u^{m}
 
         must be implemented in derived class
+
         Note that
-          alpha[l,k] -->  alpha_{l+1,k}
-          beta[l,k]  -->  beta_{l+1,k}
-          dcoefs[k]  -->  d_{k+1} because of the whole caching\ delayed eval deal
-        second index (k) is actual level
+
+        .. math::
+
+            alpha[l,k] -->  alpha_{l+1,k}
+            beta[l,k]  -->  beta_{l+1,k}
+            dcoefs[k]  -->  d_{k+1} 
+
+        because of the whole caching\delayed eval deal second index
+        (k) is actual level
+
         """
         self.alpha = None
         self.beta  = None
@@ -1748,7 +1780,7 @@ class ExplicitRK_base(TI_base):
         if self.lstage < self.nStages:
             self.t = self.substeps[self.lstage]
         if self.lstage < 0 or self.lstage > self.nStages:
-            log("""stage= %d out of allowed bounds [0,%d]""" % (self.lstage,self.nStages))
+            logEvent("""stage= %d out of allowed bounds [0,%d]""" % (self.lstage,self.nStages))
     def calculateElementCoefficients(self,q):
         """
         set m_t as
@@ -1757,12 +1789,12 @@ class ExplicitRK_base(TI_base):
 
         """
         if self.dt <= 1.0e-24:
-            log('WARNING dt= ',self.dt,' too small in updateElementCoefficients quitting ')
+            logEvent('WARNING dt= ',self.dt,' too small in updateElementCoefficients quitting ')
             sys.exit(1)
         if self.usingDTinMass == False:
             return self.calculateElementCoefficientsNoDtInMass(q)
         #mwf debug
-        log("""ExplicitRKbase calcElemenCoefs lstage= %d nStages= %d dt= %s """ % (self.lstage,self.nStages,self.dt))
+        logEvent("""ExplicitRKbase calcElemenCoefs lstage= %d nStages= %d dt= %s """ % (self.lstage,self.nStages,self.dt))
         #import pdb
         #pdb.set_trace()
         for ci in range(self.nc):#loop through components
@@ -1773,7 +1805,7 @@ class ExplicitRK_base(TI_base):
                     q[('mt',ci)].flat[:]-= self.alpha[self.lstage,i]*self.stageValues['m'][ci][i].flat[:]
                 #end i loop through stages
                 #mwf debug
-                log("""ExplicitRKbase calcElemenCoefs lstage= %d nStages= %d max dt diff= %s """ % (self.lstage,self.nStages,max(numpy.absolute(q[('mt',0)].flat))))
+                logEvent("""ExplicitRKbase calcElemenCoefs lstage= %d nStages= %d max dt diff= %s """ % (self.lstage,self.nStages,max(numpy.absolute(q[('mt',0)].flat))))
                 #if max(numpy.absolute(q[('mt',0)].flat)) > 1.0e-6:
                 #    import pdb
                 #    pdb.set_trace()
@@ -1795,7 +1827,7 @@ class ExplicitRK_base(TI_base):
         """
         assert self.dt > 1.0e-24,"dt = %d too small in calculateElementCoefficients" % self.dt
         #mwf debug
-        log("""ExplicitRK calcElemenCoefsNoDt lstage= %d nStages= %d""" % (self.lstage,self.nStages))
+        logEvent("""ExplicitRK calcElemenCoefsNoDt lstage= %d nStages= %d""" % (self.lstage,self.nStages))
         for ci in range(self.nc):#loop through components
             if q.has_key(('m',ci)):
                 self.stageValues['m'][ci][self.lstage+1].flat[:] = q[('m',ci)].flat[:]
@@ -1953,7 +1985,7 @@ class ExplicitRK_base(TI_base):
                                                       self.transport.q[('cfl',ci)])
                     maxCFL=max(globalMax(self.cfl[ci].max()),maxCFL)
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -1980,8 +2012,8 @@ class ExplicitRK_base(TI_base):
             #self.substeps.append(t)#always end up at t^{n+1}
             tLast = t
             #mwf debug
-            log('Explicit RK dcoefs= %s substeps = %s ' % (self.dcoefs,self.substeps))
-            log('Explicit RK t= %s tLast=%s self.tLast= %s ' % (t,tLast,self.tLast))
+            logEvent('Explicit RK dcoefs= %s substeps = %s ' % (self.dcoefs,self.substeps))
+            logEvent('Explicit RK t= %s tLast=%s self.tLast= %s ' % (t,tLast,self.tLast))
     def setInitialStageValues(self):
         """
         setup all the stage values if we assume that the initial condition
@@ -2002,7 +2034,7 @@ class ExplicitRK_base(TI_base):
         for term in self.eqTerms:
             for ci in self.stageValues[term].keys():
                 if resetFromDOF:
-                    assert self.transport!= None, "Must supply transport to reset from DOF"
+                    assert self.transport is not None, "Must supply transport to reset from DOF"
                     if term == 'res':
                         self.stageValues[term][ci][0].flat[:] = self.stageValues['res'][ci][self.lstage+1].flat[:]
                     else:
@@ -2018,7 +2050,7 @@ class ExplicitRK_base(TI_base):
         for term in self.eqTerms:
             for ci in self.stageValues[term].keys():
                 if resetFromDOF:
-                    assert self.transport!= None, "Must supply transport to reset from DOF"
+                    assert self.transport is not None, "Must supply transport to reset from DOF"
                     if term == 'res':
                         self.stageValues[term][ci][0].flat[:] = self.stageValues['res'][ci][self.lstage+1].flat[:]
                     else:
@@ -2039,7 +2071,7 @@ class ExplicitRK_base(TI_base):
             if 'nStagesTime' in dir(nOptions):
                 self.resetOrder(nOptions.timeOrder,nOptions.nStagesTime)
             else:
-                log("WARNING ExplicitRK.setFromOptions assuming nStagesTime=timeOrder")
+                logEvent("WARNING ExplicitRK.setFromOptions assuming nStagesTime=timeOrder")
                 self.resetOrder(nOptions.timeOrder,nOptions.timeOrder)
 
 
@@ -2048,25 +2080,32 @@ class LinearSSPRKintegration(ExplicitRK_base):
     implementation of Explicit RK schemes for ODE that are SSP for
     linear operators (aka) spatial discretizations in
 
-    \od{\vec y}{t} = \mat{L}\vec y
+    .. math::
+
+        \od{\vec y}{t} = \mat{L}\vec y
 
     See Gottlieb, Shu, Tadmor siam review article and notes
 
     Their formulation for this scheme is
 
-      u^0 = u^n
-      u^l = u^{l-1} + \Delta t L(u^{l-1}) l = 1,...,m-1
-      u^m = \sum_{k=0}^{l-1}\alpha_{m,k}u^k +
-             \alpha_{m,m-1} \Delta t L(u^{m-1})
-      u^{n+1} = u^m
+    .. math::
 
-      so \alpha_{l,l-1} = 1, \beta_{l,l-1} = 1.0  l < m,
-         \beta_{m,m-1}  = \alph_{m,m-1}
+        u^0 = u^n
+        u^l = u^{l-1} + \Delta t L(u^{l-1}) l = 1,...,m-1
+        u^m = \sum_{k=0}^{l-1}\alpha_{m,k}u^k +
+              \alpha_{m,m-1} \Delta t L(u^{m-1})
+        u^{n+1} = u^m
 
-      Apparently,
+        so \alpha_{l,l-1} = 1, \beta_{l,l-1} = 1.0  l < m,
+           \beta_{m,m-1}  = \alph_{m,m-1}
+
+    Apparently,
+
+    .. math::
          d_{l} = l \Delta t l < m,
          d_m = 1.0
-      which doesn't make a lot of sense for time dependent problems
+      
+    which doesn't make a lot of sense for time dependent problems
 
     """
     def __init__(self,transport,order=1,runCFL=0.1,usingSSPRKNewton=False):
@@ -2139,37 +2178,46 @@ class LinearSSPRKintegration(ExplicitRK_base):
 
 
 class SSPRKPIintegration(ExplicitRK_base):
-    """
-    So called SSP RK integration with limiting step at end of each
+    """So called SSP RK integration with limiting step at end of each
     phase This one holds the original TVD RK schemes up to 3rd order
     1st order is Forward Euler
 
     2nd order
-    u^1 = u^n + \Delta t L(u^n)
-    u^2 = 0.5(u^n + u^1) + 0.5\Delta t L(u^1,t^n + \Delta t^n), same stage values etc linear SSPRK
+
+    .. math::
+        u^1 = u^n + \Delta t L(u^n)
+        u^2 = 0.5(u^n + u^1) + 0.5\Delta t L(u^1,t^n + \Delta t^n), same stage values etc linear SSPRK
 
     3rd order
-    u^1 =  u^n + \Delta t L(u^n,t^n)
-    u^2 = 0.75 u^n + 0.25u^1  + 0.25\Delta t L(u^1,t^n + \Delta t^n),
-    u^3 = 1/3 u^n + 2/3 u^2 + 2/3 \Delta t L(u^2,t^n + 0.5\Delta t^n)
+
+    .. math::
+        u^1 =  u^n + \Delta t L(u^n,t^n)
+        u^2 = 0.75 u^n + 0.25u^1  + 0.25\Delta t L(u^1,t^n + \Delta t^n),
+        u^3 = 1/3 u^n + 2/3 u^2 + 2/3 \Delta t L(u^2,t^n + 0.5\Delta t^n)
 
     generic formula is
-    u^0 = u^n
-    u^l = \sum_{k=0}^{l-1}\alpha_{l,k}u^k + \beta_l \Delta t L(u^{l-1},t^n + d_{l-1} \Delta t^n)
-    u^{n+1} = u^{m}
 
-    so beta_l --> beta_{l,k-1} in our basic framework
-    Try to put this into Rothe paradigm with linear implicit mass matrix evaluation
-    by saying at stage l
+    .. math::
 
-    m_t \approx \frac{u^l - \sum_{k=0}^{l-1}\alpha_{l,k}u^k}{\Delta t}
+        u^0 = u^n
+        u^l = \sum_{k=0}^{l-1}\alpha_{l,k}u^k + \beta_l \Delta t L(u^{l-1},t^n + d_{l-1} \Delta t^n)
+        u^{n+1} = u^{m}
+
+    so :math:`beta_l --> beta_{l,k-1}` in our basic framework
+
+    Try to put this into Rothe paradigm with linear implicit mass matrix
+    evaluation by saying at stage l
+    
+    .. math::
+
+        m_t \approx \frac{u^l - \sum_{k=0}^{l-1}\alpha_{l,k}u^k}{\Delta t}
 
     spatial residual --> spatial residual * beta_l
 
-    and solve system for u^l
-
+    and solve system for :math:`u^l`
 
     The limiting right now assumes same space for each component
+
     """
     def __init__(self,transport,order=1,runCFL=0.1,limiterType=None,usingSSPRKNewton=False):
         ExplicitRK_base.__init__(self,transport,timeOrder=order,nStages=order,runCFL=runCFL,
@@ -2177,7 +2225,7 @@ class SSPRKPIintegration(ExplicitRK_base):
 
         self.limiter=None; self.uLimDof = None
         self.limiterType = limiterType
-        if self.limiterType != None:
+        if self.limiterType is not None:
             self.limiter = limiterType(transport.mesh,transport.nSpace_global,
                                        transport.u,
                                        transport=transport)
@@ -2190,10 +2238,13 @@ class SSPRKPIintegration(ExplicitRK_base):
         See Cockburn and Hou and Shu
 
         For TVD schemes beta_{l,k} = 0  k < l-1
+
         Note that
-          alpha[l,k] -->  alpha_{l+1,k}
-          beta[l,k]  -->  beta_{l+1,k}
-          dcoefs[k]  -->  d_{k+1} because of the whole caching\ delayed eval deal
+          
+        alpha[l,k] -->  alpha_{l+1,k}
+        beta[l,k]  -->  beta_{l+1,k}
+        dcoefs[k]  -->  d_{k+1} because of the whole caching\ delayed eval deal
+
         """
         order = self.timeOrder; stages = self.nStages
         assert order == stages, "SSPRKPI problem order (%s) != stages (%s) " % (order,stages)
@@ -2234,21 +2285,21 @@ class SSPRKPIintegration(ExplicitRK_base):
         increment stage counter by 1.
         lstage here is last stage completed
         """
-        if self.limiterType != None:
+        if self.limiterType is not None:
             self.limiter.applySlopeLimiting(self.transport.u,
                                             self.uLimDof)
             for ci in range(self.nc):
                 self.transport.u[ci].dof.flat[:] = self.uLimDof[ci].flat[:]
-                assert self.transport.u[ci].par_dof != None
+                assert self.transport.u[ci].par_dof is not None
                 self.transport.u[ci].par_dof.scatter_forward_insert()
 
-                #if par_u != None:
+                #if par_u is not None:
                 #    #mwf debug
                 #    for eN in range(self.transport.mesh.nElements_owned,self.transport.mesh.nElements_global):
                 #        for i in range(self.transport.u[ci].femSpace.dofMap.l2g.shape[1]):
                 #            self.transport.u[ci].dof[self.transport.u[ci].femSpace.dofMap.l2g[eN,i]] = 0.0
                 #    u.flat[:] = self.transport.u[ci].dof.flat[:]
-                #    log("Min_dt_RKcontroller performing scatter forward t= %s " % self.t)
+                #    logEvent("Min_dt_RKcontroller performing scatter forward t= %s " % self.t)
                 #    par_u.scatter_forward_insert()
                 #    self.transport.u[ci].dof.flat[:] = u.flat[:]
         #if
@@ -2277,7 +2328,7 @@ class SSPRKPIintegration(ExplicitRK_base):
         """
         ExplicitRK_base.setFromOptions(self,nOptions)
 
-        if 'limiterType' in dir(nOptions) and nOptions.limiterType != None:
+        if 'limiterType' in dir(nOptions) and nOptions.limiterType is not None:
             self.limiter = None; self.limiterType = None; self.uLimDof = {}
             self.limiterType = nOptions.limiterType
             self.limiter = self.limiterType(self.transport.mesh,
@@ -2311,7 +2362,7 @@ class LinearSSPRKPIintegration(LinearSSPRKintegration):
         LinearSSPRKintegration.__init__(self,transport,order=order,runCFL=runCFL,usingSSPRKNewton=usingSSPRKNewton)
         self.limiter=None; self.uLimDof = None
         self.limiterType = limiterType
-        if self.limiterType != None:
+        if self.limiterType is not None:
             self.limiter = None; self.uLimDof = {}
             self.limiter=limiterType(transport.mesh,transport.nSpace_global,
                                      transport.u,
@@ -2323,12 +2374,12 @@ class LinearSSPRKPIintegration(LinearSSPRKintegration):
         increment stage counter by 1.
         lstage here is last stage completed
         """
-        if self.limiterType != None:
+        if self.limiterType is not None:
             self.limiter.applySlopeLimiting(self.transport.u,
                                             self.uLimDof)
             for ci in range(self.nc):
                 self.transport.u[ci].dof.flat[:] = self.uLimDof[ci].flat[:]
-                assert self.transport.u[ci].par_dof != None
+                assert self.transport.u[ci].par_dof is not None
                 self.transport.u[ci].par_dof.scatter_forward_insert()
             #if
         #for
@@ -2358,7 +2409,7 @@ class LinearSSPRKPIintegration(LinearSSPRKintegration):
         """
         LinearSSPRKintegration.setFromOptions(self,nOptions)
 
-        if 'limiterType' in dir(nOptions) and nOptions.limiterType != None:
+        if 'limiterType' in dir(nOptions) and nOptions.limiterType is not None:
             self.limiter = None; self.limiterType = None; self.uLimDof = {}
             self.limiterType = nOptions.limiterType
             self.limiter = self.limiterType(self.transport.mesh,
@@ -2669,16 +2720,16 @@ class UnstructuredLimiter_base:
         self.useC  = True
         self.initializeMeshInfo(verbose=0)
     def initializeMeshInfo(self,verbose=0):
-        """
-        elementNeighborShapeGradients stores local gradients for simpleces formed from
-          an element's barycenter and neighboring element baryceners
-        elementNeighborShapeGradients[eN,i] <--- local simplex formed from
-          (\bar{\vec x}_{eN},\bar{\vec x}^i_{eN},\bar{\vec x}^{i+1}_{eN})
-        where i goes over local numbering of faces, \bar{\vec x}^{i}_{eN} is the barycenter
-          of the neighbor across from face i.
-        Local numbering for the neighboring simplex is always in that order
+        # """elementNeighborShapeGradients stores local gradients for simpleces
+        # formed from an element's barycenter and neighboring element
+        # baryceners elementNeighborShapeGradients[eN,i] <--- local
+        # simplex formed from (\bar{\vec x}_{eN},\bar{\vec
+        # x}^i_{eN},\bar{\vec x}^{i+1}_{eN}) where i goes over local
+        # numbering of faces, \bar{\vec x}^{i}_{eN} is the barycenter of
+        # the neighbor across from face i.  Local numbering for the
+        # neighboring simplex is always in that order
 
-        """
+        # """
         self.elementNeighborShapeGradients = numpy.zeros((self.mesh.nElements_global,
                                                             self.mesh.nElementBoundaries_element,
                                                             self.mesh.nElementBoundaries_element,
@@ -2865,9 +2916,6 @@ class DGlimiterP1Lagrange2d(CockburnNotesLimiter2d_base):
         self.useC = True
 
     def applySlopeLimiting(self,uIn,uDofOut):
-        """
-
-        """
         for ci in range(self.nc):
             if self.useC == True:
                 self.applyCockburnDGlimiterP1Lagrange2d(self.nu,self.Mfact,
@@ -3273,9 +3321,6 @@ class DGlimiterDurlofskyP1Lagrange2d(UnstructuredLimiter_base):
         del J; del invJ; del detJ
 
     def applySlopeLimiting(self,uIn,uDofOut):
-        """
-
-        """
         for ci in range(self.nc):
             self.applyDurlofskyDGlimiterP1Lagrange2d(self.killExtrema,
                                                      self.allowMinWithUndershoot,
@@ -3343,9 +3388,6 @@ class DGlimiterDurlofskyP1Lagrange3d(UnstructuredLimiter_base):
         del J; del invJ; del detJ
 
     def applySlopeLimiting(self,uIn,uDofOut):
-        """
-
-        """
         for ci in range(self.nc):
             self.applyDurlofskyDGlimiterP1Lagrange3d(self.killExtrema,
                                                      self.allowMinWithUndershoot,
@@ -3386,13 +3428,17 @@ class DGlimiterP1Lagrange1d_Sw(DGlimiterP1Lagrange1d):
         Then go through and eliminate negative values of water height
 
         for cells that have average (h_bar < h_eps)
-           if average height is negative, then zero
-           if both vertices are positive leave alone (could kill slope)
-           if one of the vertices is negative
-              choose slope so that this value is exactly zero
-              zero discharge at this vertex
+           
+        if average height is negative, then zero
+           
+        if both vertices are positive leave alone (could kill slope)
+        
+        if one of the vertices is negative choose slope so that this value is exactly zero
+           
+        zero discharge at this vertex
 
-           May need to add additional step that limits discharge where h is much less than h_eps
+        May need to add additional step that limits discharge where h is much less than h_eps
+
         """
         #go ahead and limit h and hu
         for ci in range(self.nc):
@@ -3430,18 +3476,21 @@ class DGlimiterP2Lagrange1d_Sw(DGlimiterP2Lagrange1d):
         self.transport=transport
     #
     def applySlopeLimiting(self,uIn,uDofOut):
-        """
-        Apply limiting procedure directly using dofs using standard approach
+        """Apply limiting procedure directly using dofs using standard approach
         Then go through and eliminate negative values of water height
 
         for cells that have average (h_bar < h_eps)
-           if average height is negative, then zero
-           if both vertices are positive leave alone (could kill slope)
-           if one of the vertices is negative
-              choose slope so that this value is exactly zero
-              zero discharge at this vertex
+           
+        if average height is negative, then zero
+           
+        if both vertices are positive leave alone (could kill slope)
+           
+        if one of the vertices is negative, choose slope so that this
+        value is exactly zero, zero discharge at this vertex
 
-           May need to add additional step that limits discharge where h is much less than h_eps
+        May need to add additional step that limits discharge where h
+        is much less than h_eps
+
         """
         #go ahead and limit h and hu
         for ci in range(self.nc):
@@ -3607,7 +3656,7 @@ class ForwardIntegrator:
         t = tIn
         failedFlag = False
         if self.dtMeth == NoIntegration:
-            log("""NoIntegration, fint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.dtSET,self.mlvTran.dt))
+            logEvent("""NoIntegration, fint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.dtSET,self.mlvTran.dt))
 
             failedFlag=self.mlNL.solveMultilevel(uList=self.mlvTran.uList,
                                                  rList=self.mlvTran.rList,
@@ -3617,7 +3666,7 @@ class ForwardIntegrator:
             self.tLast = tOut
             t = tOut
             self.mlvTran.updateTimeHistory(t)
-            log("""fint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.dtSET,self.mlvTran.dt))
+            logEvent("""fint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.dtSET,self.mlvTran.dt))
             self.mlvTran.choose_dt(DTSET=self.dtSET,tOut=tOut)
             #mwf debug
             #print """after solve failedFlag= %s """ % failedFlag
@@ -3628,7 +3677,7 @@ class ForwardIntegrator:
                 self.firstStep=False
             while t < tOut and failedFlag== False:
                 #mwf debug
-                log("""\nfint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.dtSET,self.mlvTran.dt))
+                logEvent("""\nfint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.dtSET,self.mlvTran.dt))
                 #try not to step past tOut
 #                 if self.stepExact and abs(t+self.mlvTran.dt-tOut) < 1.0e-10 or t+self.mlvTran.dt > tOut+1.0e-10:
 #                     self.mlvTran.resetDT()
@@ -3696,7 +3745,7 @@ class ForwardIntegrator:
         import Profiling
         if Profiling.logLevel < 2:
             eraseTime='\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b'
-            if self.tstring != None:
+            if self.tstring is not None:
                 sys.stdout.write(eraseTime)
         sys.stdout.write('T= %12.5e, tn = ' % T)
         self.tstring = '%12.5e' % (tn+dt,)
@@ -3751,7 +3800,7 @@ class SteadyStateIntegrator(ForwardIntegrator):
         #end dtMeth
         #force number of stages to be 1
         if not (self.dtMeth == NoIntegration or self.dtMeth == PsiTCtte):
-            log("""WARNING SteadyStateIntegrator type= %s must be NoIntegration or
+            logEvent("""WARNING SteadyStateIntegrator type= %s must be NoIntegration or
 PsiTCtte!""" % self.dtMeth)
     def calculateSolution(self,tIn,tOut):
         """
@@ -3785,7 +3834,7 @@ PsiTCtte!""" % self.dtMeth)
                 converged = False
                 failedFlag = False
                 while nssteps < self.maxPTCsteps and not converged:
-                    if self.dtSET == None:
+                    if self.dtSET is None:
                         model.timeIntegration.choose_dt(tOut)
                     else:
                         model.timeIntegration.dt = self.dtSET
@@ -3875,7 +3924,7 @@ PsiTCtte!""" % self.dtMeth)
         #mwf hack
         if self.ignoreFailure and not converged:
             if failedFlag:
-                log("""SteadyStateIntegrator ignoredFailure t=%s """ % tOut)
+                logEvent("""SteadyStateIntegrator ignoredFailure t=%s """ % tOut)
             #undo any damage. this will get propagated to the other grids and u-list in the projection
             for j,uj in enumerate(self.mlvTran.modelList[-1].u.values()):
                 uj.dof[:] = self.u_dof_save[j][:]
@@ -3890,7 +3939,7 @@ PsiTCtte!""" % self.dtMeth)
         """
         if Profiling.logLevel < 2:
             eraseTime='\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b'
-            if self.tstring != None:
+            if self.tstring is not None:
                 sys.stdout.write(eraseTime)
         sys.stdout.write('ResSS= %12.5e, tn = ' % res)
         self.tstring = '%12.5e' % (tn+dt,)
@@ -3948,7 +3997,7 @@ class SignedDistanceIntegrator(ForwardIntegrator):
         """
         if Profiling.logLevel < 2:
             eraseTime='\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b'
-            if self.tstring != None:
+            if self.tstring is not None:
                 sys.stdout.write(eraseTime)
         sys.stdout.write('ResSS= %12.5e, tn = ' % res)
         self.tstring = '%12.5e' % (tn+dt,)

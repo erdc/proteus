@@ -1,5 +1,8 @@
 """
 Class hierarchies for working with minimization problems
+
+.. inheritance-diagram:: proteus.Optimizers
+   :parts: 1
 """
 #John Chrispell, Summer 07
 class ObjectiveFunction_base:

@@ -1,11 +1,16 @@
 """
 Classes for calculating auxiliary variables based on the numerical solution.
+
+.. inheritance-diagram:: proteus.AuxiliaryVariables
+   :parts: 1
 """
 import numpy
-import Profiling
 import Viewers
 import Archiver
 from xml.etree.ElementTree import *
+
+import Profiling
+from Profiling import logEvent
 
 try:
     from proteusGraphical import vtkViewers
@@ -16,7 +21,6 @@ import cfemIntegrals
 import math
 import os
 
-log = Profiling.logEvent
 class AV_base:
     def __init__(self):
         pass
@@ -31,7 +35,7 @@ class AV_base:
         for child in self.ar.domain:
             if child.tag == "Grid" and child.attrib["Name"] == "Mesh Spatial_Domain":
                 self.arGridCollection = child
-        assert self.arGridCollection != None
+        assert self.arGridCollection is not None
         self.arGrid = self.arGridCollection[-1]
         #write the attribute
         attribute = SubElement(self.arGrid,"Attribute",{"Name":name,
@@ -102,7 +106,7 @@ class BoundaryForce(AV_base):
             elif self.nd == 3:
                 F = numpy.zeros((self.nForces,3),'d')
             else:
-                log("Can't use stress computation for nd = "+`self.nd`)
+                logEvent("Can't use stress computation for nd = "+`self.nd`)
                 F=None
             self.levelFlist.append(F)
         self.historyF=[]
@@ -139,17 +143,17 @@ class BoundaryForce(AV_base):
                                                                        m.ebqe[('dS_u',0)],#dS
                                                                        m.ebqe[('n')],
                                                                        F)
-            log("Force")
-            log(`F`)
+            logEvent("Force")
+            logEvent(`F`)
             Ftot=F[0,:]
             for ib in range(1,self.nForces):
                 Ftot+=F[ib,:]
-            log("Total force on all boundaries")
-            log(`Ftot`)
-        log("Drag Force " +`self.model.stepController.t_model`+" "+`F[-1,0]`)
-        log("Lift Force " +`self.model.stepController.t_model`+" "+`F[-1,1]`)
-        log("Drag Coefficient " +`self.model.stepController.t_model`+" "+`self.C_fact*F[-1,0]`)
-        log("Lift Coefficient " +`self.model.stepController.t_model`+" "+`self.C_fact*F[-1,1]`)
+            logEvent("Total force on all boundaries")
+            logEvent(`Ftot`)
+        logEvent("Drag Force " +`self.model.stepController.t_model`+" "+`F[-1,0]`)
+        logEvent("Lift Force " +`self.model.stepController.t_model`+" "+`F[-1,1]`)
+        logEvent("Drag Coefficient " +`self.model.stepController.t_model`+" "+`self.C_fact*F[-1,0]`)
+        logEvent("Lift Coefficient " +`self.model.stepController.t_model`+" "+`self.C_fact*F[-1,1]`)
 #        for ib in range(self.nForces):
 #             self.writeScalarXdmf(self.C_fact*F[ib,0],"Drag Coefficient %i" % (ib,))
 #             self.writeScalarXdmf(self.C_fact*F[ib,1],"Lift Coefficient %i" % (ib,))
@@ -203,11 +207,11 @@ class PressureProfile(AV_base):
             elif self.nd == 3:
                 pass
             else:
-                log("Can't use stress computation for nd = "+`self.nd`)
+                logEvent("Can't use stress computation for nd = "+`self.nd`)
                 pass
             self.levelPlist.append(p)
             self.levelThetalist.append(theta)
-        if self.ar.hdfFile != None:
+        if self.ar.hdfFile is not None:
             self.ar.hdfFile.createArray("/",'theta',theta)
         #self.historyP=[]
         #self.historyP.append(copy.deepcopy(self.levelPlist))
@@ -232,10 +236,10 @@ class PressureProfile(AV_base):
                     if m.mesh.nodeMaterialTypes[nN] == self.flag:
                         p.append(m.u[0].dof[nN])
             self.levelPlist.append(p)
-        if self.ar.hdfFile != None:
+        if self.ar.hdfFile is not None:
             self.ar.hdfFile.createArray("/","pressure"+str(self.tCount),p)
         self.tCount+=1
-#         if self.dataStorage != None:
+#         if self.dataStorage is not None:
 #             tmp = self.dataStorage['PressureHistory']
 #             tmp.append(self.levelPlist)
 #             self.dataStorage['PressureHistory']=tmp
@@ -324,7 +328,7 @@ class RecirculationLength(AV_base):
                 self.minX = self.minX_domain
             if self.maxX < self.minX_domain:
                 self.maxX = self.minX_domain
-            if self.rcStartX != None:
+            if self.rcStartX is not None:
                 if self.maxX > self.rcStartX:
                     self.levelLlist.append(self.maxX-self.rcStartX)
                 else:
@@ -333,7 +337,7 @@ class RecirculationLength(AV_base):
                 self.levelLlist.append(self.maxX-self.minX)
         #self.historyL.append(copy.deepcopy(self.levelLlist))
         #self.writeScalarXdmf(self.levelLlist,"Recirculation Length")
-#         if self.dataStorage != None:
+#         if self.dataStorage is not None:
 #             tmp = self.dataStorage['RecirculationLengthHistory']
 #             tmp.append(self.levelLlist)
 #             self.dataStorage['RecirculationLengthHistory']=tmp
@@ -341,7 +345,7 @@ class RecirculationLength(AV_base):
 #             self.viewL()
 #         except:
 #             pass
-        log("Recirculation Length "+`self.levelLlist[-1]`)
+        logEvent("Recirculation Length "+`self.levelLlist[-1]`)
 #     def viewL(self):
 #         tList=[]
 #         LList=[]
@@ -386,7 +390,7 @@ class VelocityAverage(AV_base):
             elif self.nd == 3:
                 V = numpy.zeros((3,),'d')
             else:
-                log("Can't use velocity average for nd = "+`self.nd`)
+                logEvent("Can't use velocity average for nd = "+`self.nd`)
                 V=None
             self.levelVlist.append(V)
 #         self.historyV=[]
@@ -420,8 +424,8 @@ class VelocityAverage(AV_base):
 #                                                                m.q[('u',2)],#v
 #                                                                m.q[('dV_u',0)],#dV
 #                                                                V)
-            log("Average Velocity")
-            log(`V`)
+            logEvent("Average Velocity")
+            logEvent(`V`)
             if self.nd == 2:
                 self.Vfile.write('%21.15e %21.15e \n' % tuple(V))
             else:
@@ -475,8 +479,8 @@ class BoundaryPressure(AV_base):
             for i in range(len(A)):#could do this in a fancier way with numpy
                 if abs(A[i]) > 0.0:
                     P[i] /= A[i]
-            log("Pressure")
-            log(`P`)
+            logEvent("Pressure")
+            logEvent(`P`)
         self.historyP.append(copy.deepcopy(self.levelPlist))
 
 class ConservationHistoryMC(AV_base):
@@ -569,7 +573,7 @@ class VelocityNormOverRegion(AV_base):
                         results['L2'] += e2*m.q[('dV_u',0)][eN,k]
                         results['L1'] += e1*m.q[('dV_u',0)][eN,k]
                         results['LI'] = max(results['LI'],ei)
-            log("Velocity Norms in Region %s L2= %s L1= %s LI= %s " % (self.regionIdList,results['L2'],results['L1'],results['LI']))
+            logEvent("Velocity Norms in Region %s L2= %s L1= %s LI= %s " % (self.regionIdList,results['L2'],results['L1'],results['LI']))
             self.Vfile.write('%21.15e %21.15e %21.15e\n' % (results['L2'],results['L1'],results['LI']))
 
 class MassOverRegion(AV_base):
@@ -587,7 +591,7 @@ class MassOverRegion(AV_base):
         self.elementsInRegion = []
         for m in self.model.levelModelList:
             self.elementsInRegion.append([])
-            if self.regionIdList == None:
+            if self.regionIdList is None:
                 #where returns a tuple
                 self.elementsInRegion[-1].append((numpy.arange(m.mesh.nElements_global),))
             else:
@@ -621,10 +625,10 @@ class MassOverRegion(AV_base):
                         results['L2'] += e2*m.q[('dV_u',ci)][eN,k]
                         results['L1'] += e1*m.q[('dV_u',ci)][eN,k]
                         results['LI'] = max(results['LI'],ei)
-            if self.regionIdList==None:
-                log("Mass Norms in Domain Total= %s L2= %s L1= %s LI= %s " % (results['total'],results['L2'],results['L1'],results['LI']))
+            if self.regionIdList is None:
+                logEvent("Mass Norms in Domain Total= %s L2= %s L1= %s LI= %s " % (results['total'],results['L2'],results['L1'],results['LI']))
             else:
-                log("Mass Norms in Domain %s Total= %s L2= %s L1= %s LI= %s " % (self.regionIdList,results['total'],results['L2'],results['L1'],results['LI']))
+                logEvent("Mass Norms in Domain %s Total= %s L2= %s L1= %s LI= %s " % (self.regionIdList,results['total'],results['L2'],results['L1'],results['LI']))
             self.ofile.write('%21.15e %21.15e %21.15e %21.15e\n' % (results['total'],results['L2'],results['L1'],results['LI']))
 
 class PT123velocityGenerator(AV_base):
@@ -650,7 +654,7 @@ class PT123velocityGenerator(AV_base):
         self.mesh= model.levelModelList[-1].mesh
         self.writePT123inputMesh(self.nd,self.mesh)
         self.velocityPostProcessor = self.model.levelModelList[-1].velocityPostProcessor
-        if self.velocityPostProcessor != None:
+        if self.velocityPostProcessor is not None:
             self.PT123_RT0_interpolation_points = self.mesh.nodeArray[self.mesh.elementNodesArray]
             self.PT123_interpolation_values = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'d')
 
@@ -686,7 +690,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123nodalVelocity(self,components):
         #write out velocity file for current time step
-        if self.nodal_velocity_file == None:
+        if self.nodal_velocity_file is None:
             vel_prefix = 'vn1';
             if self.nd == 2:
                 vel_prefix = 'vn2';
@@ -710,7 +714,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123elementVelocity(self,components):
         #write out velocity file for current time step
-        if self.element_velocity_file == None:
+        if self.element_velocity_file is None:
             vel_prefix = 've1';
             if self.nd == 2:
                 vel_prefix = 've2';
@@ -736,7 +740,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123MixedVelocityAsElementVelocity(self,ci):
         #write out velocity file for current time step
-        if self.element_velocity_file == None:
+        if self.element_velocity_file is None:
             vel_prefix = 've1';
             if self.nd == 2:
                 vel_prefix = 've2';
@@ -763,7 +767,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123elementPorosity(self,value=1.0):
         #write out constant value for volume fraction for now
-        if self.element_vf_file == None:
+        if self.element_vf_file is None:
             vf_prefix = 'eemc1';
             if self.nd == 2:
                 vf_prefix = 'eemc2';
@@ -783,7 +787,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123nodalPorosity(self,value=1.0):
         #write out constant value for volume fraction for now
-        if self.nodal_vf_file == None:
+        if self.nodal_vf_file is None:
             vf_prefix = 'nemc1';
             if self.nd == 2:
                 vf_prefix = 'nemc2';
@@ -808,7 +812,7 @@ class PT123velocityGenerator(AV_base):
                 timeToPrint = True
                 break
         if timeToPrint:
-            if self.velocityPostProcessor != None:
+            if self.velocityPostProcessor is not None:
                 self.writePT123MixedVelocityAsElementVelocity(self.ci)
                 self.writePT123elementPorosity(value=1.)
         #mwf stopped here
