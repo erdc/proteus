@@ -73,7 +73,6 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         log("NCLS3P: max numDiff %e" %
             (globalMax(self.numDiff_last[0].max()),))
 
-
 class NumericalFlux(
         proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart):
 
@@ -103,8 +102,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  waterline_interval=-1,
                  movingDomain=False,
                  PURE_BDF=False,
+                 TAYLOR_GALERKIN_METHOD=False,
                  outputQuantDOFs=False):
         
+        self.TAYLOR_GALERKIN_METHOD=TAYLOR_GALERKIN_METHOD
         self.outputQuantDOFs=outputQuantDOFs
         self.PURE_BDF=PURE_BDF
         self.movingDomain = movingDomain
@@ -174,6 +175,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.RD_modelIndex is not None:
             # print self.RD_modelIndex,len(modelList)
             self.rdModel = modelList[self.RD_modelIndex]
+            self.rdModel_ebqe = self.rdModel.ebqe[('u',0)]
+        else:
+            self.rdModel = None
+            self.rdModel_ebqe = numpy.copy(self.model.ebqe[('u',0)])
+            
         if self.eikonalSolverFlag == 2:  # FSW
             self.resDummy = numpy.zeros(self.model.u[0].dof.shape, 'd')
             eikonalSolverType = self.FSWEikonalSolver
@@ -217,6 +223,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_v = numpy.zeros(cebqe[('grad(u)', 0)].shape, 'd')
 
     def preStep(self, t, firstStep=False):
+        # BOUNDARY CONDITION FROM re-distancing model
+        if self.rdModel is None:
+            self.rdModel_ebqe[:] = self.model.ebqe[('u',0)]
+            
+        # Restart flags for stages of taylor galerkin
+        self.model.taylorGalerkinStage = 1
+        self.model.auxTaylorGalerkinFlag = 1
         # SAVE OLD SOLUTION #
         self.model.u_dof_old[:] = self.model.u[0].dof
 
@@ -783,6 +796,11 @@ class LevelModel(OneLevelTransport):
         # interface locator
         self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+
+        # For Taylor Galerkin methods
+        self.taylorGalerkinStage = 1
+        self.auxTaylorGalerkinFlag = 1
+        self.uTilde_dof = numpy.zeros(self.u[0].dof.shape,'d')
         
     # mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
@@ -833,7 +851,8 @@ class LevelModel(OneLevelTransport):
         # cek can put in logic to skip of BC's don't depend on t or u
         # Dirichlet boundary conditions
         # if hasattr(self.numericalFlux,'setDirichletValues'):
-        self.numericalFlux.setDirichletValues(self.ebqe)
+        if (self.taylorGalerkinStage!=2):
+            self.numericalFlux.setDirichletValues(self.ebqe)
         # flux boundary conditions, SHOULDN'T HAVE
         # cNCLS3P.calculateResidual(self.mesh.nElements_global,
         # try to use 1d,2d,3d specific modules
@@ -843,6 +862,10 @@ class LevelModel(OneLevelTransport):
                 self.u[0].dof[dofN] = g(
                     self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],
                     self.timeIntegration.t)
+        
+        if (self.taylorGalerkinStage==2 and self.auxTaylorGalerkinFlag==1):
+            self.uTilde_dof[:] = self.u[0].dof
+            self.auxTaylorGalerkinFlag=0
 
         self.ncls3p.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
@@ -898,12 +921,18 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             self.numericalFlux.isDOFBoundary[0],
-            self.coefficients.rdModel.ebqe[('u', 0)],
+            #self.coefficients.rdModel.ebqe[('u', 0)],
+            self.coefficients.rdModel_ebqe,
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('u', 0)],
             self.interface_locator,
+            self.uTilde_dof,
+            self.coefficients.TAYLOR_GALERKIN_METHOD,
+            self.taylorGalerkinStage,
+            self.timeIntegration.dt,
             self.coefficients.PURE_BDF)
 
+        self.taylorGalerkinStage = 2
         self.quantDOFs[:] = self.interface_locator
         
         if self.forceStrongConditions:
@@ -931,6 +960,7 @@ class LevelModel(OneLevelTransport):
         # mwf debug
         # pdb.set_trace()
         # cNCLS3P.calculateJacobian(self.mesh.nElements_global,
+
         self.ncls3p.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -974,9 +1004,12 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             self.numericalFlux.isDOFBoundary[0],
-            self.coefficients.rdModel.ebqe[('u', 0)],
+            #self.coefficients.rdModel.ebqe[('u', 0)],
+            self.coefficients.rdModel_ebqe,
             self.numericalFlux.ebqe[('u', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
+            self.coefficients.TAYLOR_GALERKIN_METHOD,
+            self.taylorGalerkinStage,
             self.coefficients.PURE_BDF)
 
         # Load the Dirichlet conditions directly into residual
