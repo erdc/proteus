@@ -249,7 +249,8 @@ cdef class ProtChBody:
         self.F_applied = np.zeros(3)  # initialise empty Applied force
         self.M_applied = np.zeros(3)  # initialise empty Applied moment
         self.prescribed_motion_function = None
-
+        self.acceleration = np.zeros(3)
+        self.acceleration_last = np.zeros(3)
         self.velocity = np.zeros(3)
         self.velocity_last = np.zeros(3)
         self.ang_velocity = np.zeros(3)
@@ -742,8 +743,14 @@ cdef class ProtChBody:
                 am = self.ProtChSystem.model_addedmass.levelModelList[-1]
                 for i in range(self.i_start, self.i_end):
                     self.Aij += am.Aij[i]
-            self.F_prot = self.getPressureForces()+self.getShearForces()
-            self.M_prot = self.getMoments()
+        FF = self.Aij*self.acceleration[1]
+        aa = np.zeros(6)
+        aa[:3] = self.acceleration
+        Aija = np.dot(self.Aij, aa)
+        self.setAddedMass(self.Aij)
+        if self.ProtChSystem.model is not None:
+            self.F_prot = self.getPressureForces()+self.getShearForces()+Aija[:3]
+            self.M_prot = self.getMoments()+Aija[3:]
             if self.ProtChSystem.first_step is True:
                 # just apply initial conditions for 1st time step
                 F_bar = self.F_prot
@@ -776,7 +783,6 @@ cdef class ProtChBody:
                     M_body = 2*M_bar-self.M_applied_last
             self.setExternalForces(F_body, M_body)
         # setting added mass
-        self.setAddedMass(self.Aij)
         self.predicted = False
 
     def setExternalForces(self, np.ndarray forces, np.ndarray moments):
@@ -793,6 +799,9 @@ cdef class ProtChBody:
         """
         self.F_applied = forces
         self.M_applied = moments
+        if self.width_2D:
+            self.F_applied *= self.width_2D
+            self.M_applied *= self.width_2D
         self.thisptr.prestep(<double*> forces.data,
                              <double*> moments.data)
 
@@ -1243,21 +1252,22 @@ cdef class ProtChBody:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(values_towrite)
         ## added mass
-        #if t == 0:
-        #    headers = ['t', 't_ch', 't_sim']
-        #    for i in range(6):
-        #        for j in range(6):
-        #            headers += ['A'+str(i)+str(j)]
-        #    with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'w') as csvfile:
-        #        writer = csv.writer(csvfile, delimiter=',')
-        #        writer.writerow(headers)
-        #values_towrite = [t, t_chrono, t_sim]
-        #for i in range(6):
-        #    for j in range(6):
-        #        values_towrite += [self.Aij[i, j]]
-        #with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'a') as csvfile:
-        #    writer = csv.writer(csvfile, delimiter=',')
-        #    writer.writerow(values_towrite)
+        if self.ProtChSystem.model_addedmass is not None:
+            if t == 0:
+                headers = ['t', 't_ch', 't_sim']
+                for i in range(6):
+                    for j in range(6):
+                        headers += ['A'+str(i)+str(j)]
+                with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'w') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=',')
+                    writer.writerow(headers)
+            values_towrite = [t, t_chrono, t_sim]
+            for i in range(6):
+                for j in range(6):
+                    values_towrite += [self.Aij[i, j]]
+            with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'a') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(values_towrite)
 
     def addPrismaticLinksWithSpring(self, np.ndarray pris1,
                                     np.ndarray pris2, double stiffness, double damping,
