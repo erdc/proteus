@@ -136,6 +136,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def __init__(self,
                  CORRECT_VELOCITY=True,
+                 STABILIZATION_TYPE=0, #0: SUPG, 1: EV via weak residual, 2: EV via strong residual
                  cMax=1.0,  # For entropy viscosity (mql)
                  cE=1.0,  # For entropy viscosity (mql)
                  epsFact=1.5,
@@ -284,6 +285,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nd = nd
         #
         # mql: for entropy viscosity
+        self.STABILIZATION_TYPE=STABILIZATION_TYPE
         self.cMax = cMax
         self.cE = cE
         #
@@ -1065,10 +1067,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.KILL_PRESSURE_TERM = options.KILL_PRESSURE_TERM
         else:
             self.KILL_PRESSURE_TERM = False
-        # mql: Use entropy viscosity?
-        self.STABILIZATION_TYPE = 0  # 0: SUPG, 1: EV via weak residual, 2: EV via strong residual
-        if ('STABILIZATION_TYPE') in dir(options):
-            self.STABILIZATION_TYPE = options.STABILIZATION_TYPE
         # mql: Check if materialParameters are declared. This is for convergence tests
         self.hasMaterialParametersAsFunctions = False
         if ('materialParameters') in dir(options):
@@ -2220,7 +2218,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             Cz = numpy.zeros(Cx.shape, 'd')
 
         # mql: select appropiate functions to compute residual and jacobian
-        if (self.STABILIZATION_TYPE == 1 or self.STABILIZATION_TYPE == 2):
+        if (self.coefficients.STABILIZATION_TYPE == 1 or self.coefficients.STABILIZATION_TYPE == 2):
             self.calculateResidual = self.rans3pf.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.rans3pf.calculateJacobian_entropy_viscosity
         else:
@@ -2442,7 +2440,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_nitsche,
             self.q['phisError'],
             self.phisErrorNodal,
-            self.STABILIZATION_TYPE,
+            self.coefficients.STABILIZATION_TYPE,
             self.elementQuadratureWeights[('u', 0)].sum(),
             self.coefficients.cMax,
             self.coefficients.cE,
@@ -2746,6 +2744,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_centroids,
             self.coefficients.particle_nitsche,
             self.KILL_PRESSURE_TERM,
+            self.timeIntegration.dt,
             self.hasMaterialParametersAsFunctions,
             self.q['density'],
             self.q['dynamic_viscosity'],
