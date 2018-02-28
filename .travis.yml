@@ -37,10 +37,13 @@ install:
 - ./hashdist/bin/hit init-home
 - ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
 - ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
+- pushd $HOME
 - mkdir -p hashdist_src
 - mkdir -p hashdist_bld
-- ln -s hashdist_src .hashdist/src 
-- ln -s hashdist_bld .hashdist/bld 
+- cd .hashdist
+- ln -s ../hashdist_src src 
+- ln -s ../hashdist_bld bld
+- popd
 - cd stack
 - ../hashdist/bin/hit build -v default.yaml
 - cd ..
