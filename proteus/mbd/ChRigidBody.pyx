@@ -182,7 +182,9 @@ cdef class ProtChBody:
       object model
       ProtChSystem ProtChSystem
       object Shape
-      int nd, i_start, i_end
+      int nd
+      int i_start
+      int i_end
       double dt
       double width_2D
       object record_dict
@@ -190,16 +192,16 @@ cdef class ProtChBody:
       pych.ChBodyAddedMass ChBody
       np.ndarray position
       np.ndarray position_last
-      np.ndarray F
-      np.ndarray M
+      np.ndarray F  # force as retrieved from Chrono
+      np.ndarray M  # moment as retreived from Chrono
       np.ndarray F_last
       np.ndarray M_last
-      np.ndarray F_prot
-      np.ndarray M_prot
+      np.ndarray F_prot  # force retrieved from Proteus (fluid)
+      np.ndarray M_prot  # moment retrieved from Proteus (fluid)
       np.ndarray F_prot_last
       np.ndarray M_prot_last
-      np.ndarray F_applied
-      np.ndarray M_applied
+      np.ndarray F_applied  # force applied and passed to Chrono
+      np.ndarray M_applied  # moment applied and passed to Chrono
       np.ndarray F_applied_last
       np.ndarray M_applied_last
       np.ndarray acceleration
@@ -228,9 +230,9 @@ cdef class ProtChBody:
       np.ndarray h_predict_last  # predicted displacement
       double h_ang_predict_last  # predicted angular displacement (angle)
       np.ndarray h_ang_vel_predict_last  # predicted angular velocity
-      np.ndarray Aij
-      # np.ndarray free_r
-      # np.ndarray free_x
+      np.ndarray Aij  # added mass array
+      bool applyAddedMass  # will apply added mass if True (default)
+
     def __cinit__(self,
                   ProtChSystem system,
                   shape=None,
@@ -267,6 +269,7 @@ cdef class ProtChBody:
         self.adams_vel = np.zeros((5, 3))
         self.ChBody.SetBodyFixed(False)
         self.Aij = np.zeros((6, 6))  # added mass array
+        self.applyAddedMass = True  # will apply added mass in Chrono calculations if True
         # if self.nd is None:
         #     assert nd is not None, "must set nd if SpatialTools.Shape is not passed"
         #     self.nd = nd
@@ -743,14 +746,19 @@ cdef class ProtChBody:
                 am = self.ProtChSystem.model_addedmass.levelModelList[-1]
                 for i in range(self.i_start, self.i_end):
                     self.Aij += am.Aij[i]
-        FF = self.Aij*self.acceleration[1]
-        aa = np.zeros(6)
-        aa[:3] = self.acceleration
-        Aija = np.dot(self.Aij, aa)
-        self.setAddedMass(self.Aij)
+        # setting added mass
+        if self.applyAddedMass is True:
+            FF = self.Aij*self.acceleration[1]
+            aa = np.zeros(6)
+            aa[:3] = self.acceleration
+            Aija = np.dot(self.Aij, aa)
+            self.setAddedMass(self.Aij)
         if self.ProtChSystem.model is not None:
-            self.F_prot = self.getPressureForces()+self.getShearForces()+Aija[:3]
-            self.M_prot = self.getMoments()+Aija[3:]
+            self.F_prot = self.getPressureForces()+self.getShearForces()
+            self.M_prot = self.getMoments()
+            if self.applyAddedMass is True:
+                self.F_prot += Aija[:3]
+                self.M_prot += Aija[3:]
             if self.ProtChSystem.first_step is True:
                 # just apply initial conditions for 1st time step
                 F_bar = self.F_prot
@@ -782,7 +790,6 @@ cdef class ProtChBody:
                     F_body = 2*F_bar-self.F_applied_last
                     M_body = 2*M_bar-self.M_applied_last
             self.setExternalForces(F_body, M_body)
-        # setting added mass
         self.predicted = False
 
     def setExternalForces(self, np.ndarray forces, np.ndarray moments):
@@ -923,6 +930,8 @@ cdef class ProtChBody:
         # get first, store then on initial time step
         self.getValues()
         self.storeValues()
+        # set mass matrix with no added mass
+        self.setAddedMass(np.zeros((6,6)))
         # self.thisptr.setRotation(<double*> self.rotation_init.data)
         #
 
