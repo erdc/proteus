@@ -34,7 +34,7 @@ install:
   #- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
   #- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
 - cd stack
-- ../hashdist/bin/hit build -v default.yaml
+  #- ../hashdist/bin/hit build -v default.yaml
 - cd ..
 - git submodule init
 - git submodule update --recursive --remote  
