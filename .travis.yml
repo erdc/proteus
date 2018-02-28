@@ -14,9 +14,6 @@ addons:
     - libssl-dev
     - python-lzma
 
-cache:
-  directories:
-    - $HOME/.hashdist  
 
 before_install:
 - pip install pyliblzma
