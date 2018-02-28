@@ -34,9 +34,13 @@ install:
 - make hashdist
 - make stack
 - make stack/default.yaml
-- ./hashdist/bin/hit init-home || true
-- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source" || true
-- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build" || true
+- ./hashdist/bin/hit init-home
+- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
+- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
+- mkdir -p hashdist_src
+- mkdir -p hashdist_bld
+- ln -s hashdist_src .hashdist/src
+- ln -s hashdist_bld ./hashdist/bld
 - cd stack
 - ../hashdist/bin/hit build -v default.yaml
 - cd ..
@@ -52,7 +56,8 @@ install:
 
 cache:
   directories:
-    - $HOME/.hashdist    
+    - $HOME/hashdist_src    
+    - $HOME/hashdist_bld    
 
 script:
 - $SCRIPT
