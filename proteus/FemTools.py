@@ -5404,7 +5404,7 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
         if ar.has_h5py:
             if ar.global_sync:
                 permute = np.argsort(u.femSpace.dofMap.subdomain2global)
-                u.dof[:] = ar.hdfFile["/"+u.name+"_t"+str(tCount)][u.femSpace.dofMap.subdomain2global[permute].tolist()]
+                u.dof[permute] = ar.hdfFile["/"+u.name+"_t"+str(tCount)][u.femSpace.dofMap.subdomain2global[permute].tolist()]
             else:
                 u.dof[:]=ar.hdfFile["/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)].value
         else:
