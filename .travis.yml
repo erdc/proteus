@@ -3,6 +3,10 @@ sudo: required
 
 language: python
 
+env:
+  - SCRIPT=`py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus`
+  - SCRIPT=`py.test --boxed -v air-water-vv/Tests/`
+
 python:
 - 2.7
 
@@ -30,11 +34,11 @@ install:
 - make hashdist
 - make stack
 - make stack/default.yaml
-  #- ./hashdist/bin/hit init-home
-  #- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
-  #- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
+- ./hashdist/bin/hit init-home || true
+- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source" || true
+- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build" || true
 - cd stack
-  #- ../hashdist/bin/hit build -v default.yaml
+- ../hashdist/bin/hit build -v default.yaml
 - cd ..
 - git submodule init
 - git submodule update --recursive --remote  
@@ -51,8 +55,7 @@ cache:
     - $HOME/.hashdist    
 
 script:
-- py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus
-- py.test --boxed -v air-water-vv/Tests/
+- $SCRIPT
 
 notifications:
   email:
