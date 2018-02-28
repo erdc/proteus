@@ -14,6 +14,10 @@ addons:
     - libssl-dev
     - python-lzma
 
+cache:
+  directories:
+    - $HOME/.hashdist  
+
 before_install:
 - pip install pyliblzma
 - wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
@@ -38,6 +42,7 @@ install:
 - git submodule init
 - git submodule update --recursive --remote  
 - make profile
+- make distclean
 - FC=gfortran CC=mpicc CXX=mpicxx make install
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
