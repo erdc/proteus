@@ -213,7 +213,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_sdfList=[],
                  particle_velocityList=[],
                  granular_sdf_Calc=None,
-                 granular_vel_Calc=None
+                 granular_vel_Calc=None,
+                 use_sbm=0
                  ):
         self.CORRECT_VELOCITY = CORRECT_VELOCITY
         self.nParticles = nParticles
@@ -308,6 +309,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nonlinearDragFactor = 1.0
         if self.killNonlinearDrag:
             self.nonlinearDragFactor = 0.0
+        #
+        self.use_sbm = use_sbm
+        #
         mass = {}
         advection = {}
         diffusion = {}
@@ -427,6 +431,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_velocities = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape, 'd')
 
         self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
+        self.ebq_global_phi_s = numpy.ones_like(self.model.ebq_global[('totalFlux',0)]) * 1.e10
+        self.ebq_global_grad_phi_s = numpy.ones_like(self.model.ebq_global[('velocityAverage',0)]) * 1.e10
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
         # otherwise the sdf are calculated based on the input sdf list for each body
@@ -447,6 +453,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 temp_3 = np.minimum(temp_2, self.phisField)
                 self.phisField = temp_3
                 self.model.q[('phis')] = temp_3
+                for ebN in range(self.model.ebq_global['x'].shape[0]):
+                    for kb in range(self.model.ebq_global['x'].shape[1]):
+                        sdf,sdNormals = self.granular_sdf_Calc(self.model.ebq_global['x'][ebN,kb],i)
+                        if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                            self.ebq_global_phi_s[ebN,kb]=sdf
+                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
         else:
             for i, sdf, vel in zip(range(self.nParticles),
                                    self.particle_sdfList, self.particle_velocityList):
@@ -456,6 +468,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         self.particle_velocities[i, eN, k] = vel(0, self.model.q['x'][eN, k])
                 self.model.q[('phis', i)] = self.particle_signed_distances[i]
                 self.model.q[('phis_vel', i)] = self.particle_velocities[i]
+                for ebN in range(self.model.ebq_global['x'].shape[0]):
+                    for kb in range(self.model.ebq_global['x'].shape[1]):
+                        sdf_ebN_kb,sdNormals = sdf(0,self.model.ebq_global['x'][ebN,kb],)
+                        if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                            self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
+                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
 
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
@@ -582,7 +600,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         ), "epsFact_solid  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
 
     def initializeMesh(self, mesh):
-        self.phi_s = numpy.zeros(mesh.nodeArray.shape[0], 'd')
+        self.phi_s = numpy.ones(mesh.nodeArray.shape[0], 'd')*1e10
 
         if self.granular_sdf_Calc is not None:
             print ("updating", self.nParticles, " particles...")
@@ -595,7 +613,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             for i, sdf in zip(range(self.nParticles),
                               self.particle_sdfList):
                 for j in range(mesh.nodeArray.shape[0]):
-                    self.phi_s[j], sdNormals = sdf(0, mesh.nodeArray[j, :])
+                    #self.phi_s[j], sdNormals = sdf(0, mesh.nodeArray[j, :])
+                    sdf_j,sdNormals=sdf(0,mesh.nodeArray[j,:])
+                    if (abs(sdf_j) < abs(self.phi_s[j])):
+                        self.phi_s[j] = sdf_j
 
         # cek we eventually need to use the local element diameter
         self.eps_density = self.epsFact_density * mesh.h
@@ -984,12 +1005,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         self.phi_s[j] = sdf
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
-                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i,
-                                                                                                        eN, k] = self.granular_sdf_Calc(self.model.q['x'][eN, k], i)
+                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = self.granular_sdf_Calc(self.model.q['x'][eN, k], i)
                         self.particle_velocities[i, eN, k] = self.granular_vel_Calc(self.model.q['x'][eN, k], i)
                         if (abs(self.particle_signed_distances[i, eN, k]) < abs(self.phisField[eN, k])):
                             self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
-
+                for ebN in range(self.model.ebq_global['x'].shape[0]):
+                    for kb in range(self.model.ebq_global['x'].shape[1]):
+                        sdf,sdNormals = self.granular_sdf_Calc(self.model.ebq_global['x'][ebN,kb],i)
+                        if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                            self.ebq_global_phi_s[ebN,kb]=sdf
+                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
             self.model.q[('phis')] = self.phisField
 
         else:
@@ -1005,6 +1030,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     for k in range(self.model.q['x'].shape[1]):
                         self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(t, self.model.q['x'][eN, k])
                         self.particle_velocities[i, eN, k] = vel(t, self.model.q['x'][eN, k])
+                for ebN in range(self.model.ebq_global['x'].shape[0]):
+                    for kb in range(self.model.ebq_global['x'].shape[1]):
+                        sdf_ebN_kb,sdNormals = sdf(t, self.model.ebq_global['x'][ebN,kb])
+                        if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                            self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
+                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
 
         if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
@@ -2229,6 +2260,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.pressureModel.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.isActiveDOF = np.ones_like(r);
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2238,6 +2270,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.PSTAB,
             self.mesh.elementNodesArray,
             self.elementQuadratureWeights[('u', 0)],
+            self.pressureModel.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,#: dim of FE space of pressure
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
             self.pressureModel.u[0].femSpace.psi,
@@ -2292,6 +2325,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.shockCapturing.shockCapturingFactor,
             self.numericalFlux.penalty_constant,
             self.coefficients.epsFact_solid,
+            self.coefficients.ebq_global_phi_s,
+            self.coefficients.ebq_global_grad_phi_s,
+            self.coefficients.phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
             self.coefficients.q_vos,
@@ -2368,6 +2404,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             r,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
+            self.mesh.elementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_vf,
@@ -2467,8 +2504,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dynamic_viscosity'],
             self.ebqe['density'],
             self.ebqe['dynamic_viscosity'],
-            self.u[0].femSpace.order)
-
+            self.u[0].femSpace.order,
+            self.isActiveDOF,
+            self.coefficients.use_sbm)
+        r*=self.isActiveDOF
+#         print "***********",np.amin(r),np.amax(r),np.amin(self.isActiveDOF),np.amax(self.isActiveDOF)
+#         import pdb
+#         pdb.set_trace()
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):
             self.q[('u', dim)][:] = self.q[('velocity', 0)][:, :, dim]
@@ -2600,6 +2642,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.penalty_constant,
             # VRANS start
             self.coefficients.epsFact_solid,
+            self.coefficients.ebq_global_phi_s,
+            self.coefficients.ebq_global_grad_phi_s,
+            self.coefficients.phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
             self.coefficients.q_vos,
@@ -2680,6 +2725,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             jacobian,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
+            self.mesh.elementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_vf,
@@ -2749,7 +2795,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['density'],
             self.q['dynamic_viscosity'],
             self.ebqe['density'],
-            self.ebqe['dynamic_viscosity'])
+            self.ebqe['dynamic_viscosity'],
+            self.coefficients.use_sbm)
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(
@@ -2774,6 +2821,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             self.nzval[i] = 0.0
                             # print "RBLES zeroing residual cj = %s dofN= %s
                             # global_dofN= %s " % (cj,dofN,global_dofN)
+        # sb method
+        for global_dofN in np.where(self.isActiveDOF==0.0)[0]:
+            for i in range(
+                    self.rowptr[global_dofN],
+                    self.rowptr[global_dofN + 1]):
+                if (self.colind[i] == global_dofN):
+                    self.nzval[i] = 1.0
+                else:
+                    self.nzval[i] = 0.0
         log("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1

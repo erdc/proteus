@@ -2585,6 +2585,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double PSTAB,
                                int * mesh_l2g,
                                double * dV_ref,
+                               int nDOF_per_element_pressure,
                                double * p_trial_ref,
                                double * p_grad_trial_ref,
                                double * p_test_ref,
@@ -2636,6 +2637,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double C_b,
                                # VRANS start
                                double * eps_solid,
+                               double* ebq_global_phi_solid,
+                               double* ebq_global_grad_phi_solid,
+                               double* phi_solid_nodes,
                                double * phi_solid,
                                double * q_velocity_solid,
                                double * q_vos,
@@ -2694,6 +2698,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * globalResidual,
                                int nExteriorElementBoundaries_global,
                                int * exteriorElementBoundariesArray,
+                               int * elementBoundariesArray,
                                int * elementBoundaryElementsArray,
                                int * elementBoundaryLocalElementBoundariesArray,
                                double * ebqe_vf_ext,
@@ -2795,7 +2800,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * dynamic_viscosity_as_function,
                                double * ebqe_density_as_function,
                                double * ebqe_dynamic_viscosity_as_function,
-                               double order_polynomial)
+                               double order_polynomial,
+                               double* isActiveDOF,
+                               int USE_SBM)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -2854,6 +2861,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double C_b,
                                # VRANS start
                                double * eps_solid,
+                               double *ebq_global_phi_solid,
+                               double *ebq_global_grad_phi_solid,
+                               double *phi_solid_nodes,
                                double * phi_solid,
                                double * q_velocity_solid,
                                double * q_vos,
@@ -2911,6 +2921,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * globalJacobian,
                                int nExteriorElementBoundaries_global,
                                int * exteriorElementBoundariesArray,
+                               int * elementBoundariesArray,
                                int * elementBoundaryElementsArray,
                                int * elementBoundaryLocalElementBoundariesArray,
                                double * ebqe_vf_ext,
@@ -2980,7 +2991,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * density_as_function,
                                double * dynamic_viscosity_as_function,
                                double * ebqe_density_as_function,
-                               double * ebqe_dynamic_viscosity_as_function)
+                               double * ebqe_dynamic_viscosity_as_function,
+                               int USE_SBM)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -3487,6 +3499,7 @@ cdef class RANS3PF2D:
                           double PSTAB,
                           numpy.ndarray mesh_l2g,
                           numpy.ndarray dV_ref,
+                          int nDOF_per_element_pressure,
                           numpy.ndarray p_trial_ref,
                           numpy.ndarray p_grad_trial_ref,
                           numpy.ndarray p_test_ref,
@@ -3538,6 +3551,9 @@ cdef class RANS3PF2D:
                           double C_b,
                           # VRANS start
                           numpy.ndarray eps_solid,
+                          numpy.ndarray ebq_global_phi_solid,
+                          numpy.ndarray ebq_global_grad_phi_solid,
+                          numpy.ndarray phi_solid_nodes,
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
                           numpy.ndarray q_vos,
@@ -3594,6 +3610,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray globalResidual,
                           int nExteriorElementBoundaries_global,
                           numpy.ndarray exteriorElementBoundariesArray,
+                          numpy.ndarray elementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray,
                           numpy.ndarray ebqe_vf_ext,
@@ -3695,7 +3712,9 @@ cdef class RANS3PF2D:
                           numpy.ndarray dynamic_viscosity_as_function,
                           numpy.ndarray ebqe_density_as_function,
                           numpy.ndarray ebqe_dynamic_viscosity_as_function,
-                          double order_polynomial):
+                          double order_polynomial,
+                          numpy.ndarray isActiveDOF,
+                          int USE_SBM):
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                         < double * > mesh_grad_trial_ref.data,
                                         < double * > mesh_dof.data,
@@ -3704,6 +3723,7 @@ cdef class RANS3PF2D:
                                         PSTAB,
                                         < int * > mesh_l2g.data,
                                         < double * > dV_ref.data,
+                                        nDOF_per_element_pressure,
                                         < double * > p_trial_ref.data,
                                         < double * > p_grad_trial_ref.data,
                                         < double * > p_test_ref.data,
@@ -3753,7 +3773,10 @@ cdef class RANS3PF2D:
                                         Cd_sge,
                                         C_dc,
                                         C_b,
-                                        < double * > eps_solid.data,
+                                        < double* > eps_solid.data,
+                                        < double* > ebq_global_phi_solid.data,
+                                        < double* > ebq_global_grad_phi_solid.data,
+                                        < double* > phi_solid_nodes.data,
                                         < double * > phi_solid.data,
                                         < double * > q_velocity_solid.data,
                                         < double * > q_vos.data,
@@ -3809,6 +3832,7 @@ cdef class RANS3PF2D:
                                         < double * > globalResidual.data,
                                         nExteriorElementBoundaries_global,
                                         < int * > exteriorElementBoundariesArray.data,
+                                        < int * > elementBoundariesArray.data,
                                         < int * > elementBoundaryElementsArray.data,
                                         < int * > elementBoundaryLocalElementBoundariesArray.data,
                                         < double * > ebqe_vf_ext.data,
@@ -3908,7 +3932,9 @@ cdef class RANS3PF2D:
                                         < double * > dynamic_viscosity_as_function.data,
                                         < double * > ebqe_density_as_function.data,
                                         < double * > ebqe_dynamic_viscosity_as_function.data,
-                                        order_polynomial)
+                                        order_polynomial,
+                                        < double *> isActiveDOF.data,
+                                        USE_SBM)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -3969,6 +3995,9 @@ cdef class RANS3PF2D:
                           double C_b,
                           # VRANS start
                           numpy.ndarray eps_solid,
+                          numpy.ndarray ebq_global_phi_solid,
+                          numpy.ndarray ebq_global_grad_phi_solid,
+                          numpy.ndarray phi_solid_nodes,
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
                           numpy.ndarray q_vos,
@@ -4024,6 +4053,7 @@ cdef class RANS3PF2D:
                           globalJacobian,
                           int nExteriorElementBoundaries_global,
                           numpy.ndarray exteriorElementBoundariesArray,
+                          numpy.ndarray elementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray,
                           numpy.ndarray ebqe_vf_ext,
@@ -4093,7 +4123,8 @@ cdef class RANS3PF2D:
                           numpy.ndarray density_as_function,
                           numpy.ndarray dynamic_viscosity_as_function,
                           numpy.ndarray ebqe_density_as_function,
-                          numpy.ndarray ebqe_dynamic_viscosity_as_function):
+                          numpy.ndarray ebqe_dynamic_viscosity_as_function,
+                          int USE_SBM):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double * > mesh_trial_ref.data,
@@ -4153,6 +4184,9 @@ cdef class RANS3PF2D:
                                         C_dg,
                                         C_b,
                                         < double * > eps_solid.data,
+                                        < double* > ebq_global_phi_solid.data,
+                                        < double* > ebq_global_grad_phi_solid.data,
+                                        < double* > phi_solid_nodes.data,
                                         < double * > phi_solid.data,
                                         < double * > q_velocity_solid.data,
                                         < double * > q_vos.data,
@@ -4207,6 +4241,7 @@ cdef class RANS3PF2D:
                                         < double * > globalJacobian_a.data,
                                         nExteriorElementBoundaries_global,
                                         < int * > exteriorElementBoundariesArray.data,
+                                        < int * > elementBoundariesArray.data,
                                         < int * > elementBoundaryElementsArray.data,
                                         < int * > elementBoundaryLocalElementBoundariesArray.data,
                                         < double * > ebqe_vf_ext.data,
@@ -4274,7 +4309,8 @@ cdef class RANS3PF2D:
                                         < double * > density_as_function.data,
                                         < double * > dynamic_viscosity_as_function.data,
                                         < double * > ebqe_density_as_function.data,
-                                        < double * > ebqe_dynamic_viscosity_as_function.data)
+                                        < double * > ebqe_dynamic_viscosity_as_function.data,
+                                        USE_SBM)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,

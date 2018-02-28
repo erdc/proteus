@@ -4,15 +4,14 @@ The problelm is to simulate the flow (density=1, viscoity=0.001) around the cyli
 
 
 
-The whole algorithm is a projection scheme, where the momentum equation is solved using RANS3P.py, the pressure increment is compuetd in PreInc.py, and the pressure at the next step is updated in Pressure.py.
-
+The whole algorithm is a projection scheme, where the momentum equation is solved using RANS3P.py, the pressure increment is computed in PreInc.py, and the pressure at the next step is updated in Pressure.py.
 
 
 ## Preprocessing
 
-The file cylinder.py is called first, where *he*, the maximum size of edge, is passed into *symmetric2D* to generate mesh. To increase the accuracy of the cylinder, there are at least 40 points on the boundary of the cylinder.
+The file cylinder.py is called first, where *he*, the maximum size of edge, is passed into *symmetric2D* to generate the mesh. To increase the accuracy of the cylinder, there are at least 40 points on the boundary of the cylinder.
 The final time of the problem is *T=8*. The boundary flags are ['left', 'right', 'top', 'bottom', 'obstacle'].
-For boundary condition, the 'left' side is of inflow type, the 'right' side is of outflow type, and other sides are enfored non-slip boundary condition.
+For boundary condition, the 'left' side is of inflow type, the 'right' side is of outflow type, and other sides are enforced non-slip boundary condition.
 
 
 
