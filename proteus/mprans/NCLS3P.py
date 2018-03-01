@@ -101,7 +101,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  checkMass=True, epsFact=1.5,
                  useMetrics=0.0, sc_uref=1.0, sc_beta=1.0,
                  waterline_interval=-1,
-                 movingDomain=False):
+                 movingDomain=False,
+                 PURE_BDF=False,
+                 outputQuantDOFs=False):
+        
+        self.outputQuantDOFs=outputQuantDOFs
+        self.PURE_BDF=PURE_BDF
         self.movingDomain = movingDomain
         self.useMetrics = useMetrics
         self.epsFact = epsFact
@@ -139,8 +144,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # the level set model
         self.model = modelList[self.modelIndex]
 
-        #self.u_old_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
-        self.u_old_dof = self.model.u[0].dof.copy()
         # the velocity
         if self.flowModelIndex >= 0:
             self.flowModel = modelList[self.flowModelIndex]
@@ -214,6 +217,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_v = numpy.zeros(cebqe[('grad(u)', 0)].shape, 'd')
 
     def preStep(self, t, firstStep=False):
+        # SAVE OLD SOLUTION #
+        self.model.u_dof_old[:] = self.model.u[0].dof
+
+        # COMPUTE NEW VELOCITY (if given by user) #
+        if self.model.hasVelocityFieldAsFunction:
+            self.model.updateVelocityFieldAsFunction()
+
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,
@@ -235,7 +245,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def postStep(self, t, firstStep=False):
-        self.u_old_dof[:] = self.model.u[0].dof
         self.model.q['dV_last'][:] = self.model.q['dV']
         # if self.checkMass:
         #     self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
@@ -347,6 +356,8 @@ class LevelModel(OneLevelTransport):
             for ci in range(1, coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[
                     0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
+        self.u_dof_old = None
+
         # Simplicial Mesh
         # assume the same mesh for  all components for now
         self.mesh = self.u[0].femSpace.mesh
@@ -763,9 +774,38 @@ class LevelModel(OneLevelTransport):
         self.waterline_calls = 0
         self.waterline_prints = 0
 
+        # mql. Allow the user to provide functions to define the velocity field
+        self.hasVelocityFieldAsFunction = False
+        if ('velocityField') in dir(options):
+            self.velocityField = options.velocityField
+            self.hasVelocityFieldAsFunction = True
+
+        # interface locator
+        self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+        
     # mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
+
+    def updateVelocityFieldAsFunction(self):
+        X = {0: self.q[('x')][:, :, 0],
+             1: self.q[('x')][:, :, 1],
+             2: self.q[('x')][:, :, 2]}
+        t = self.timeIntegration.t
+        self.coefficients.q_v[..., 0] = self.velocityField[0](X, t)
+        self.coefficients.q_v[..., 1] = self.velocityField[1](X, t)
+        if (self.nSpace_global == 3):
+            self.coefficients.q_v[..., 2] = self.velocityField[2](X, t)
+
+        # BOUNDARY
+        ebqe_X = {0: self.ebqe['x'][:, :, 0],
+                  1: self.ebqe['x'][:, :, 1],
+                  2: self.ebqe['x'][:, :, 2]}
+        self.coefficients.ebqe_v[..., 0] = self.velocityField[0](ebqe_X, t)
+        self.coefficients.ebqe_v[..., 1] = self.velocityField[1](ebqe_X, t)
+        if (self.nSpace_global == 3):
+            self.coefficients.ebqe_v[..., 2] = self.velocityField[2](ebqe_X, t)
 
     def calculateElementResidual(self):
         if self.globalResidualDummy is not None:
@@ -779,7 +819,13 @@ class LevelModel(OneLevelTransport):
         """
         # mwf debug
         # pdb.set_trace()
+
+        if self.u_dof_old is None:
+            # Pass initial condition to u_dof_old
+            self.u_dof_old = numpy.copy(self.u[0].dof)
+
         r.fill(0.0)
+        self.interface_locator.fill(0.0) 
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -831,7 +877,7 @@ class LevelModel(OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.u[0].dof,
-            self.coefficients.u_old_dof,
+            self.u_dof_old,
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u', 0)],
@@ -854,8 +900,12 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u', 0)],
             self.numericalFlux.ebqe[('u', 0)],
-            self.ebqe[('u', 0)])
+            self.ebqe[('u', 0)],
+            self.interface_locator,
+            self.coefficients.PURE_BDF)
 
+        self.quantDOFs[:] = self.interface_locator
+        
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
@@ -926,7 +976,8 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u', 0)],
             self.numericalFlux.ebqe[('u', 0)],
-            self.csrColumnOffsets_eb[(0, 0)])
+            self.csrColumnOffsets_eb[(0, 0)],
+            self.coefficients.PURE_BDF)
 
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
@@ -1061,7 +1112,7 @@ class LevelModel(OneLevelTransport):
                 self.u[0].femSpace.dofMap.l2g,
                 self.mesh.elementDiametersArray,
                 self.u[0].dof,
-                self.coefficients.u_old_dof,
+                self.u_dof_old,
                 self.coefficients.q_v,
                 self.timeIntegration.m_tmp[0],
                 self.q[('u', 0)],
