@@ -8,7 +8,7 @@ from proteus import Context
 
 ct = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("Refinement",8, "refinement"),
+    ("Refinement",4, "refinement"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
     ("vspaceOrder",1,"FE space for velocity"),
     ("pspaceOrder",1,"FE space for pressure"),
