@@ -7090,7 +7090,7 @@ DaetkPetscSys_init(DaetkPetscSys *self, PyObject *args, PyObject *kwds)
       argv[i] = PyString_AsString(PyList_GetItem(sys_argv,i));
     }
   argv[argc] = new char[1];
-  argv[argc] = '\0';
+  argv[argc][0] = '\0';
   //cek need to think more about how to handle petsc4py and daetk. 
   //if (isInitialized)
   //Daetk::Petsc::Sys::initialized=true;

@@ -1036,14 +1036,6 @@ class NS_base:  # (HasTraits):
                     del scalar
 
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-            # scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal
-            # p0.domain.PUMIMesh.transferFieldToPUMI(
-            #     'velocityError', scalar)
-
-            # This is hardcoded for the RANS3PF to be the 4th model
-            scalar[:,0] = self.modelList[4].levelModelList[0].coefficients.phi_s
-            p0.domain.PUMIMesh.transferFieldToPUMI(
-                'phi_s', scalar)
 
             del scalar
             #Get Physical Parameters
@@ -1206,7 +1198,7 @@ class NS_base:  # (HasTraits):
         for index,m in self.modelSpinUp.iteritems():
             spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
-            logEvent("Attaching models to model "+p.name)
+            logEvent("Attaching models to model "+m.name)
             m.attachModels(self.modelList)
             if index not in self.modelSpinUp:
                 spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
@@ -1341,6 +1333,7 @@ class NS_base:  # (HasTraits):
        #     print "Min / Max residual %s / %s" %(lr.min(),lr.max())
 
         self.nSequenceSteps = 0
+        nSequenceStepsLast=self.nSequenceSteps # prevent archiving the same solution twice
         self.nSolveSteps=self.nList[0].adaptMesh_nSteps-1
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
@@ -1488,7 +1481,8 @@ class NS_base:  # (HasTraits):
                 if(self.PUMI_estimateError()):
                     self.PUMI_adaptMesh()
             #end system step iterations
-            if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
+            if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
+                nSequenceStepsLast = self.nSequenceSteps
                 self.tCount+=1
                 for index,model in enumerate(self.modelList):
                     self.archiveSolution(model,index,self.systemStepController.t_system_last)
@@ -1504,6 +1498,9 @@ class NS_base:  # (HasTraits):
             if(self.PUMI_estimateError()):
               self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
+        # compute auxiliary quantities at last time step
+        if hasattr(self.modelList[-1].levelModelList[-1],'runAtEOS'):
+            self.modelList[-1].levelModelList[-1].runAtEOS()
 
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)

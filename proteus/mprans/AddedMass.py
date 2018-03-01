@@ -30,12 +30,27 @@ class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exter
 
 class Coefficients(TC_base):
     """
-    TODO
+    Parameters
+    ----------
+    nd: int
+        Number of space dimensions.
+    V_model: int
+        Index of Navier-Stokes model.
+    barycenters: array_like
+        List of domain barycenters.
+    flags_rigidbody: array_like
+        Array of integers of length at least as long as maximum domain flag,
+        with 0 at indices corresponding to flags for fixed walls, and 1 at
+        indices corresponding to flags for rigid bodies.
+        e.g. if only flag 2 is rigid body, and the max value of flag is 5,
+        the array will look like np.array([0,0,1,0,0,0])
     """
 
     def __init__(self,
                  nd=2,
-                 V_model=None):
+                 V_model=None,
+                 barycenters=None,
+                 flags_rigidbody=None):
         """
         TODO
         """
@@ -55,6 +70,17 @@ class Coefficients(TC_base):
                          sparseDiffusionTensors=sdInfo,
                          useSparseDiffusion=True)
         self.flowModelIndex=V_model
+        self.barycenters = barycenters
+        if flags_rigidbody is not None:
+            self.flags_rigidbody = flags_rigidbody
+        else:
+            Profiling.logEvent("Warning: flags_rigidbody was not set for"+
+                               "AddedMass model, using a zero array of length"+
+                               "1000, this sets all boundaries as fixed walls"+
+                               "for the added mass model and might cause"+
+                               " issues if the domain contains more flags")
+            self.flags_rigidbody = np.zeros(1000, dtype='int32')
+
     def attachModels(self, modelList):
         """
         Attach the model for velocity and density to PresureIncrement model
@@ -66,7 +92,7 @@ class Coefficients(TC_base):
         """
         Give the TC object access to the mesh for any mesh-dependent information.
         """
-        pass
+        self.mesh = mesh
 
     def initializeElementQuadrature(self, t, cq):
         """
@@ -351,7 +377,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         # simplified allocations for test==trial and also check if space is mixed or not
         #
-        self.Aij = numpy.zeros((6,),'d')
+        self.added_mass_i = 0;
+        nBoundariesMax = int(globalMax(max(self.mesh.elementBoundaryMaterialTypes))) + 1
+        self.Aij = np.zeros((nBoundariesMax, 6, 6), 'd')
         self.q = {}
         self.ebq = {}
         self.ebq_global = {}
@@ -582,6 +610,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     options.periodicDirichletConditions)
         else:
             self.numericalFlux = None
+        # strong Dirichlet
+        self.dirichletConditionsForceDOF = {0: DOFBoundaryConditions(self.u[cj].femSpace, dofBoundaryConditionsSetterDict[cj], weakDirichletConditions=False)}
         # set penalty terms
         # cek todo move into numerical flux initialization
         if self.ebq_global.has_key('penalty'):
@@ -621,6 +651,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
             self.nElementBoundaryQuadraturePoints_elementBoundary,
             compKernelFlag)
+        self.barycenters = self.coefficients.barycenters
+        self.flags_rigidbody = self.coefficients.flags_rigidbody
 
     def calculateCoefficients(self):
         pass
@@ -638,8 +670,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         r.fill(0.0)
         # Load the unknowns into the finite element dof
+        for dofN, g in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.iteritems():
+            # load the BC valu        # Load the unknowns into the finite element dof
+            u[self.offset[0] + self.stride[0] * dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         self.setUnknowns(u)
-        self.Aij.fill(0.0)
+        self.Aij[:,:,self.added_mass_i]=0.0
         self.addedMass.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -673,10 +708,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.mesh.elementBoundaryMaterialTypes,
-            self.Aij)
-        for i in range(self.Aij.shape[0]):
-            self.Aij[i] = globalSum(self.Aij[i])
-        logEvent("Added Mass Tensor " +`self.Aij`)
+            self.Aij,
+            self.added_mass_i,
+            self.barycenters,
+            self.flags_rigidbody)
+        for k in range(self.Aij.shape[0]):
+            for j in range(self.Aij.shape[2]):
+                self.Aij[k,j,self.added_mass_i] = globalSum(
+                    self.Aij[k,j,self.added_mass_i])
+        for i,flag in enumerate(self.flags_rigidbody):
+            if flag==1:
+                numpy.set_printoptions(precision=2, linewidth=160)
+                logEvent("Added Mass Tensor for rigid body i" + `i`)
+                logEvent("Aij = \n"+str(self.Aij[i]))
+        for dofN, g in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.iteritems():
+            r[self.offset[0] + self.stride[0] * dofN] = self.u[0].dof[dofN] - \
+                g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         logEvent("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1
 
@@ -713,6 +760,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.csrColumnOffsets_eb[(0, 0)])
+        for dofN in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.keys():
+            global_dofN = self.offset[0] + self.stride[0] * dofN
+            self.nzval[numpy.where(self.colind == global_dofN)] = 0.0  # column
+            self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN + 1]] = 0.0  # row
+            zeroRow = True
+            for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):  # row
+                if (self.colind[i] == global_dofN):
+                    self.nzval[i] = 1.0
+                    zeroRow = False
+            if zeroRow:
+                raise RuntimeError("Jacobian has a zero row because sparse matrix has no diagonal entry at row " +
+                                   `global_dofN`+". You probably need add diagonal mass or reaction term")
         logEvent("Jacobian ", level=10, data=jacobian)
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian

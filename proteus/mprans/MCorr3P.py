@@ -29,11 +29,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             epsFactHeaviside=0.0,
             epsFactDirac=1.0,
             epsFactDiffusion=2.0,
-            LS_model=3,
-            V_model=2,
-            ME_model=5,
-            VOS_model=0,
-            VOF_model=4,
+            LS_model=None,
+            V_model=None,
+            ME_model=None,
+            VOS_model=None,
+            VOF_model=None,
             checkMass=True,
             sd=True,
             nd=None,
@@ -517,7 +517,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             elif self.nSpace_global == 1:
                 assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 1)
 
-        # pdb.set_trace()
         #
         # simplified allocations for test==trial and also check if space is mixed or not
         #
