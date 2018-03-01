@@ -10,9 +10,9 @@ The whole algorithm is to solve a saddle point problem, where velocity and press
 
 ## Preprocessing
 
-The file cylinder2d.py is called first, where *he*, the maximum size of edge, is passed into *symmetric2D* to generate mesh. To increase the accuracy of the cylinder, there are at least 40 points on the boundary of the cylinder.
+The file cylinder2d.py is called first, where *he*, the maximum size of edge, is passed into *symmetric2D* to generate the mesh. To increase the accuracy of the cylinder, there are at least 40 points on the boundary of the cylinder.
 The final time of the problem is *T=8*. The boundary flags are ['left', 'right', 'top', 'bottom', 'obstacle'].
-For boundary condition, the 'left' side is of inflow type, the 'right' side is of outflow type, and other sides are enfored non-slip boundary condition.
+For boundary condition, the 'left' side is of inflow type, the 'right' side is of outflow type, and other sides are enforced non-slip boundary condition.
 
 
 

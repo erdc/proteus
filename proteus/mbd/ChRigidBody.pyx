@@ -182,7 +182,9 @@ cdef class ProtChBody:
       object model
       ProtChSystem ProtChSystem
       object Shape
-      int nd, i_start, i_end
+      int nd
+      int i_start
+      int i_end
       double dt
       double width_2D
       object record_dict
@@ -190,16 +192,16 @@ cdef class ProtChBody:
       pych.ChBodyAddedMass ChBody
       np.ndarray position
       np.ndarray position_last
-      np.ndarray F
-      np.ndarray M
+      np.ndarray F  # force as retrieved from Chrono
+      np.ndarray M  # moment as retreived from Chrono
       np.ndarray F_last
       np.ndarray M_last
-      np.ndarray F_prot
-      np.ndarray M_prot
+      np.ndarray F_prot  # force retrieved from Proteus (fluid)
+      np.ndarray M_prot  # moment retrieved from Proteus (fluid)
       np.ndarray F_prot_last
       np.ndarray M_prot_last
-      np.ndarray F_applied
-      np.ndarray M_applied
+      np.ndarray F_applied  # force applied and passed to Chrono
+      np.ndarray M_applied  # moment applied and passed to Chrono
       np.ndarray F_applied_last
       np.ndarray M_applied_last
       np.ndarray acceleration
@@ -228,9 +230,9 @@ cdef class ProtChBody:
       np.ndarray h_predict_last  # predicted displacement
       double h_ang_predict_last  # predicted angular displacement (angle)
       np.ndarray h_ang_vel_predict_last  # predicted angular velocity
-      np.ndarray Aij
-      # np.ndarray free_r
-      # np.ndarray free_x
+      np.ndarray Aij  # added mass array
+      bool applyAddedMass  # will apply added mass if True (default)
+
     def __cinit__(self,
                   ProtChSystem system,
                   shape=None,
@@ -249,7 +251,8 @@ cdef class ProtChBody:
         self.F_applied = np.zeros(3)  # initialise empty Applied force
         self.M_applied = np.zeros(3)  # initialise empty Applied moment
         self.prescribed_motion_function = None
-
+        self.acceleration = np.zeros(3)
+        self.acceleration_last = np.zeros(3)
         self.velocity = np.zeros(3)
         self.velocity_last = np.zeros(3)
         self.ang_velocity = np.zeros(3)
@@ -266,6 +269,7 @@ cdef class ProtChBody:
         self.adams_vel = np.zeros((5, 3))
         self.ChBody.SetBodyFixed(False)
         self.Aij = np.zeros((6, 6))  # added mass array
+        self.applyAddedMass = True  # will apply added mass in Chrono calculations if True
         # if self.nd is None:
         #     assert nd is not None, "must set nd if SpatialTools.Shape is not passed"
         #     self.nd = nd
@@ -742,8 +746,19 @@ cdef class ProtChBody:
                 am = self.ProtChSystem.model_addedmass.levelModelList[-1]
                 for i in range(self.i_start, self.i_end):
                     self.Aij += am.Aij[i]
+        # setting added mass
+        if self.applyAddedMass is True:
+            FF = self.Aij*self.acceleration[1]
+            aa = np.zeros(6)
+            aa[:3] = self.acceleration
+            Aija = np.dot(self.Aij, aa)
+            self.setAddedMass(self.Aij)
+        if self.ProtChSystem.model is not None:
             self.F_prot = self.getPressureForces()+self.getShearForces()
             self.M_prot = self.getMoments()
+            if self.applyAddedMass is True:
+                self.F_prot += Aija[:3]
+                self.M_prot += Aija[3:]
             if self.ProtChSystem.first_step is True:
                 # just apply initial conditions for 1st time step
                 F_bar = self.F_prot
@@ -775,8 +790,6 @@ cdef class ProtChBody:
                     F_body = 2*F_bar-self.F_applied_last
                     M_body = 2*M_bar-self.M_applied_last
             self.setExternalForces(F_body, M_body)
-        # setting added mass
-        self.setAddedMass(self.Aij)
         self.predicted = False
 
     def setExternalForces(self, np.ndarray forces, np.ndarray moments):
@@ -793,6 +806,9 @@ cdef class ProtChBody:
         """
         self.F_applied = forces
         self.M_applied = moments
+        if self.width_2D:
+            self.F_applied *= self.width_2D
+            self.M_applied *= self.width_2D
         self.thisptr.prestep(<double*> forces.data,
                              <double*> moments.data)
 
@@ -914,6 +930,8 @@ cdef class ProtChBody:
         # get first, store then on initial time step
         self.getValues()
         self.storeValues()
+        # set mass matrix with no added mass
+        self.setAddedMass(np.zeros((6,6)))
         # self.thisptr.setRotation(<double*> self.rotation_init.data)
         #
 
@@ -1243,21 +1261,22 @@ cdef class ProtChBody:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(values_towrite)
         ## added mass
-        #if t == 0:
-        #    headers = ['t', 't_ch', 't_sim']
-        #    for i in range(6):
-        #        for j in range(6):
-        #            headers += ['A'+str(i)+str(j)]
-        #    with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'w') as csvfile:
-        #        writer = csv.writer(csvfile, delimiter=',')
-        #        writer.writerow(headers)
-        #values_towrite = [t, t_chrono, t_sim]
-        #for i in range(6):
-        #    for j in range(6):
-        #        values_towrite += [self.Aij[i, j]]
-        #with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'a') as csvfile:
-        #    writer = csv.writer(csvfile, delimiter=',')
-        #    writer.writerow(values_towrite)
+        if self.ProtChSystem.model_addedmass is not None:
+            if t == 0:
+                headers = ['t', 't_ch', 't_sim']
+                for i in range(6):
+                    for j in range(6):
+                        headers += ['A'+str(i)+str(j)]
+                with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'w') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=',')
+                    writer.writerow(headers)
+            values_towrite = [t, t_chrono, t_sim]
+            for i in range(6):
+                for j in range(6):
+                    values_towrite += [self.Aij[i, j]]
+            with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'a') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(values_towrite)
 
     def addPrismaticLinksWithSpring(self, np.ndarray pris1,
                                     np.ndarray pris2, double stiffness, double damping,
