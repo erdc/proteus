@@ -1528,6 +1528,7 @@ namespace proteus
       {
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
         double *phi_s_normal;
+        double fluid_outward_normal[2];
         double *vel;
         H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
         nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
@@ -1538,6 +1539,8 @@ namespace proteus
           {
             phi_s = particle_signed_distances[i * sd_offset];
             phi_s_normal = &particle_signed_distance_normals[i * sd_offset * nSpace];
+            fluid_outward_normal[0] = -phi_s_normal[0];
+            fluid_outward_normal[1] = -phi_s_normal[1];
             vel = &particle_velocities[i * sd_offset * nSpace];
             u_s = vel[0]; //particle_velocities[i*3+0];
             v_s = vel[1]; //particle_velocities[i*3+1];
@@ -1556,8 +1559,8 @@ namespace proteus
             //              dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
             //            force_y = dV * D_s * (p * phi_s_normal[1] - porosity * mu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]) + C_surf * (v - v_s) * rho) +
             //              dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
-            force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*rel_vel_norm*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
-            force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*rel_vel_norm*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
+            force_x = dV*D_s*(p*fluid_outward_normal[0] - porosity*mu*(fluid_outward_normal[0]*grad_u[0] + fluid_outward_normal[1]*grad_u[1]) + C_surf*rel_vel_norm*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
+            force_y = dV*D_s*(p*fluid_outward_normal[1] - porosity*mu*(fluid_outward_normal[0]*grad_v[0] + fluid_outward_normal[1]*grad_v[1]) + C_surf*rel_vel_norm*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
 
 
             //always 3D for particle centroids
@@ -1580,23 +1583,23 @@ namespace proteus
             dmom_v_source[1] += C;
 
             //Nitsche terms
-            mom_u_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]);
-            dmom_u_ham_grad_u[0] -= D_s * porosity * nu * phi_s_normal[0];
-            dmom_u_ham_grad_u[1] -= D_s * porosity * nu * phi_s_normal[1];
+            mom_u_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
+            dmom_u_ham_grad_u[0] -= D_s * porosity * nu * fluid_outward_normal[0];
+            dmom_u_ham_grad_u[1] -= D_s * porosity * nu * fluid_outward_normal[1];
 
-            mom_v_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]);
-            dmom_v_ham_grad_v[0] -= D_s * porosity * nu * phi_s_normal[0];
-            dmom_v_ham_grad_v[1] -= D_s * porosity * nu * phi_s_normal[1];
+            mom_v_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
+            dmom_v_ham_grad_v[0] -= D_s * porosity * nu * fluid_outward_normal[0];
+            dmom_v_ham_grad_v[1] -= D_s * porosity * nu * fluid_outward_normal[1];
 
-            mom_u_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (u - u_s);
-            mom_u_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (u - u_s);
-            dmom_u_adv_u[0] += D_s * porosity * nu * phi_s_normal[0];
-            dmom_u_adv_u[1] += D_s * porosity * nu * phi_s_normal[1];
+            mom_u_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (u - u_s);
+            mom_u_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (u - u_s);
+            dmom_u_adv_u[0] += D_s * porosity * nu * fluid_outward_normal[0];
+            dmom_u_adv_u[1] += D_s * porosity * nu * fluid_outward_normal[1];
 
-            mom_v_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (v - v_s);
-            mom_v_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (v - v_s);
-            dmom_v_adv_v[0] += D_s * porosity * nu * phi_s_normal[0];
-            dmom_v_adv_v[1] += D_s * porosity * nu * phi_s_normal[1];
+            mom_v_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (v - v_s);
+            mom_v_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (v - v_s);
+            dmom_v_adv_v[0] += D_s * porosity * nu * fluid_outward_normal[0];
+            dmom_v_adv_v[1] += D_s * porosity * nu * fluid_outward_normal[1];
           }
       }
       inline void compute_force_around_solid(const double dV,
@@ -1637,6 +1640,7 @@ namespace proteus
       {
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
         double *phi_s_normal;
+        double fluid_outward_normal[2];
         double *vel;
         H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
         nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
@@ -1646,6 +1650,8 @@ namespace proteus
 
         phi_s = particle_signed_distances[0];
         phi_s_normal = &particle_signed_distance_normals[0];
+        fluid_outward_normal[0] = -phi_s_normal[0];
+        fluid_outward_normal[1] = -phi_s_normal[1];
         vel = &particle_velocities[0];
         u_s = vel[0]; //particle_velocities[i*3+0];
         v_s = vel[1]; //particle_velocities[i*3+1];
@@ -1660,14 +1666,14 @@ namespace proteus
         double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
 
         C = (D_s * C_surf + (1.0 - H_s) * C_vol);
-        force_x = dV * D_s * (p * phi_s_normal[0]
-                                               - mu * (phi_s_normal[0] * 2* grad_u[0] + phi_s_normal[1] * (grad_u[1]+grad_v[0]))
+        force_x = dV * D_s * (p * fluid_outward_normal[0]
+                                               - mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
                                                );
                 //+dV*D_s*C_surf*rel_vel_norm*(u-u_s)*rho
                 //+dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
 
-        force_y = dV * D_s * (p * phi_s_normal[1]
-                                               - mu * (phi_s_normal[0] * (grad_u[1]+grad_v[0]) + phi_s_normal[1] * 2* grad_v[1])
+        force_y = dV * D_s * (p * fluid_outward_normal[1]
+                                               - mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
                                                );
                 //+dV*D_s*C_surf*rel_vel_norm*(v-v_s)*rho
                 //+dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
@@ -1682,8 +1688,8 @@ namespace proteus
                 <<D_s<<","
                 <<H_s<<","
                 <<p<<","
-                <<phi_s_normal[0]<<","
-                <<phi_s_normal[1]<<","
+                <<fluid_outward_normal[0]<<","
+                <<fluid_outward_normal[1]<<","
                 <<grad_u[0]<<","
                 <<grad_u[1]<<","
                 <<grad_v[0]<<","
