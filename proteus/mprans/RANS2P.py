@@ -1586,10 +1586,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.coefficients.netMoments[i, I] = globalSum(self.coefficients.netMoments[i, I])
                 #cek hack, testing 6DOF motion
                 #self.coefficients.netForces_p[i,I] = 0.0
-                #if I==1:
-                #    self.coefficients.netForces_p[i,I] = (125.0* math.pi**2 * 0.125*math.cos(self.timeIntegration.t*math.pi) + 125.0*9.81)/4.0
                 #self.coefficients.netForces_v[i,I] = 0.0
                 #self.coefficients.netMoments[i,I] = 0.0
+                #if I==0:
+                #    self.coefficients.netForces_p[i,I] = (125.0* math.pi**2 * 0.125*math.cos(self.timeIntegration.t*math.pi))/4.0
+                #if I==1:
+                #    self.coefficients.netForces_p[i,I] = (125.0* math.pi**2 * 0.125*math.cos(self.timeIntegration.t*math.pi) + 125.0*9.81)/4.0
+                #if I==2:
+                #    self.coefficients.netMoments[i,I] = (4.05* math.pi**2 * (math.pi/4.0)*math.cos(self.timeIntegration.t*math.pi))/4.0
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
