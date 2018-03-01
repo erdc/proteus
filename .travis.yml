@@ -4,8 +4,8 @@ sudo: required
 language: python
 
 env:
-  - SCRIPT=`py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus`
-  - SCRIPT=`py.test --boxed -v air-water-vv/Tests/`
+  - TEST_PROFILE="proteus"
+  - TEST_PROFILE="air-water-vv"
 
 python:
 - 2.7
@@ -63,7 +63,12 @@ cache:
     - $HOME/hashdist_bld    
 
 script:
-- $SCRIPT
+  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then
+      py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus
+    fi
+  - if [[ "${TEST_PROFILE}" == "air-water-vv" ]]; then
+      py.test --boxed -v air-water-vv/Tests/
+    fi
 
 notifications:
   email:
