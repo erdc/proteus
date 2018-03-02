@@ -708,7 +708,7 @@ namespace proteus
                   ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                   ebN_local_kb_nSpace = ebN_local_kb*nSpace;
                 register double u_ext=0.0, 
-                  grad_u_ext[nSpace],
+                  grad_u_ext[nSpace], 
                   m_ext=0.0,
                   dm_ext=0.0,
                   H_ext=0.0,
@@ -777,14 +777,28 @@ namespace proteus
                                     jacInv_ext,
                                     u_grad_trial_trace);
                 //solution and gradients
-                ck.valFromDOF(u_dof,
-                              &u_l2g[eN_nDOF_trial_element],
-                              &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
-                              u_ext);
-                ck.gradFromDOF(u_dof,
-                               &u_l2g[eN_nDOF_trial_element],
-                               u_grad_trial_trace,
-                               grad_u_ext);
+		if (TAYLOR_GALERKIN_METHOD==1) // explicit
+		  {
+		    ck.valFromDOF(u_dof_old,
+				  &u_l2g[eN_nDOF_trial_element],
+				  &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
+				  u_ext);
+		    ck.gradFromDOF(u_dof_old,
+				   &u_l2g[eN_nDOF_trial_element],
+				   u_grad_trial_trace,
+				   grad_u_ext);	
+		  }
+		else
+		  {
+		    ck.valFromDOF(u_dof,
+				  &u_l2g[eN_nDOF_trial_element],
+				  &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
+				  u_ext);
+		    ck.gradFromDOF(u_dof,
+				   &u_l2g[eN_nDOF_trial_element],
+				   u_grad_trial_trace,
+				   grad_u_ext);
+		  }
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
@@ -798,14 +812,14 @@ namespace proteus
                 //
                 //calculate the pde coefficients using the solution and the boundary values for the solution
                 //
-                evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
-                                     u_ext,
-                                     grad_u_ext,
-                                     m_ext,
-                                     dm_ext,
-                                     H_ext,
-                                     dH_ext);
-                evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+		evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+					 u_ext,
+					 grad_u_ext,
+					 m_ext,
+					 dm_ext,
+					 H_ext,
+					 dH_ext);
+		evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
                                      bc_u_ext,
                                      bc_grad_u_ext,
                                      bc_m_ext,
@@ -825,14 +839,19 @@ namespace proteus
                 //
                 //calculate the numerical fluxes
                 //
-                exteriorNumericalFlux(normal,
-                                      bc_u_ext,
-                                      u_ext,
-                                      dH_ext,
-                                      velocity_ext,
-                                      flux_ext);
+		exteriorNumericalFlux(normal,
+				      bc_u_ext,
+				      u_ext,
+				      dH_ext,
+				      velocity_ext,
+				      flux_ext);
                 ebqe_u[ebNE_kb] = u_ext;
 
+		if (TAYLOR_GALERKIN_METHOD==1)
+		  if (stage==1)
+		    flux_ext *= 1./3*dt;
+		  else
+		    flux_ext *= dt;
                 //std::cout<<u_ext<<ebqe_bc_u_ext
                 //
                 //update residuals
@@ -1123,6 +1142,7 @@ namespace proteus
         //
         //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
         //
+	if (TAYLOR_GALERKIN_METHOD==0) //(semi)-implicit
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
             register int ebN = exteriorElementBoundariesArray[ebNE];
