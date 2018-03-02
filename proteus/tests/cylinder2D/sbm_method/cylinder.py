@@ -8,7 +8,7 @@ from proteus import Context
 
 ct = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("Refinement",8, "refinement"),
+    ("Refinement",4, "refinement"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
     ("vspaceOrder",1,"FE space for velocity"),
     ("pspaceOrder",1,"FE space for pressure"),
@@ -345,7 +345,7 @@ def particle_sdf(t, x):
     cx = 0.2
     cy = 0.2
     r = math.sqrt( (x[0]-cx)**2 + (x[1]-cy)**2)
-    n = (-(x[0]-cx)/r,-(x[1]-cy)/r)
+    n = ((x[0]-cx)/r,(x[1]-cy)/r)
     return  r - 0.05,n
 
 def particle_vel(t, x):
