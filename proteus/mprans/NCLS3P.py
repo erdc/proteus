@@ -794,6 +794,7 @@ class LevelModel(OneLevelTransport):
             self.hasVelocityFieldAsFunction = True
 
         # interface locator
+        self.cell_interface_locator = numpy.zeros(self.mesh.nElements_global,'d')
         self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
@@ -843,6 +844,7 @@ class LevelModel(OneLevelTransport):
             self.u_dof_old = numpy.copy(self.u[0].dof)
 
         r.fill(0.0)
+        self.cell_interface_locator.fill(0.0) 
         self.interface_locator.fill(0.0) 
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
@@ -925,6 +927,7 @@ class LevelModel(OneLevelTransport):
             self.coefficients.rdModel_ebqe,
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('u', 0)],
+            self.cell_interface_locator,
             self.interface_locator,
             self.uTilde_dof,
             self.coefficients.TAYLOR_GALERKIN_METHOD,
@@ -1009,6 +1012,7 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.ebqe[('u', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
             self.coefficients.TAYLOR_GALERKIN_METHOD,
+            self.timeIntegration.dt,
             self.taylorGalerkinStage,
             self.coefficients.PURE_BDF)
 
