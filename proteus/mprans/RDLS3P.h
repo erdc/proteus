@@ -78,6 +78,7 @@ namespace proteus
                                    double* ebqe_u,
                                    double* ebqe_n,
                                    // elliptic redistancing
+				   double * cell_interface_locator,
                                    int ELLIPTIC_REDISTANCING_TYPE,
                                    double* abs_grad_u_dof,
                                    double* lumped_qx,
@@ -139,6 +140,7 @@ namespace proteus
                                    double* ebqe_bc_u_ext,
                                    int* csrColumnOffsets_eb_u_u,
                                    // elliptic redistancing
+				   double * cell_interface_locator,
                                    int ELLIPTIC_REDISTANCING,
                                    double* abs_grad_u_dof,
                                    double alpha)=0;
@@ -205,6 +207,7 @@ namespace proteus
                                                   double* ebqe_u,
                                                   double* ebqe_n,
                                                   // elliptic redistancing
+						  double * cell_interface_locator,
                                                   int ELLIPTIC_REDISTANCING_TYPE,
                                                   double* abs_grad_u_dof,
                                                   double* lumped_qx,
@@ -266,6 +269,7 @@ namespace proteus
                                                   double* ebqe_bc_u_ext,
                                                   int* csrColumnOffsets_eb_u_u,
                                                   // elliptic redistancing
+						  double * cell_interface_locator,
                                                   int ELLIPTIC_REDISTANCING,
                                                   double* abs_grad_u_dof,
                                                   double alpha)=0;
@@ -480,6 +484,7 @@ namespace proteus
                              double* ebqe_u,
                              double* ebqe_n,
                              // elliptic redistancing
+			     double * cell_interface_locator,
                              int ELLIPTIC_REDISTANCING_TYPE,
                              double* abs_grad_u_dof,
                              double* lumped_qx,
@@ -995,6 +1000,7 @@ namespace proteus
                              double* ebqe_bc_u_ext,
                              int* csrColumnOffsets_eb_u_u,
                              // elliptic redistancing
+			     double * cell_interface_locator,
                              int ELLIPTIC_REDISTANCING,
                              double* abs_grad_u_dof,
                              double alpha)
@@ -1455,6 +1461,7 @@ namespace proteus
                                             double* ebqe_u,
                                             double* ebqe_n,
                                             // elliptic redistancing
+					    double * cell_interface_locator,
                                             int ELLIPTIC_REDISTANCING_TYPE,
                                             double* abs_grad_u_dof,
                                             double* lumped_qx,
@@ -1581,11 +1588,11 @@ namespace proteus
                   coeff = 1.0+2*std::pow(norm_grad_u,2)-3*norm_grad_u;
 
                 // COMPUTE DELTA FUNCTION //
-                epsilon_redist = epsFact_redist*(useMetrics*h_phi
-                                                 +(1.0-useMetrics)*elementDiameter[eN]);
-                delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
-
-                // UPDATE ELEMENT RESIDUAL //
+		//delta = smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
+		delta = (cell_interface_locator[eN] == 1 ? 1.0 : 0)*
+		  smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
+		
+		// UPDATE ELEMENT RESIDUAL //
                 if (ELLIPTIC_REDISTANCING_TYPE > 1) // (NON)LINEAR VIA C0 NORMAL RECONSTRUCTION
                   for(int i=0;i<nDOF_test_element;i++)
                     {
@@ -1621,6 +1628,77 @@ namespace proteus
                 globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
               }//i
           }//elements
+        //
+        //loop over exterior element boundaries to save soln at quad points
+        //
+        for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+          {
+            register int ebN = exteriorElementBoundariesArray[ebNE],
+              eN  = elementBoundaryElementsArray[ebN*2+0],
+              ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+              eN_nDOF_trial_element = eN*nDOF_trial_element;
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+              {
+                register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+                  ebNE_kb_nSpace = ebNE_kb*nSpace,
+                  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+                register double
+                  u_ext=0.0,
+                  grad_u_ext[nSpace],
+                  jac_ext[nSpace*nSpace],jacDet_ext,jacInv_ext[nSpace*nSpace],
+                  boundaryJac[nSpace*(nSpace-1)],
+                  metricTensor[(nSpace-1)*(nSpace-1)],metricTensorDetSqrt,
+                  u_grad_trial_trace[nDOF_trial_element*nSpace],
+                  normal[nSpace],x_ext,y_ext,z_ext,
+                  dir[nSpace],norm;
+                ck.calculateMapping_elementBoundary(eN,
+                                                    ebN_local,
+                                                    kb,
+                                                    ebN_local_kb,
+                                                    mesh_dof,
+                                                    mesh_l2g,
+                                                    mesh_trial_trace_ref,
+                                                    mesh_grad_trial_trace_ref,
+                                                    boundaryJac_ref,
+                                                    jac_ext,
+                                                    jacDet_ext,
+                                                    jacInv_ext,
+                                                    boundaryJac,
+                                                    metricTensor,
+                                                    metricTensorDetSqrt,
+                                                    normal_ref,
+                                                    normal,
+                                                    x_ext,y_ext,z_ext);
+                //compute shape and solution information
+                //shape
+                ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],
+                                    jacInv_ext,
+                                    u_grad_trial_trace);
+                //solution and gradients
+                ck.valFromDOF(u_dof,
+                              &u_l2g[eN_nDOF_trial_element],
+                              &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
+                              u_ext);
+                ck.gradFromDOF(u_dof,
+                               &u_l2g[eN_nDOF_trial_element],
+                               u_grad_trial_trace,
+                               grad_u_ext);
+                norm = 0;
+                for (int I=0;I<nSpace;I++)
+                  norm += grad_u_ext[I]*grad_u_ext[I];
+                norm = sqrt(norm) + 1.0E-10;
+                for (int I=0;I<nSpace;I++)
+                  dir[I] = grad_u_ext[I]/norm;
+
+                //save for other models
+                ebqe_u[ebNE_kb] = u_ext;
+
+                for (int I=0;I<nSpace;I++)
+                  ebqe_n[ebNE_kb_nSpace+I] = dir[I];
+              }//kb
+          }//ebNE
+        //////
       }
 
       void calculateJacobian_ellipticRedist(//element
@@ -1678,6 +1756,7 @@ namespace proteus
                                             double* ebqe_bc_u_ext,
                                             int* csrColumnOffsets_eb_u_u,
                                             // elliptic redistancing
+					    double * cell_interface_locator,
                                             int ELLIPTIC_REDISTANCING,
                                             double* abs_grad_u_dof,
                                             double alpha)
@@ -1775,10 +1854,10 @@ namespace proteus
                   }
 
                 // COMPUTE DELTA FUNCTION //
-                epsilon_redist = epsFact_redist*(useMetrics*h_phi
-                                                 +(1.0-useMetrics)*elementDiameter[eN]);
-                delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
-
+		//delta = smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
+		delta = (cell_interface_locator[eN] == 1 ? 1.0 : 0)*
+		  smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
+		
                 for(int i=0;i<nDOF_test_element;i++)
                   {
                     int i_nSpace = i*nSpace;

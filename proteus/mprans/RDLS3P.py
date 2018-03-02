@@ -193,7 +193,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             # Parameters for elliptic re-distancing
             ELLIPTIC_REDISTANCING=False,
             ELLIPTIC_REDISTANCING_TYPE=2, #Linear elliptic re-distancing by default
+            outputQuantDOFs=False,
             alpha=1.0E9): #penalization param for elliptic re-distancing
+        self.outputQuantDOFs=outputQuantDOFs
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
         variableNames = ['phid']
@@ -280,12 +282,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         cebqe['x'].flat[3 * i:3 * (i + 1)], 0.)
 
     def preStep(self, t, firstStep=False):
+        # FOR ELLIPTIC REDISTANCING #
         # reset ellipticStage flag
         self.rdModel.ellipticStage = 1
         self.rdModel.auxEllipticFlag = 1
         # COMPUTE NORMAL RECONSTRUCTION
-        if self.ELLIPTIC_REDISTANCING == True and self.ELLIPTIC_REDISTANCING_TYPE == 2: # linear via C0 normal reconstruction
+        if self.ELLIPTIC_REDISTANCING == True and self.ELLIPTIC_REDISTANCING_TYPE == 2: # linear 
             self.rdModel.getNormalReconstruction()
+        # END OF ELLIPTIC REDISTANCING #
 
         if self.nModel is not None:
             log("resetting signed distance level set to current level set", level=2)
@@ -304,7 +308,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.rdModel.updateTimeHistory(t, resetFromDOF=True)
             copyInstructions = {'copy_uList': True,
                                 'uList_model': self.nModelId}
-            copyInstructions = {'reset_uList': True}
+            copyInstructions = {'reset_uList': False} #mql: should this be True or False?  
             return copyInstructions
         else:
             return {}
@@ -320,7 +324,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.nModel.numericalFlux.ebqe[
                     ('u', 0)][:] = self.rdModel.ebqe[
                     ('u', 0)]
-            copyInstructions = {}
+            copyInstructions = {}                      
             return copyInstructions
         else:
             return {}
@@ -872,10 +876,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # add some structures for elliptic re-distancing        
         self.interface_locator = None
+        self.cell_interface_locator = None
         self.abs_grad_u = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qx = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qy = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qz = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFs = self.lumped_qy
         self.ellipticStage = 1
         self.auxEllipticFlag = 1
         # ASSERT: if order>1 and elliptic redistancing is true then use bernstein polynomials
@@ -1037,12 +1043,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.interface_locator is None:
             if self.coefficients.nModel is not None:
                 self.interface_locator = self.coefficients.nModel.interface_locator
+                self.cell_interface_locator = self.coefficients.nModel.cell_interface_locator
             else:
                 self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')
+                self.cell_interface_locator = numpy.zeros(self.mesh.nElements_global,'d')
                 
-        # try to use 1d,2d,3d specific modules
-        # mwf debug
-        # pdb.set_trace()
         r.fill(0.0)
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
@@ -1091,7 +1096,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if self.interface_locator[gi] == 1.0:
                     self.u[0].dof[gi] = self.coefficients.dof_u0[gi]
         # END OF FREEZING INTERFACE #
-        
+
         self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1155,6 +1160,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
             # elliptic re-distancing
+            self.cell_interface_locator,
             self.coefficients.ELLIPTIC_REDISTANCING_TYPE,
             self.abs_grad_u,
             self.lumped_qx,
@@ -1169,7 +1175,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     r[gi] = 0
         # END OF FREEZING INTERFACE #
         
-        if self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 2 and self.ellipticStage == 1:
+        if (self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 2 and
+            self.coefficients.ELLIPTIC_REDISTANCING == True and self.ellipticStage==1):
             self.ellipticStage = 2
 
         # print "m_tmp",self.timeIntegration.m_tmp[0]
@@ -1259,6 +1266,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
             # elliptic re-distancing
+            self.cell_interface_locator,
             self.coefficients.ELLIPTIC_REDISTANCING_TYPE,
             self.abs_grad_u,
             self.coefficients.alpha/self.elementDiameter.min())
