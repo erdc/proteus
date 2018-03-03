@@ -35,7 +35,7 @@ class Test_rans2p():
 
     def test_ex2(self):
         self.compare_name = "T1_rans2p"
-        self.example_setting("T=1.0 onlySaveFinalSolution=True")
+        self.example_setting("T=0.01 onlySaveFinalSolution=True")
 
     def example_setting(self, pre_setting):
         Context.contextOptionsString = pre_setting
