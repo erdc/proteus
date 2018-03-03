@@ -669,6 +669,18 @@ class Newton(NonlinearSolver):
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
         logEvent(memory("Newton","Newton"),level=4)
 
+class AddedMassNewton(Newton):
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        if self.F.coefficients.nd == 3:
+            accelerations = range(6)
+        elif self.F.coefficients.nd == 2:
+            accelerations = [0,1,5]
+        else:
+            exit(1)
+        for i in accelerations:
+            self.F.added_mass_i=i
+            Newton.solve(self,u,r,b,par_u,par_r)
+
 class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
     """
     This is a fake solver meant to be used with optimized code
@@ -3416,6 +3428,28 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                         EWtol=EWtol,
                                                         maxLSits=maxLSits ))
 
+    elif levelNonlinearSolverType == AddedMassNewton:
+        for l in range(nLevels):
+            if par_duList is not None and len(par_duList) > 0:
+                par_du=par_duList[l]
+            else:
+                par_du=None
+            levelNonlinearSolverList.append(AddedMassNewton(linearSolver=linearSolverList[l],
+                                                            F=nonlinearOperatorList[l],
+                                                            J=jacobianList[l],
+                                                            du=duList[l],
+                                                            par_du=par_du,
+                                                            rtol_r=relativeToleranceList[l],
+                                                            atol_r=absoluteTolerance,
+                                                            maxIts=maxSolverIts,
+                                                            norm = nonlinearSolverNorm,
+                                                            convergenceTest = levelSolverConvergenceTest,
+                                                            computeRates = computeLevelSolverRates,
+                                                            printInfo=printLevelSolverInfo,
+                                                            fullNewton=levelSolverFullNewtonFlag,
+                                                            directSolver=linearDirectSolverFlag,
+                                                            EWtol=EWtol,
+                                                            maxLSits=maxLSits ))     
     else:
         try:
             for l in range(nLevels):
@@ -3453,6 +3487,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                          computeRates = computeSolverRates,
                                          printInfo=printSolverInfo)
     elif (multilevelNonlinearSolverType == Newton or
+          multilevelNonlinearSolverType == AddedMassNewton or
           multilevelNonlinearSolverType == POD_Newton or
           multilevelNonlinearSolverType == POD_DEIM_Newton or
           multilevelNonlinearSolverType == NewtonNS or
