@@ -41,6 +41,7 @@ install:
 - mkdir -p hashdist_src
 - mkdir -p hashdist_bld
 - cd .hashdist
+- rm -rf src bld
 - ln -s ../hashdist_src src 
 - ln -s ../hashdist_bld bld
 - pwd
