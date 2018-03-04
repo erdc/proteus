@@ -61,7 +61,8 @@ install:
 - ls $SSL_CERT_DIR
 
 cache:
-  directories:
+  - timeout: 1000
+  - directories:
     - $HOME/hashdist_src    
     - $HOME/hashdist_bld    
 
