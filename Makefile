@@ -11,6 +11,7 @@ PROTEUS ?= $(shell python -c "from __future__ import print_function; import os; 
 VER_CMD = git log -1 --pretty="%H"
 PROTEUS_BUILD_CMD = python setup.py build_ext
 PROTEUS_INSTALL_CMD = python setup.py install
+PROTEUS_DEVELOP_BUILD_CMD = python setup.py build_ext -i
 PROTEUS_DEVELOP_CMD = pip --disable-pip-version-check install -v -e .
 # shell hack for now to automatically detect Garnet front-end nodes
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python -c "import sys; print sys.platform")
@@ -243,7 +244,8 @@ develop: proteus profile
 	@echo "Installing development version"
 	@echo "************************"
 	$(call show_info)
-	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG" ${PROTEUS_DEVELOP_CMD}
+	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG -Og" ${PROTEUS_DEVELOP_BUILD_CMD}
+	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG -Og" ${PROTEUS_DEVELOP_CMD}
 	@echo "************************"
 	@echo "installing scripts"
 	cd scripts && ${PROTEUS_ENV} PROTEUS_PREFIX=${PROTEUS_PREFIX} make
@@ -314,7 +316,7 @@ doc:
 test: check
 	@echo "************************************"
 	@echo "Running test suite"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n auto --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
 	@echo "Tests complete "
 	@echo "************************************"
 
