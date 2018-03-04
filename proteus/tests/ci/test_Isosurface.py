@@ -22,7 +22,8 @@ class TestIsosurface():
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
-        
+
+    @pytest.mark.skip(reason="in development")
     def test_povgen(self):
         import difflib
         import urllib
@@ -31,7 +32,8 @@ class TestIsosurface():
         urllib.urlretrieve(
             'https://dl.dropbox.com/s/tjkj3ella3ntv75/floating_bar.h5',
             'floating_bar.h5')
-        subprocess.check_call(['povgen.py',
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        subprocess.check_call([os.path.join(dir_path,'../../../scripts/povgen.py'),
                                'floating_bar',
                                '-s',
                                '3'])
