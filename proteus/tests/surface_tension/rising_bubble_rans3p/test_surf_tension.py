@@ -10,6 +10,7 @@ Profiling.verbose=True
 import os
 import numpy as np
 import tables
+import pytest
 from . import (parameters,
                risingBubble_so, risingBubble,
                vof_p,
