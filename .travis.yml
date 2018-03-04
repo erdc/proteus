@@ -66,8 +66,8 @@ cache:
     - $HOME/hashdist_bld    
 
 script:
-  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then py.test -n auto --dist=loadfiles --forked -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus; fi
-  - if [[ "${TEST_PROFILE}" == "air-water-vv" ]]; then py.test -n auto --dist=loadfiles --forked -v air-water-vv/Tests/; fi
+  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then py.test -n auto --dist=loadfile --forked -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus; fi
+  - if [[ "${TEST_PROFILE}" == "air-water-vv" ]]; then py.test -n auto --dist=loadfile --forked -v air-water-vv/Tests/; fi
 
 notifications:
   email:
