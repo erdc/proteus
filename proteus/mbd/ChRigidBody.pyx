@@ -24,7 +24,7 @@ from cython.operator cimport dereference as deref
 # chrono C++ headers
 cimport ChronoHeaders as ch
 # chrono Python headers
-from proteus.mbd cimport pyChronoCore as pych
+cimport pyChronoCore as pych
 from proteus.mprans import BodyDynamics as bd
 
 
