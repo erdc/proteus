@@ -191,8 +191,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             weakDirichletFactor=10.0,
             backgroundDiffusionFactor=0.01,
             # Parameters for elliptic re-distancing
-            ELLIPTIC_REDISTANCING=False,
-            ELLIPTIC_REDISTANCING_TYPE=2, #Linear elliptic re-distancing by default
+            ELLIPTIC_REDISTANCING=0, #Linear elliptic re-distancing by default
             outputQuantDOFs=False,
             alpha=1.0E9): #penalization param for elliptic re-distancing
         self.outputQuantDOFs=outputQuantDOFs
@@ -229,9 +228,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.backgroundDiffusionFactor = backgroundDiffusionFactor
         self.weakDirichletFactor = weakDirichletFactor
         self.ELLIPTIC_REDISTANCING=ELLIPTIC_REDISTANCING
-        self.ELLIPTIC_REDISTANCING_TYPE=ELLIPTIC_REDISTANCING_TYPE
-        assert (ELLIPTIC_REDISTANCING_TYPE >= 1 and ELLIPTIC_REDISTANCING_TYPE <= 3), "ELLIPTIC_REDISTANCING_TYPE=0,1,2 or 3."
-        #ELLIPTIC_REDISTANCING_TYPE:
+        assert (ELLIPTIC_REDISTANCING >= 0 and ELLIPTIC_REDISTANCING <= 3), "ELLIPTIC_REDISTANCING=0,1,2 or 3."
+        #ELLIPTIC_REDISTANCING:
+        #0: Use default re-distancing in Proteus
         #1: Non-linear elliptic re-distancing via single or doble pot.
         #   Uses single/double pot. with(out) |grad(u)| reconstructed. See c++ code
         #2: Linear elliptic re-distancing via C0 normal reconstruction and single pot.
@@ -287,7 +286,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.rdModel.ellipticStage = 1
         self.rdModel.auxEllipticFlag = 1
         # COMPUTE NORMAL RECONSTRUCTION
-        if self.ELLIPTIC_REDISTANCING == True and self.ELLIPTIC_REDISTANCING_TYPE == 2: # linear 
+        if self.ELLIPTIC_REDISTANCING == 2: # linear elliptic re-distancing
             self.rdModel.getNormalReconstruction()
         # END OF ELLIPTIC REDISTANCING #
 
@@ -877,6 +876,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # add some structures for elliptic re-distancing        
         self.interface_locator = None
         self.cell_interface_locator = None
+        self.interface_lumpedMassMatrix = numpy.zeros(self.u[0].dof.shape,'d')
         self.abs_grad_u = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qx = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qy = numpy.zeros(self.u[0].dof.shape,'d')
@@ -884,14 +884,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.quantDOFs = self.lumped_qy
         self.ellipticStage = 1
         self.auxEllipticFlag = 1
+        # STIFFNESS MATRIX #
+        self.stiffness_matrix_array = None
+        self.stiffness_matrix = None
+        
         # ASSERT: if order>1 and elliptic redistancing is true then use bernstein polynomials
-        if self.coefficients.ELLIPTIC_REDISTANCING==True and self.u[0].femSpace.order>1:            
+        if self.coefficients.ELLIPTIC_REDISTANCING>0 and self.u[0].femSpace.order>1:            
             isBernsteinOnCube = isinstance(self.u[0].femSpace,
                                            proteus.FemTools.C0_AffineBernsteinOnCube)
             isBernsteinOnSimplex = isinstance(self.u[0].femSpace,
                                               proteus.FemTools.C0_AffineBernsteinOnSimplex)
             isBernstein = isBernsteinOnCube or isBernsteinOnSimplex
-            assert isBernstein==True, "If order>1 and ELLIPTIC_REDISTANCING=True, use Bernstein polynomials"
+            assert isBernstein==True, "If order>1 and ELLIPTIC_REDISTANCING>0, use Bernstein polynomials"
                        
         log(memory("stride+offset", "OneLevelTransport"), level=4)
         if numericalFluxType is not None:
@@ -1049,6 +1053,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.cell_interface_locator = numpy.zeros(self.mesh.nElements_global,'d')
                 
         r.fill(0.0)
+        self.interface_lumpedMassMatrix.fill(0.0)
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -1074,15 +1079,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # RDLS3P.calculateResidual(self.mesh.nElements_global,
         # print "beta_bdf",beta_bdf
 
-        if self.coefficients.ELLIPTIC_REDISTANCING == True:
+        if self.coefficients.ELLIPTIC_REDISTANCING>0:
             self.calculateResidual = self.rdls3p.calculateResidual_ellipticRedist
             self.calculateJacobian = self.rdls3p.calculateJacobian_ellipticRedist
             # COMPUTE RECONSTRUCTIONS #
-            if self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 1: #nlinear via single or double pot.
+            if self.coefficients.ELLIPTIC_REDISTANCING == 1: #nlinear via single or double pot.
                 self.getAbsGradUReconstruction()
-            if self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 3: # nlinear via C0 normal rec.
+            if self.coefficients.ELLIPTIC_REDISTANCING == 3: # nlinear via C0 normal rec.
                 self.getNormalReconstruction()
-            if (self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 2 # linear via C0 normal rec.
+            if (self.coefficients.ELLIPTIC_REDISTANCING == 2 # linear via C0 normal rec.
                 and self.ellipticStage == 2 and self.auxEllipticFlag == 1):
                 self.getNormalReconstruction()
                 self.auxEllipticFlag = 0
@@ -1161,7 +1166,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('grad(u)', 0)],
             # elliptic re-distancing
             self.cell_interface_locator,
-            self.coefficients.ELLIPTIC_REDISTANCING_TYPE,
+            self.interface_lumpedMassMatrix,
+            self.coefficients.ELLIPTIC_REDISTANCING,
             self.abs_grad_u,
             self.lumped_qx,
             self.lumped_qy,
@@ -1175,8 +1181,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     r[gi] = 0
         # END OF FREEZING INTERFACE #
         
-        if (self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 2 and
-            self.coefficients.ELLIPTIC_REDISTANCING == True and self.ellipticStage==1):
+        if (self.coefficients.ELLIPTIC_REDISTANCING == 2 and self.ellipticStage==1):
             self.ellipticStage = 2
 
         # print "m_tmp",self.timeIntegration.m_tmp[0]
@@ -1190,6 +1195,30 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape, 'd')
 
+    def getStiffnessMatrix(self):
+        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+        nnz = nzval.shape[-1]  # number of non-zero entries in sparse matrix
+        self.stiffness_matrix_array = nzval.copy()
+        self.stiffness_matrix = SparseMat(self.nFreeDOF_global[0],
+                                          self.nFreeDOF_global[0],
+                                          nnz,
+                                          self.stiffness_matrix_array,
+                                          colind,
+                                          rowptr)
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       self.stiffness_matrix)
+
+        self.rdls3p.calculateStiffnessMatrix(
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u', 0)],
+            self.u[0].femSpace.grad_psi,
+            self.mesh.nElements_global,
+            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
+            self.stiffness_matrix)
+
     def getJacobian(self, jacobian):
         if not debugRDLS3P:
             return self.getJacobianNew(jacobian)
@@ -1199,8 +1228,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #import superluWrappers
         #import numpy
         import pdb
-        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-                                       jacobian)
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,jacobian)
+        
+        if self.stiffness_matrix is None:
+            self.getStiffnessMatrix()
+            
         # for  now force time integration
         useTimeIntegration = 1
         if self.timeIntegration.__class__ == TimeIntegration.NoIntegration or not self.timeTerm:
@@ -1211,7 +1243,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             alpha_bdf = self.timeIntegration.dt
             beta_bdf = self.timeIntegration.m_last
-
+        
         self.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1267,7 +1299,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(0, 0)],
             # elliptic re-distancing
             self.cell_interface_locator,
-            self.coefficients.ELLIPTIC_REDISTANCING_TYPE,
+            self.coefficients.ELLIPTIC_REDISTANCING,
+            len(self.u[0].dof),
+            self.rowptr,
+            self.colind,
+            self.stiffness_matrix_array,
+            self.interface_lumpedMassMatrix,
             self.abs_grad_u,
             self.coefficients.alpha/self.elementDiameter.min())
 
