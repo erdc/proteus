@@ -1198,7 +1198,7 @@ class NS_base:  # (HasTraits):
         for index,m in self.modelSpinUp.iteritems():
             spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
-            logEvent("Attaching models to model "+p.name)
+            logEvent("Attaching models to model "+m.name)
             m.attachModels(self.modelList)
             if index not in self.modelSpinUp:
                 spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
@@ -1496,6 +1496,9 @@ class NS_base:  # (HasTraits):
             if(self.PUMI_estimateError()):
               self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
+        # compute auxiliary quantities at last time step
+        if hasattr(self.modelList[-1].levelModelList[-1],'runAtEOS'):
+            self.modelList[-1].levelModelList[-1].runAtEOS()
 
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)

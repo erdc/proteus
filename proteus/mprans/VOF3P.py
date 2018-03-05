@@ -12,7 +12,7 @@ from proteus.FemTools import (DOFBoundaryConditions,
                               C0_AffineLinearOnSimplexWithNodalBasis)
 from proteus.flcbdfWrappers import globalMax
 from proteus.Profiling import memory
-from proteus.Profiling import logEvent as log
+from proteus.Profiling import logEvent
 from proteus.Transport import OneLevelTransport
 from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
@@ -50,7 +50,7 @@ class ShockCapturing(ShockCapturing_base):
         self.nStepsToDelay = nStepsToDelay
         self.nSteps = 0
         if self.lag:
-            log("VOF3P.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
+            logEvent("VOF3P.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
             self.nStepsToDelay = 1
             self.lag = False
 
@@ -68,12 +68,12 @@ class ShockCapturing(ShockCapturing_base):
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
         if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
-            log("VOF3P.ShockCapturing: switched to lagged shock capturing")
+            logEvent("VOF3P.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
             self.numDiff_last = []
             for ci in range(self.nc):
                 self.numDiff_last.append(self.numDiff[ci].copy())
-        log("VOF3P: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
+        logEvent("VOF3P: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
 
 
 class NumericalFlux(
@@ -218,16 +218,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #     self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
         #                                              self.model.q[('m',0)],
         #                                              self.model.mesh.nElements_owned)
-        #     log("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_pre,),level=2)
+        #     logEvent("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_pre,),level=2)
         #     self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
         #                                              self.model.q[('m',0)],
         #                                              self.model.mesh.nElements_owned)
-        #     log("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
+        #     logEvent("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
         #     if self.model.ebqe.has_key(('advectiveFlux',0)):
         #         self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
         #                                                              self.model.ebqe[('advectiveFlux',0)],
         #                                                              self.model.mesh)
-        #         log("Attach Models VOF: Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+        #         logEvent("Attach Models VOF: Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
         # VRANS
         self.flowCoefficients = modelList[self.V_model].coefficients
         if self.VOS_model is not None:
@@ -296,12 +296,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.m_pre = Norms.scalarDomainIntegral(
                 self.model.q['dV_last'], self.model.q[
                     ('m', 0)], self.model.mesh.nElements_owned)
-            log("Phase  0 mass before VOF3P step = %12.5e" %
+            logEvent("Phase  0 mass before VOF3P step = %12.5e" %
                 (self.m_pre,), level=2)
         #     self.m_last = Norms.scalarDomainIntegral(self.model.q['dV'],
         #                                              self.model.timeIntegration.m_last[0],
         #                                              self.model.mesh.nElements_owned)
-        #     log("Phase  0 mass before VOF3P (m_last) step = %12.5e" % (self.m_last,),level=2)
+        #     logEvent("Phase  0 mass before VOF3P (m_last) step = %12.5e" % (self.m_last,),level=2)
         copyInstructions = {}
         return copyInstructions
 
@@ -312,18 +312,18 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.m_post = Norms.scalarDomainIntegral(
                 self.model.q['dV'], self.model.q[
                     ('m', 0)], self.model.mesh.nElements_owned)
-            log("Phase  0 mass after VOF3P step = %12.5e" %
+            logEvent("Phase  0 mass after VOF3P step = %12.5e" %
                 (self.m_post,), level=2)
             # self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
             #                                                     self.model.ebqe[('advectiveFlux',0)],
             #                                                     self.model.mesh)
-            #log("Phase  0 mass flux boundary integral after VOF step = %12.5e" % (self.fluxIntegral,),level=2)
-            #log("Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+            #logEvent("Phase  0 mass flux boundary integral after VOF step = %12.5e" % (self.fluxIntegral,),level=2)
+            #logEvent("Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
             # divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.model.ebqe['dS'],
             #                                                        self.ebqe_v,
             #                                                        self.model.ebqe['n'],
             #                                                        self.model.mesh)
-            #log("Divergence = %12.5e" % (divergence,),level=2)
+            #logEvent("Divergence = %12.5e" % (divergence,),level=2)
         copyInstructions = {}
         return copyInstructions
 
@@ -370,7 +370,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                        c[('f', 0)],
                                                        c[('df', 0, 0)])
         # if self.checkMass:
-        #     log("Phase  0 mass in eavl = %12.5e" % (Norms.scalarDomainIntegral(self.model.q['dV'],
+        #     logEvent("Phase  0 mass in eavl = %12.5e" % (Norms.scalarDomainIntegral(self.model.q['dV'],
         #                                                                        self.model.q[('m',0)],
         # self.model.mesh.nElements_owned),),level=2)
 
@@ -721,10 +721,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         del self.internalNodes
         self.internalNodes = None
-        log("Updating local to global mappings", 2)
+        logEvent("Updating local to global mappings", 2)
         self.updateLocal2Global()
-        log("Building time integration object", 2)
-        log(memory("inflowBC, internalNodes,updateLocal2Global",
+        logEvent("Building time integration object", 2)
+        logEvent(memory("inflowBC, internalNodes,updateLocal2Global",
                    "OneLevelTransport"), level=4)
         # mwf for interpolating subgrid error for gradients etc
         if self.stabilization and self.stabilization.usesGradientStabilization:
@@ -735,8 +735,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if options is not None:
             self.timeIntegration.setFromOptions(options)
-        log(memory("TimeIntegration", "OneLevelTransport"), level=4)
-        log("Calculating numerical quadrature formulas", 2)
+        logEvent(memory("TimeIntegration", "OneLevelTransport"), level=4)
+        logEvent("Calculating numerical quadrature formulas", 2)
         self.calculateQuadrature()
         self.setupFieldStrides()
 
@@ -745,7 +745,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if comm.size() > 1:
             assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions, "You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        log(memory("stride+offset", "OneLevelTransport"), level=4)
+        logEvent(memory("stride+offset", "OneLevelTransport"), level=4)
         if numericalFluxType is not None:
             if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(
@@ -779,13 +779,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebqe['penalty'][ebNE, k] = self.numericalFlux.penalty_constant / \
                         self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
-        log(memory("numericalFlux", "OneLevelTransport"), level=4)
+        logEvent(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         # use post processing tools to get conservative fluxes, None by default
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(
             self)
-        log(memory("velocity postprocessor", "OneLevelTransport"), level=4)
+        logEvent(memory("velocity postprocessor", "OneLevelTransport"), level=4)
         # helper for writing out data storage
         from proteus import Archiver
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
@@ -955,10 +955,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 r[dofN] = 0
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
-        log("Global residual", level=9, data=r)
-        # mwf debug
-        # pdb.set_trace()
-        # mwf decide if this is reasonable for keeping solver statistics
+        logEvent("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape, 'd')
@@ -1036,7 +1033,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.nzval[i] = 0.0
                         # print "RBLES zeroing residual cj = %s dofN= %s
                         # global_dofN= %s " % (cj,dofN,global_dofN)
-        log("Jacobian ", level=10, data=jacobian)
+        logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian

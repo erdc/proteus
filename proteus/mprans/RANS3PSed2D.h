@@ -2682,7 +2682,7 @@ namespace proteus
               //calculate the numerical fluxes
               //
               ck.calculateGScale(G,normal,h_penalty);
-              penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+              penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
               exteriorNumericalAdvectiveFlux(isDOFBoundary_p[ebNE_kb],
                                              isDOFBoundary_u[ebNE_kb],
                                              isDOFBoundary_v[ebNE_kb],
@@ -4477,7 +4477,7 @@ namespace proteus
               //calculate the flux jacobian
               //
               ck.calculateGScale(G,normal,h_penalty);
-              penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+              penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
               for (int j=0;j<nDOF_trial_element;j++)
                 {
                   register int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
