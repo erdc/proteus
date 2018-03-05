@@ -11,6 +11,7 @@ import sys
 import numpy as np
 from proteus import (AuxiliaryVariables,
                      BoundaryConditions)
+from proteus.BoundaryConditions import BoundaryCondition
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
 from proteus import WaveTools as wt
