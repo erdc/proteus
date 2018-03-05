@@ -24,7 +24,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
     """
 
     def __init__(self, shape=None, name=None, b_or=None, b_i=0., nd=None):
-        BC_Base.__init__(self,shape=shape, name=name, b_or=b_or, b_i=b_i, nd=nd)
+        BoundaryConditions.BC_Base.__init__(self,shape=shape, name=name, b_or=b_or, b_i=b_i, nd=nd)
         #super(BC_RANS, self).__init__(shape=shape, name=name, b_or=b_or, b_i=b_i, nd=nd)
         # _dirichlet
         self.p_dirichlet = BoundaryCondition()  # pressure
