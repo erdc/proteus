@@ -162,3 +162,4 @@ if sys.platform == 'linux2':
     PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_ZOLTAN_LIB_DIR]
     PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_LAPACK_LIB_DIR]
     PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_BLAS_LIB_DIR]
+    PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_CHRONO_LIB_DIR]
