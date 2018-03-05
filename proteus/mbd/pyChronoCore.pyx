@@ -22,6 +22,11 @@ cdef np.ndarray ChMatrix33_to_npArray(ch.ChMatrix33 &mat):
                      [mat.Get_A_Yaxis().x(), mat.Get_A_Yaxis().y(), mat.Get_A_Yaxis().z()],
                      [mat.Get_A_Zaxis().x(), mat.Get_A_Zaxis().y(), mat.Get_A_Zaxis().z()]])
 
+cdef np.ndarray ConstChMatrix33_to_npArray(const ch.ChMatrix33 &mat):
+    return np.array([[mat.Get_A_Xaxis().x(), mat.Get_A_Xaxis().y(), mat.Get_A_Xaxis().z()],
+                     [mat.Get_A_Yaxis().x(), mat.Get_A_Yaxis().y(), mat.Get_A_Yaxis().z()],
+                     [mat.Get_A_Zaxis().x(), mat.Get_A_Zaxis().y(), mat.Get_A_Zaxis().z()]])
+
 cdef ch.ChVector npArray_to_ChVector(np.ndarray arr):
     cdef ch.ChVector vec
     vec = ch.ChVector[double](arr[0], arr[1], arr[2])
@@ -170,6 +175,9 @@ cdef class ChBody(ChBodyFrame):
     cpdef void SetMaterialSurface(self, ChMaterialSurfaceSMC mat):
         deref(self.sharedptr_chbody).SetMaterialSurface(<shared_ptr[ch.ChMaterialSurface]> mat.sharedptr)
 
+    cpdef np.ndarray GetInertia(self):
+        return ConstChMatrix33_to_npArray(deref(self.sharedptr_chbody).GetInertia())
+
     cpdef void SetInertiaXX(self, ChVector iner):
         deref(self.sharedptr_chbody).SetInertiaXX(iner.cppobj)
 
@@ -301,3 +309,22 @@ cdef class ChContactSurfaceNodeCloud:
 
 
 
+
+cdef class ChBodyAddedMass(ChBody):
+    """Cython class for ChBodyAddedMass
+    (!) Uses shared_ptr
+    """
+
+    def __cinit__(self):
+        if type(self) is ChBodyAddedMass:
+            self.sharedptr_chbodyaddedmass = make_shared[ch.ChBodyAddedMass]()
+            self.sharedptr_chbody = <shared_ptr[ch.ChBody]> self.sharedptr_chbodyaddedmass
+            self.sharedptr_chbodyframe = <shared_ptr[ch.ChBodyFrame]> self.sharedptr_chbodyaddedmass
+            self.sharedptr_chframemoving = <shared_ptr[ch.ChFrameMoving]> self.sharedptr_chbodyaddedmass
+            self.sharedptr_chframe = <shared_ptr[ch.ChFrame]> self.sharedptr_chbodyaddedmass
+
+    cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in):
+        deref(self.sharedptr_chbodyaddedmass).SetMfullmass(Mfullmass_in)
+
+    cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
+        deref(self.sharedptr_chbodyaddedmass).SetInvMfullmass(inv_Mfullmass_in)
