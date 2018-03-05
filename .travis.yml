@@ -5,7 +5,7 @@ language: python
 
 env:
   - TEST_PROFILE="proteus"
-  - TEST_PROFILE="air-water-vv"
+#  - TEST_PROFILE="air-water-vv"
 
 python:
 - 2.7
