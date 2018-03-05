@@ -5,6 +5,8 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+#define Sign(z) (z >= 0.0 ? 1.0 : -1.0)
+
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define IS_BETAij_ONE 0
 
@@ -86,6 +88,9 @@ namespace proteus
                                    double* ebqe_rd_u_ext,
                                    double* ebqe_bc_u_ext,
                                    double* ebqe_u,
+				   double* interface_locator,
+				   // TO KILL SUPG AND SHOCK CAPTURING 
+				   int PURE_BDF,
                                    // PARAMETERS FOR EDGE VISCOSITY
                                    int numDOFs,
                                    int NNZ,
@@ -161,6 +166,7 @@ namespace proteus
                                    double* ebqe_rd_u_ext,
                                    double* ebqe_bc_u_ext,
                                    int* csrColumnOffsets_eb_u_u,
+				   int PURE_BDF,
                                    int LUMPED_MASS_MATRIX
                                    )=0;
     virtual void calculateWaterline(//element
@@ -333,6 +339,9 @@ namespace proteus
                                                      double* ebqe_rd_u_ext,
                                                      double* ebqe_bc_u_ext,
                                                      double* ebqe_u,
+						     double* interface_locator,
+						     // TO KILL SUPG AND SHOCK CAPTURING 
+						     int PURE_BDF,
                                                      // PARAMETERS FOR EDGE VISCOSITY
                                                      int numDOFs,
                                                      int NNZ,
@@ -408,6 +417,7 @@ namespace proteus
                                      double* ebqe_rd_u_ext,
                                      double* ebqe_bc_u_ext,
                                      int* csrColumnOffsets_eb_u_u,
+				     int PURE_BDF,
                                      int LUMPED_MASS_MATRIX
                                      )=0;
     virtual void calculateSmoothingMatrix(//element
@@ -672,6 +682,9 @@ namespace proteus
 			     double* ebqe_rd_u_ext,
 			     double* ebqe_bc_u_ext,
 			     double* ebqe_u,
+			     double* interface_locator,
+			     // TO KILL SUPG AND SHOCK CAPTURING 
+			     int PURE_BDF,
 			     // PARAMETERS FOR EDGE VISCOSITY
 			     int numDOFs,
 			     int NNZ,
@@ -868,9 +881,18 @@ namespace proteus
 		//
 		//update element residual
 		//
-
+		double sign;
+		int same_sign=1;
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
+		    int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
+		    if (i==0)
+		      sign = Sign(u_dof[gi]);
+		    else if (same_sign==1)
+		      {
+			same_sign = sign == Sign(u_dof[gi]) ? 1 : 0;
+			sign = Sign(u_dof[gi]);
+		      }		    
 		    //register int eN_k_i=eN_k*nDOF_test_element+i,
 		    // eN_k_i_nSpace = eN_k_i*nSpace;
 		    register int  i_nSpace=i*nSpace;
@@ -879,9 +901,18 @@ namespace proteus
 		      ck.Mass_weak(m_t,u_test_dV[i]) +
 		      ck.Hamiltonian_weak(H,u_test_dV[i]) +
 		      MOVING_DOMAIN*ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])+
-		      ck.SubgridError(subgridError_u,Lstar_u[i]) +
-		      ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&u_grad_test_dV[i_nSpace]);
+		      (PURE_BDF == 1 ? 0. : 1.)*
+		      (ck.SubgridError(subgridError_u,Lstar_u[i]) +
+		       ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
+					     grad_u,
+					     &u_grad_test_dV[i_nSpace]));
 		  }//i
+		if (same_sign == 0) // This cell contains the interface
+		  for(int i=0;i<nDOF_test_element;i++)
+		    {
+		      int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
+		      interface_locator[gi] = 1.0;
+		    }
 		//
 		//cek/ido todo, get rid of m, since u=m
 		//save momentum for time history and velocity for subgrid error
@@ -1115,6 +1146,7 @@ namespace proteus
 			     double* ebqe_rd_u_ext,
 			     double* ebqe_bc_u_ext,
 			     int* csrColumnOffsets_eb_u_u,
+			     int PURE_BDF,
 			     int LUMPED_MASS_MATRIX)
       {
 	double Ct_sge = 4.0;
@@ -1280,11 +1312,18 @@ namespace proteus
 			int j_nSpace = j*nSpace;
 			int i_nSpace = i*nSpace;
 			elementJacobian_u_u[i][j] +=
-			  ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
+			  ck.MassJacobian_weak(dm_t,
+					       u_trial_ref[k*nDOF_trial_element+j],
+					       u_test_dV[i]) +
 			  ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
-			  MOVING_DOMAIN*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
-			  ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
-			  ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
+			  MOVING_DOMAIN*ck.AdvectionJacobian_weak(df,
+								  u_trial_ref[k*nDOF_trial_element+j],
+								  &u_grad_test_dV[i_nSpace]) +
+			  (PURE_BDF == 1 ? 0. : 1.)*
+			  (ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
+			   ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],
+							 &u_grad_trial[j_nSpace],
+							 &u_grad_test_dV[i_nSpace]));
 		      }//j
 		  }//i
 	      }//k
@@ -1976,6 +2015,9 @@ namespace proteus
 					       double* ebqe_rd_u_ext,
 					       double* ebqe_bc_u_ext,
 					       double* ebqe_u,
+					       double* interface_locator,
+					       // TO KILL SUPG AND SHOCK CAPTURING 
+					       int PURE_BDF,
 					       // PARAMETERS FOR EDGE VISCOSITY
 					       int numDOFs,
 					       int NNZ,
@@ -2631,6 +2673,7 @@ namespace proteus
 			       double* ebqe_rd_u_ext,
 			       double* ebqe_bc_u_ext,
 			       int* csrColumnOffsets_eb_u_u,
+			       int PURE_BDF,
 			       int LUMPED_MASS_MATRIX)
       {
 	double Ct_sge = 4.0;
