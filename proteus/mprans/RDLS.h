@@ -5,6 +5,8 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+#define heaviside(z) (z>0 ? 1. : (z<0 ? 0. : 0.5))
+
 #define SINGLE_POTENTIAL 0
 #define USE_ABS_GRAD_U_RECONSTRUCTION 1
 
@@ -300,6 +302,28 @@ namespace proteus
                                         int offset_u, int stride_u,
                                         int numDOFs,
                                         double* abs_grad_u_dof)=0;
+    virtual void calculateMetricsAtEOS( //EOS=End Of Simulation
+                                       double* mesh_trial_ref,
+                                       double* mesh_grad_trial_ref,
+                                       double* mesh_dof,
+                                       int* mesh_l2g,
+                                       double* dV_ref,
+                                       double* u_trial_ref,
+                                       double* u_grad_trial_ref,
+                                       double* u_test_ref,
+                                       //physics
+                                       int nElements_global,
+                                       int* u_l2g,
+                                       double* elementDiameter,
+                                       //double* nodeDiametersArray,
+                                       double degree_polynomial,
+                                       double epsFact_redist,
+                                       double* u_dof,
+                                       double* u_exact,
+                                       int offset_u, int stride_u,
+                                       double* global_I_err,
+                                       double* global_V_err,
+                                       double* global_D_err)=0;
   };
 
   template<class CompKernelType,
@@ -1489,7 +1513,7 @@ namespace proteus
                   eN_k_nSpace = eN_k*nSpace,
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
                 register double
-                  coeff, delta, hK,
+                  coeff, delta,
                   abs_grad_u, qx, qy, qz, normalReconstruction[nSpace],
                   u=0,grad_u[nSpace],
                   m=0.0,
@@ -1585,7 +1609,6 @@ namespace proteus
                 // COMPUTE DELTA FUNCTION //
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi
                                                  +(1.0-useMetrics)*elementDiameter[eN]);
-                hK = useMetrics*h_phi + (1.0-useMetrics)*elementDiameter[eN];
                 delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
 
                 // UPDATE ELEMENT RESIDUAL //
@@ -1599,8 +1622,8 @@ namespace proteus
                       elementResidual_u[i] +=
                         ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace])
                         -ck.NumericalDiffusion(1.0,normalReconstruction,&u_grad_test_dV[i_nSpace])
-                        //+alpha/hK*(u-phi_ls[eN_k])*delta*u_test_dV[i];
-                        +alpha/hK*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i];
+                        //+alpha*(u-phi_ls[eN_k])*delta*u_test_dV[i];
+                        +alpha*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i];
                     }
                 else // =1. Nonlinear via single or double pot., with(out) |grad(u)| reconstructed
                   for(int i=0;i<nDOF_test_element;i++)
@@ -1611,8 +1634,8 @@ namespace proteus
 
                       elementResidual_u[i] +=
                         ck.NumericalDiffusion(coeff,grad_u,&u_grad_test_dV[i_nSpace])
-                        //+alpha/hK*(u-phi_ls[eN_k])*delta*u_test_dV[i]; // consistent mass matrix
-                        + alpha/hK*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i]; //lump mass matrix
+                        //+alpha*(u-phi_ls[eN_k])*delta*u_test_dV[i]; // consistent mass matrix
+                        + alpha*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i]; //lump mass matrix
                     }//i
               }//k
             //
@@ -1705,7 +1728,7 @@ namespace proteus
 
                 //declare local storage
                 register double
-                  coeff1, coeff2, delta, abs_grad_u, hK,
+                  coeff1, coeff2, delta, abs_grad_u,
                   u=0.0, grad_u[nSpace],
                   m=0.0,
                   jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
@@ -1787,7 +1810,6 @@ namespace proteus
                 // COMPUTE DELTA FUNCTION //
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi
                                                  +(1.0-useMetrics)*elementDiameter[eN]);
-                hK = useMetrics*h_phi + (1.0-useMetrics)*elementDiameter[eN];
                 delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
 
                 for(int i=0;i<nDOF_test_element;i++)
@@ -1807,8 +1829,8 @@ namespace proteus
                             + coeff2*dV*
                             ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[i_nSpace])*
                             ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[j_nSpace]) )
-                          //+ alpha/hK*u_trial_ref[k*nDOF_trial_element+j]*delta*u_test_dV[i];//cons.
-                          + (i == j ? alpha/hK*delta*u_test_dV[i] : 0.); //lumped
+                          //+ alpha*u_trial_ref[k*nDOF_trial_element+j]*delta*u_test_dV[i];//cons.
+                          + (i == j ? alpha*delta*u_test_dV[i] : 0.); //lumped
                       }//j
                   }//i
               }//k
@@ -2057,6 +2079,110 @@ namespace proteus
           }
       }
       //////////////////
+
+      void calculateMetricsAtEOS( //EOS=End Of Simulation
+                                 double* mesh_trial_ref, //
+                                 double* mesh_grad_trial_ref, //
+                                 double* mesh_dof, //
+                                 int* mesh_l2g, //
+                                 double* dV_ref, //
+                                 double* u_trial_ref,
+                                 double* u_grad_trial_ref,
+                                 double* u_test_ref, //
+                                 //physics
+                                 int nElements_global, //
+                                 int* u_l2g, //
+                                 double* elementDiameter,
+                                 //double* nodeDiametersArray,
+                                 double degree_polynomial,
+                                 double epsFact_redist,
+                                 double* u_dof,
+                                 double* u_exact,
+                                 int offset_u, int stride_u,
+                                 double* global_I_err,
+                                 double* global_V_err,
+                                 double* global_D_err)
+      {
+        double global_V = 0.;
+        double global_V0 = 0.;
+        *global_I_err = 0.0;
+        *global_V_err = 0.0;
+        *global_D_err = 0.0;
+        //////////////////////
+        // ** LOOP IN CELLS //
+        //////////////////////
+        for(int eN=0;eN<nElements_global;eN++)
+          {
+            //declare local storage for local contributions and initialize
+            register double
+              elementResidual_u[nDOF_test_element];
+            double
+              cell_mass_error = 0., cell_mass_exact = 0.,
+              cell_I_err = 0.,
+              cell_V = 0., cell_V0 = 0.,
+              cell_D_err = 0.;
+
+            //loop over quadrature points and compute integrands
+            for  (int k=0;k<nQuadraturePoints_element;k++)
+              {
+                //compute indeces and declare local storage
+                register int eN_k = eN*nQuadraturePoints_element+k,
+                  eN_k_nSpace = eN_k*nSpace,
+                  eN_nDOF_trial_element = eN*nDOF_trial_element;
+                register double
+                  u, uh,
+                  u_grad_trial[nDOF_trial_element*nSpace],
+                  grad_uh[nSpace],
+                  //for general use
+                  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+                  dV,x,y,z;
+                //get the physical integration weight
+                ck.calculateMapping_element(eN,
+                                            k,
+                                            mesh_dof,
+                                            mesh_l2g,
+                                            mesh_trial_ref,
+                                            mesh_grad_trial_ref,
+                                            jac,
+                                            jacDet,
+                                            jacInv,
+                                            x,y,z);
+                dV = fabs(jacDet)*dV_ref[k];
+                // get functions at quad points
+                ck.valFromDOF(u_dof,
+                              &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+                              uh);
+                u = u_exact[eN_k];
+                // get gradients
+                ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+                                    jacInv,
+                                    u_grad_trial);
+                ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_uh);
+
+                double epsHeaviside = epsFact_redist*elementDiameter[eN]/degree_polynomial;
+                // compute (smoothed) heaviside functions //
+                double Hu = heaviside(u);
+                double Huh = heaviside(uh);
+                // compute cell metrics //
+                cell_I_err += fabs(Hu - Huh)*dV;
+                cell_V   += Huh*dV;
+                cell_V0  += Hu*dV;
+
+                double norm2_grad_uh = 0.;
+                for (int I=0; I<nSpace; I++)
+                  norm2_grad_uh += grad_uh[I]*grad_uh[I];
+                cell_D_err += std::pow(std::sqrt(norm2_grad_uh) - 1, 2.)*dV;
+              }
+            global_V += cell_V;
+            global_V0 += cell_V0;
+            // metrics //
+            *global_I_err    += cell_I_err;
+            *global_D_err    += cell_D_err;
+          }//elements
+        *global_V_err = fabs(global_V0 - global_V)/global_V0;
+        *global_D_err *= 0.5;
+      }
+
     };//RDLS
   inline RDLS_base* newRDLS(int nSpaceIn,
                             int nQuadraturePoints_elementIn,

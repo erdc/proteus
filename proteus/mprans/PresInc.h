@@ -57,6 +57,7 @@ namespace proteus
                                    double* ebqe_bc_u_ext,
                                    double* ebqe_adv_flux,
                                    double* ebqe_diff_flux,
+                                   double* bc_adv_flux,
                                    double* bc_diff_flux,
                                    int offset_u,
                                    int stride_u,
@@ -146,13 +147,20 @@ namespace proteus
     }
 
     inline
-      void exteriorNumericalAdvectiveFlux(const double n[nSpace],
+      void exteriorNumericalAdvectiveFlux(const int& isFluxBoundary,
+                                          const double& bc_flux,
+                                          const double n[nSpace],
                                           const double f[nSpace],
                                           double& flux)
     {
-      flux = 0.0;
-      for (int I=0; I < nSpace; I++)
-        flux += n[I]*f[I];
+      if (isFluxBoundary == 1)
+        flux = bc_flux;
+      else
+        {
+          flux = 0.0;
+          for (int I=0; I < nSpace; I++)
+            flux += n[I]*f[I];
+        }
     }
 
     inline
@@ -331,7 +339,7 @@ namespace proteus
               register int  i_nSpace=i*nSpace;
               elementResidual_u[i] +=
                 (INTEGRATE_BY_PARTS_DIV_U == 1 ? ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]) : q_divU[eN_k]*u_test_dV[i])
-                + compatibility_condition*u_test_dV[i] // mql: to make the system solvable if int(div(u))!=0
+                //                + compatibility_condition*u_test_dV[i] // mql: to make the system solvable if int(div(u))!=0
                 + ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]);
             }//i
           //
@@ -391,6 +399,7 @@ namespace proteus
                            double* ebqe_bc_u_ext,
                            double* ebqe_adv_flux,
                            double* ebqe_diff_flux,
+                           double* bc_adv_flux,
                            double* bc_diff_flux,
                            int offset_u,
                            int stride_u,
@@ -533,7 +542,8 @@ namespace proteus
                 ebNE_kb_nSpace = ebNE_kb*nSpace,
                 ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                 ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-              register double penalty=0.0,
+              register double h_b=0.0,
+                penalty=0.0,
                 u_ext=0.0,
                 bc_u_ext=0.0,
                 adv_flux_ext=0.0,
@@ -578,7 +588,8 @@ namespace proteus
               //get the metric tensor
               //cek todo use symmetry
               ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
-              ck.calculateGScale(G,normal,penalty);
+              ck.calculateGScale(G,normal,h_b);
+              penalty = 10.0/h_b;
               //compute shape and solution information
               //shape
               ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
@@ -613,7 +624,9 @@ namespace proteus
               //
               //calculate the numerical fluxes
               //
-              exteriorNumericalAdvectiveFlux(normal,
+              exteriorNumericalAdvectiveFlux(isFluxBoundary[ebNE_kb],
+                                             bc_adv_flux[ebNE_kb],
+                                             normal,
                                              f_ext,
                                              adv_flux_ext); //=f.normal = [(1-vos)*vf + vos*vs].normal
               exteriorNumericalDiffusiveFlux(isDOFBoundary[ebNE_kb],
@@ -663,6 +676,7 @@ namespace proteus
               globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
             }//i
         }//ebNE
+
     }
 
     inline void calculateElementJacobian(//element
@@ -903,7 +917,8 @@ namespace proteus
                 ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                 ebN_local_kb_nSpace = ebN_local_kb*nSpace;
 
-              register double u_ext=0.0,
+              register double h_b=0.0,
+                u_ext=0.0,
                 grad_u_ext[nSpace],
                 m_ext=0.0,
                 dm_ext=0.0,
@@ -959,7 +974,8 @@ namespace proteus
                                                   x_ext,y_ext,z_ext);
               dS = metricTensorDetSqrt*dS_ref[kb];
               ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
-              ck.calculateGScale(G,normal,penalty);
+              ck.calculateGScale(G,normal,h_b);
+              penalty=10.0/h_b;
               //compute shape and solution information
               //shape
               ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
