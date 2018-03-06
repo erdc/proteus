@@ -15,6 +15,7 @@
 static void SmoothField(apf::Field *f);
 void gradeAnisoMesh(apf::Mesh* m);
 void gradeAspectRatio(apf::Mesh* m, int idx);
+void getAspectRatioField(apf::Mesh* m);
 void gradeSizeFrames(apf::Mesh* m);
 
 /* Based on the distance from the interface epsilon can be controlled to determine
@@ -219,6 +220,89 @@ static apf::Field *extractSpeed(apf::Field *velocity)
   m->end(it);
   return speedF;
 }
+
+static bool isInterior(apf::Mesh* m, apf::MeshEntity* ent){
+    apf::ModelEntity* me=m->toModel(ent);
+    int tag = m->getModelTag(me);
+    //apf::ModelEntity* InteriorEnt = m->findModelEntity(m->getDimension(),tag);
+    //std::cout<<"What is the interior vertex "<<tag<<" "<<m->getModelTag(InteriorEnt)<<std::endl;
+    //std::cout<<"What is the interior tag "<<m->getModelType(me)<<" "<<m->getDimension()<<std::endl;
+    return m->getModelType(me)==m->getDimension();
+    //return me==InteriorEnt;
+}
+
+static void getBoundaryHessian(apf::Field* grad2Speed)
+//Function used to convert the velocity field into a speed field
+{
+  apf::Mesh *m = apf::getMesh(grad2Speed);
+  //apf::MeshIterator *it = m->begin(m->getDimension()-1);
+  apf::MeshIterator *it = m->begin(0);
+  apf::MeshEntity *bent;
+  apf::MeshEntity *v;
+  apf::MeshTag* boundaryFlag = m->createIntTag("boundaryFlag",1);
+  apf::Field* boundaryTest = apf::createLagrangeField(m,"boundaryTest",apf::SCALAR,1);
+  while(v = m->iterate(it)){
+    apf::setScalar(boundaryTest,v,0,0);
+  }
+  m->end(it);
+  it = m->begin(m->getDimension()-1);
+  while ((bent = m->iterate(it)))
+  {
+    apf::ModelEntity* me=m->toModel(bent);
+    int tag = m->getModelTag(me);
+//    int countIdx = 0;
+    apf::ModelEntity* boundary_face = m->findModelEntity(m->getDimension()-1,tag);
+    if(me==boundary_face){
+      apf::Adjacent adjVerts;
+      m->getAdjacent(bent,0,adjVerts);
+      for(int i=0;i<adjVerts.getSize();i++){
+        //m->getIntTag(v,boundaryFlag,&data);
+        //if adjacent to boundary face and has not been reached
+        if(!(m->hasTag(adjVerts[i],boundaryFlag))){
+          apf::Vector3 pt;
+          m->getPoint(adjVerts[i],0,pt);
+//          std::cout<<"vertex i= "<<i<<" "<<pt<<std::endl;
+          int data; 
+          m->setIntTag(adjVerts[i],boundaryFlag,&data);
+          apf::setScalar(boundaryTest,adjVerts[i],0,1);
+          //get adjacent vertices and look for interior vertices
+          //then perform Hessian extrapolation
+          apf::Adjacent v2v;
+          //m->getAdjacent(adjVerts[i],0,v2v);
+          apf::getBridgeAdjacent(m,adjVerts[i],1,0,v2v); //get vertex adjacency across edge
+          apf::Matrix3x3 extrapGrad2Speed;
+          int counter = 0;
+          for(int j=0;j<v2v.getSize();j++){
+            m->getPoint(v2v[j],0,pt);
+//            std::cout<<"vertex j "<<j<<" "<<pt<<" "<<isInterior(m,v2v[j])<<std::endl;
+            if(isInterior(m,v2v[j])){
+              //std::cout<<"IT's INTERIOR\n";
+              //std::cerr<<"IT's INTERIOR\n";
+              //countIdx++;
+              apf::setScalar(boundaryTest,v2v[j],0,-1);
+              apf::Matrix3x3 tempMat;
+              apf::getMatrix(grad2Speed,v2v[j],0,tempMat);
+              extrapGrad2Speed = extrapGrad2Speed+tempMat;
+              counter++;
+            }
+          }
+//          if(countIdx>1)
+//            std::abort();
+          if(counter!=0){
+            extrapGrad2Speed = extrapGrad2Speed/counter;
+            apf::setMatrix(grad2Speed,adjVerts[i],0,extrapGrad2Speed);
+          }
+        } //end if need to compute boundary Hessian
+      } //end for loop
+
+    }
+  }
+  m->destroyTag(boundaryFlag);
+  m->end(it);
+  std::cout<<"Finished computing boundary Hessians\n";
+  //apf::writeVtkFiles("testHessBound",m);
+}
+
 
 static apf::Matrix3x3 hessianFormula(apf::Matrix3x3 const &g2phi)
 //Function used to output a symmetric hessian
@@ -776,8 +860,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   if(target_error==0)
     getTargetError(m,target_error);
   
-  //DEBUG hack a target error calculation for backward facing step
 /*
+  //DEBUG hack a target error calculation for backward facing step
   target_error=0;
   it = m->begin(1);
   apf::MeshEntity* bent;
@@ -882,8 +966,11 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     apf::Field *grad2phi = apf::recoverGradientByVolume(gradphi);
 */
     apf::Field *speedF = extractSpeed(m->findField("velocity"));
+    std::cout<<"got speed field\n";
     apf::Field *gradSpeed = apf::recoverGradientByVolume(speedF);
     apf::Field *grad2Speed = apf::recoverGradientByVolume(gradSpeed);
+    //getBoundaryHessian(grad2Speed);
+    std::cout<<"got hessian field\n";
     //apf::Field *hess = computeHessianField(grad2phi);
     //apf::Field *curves = getCurves(hess, gradphi);
     //apf::Field* metricf = computeMetricField(gradphi,grad2phi,size_iso,eps_u);
@@ -920,6 +1007,14 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
       apf::Vector3 eigenVectors[3];
       double eigenValues[3];
+  
+      //hack for hessian
+      metric[0][1] = 0.0;
+      metric[1][1] = 1.0;
+      metric[2][1] = 0.0;
+      metric[1][0] = 0.0;
+      metric[1][2] = 0.0;
+      //
       apf::eigen(metric, eigenVectors, eigenValues);
       // Sort the eigenvalues and corresponding vectors
       // Larger eigenvalues means a need for a finer mesh
@@ -934,6 +1029,24 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       assert(ssa[2].wm >= ssa[1].wm);
       assert(ssa[1].wm >= ssa[0].wm);
 
+      //hack to get aspect ratios in one field
+      //switches the last two frames
+      if(ssa[0].wm<0.99){
+        //std::cout<<"initial values"<<ssa[2].wm<<" "<<ssa[1].wm<<" "<<ssa[0].wm<<std::endl;
+        //std::cout<<"initial frames"<<ssa[2].v<<" "<<ssa[1].v<<" "<<ssa[0].v<<std::endl;
+        double tempVal = ssa[0].wm;
+        ssa[0].wm = ssa[1].wm;
+        ssa[1].wm = tempVal;  
+        apf::Vector3 tempVec;
+        tempVec = ssa[0].v;
+        ssa[0].v = ssa[1].v;
+        ssa[1].v = tempVec;
+        //std::cout<<"final values"<<ssa[2].wm<<" "<<ssa[1].wm<<" "<<ssa[0].wm<<std::endl;
+        //std::cout<<"final frames"<<ssa[2].v<<" "<<ssa[1].v<<" "<<ssa[0].v<<std::endl;
+        //std::abort();
+      }
+      //
+
       double lambda[3] = {ssa[2].wm, ssa[1].wm, ssa[0].wm};
 
       scaleFormulaERM(phi, hmin, hmax, apf::getScalar(size_iso, v, 0), curve, lambda, eps_u, scale,nsd,maxAspect);
@@ -942,6 +1055,15 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       //get frames
 
       apf::Matrix3x3 frame(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+
+      //DEBUG
+/*
+      if(localNumber(v)==2429){
+        std::cout<<"frame initial? "<<std::endl;
+        std::cout<<frame<<std::endl;
+      }
+*/
+      //
 
       //get eigen values and eigenvectors from hessian
       double firstEigenvalue = ssa[2].wm;
@@ -953,19 +1075,67 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       //normalize eigenvectors
       for (int i = 0; i < 3; ++i)
         frame[i] = frame[i].normalize();
+
+       //DEBUG
+/*
+      if(localNumber(v) == 2429){
+        apf::Vector3 coordPt;
+        m->getPoint(v,0,coordPt);
+        std::cout<<localNumber(v)<<" coordinates are "<<coordPt<<std::endl;  
+        std::cout<<"Metric/Hessian is? "<<metric<<std::endl;
+        std::cout<<"frame final? "<<std::endl;
+        std::cout<<frame<<std::endl;  
+        std::cout<<"WHAT ARE THE EIGEN? "<<std::endl;
+        for(int i=0;i<3;++i){
+          std::cout<<ssa[2].v<<" "<<ssa[1].v<<" "<<ssa[0].v<<std::endl;
+          std::cout<<lambda[0]<<" "<<lambda[1]<<" "<<lambda[2]<<std::endl;
+        }
+        std::abort();
+      }
+*/
+      //
+     
+
       frame = apf::transpose(frame);
       apf::setMatrix(size_frame, v, 0, frame);
-
+      //if(localNumber(v) == 3143){
+/*
+      if(localNumber(v) == 704){
+        std::cout<<localNumber(v)<<" What is hessian "<<metric<<std::endl;
+        std::cout<<localNumber(v)<<" What is lambda? "<<lambda[0]<<" "<<lambda[1]<<" "<<lambda[2]<<std::endl;
+        std::cout<<"what is frame? "<<frame<<std::endl;
+        apf::Adjacent adjVerts;
+        apf::getBridgeAdjacent(m,v,1,0,adjVerts);
+        apf::Vector3 samplePoint;
+        m->getPoint(v,0,samplePoint);
+        std::cout<<"MAIN speed at "<<localNumber(v)<<" coords "<<samplePoint<<" speed "<<apf::getScalar(speedF,v,0)<<std::endl;
+        for(int idx=0;idx<adjVerts.getSize();idx++){
+          m->getPoint(adjVerts[idx],0,samplePoint);
+          std::cout<<"speed at "<<localNumber(adjVerts[idx])<<" coords "<<samplePoint<<" speed "<<apf::getScalar(speedF,adjVerts[idx],0)<<std::endl;;
+        }
+        abort();
+      }
+*/
     }
     m->end(it);
+    if(logging_config=="on"){
+      char namebuffer[20];
+      getAspectRatioField(m);
+      sprintf(namebuffer,"pumi_preadapt_pregrade_%i.smb",nAdapt);
+      m->writeNative(namebuffer);
+      sprintf(namebuffer,"pumi_preadapt_pregradeVTK_%i",nAdapt);
+      apf::writeVtkFiles(namebuffer,m);
+    }
 
     //Do simple size and aspect ratio grading
     gradeAnisoMesh(m);
     std::cout<<"Finished grading size 0\n";
     gradeAspectRatio(m,1);
+/*
     std::cout<<"Finished grading size 1\n";
     gradeAspectRatio(m,2);
     std::cout<<"Finished grading size 2\n";
+*/
 
     //grade directions
     //gradeSizeFrames(m);
@@ -1000,6 +1170,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     //apf::destroyField(hess);
 
     if(logging_config=="on"){
+      getAspectRatioField(m);
       char namebuffer[20];
       sprintf(namebuffer,"pumi_preadapt_aniso_%i",nAdapt);
       apf::writeVtkFiles(namebuffer, m);
@@ -1012,6 +1183,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     apf::destroyField(speedF);
     apf::destroyField(gradSpeed);
     apf::destroyField(grad2Speed);
+    if(m->findField("aspect_ratio"))
+      apf::destroyField(m->findField("aspect_ratio"));
   }
   else
   {
@@ -1345,7 +1518,8 @@ void gradeAspectRatio(apf::Mesh* m,int idx)
   apf::MeshEntity* edge;
   apf::Adjacent edgAdjVert;
   apf::Adjacent vertAdjEdg;
-  double gradingFactor = 1.3;
+  //double gradingFactor = 1.3;
+  double gradingFactor = 2.0;
   double size[2];
   apf::Vector3 sizeVec;
   std::queue<apf::MeshEntity*> markedEdges;
@@ -1397,6 +1571,29 @@ void gradeAspectRatio(apf::Mesh* m,int idx)
   m->end(it); 
   m->destroyTag(isMarked);
   apf::synchronize(size_scale);
+}
+
+void getAspectRatioField(apf::Mesh* m)
+{
+  apf::MeshIterator* it = m->begin(0);
+  apf::MeshEntity* ent;
+  double AR[2];
+  apf::Vector3 sizeVec;
+  if(m->findField("aspect_ratio"))
+    apf::destroyField(m->findField("aspect_ratio"));
+  apf::Field* size_scale = m->findField("proteus_size_scale");
+  apf::Field* aspect_ratio = apf::createLagrangeField(m,"aspect_ratio",apf::VECTOR,1);
+
+  while((ent=m->iterate(it))){
+      apf::getVector(size_scale,ent,0,sizeVec);
+      apf::Vector3 aspectRatio;
+      aspectRatio[0] = sizeVec[0];
+      for(int i=0; i<2;i++){
+        AR[i]=sizeVec[i+1]/sizeVec[0];
+        aspectRatio[i+1] = AR[i];
+      }
+      apf::setVector(aspect_ratio,ent,0,aspectRatio);
+  }
 }
 
 void gradeSizeFrames(apf::Mesh* m)
