@@ -6,7 +6,6 @@
 #include "ModelFactory.h"
 
 #define Sign(z) (z >= 0.0 ? 1.0 : -1.0)
-#define SEMI_IMPLICIT_LAX_WENDROFF 0
 
 namespace proteus
 {
@@ -71,10 +70,10 @@ namespace proteus
                                    double* ebqe_u,
                                    double* cell_interface_locator,
 				   double* interface_locator,
-                                   // FOR TAYLOR GALERKIN METHODS
-                                   double* uTilde_dof,
-                                   int TAYLOR_GALERKIN_METHOD,
+                                   // FOR TAYLOR GALERKIN METHODS                                   
+                                   int EXPLICIT_METHOD,				   
                                    int stage,
+				   double* uTilde_dof,
                                    double dt,
                                    // TO KILL SUPG AND SHOCK CAPTURING
                                    int PURE_BDF)=0;
@@ -125,9 +124,7 @@ namespace proteus
                                    double* ebqe_bc_u_ext,
                                    int* csrColumnOffsets_eb_u_u,
                                    // FOR TAYLOR GALERKIN METHODS
-                                   int TAYLOR_GALERKIN_METHOD,
-				   double dt,
-                                   int stage,
+                                   int EXPLICIT_METHOD,
                                    // TO KILL SUPG AND SHOCK CAPTURING
                                    int PURE_BDF)=0;
     virtual void calculateWaterline(//element
@@ -374,10 +371,10 @@ namespace proteus
                              double* ebqe_u,
 			     double* cell_interface_locator,
                              double* interface_locator,
-                             // FOR TAYLOR GALERKIN METHODS
-                             double* uTilde_dof,
-                             int TAYLOR_GALERKIN_METHOD,
+                             // FOR TAYLOR GALERKIN METHODS                             
+                             int EXPLICIT_METHOD,			     
                              int stage,
+			     double* uTilde_dof,
                              double dt,
                              // TO KILL SUPG AND SHOCK CAPTURING
                              int PURE_BDF)
@@ -523,7 +520,7 @@ namespace proteus
                        dm,
                        m_t,
                        dm_t);
-                if (TAYLOR_GALERKIN_METHOD==1)
+                if (EXPLICIT_METHOD==1)
                   {
                     double relVelocity[nSpace];
                     for (int I=0;I<nSpace;I++)
@@ -615,29 +612,23 @@ namespace proteus
                     // eN_k_i_nSpace = eN_k_i*nSpace;
                     register int  i_nSpace=i*nSpace;
 
-                    if (TAYLOR_GALERKIN_METHOD==1)
+                    if (EXPLICIT_METHOD==1)
                       {
-			if (SEMI_IMPLICIT_LAX_WENDROFF==1)
-			  {
-			    elementResidual_u[i] += // semi-implicit Lax Wendroff
-			      ck.Mass_weak(u-un,u_test_dV[i]) +
-			      dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) +
-			      0.5*dt*dt*ck.NumericalDiffusion(H,dH,&u_grad_test_dV[i_nSpace]);
-			  }
+			if (stage == 1)
+			  elementResidual_u[i] +=
+			    ck.Mass_weak(u-un,u_test_dV[i]) +  // time derivative
+			    1./3*dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) + // v*grad(phi)
+			    1./9*dt*dt*ck.NumericalDiffusion(Hn,dH,&u_grad_test_dV[i_nSpace]);
+			// TODO: Add part about moving mesh
 			else
-			  {
-			    if (stage == 1)
-			      elementResidual_u[i] +=
-				ck.Mass_weak(u-un,u_test_dV[i]) +  // time derivative
-				1./3*dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) + // v*grad(phi)
-				1./9*dt*dt*ck.NumericalDiffusion(Hn,dH,&u_grad_test_dV[i_nSpace]);
-			    // TODO: Add part about moving mesh
-			    else
-			      elementResidual_u[i] +=
-				ck.Mass_weak(u-un,u_test_dV[i]) +  // time derivative
-				dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) + // v*grad(phi)
-				0.5*dt*dt*ck.NumericalDiffusion(HTilde,dH,&u_grad_test_dV[i_nSpace]);
-			  }
+			  elementResidual_u[i] +=
+			    ck.Mass_weak(u-un,u_test_dV[i]) +  // time derivative
+			    dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) + // v*grad(phi)
+			    0.5*dt*dt*ck.NumericalDiffusion(HTilde,dH,&u_grad_test_dV[i_nSpace]);
+			//elementResidual_u[i] += // semi-implicit Lax Wendroff
+			//    ck.Mass_weak(u-un,u_test_dV[i]) +
+			//    dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) +
+			//    0.5*dt*dt*ck.NumericalDiffusion(H,dH,&u_grad_test_dV[i_nSpace]);
                       }
                     else // Implicit SUPG with SHOCK CAPTURING 
                       {
@@ -777,7 +768,7 @@ namespace proteus
                                     jacInv_ext,
                                     u_grad_trial_trace);
                 //solution and gradients
-		if (TAYLOR_GALERKIN_METHOD==1) // explicit
+		if (EXPLICIT_METHOD==1) // explicit
 		  {
 		    ck.valFromDOF(u_dof_old,
 				  &u_l2g[eN_nDOF_trial_element],
@@ -847,7 +838,7 @@ namespace proteus
 				      flux_ext);
                 ebqe_u[ebNE_kb] = u_ext;
 
-		if (TAYLOR_GALERKIN_METHOD==1)
+		if (EXPLICIT_METHOD==1)
 		  if (stage==1)
 		    flux_ext *= 1./3*dt;
 		  else
@@ -922,9 +913,7 @@ namespace proteus
                              double* ebqe_bc_u_ext,
                              int* csrColumnOffsets_eb_u_u,
                              // FOR TAYLOR GALERKIN METHODS
-                             int TAYLOR_GALERKIN_METHOD,
-			     double dt,
-                             int stage,
+                             int EXPLICIT_METHOD,
                              // TO KILL SUPG AND SHOCK CAPTURING
                              int PURE_BDF)
       {
@@ -1090,24 +1079,18 @@ namespace proteus
                         //int eN_k_j_nSpace = eN_k_j*nSpace;
                         int j_nSpace = j*nSpace;
                         int i_nSpace = i*nSpace;
-                        if (TAYLOR_GALERKIN_METHOD==1)
+                        if (EXPLICIT_METHOD==1)
 			  {
-			    if (SEMI_IMPLICIT_LAX_WENDROFF==1)
-			      {
-				ck.MassJacobian_weak(1.0, // semi-implicit Lax Wendroff
-						     u_trial_ref[k*nDOF_trial_element+j],
-						     u_test_dV[i]) +
-				  0.5*dt*dt*dV*
-				  ck.NumericalDiffusion(1.0,dH,&u_grad_trial[i_nSpace])*
-				  ck.NumericalDiffusion(1.0,dH,&u_grad_trial[j_nSpace]);
-			      }
-			    else
-			      {
-				elementJacobian_u_u[i][j] += 
-				  ck.MassJacobian_weak(1.0,
-						       u_trial_ref[k*nDOF_trial_element+j],
-						       u_test_dV[i]);
-			      }
+			    elementJacobian_u_u[i][j] += 
+			      ck.MassJacobian_weak(1.0,
+						   u_trial_ref[k*nDOF_trial_element+j],
+						   u_test_dV[i]);
+			    //ck.MassJacobian_weak(1.0, // semi-implicit Lax Wendroff
+			    //			 u_trial_ref[k*nDOF_trial_element+j],
+			    //  		 u_test_dV[i]) +
+			    //0.5*dt*dt*dV*
+			    //ck.NumericalDiffusion(1.0,dH,&u_grad_trial[i_nSpace])*
+			    //ck.NumericalDiffusion(1.0,dH,&u_grad_trial[j_nSpace]);
 			  }
                         else // Implicit SUPG with SHOCK CAPTURING 
                           elementJacobian_u_u[i][j] +=
@@ -1142,7 +1125,7 @@ namespace proteus
         //
         //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
         //
-	if (TAYLOR_GALERKIN_METHOD==0) //(semi)-implicit
+	if (EXPLICIT_METHOD==0) //(semi)-implicit
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
             register int ebN = exteriorElementBoundariesArray[ebNE];

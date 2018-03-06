@@ -102,10 +102,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  waterline_interval=-1,
                  movingDomain=False,
                  PURE_BDF=False,
-                 TAYLOR_GALERKIN_METHOD=False,
+                 EXPLICIT_METHOD=False,
                  outputQuantDOFs=False):
         
-        self.TAYLOR_GALERKIN_METHOD=TAYLOR_GALERKIN_METHOD
+        self.EXPLICIT_METHOD=EXPLICIT_METHOD
         self.outputQuantDOFs=outputQuantDOFs
         self.PURE_BDF=PURE_BDF
         self.movingDomain = movingDomain
@@ -928,14 +928,14 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('u', 0)],
             self.cell_interface_locator,
-            self.interface_locator,
-            self.uTilde_dof,
-            self.coefficients.TAYLOR_GALERKIN_METHOD,
+            self.interface_locator,            
+            self.coefficients.EXPLICIT_METHOD,            
             self.taylorGalerkinStage,
+            self.uTilde_dof,
             self.timeIntegration.dt,
             self.coefficients.PURE_BDF)
 
-        self.taylorGalerkinStage = 2
+        self.taylorGalerkinStage = 2 
         self.quantDOFs[:] = self.interface_locator
         
         if self.forceStrongConditions:
@@ -1011,9 +1011,7 @@ class LevelModel(OneLevelTransport):
             self.coefficients.rdModel_ebqe,
             self.numericalFlux.ebqe[('u', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
-            self.coefficients.TAYLOR_GALERKIN_METHOD,
-            self.timeIntegration.dt,
-            self.taylorGalerkinStage,
+            self.coefficients.EXPLICIT_METHOD,
             self.coefficients.PURE_BDF)
 
         # Load the Dirichlet conditions directly into residual
