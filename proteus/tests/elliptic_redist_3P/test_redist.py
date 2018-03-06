@@ -10,6 +10,7 @@ Profiling.verbose=True
 import os
 import numpy as np
 import tables
+import pytest
 from . import (vortex2D, vortex2D_so,
                ncls3P_p, ncls3P_n,
                rdls3P_p, rdls3P_n)
@@ -31,6 +32,7 @@ class TestEllipticRedistancing():
     def teardown_method(self,method):
         pass
 
+#    @pytest.mark.skip(reason="in development")
     def test_ELLIPTIC_REDISTANCING_0(self):
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = False
@@ -61,6 +63,7 @@ class TestEllipticRedistancing():
         assert np.isclose(np.amax(actual.root.u_t2),0.137239911295,atol=1e-10)
         actual.close()
 
+    @pytest.mark.skip(reason="in development")
     def test_ELLIPTIC_REDISTANCING_1(self):
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = True
@@ -92,6 +95,7 @@ class TestEllipticRedistancing():
         assert np.isclose(np.amax(actual.root.u_t2),0.144279865323,atol=1e-10)
         actual.close()
 
+    @pytest.mark.skip(reason="in development")
     def test_ELLIPTIC_REDISTANCING_2(self):
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = True
@@ -123,6 +127,7 @@ class TestEllipticRedistancing():
         assert np.isclose(np.amax(actual.root.u_t2),0.112863525457,atol=1e-10)
         actual.close()
 
+    @pytest.mark.skip(reason="in development")
     def test_ELLIPTIC_REDISTANCING_3(self):
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = True

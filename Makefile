@@ -9,7 +9,9 @@ SHELL=/usr/bin/env bash
 
 PROTEUS ?= $(shell python -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
-PROTEUS_INSTALL_CMD = python setup.py install -O2
+PROTEUS_BUILD_CMD = python setup.py build_ext
+PROTEUS_INSTALL_CMD = python setup.py install
+PROTEUS_DEVELOP_BUILD_CMD = python setup.py build_ext -i
 PROTEUS_DEVELOP_CMD = pip --disable-pip-version-check install -v -e .
 # shell hack for now to automatically detect Garnet front-end nodes
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python -c "import sys; print sys.platform")
@@ -216,6 +218,7 @@ install: profile $(wildcard *.py) proteus
 	@echo "Installing..."
 	@echo "************************"
 	$(call show_info)
+	${PROTEUS_ENV} ${PROTEUS_BUILD_CMD}
 	${PROTEUS_ENV} ${PROTEUS_INSTALL_CMD}
 	@echo "************************"
 	@echo "done installing standard extension modules"
@@ -241,7 +244,8 @@ develop: proteus profile
 	@echo "Installing development version"
 	@echo "************************"
 	$(call show_info)
-	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG" ${PROTEUS_DEVELOP_CMD}
+	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG -Og" ${PROTEUS_DEVELOP_BUILD_CMD}
+	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG -Og" ${PROTEUS_DEVELOP_CMD}
 	@echo "************************"
 	@echo "installing scripts"
 	cd scripts && ${PROTEUS_ENV} PROTEUS_PREFIX=${PROTEUS_PREFIX} make
@@ -312,7 +316,7 @@ doc:
 test: check
 	@echo "************************************"
 	@echo "Running test suite"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n auto --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
 	@echo "Tests complete "
 	@echo "************************************"
 
@@ -320,8 +324,9 @@ jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/lab/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip install configparser
-	pip install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0 hide_code==0.4.0 matplotlib ipympl ipymesh
+	pip install -U configparser
+#	pip install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.8.1 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0 hide_code==0.4.0 matplotlib ipympl ipymesh
+	pip install -U ipyparallel ipython terminado jupyter jupyterlab ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy bqplot hide_code matplotlib ipympl ipymesh
 	ipcluster nbextension enable --user
 	jupyter serverextension enable --py jupyterlab --sys-prefix
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
@@ -344,9 +349,10 @@ jupyter:
 	printf "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.MPIEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 lfs:
-	pip install pyliblzma
+	pip install -U pyliblzma
 	wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
 	tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
 	cd git-lfs-1.5.5 && PREFIX=${HOME} ./install.sh
