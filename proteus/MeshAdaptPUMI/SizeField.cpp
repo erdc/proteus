@@ -511,9 +511,16 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
 //3D
 
   if(nsd == 2){
-    scale[0] = h_dest * pow((lambda[1] ) / (lambda[0]), 1.0 / 4.0);
+    //scale[0] = h_dest * pow((lambda[1] ) / (lambda[0]), 1.0 / 4.0);
+    //scale[1] = sqrt(lambda[0] / lambda[1]) * scale[0];
+    //scale[2] = 1.0;
+    scale[0] = h_dest;
     scale[1] = sqrt(lambda[0] / lambda[1]) * scale[0];
     scale[2] = 1.0;
+    if(scale[1]/scale[0] > maxAspect){
+      scale[1] = maxAspect*scale[0];
+      std::cout<<"Scales reached maximum aspect ratio\n";
+    }
   }
   else{
 /*
@@ -916,10 +923,11 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     element = apf::createMeshElement(m, reg);
 
     if (m->getDimension() == 2)
-      h_old = sqrt(apf::measure(element) * 4 / sqrt(3));
+      //h_old = sqrt(apf::measure(element) * 4 / sqrt(3));
+      h_old = apf::computeShortestHeightInTri(m,reg);
     else
       //h_old = pow(apf::measure(element) * 6 * sqrt(2), 1.0 / 3.0); //edge of a regular tet
-      h_old = apf::computeShortesHeightInTet(m,reg);
+      h_old = apf::computeShortestHeightInTet(m,reg);
     err_curr = apf::getScalar(vmsErrH1, reg, 0);
     //err_curr = err_vect[0];
     //errRho_curr = apf::getScalar(errRho_reg, reg, 0);
@@ -995,6 +1003,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     }
 
     it = m->begin(0);
+    int debug3D=0;
+    
     while( (v = m->iterate(it)) ){
       double phi;// = apf::getScalar(phif, v, 0);
 
@@ -1008,6 +1018,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       apf::Vector3 eigenVectors[3];
       double eigenValues[3];
   
+      if(debug3D){
       //hack for hessian
       metric[0][1] = 0.0;
       metric[1][1] = 1.0;
@@ -1015,6 +1026,15 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       metric[1][0] = 0.0;
       metric[1][2] = 0.0;
       //
+      }
+      if (m->getDimension() == 2){
+        metric[0][2] = 0.0;
+        metric[1][2] = 0.0;
+        metric[2][2] = 0.0; //get an eigenvalue of 0
+        metric[2][0] = 0.0;
+        metric[2][1] = 0.0;
+      }
+
       apf::eigen(metric, eigenVectors, eigenValues);
       // Sort the eigenvalues and corresponding vectors
       // Larger eigenvalues means a need for a finer mesh
@@ -1031,6 +1051,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
       //hack to get aspect ratios in one field
       //switches the last two frames
+      if(debug3D){
       if(ssa[0].wm<0.99){
         //std::cout<<"initial values"<<ssa[2].wm<<" "<<ssa[1].wm<<" "<<ssa[0].wm<<std::endl;
         //std::cout<<"initial frames"<<ssa[2].v<<" "<<ssa[1].v<<" "<<ssa[0].v<<std::endl;
@@ -1044,6 +1065,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
         //std::cout<<"final values"<<ssa[2].wm<<" "<<ssa[1].wm<<" "<<ssa[0].wm<<std::endl;
         //std::cout<<"final frames"<<ssa[2].v<<" "<<ssa[1].v<<" "<<ssa[0].v<<std::endl;
         //std::abort();
+      }
       }
       //
 
