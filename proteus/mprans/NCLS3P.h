@@ -5,6 +5,12 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+#define ENTROPY(u)  u
+#define DENTROPY(u) 1.0
+
+#define cE 0.1
+#define cMax 0.1
+
 #define Sign(z) (z >= 0.0 ? 1.0 : -1.0)
 
 namespace proteus
@@ -379,6 +385,8 @@ namespace proteus
                              // TO KILL SUPG AND SHOCK CAPTURING
                              int PURE_BDF)
       {
+	double meanEntropy = 0., meanOmega = 0., maxEntropy = -1E10, minEntropy = 1E10;
+	register double maxVel[nElements_global], maxEntRes[nElements_global];
         //cek should this be read in?
         double Ct_sge = 4.0;
 
@@ -393,6 +401,9 @@ namespace proteus
         //eN_k_i is the quadrature point index for a trial function
         for(int eN=0;eN<nElements_global;eN++)
           {
+	    // init maxVel and maxEntRes
+	    maxVel[eN] = 0.;
+	    maxEntRes[eN] = 0.;
             //declare local storage for element residual and initialize
             register double elementResidual_u[nDOF_test_element];
             for (int i=0;i<nDOF_test_element;i++)
@@ -522,16 +533,34 @@ namespace proteus
                        dm_t);
                 if (EXPLICIT_METHOD==1)
                   {
+		    double normVel=0.;
                     double relVelocity[nSpace];
                     for (int I=0;I<nSpace;I++)
-                      relVelocity[I] = dH[I] - MOVING_DOMAIN*df[I];
-                    calculateCFL(elementDiameter[eN],relVelocity,cfl[eN_k]);
-
-                    for (int I=0; I<nSpace; I++)
-                      {
+		      {
+			Hn += velocity[eN_k_nSpace+I]*grad_u_old[I];
                         HTilde += velocity[eN_k_nSpace+I]*grad_uTilde[I];
-                        Hn += velocity[eN_k_nSpace+I]*grad_u_old[I];
+			H += velocity[eN_k_nSpace+I]*grad_u[I];		       
+			relVelocity[I] = dH[I] - MOVING_DOMAIN*df[I];
+			normVel += relVelocity[I]*relVelocity[I];
                       }
+		    normVel = std::sqrt(normVel);
+
+		    // calculate CFL
+		    calculateCFL(elementDiameter[eN],relVelocity,cfl[eN_k]);
+
+		    // compute max velocity at cell 
+		    maxVel[eN] = fmax(normVel,maxVel[eN]);
+		    
+		    // entropy residual
+		    double entRes = (ENTROPY(u)-ENTROPY(un))/dt + 0.5*(DENTROPY(u)*H +
+								       DENTROPY(un)*Hn);
+		    maxEntRes[eN] = fmax(maxEntRes[eN],fabs(entRes));
+		    
+		    // Quantities for normalization factor //
+		    meanEntropy += ENTROPY(u)*dV;
+		    meanOmega += dV;
+		    maxEntropy = fmax(maxEntropy,ENTROPY(u));
+		    minEntropy = fmin(minEntropy,ENTROPY(u));		    
                   }
                 else
                   {
@@ -611,20 +640,25 @@ namespace proteus
                     //register int eN_k_i=eN_k*nDOF_test_element+i,
                     // eN_k_i_nSpace = eN_k_i*nSpace;
                     register int  i_nSpace=i*nSpace;
-
                     if (EXPLICIT_METHOD==1)
                       {
 			if (stage == 1)
 			  elementResidual_u[i] +=
 			    ck.Mass_weak(u-un,u_test_dV[i]) +  // time derivative
 			    1./3*dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) + // v*grad(phi)
-			    1./9*dt*dt*ck.NumericalDiffusion(Hn,dH,&u_grad_test_dV[i_nSpace]);
+			    1./9*dt*dt*ck.NumericalDiffusion(Hn,dH,&u_grad_test_dV[i_nSpace]) +
+			    1./3*dt*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
+							  grad_u_old,
+							  &u_grad_test_dV[i_nSpace]);
 			// TODO: Add part about moving mesh
 			else
 			  elementResidual_u[i] +=
 			    ck.Mass_weak(u-un,u_test_dV[i]) +  // time derivative
 			    dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) + // v*grad(phi)
-			    0.5*dt*dt*ck.NumericalDiffusion(HTilde,dH,&u_grad_test_dV[i_nSpace]);
+			    0.5*dt*dt*ck.NumericalDiffusion(HTilde,dH,&u_grad_test_dV[i_nSpace]) +
+			    dt*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
+						     grad_u_old,
+						     &u_grad_test_dV[i_nSpace]);
 			//elementResidual_u[i] += // semi-implicit Lax Wendroff
 			//    ck.Mass_weak(u-un,u_test_dV[i]) +
 			//    dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) +
@@ -674,6 +708,22 @@ namespace proteus
                 globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
               }//i
           }//elements
+	if (EXPLICIT_METHOD==1)
+	  {
+	    meanEntropy /= meanOmega;
+	    double norm_factor = fmax(fabs(maxEntropy - meanEntropy), fabs(meanEntropy-minEntropy));
+	    for(int eN=0;eN<nElements_global;eN++)
+	      {
+		double hK=elementDiameter[eN];
+		double linear_viscosity = cMax*hK*maxVel[eN];
+		double entropy_viscosity = cE*hK*hK*maxEntRes[eN]/norm_factor;	  
+		for  (int k=0;k<nQuadraturePoints_element;k++)
+		  {
+		    register int eN_k = eN*nQuadraturePoints_element+k;
+		    q_numDiff_u[eN_k] = fmin(linear_viscosity,entropy_viscosity);
+		  }
+	      }
+	  }	
         //
         //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
         //

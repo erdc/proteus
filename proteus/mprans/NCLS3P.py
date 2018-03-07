@@ -935,7 +935,9 @@ class LevelModel(OneLevelTransport):
             self.timeIntegration.dt,
             self.coefficients.PURE_BDF)
 
-        self.taylorGalerkinStage = 2 
+        if self.coefficients.EXPLICIT_METHOD:
+            self.taylorGalerkinStage = 2
+            
         self.quantDOFs[:] = self.interface_locator
         
         if self.forceStrongConditions:
