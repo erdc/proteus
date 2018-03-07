@@ -391,7 +391,10 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                  double fContact,
                                  double mContact,
                                  double nContact,
-                                 double angFriction)
+                                 double angFriction,
+                                 double vos_limiter,
+                                 double mu_fr_limiter,
+                             )
 
 cdef class RANS3PSed:
     cdef cppRANS3PSed_base * thisptr
@@ -418,7 +421,10 @@ cdef class RANS3PSed:
                   double fContact,
                   double mContact,
                   double nContact,
-                  double angFriction):
+                  double angFriction,
+                  double vos_limiter,
+                  double mu_fr_limiter,
+                  ):
         self.thisptr = newRANS3PSed(nSpaceIn,
                                   nQuadraturePoints_elementIn,
                                   nDOF_mesh_trial_elementIn,
@@ -440,7 +446,10 @@ cdef class RANS3PSed:
                                   fContact,
                                   mContact,
                                   nContact,
-                                  angFriction)
+                                  angFriction,
+                                  vos_limiter,
+                                  mu_fr_limiter,
+                                  )
 
 
     def __dealloc__(self):
@@ -1514,7 +1523,10 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                      double fContact,
                                      double mContact,
                                      double nContact,
-                                     double angFriction)
+                                     double angFriction,
+                                     double vos_limiter,
+                                     double mu_fr_limiter,
+                                      )
 
 cdef class RANS3PSed2D:
     cdef cppRANS3PSed2D_base * thisptr
@@ -1541,7 +1553,10 @@ cdef class RANS3PSed2D:
                   double fContact,
                   double mContact,
                   double nContact,
-                  double angFriction):
+                  double angFriction,
+                  double vos_limiter,
+                  double mu_fr_limiter,
+                  ):
         self.thisptr = newRANS3PSed2D(nSpaceIn,
                                     nQuadraturePoints_elementIn,
                                     nDOF_mesh_trial_elementIn,
@@ -1563,7 +1578,10 @@ cdef class RANS3PSed2D:
                                     fContact,
                                     mContact,
                                     nContact,
-                                    angFriction)
+                                    angFriction,
+                                    vos_limiter,
+                                    mu_fr_limiter,
+                                    )
 
 
     def __dealloc__(self):

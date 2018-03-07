@@ -176,15 +176,15 @@ class BC_RANS(BC_Base):
         self.w_dirichlet.setConstantBC(0.)
         self.us_dirichlet.setConstantBC(0.)
         self.vs_dirichlet.setConstantBC(0.)
-        self.ws_dirichlet.setConstantBC(0.)         
-        self.pInit_dirichlet.setConstantBC(0.)          
-        self.pInc_dirichlet.setConstantBC(0.)
+        self.ws_dirichlet.setConstantBC(0.)  
         self.k_dirichlet.setConstantBC(0.)  
         # advective
         self.p_advective.setConstantBC(0.)
+        self.pInit_advective.setConstantBC(0.)  
         self.vof_advective.setConstantBC(0.)
         self.vos_advective.setConstantBC(0.)
         # diffusive
+        self.pInc_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)  
 
@@ -211,6 +211,9 @@ class BC_RANS(BC_Base):
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
+        self.us_diffusive.setConstantBC(0.)
+        self.vs_diffusive.setConstantBC(0.)
+        self.ws_diffusive.setConstantBC(0.)
         self.pInc_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)  

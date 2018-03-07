@@ -24,6 +24,9 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
         double small_;
         double notSoLarge_;
         double large_;
+        double vos_limiter_;
+        double mu_fr_limiter_;
+
         cppHsuSedStress2D(
 		 double aDarcy, # darcy parameter for drag term. Default value from Ergun (1952) is 150
 		 double betaForch, # forchheimer parameter for drag term. Default value from Ergun (1952) is 1.75
@@ -39,8 +42,9 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
  		 double fContact,
                  double mContact,
                  double nContact,
-                 double angFriction
-
+                 double angFriction,
+		 double vos_limiter,
+		 double mu_fr_limiter,
 		 )
         double betaCoeff(
                             double sedF, # Sediment fraction
@@ -265,7 +269,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 #define the way we want to present to Python
 cdef class HsuSedStress:
     cdef  cppHsuSedStress2D* thisptr
-    def __cinit__(self, aDarcy, betaForch, grain, packFraction,packMargin, maxFraction, frFraction,sigmaC, C3e, C4e, eR,fContact, mContact, nContact, angFriction):
+    def __cinit__(self, aDarcy, betaForch, grain, packFraction,packMargin, maxFraction, frFraction,sigmaC, C3e, C4e, eR,fContact, mContact, nContact, angFriction, vos_limiter, mu_fr_limiter):
         """ Class for caclulating sediment / fluid momentum transfer, see Chen and Hsu, CACR 14-08, A Multidimensional TwoPhase Eulerian Model for Sediment Transport TwoPhaseEulerSedFoam (Version 1.0)
         http://www.coastal.udel.edu/~thsu/simulation_data_files/CACR-14-08.pdf
         param: aDarcy: Darcy parameter for drag term [-]. Default value from Ergun (1952) is 150
@@ -273,7 +277,7 @@ cdef class HsuSedStress:
         param: grain: Grain size, default assumed as d50 [L]
         param: packFraction : Critical sediment fraction [-] for switching the drag relation 0.2 by default, see Chen and Hsu 2014, equation (7)
         param: packMargin : [-] For packFraction \pm packMargin where the two braches in equation (7) are blended with linear weighting. Currently no information on the default value of this """
-        self.thisptr = new cppHsuSedStress2D( aDarcy, betaForch, grain, packFraction, packMargin, maxFraction, frFraction,sigmaC, C3e, C4e, eR, fContact,  mContact, nContact, angFriction)
+        self.thisptr = new cppHsuSedStress2D( aDarcy, betaForch, grain, packFraction, packMargin, maxFraction, frFraction,sigmaC, C3e, C4e, eR, fContact,  mContact, nContact, angFriction, vos_limiter, mu_fr_limiter)
     @property
     def aDarcy(self):
         return self.thisptr.aDarcy_
@@ -319,6 +323,12 @@ cdef class HsuSedStress:
     @property
     def angFriction(self):
         return self.thisptr.angFriction_
+    @property
+    def vos_limiter(self):
+        return self.thisptr.vos_limiter_
+    @property
+    def mu_fr_limiter(self):
+        return self.thisptr.mu_fr_limiter_
     def __dealloc__(self):
         del self.thisptr
     def betaCoeff(self,

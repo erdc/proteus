@@ -26,7 +26,9 @@ namespace proteus
                                double fContact,
                                double mContact,
                                double nContact,
-                               double angFriction){}
+                               double angFriction,
+                               double vos_limiter,
+                               double mu_fr_limiter){}
     virtual void calculateResidual(double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
@@ -421,7 +423,9 @@ namespace proteus
               0.02,
               2.0,
               5.0,
-              M_PI/6.),
+              M_PI/6.,
+              0.05,
+              1.00),
         nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
           {/*          std::cout<<"Constructing cppRANS3PSed2D<CompKernelTemplate<"
@@ -452,7 +456,9 @@ namespace proteus
                          double fContact,
                          double mContact,
                          double nContact,
-                         double angFriction)
+                         double angFriction,
+                       double vos_limiter,
+                       double mu_fr_limiter)
       {
         closure = cppHsuSedStress<2>(aDarcy,
                                      betaForch,
@@ -468,7 +474,9 @@ namespace proteus
                                      fContact,
                                      mContact,
                                      nContact,
-                                     angFriction);
+                                     angFriction,
+                                   vos_limiter,
+                                   mu_fr_limiter);
       }
 
       inline double smoothedHeaviside(double eps, double phi)
@@ -917,9 +925,9 @@ namespace proteus
                                    grad_v[0], grad_v[1], grad_v[2], 
                                    grad_w[0], grad_w[1], grad_w[2]);
       double rho_solid = rho_s;
-      double mu_sf = std::max(mu_fr, 1e06*nu_fluid*rho_solid);
+      double mu_sf = std::max(mu_fr, 10.00);//e06*nu_fluid*rho_solid);
 
-      mom_uu_diff_ten[0] += 2. * mu_sf ; 
+      mom_uu_diff_ten[0] += 2. * mu_sf * (2./3.); 
       mom_uu_diff_ten[1] += mu_sf;
       /*mom_uu_diff_ten[2] += mu_sf; */
 
@@ -927,7 +935,7 @@ namespace proteus
       /*mom_uw_diff_ten[0] += mu_sf; */
 
       mom_vv_diff_ten[0] += mu_sf; 
-      mom_vv_diff_ten[1] += 2. * mu_sf ;
+      mom_vv_diff_ten[1] += 2. * mu_sf * (2./3.) ;
       /*mom_vv_diff_ten[2] += mu_sf; */
 
       mom_vu_diff_ten[0] += mu_sf;
@@ -935,7 +943,7 @@ namespace proteus
 
       /*mom_ww_diff_ten[0] += mu_sf;  */
       /*mom_ww_diff_ten[1] += mu_sf; */
-      /*mom_ww_diff_ten[2] += 2. * mu_sf ; */
+      /*mom_ww_diff_ten[2] += 2. * mu_sf * (2./3.) ; */
 
       /*mom_wu_diff_ten[0] += mu_sf; */
       /*mom_wv_diff_ten[0] += mu_sf; */
@@ -5110,7 +5118,9 @@ namespace proteus
                                              double fContact,
                                              double mContact,
                                              double nContact,
-                                             double angFriction)
+                                             double angFriction,
+                                     double vos_limiter,
+                                     double mu_fr_limiter)
   {
     cppRANS3PSed2D_base* rvalue = proteus::chooseAndAllocateDiscretization2D<cppRANS3PSed2D_base,cppRANS3PSed2D,CompKernel>(nSpaceIn,
                                                                                                                             nQuadraturePoints_elementIn,
@@ -5133,7 +5143,9 @@ namespace proteus
                           fContact,
                           mContact,
                           nContact,
-                          angFriction);
+                          angFriction,
+                          vos_limiter,
+                          mu_fr_limiter);
     return rvalue;
   }
 } //proteus

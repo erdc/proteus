@@ -214,6 +214,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_velocityList=[],
                  granular_sdf_Calc=None,
                  granular_vel_Calc=None,
+                 vos_limiter = 0.05,
+                 mu_fr_limiter = 1.00,
 		 ):
         self.CORRECT_VELOCITY=CORRECT_VELOCITY
         self.vos_function=vos_function
@@ -258,6 +260,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.useRBLES = useRBLES
         self.useMetrics = useMetrics
         self.sd = sd
+        self.vos_limiter = vos_limiter
+        self.mu_fr_limiter = mu_fr_limiter
         if epsFact_density is not None:
             self.epsFact_density = epsFact_density
         else:
@@ -1992,7 +1996,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.coefficients.fContact,
                 self.coefficients.mContact,
                 self.coefficients.nContact,
-                self.coefficients.angFriction)
+                self.coefficients.angFriction,
+                self.coefficients.vos_limiter,
+                self.coefficients.mu_fr_limiter,
+                )
         else:
             log("calling  RANS3PF_base ctor")
             self.rans3pf = cRANS3PF.RANS3PF(
@@ -2017,7 +2024,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.coefficients.fContact,
                 self.coefficients.mContact,
                 self.coefficients.nContact,
-                self.coefficients.angFriction)
+                self.coefficients.angFriction,
+                self.coefficients.vos_limiter,
+                self.coefficients.mu_fr_limiter,
+                )
 
         self.phisErrorNodal = self.u[0].dof.copy()
         self.velocityErrorNodal = self.u[0].dof.copy()

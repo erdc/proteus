@@ -25,8 +25,9 @@ public:
 		 double fContact,
 		 double mContact,
 		 double nContact,
-		 double angFriction
-		 
+		 double angFriction,
+		 double vos_limiter,
+		 double mu_fr_limiter
 ): 
  
     aDarcy_(aDarcy), 
@@ -46,7 +47,9 @@ public:
     angFriction_(angFriction),
     small_(1e-100),
     notSoLarge_(1e+6),
-    large_(1e+100)
+    large_(1e+100),
+    vos_limiter_(vos_limiter),
+	mu_fr_limiter_(mu_fr_limiter)
 
 
          
@@ -90,8 +93,6 @@ public:
             weight =  0.; 
            } 
        } 
-    
-
     
     return (weight*gDrag1 + (1.-weight)*gDrag2)*rhoFluid;
     }
@@ -520,15 +521,14 @@ public:
 
     {
       double pf = p_friction(sedF);
-      double lim = 0.05;
       double den1 = 0.0;
       double den2 = 0.0;
       double coeff = 0.0;
       //if ((sedF > frFraction_) && (sedF < maxFraction_ ))
       if (sedF > frFraction_) 
 	{
-     den1 = std::max(sedF-frFraction_,lim);
-     den2 = std::max(maxFraction_-sedF,lim);
+     den1 = std::max(sedF-frFraction_,vos_limiter_);
+     den2 = std::max(maxFraction_-sedF,vos_limiter_);
      coeff = pf *( (mContact_/den1) + (nContact_/den2) );
 	} 
 
@@ -556,12 +556,26 @@ public:
       double s13 = 0.5*(du_dz + dw_dx);
       double s23 = 0.5*(dv_dz + dw_dy);
       double sumS = s11*s11 + s22*s22 + s33*s33 + 2.*s12*s12 + 2.*s13*s13 + 2.*s23*s23;
-      double mu_sf = pf * sqrt(2.) * sin(angFriction_) / (2 * sqrt(sumS) + small_); 
-      //printf("pf --> %2.20f", pf);
-      //printf("angFriction_ --> %2.20f", angFriction_);
-      //printf("sumS --> %2.20f", sumS);
-      //printf("---------------");
-      return mu_sf;
+      double mu_sf = pf * sqrt(2.) * sin(angFriction_) / (2 * sqrt(sumS) + small_);
+      double mu_fr = std::max(mu_sf,mu_fr_limiter_); 
+//      if (divU  > 0.0 )
+//	{
+//     printf("divU --> %2.20f", divU);
+//	} 
+//      if (du_dx  > 0.0 )
+//	{
+//     printf("du_dx --> %2.20f", du_dx);
+//	} 
+//      if (dv_dy  > 0.0 )
+//	{
+//     printf("dv_dy --> %2.20f", dv_dy);
+//	} 
+//      if (mu_sf  > 0.0 )
+//	{
+//     printf("mu_sf --> %2.20f", mu_sf);
+//	} 
+
+      return mu_fr;
     }
 
 
@@ -733,6 +747,8 @@ public:
   double small_;
   double notSoLarge_;
   double large_;
+  double vos_limiter_;
+  double mu_fr_limiter_;
 
 };
 

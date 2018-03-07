@@ -201,6 +201,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  angFriction=pi/6.0,
                  vos_function=None,
                  staticSediment=False,
+                 vos_limiter = 0.05,
+                 mu_fr_limiter = 1.00,
                  ):
         self.aDarcy=aDarcy
         self.betaForch=betaForch
@@ -233,6 +235,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.useRBLES = useRBLES
         self.useMetrics = useMetrics
         self.sd = sd
+        self.vos_limiter = vos_limiter
+        self.mu_fr_limiter = mu_fr_limiter
         if epsFact_density is not None:
             self.epsFact_density = epsFact_density
         else:
@@ -1705,7 +1709,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.coefficients.fContact,
                 self.coefficients.mContact,
                 self.coefficients.nContact,
-                self.coefficients.angFriction)
+                self.coefficients.angFriction,
+                self.coefficients.vos_limiter,
+                self.coefficients.mu_fr_limiter,
+                )
         else:
             log("calling  RANS3PSed ctor")
             self.rans3psed = cRANS3PSed.RANS3PSed(
@@ -1730,7 +1737,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.coefficients.fContact,
                 self.coefficients.mContact,
                 self.coefficients.nContact,
-                self.coefficients.angFriction)
+                self.coefficients.angFriction,
+                self.coefficients.vos_limiter,
+                self.coefficients.mu_fr_limiter,
+                )
 
     def getResidual(self, u, r):
         """

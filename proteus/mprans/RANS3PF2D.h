@@ -47,7 +47,10 @@ namespace proteus
                                double fContact,
                                double mContact,
                                double nContact,
-                               double angFriction){}
+                               double angFriction,
+                               double vos_limiter,
+                               double mu_fr_limiter
+                                ){}
     virtual void calculateResidual(double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
@@ -941,7 +944,9 @@ namespace proteus
                 0.02,
                 2.0,
                 5.0,
-                M_PI/6.),
+                M_PI/6.,
+                0.05,
+                1.00),
         nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
           {/*        std::cout<<"Constructing cppRANS3PF2D<CompKernelTemplate<"
@@ -972,7 +977,9 @@ namespace proteus
                          double fContact,
                          double mContact,
                          double nContact,
-                         double angFriction)
+                         double angFriction,
+                       double vos_limiter,
+                       double mu_fr_limiter)
       {
         closure = cppHsuSedStress<2>(aDarcy,
                                      betaForch,
@@ -988,7 +995,9 @@ namespace proteus
                                      fContact,
                                      mContact,
                                      nContact,
-                                     angFriction);
+                                     angFriction,
+                                   vos_limiter,
+                                   mu_fr_limiter );
       }
 
       inline double smoothedHeaviside(double eps, double phi)
@@ -9895,7 +9904,10 @@ namespace proteus
                                          double fContact,
                                          double mContact,
                                          double nContact,
-                                         double angFriction)
+                                         double angFriction,
+                                     double vos_limiter,
+                                     double mu_fr_limiter
+                                      )
   {
     cppRANS3PF2D_base *rvalue = proteus::chooseAndAllocateDiscretization2D<cppRANS3PF2D_base, cppRANS3PF2D, CompKernel>(nSpaceIn,
                                                                                                                         nQuadraturePoints_elementIn,
@@ -9918,7 +9930,10 @@ namespace proteus
                           fContact,
                           mContact,
                           nContact,
-                          angFriction);
+                          angFriction,
+                          vos_limiter,
+                          mu_fr_limiter
+                           );
     return rvalue;
   }
 } //proteus
