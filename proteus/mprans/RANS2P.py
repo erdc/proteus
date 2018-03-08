@@ -178,13 +178,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  MOMENTUM_SGE=1.0,
                  PRESSURE_SGE=1.0,
                  VELOCITY_SGE=1.0,
+                 PRESSURE_PROJECTION_STABILIZATION=0.0,
                  phaseFunction=None):
-        self.phaseFunction = phaseFunction
-        self.NONCONSERVATIVE_FORM = NONCONSERVATIVE_FORM
-        self.MOMENTUM_SGE = MOMENTUM_SGE
-        self.PRESSURE_SGE = PRESSURE_SGE
-        self.VELOCITY_SGE = VELOCITY_SGE
-        self.barycenters = barycenters
+        self.phaseFunction=phaseFunction
+        self.NONCONSERVATIVE_FORM=NONCONSERVATIVE_FORM
+        self.MOMENTUM_SGE=MOMENTUM_SGE
+        self.PRESSURE_SGE=PRESSURE_SGE
+        self.VELOCITY_SGE=VELOCITY_SGE
+        self.PRESSURE_PROJECTION_STABILIZATION=PRESSURE_PROJECTION_STABILIZATION
+        self.barycenters=barycenters
         self.smagorinskyConstant = smagorinskyConstant
         self.turbulenceClosureModel = turbulenceClosureModel
         self.forceStrongDirichlet = forceStrongDirichlet
@@ -1400,7 +1402,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.netForces_p[:, :] = 0.0
         self.coefficients.netForces_v[:, :] = 0.0
         self.coefficients.netMoments[:, :] = 0.0
-
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1413,6 +1414,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
                                       self.coefficients.VELOCITY_SGE,
+                                      self.coefficients.PRESSURE_PROJECTION_STABILIZATION,
                                       self.coefficients.numerical_viscosity,
                                       # element
                                       self.u[0].femSpace.elementMaps.psi,
@@ -1630,7 +1632,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
                                       self.coefficients.VELOCITY_SGE,
-                                      # element
+                                      self.coefficients.PRESSURE_PROJECTION_STABILIZATION,
+                                      #element
                                       self.u[0].femSpace.elementMaps.psi,
                                       self.u[0].femSpace.elementMaps.grad_psi,
                                       self.mesh.nodeArray,
@@ -1969,7 +1972,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q['velocityError'][:] = self.q[('velocity', 0)]
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
         self.q['velocityError'] -= self.q[('velocity', 0)]
-
     def updateAfterMeshMotion(self):
         pass
 

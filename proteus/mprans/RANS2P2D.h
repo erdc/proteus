@@ -17,6 +17,7 @@ namespace proteus
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
+				   double PRESSURE_PROJECTION_STABLIZATION,
                                    double* numerical_viscosity,
                                    //element
                                    double* mesh_trial_ref,
@@ -175,6 +176,7 @@ namespace proteus
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
+				   double PRESSURE_PROJECTION_STABILIZATION,
                                    //element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -1482,6 +1484,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
+			     double PRESSURE_PROJECTION_STABILIZATION,
                              double* numerical_viscosity,
                              //element
                              double* mesh_trial_ref,
@@ -1763,6 +1766,7 @@ namespace proteus
                   p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
                   p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
                   dV,x,y,z,xt,yt,zt,
+		  p_element_avg,
                   //
                   porosity,
                   //meanGrainSize,
@@ -1817,6 +1821,9 @@ namespace proteus
                 ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p);
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
+		// calculate the average pressure value
+		if (PRESSURE_PROJECTION_STABILIZATION)
+		  ck.DOFaverage(p_dof, &p_l2g[eN_nDOF_trial_element],p_element_avg);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
@@ -2199,8 +2206,9 @@ namespace proteus
                       //VRANS
                       ck.Reaction_weak(mass_source,p_test_dV[i])   + //VRANS source term for wave maker
                       //
-                      ck.SubgridError(subgridError_u,Lstar_u_p[i]) +
-                      ck.SubgridError(subgridError_v,Lstar_v_p[i]);
+		      PRESSURE_PROJECTION_STABILIZATION * ck.pressureProjection_weak(mom_uu_diff_ten[1], p, p_element_avg, p_test_ref[k*nDOF_test_element+i], dV) +
+		      (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_u,Lstar_u_p[i]) + 
+                      (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_v,Lstar_v_p[i]);
 
                     elementResidual_u[i] += ck.Mass_weak(mom_u_acc_t,vel_test_dV[i]) +
                       ck.Advection_weak(mom_u_adv,&vel_grad_test_dV[i_nSpace]) +
@@ -2786,7 +2794,7 @@ namespace proteus
                 //calculate the numerical fluxes
                 //
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 exteriorNumericalAdvectiveFlux(NONCONSERVATIVE_FORM,
                                                isDOFBoundary_p[ebNE_kb],
                                                isDOFBoundary_u[ebNE_kb],
@@ -3005,6 +3013,7 @@ namespace proteus
                 globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
               }//i
           }//ebNE
+
         /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
         /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
         /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
@@ -3015,6 +3024,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
+			     double PRESSURE_PROJECTION_STABILIZATION,
                              //element
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
@@ -3772,16 +3782,17 @@ namespace proteus
                     for(int j=0;j<nDOF_trial_element;j++)
                       {
                         register int j_nSpace = j*nSpace;
-                        elementJacobian_p_p[i][j] += ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) +
-                          ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]);
+                        elementJacobian_p_p[i][j] += (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) + 
+                                                     (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]) +
+			  PRESSURE_PROJECTION_STABILIZATION*ck.pressureProjection_weak(mom_uu_diff_ten[1], p_trial_ref[k*nDOF_trial_element+j], 1./3., p_test_ref[k*nDOF_test_element +i],dV);
+                        
+                        elementJacobian_p_u[i][j] += ck.AdvectionJacobian_weak(dmass_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) + 
+                          (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]); 
+                        elementJacobian_p_v[i][j] += ck.AdvectionJacobian_weak(dmass_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) + 
+                          (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]); 
 
-                        elementJacobian_p_u[i][j] += ck.AdvectionJacobian_weak(dmass_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) +
-                          ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]);
-                        elementJacobian_p_v[i][j] += ck.AdvectionJacobian_weak(dmass_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) +
-                          ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]);
-
-                        elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) +
-                          MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]);
+                        elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) + 
+                          MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]); 
                         elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           ck.MassJacobian_weak(dmom_u_ham_u,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + //cek hack for nonlinear hamiltonian
                           ck.HamiltonianJacobian_weak(dmom_u_ham_grad_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]) +
@@ -4444,7 +4455,7 @@ namespace proteus
                 //calculate the flux jacobian
                 //
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 if(boundaryFlags[ebN] > 0)
                   { //if boundary flag positive, then include flux contributions on interpart boundaries
                     for (int j=0;j<nDOF_trial_element;j++)
@@ -4887,7 +4898,6 @@ namespace proteus
                                         int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
                                         int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
                                         double* advection_matrix)
-
       {
         for (int eN=0 ; eN < nElements_global ; ++eN)
           {
