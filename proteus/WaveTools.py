@@ -11,12 +11,13 @@ import cython
 import numpy as np
 import cmath as cmat
 from Profiling import logEvent
+from proteus import Comm
 import time as tt
 import sys as sys
 
 __all__ = ['SteadyCurrent',
            'SolitaryWave',
-	   'MonochromaticWaves',
+           'MonochromaticWaves',
            'RandomWaves',
            'MultiSpectraRandomWaves',
            'DirectionalWaves',
@@ -884,7 +885,9 @@ class  MonochromaticWaves:
     wavelength : float
              Regular wave lenght, calculated from linear dispersion if set to None
     waveType : string
-             Defines regular wave theory ("Linear" or "Fenton")
+             Defines regular wave theory ("Linear", "Fenton", or "Fenton2")
+             Fenton: uses BCoeffs/YCoeffs provided by user
+             Fenton2: uses waveheight, period, depth, and g to calculate coeffs
     Ycoeff : numpy.ndarray
              Fenton Fourier coefficients for free-surface elevation             
     Bcoeff : numpy.ndarray
@@ -916,7 +919,7 @@ class  MonochromaticWaves:
                  fast = True):
         
         self.fast = fast
-        knownWaveTypes = ["Linear","Fenton"]
+        knownWaveTypes = ["Linear","Fenton", "Fenton2"]
         self.waveType = waveType
         if waveType not in knownWaveTypes:
             logEvent("Wrong wavetype given: Valid wavetypes are %s" %(knownWaveTypes), level=0)
@@ -941,7 +944,7 @@ class  MonochromaticWaves:
         if  waveType== "Linear":
             self.k = dispersion(w=self.omega,d=self.depth,g=self.gAbs)
             self.wavelength = 2.0*M_PI/self.k
-        else:
+        elif waveType == "Fenton":
             try:
                 self.k = 2.0*M_PI/wavelength
                 self.wavelength=wavelength
@@ -955,6 +958,33 @@ class  MonochromaticWaves:
                 for ii in range(len(self.tanhF)):
                     kk = (ii+1)*self.k
                     self.tanhF[ii] = float(np.tanh(kk*self.depth) )
+        elif waveType == "Fenton2":
+            from proteus.fenton import Fenton
+            comm = Comm.get()
+            if comm.isMaster():
+                Fenton.writeInput(waveheight=waveHeight,
+                                    depth=depth,
+                                    period=period,
+                                    mode='Period',
+                                    current_criterion=1,
+                                    current_magnitude=0,
+                                    ncoeffs=Nf,
+                                    height_steps=1,
+                                    g=np.linalg.norm(g),
+                                    niter=40,
+                                    conv_crit=1.e-05,
+                                    points_freesurface=50,
+                                    points_velocity=16,
+                                    points_vertical=20)
+                Fenton.runFourier()
+                Fenton.copyFiles()
+            comm.barrier()
+            self.Bcoeff, self.Ycoeff = Fenton.getBYCoeffs()
+            self.wavelength = Fenton.getWavelength()*depth
+            self.k = 2.0*M_PI/self.wavelength
+            for ii in range(len(self.tanhF)):
+                kk = (ii+1)*self.k
+                self.tanhF[ii] = float(np.tanh(kk*self.depth) )
 
            
         self.kDir = self.k * self.waveDir
@@ -985,7 +1015,7 @@ class  MonochromaticWaves:
         
 
 
-        if self.waveType == "Fenton":
+        if "Fenton" in self.waveType:
             for ij in range(Nf):
                 self.Ycoeff_c[ij] = self.Ycoeff[ij]
                 self.Bcoeff_c[ij] = self.Bcoeff[ij]
@@ -993,7 +1023,6 @@ class  MonochromaticWaves:
             self.Ycoeff_ =  self.Ycoeff_c
             self.Bcoeff_ =  self.Bcoeff_c
             self.tanhF_ = self.tanh_c
-        
 
 
 
