@@ -378,8 +378,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # simplified allocations for test==trial and also check if space is mixed or not
         #
         self.added_mass_i = 0;
-        nBoundariesMax = int(globalMax(max(self.mesh.elementBoundaryMaterialTypes))) + 1
-        self.Aij = np.zeros((nBoundariesMax, 6, 6), 'd')
+        self.Aij = np.zeros((self.coefficients.flags_rigidbody.shape[0], 6, 6), 'd')
         self.q = {}
         self.ebq = {}
         self.ebq_global = {}
