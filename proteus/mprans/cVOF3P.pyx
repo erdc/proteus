@@ -63,6 +63,8 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * ebqe_u,
                                double * ebqe_flux,
                                int EXPLICIT_METHOD,
+                               int stage,
+                               double * uTilde_dof,
                                double dt)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -203,6 +205,8 @@ cdef class VOF3P:
                           numpy.ndarray ebqe_u,
                           numpy.ndarray ebqe_flux,
                           int EXPLICIT_METHOD,
+                          int stage,
+                          numpy.ndarray uTilde_dof,
                           double dt):
         self.thisptr.calculateResidual(< double*> mesh_trial_ref.data,
                                         < double * > mesh_grad_trial_ref.data,
@@ -263,6 +267,8 @@ cdef class VOF3P:
                                         < double * > ebqe_u.data,
                                         < double * > ebqe_flux.data,
                                         EXPLICIT_METHOD,
+                                        stage,
+                                        < double * > uTilde_dof.data,
                                         dt)
 
     def calculateJacobian(self,

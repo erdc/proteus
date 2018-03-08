@@ -85,7 +85,9 @@ namespace proteus
                                    double* ebqe_u,
                                    double* ebqe_flux,
 				   //EXPLICIT METHODS
-				   int ENTROPY_VISCOSITY,
+				   int EXPLICIT_METHOD,
+				   int stage,
+				   double * uTilde_dof,
 				   double dt)=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
@@ -402,6 +404,8 @@ namespace proteus
                            double* ebqe_flux,
 			   //EXPLICIT METHODS
 			   int EXPLICIT_METHOD,
+			   int stage,
+			   double * uTilde_dof,
 			   double dt)
     {
       double meanEntropy = 0., meanOmega = 0., maxEntropy = -1E10, minEntropy = 1E10;
@@ -442,8 +446,8 @@ namespace proteus
               register double
 		entVisc_minus_artComp, 
 		u=0.0,un=0.0,
-		grad_u[nSpace],grad_u_old[nSpace],
-                m=0.0,dm=0.0,H=0.0,Hn=0.0,
+		grad_u[nSpace],grad_u_old[nSpace],grad_uTilde[nSpace],
+                m=0.0,dm=0.0,H=0.0,Hn=0.0,HTilde=0.0,
                 f[nSpace],fn[nSpace],df[nSpace],
                 m_t=0.0,dm_t=0.0,
                 pdeResidual_u=0.0,
@@ -522,6 +526,10 @@ namespace proteus
 			     &u_l2g[eN_nDOF_trial_element],
 			     u_grad_trial,
 			     grad_u_old);
+              ck.gradFromDOF(uTilde_dof,
+			     &u_l2g[eN_nDOF_trial_element],
+			     u_grad_trial,
+			     grad_uTilde);	      
               //precalculate test function products with integration weights
               for (int j=0;j<nDOF_trial_element;j++)
                 {
@@ -579,6 +587,7 @@ namespace proteus
 		  for (int I=0;I<nSpace;I++)
 		    {
 		      Hn += df[I]*grad_u_old[I];
+		      HTilde += df[I]*grad_uTilde[I];
 		      fn[I] = porosity*df[I]*un-MOVING_DOMAIN*m*mesh_velocity[I];
 		      H += df[I]*grad_u[I];
 		      normVel += df[I]*df[I];
@@ -661,16 +670,25 @@ namespace proteus
 		  register int i_nSpace=i*nSpace;
 		  if (EXPLICIT_METHOD==1)
 		    {
-		      int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
-		      elementResidual_u[i] +=
-			ck.Mass_weak(dt*m_t,u_test_dV[i]) +
-			//ck.Mass_weak(u-un,u_test_dV[i]) +			    
-			dt*ck.Advection_weak(fn,&u_grad_test_dV[i_nSpace]) +
-			entVisc_minus_artComp*dt*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
-								       grad_u_old,
-								       &u_grad_test_dV[i_nSpace]);
+		      if (stage == 1)
+			elementResidual_u[i] +=
+			  ck.Mass_weak(dt*m_t,u_test_dV[i]) +  // time derivative
+			  1./3*dt*ck.Advection_weak(fn,&u_grad_test_dV[i_nSpace]) +
+			  1./9*dt*dt*ck.NumericalDiffusion(Hn,df,&u_grad_test_dV[i_nSpace]) +
+			  1./3*dt*entVisc_minus_artComp*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
+									      grad_u_old,
+									      &u_grad_test_dV[i_nSpace]);
+		      // TODO: Add part about moving mesh
+		      else
+			elementResidual_u[i] +=
+			  ck.Mass_weak(dt*m_t,u_test_dV[i]) +  // time derivative
+			  dt*ck.Advection_weak(fn,&u_grad_test_dV[i_nSpace]) +
+			  0.5*dt*dt*ck.NumericalDiffusion(HTilde,df,&u_grad_test_dV[i_nSpace]) +
+			  dt*entVisc_minus_artComp*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
+									 grad_u_old,
+									 &u_grad_test_dV[i_nSpace]);		      
 		    }
-		  else
+		  else //supg
 		    {
 		      elementResidual_u[i] +=
 			ck.Mass_weak(m_t,u_test_dV[i]) +
@@ -713,8 +731,7 @@ namespace proteus
 		  q_numDiff_u[eN_k] = fmin(linear_viscosity,entropy_viscosity);
 		}
 	    }
-	}
-      
+	}      
       //
       //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
       //
@@ -900,7 +917,10 @@ namespace proteus
                 ebqe_u[ebNE_kb] = bc_u_ext;
 
 	      if (EXPLICIT_METHOD==1)
-		flux_ext *= dt;
+		if (stage==1)
+		  flux_ext *= 1./3*dt;
+		else
+		  flux_ext *= dt;	      
               //
               //update residuals
               //

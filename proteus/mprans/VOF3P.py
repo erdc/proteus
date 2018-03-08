@@ -465,6 +465,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # SAVE OLD SOLUTION #
         self.model.u_dof_old[:] = self.model.u[0].dof
 
+        # Restart flags for stages of taylor galerkin
+        self.model.taylorGalerkinStage = 1
+        self.model.auxTaylorGalerkinFlag = 1
+        
         # COMPUTE NEW VELOCITY (if given by user) #
         if self.model.hasVelocityFieldAsFunction:
             self.model.updateVelocityFieldAsFunction()
@@ -870,6 +874,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.velocityFieldAsFunction = options.velocityFieldAsFunction
             self.hasVelocityFieldAsFunction = True
 
+        # For Taylor Galerkin methods
+        self.taylorGalerkinStage = 1
+        self.auxTaylorGalerkinFlag = 1
+        self.uTilde_dof = numpy.zeros(self.u[0].dof.shape,'d')
+        
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set(
             [('u', ci) for ci in range(self.nc)])
@@ -1077,7 +1086,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # cek can put in logic to skip of BC's don't depend on t or u
         # Dirichlet boundary conditions
         # if hasattr(self.numericalFlux,'setDirichletValues'):
-        self.numericalFlux.setDirichletValues(self.ebqe)            
+        if (self.taylorGalerkinStage!=2):
+            self.numericalFlux.setDirichletValues(self.ebqe)            
         # flux boundary conditions
         for t, g in self.fluxBoundaryConditionsObjectsDict[
                 0].advectiveFluxBoundaryConditionsDict.iteritems():
@@ -1096,6 +1106,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.timeIntegration.t)
         assert (self.coefficients.q_porosity == 1).all()
 
+        if (self.taylorGalerkinStage==2 and self.auxTaylorGalerkinFlag==1):
+            self.uTilde_dof[:] = self.u[0].dof
+            self.auxTaylorGalerkinFlag=0
+            
         self.vof.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1161,8 +1175,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux', 0)],
             #EXPLICIT METHODS
             self.coefficients.EXPLICIT_METHOD,
+            self.taylorGalerkinStage,
+            self.uTilde_dof,            
             self.timeIntegration.dt)
 
+        if self.coefficients.EXPLICIT_METHOD:
+            self.taylorGalerkinStage = 2
+        
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
