@@ -9,7 +9,9 @@ Module for creating boundary conditions. Imported in mprans.SpatialTools.py
 """
 import sys
 import numpy as np
-from proteus import AuxiliaryVariables
+from proteus import (AuxiliaryVariables,
+                     BoundaryConditions)
+from proteus.BoundaryConditions import BoundaryCondition
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
 from proteus import WaveTools as wt
@@ -17,13 +19,14 @@ from proteus.Profiling import logEvent
 from math import cos, sin, sqrt, atan2, acos, asin
 
 
-class BC_RANS(BC_Base):
+class BC_RANS(BoundaryConditions.BC_Base):
     """
     Class regrouping boundary conditions for two-phase flows
     """
 
     def __init__(self, shape=None, name=None, b_or=None, b_i=0., nd=None):
-        super(BC_RANS, self).__init__(shape=shape, name=name, b_or=b_or, b_i=b_i, nd=nd)
+        BoundaryConditions.BC_Base.__init__(self,shape=shape, name=name, b_or=b_or, b_i=b_i, nd=nd)
+        #super(BC_RANS, self).__init__(shape=shape, name=name, b_or=b_or, b_i=b_i, nd=nd)
         # _dirichlet
         self.p_dirichlet = BoundaryCondition()  # pressure
         self.u_dirichlet = BoundaryCondition()  # velocity u
