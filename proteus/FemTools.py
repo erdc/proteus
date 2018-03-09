@@ -2241,7 +2241,7 @@ class DOFMap:
     """
     def __init__(self,nDOF=0):
         self.nDOF = nDOF
-        self.range_nDOF = range(nDOF)
+        self.range_nDOF = xrange(nDOF)
         self.l2g=None
         ###for parallel subdomain local dof to global dof mappings
         #array of 'offsets' where owned dof numbers start on each subdomain
@@ -6494,8 +6494,11 @@ class FiniteElementFunction:
         self.range_dim_dof = range(self.dim_dof)
         if dof is not None:
             self.dof=dof
+            self.dof_last=dof_last
         else:
             self.dof = numpy.zeros((self.femSpace.dim*dim_dof),
+                                     'd')
+            self.dof_last = numpy.zeros((self.femSpace.dim*dim_dof),
                                      'd')
         self.useC=True
         #we need to be able to get references to existing values for values at nodes for some calculations
