@@ -1449,41 +1449,41 @@ class SchurPrecon(KSP_Preconditioner):
         global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
 
 class Schur_Sp(SchurPrecon):
-    """ 
-    This class implements the SIMPLE approximation to the Schur 
-    complement proposed in 2009 by Rehman, Vuik and Segal.
+    """
+    Implements the SIMPLE Schur complement approximation proposed
+    in 2009 by Rehman, Vuik and Segal.
 
     Parameters
     ----------
-    L : petsc4py matrix
-    prefix : str
-    bdyNullSpace : bool
+    L: :class:`p4pyPETSc.Mat`
+    prefix: str
+    bdyNullSpace: bool
         Indicates the models boundary conditions create a global
-        null space. (see notes)
-    constNullSpace : bool
-        Indicates the operator Sp has a constant null space. 
-        (see Notes)
+        null space. (see Notes)
 
     Notes
     -----
     This Schur complement approximation is also avaliable in PETSc
     by the name selfp.
 
-    The bdyNullSpace flag is used to indicate that the model has a 
-    global null space because it only uses Dirichlet boundary 
-    conditions.  In contrast, the constNullSpace flag refers to the 
-    Sp operator which typically has a constant null space because of 
-    its construction.  This flag will typically always be be set to 
-    True.  See the Sp_shell class for more details.
+    One drawback of this operator is that it must be constructed from
+    the component pieces.  For small problems this is okay,
+    but for large problems this process may not scale well and often
+    a pure Laplace operator will prove a more effective choice of
+    preconditioner.
+
+    The `bdyNullSpace` parameter indicates if the model has a
+    global null space because the saddle point problem uses pure
+    Dirichlet boundary conditions.  When the global saddle point
+    system model has a null space, it is necessary apply a constant
+    null space to this operator.
     """
     def __init__(self,
                  L,
                  prefix,
-                 bdyNullSpace=False,
-                 constNullSpace=True):
+                 bdyNullSpace=False):
         SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
         self.operator_constructor = SchurOperatorConstructor(self)
-        self.constNullSpace = constNullSpace
 
     def setUp(self,global_ksp):
         self._setSchurlog(global_ksp)
@@ -1498,16 +1498,16 @@ class Schur_Sp(SchurPrecon):
         self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
                                                              self.operator_constructor.linear_smoother.isp)
         L_sizes = self.operator_constructor.linear_smoother.isp.sizes
-        self.Sp_shell = p4pyPETSc.Mat().create()
-        self.Sp_shell.setSizes(L_sizes)
-        self.Sp_shell.setType('python')
-        self.matcontext_inv = Sp_shell(self.A00,
-                                       self.A11,
-                                       self.A01,
-                                       self.A10,
-                                       constNullSpace = self.constNullSpace)
-        self.Sp_shell.setPythonContext(self.matcontext_inv)
-        self.Sp_shell.setUp()
+        self.SpInv_shell = p4pyPETSc.Mat().create()
+        self.SpInv_shell.setSizes(L_sizes)
+        self.SpInv_shell.setType('python')
+        self.matcontext_inv = SpInv_shell(self.A00,
+                                          self.A11,
+                                          self.A01,
+                                          self.A10,
+                                          constNullSpace = self.constNullSpace)
+        self.SpInv_shell.setPythonContext(self.matcontext_inv)
+        self.SpInv_shell.setUp()
         # Set PETSc Schur operator
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
@@ -1595,6 +1595,9 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
          * mass form - This flag allows the user to specify what form
            the mass matrix takes, lumped (True) or full (False).
 
+         * number chebyshev its - This integer allows the user to
+           specify how many Chebyshev its to use if a full mass matrix
+           is used and a direct solver is not applied.
     """
     def __init__(self,
                  L,
@@ -1630,7 +1633,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
             a chebyshev semi-iteration.  0  indicates the semi-
             iteration should not be used, where as a number 1,2,...
             indicates the number of iterations the method should take.
-
         """
         NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
         # Initialize the discrete operators

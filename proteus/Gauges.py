@@ -486,7 +486,8 @@ class Gauges(AV_base):
 
         for field, field_id in zip(self.fields, self.field_ids):
             m = PETSc.Mat().create(PETSc.COMM_SELF)
-            m.setSizes([len(self.measuredQuantities[field]), self.num_owned_nodes])
+            m.setSizes([len(self.measuredQuantities[field]),
+                        self.u[field_id].femSpace.dim])
             m.setType('aij')
             m.setUp()
             # matrices are a list in same order as fields

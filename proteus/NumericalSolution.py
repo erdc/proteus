@@ -67,9 +67,13 @@ class NS_base:  # (HasTraits):
         for p in pList:
             message += p.name+"\n"
         logEvent(message)
+        #: SplitOperator initialize file
         self.so=so
+        #: List of physics initialize files
         self.pList=pList
+        #: List of numerics initialize files
         self.nList=nList
+        #: Dictionary of command line arguments
         self.opts=opts
         self.simFlagsList=simFlagsList
         self.timeValues={}
@@ -1032,14 +1036,6 @@ class NS_base:  # (HasTraits):
                     del scalar
 
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-            # scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal
-            # p0.domain.PUMIMesh.transferFieldToPUMI(
-            #     'velocityError', scalar)
-
-            # This is hardcoded for the RANS3PF to be the 4th model
-            scalar[:,0] = self.modelList[4].levelModelList[0].coefficients.phi_s
-            p0.domain.PUMIMesh.transferFieldToPUMI(
-                'phi_s', scalar)
 
             del scalar
             #Get Physical Parameters
@@ -1202,7 +1198,7 @@ class NS_base:  # (HasTraits):
         for index,m in self.modelSpinUp.iteritems():
             spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
-            logEvent("Attaching models to model "+p.name)
+            logEvent("Attaching models to model "+m.name)
             m.attachModels(self.modelList)
             if index not in self.modelSpinUp:
                 spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
@@ -1500,6 +1496,9 @@ class NS_base:  # (HasTraits):
             if(self.PUMI_estimateError()):
               self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
+        # compute auxiliary quantities at last time step
+        if hasattr(self.modelList[-1].levelModelList[-1],'runAtEOS'):
+            self.modelList[-1].levelModelList[-1].runAtEOS()
 
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
