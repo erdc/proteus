@@ -1025,6 +1025,11 @@ class NS_base:  # (HasTraits):
                     vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
                   p0.domain.PUMIMesh.transferFieldToPUMI(
                          coef.vectorName, vector)
+                  #Transfer dof_last
+                  for vci in range(len(coef.vectorComponents)):
+                    vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
+                  p0.domain.PUMIMesh.transferFieldToPUMI(
+                         "velocity_old", vector)
                   del vector
                 for ci in range(coef.nc):
                   if coef.vectorComponents is None or \
@@ -1053,9 +1058,12 @@ class NS_base:  # (HasTraits):
             nu = numpy.array([self.pList[0].nu_0,
                               self.pList[0].nu_1])
             g = numpy.asarray(self.pList[0].g)
-            deltaT = self.tn-self.tn_last
-            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
-            del rho, nu, g
+            
+            deltaT_test = self.systemStepController.dt_system
+            deltaT = self.systemStepController.t_system-self.systemStepController.t_system_last
+            print("deltaT %f",deltaT," dt_system ", deltaT_test)
+            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT)
+            del rho, nu, g, deltaT
 
             logEvent("Estimate Error")
             sfConfig = p0.domain.PUMIMesh.size_field_config()
@@ -1345,7 +1353,7 @@ class NS_base:  # (HasTraits):
        #     print "Min / Max residual %s / %s" %(lr.min(),lr.max())
 
         self.nSequenceSteps = 0
-        self.nSolveSteps=self.nList[0].adaptMesh_nSteps-3
+        self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-3
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]): 
             #if(self.tn < 8.0):
             #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
@@ -1353,6 +1361,8 @@ class NS_base:  # (HasTraits):
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
 #            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
+
+            self.opts.save_dof = True
             if self.opts.save_dof:
                 for m in self.modelList:
                     for lm in m.levelModelList:
@@ -1366,6 +1376,15 @@ class NS_base:  # (HasTraits):
 
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
+
+                    self.opts.save_dof = True
+                    if self.opts.save_dof:
+                        for m in self.modelList:
+                            for lm in m.levelModelList:
+                                for ci in range(lm.coefficients.nc):
+                                    lm.u[ci].dof_last[:] = lm.u[ci].dof
+                        logEvent("saving previous velocity dofs %s" % self.nSolveSteps)
+
                     logEvent("Split operator iteration %i" % (self.systemStepController.its,),level=3)
                     self.nSequenceSteps += 1
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
@@ -1490,6 +1509,8 @@ class NS_base:  # (HasTraits):
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
                 #can only handle PUMIDomain's for now
+                #if(self.tn < 0.05):
+                #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
                 if(self.PUMI_estimateError()):
                     self.PUMI_adaptMesh()
