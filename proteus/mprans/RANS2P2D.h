@@ -815,6 +815,7 @@ namespace proteus
             dmom_v_ham_v =0.0;
           }
       }
+
       //VRANS specific
       inline
         void updateDarcyForchheimerTerms_Ergun(const double NONCONSERVATIVE_FORM,
@@ -3151,6 +3152,7 @@ namespace proteus
                              double* ebqe_bc_flux_v_diff_ext,
                              double* ebqe_bc_w_ext,
                              double* ebqe_bc_flux_w_diff_ext,
+
                              int* csrColumnOffsets_eb_p_p,
                              int* csrColumnOffsets_eb_p_u,
                              int* csrColumnOffsets_eb_p_v,
@@ -3346,6 +3348,7 @@ namespace proteus
                                       mesh_l2g,
                                       mesh_trial_ref,
                                       h_phi);
+
                 ck.calculateMappingVelocity_element(eN,
                                                     k,
                                                     mesh_velocity_dof,
@@ -3520,6 +3523,7 @@ namespace proteus
                                                   dmom_u_source,
                                                   dmom_v_source,
                                                   dmom_w_source);
+
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -4050,6 +4054,7 @@ namespace proteus
                                                             boundaryJac,
                                                             metricTensor,
                                                             integralScaling);
+
                 //dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
                 dS = metricTensorDetSqrt*dS_ref[kb];
                 ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
@@ -5046,7 +5051,6 @@ namespace proteus
 
             // Loop over quadrature points on element
             for (int k=0 ; k < nQuadraturePoints_element; ++k){
-
               int eN_k = eN*nQuadraturePoints_element + k;
               int eN_nDOF_trial_element = eN*nDOF_trial_element;
 

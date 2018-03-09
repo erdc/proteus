@@ -567,7 +567,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  sd=True,
                  movingDomain=False,
                  bdyNullSpace=False):
-
         self.auxiliaryCallCalculateResidual = False
         #
         # set the objects describing the method and boundary conditions

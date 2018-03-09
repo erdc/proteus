@@ -1,5 +1,5 @@
 """
-A hierarchy of classes for managing comlete numerical solution implementations
+A hierarchy of classes for managing complete numerical solution implementations
 
 .. inheritance-diagram:: proteus.NumericalSolution
    :parts: 1
@@ -278,10 +278,8 @@ class NS_base:  # (HasTraits):
                         tmesh.readFromPolyFile(p.domain.polyfile)
                         tmesh.writeToFile(p.domain.polyfile)
                     comm.barrier()
-
                     mesh = MeshTools.TriangularMesh()
                     mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
-
                     mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
                                                                 nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                 parallelPartitioningType=n.parallelPartitioningType)
@@ -349,6 +347,12 @@ class NS_base:  # (HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.PUMIDomain):
+                import sys
+                if(comm.size()>1 and p.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
+                  sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
+                if comm.size() > 1 and n.conservativeFlux != None:
+                    sys.exit("ERROR: Element based partitions don't have a functioning conservative flux calculation. Set conservativeFlux to None in twp_navier_stokes")
+
                 #ibaned: PUMI conversion #1
                 if p.domain.nd == 3:
                   mesh = MeshTools.TetrahedralMesh()
@@ -498,6 +502,35 @@ class NS_base:  # (HasTraits):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
+            if (n.useModel) and not isinstance(p.domain,Domain.PUMIDomain) :
+              logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
+              p = self.pList[0]
+              n = self.nList[0]
+              p.domain.PUMIMesh=n.MeshAdaptMesh
+              p.domain.hasModel = n.useModel
+           
+              from scipy import spatial
+              meshVertexTree = spatial.cKDTree(mesh.nodeArray)
+              meshVertex2Model= [0]*mesh.nNodes_owned
+              for idx,vertex in enumerate(self.pList[0].domain.vertices):
+                if(self.pList[0].nd==2 and len(vertex) == 2): #there might be a smarter way to do this
+                  vertex.append(0.0) #need to make a 3D coordinate
+                closestVertex = meshVertexTree.query(vertex)
+                meshVertex2Model[closestVertex[1]] = 1
+
+              isModelVert = numpy.asarray(meshVertex2Model).astype("i")
+              
+              meshBoundaryConnectivity = numpy.zeros((mesh.nExteriorElementBoundaries_global,5),dtype=numpy.int32)
+              for elementBdyIdx in range(len(mesh.exteriorElementBoundariesArray)):
+                exteriorIdx = mesh.exteriorElementBoundariesArray[elementBdyIdx]
+                meshBoundaryConnectivity[elementBdyIdx][0] =  mesh.elementBoundaryMaterialTypes[exteriorIdx]
+                meshBoundaryConnectivity[elementBdyIdx][1] = mesh.elementBoundaryElementsArray[exteriorIdx][0]
+                meshBoundaryConnectivity[elementBdyIdx][2] = mesh.elementBoundaryNodesArray[exteriorIdx][0]
+                meshBoundaryConnectivity[elementBdyIdx][3] = mesh.elementBoundaryNodesArray[exteriorIdx][1]
+                meshBoundaryConnectivity[elementBdyIdx][4] = mesh.elementBoundaryNodesArray[exteriorIdx][2]
+              
+              p.domain.PUMIMesh.reconstructFromProteus2(mesh.cmesh,isModelVert,meshBoundaryConnectivity)
+  
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 logEvent("Attempting to visualize mesh")
@@ -1046,10 +1079,10 @@ class NS_base:  # (HasTraits):
             #     'velocityError', scalar)
 
             # This is hardcoded for the RANS3PF to be the 4th model
-            scalar[:,0] = self.modelList[4].levelModelList[0].coefficients.phi_s
-            p0.domain.PUMIMesh.transferFieldToPUMI(
-                'phi_s', scalar)
-
+            if len(self.modelList) > 3 and hasattr(self.modelList[4].levelModelList[0].coefficients,"phi_s"):
+              scalar[:,0] = self.modelList[4].levelModelList[0].coefficients.phi_s
+              p0.domain.PUMIMesh.transferFieldToPUMI(
+                  'phi_s', scalar)
             del scalar
             #Get Physical Parameters
             #Can we do this in a problem-independent  way?
@@ -1159,6 +1192,51 @@ class NS_base:  # (HasTraits):
         runName : str
             A name for the calculated solution.
         """
+
+        #Get mesh entities for reconstruction
+        #theMesh = self.modelList[0].levelModelList[0].mesh
+        #from scipy import spatial
+        #meshVertexTree = spatial.cKDTree(theMesh.nodeArray)
+        #meshVertex2Model= [0]*theMesh.nNodes_owned
+        #file0 = open('modelNodeArray.csv','w') 
+        #file0.write('%i\n' % len(self.pList[0].domain.vertices))
+        #for idx,vertex in enumerate(self.pList[0].domain.vertices):
+        #  #if(self.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
+        #  #  vertex.append(0.0) #need to make a 3D coordinate
+        #  closestVertex = meshVertexTree.query(vertex)
+        #  #file0.write('%i, %i\n' % (closestVertex[1],theMesh.nodeMaterialTypes[closestVertex[1]])) 
+        #  file0.write('%i, %i\n' % (closestVertex[1],idx)) 
+        #file0.close()      
+
+        #file1 = open('meshNodeArray.csv','w') 
+        #file1.write('%i\n' % theMesh.nNodes_owned)
+        #for nodeIdx in range(len(theMesh.nodeArray)):
+        #  file1.write('%i, %.15f, %.15f, %.15f\n' % (nodeIdx, 
+        #     theMesh.nodeArray[nodeIdx][0],
+        #     theMesh.nodeArray[nodeIdx][1], 
+        #     theMesh.nodeArray[nodeIdx][2]))
+        #file1.close() 
+        #file2 = open('meshConnectivity.csv','w') 
+        #file2.write('%i\n' % theMesh.nElements_owned)
+        #for elementIdx in range(len(theMesh.elementNodesArray)):
+        #  file2.write('%i, %i, %i, %i, %i\n' % (elementIdx, theMesh.elementNodesArray[elementIdx][0],
+        #     theMesh.elementNodesArray[elementIdx][1], theMesh.elementNodesArray[elementIdx][2],
+        #     theMesh.elementNodesArray[elementIdx][3]))
+        #file2.close() 
+        #file3 = open('meshBoundaryConnectivity.csv','w') 
+        #file3.write('%i\n' % theMesh.nExteriorElementBoundaries_global)
+        #for elementBdyIdx in range(len(theMesh.exteriorElementBoundariesArray)):
+        #  exteriorIdx = theMesh.exteriorElementBoundariesArray[elementBdyIdx]
+        #  file3.write('%i, %i, %i, %i, %i, %i\n' % (exteriorIdx,
+        #     theMesh.elementBoundaryMaterialTypes[exteriorIdx],
+        #     theMesh.elementBoundaryElementsArray[exteriorIdx][0], #should be adjacent to only one boundary
+        #     theMesh.elementBoundaryNodesArray[exteriorIdx][0],
+        #     theMesh.elementBoundaryNodesArray[exteriorIdx][1],
+        #     theMesh.elementBoundaryNodesArray[exteriorIdx][2],
+        #      ))
+        #file3.close() 
+        #exit()
+
         logEvent("Setting initial conditions",level=0)
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:

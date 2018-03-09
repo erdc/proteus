@@ -1545,9 +1545,12 @@ class Mesh:
           self.subdomainMesh.cmesh = cmeshTools.CMesh()
           PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
               self.subdomainMesh.cmesh)
-          if(PUMIMesh.isReconstructed()):
+          if(PUMIMesh.isReconstructed()==1):
             logEvent("Material arrays updating based on reconstructed model.\n")
             PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh);
+          elif(PUMIMesh.isReconstructed()==2):
+            logEvent("Material arrays updating based on better reconstructed model.\n")
+            PUMIMesh.updateMaterialArrays2(self.subdomainMesh.cmesh);
           else:
               logEvent("Material arrays updating based on geometric model.\n")
               for i in range(len(faceList)):
@@ -1601,8 +1604,12 @@ class Mesh:
           comm.barrier()
         else:
           PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
-          if(PUMIMesh.isReconstructed()):
+          if(PUMIMesh.isReconstructed()==1):
+            logEvent("Material arrays updating based on reconstructed model.\n")
             PUMIMesh.updateMaterialArrays(self.cmesh);
+          elif(PUMIMesh.isReconstructed()==2):
+            logEvent("Material arrays updating based on better reconstructed model.\n")
+            PUMIMesh.updateMaterialArrays2(self.cmesh);
           else:
               for i in range(len(faceList)):
                 for j in range(len(faceList[i])):

@@ -17,17 +17,19 @@ cdef extern from "cmeshToolsModule.h":
 
 cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
-        MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*,double,double)
+        MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*,double,double,double,int)
         int numIter, numAdaptSteps
         string size_field_config, adapt_type_config
-        bint isReconstructed
+        int isReconstructed
         int loadModelAndMesh(char *, char*)
         int getSimmetrixBC()
         int reconstructFromProteus(Mesh&,Mesh&,int)
+        int reconstructFromProteus2(Mesh&,int*,int*)
         int constructFromSerialPUMIMesh(Mesh&)
         int constructFromParallelPUMIMesh(Mesh&, Mesh&)
         int updateMaterialArrays(Mesh&,int, int, int)
         int updateMaterialArrays(Mesh&)
+        int updateMaterialArrays2(Mesh&)
         int transferFieldToPUMI(char*, double*, int, int)
         int transferFieldToProteus(char*, double*, int, int)
         int transferPropertiesToPUMI(double*, double*,double*,double)
@@ -53,7 +55,7 @@ cdef class MeshAdaptPUMI:
     cdef double deltaT
     def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="ERM",maType="test",logType="off",targetError=0,targetElementCount=0,maxAspectRatio=100.0,reconstructedFlag=0):
         logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
-        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType,targetError,targetElementCount)
+        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType,targetError,targetElementCount,maxAspectRatio,reconstructedFlag)
     def __dealloc__(self):
         del self.thisptr
     def size_field_config(self):
@@ -70,6 +72,11 @@ cdef class MeshAdaptPUMI:
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         cdef CMesh* global_cmesh_ptr = <CMesh*>global_cmesh
         return self.thisptr.reconstructFromProteus(cmesh_ptr.mesh,global_cmesh_ptr.mesh,hasModel)
+    def reconstructFromProteus2(self,cmesh,np.ndarray[int,ndim=1,mode="c"] isModelVert,
+                                np.ndarray[int,ndim=2,mode="c"] bFaces):
+        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
+        isModelVert = np.ascontiguousarray(isModelVert)
+        return self.thisptr.reconstructFromProteus2(cmesh_ptr.mesh,&isModelVert[0], <int *> bFaces.data)
     def constructFromSerialPUMIMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.constructFromSerialPUMIMesh(cmesh_ptr.mesh)
@@ -83,6 +90,9 @@ cdef class MeshAdaptPUMI:
             return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh)
         else:
             return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh,dim, bdryId, geomTag)
+    def updateMaterialArrays2(self, cmesh):
+        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
+        return self.thisptr.updateMaterialArrays2(cmesh_ptr.mesh)
     def transferFieldToPUMI(self, name, np.ndarray[np.double_t,ndim=2,mode="c"] inArray):
         inArray = np.ascontiguousarray(inArray)
         return self.thisptr.transferFieldToPUMI(name, &inArray[0,0], inArray.shape[1], inArray.shape[0])

@@ -505,6 +505,49 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
   return 0;
 }
 
+int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
+{
+  std::cout<<"Starting to update material arrays\n";
+  int geomTag;
+  apf::ModelEntity* geomEnt;
+  apf::MeshIterator* it;
+  apf::MeshEntity* f;
+
+  //First iterate over all faces in 3D, get the model tag and apply to all downward adjacencies
+  int dim = m->getDimension()-1;
+  it = m->begin(dim);
+  while(f = m->iterate(it)){
+    int i = localNumber(f);
+    geomEnt = m->toModel(f);
+    geomTag = m->getModelTag(geomEnt);
+    if(m->getModelType(geomEnt) == dim){
+      mesh.elementBoundaryMaterialTypes[i] = geomTag;
+      apf::Adjacent face_adjVert;
+      m->getAdjacent(f,0,face_adjVert);
+      for(int j=0;j<face_adjVert.getSize();j++){
+          int vID = localNumber(face_adjVert[j]);
+          mesh.nodeMaterialTypes[vID] = geomTag;
+      }
+    }
+  }
+  m->end(it);
+
+  std::cout<<"Finished faces and verts\n";
+  //Loop over regions
+  dim = m->getDimension();
+  it = m->begin(dim);
+  while( f = m->iterate(it)){
+    int i = localNumber(f);
+    geomEnt = m->toModel(f);
+    geomTag = m->getModelTag(geomEnt);
+    if(m->getModelType(geomEnt) == dim){
+      mesh.elementMaterialTypes[i] = geomTag;
+    }
+  }
+  m->end(it);
+  std::cout<<"Completo\n";
+  return 0;
+}
 
 
 /**************************************************************************/
@@ -1215,5 +1258,49 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
     std::cout<<"FINISHING RECONSTRUCTION\n";
 }
 
+int MeshAdaptPUMIDrvr::reconstructFromProteus2(Mesh& mesh,int* isModelVert,int* bFaces){
 
+//This function only applies for 3D meshes
+
+    isReconstructed = 2;
+    int nBFaces = mesh.nExteriorElementBoundaries_global;
+    bool isModelVert_bool[mesh.nNodes_global];
+    for(int i=0;i<mesh.nNodes_global;i++){
+      isModelVert_bool[i] = isModelVert[i] != 0;
+    }
+    int bFaces_2D[nBFaces][5];
+    for(int i=0;i<nBFaces;i++){
+      int idx = i*5;
+      bFaces_2D[i][0] = bFaces[idx+0];
+      bFaces_2D[i][1] = bFaces[idx+1];
+      bFaces_2D[i][2] = bFaces[idx+2];
+      bFaces_2D[i][3] = bFaces[idx+3];
+      bFaces_2D[i][4] = bFaces[idx+4];
+    }
+
+    apf::GlobalToVert outMap;
+
+    int dim = 3;
+    gmi_model* tempModel  = gmi_load(".null");
+    m = apf::makeEmptyMdsMesh(tempModel,dim,false);
+    apf::construct(m,mesh.elementNodesArray,mesh.nElements_global,apf::Mesh::TET,outMap);
+
+    apf::setCoords(m,mesh.nodeArray,mesh.nNodes_global,outMap);
+
+    std::map<int,apf::MeshEntity*> globalToRegion;
+    apf::MeshIterator* it = m->begin(dim);
+    apf::MeshEntity* ent;
+    int counter = 0;
+    while( ent = m->iterate(it) ){
+      globalToRegion.insert(std::pair<int,apf::MeshEntity*> (counter,ent ));
+      counter++;
+    }
+
+    apf::deriveMdlFromManifold(m,isModelVert_bool,nBFaces,bFaces_2D,outMap,globalToRegion);
+    m->writeNative("Reconstructed.smb");
+    gmi_write_dmg(m->getModel(),"Reconstructed.dmg");
+    std::cout<<"Finished Reconstruction, terminating program. Rerun with PUMI workflow\n";
+    std::exit(0);
+
+}
 

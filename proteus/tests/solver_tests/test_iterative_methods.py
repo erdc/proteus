@@ -22,7 +22,6 @@ from petsc4py import PETSc as p4pyPETSc
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 
-
 class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
 
     def setup_method(self,method):

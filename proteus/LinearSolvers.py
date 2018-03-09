@@ -1707,6 +1707,157 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
 
+    """
+    This class is derived from SchurPrecond and serves as the base
+    class for all NavierStokes preconditioners which use the Schur complement
+    method.    
+    """
+    def __init__(self,L,prefix=None,bdyNullSpace=False):
+        SchurPrecon.__init__(self,L,prefix)
+        self.operator_constructor = SchurOperatorConstructor(self,
+                                                             pde_type='navier_stokes')
+
+
+class NavierStokes_TwoPhasePCD(NavierStokesSchur):
+    """ Two-phase PCD Schur complement approximation class.
+         Details of this operator are in the forthcoming paper
+         'Preconditioners for Two-Phase Incompressible Navier-Stokes 
+         Flow', Bootland et. al. 2017.
+
+         Since the two-phase Navier-Stokes problem used in the MPRANS 
+         module of Proteus
+         has some additional features not include in the above paper,
+         a few additional flags and options are avaliable.
+
+         * density scaling - This flag allows the user to specify 
+           whether the advection and mass terms in the second term
+           of the PCD operator should use the actual density or the
+           scale with the number one.
+
+         * numerical viscosity - This flag specifies whether the 
+           additional viscosity introduced from shock capturing
+           stabilization should be included as part of the viscosity
+           coefficient.
+
+         * mass form - This flag allows the user to specify what form
+           the mass matrix takes, lumped (True) or full (False).
+
+    """
+    def __init__(self,
+                 L,
+                 prefix = None,
+                 bdyNullSpace = False,
+                 density_scaling = True,
+                 numerical_viscosity = True,
+                 lumped = True):
+        """
+        Initialize the two-phase PCD preconditioning class.
+
+        Parameters
+        ----------
+        L : petsc4py Matrix
+            Defines the problem's operator.
+        prefix : str
+            String allowing PETSc4py options.
+        bdyNullSpace : bool
+            Indicates whether there is a global null space.
+        density_scaling : bool
+            Indicates whether mass and advection terms should be
+            scaled with the density (True) or 1 (False).
+        numerical_viscosity : bool
+            Indicates whether the viscosity used to calculate
+            the inverse scaled mass matrix should include numerical
+            viscosity (True) or not (False).
+        lumped : bool
+            Indicates whether the viscosity and density mass matrices
+            should be lumped (True) or full (False).
+
+        """
+        NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
+        # Initialize the discrete operators
+        self.N_rho = self.operator_constructor.initializeTwoPhaseCp_rho()
+        self.A_invScaledRho = self.operator_constructor.initializeTwoPhaseInvScaledAp()
+        self.Q_rho = self.operator_constructor.initializeTwoPhaseQp_rho()
+        self.Q_invScaledVis = self.operator_constructor.initializeTwoPhaseInvScaledQp()
+        # TP PCD scaling options
+        self.density_scaling = density_scaling
+        self.numerical_viscosity = numerical_viscosity
+        self.lumped = lumped
+
+    def setUp(self, global_ksp):
+        import Comm
+        comm = Comm.get()
+        self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
+        self.operator_constructor.updateInvScaledAp()
+        self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
+                                                       lumped = self.lumped)
+        self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
+                                                                 lumped = self.lumped)
+
+        # ****** Sp for Ap *******
+        # TODO - This is included for a possible extension which exchanges Ap with Sp for short
+        #        time steps.
+        # self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
+        #                                                      self.operator_constructor.linear_smoother.isv)
+        # self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
+        #                                                      self.operator_constructor.linear_smoother.isp)
+        # self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        #                                                      self.operator_constructor.linear_smoother.isv)
+        # self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        #                                                      self.operator_constructor.linear_smoother.isp)
+
+        # dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
+        # self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
+        # A00_invBt = self.A00_inv.matMult(self.A01)
+        # self.Sp = self.A10.matMult(A00_invBt)
+        # self.Sp.scale(- 1. )
+        # self.Sp.axpy( 1. , self.A11)
+
+        # End ******** Sp for Ap ***********
+
+        
+        self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                              self.operator_constructor.linear_smoother.isp)
+
+        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                                self.operator_constructor.linear_smoother.isp)
+
+        self.Qp_rho = self.Q_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                              self.operator_constructor.linear_smoother.isp)
+
+        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                                self.operator_constructor.linear_smoother.isp)
+
+        # if comm.size() > 0 and comm.rank()==1:
+        #     self.Ap_invScaledRho.zeroRowsColumns(ParInfo_petsc4py.subdomain2global[0])
+        # else:
+        #     self.Ap_invScaledRho.zeroRowsColumns(0)
+        
+        L_sizes = self.Qp_rho.size        
+        L_range = self.Qp_rho.owner_range
+        self.TP_PCDInv_shell = p4pyPETSc.Mat().create()
+        self.TP_PCDInv_shell.setSizes(L_sizes)
+        self.TP_PCDInv_shell.setType('python')
+        dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
+        self.matcontext_inv = TwoPhase_PCDInv_shell(self.Qp_invScaledVis,
+                                                    self.Qp_rho,
+                                                    self.Ap_invScaledRho,
+                                                    self.Np_rho,
+                                                    True,
+                                                    dt)
+        self.TP_PCDInv_shell.setPythonContext(self.matcontext_inv)
+        self.TP_PCDInv_shell.setUp()
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+
+        self._setSchurlog(global_ksp)
+        if self.bdyNullSpace == True:
+            nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                               vectors = (),
+                                               constant = True)
+            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
+            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
@@ -3747,7 +3898,6 @@ class ChebyshevSemiIteration(LinearSolver):
         self.beta = beta
         self.relax_parameter = (self.alpha + self.beta) / 2.
         self.rho = (self.beta - self.alpha) / (self.alpha + self.beta)
-
         self.diag = self.A_petsc.getDiagonal().copy()
         self.diag.scale(self.relax_parameter)
         self.z = self.A_petsc.getDiagonal().copy()

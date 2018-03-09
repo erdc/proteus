@@ -805,6 +805,7 @@ namespace proteus
             mom_v_ham += rho*porosity*(u*grad_v[0]+v*grad_v[1]+w*grad_v[2]);
             dmom_v_ham_grad_v[0]=rho*porosity*u;
             dmom_v_ham_grad_v[1]=rho*porosity*v;
+
             dmom_v_ham_grad_v[2]=rho*porosity*w;
             dmom_v_ham_u =rho*porosity*grad_v[0];
             dmom_v_ham_v =rho*porosity*grad_v[1];
