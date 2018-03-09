@@ -193,7 +193,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             # Parameters for elliptic re-distancing
             ELLIPTIC_REDISTANCING=0, #Linear elliptic re-distancing by default
             outputQuantDOFs=False,
-            alpha=1.0E9): #penalization param for elliptic re-distancing
+            alpha=1.0E6): #penalization param for elliptic re-distancing
         self.outputQuantDOFs=outputQuantDOFs
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
@@ -236,6 +236,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #2: Linear elliptic re-distancing via C0 normal reconstruction and single pot.
         #3: Non-linear elliptic re-distancing via C0 normal reconstruction and single pot.
         self.alpha=alpha
+        self.freeze_interface_within_elliptic_redist = False
+        if alpha=='inf':
+            self.alpha = 0
+            self.freeze_interface_within_elliptic_redist = True
         
     def attachModels(self, modelList):
         if self.nModelId is not None:
@@ -1096,7 +1100,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.calculateJacobian = self.rdls3p.calculateJacobian
 
         # FREEZE INTERFACE #
-        if self.coefficients.alpha == 0:
+        if self.coefficients.freeze_interface_within_elliptic_redist==True:
             for gi in range(len(self.u[0].dof)):
                 if self.interface_locator[gi] == 1.0:
                     self.u[0].dof[gi] = self.coefficients.dof_u0[gi]
@@ -1175,7 +1179,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.alpha/self.elementDiameter.min())
 
         # FREEZE INTERFACE #
-        if self.coefficients.alpha == 0:
+        if self.coefficients.freeze_interface_within_elliptic_redist==True:
             for gi in range(len(self.u[0].dof)):
                 if self.interface_locator[gi] == 1.0:
                     r[gi] = 0
@@ -1309,7 +1313,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.alpha/self.elementDiameter.min())
 
         # FREEZING INTERFACE #
-        if self.coefficients.alpha == 0:
+        if self.coefficients.freeze_interface_within_elliptic_redist==True:
             for gi in range(len(self.u[0].dof)):
                 if self.interface_locator[gi] == 1.0:
                     for i in range(self.rowptr[gi], self.rowptr[gi + 1]):
