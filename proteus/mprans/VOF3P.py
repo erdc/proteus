@@ -283,8 +283,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             setParamsFunc=None,
             movingDomain=False,
             set_vos=None,
-            EXPLICIT_METHOD=False):
+            EXPLICIT_METHOD=False,
+            outputQuantDOFs=False):
 
+        self.outputQuantDOFs=outputQuantDOFs
         self.EXPLICIT_METHOD=EXPLICIT_METHOD
         self.set_vos = set_vos
         self.useMetrics = useMetrics
@@ -867,17 +869,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
-
-        # mql. Allow the user to provide functions to define the velocity field
-        self.hasVelocityFieldAsFunction = False
-        if ('velocityFieldAsFunction') in dir(options):
-            self.velocityFieldAsFunction = options.velocityFieldAsFunction
-            self.hasVelocityFieldAsFunction = True
-
-        # For Taylor Galerkin methods
-        self.taylorGalerkinStage = 1
-        self.auxTaylorGalerkinFlag = 1
-        self.uTilde_dof = numpy.zeros(self.u[0].dof.shape,'d')
         
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set(
@@ -1034,7 +1025,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(
                 self.mesh.nodeArray.shape, 'd')
-    # mwf these are getting called by redistancing classes,
+        # mwf these are getting called by redistancing classes,
+
+        # mql. Allow the user to provide functions to define the velocity field
+        self.hasVelocityFieldAsFunction = False
+        if ('velocityFieldAsFunction') in dir(options):
+            self.velocityFieldAsFunction = options.velocityFieldAsFunction
+            self.hasVelocityFieldAsFunction = True
+
+        # For Taylor Galerkin methods
+        self.taylorGalerkinStage = 1
+        self.auxTaylorGalerkinFlag = 1
+        self.uTilde_dof = numpy.zeros(self.u[0].dof.shape,'d')
+        
+        # Some asserts for NCLS with Taylor Galerkin
+        if self.coefficients.EXPLICIT_METHOD==True:
+            assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "If EXPLICIT_METHOD=True, use BackwardEuler_cfl"
     
     def updateVelocityFieldAsFunction(self):
         X = {0: self.q[('x')][:, :, 0],
@@ -1109,7 +1115,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if (self.taylorGalerkinStage==2 and self.auxTaylorGalerkinFlag==1):
             self.uTilde_dof[:] = self.u[0].dof
             self.auxTaylorGalerkinFlag=0
-            
+
         self.vof.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1175,8 +1181,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux', 0)],
             #EXPLICIT METHODS
             self.coefficients.EXPLICIT_METHOD,
+            self.u[0].femSpace.order,
             self.taylorGalerkinStage,
-            self.uTilde_dof,            
+            self.uTilde_dof,
             self.timeIntegration.dt)
 
         if self.coefficients.EXPLICIT_METHOD:

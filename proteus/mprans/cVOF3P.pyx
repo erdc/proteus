@@ -63,6 +63,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * ebqe_u,
                                double * ebqe_flux,
                                int EXPLICIT_METHOD,
+                               double degree_polynomial,
                                int stage,
                                double * uTilde_dof,
                                double dt)
@@ -205,6 +206,7 @@ cdef class VOF3P:
                           numpy.ndarray ebqe_u,
                           numpy.ndarray ebqe_flux,
                           int EXPLICIT_METHOD,
+                          double degree_polynomial,
                           int stage,
                           numpy.ndarray uTilde_dof,
                           double dt):
@@ -267,6 +269,7 @@ cdef class VOF3P:
                                         < double * > ebqe_u.data,
                                         < double * > ebqe_flux.data,
                                         EXPLICIT_METHOD,
+                                        degree_polynomial,
                                         stage,
                                         < double * > uTilde_dof.data,
                                         dt)
