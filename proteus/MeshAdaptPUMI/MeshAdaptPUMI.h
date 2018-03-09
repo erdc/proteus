@@ -18,7 +18,7 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double); 
+  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double,double,int); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
@@ -26,10 +26,12 @@ class MeshAdaptPUMIDrvr{
 
   //Functions to construct proteus mesh data structures
   int reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int hasModel);
+  int reconstructFromProteus2(Mesh& mesh, int* isModelVert, int* bFaces);
   int constructFromSerialPUMIMesh(Mesh& mesh);
   int constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh);
   int updateMaterialArrays(Mesh& mesh,int dim, int bdryID, int GeomTag);
   int updateMaterialArrays(Mesh& mesh);
+  int updateMaterialArrays2(Mesh& mesh);
   void numberLocally();
   int localNumber(apf::MeshEntity* e);
   int dumpMesh(Mesh& mesh);
@@ -73,6 +75,7 @@ class MeshAdaptPUMIDrvr{
   int nAdapt; //counter for number of adapt steps
   int nEstimate; //counter for number of error estimator calls
   int nsd; //number of spatial dimensions
+  int maxAspect; //maximum aspect ratio
 
   //User Inputs
   std::string size_field_config; //What type of size field: interface, ERM, isotropic
