@@ -802,6 +802,10 @@ class LevelModel(OneLevelTransport):
         self.taylorGalerkinStage = 1
         self.auxTaylorGalerkinFlag = 1
         self.uTilde_dof = numpy.zeros(self.u[0].dof.shape,'d')
+
+        # Some asserts for NCLS with Taylor Galerkin
+        if self.coefficients.EXPLICIT_METHOD==True:
+            assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "If EXPLICIT_METHOD=True, use BackwardEuler_cfl"
         
     # mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
@@ -929,7 +933,8 @@ class LevelModel(OneLevelTransport):
             self.ebqe[('u', 0)],
             self.cell_interface_locator,
             self.interface_locator,            
-            self.coefficients.EXPLICIT_METHOD,            
+            self.coefficients.EXPLICIT_METHOD,
+            self.u[0].femSpace.order,
             self.taylorGalerkinStage,
             self.uTilde_dof,
             self.timeIntegration.dt,

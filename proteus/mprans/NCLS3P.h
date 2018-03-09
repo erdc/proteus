@@ -5,11 +5,11 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-#define ENTROPY(u)  u
-#define DENTROPY(u) 1.0
+#define ENTROPY(u)  0.5*u*u
+#define DENTROPY(u) fabs(u)
 
-#define cE 0.1
-#define cMax 0.1
+#define cE 0.0
+#define cMax 0.0
 
 #define Sign(z) (z >= 0.0 ? 1.0 : -1.0)
 
@@ -77,7 +77,8 @@ namespace proteus
                                    double* cell_interface_locator,
 				   double* interface_locator,
                                    // FOR TAYLOR GALERKIN METHODS                                   
-                                   int EXPLICIT_METHOD,				   
+                                   int EXPLICIT_METHOD,
+				   double degree_polynomial,
                                    int stage,
 				   double* uTilde_dof,
                                    double dt,
@@ -378,7 +379,8 @@ namespace proteus
 			     double* cell_interface_locator,
                              double* interface_locator,
                              // FOR TAYLOR GALERKIN METHODS                             
-                             int EXPLICIT_METHOD,			     
+                             int EXPLICIT_METHOD,
+			     double degree_polynomial,
                              int stage,
 			     double* uTilde_dof,
                              double dt,
@@ -546,7 +548,7 @@ namespace proteus
 		    normVel = std::sqrt(normVel);
 
 		    // calculate CFL
-		    calculateCFL(elementDiameter[eN],relVelocity,cfl[eN_k]);
+		    calculateCFL(elementDiameter[eN]/degree_polynomial,relVelocity,cfl[eN_k]);
 
 		    // compute max velocity at cell 
 		    maxVel[eN] = fmax(normVel,maxVel[eN]);
@@ -714,7 +716,7 @@ namespace proteus
 	    double norm_factor = fmax(fabs(maxEntropy - meanEntropy), fabs(meanEntropy-minEntropy));
 	    for(int eN=0;eN<nElements_global;eN++)
 	      {
-		double hK=elementDiameter[eN];
+		double hK=elementDiameter[eN]/degree_polynomial;
 		double linear_viscosity = cMax*hK*maxVel[eN];
 		double entropy_viscosity = cE*hK*hK*maxEntRes[eN]/norm_factor;	  
 		for  (int k=0;k<nQuadraturePoints_element;k++)
