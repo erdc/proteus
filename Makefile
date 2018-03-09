@@ -138,7 +138,7 @@ hashdist_bld:
 
 stack: 
 	@echo "No stack found.  Cloning stack from GitHub"
-	git clone https://github.com/hashdist/hashstack.git stack
+	git clone https://github.com/erdc/hashstack.git stack
 	cd  stack && git checkout ${HASHSTACK_DEFAULT_VERSION}
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
