@@ -24,6 +24,7 @@
   pAManager SModel_attManager(pModel model);
 #endif
 
+void orthogonalEigenDecompForSymmetricMatrix(apf::Matrix3x3 const& A, apf::Vector3& v, apf::Matrix3x3& R);
 /** 
  * \file cMeshAdaptPUMI.cpp
  * \ingroup MeshAdaptPUMI 
@@ -433,6 +434,25 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 
   /// Adapt the mesh
 
+  //DEBUG
+  if(m->findField("logM")){
+    apf::destroyField(m->findField("logM"));
+  }
+  apf::Field* logMField = apf::createFieldOn(m, "logM", apf::MATRIX);
+  apf::MeshEntity* v;
+  apf::MeshIterator* it = m->begin(0);
+  while ( (v = m->iterate(it)) ) {
+    apf::Vector3 h;
+    apf::Matrix3x3 f;
+    apf::getVector(size_scale, v, 0, h);
+    apf::getMatrix(size_frame, v, 0, f);
+    apf::Vector3 s(log(1/h[0]/h[0]), log(1/h[1]/h[1]), log(1/h[2]/h[2]));
+    apf::Matrix3x3 S(s[0], 0   , 0,
+             0   , s[1], 0,
+             0   , 0   , s[2]);
+    apf::setMatrix(logMField, v, 0, f * S * transpose(f));
+  }
+
   ma::Input* in;
   if(adapt_type_config=="anisotropic" || size_field_config== "interface"){
     //in = ma::configure(m, size_scale, size_frame);
@@ -456,13 +476,31 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->shouldSnap = false;
   in->shouldFixShape = true;
   in->shouldForceAdaptation = false;
-  in->goodQuality = 0.008;
+  //in->goodQuality = 0.008;
+  in->goodQuality = 0.027;
   double mass_before = getTotalMass();
   
   double t1 = PCU_Time();
   //ma::adapt(in);
   ma::adaptVerbose(in);
   double t2 = PCU_Time();
+
+ // DEBUG updated the h and R fields using logM field
+ //
+ it = m->begin(0);
+ while ( (v = m->iterate(it)) ) {
+   apf::Matrix3x3 logM;
+   apf::getMatrix(logMField, v, 0, logM);
+   apf::Vector3 s;
+   apf::Matrix3x3 R;
+   orthogonalEigenDecompForSymmetricMatrix(logM, s, R);
+   apf::Vector3 h(1/sqrt(exp(s[0])),
+           1/sqrt(exp(s[1])),
+           1/sqrt(exp(s[2])));;
+   apf::setVector(size_scale, v, 0, h);
+   apf::setMatrix(size_frame, v, 0, R);
+ }
+ //
 
   m->verify();
   double mass_after = getTotalMass();
@@ -563,4 +601,25 @@ double MeshAdaptPUMIDrvr::getTotalMass()
 void MeshAdaptPUMIDrvr::writeMesh(const char* meshFile){
   m->writeNative(meshFile);
   apf::writeVtkFiles(meshFile,m);
+}
+
+void orthogonalEigenDecompForSymmetricMatrix(apf::Matrix3x3 const& A, apf::Vector3& v, apf::Matrix3x3& R)
+{
+ /* here we assume A to be real symmetric 3x3 matrix,
+  * we should be able to get 3 orthogonal eigen vectors
+  * we also normalize the eigen vectors */
+ double eigenValues[3];
+ apf::Vector3 eigenVectors[3];
+ 
+ apf::eigen(A, eigenVectors, eigenValues);
+ 
+ apf::Matrix3x3 RT(eigenVectors); // eigen vectors are stored in the rows of RT
+
+ RT[0] = RT[0].normalize();
+ RT[1] = RT[1] - RT[0]*(RT[0]*RT[1]);
+ RT[1] = RT[1].normalize();
+ RT[2] = apf::cross(RT[0],RT[1]);
+
+ v = apf::Vector3(eigenValues);
+ R = transpose(RT);
 }

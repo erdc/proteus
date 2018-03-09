@@ -1153,11 +1153,9 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     gradeAnisoMesh(m);
     std::cout<<"Finished grading size 0\n";
     gradeAspectRatio(m,1);
-/*
     std::cout<<"Finished grading size 1\n";
     gradeAspectRatio(m,2);
     std::cout<<"Finished grading size 2\n";
-*/
 
     //grade directions
     //gradeSizeFrames(m);
