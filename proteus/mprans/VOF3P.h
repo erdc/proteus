@@ -6,12 +6,12 @@
 #include "ModelFactory.h"
 
 //#define ENTROPY(u) 0.5*u*u
-//#define DENTROPY(u) fabs(u)
+//#define DENTROPY(u) u
 
 #define ENTROPY(u) std::log(fabs(u*(1.0-u))+1E-14)
-#define DENTROPY(u) (1.0-2*u)*(u*(1.0-u)>=0 ? 1 : -1)/(fabs(u*(1.0-u))+1E-14)
+#define DENTROPY(u) (1.0-2*u)/(u*(1.0-u)+1E-14)
 
-#define cE 1.0
+#define cE 0.1
 #define cMax 0.1
 #define cK 1.0
 
@@ -86,6 +86,7 @@ namespace proteus
                                    double* ebqe_flux,
 				   //EXPLICIT METHODS
 				   int EXPLICIT_METHOD,
+				   double degree_polynomial,
 				   int stage,
 				   double * uTilde_dof,
 				   double dt)=0;
@@ -404,6 +405,7 @@ namespace proteus
                            double* ebqe_flux,
 			   //EXPLICIT METHODS
 			   int EXPLICIT_METHOD,
+			   double degree_polynomial,
 			   int stage,
 			   double * uTilde_dof,
 			   double dt)
@@ -529,7 +531,7 @@ namespace proteus
               ck.gradFromDOF(uTilde_dof,
 			     &u_l2g[eN_nDOF_trial_element],
 			     u_grad_trial,
-			     grad_uTilde);	      
+			     grad_uTilde);
               //precalculate test function products with integration weights
               for (int j=0;j<nDOF_trial_element;j++)
                 {
@@ -538,7 +540,7 @@ namespace proteus
                     {
                       u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
                     }
-                }
+                }	      
               //VRANS
               porosity = 1.0 - q_vos[eN_k];
               //
@@ -597,12 +599,12 @@ namespace proteus
 		  norm_grad_un = std::sqrt(norm_grad_un)+1E-10;
 				  
 		  // calculate CFL
-		  calculateCFL(elementDiameter[eN],df,cfl[eN_k]);
-		  
+		  calculateCFL(elementDiameter[eN]/degree_polynomial,df,cfl[eN_k]);
+
 		  // compute max velocity at cell 
 		  maxVel[eN] = fmax(normVel,maxVel[eN]);
-		  
-		  // entropy residual
+
+		  // Strong entropy residual
 		  double entRes = (ENTROPY(u)-ENTROPY(un))/dt + 0.5*(DENTROPY(u)*H +
 								     DENTROPY(un)*Hn);
 		  maxEntRes[eN] = fmax(maxEntRes[eN],fabs(entRes));
@@ -614,7 +616,7 @@ namespace proteus
 		  minEntropy = fmin(minEntropy,ENTROPY(u));		    
 
 		  // artificial compression
-		  double hK=elementDiameter[eN];
+		  double hK=elementDiameter[eN]/degree_polynomial;
 		  entVisc_minus_artComp = fmax(1-cK*fmax(un*(1-un),0)/hK/norm_grad_un,0);
 		}
 	      else
@@ -679,14 +681,14 @@ namespace proteus
 									      grad_u_old,
 									      &u_grad_test_dV[i_nSpace]);
 		      // TODO: Add part about moving mesh
-		      else
+		      else //stage 2
 			elementResidual_u[i] +=
 			  ck.Mass_weak(dt*m_t,u_test_dV[i]) +  // time derivative
 			  dt*ck.Advection_weak(fn,&u_grad_test_dV[i_nSpace]) +
 			  0.5*dt*dt*ck.NumericalDiffusion(HTilde,df,&u_grad_test_dV[i_nSpace]) +
 			  dt*entVisc_minus_artComp*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
 									 grad_u_old,
-									 &u_grad_test_dV[i_nSpace]);		      
+									 &u_grad_test_dV[i_nSpace]);
 		    }
 		  else //supg
 		    {
@@ -716,22 +718,6 @@ namespace proteus
               globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
             }//i
         }//elements
-      if (EXPLICIT_METHOD==1)
-	{
-	  meanEntropy /= meanOmega;
-	  double norm_factor = fmax(fabs(maxEntropy - meanEntropy), fabs(meanEntropy-minEntropy));
-	  for(int eN=0;eN<nElements_global;eN++)
-	    {
-	      double hK=elementDiameter[eN];
-	      double linear_viscosity = cMax*hK*maxVel[eN];
-	      double entropy_viscosity = cE*hK*hK*maxEntRes[eN]/norm_factor;	  
-	      for  (int k=0;k<nQuadraturePoints_element;k++)
-		{
-		  register int eN_k = eN*nQuadraturePoints_element+k;
-		  q_numDiff_u[eN_k] = fmin(linear_viscosity,entropy_viscosity);
-		}
-	    }
-	}      
       //
       //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
       //
@@ -920,7 +906,8 @@ namespace proteus
 		if (stage==1)
 		  flux_ext *= 1./3*dt;
 		else
-		  flux_ext *= dt;	      
+		  flux_ext *= dt;
+
               //
               //update residuals
               //
@@ -936,10 +923,25 @@ namespace proteus
           for (int i=0;i<nDOF_test_element;i++)
             {
               int eN_i = eN*nDOF_test_element+i;
-
               globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
             }//i
         }//ebNE
+      if (EXPLICIT_METHOD==1)
+	{
+	  meanEntropy /= meanOmega;
+	  double norm_factor = fmax(fabs(maxEntropy - meanEntropy), fabs(meanEntropy-minEntropy));
+	  for(int eN=0;eN<nElements_global;eN++)
+	    {
+	      double hK=elementDiameter[eN]/degree_polynomial;
+	      double linear_viscosity = cMax*hK*maxVel[eN];
+	      double entropy_viscosity = cE*hK*hK*maxEntRes[eN]/norm_factor;	     
+	      for  (int k=0;k<nQuadraturePoints_element;k++)
+		{
+		  register int eN_k = eN*nQuadraturePoints_element+k;
+		  q_numDiff_u[eN_k] = fmin(linear_viscosity,entropy_viscosity);
+		}	      
+	    }	  
+	}
     }
 
     void calculateJacobian(//element
