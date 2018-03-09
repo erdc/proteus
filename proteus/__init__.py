@@ -74,3 +74,28 @@ __all__ = ["Archiver",
            "Context",
            "BoundaryConditions",
            "SpatialTools"]
+
+def test(verbose=False, cleanup=True):
+    """Run all proteus tests
+
+    Parameters
+    ----------
+    verbose : bool
+              Print verbose testing information
+    cleanup : bool
+              Remove the temporary directory containing output
+    """
+    from os import path
+    from tempfile import mkdtemp
+    from shutil import rmtree
+    import pytest
+    flags="--boxed "
+    if verbose:
+        flags+="-v "
+    original_dir = os.get_cwd()
+    tmp_dir = mkdtemp()
+    os.chdir(tmp_dir)
+    pytest.main(flags+path.join(path.dirname(__file__),'tests'))
+    os.chdir(original_dir)
+    if cleanup:
+        rmtree(tmp_dir)
