@@ -189,7 +189,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             useMetrics=0.0,
             useConstantH=False,
             weakDirichletFactor=10.0,
-            backgroundDiffusionFactor=0.01):
+            backgroundDiffusionFactor=0.01,
+            # Parameters for elliptic re-distancing
+            ELLIPTIC_REDISTANCING=False,
+            ELLIPTIC_REDISTANCING_TYPE=2, #Linear elliptic re-distancing by default
+            alpha=1.0E9): #penalization param for elliptic re-distancing
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
         variableNames = ['phid']
@@ -222,7 +226,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.penaltyParameter = penaltyParameter
         self.backgroundDiffusionFactor = backgroundDiffusionFactor
         self.weakDirichletFactor = weakDirichletFactor
-
+        self.ELLIPTIC_REDISTANCING=ELLIPTIC_REDISTANCING
+        self.ELLIPTIC_REDISTANCING_TYPE=ELLIPTIC_REDISTANCING_TYPE
+        assert (ELLIPTIC_REDISTANCING_TYPE >= 1 and ELLIPTIC_REDISTANCING_TYPE <= 3), "ELLIPTIC_REDISTANCING_TYPE=0,1,2 or 3."
+        #ELLIPTIC_REDISTANCING_TYPE:
+        #1: Non-linear elliptic re-distancing via single or doble pot.
+        #   Uses single/double pot. with(out) |grad(u)| reconstructed. See c++ code
+        #2: Linear elliptic re-distancing via C0 normal reconstruction and single pot.
+        #3: Non-linear elliptic re-distancing via C0 normal reconstruction and single pot.
+        self.alpha=alpha
+        
     def attachModels(self, modelList):
         if self.nModelId is not None:
             self.nModel = modelList[self.nModelId]
@@ -267,8 +280,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         cebqe['x'].flat[3 * i:3 * (i + 1)], 0.)
 
     def preStep(self, t, firstStep=False):
-        import pdb
-        # pdb.set_trace()
+        # reset ellipticStage flag
+        self.rdModel.ellipticStage = 1
+        self.rdModel.auxEllipticFlag = 1
+        # COMPUTE NORMAL RECONSTRUCTION
+        if self.ELLIPTIC_REDISTANCING == True and self.ELLIPTIC_REDISTANCING_TYPE == 2: # linear via C0 normal reconstruction
+            self.rdModel.getNormalReconstruction()
+
         if self.nModel is not None:
             log("resetting signed distance level set to current level set", level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
@@ -852,6 +870,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if comm.size() > 1:
             assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions, "You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
+        # add some structures for elliptic re-distancing        
+        self.interface_locator = None
+        self.abs_grad_u = numpy.zeros(self.u[0].dof.shape,'d')
+        self.lumped_qx = numpy.zeros(self.u[0].dof.shape,'d')
+        self.lumped_qy = numpy.zeros(self.u[0].dof.shape,'d')
+        self.lumped_qz = numpy.zeros(self.u[0].dof.shape,'d')
+        self.ellipticStage = 1
+        self.auxEllipticFlag = 1
+        # ASSERT: if order>1 and elliptic redistancing is true then use bernstein polynomials
+        if self.coefficients.ELLIPTIC_REDISTANCING==True and self.u[0].femSpace.order>1:            
+            isBernsteinOnCube = isinstance(self.u[0].femSpace,
+                                           proteus.FemTools.C0_AffineBernsteinOnCube)
+            isBernsteinOnSimplex = isinstance(self.u[0].femSpace,
+                                              proteus.FemTools.C0_AffineBernsteinOnSimplex)
+            isBernstein = isBernsteinOnCube or isBernsteinOnSimplex
+            assert isBernstein==True, "If order>1 and ELLIPTIC_REDISTANCING=True, use Bernstein polynomials"
+                       
         log(memory("stride+offset", "OneLevelTransport"), level=4)
         if numericalFluxType is not None:
             if options is None or options.periodicDirichletConditions is None:
@@ -957,9 +992,54 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def calculateElementResidual(self):
         pass
 
+    def getAbsGradUReconstruction(self):
+        self.rdls3p.absGradUReconstruction(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.mesh.elementDiametersArray,
+            self.u[0].dof, # phi
+            self.offset[0],self.stride[0],
+            self.nFreeDOF_global[0], #numDOFs
+            self.abs_grad_u)
+
+    def getNormalReconstruction(self):
+        self.rdls3p.normalReconstruction(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.mesh.elementDiametersArray,
+            self.u[0].dof, # phi
+            self.offset[0],self.stride[0],
+            self.nFreeDOF_global[0], #numDOFs
+            self.lumped_qx,
+            self.lumped_qy,
+            self.lumped_qz)
+
     def getResidual(self, u, r):
         import pdb
         import copy
+
+        if self.interface_locator is None:
+            if self.coefficients.nModel is not None:
+                self.interface_locator = self.coefficients.nModel.interface_locator
+            else:
+                self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')
+                
         # try to use 1d,2d,3d specific modules
         # mwf debug
         # pdb.set_trace()
@@ -988,7 +1068,31 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # self.elementResidual[0].fill(0.0)
         # RDLS3P.calculateResidual(self.mesh.nElements_global,
         # print "beta_bdf",beta_bdf
-        self.rdls3p.calculateResidual(  # element
+
+        if self.coefficients.ELLIPTIC_REDISTANCING == True:
+            self.calculateResidual = self.rdls3p.calculateResidual_ellipticRedist
+            self.calculateJacobian = self.rdls3p.calculateJacobian_ellipticRedist
+            # COMPUTE RECONSTRUCTIONS #
+            if self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 1: #nlinear via single or double pot.
+                self.getAbsGradUReconstruction()
+            if self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 3: # nlinear via C0 normal rec.
+                self.getNormalReconstruction()
+            if (self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 2 # linear via C0 normal rec.
+                and self.ellipticStage == 2 and self.auxEllipticFlag == 1):
+                self.getNormalReconstruction()
+                self.auxEllipticFlag = 0
+        else:
+            self.calculateResidual = self.rdls3p.calculateResidual
+            self.calculateJacobian = self.rdls3p.calculateJacobian
+
+        # FREEZE INTERFACE #
+        if self.coefficients.alpha == 0:
+            for gi in range(len(self.u[0].dof)):
+                if self.interface_locator[gi] == 1.0:
+                    self.u[0].dof[gi] = self.coefficients.dof_u0[gi]
+        # END OF FREEZING INTERFACE #
+        
+        self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -1026,6 +1130,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter,  # self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
+            self.coefficients.dof_u0,
             self.coefficients.q_u0,
             self.timeIntegration.m_tmp[0],
             self.q[('u', 0)],
@@ -1048,7 +1153,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('u', 0)],
-            self.ebqe[('grad(u)', 0)])
+            self.ebqe[('grad(u)', 0)],
+            # elliptic re-distancing
+            self.coefficients.ELLIPTIC_REDISTANCING_TYPE,
+            self.abs_grad_u,
+            self.lumped_qx,
+            self.lumped_qy,
+            self.lumped_qz,
+            self.coefficients.alpha/self.elementDiameter.min())
+
+        # FREEZE INTERFACE #
+        if self.coefficients.alpha == 0:
+            for gi in range(len(self.u[0].dof)):
+                if self.interface_locator[gi] == 1.0:
+                    r[gi] = 0
+        # END OF FREEZING INTERFACE #
+        
+        if self.coefficients.ELLIPTIC_REDISTANCING_TYPE == 2 and self.ellipticStage == 1:
+            self.ellipticStage = 2
+
         # print "m_tmp",self.timeIntegration.m_tmp[0]
         # print "dH",self.q[('dH',0,0)]
         # print "dH_sge",self.q[('dH_sge',0,0)]
@@ -1081,7 +1204,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             alpha_bdf = self.timeIntegration.dt
             beta_bdf = self.timeIntegration.m_last
-        self.rdls3p.calculateJacobian(  # element
+
+        self.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -1133,7 +1257,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_u0,
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.ebqe[('u', 0)],
-            self.csrColumnOffsets_eb[(0, 0)])
+            self.csrColumnOffsets_eb[(0, 0)],
+            # elliptic re-distancing
+            self.coefficients.ELLIPTIC_REDISTANCING_TYPE,
+            self.abs_grad_u,
+            self.coefficients.alpha/self.elementDiameter.min())
+
+        # FREEZING INTERFACE #
+        if self.coefficients.alpha == 0:
+            for gi in range(len(self.u[0].dof)):
+                if self.interface_locator[gi] == 1.0:
+                    for i in range(self.rowptr[gi], self.rowptr[gi + 1]):
+                        if (self.colind[i] == gi):
+                            self.nzval[i] = 1.0
+                        else:
+                            self.nzval[i] = 0.0
+        # END OF FREEZING INTERFACE #
+        
         log("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
