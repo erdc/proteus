@@ -752,7 +752,15 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   freeField(size_iso);
 
   //Initialize fields and needed types/variables
-  apf::Mesh *m = apf::getMesh(vmsErrH1);
+
+  apf::Field* errField;
+  if(size_field_config=="ErrorRegion")
+    errField = m->findField("ErrorRegion");
+  else if(size_field_config=="VMSH1")
+    errField = m->findField("VMSH1");
+  assert(errField); 
+  //apf::Mesh *m = apf::getMesh(vmsErrH1);
+  apf::Mesh *m = apf::getMesh(errField);
   apf::MeshIterator *it;
   apf::MeshEntity *v;
   apf::MeshElement *element;
@@ -806,7 +814,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     else
       //h_old = pow(apf::measure(element) * 6 * sqrt(2), 1.0 / 3.0); //edge of a regular tet
       h_old = apf::computeShortestHeightInTet(m,reg);
-    err_curr = apf::getScalar(vmsErrH1, reg, 0);
+    //err_curr = apf::getScalar(vmsErrH1, reg, 0);
+    err_curr = apf::getScalar(errField, reg, 0);
     //err_curr = err_vect[0];
     //errRho_curr = apf::getScalar(errRho_reg, reg, 0);
     //h_new = h_old*errRho_target/errRho_curr;
@@ -834,7 +843,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   {
     //averageToEntity(size_iso_reg, size_iso, v);
     //volumeAverageToEntity(size_iso_reg, size_iso, v);
-    errorAverageToEntity(size_iso_reg, size_iso,vmsErrH1, v);
+    errorAverageToEntity(size_iso_reg, size_iso,errField, v);
     //minToEntity(size_iso_reg, size_iso, v);
   }
   m->end(it);
