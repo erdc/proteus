@@ -2260,7 +2260,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.pressureModel.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
-        self.isActiveDOF = np.ones_like(r);
+        self.isActiveDOF = np.ones_like(r)
+        self.quantDOFs[:] = 0.0
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2508,6 +2509,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.isActiveDOF,
             self.coefficients.use_sbm)
         r*=self.isActiveDOF
+        self.quantDOFs[:] /= self.ML #assume P1 and use lumped mass matrix
+
 #         print "***********",np.amin(r),np.amax(r),np.amin(self.isActiveDOF),np.amax(self.isActiveDOF)
 #         import pdb
 #         pdb.set_trace()

@@ -2560,7 +2560,7 @@ namespace proteus
               elementResidual_u[nDOF_test_element],
               elementResidual_v[nDOF_test_element],
               phisErrorElement[nDOF_test_element],
-              //elementResidual_w[nDOF_test_element],
+              element_quant[nDOF_test_element],
               eps_rho,eps_mu;
             //const double* elementResidual_w(NULL);
             double element_active=1;//use 1 since by default it is ibm
@@ -2575,7 +2575,7 @@ namespace proteus
                 elementResidual_u[i]=0.0;
                 elementResidual_v[i]=0.0;
                 phisErrorElement[i]=0.0;
-                /* elementResidual_w[i]=0.0; */
+                element_quant[i]=0.0;
               }//i
             if(USE_SBM>0)
               {
@@ -3349,6 +3349,7 @@ namespace proteus
                     /*   ck.SubgridError(subgridError_p,Lstar_p_w[i]) +  */
                     /*   ck.SubgridError(subgridError_w,Lstar_w_w[i]) +  */
                     /*   ck.NumericalDiffusion(q_numDiff_w_last[eN_k],grad_w,&vel_grad_test_dV[i_nSpace]);  */
+                    element_quant[i] += particle_signed_distances[eN_k]*vel_test_dV[i];
                   }//i
               }
             //
@@ -3364,6 +3365,7 @@ namespace proteus
                 globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=element_active*elementResidual_u[i];
                 globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=element_active*elementResidual_v[i];
                 /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
+                quantDOFs[vel_l2g[eN_i]] += element_quant[i];//same shape as u
               }//i
             /* mesh_volume_conservation += mesh_volume_conservation_element; */
             /* mesh_volume_conservation_weak += mesh_volume_conservation_element_weak; */
