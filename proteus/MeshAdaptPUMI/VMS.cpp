@@ -66,7 +66,14 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
   assert(velf);
   apf::Field* pref = m->findField("p");
   assert(pref);
-  apf::Field* velf_old = m->findField("velocity_old");
+  apf::Field* velf_old;
+  if(m->findField("velocity_old"))
+    velf_old = m->findField("velocity_old");
+  else{
+    velf_old = velf;
+    std::cout<<"WARNING: old velocity field not found. Will proceed as if unsteady term is 0. \n";
+    dt_err = 1.0;
+  }
   assert(velf_old);
   //*****               *****//
 
