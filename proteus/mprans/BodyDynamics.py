@@ -24,7 +24,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         first time step of the simulation.
     """
 
-    def __init__(self, shape, cfl_target=0.9, dt_init=0.001, substeps=20):
+    def __init__(self, shape, g, cfl_target=0.9, dt_init=0.001, substeps=20):
         self.Shape = shape
         self.nd = nd = shape.Domain.nd
         # if isinstance(shape, (Rectangle, Cuboid)):
@@ -39,7 +39,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         self.i_end = None  # will be retrieved from setValues() of Domain
         self.It = self.Shape.It
         self.record_dict = OrderedDict()
-
+        self.g=g
         # variables
         self.position = np.zeros(3)
         self.last_position = np.array([0., 0., 0.])
@@ -187,13 +187,14 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         Fg: array_like
             gravity force
         """
-        nd = self.nd
-        if nd == 2:
-            Fg = self.mass * np.array([0., -9.81, 0.])
-        if nd == 3:
-            Fg = self.mass * np.array([0., 0., -9.81])
-        return Fg
-
+#         nd = self.nd
+#         if nd == 2:
+#             Fg = self.mass * np.array([0., -9.81, 0.])
+#         if nd == 3:
+#             Fg = self.mass * np.array([0., 0., -9.81])
+#         return Fg
+        return self.mass *self.g
+    
     def getMoments(self):
         """
         Gives the moments applied on each segments/facets of the rigid body
