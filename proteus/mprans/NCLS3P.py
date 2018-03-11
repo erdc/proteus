@@ -230,6 +230,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # Restart flags for stages of taylor galerkin
         self.model.taylorGalerkinStage = 1
         self.model.auxTaylorGalerkinFlag = 1
+
         # SAVE OLD SOLUTION #
         self.model.u_dof_old[:] = self.model.u[0].dof
 

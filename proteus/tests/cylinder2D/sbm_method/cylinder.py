@@ -4,7 +4,6 @@ from proteus import Domain
 from proteus.default_n import *
 from proteus.Profiling import logEvent
 
-
 from proteus import Context
 
 ct = Context.Options([
@@ -12,8 +11,15 @@ ct = Context.Options([
     ("Refinement",4, "refinement"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
     ("vspaceOrder",1,"FE space for velocity"),
-    ("pspaceOrder",1,"FE space for pressure")
+    ("pspaceOrder",1,"FE space for pressure"),
+    ("use_sbm",True,"use sbm instead of imb")
 ], mutable=True)
+
+
+if ct.use_sbm:
+    USE_SBM=1
+else:
+    USE_SBM=0
 
 #  Discretization -- input options
 #Refinement = 20#45min on a single core for spaceOrder=1, useHex=False

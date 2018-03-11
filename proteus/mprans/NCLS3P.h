@@ -914,7 +914,7 @@ namespace proteus
                 //globalResidual[offset_u+stride_u*u_l2g[eN_i]] += MOVING_DOMAIN*elementResidual_u[i];
                 globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
 
-              }//i
+	      }//i
           }//ebNE
       }
 
@@ -1334,9 +1334,7 @@ namespace proteus
                     //register int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
                     register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
 
-                    fluxJacobian_u_u[j]=
-                      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,
-                                                                u_trial_trace_ref[ebN_local_kb_j]);
+                    fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
                   }//j
                 //
                 //update the global Jacobian from the flux Jacobian

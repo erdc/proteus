@@ -1,4 +1,4 @@
-"""Tests for 2d flow around an immersed boundary cylinder with rans3p"""
+"""Tests for 2d flow around a cylinder with shifted boundary method"""
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import Context
@@ -12,7 +12,7 @@ Profiling.verbose = False
 import numpy as np
 
 
-class Test_ibm():
+class Test_sbm():
 
     @classmethod
     def setup_class(cls):
@@ -36,14 +36,16 @@ class Test_ibm():
 #         self.example_setting("T=8.0 vspaceOrder=2 onlySaveFinalSolution=True")
 
     def test_ex2(self):
-        self.compare_name = "T1_rans3p"
+        self.compare_name = "T1_sbm_rans3p"
         self.example_setting("T=0.01 onlySaveFinalSolution=True")
 
 
     def example_setting(self, pre_setting):
         Context.contextOptionsString = pre_setting
 
-        from . import cylinder_so as my_so
+        #from . import cylinder_so as my_so
+        my_so = importlib.import_module(".cylinder_so",
+                                        "proteus.tests.cylinder2D.sbm_method")
         reload(my_so)
         # defined in iproteus
         opts.profile = False
@@ -55,10 +57,10 @@ class Test_ibm():
         for (pModule,nModule) in my_so.pnList:
             pList.append(
                 importlib.import_module("."+pModule,
-                                        "proteus.tests.cylinder2D.ibm_method"))
+                                        "proteus.tests.cylinder2D.sbm_method"))
             nList.append(
                 importlib.import_module("."+nModule,
-                                        "proteus.tests.cylinder2D.ibm_method"))
+                                        "proteus.tests.cylinder2D.sbm_method"))
             if pList[-1].name == None:
                 pList[-1].name = pModule
             reload(pList[-1])  # Serious error
@@ -70,7 +72,7 @@ class Test_ibm():
                 sList.append(s)
         else:
             sList = my_so.sList
-        my_so.name += "_ibm_"+self.compare_name #save data with different filename
+        my_so.name += "_sbm_"+self.compare_name #save data with different filename
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(my_so,
                                                pList,

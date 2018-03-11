@@ -1056,6 +1056,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')
                 self.cell_interface_locator = numpy.zeros(self.mesh.nElements_global,'d')
                 
+        # try to use 1d,2d,3d specific modules
+        # mwf debug
+        # pdb.set_trace()
         r.fill(0.0)
         self.interface_lumpedMassMatrix.fill(0.0)
         # Load the unknowns into the finite element dof
@@ -1247,7 +1250,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             alpha_bdf = self.timeIntegration.dt
             beta_bdf = self.timeIntegration.m_last
-        
+
         self.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
