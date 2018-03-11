@@ -35,6 +35,7 @@ namespace proteus
                                    double* boundaryJac_ref,
                                    //physics
                                    int nElements_global,
+                                   int nElementBoundaries_owned,
                                    int* u_l2g,
                                    double* u_dof,
                                    double* q_rho,
@@ -249,6 +250,7 @@ namespace proteus
                            double* boundaryJac_ref,
                            //physics
                            int nElements_global,
+                           int nElementBoundaries_owned,
                            int* u_l2g,
                            double* u_dof,
                            double* q_rho,
@@ -390,7 +392,7 @@ namespace proteus
                 u_test_dS[nDOF_test_element],
                 u_grad_trial_trace[nDOF_trial_element*nSpace],
                 u_grad_test_dS[nDOF_test_element*nSpace],
-                normal[nSpace],x_ext,y_ext,z_ext,
+                normal[nSpace],x_ext,y_ext,z_ext=0.0,
                 G[nSpace*nSpace],G_dd_G,tr_G;
               //
               //calculate the solution and gradients at quadrature points
@@ -454,16 +456,16 @@ namespace proteus
 		      added_mass_a[2] = 1.0;
 		      break;
 		    case 3:
-		      added_mass_a[1] += rz;
-		      added_mass_a[2] += -ry;
+		      added_mass_a[1] = -rz;
+		      added_mass_a[2] =  ry;
 		      break;
 		    case 4:
-		      added_mass_a[0] += -rz;
-		      added_mass_a[2] += rx;
+		      added_mass_a[0] =  rz;
+		      added_mass_a[2] = -rx;
 		      break;
 		    case 5:
-		      added_mass_a[0] += ry;
-		      added_mass_a[1] += -rx;
+		      added_mass_a[0] = -ry;
+		      added_mass_a[1] =  rx;
 		      break;
 		    default:
 		      assert(0);
@@ -493,16 +495,22 @@ namespace proteus
                     + ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]);
                 }//i
               //calculate Aij
-              double px, py, pz;
-              px = u_ext*normal[0];
-              py = u_ext*normal[1];
-              pz = u_ext*normal[2];
-              Aij[36*eBMT+added_mass_i+6*0] += px*dS;
-              Aij[36*eBMT+added_mass_i+6*1] += py*dS;
-              Aij[36*eBMT+added_mass_i+6*2] += pz*dS;
-              Aij[36*eBMT+added_mass_i+6*3] += (ry*pz-rz*py)*dS;
-              Aij[36*eBMT+added_mass_i+6*4] += (rz*px-rx*pz)*dS;
-              Aij[36*eBMT+added_mass_i+6*5] += (rx*py-ry*px)*dS;
+              if (ebN < nElementBoundaries_owned)
+                {
+                  double px, py, pz;
+                  px = u_ext*normal[0];
+                  py = u_ext*normal[1];
+                  if (nSpace==3)
+                    pz = u_ext*normal[2];
+                  else
+                    pz=0.0;
+                  Aij[36*eBMT+added_mass_i+6*0] += px*dS;
+                  Aij[36*eBMT+added_mass_i+6*1] += py*dS;
+                  Aij[36*eBMT+added_mass_i+6*2] += pz*dS;
+                  Aij[36*eBMT+added_mass_i+6*3] += (ry*pz-rz*py)*dS;
+                  Aij[36*eBMT+added_mass_i+6*4] += (rz*px-rx*pz)*dS;
+                  Aij[36*eBMT+added_mass_i+6*5] += (rx*py-ry*px)*dS;
+                }
               //
               //update the element and global residual storage
               //
@@ -604,8 +612,7 @@ namespace proteus
           //
           //calculate pde coefficients and derivatives at quadrature points
           //
-          evaluateCoefficients(q_rho[eN_k],
-                               a);
+          evaluateCoefficients(q_rho[eN_k], a);
           for(int i=0;i<nDOF_test_element;i++)
             {
               //int eN_k_i=eN_k*nDOF_test_element+i;

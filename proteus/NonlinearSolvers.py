@@ -671,7 +671,13 @@ class Newton(NonlinearSolver):
 
 class AddedMassNewton(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        for i in range(6):
+        if self.F.coefficients.nd == 3:
+            accelerations = range(6)
+        elif self.F.coefficients.nd == 2:
+            accelerations = [0,1,5]
+        else:
+            exit(1)
+        for i in accelerations:
             self.F.added_mass_i=i
             Newton.solve(self,u,r,b,par_u,par_r)
 

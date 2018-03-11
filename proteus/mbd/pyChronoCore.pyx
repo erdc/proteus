@@ -328,15 +328,3 @@ cdef class ChBodyAddedMass(ChBody):
 
     cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
         deref(self.sharedptr_chbodyaddedmass).SetInvMfullmass(inv_Mfullmass_in)
-
-    #cpdef void SetMass(self, double newmass):
-    #    deref(self.sharedptr_chbodyaddedmass).SetMass(newmass)
-
-    #cpdef void SetInertia(self, ch.ChMatrix33& newXInertia):
-    #    deref(self.sharedptr_chbodyaddedmass).SetInertia(newXinertia)
-
-    #cpdef void SetInertiaXX(self, ch.ChVector& newXInertia):
-    #    deref(self.sharedptr_chbodyaddedmass).SetInertiaXX(newXinertia)
-
-    #cpdef void SetInertiaXY(self, ch.ChVector& newXInertia):
-    #    deref(self.sharedptr_chbodyaddedmass).SetInertiaXY(newXinertia)

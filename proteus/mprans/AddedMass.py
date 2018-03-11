@@ -378,8 +378,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # simplified allocations for test==trial and also check if space is mixed or not
         #
         self.added_mass_i = 0;
-        nBoundariesMax = int(globalMax(max(self.mesh.elementBoundaryMaterialTypes))) + 1
-        self.Aij = np.zeros((nBoundariesMax, 6, 6), 'd')
+        self.Aij = np.zeros((self.coefficients.flags_rigidbody.shape[0], 6, 6), 'd')
         self.q = {}
         self.ebq = {}
         self.ebq_global = {}
@@ -610,6 +609,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     options.periodicDirichletConditions)
         else:
             self.numericalFlux = None
+        # strong Dirichlet
+        self.dirichletConditionsForceDOF = {0: DOFBoundaryConditions(self.u[cj].femSpace, dofBoundaryConditionsSetterDict[cj], weakDirichletConditions=False)}
         # set penalty terms
         # cek todo move into numerical flux initialization
         if self.ebq_global.has_key('penalty'):
@@ -668,6 +669,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         r.fill(0.0)
         # Load the unknowns into the finite element dof
+        for dofN, g in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.iteritems():
+            # load the BC valu        # Load the unknowns into the finite element dof
+            u[self.offset[0] + self.stride[0] * dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         self.setUnknowns(u)
         self.Aij[:,:,self.added_mass_i]=0.0
         self.addedMass.calculateResidual(  # element
@@ -692,6 +696,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             # physics
             self.mesh.nElements_global,
+            self.mesh.nElementBoundaries_owned,
             self.u[0].femSpace.dofMap.l2g,
             self.u[0].dof,
             self.coefficients.q_rho,
@@ -706,7 +711,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.added_mass_i,
             self.barycenters,
             self.flags_rigidbody)
-        logEvent("Added Mass Tensor " +`self.Aij`)
+        for k in range(self.Aij.shape[0]):
+            for j in range(self.Aij.shape[2]):
+                self.Aij[k,j,self.added_mass_i] = globalSum(
+                    self.Aij[k,j,self.added_mass_i])
+        for i,flag in enumerate(self.flags_rigidbody):
+            if flag==1:
+                numpy.set_printoptions(precision=2, linewidth=160)
+                logEvent("Added Mass Tensor for rigid body i" + `i`)
+                logEvent("Aij = \n"+str(self.Aij[i]))
+        for dofN, g in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.iteritems():
+            r[self.offset[0] + self.stride[0] * dofN] = self.u[0].dof[dofN] - \
+                g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         logEvent("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1
 
@@ -743,6 +759,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.csrColumnOffsets_eb[(0, 0)])
+        for dofN in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.keys():
+            global_dofN = self.offset[0] + self.stride[0] * dofN
+            self.nzval[numpy.where(self.colind == global_dofN)] = 0.0  # column
+            self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN + 1]] = 0.0  # row
+            zeroRow = True
+            for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):  # row
+                if (self.colind[i] == global_dofN):
+                    self.nzval[i] = 1.0
+                    zeroRow = False
+            if zeroRow:
+                raise RuntimeError("Jacobian has a zero row because sparse matrix has no diagonal entry at row " +
+                                   `global_dofN`+". You probably need add diagonal mass or reaction term")
         logEvent("Jacobian ", level=10, data=jacobian)
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian

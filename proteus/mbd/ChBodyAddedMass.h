@@ -6,14 +6,11 @@
 
 namespace chrono {
 	class ChBodyAddedMass : public ChBody {
-        protected:
-            ChVariablesBodyAddedMass variables;
-        public:
-            ChBodyAddedMass();
-            virtual ~ChBodyAddedMass() {}
-
-
-
+      protected:
+          ChVariablesBodyAddedMass variables;
+      public:
+          ChBodyAddedMass();
+          virtual ~ChBodyAddedMass() {}
     void SetMass(double newmass);
     void SetInertia(const ChMatrix33<>& iner);
     void SetInertiaXX(const ChVector<>& iner);
@@ -25,7 +22,7 @@ namespace chrono {
     void SetMfullmass(ChMatrixDynamic<> Mfullmass_in);
     void SetInvMfullmass(ChMatrixDynamic<> inv_Mfullmass_in);
     ChVariables& Variables() override { return variables; } 
-    ChVariablesBodyOwnMass& VariablesBody() override { return variables; } 
+    ChVariablesBodyOwnMass& VariablesBody() override { return variables; }
     ChVariablesBodyAddedMass& VariablesBodyAddedMass() { return variables; }
     //
     // STATE FUNCTIONS
@@ -43,6 +40,12 @@ namespace chrono {
                                    ChStateDelta& v,
                                    const unsigned int off_L,
                                    ChVectorDynamic<>& L) override;
+    virtual void IntLoadResidual_F(const unsigned int off, ChVectorDynamic<>& R, const double c) override;
+
+    virtual void IntLoadResidual_Mv(const unsigned int off,
+                                    ChVectorDynamic<>& R,
+                                    const ChVectorDynamic<>& w,
+                                    const double c) override;
 
     //
     // SOLVER FUNCTIONS
