@@ -697,12 +697,10 @@ static void SmoothField(apf::Field *f)
   op.applyToDimension(0);
 }
 
-void getTargetError(apf::Mesh* m, double &target_error){
+void getTargetError(apf::Mesh* m, apf::Field* errField, double &target_error){
   //Implemented for 3D and for serial case only so far
   assert(m->getDimension()==3);
   std::cout<<"Enter target Error\n";
-  //apf::Field* errField = m->findField("ErrorRegion");
-  apf::Field* errField = m->findField("VMSH1");
   apf::Field* interfaceField = m->findField("vof");
   apf::Field* targetField = apf::createField(m,"targetError",apf::SCALAR,apf::getVoronoiShape(m->getDimension(),1));
   apf::MeshEntity* ent;
@@ -754,13 +752,14 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   //Initialize fields and needed types/variables
 
   apf::Field* errField;
-  if(size_field_config=="ErrorRegion")
+  //apf::Mesh* m;
+  if(size_field_config=="ERM")
     errField = m->findField("ErrorRegion");
-  else if(size_field_config=="VMSH1")
+  else if(size_field_config=="VMS")
     errField = m->findField("VMSH1");
   assert(errField); 
   //apf::Mesh *m = apf::getMesh(vmsErrH1);
-  apf::Mesh *m = apf::getMesh(errField);
+  //apf::getMesh(errField);
   apf::MeshIterator *it;
   apf::MeshEntity *v;
   apf::MeshElement *element;
@@ -779,9 +778,14 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   numel = m->count(nsd);
   PCU_Add_Ints(&numel, 1);
 
-  //if target error is not specified, choose one based on interface
-  if(target_error==0)
-    getTargetError(m,target_error);
+  //if target error is not specified, choose one based on interface or based on equidistribution assumption
+  if(target_error==0){
+    if(m->findField("vof")!=NULL)
+      getTargetError(m,errField,target_error);
+    else
+      target_error = err_total/sqrt(m->count(nsd));
+  }
+   
   
   // Get domain volume
   // should only need to be computed once unless geometry is complex
@@ -820,8 +824,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     //errRho_curr = apf::getScalar(errRho_reg, reg, 0);
     //h_new = h_old*errRho_target/errRho_curr;
     //h_new = h_old*sqrt(apf::measure(element))/sqrt(domainVolume)*target_error/err_curr;
-    if (target_error == 0)
-      target_error = err_total / sqrt(numel);
+    //
     //error-to-size relationship should be different between anisotropic and isotropic cases
     //consider moving this to where size frames are computed to get aspect ratio info
     if (adapt_type_config == "anisotropic")
@@ -847,6 +850,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     //minToEntity(size_iso_reg, size_iso, v);
   }
   m->end(it);
+
 
   //Get the anisotropic size frame
   if (adapt_type_config == "anisotropic")
