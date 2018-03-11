@@ -67,7 +67,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
   apf::Field* pref = m->findField("p");
   assert(pref);
   apf::Field* velf_old;
-  if(m->findField("velocity_old"))
+  if(m->findField("velocity_old")!=NULL)
     velf_old = m->findField("velocity_old");
   else{
     velf_old = velf;
