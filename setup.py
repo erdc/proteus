@@ -496,7 +496,6 @@ EXTENSIONS_TO_BUILD = [Extension("MeshAdaptPUMI.MeshAdaptPUMI",
 ]
 
 def setup_given_extensions(extensions):
-    print extensions
     setup(name='proteus',
           version='1.4.2',
           classifiers=[

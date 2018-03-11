@@ -6,13 +6,19 @@ all: develop
 #otherwise we try our best to determine them automatically.
 
 SHELL=/usr/bin/env bash
-
+N=1
 PROTEUS ?= $(shell python -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
 PROTEUS_BUILD_CMD = python setup.py build_ext
 PROTEUS_INSTALL_CMD = python setup.py install
 PROTEUS_DEVELOP_BUILD_CMD = python setup.py build_ext -i
 PROTEUS_DEVELOP_CMD = pip --disable-pip-version-check install -v -e .
+#
+ifeq (${N}, 1)
+PROTEUS_BUILD_CMD = python -c "print('Letting install handle build_ext')"
+PROTEUS_DEVELOP_BUILD_CMD = python -c "print('Letting install handle build_ext')"
+endif
+
 # shell hack for now to automatically detect Garnet front-end nodes
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python -c "import sys; print sys.platform")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = onyx* ]] && echo "onyx" || python -c "import sys; print sys.platform")
@@ -316,7 +322,7 @@ doc:
 test: check
 	@echo "************************************"
 	@echo "Running test suite"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n auto --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
 	@echo "Tests complete "
 	@echo "************************************"
 
