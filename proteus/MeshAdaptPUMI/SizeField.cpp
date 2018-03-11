@@ -697,7 +697,7 @@ static void SmoothField(apf::Field *f)
   op.applyToDimension(0);
 }
 
-void getTargetError(apf::Mesh* m, apf::Field* errField, double &target_error){
+void getTargetError(apf::Mesh* m, apf::Field* errField, double &target_error,double totalError){
   //Implemented for 3D and for serial case only so far
   assert(m->getDimension()==3);
   if(PCU_Comm_Self()==0)
@@ -725,20 +725,25 @@ void getTargetError(apf::Mesh* m, apf::Field* errField, double &target_error){
   m->end(it);
   if(PCU_Comm_Self()==0)
     std::cout<<"Past creation of vector\n";
-  std::ofstream myfile;
-  myfile.open("interfaceErrors.txt", std::ios::app );
-  for(int i=0;i<errVect.size();i++){
-    myfile << errVect[i]<<std::endl;
+  if(errVect.size()==0){
+    target_error = totalError/sqrt(m->count(m->getDimension()));
   }
-  myfile.close();
-  std::sort(errVect.begin(),errVect.end());
-  int vectorSize = errVect.size();
-  if(vectorSize %2 ==0){
-    int idx1 = vectorSize/2-1;
-    target_error = (errVect[idx1]+errVect[idx1+1])/2; //get average
+  else{
+    std::ofstream myfile;
+    myfile.open("interfaceErrors.txt", std::ios::app );
+    for(int i=0;i<errVect.size();i++){
+      myfile << errVect[i]<<std::endl;
+    }
+    myfile.close();
+    std::sort(errVect.begin(),errVect.end());
+    int vectorSize = errVect.size();
+    if(vectorSize %2 ==0){
+      int idx1 = vectorSize/2-1;
+      target_error = (errVect[idx1]+errVect[idx1+1])/2; //get average
+    }
+    else
+      target_error = errVect[(vectorSize-1)/2];
   }
-  else
-    target_error = errVect[(vectorSize-1)/2];
   if(PCU_Comm_Self()==0)
     std::cout<<"The estimated target error is "<<target_error<<std::endl;
   //std::abort();
@@ -753,7 +758,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   freeField(size_iso);
 
   //Initialize fields and needed types/variables
-
   apf::Field* errField;
   //apf::Mesh* m;
   if(size_field_config=="ERM")
@@ -774,7 +778,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   }
   apf::Field *size_iso_reg = apf::createField(m, "iso_size", apf::SCALAR, apf::getConstant(nsd));
   apf::Field *clipped_vtx = apf::createLagrangeField(m, "iso_clipped", apf::SCALAR, 1);
-
+  
   //Get total number of elements
   int numel = 0;
   int nsd = m->getDimension();
@@ -784,7 +788,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   //if target error is not specified, choose one based on interface or based on equidistribution assumption
   if(target_error==0){
     if(m->findField("vof")!=NULL)
-      getTargetError(m,errField,target_error);
+      getTargetError(m,errField,target_error,err_total);
     else
       target_error = err_total/sqrt(m->count(nsd));
   }
