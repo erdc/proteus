@@ -11,7 +11,6 @@ ct=Context.Options([
     ("unstructured",False,"Use unstructured mesh. Set to false for periodic BCs"),
     # parameters for elliptic re-distancing    
     ("ELLIPTIC_REDISTANCING",False, "Type of elliptic re-distancing"),
-    ("ELLIPTIC_REDISTANCING_TYPE",2, "Type of elliptic re-distancing"),    
     ("alpha",100.0,"penalization parameter")
 ],mutable=True)
 
@@ -89,4 +88,5 @@ class MyCoefficients(NCLS3P.Coefficients):
         self.model = modelList[0]
         self.q_v = np.zeros(self.model.q[('dH',0,0)].shape,'d')
         self.ebqe_v = np.zeros(self.model.ebqe[('dH',0,0)].shape,'d')
-        self.rdModel = self.model
+        self.rdModel = None
+        self.rdModel_ebqe = np.copy(self.model.ebqe[('u',0)])
