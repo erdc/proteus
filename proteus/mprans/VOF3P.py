@@ -1037,6 +1037,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.stage = 1
         self.auxTaylorGalerkinFlag = 1
         self.uTilde_dof = numpy.zeros(self.u[0].dof.shape,'d')
+        if self.coefficients.EXPLICIT_METHOD==True:
+            self.useTwoStageNewton = True
         
         # Some asserts for NCLS with Taylor Galerkin
         if self.coefficients.EXPLICIT_METHOD==True:

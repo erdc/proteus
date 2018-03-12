@@ -888,6 +888,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.quantDOFs = self.lumped_qy
         self.stage = 1
         self.auxEllipticFlag = 1
+        if self.coefficients.ELLIPTIC_REDISTANCING==2:
+            self.useTwoStageNewton = True
+        
         # STIFFNESS MATRIX #
         self.stiffness_matrix_array = None
         self.stiffness_matrix = None

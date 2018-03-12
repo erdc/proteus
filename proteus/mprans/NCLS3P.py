@@ -803,7 +803,9 @@ class LevelModel(OneLevelTransport):
         self.stage = 1
         self.auxTaylorGalerkinFlag = 1
         self.uTilde_dof = numpy.zeros(self.u[0].dof.shape,'d')
-
+        if self.coefficients.EXPLICIT_METHOD==True:
+            self.useTwoStageNewton = True
+        
         # Some asserts for NCLS with Taylor Galerkin
         if self.coefficients.EXPLICIT_METHOD==True:
             assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "If EXPLICIT_METHOD=True, use BackwardEuler_cfl"
