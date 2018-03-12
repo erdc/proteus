@@ -699,9 +699,15 @@ static void SmoothField(apf::Field *f)
 
 void getTargetError(apf::Mesh* m, apf::Field* errField, double &target_error,double totalError){
   //Implemented for 3D and for serial case only so far
-  assert(m->getDimension()==3);
-  if(PCU_Comm_Self()==0)
-    std::cout<<"Enter target Error\n";
+  //Need to communicate target error in parallel
+  if(PCU_Comm_Self()>0) 
+    std::cout<<"WARNING/ERROR:Parallel implementation is not completed yet\n";
+  if(m->getDimension()==2){
+    target_error = totalError/sqrt(m->count(m->getDimension()));
+    if(PCU_Comm_Self()==0)
+      std::cout<<"The estimated target error is "<<target_error<<std::endl;
+    return;
+  }
   apf::Field* interfaceField = m->findField("vof");
   apf::Field* targetField = apf::createField(m,"targetError",apf::SCALAR,apf::getVoronoiShape(m->getDimension(),1));
   apf::MeshEntity* ent;
