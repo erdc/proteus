@@ -468,7 +468,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.u_dof_old[:] = self.model.u[0].dof
 
         # Restart flags for stages of taylor galerkin
-        self.model.taylorGalerkinStage = 1
+        self.model.stage = 1
         self.model.auxTaylorGalerkinFlag = 1
         
         # COMPUTE NEW VELOCITY (if given by user) #
@@ -1034,14 +1034,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.hasVelocityFieldAsFunction = True
 
         # For Taylor Galerkin methods
-        self.taylorGalerkinStage = 1
+        self.stage = 1
         self.auxTaylorGalerkinFlag = 1
         self.uTilde_dof = numpy.zeros(self.u[0].dof.shape,'d')
         
         # Some asserts for NCLS with Taylor Galerkin
         if self.coefficients.EXPLICIT_METHOD==True:
             assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "If EXPLICIT_METHOD=True, use BackwardEuler_cfl"
-    
+            assert options.levelNonlinearSolver == proteus.NonlinearSolvers.TwoStageNewton, "If EXPLICIT_METHOD=True, use levelNonlinearSolver=TwoStageNewton"
+            
     def updateVelocityFieldAsFunction(self):
         X = {0: self.q[('x')][:, :, 0],
              1: self.q[('x')][:, :, 1],
@@ -1092,7 +1093,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # cek can put in logic to skip of BC's don't depend on t or u
         # Dirichlet boundary conditions
         # if hasattr(self.numericalFlux,'setDirichletValues'):
-        if (self.taylorGalerkinStage!=2):
+        if (self.stage!=2):
             self.numericalFlux.setDirichletValues(self.ebqe)            
         # flux boundary conditions
         for t, g in self.fluxBoundaryConditionsObjectsDict[
@@ -1112,7 +1113,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.timeIntegration.t)
         assert (self.coefficients.q_porosity == 1).all()
 
-        if (self.taylorGalerkinStage==2 and self.auxTaylorGalerkinFlag==1):
+        if (self.stage==2 and self.auxTaylorGalerkinFlag==1):
             self.uTilde_dof[:] = self.u[0].dof
             self.auxTaylorGalerkinFlag=0
 
@@ -1182,12 +1183,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #EXPLICIT METHODS
             self.coefficients.EXPLICIT_METHOD,
             self.u[0].femSpace.order,
-            self.taylorGalerkinStage,
+            self.stage,
             self.uTilde_dof,
             self.timeIntegration.dt)
 
-        if self.coefficients.EXPLICIT_METHOD:
-            self.taylorGalerkinStage = 2
+        #if self.coefficients.EXPLICIT_METHOD:
+        #    self.taylorGalerkinStage = 2
         
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():

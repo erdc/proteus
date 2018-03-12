@@ -1617,9 +1617,9 @@ namespace proteus
                   coeff = 1.0+2*std::pow(norm_grad_u,2)-3*norm_grad_u;
 
                 // COMPUTE DELTA FUNCTION //
-		//delta = smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
-		delta = (cell_interface_locator[eN] == 1 ? 1.0 : 0)*
-		  smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
+		delta = smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
+		//delta = (cell_interface_locator[eN] == 1 ? 1.0 : 0)*
+		//smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
 		
 		// UPDATE ELEMENT RESIDUAL //
                 if (ELLIPTIC_REDISTANCING > 1) // (NON)LINEAR VIA C0 NORMAL RECONSTRUCTION
@@ -1906,9 +1906,9 @@ namespace proteus
 		    }
 		  
 		  // COMPUTE DELTA FUNCTION //
-		  //delta = smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
-		  delta = (cell_interface_locator[eN] == 1 ? 1.0 : 0)*
-		    smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
+		  delta = smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
+		  //delta = (cell_interface_locator[eN] == 1 ? 1.0 : 0)*
+		  //smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
 		  
 		  for(int i=0;i<nDOF_test_element;i++)
 		    {

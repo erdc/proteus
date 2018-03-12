@@ -286,8 +286,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         # FOR ELLIPTIC REDISTANCING #
-        # reset ellipticStage flag
-        self.rdModel.ellipticStage = 1
+        # reset stage flag
+        self.rdModel.stage = 1
         self.rdModel.auxEllipticFlag = 1
         # COMPUTE NORMAL RECONSTRUCTION
         if self.ELLIPTIC_REDISTANCING == 2: # linear elliptic re-distancing
@@ -886,7 +886,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.lumped_qy = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qz = numpy.zeros(self.u[0].dof.shape,'d')
         self.quantDOFs = self.lumped_qy
-        self.ellipticStage = 1
+        self.stage = 1
         self.auxEllipticFlag = 1
         # STIFFNESS MATRIX #
         self.stiffness_matrix_array = None
@@ -1095,7 +1095,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             if self.coefficients.ELLIPTIC_REDISTANCING == 3: # nlinear via C0 normal rec.
                 self.getNormalReconstruction()
             if (self.coefficients.ELLIPTIC_REDISTANCING == 2 # linear via C0 normal rec.
-                and self.ellipticStage == 2 and self.auxEllipticFlag == 1):
+                and self.stage == 2 and self.auxEllipticFlag == 1):
                 self.getNormalReconstruction()
                 self.auxEllipticFlag = 0
         else:
@@ -1188,8 +1188,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     r[gi] = 0
         # END OF FREEZING INTERFACE #
         
-        if (self.coefficients.ELLIPTIC_REDISTANCING == 2 and self.ellipticStage==1):
-            self.ellipticStage = 2
+        #if self.coefficients.ELLIPTIC_REDISTANCING == 2:
+        #    self.stage = 2
 
         # print "m_tmp",self.timeIntegration.m_tmp[0]
         # print "dH",self.q[('dH',0,0)]

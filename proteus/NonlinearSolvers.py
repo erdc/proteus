@@ -694,7 +694,8 @@ class TwoStageNewton(Newton):
         ###############
         # FIRST STAGE #
         ###############
-        self.F.stage = 2
+        logEvent(" FIRST STAGE",level=1)
+        self.F.stage = 1
         while (not self.converged(r) and
                not self.failed()):
             logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
@@ -760,6 +761,7 @@ class TwoStageNewton(Newton):
         ################
         # SECOND STAGE #
         ################
+        logEvent(" SECOND STAGE",level=1)
         self.F.stage = 2
         r=self.solveInitialize(u,r,b)
         self.norm_r0 = self.norm(r)
