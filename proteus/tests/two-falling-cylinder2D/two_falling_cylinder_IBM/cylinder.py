@@ -13,7 +13,7 @@ ct = Context.Options([
     ("vspaceOrder",1,"FE space for velocity"),
     ("pspaceOrder",1,"FE space for pressure"),
     ("parallel",False,"Use parallel or not"),
-    ("use_sbm",False,"use sbm instead of imb"),
+    ("use_sbm",True,"use sbm instead of imb"),
     ("is_structured",False,"use structured mesh or not"),
     ("free_x",(0,1,0),"which direction is allowed"),
     ("free_r",(0,0,1),"which direction is allowed"),
@@ -317,60 +317,60 @@ g = [0.0, -981]
 # Initial condition
 waterLine_x = 0.75
 waterLine_z = 1.6
+# 
+# def quarter_circle(center, radius, p_nb, angle, angle0=0., v_start=0.):
+#     vertices = []
+#     segments = []
+#     for i in range(p_nb+1):
+#         x = radius*np.sin(angle0+angle*float(i)/(p_nb))
+#         y = radius*np.cos(angle0+angle*float(i)/(p_nb))
+#         vertices += [[center[0]+x, center[1]+y]]
+#         if i > 0:
+#             segments += [[v_start+(i-1), v_start+i]]
+#         elif i == p_nb-1:
+#             segments += [[v_start+i, v_start]]
+#     return vertices, segments
+# 
+# def get_a_cylinder_shape(_d,_c, _r, _bdTag, _b=(0.0,0.0,0.0), _a=0.0):#create a cylinder with center _c and radius _r, retate about _b angle _a, with boundary flag _f
+#     p_nb = int((np.pi*2*_r)/(he))
+#     v, s = quarter_circle(center=[0.,0.], radius=_r, p_nb=p_nb,angle=2*np.pi, angle0=0., v_start=0.)
+#     vertices = []
+#     vertexFlags = []
+#     segments = []
+#     segmentFlags = []
+#     center = [0., 0.]
+#     flag = 1
+#     v_start = 0
+#     vertices += v[:-1]
+#     vertexFlags += [1]*len(vertices)
+#     segments += s[:-1]+[[len(vertices)-1, 0]]
+#     segmentFlags += [1]*len(segments)
+#     segments[-1][1] = 0  # last segment links to vertex 0
+#     boundaryTags = {_bdTag: 1}
+#     caisson = st.CustomShape(_d, barycenter=_b,
+#                             vertices=vertices, vertexFlags=vertexFlags,
+#                             segments=segments, segmentFlags=segmentFlags,
+#                             boundaryTags=boundaryTags)
+#     facet = []
+#     for i, vert in enumerate(caisson.vertices):
+#         facet += [i]
+#     caisson.facets = np.array([[facet]])
+#     caisson.facetFlags = np.array([1])
+#     caisson.regionFlags = np.array([1])
+#     
+#     ang = _a
+#     caisson.rotation_init = np.array([np.cos(ang/2.), 0., 0., np.sin(ang/2.)*1.])
+#     caisson.rotate(ang, pivot=caisson.barycenter)
+#     
+#     caisson.setHoles([[0., 0.]])
+#     caisson.holes_ind = np.array([0])
+#     caisson.translate([_c[0], _c[1]])
+#     
+#     for bc in caisson.BC_list:
+#         bc.setNoSlip()
+#     return caisson
 
-def quarter_circle(center, radius, p_nb, angle, angle0=0., v_start=0.):
-    vertices = []
-    segments = []
-    for i in range(p_nb+1):
-        x = radius*np.sin(angle0+angle*float(i)/(p_nb))
-        y = radius*np.cos(angle0+angle*float(i)/(p_nb))
-        vertices += [[center[0]+x, center[1]+y]]
-        if i > 0:
-            segments += [[v_start+(i-1), v_start+i]]
-        elif i == p_nb-1:
-            segments += [[v_start+i, v_start]]
-    return vertices, segments
-
-def get_a_cylinder_shape(_d,_c, _r, _bdTag, _b=(0.0,0.0,0.0), _a=0.0):#create a cylinder with center _c and radius _r, retate about _b angle _a, with boundary flag _f
-    p_nb = int((np.pi*2*_r)/(he))
-    v, s = quarter_circle(center=[0.,0.], radius=_r, p_nb=p_nb,angle=2*np.pi, angle0=0., v_start=0.)
-    vertices = []
-    vertexFlags = []
-    segments = []
-    segmentFlags = []
-    center = [0., 0.]
-    flag = 1
-    v_start = 0
-    vertices += v[:-1]
-    vertexFlags += [1]*len(vertices)
-    segments += s[:-1]+[[len(vertices)-1, 0]]
-    segmentFlags += [1]*len(segments)
-    segments[-1][1] = 0  # last segment links to vertex 0
-    boundaryTags = {_bdTag: 1}
-    caisson = st.CustomShape(_d, barycenter=_b,
-                            vertices=vertices, vertexFlags=vertexFlags,
-                            segments=segments, segmentFlags=segmentFlags,
-                            boundaryTags=boundaryTags)
-    facet = []
-    for i, vert in enumerate(caisson.vertices):
-        facet += [i]
-    caisson.facets = np.array([[facet]])
-    caisson.facetFlags = np.array([1])
-    caisson.regionFlags = np.array([1])
-    
-    ang = _a
-    caisson.rotation_init = np.array([np.cos(ang/2.), 0., 0., np.sin(ang/2.)*1.])
-    caisson.rotate(ang, pivot=caisson.barycenter)
-    
-    caisson.setHoles([[0., 0.]])
-    caisson.holes_ind = np.array([0])
-    caisson.translate([_c[0], _c[1]])
-    
-    for bc in caisson.BC_list:
-        bc.setNoSlip()
-    return caisson
-
-def add_shape(_shape, _g, _M, _Iz, _filename):
+def add_shape(_shape, _g, _M, _Ixx,_Iyy,_Izz, _filename):
     from proteus import AuxiliaryVariables
     class BodyAddedMass(AuxiliaryVariables.AV_base):
         def __init__(self):
@@ -392,9 +392,9 @@ def add_shape(_shape, _g, _M, _Iz, _filename):
     free_r = ct.free_r
     body.setConstraints(free_x=free_x,
                         free_r=free_r)
-    body.It = np.array([[1., 0., 0.],
-                        [0., 1., 0.],
-                        [0., 0., _Iz]])
+    body.It = np.array([[_Ixx, 0., 0.],
+                        [0., _Iyy, 0.],
+                        [0., 0., _Izz]])#inertia tensor wrt the body coordinate, containing the mass since it is used to compute I.
     filename=_filename
     body.setRecordValues(filename=filename, all_values=True)
     body.coords_system = _shape.coords_system  # hack
@@ -466,12 +466,12 @@ def add_shape(_shape, _g, _M, _Iz, _filename):
                     M[j,i]*=body.free_dof[j]#only allow j added mass forces if j is free
                     body.Aij[i,j]*=body.free_dof[j]#only allow j accelerations to contribute to i force balance if j is free
                     body.Aij[j,i]*=body.free_dof[j]#only allow j added mass forces if j is free
-            body.FT[:3] = body.model.levelModelList[-1].coefficients.particle_netForces[0]#body.F 
-            body.FT[3:] = body.model.levelModelList[-1].coefficients.particle_netMoments[0]#body.M
+            body.FT[:3] = -body.model.levelModelList[-1].coefficients.particle_netForces[0]#body.F 
+            body.FT[3:] = 0.0#body.model.levelModelList[-1].coefficients.particle_netMoments[0]#body.M
             body.FT[1] += body.mass * _g[1]
             
-            print "yy4:", body.FT[:3]
-            print "yy5:", body.FT[3:]
+#             print "yy4:", body.FT[:3]
+#             print "yy5:", body.FT[3:]
             for i in range(3):
                 M[i, i] += body.mass
                 for j in range(3):
@@ -578,12 +578,15 @@ def add_shape(_shape, _g, _M, _Iz, _filename):
 R = 0.125
 Rho_S=1.5
 M = np.pi*R*R*Rho_S
-Iz= M*0.5*R*R
+Ixx=M*0.25*R*R
+Iyy=M*0.25*R*R
+Izz= M*0.5*R*R
 C1 = (1.0,4.0)
 C2 = (1.0,3.5)
 
-caisson1 = get_a_cylinder_shape(domain,C1, R, 'c1')
-cylinder1 = add_shape(caisson1,np.array([0,-981,0]),M,Iz,'c1')
+# caisson1 = get_a_cylinder_shape(domain,C1, R, 'c1')
+c1 = st.Circle(domain,R,C1,None,20)
+cylinder1 = add_shape(c1,np.array([0,-981,0]),M,Ixx,Iyy,Izz,'c1')
 
 def particle_sdf_1(t, x):
     cx = cylinder1.barycenter[0]
@@ -595,6 +598,6 @@ def particle_sdf_1(t, x):
 
 def particle_vel_1(t, x):
     r = np.array([x[0]-cylinder1.barycenter[0], x[1]-cylinder1.barycenter[1],0])#use barycenter not position since the first step error
-    u = np.dot(cylinder1.Omega, r) + cylinder1.velocity
+    u = cylinder1.velocity #+ np.dot(cylinder1.Omega, r) 
     #return cylinder1.velocity[:2]
     return u[:2]
