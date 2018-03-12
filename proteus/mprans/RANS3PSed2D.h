@@ -925,28 +925,27 @@ namespace proteus
                                    grad_v[0], grad_v[1], grad_v[2], 
                                    grad_w[0], grad_w[1], grad_w[2]);
       double rho_solid = rho_s;
-      double mu_sf = std::max(mu_fr, 10.00);//e06*nu_fluid*rho_solid);
 
-      mom_uu_diff_ten[0] += 2. * mu_sf * (2./3.); 
-      mom_uu_diff_ten[1] += mu_sf;
-      /*mom_uu_diff_ten[2] += mu_sf; */
+      mom_uu_diff_ten[0] += 2. * mu_fr * (2./3.); 
+      mom_uu_diff_ten[1] += mu_fr;
+      /*mom_uu_diff_ten[2] += mu_fr; */
 
-      mom_uv_diff_ten[0] += mu_sf;
-      /*mom_uw_diff_ten[0] += mu_sf; */
+      mom_uv_diff_ten[0] += mu_fr;
+      /*mom_uw_diff_ten[0] += mu_fr; */
 
-      mom_vv_diff_ten[0] += mu_sf; 
-      mom_vv_diff_ten[1] += 2. * mu_sf * (2./3.) ;
-      /*mom_vv_diff_ten[2] += mu_sf; */
+      mom_vv_diff_ten[0] += mu_fr; 
+      mom_vv_diff_ten[1] += 2. * mu_fr * (2./3.) ;
+      /*mom_vv_diff_ten[2] += mu_fr; */
 
-      mom_vu_diff_ten[0] += mu_sf;
-      /*mom_vw_diff_ten[0] += mu_sf; */
+      mom_vu_diff_ten[0] += mu_fr;
+      /*mom_vw_diff_ten[0] += mu_fr; */
 
-      /*mom_ww_diff_ten[0] += mu_sf;  */
-      /*mom_ww_diff_ten[1] += mu_sf; */
-      /*mom_ww_diff_ten[2] += 2. * mu_sf * (2./3.) ; */
+      /*mom_ww_diff_ten[0] += mu_fr;  */
+      /*mom_ww_diff_ten[1] += mu_fr; */
+      /*mom_ww_diff_ten[2] += 2. * mu_fr * (2./3.) ; */
 
-      /*mom_wu_diff_ten[0] += mu_sf; */
-      /*mom_wv_diff_ten[0] += mu_sf; */
+      /*mom_wu_diff_ten[0] += mu_fr; */
+      /*mom_wv_diff_ten[0] += mu_fr; */
 
     }
 

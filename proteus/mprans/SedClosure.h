@@ -503,20 +503,47 @@ public:
     inline double p_friction(double sedF)
 
     {
-      double sedBound = 0.05;
       double pf = 0.;
+      double sedN = 0.;
       double sedD = 0.;
+      double num = 0.;
+      double den = 0.;
       //if ((sedF > frFraction_) && (sedF < maxFraction_ ))
       if (sedF > frFraction_)
 	{
-      sedD = std::max((maxFraction_ - sedF), sedBound);
-      pf =std::min( fContact_ * pow(std::min(sedF,maxFraction_)-frFraction_,mContact_) / pow(sedD, nContact_), notSoLarge_ );
+      sedN = std::min( sedF - frFraction_  , vos_limiter_ );
+      sedD = std::max( maxFraction_ - sedF , vos_limiter_ );
+      num = pow( sedN , mContact_ );
+      den = pow( sedD , nContact_ );
+      pf =  fContact_ *  num / den ;
 	} 
 
+//      if (num  > 0.0 )
+//	{
+//     printf("num --> %2.20f", num);
+//	} 
+//      if (den  > 0.0 )
+//	{
+//     printf("den --> %2.20f", den);
+//	} 
+//      if (sedN  > 0.0 )
+//	{
+//     printf("sedN --> %2.20f", sedN);
+//	} 
+//      if (sedD  > 0.0 )
+//	{
+//     printf("sedD --> %2.20f", sedD);
+//	} 
+      if (pf  > 0.0 )
+	{
+     printf("pf --> %2.20f", pf);
+	} 
 	  
       return pf;
+
     } 
    
+
     inline double gradp_friction(double sedF)
 
     {
@@ -527,11 +554,27 @@ public:
       //if ((sedF > frFraction_) && (sedF < maxFraction_ ))
       if (sedF > frFraction_) 
 	{
-     den1 = std::max(sedF-frFraction_,vos_limiter_);
+     den1 = std::min(sedF-frFraction_,vos_limiter_);
      den2 = std::max(maxFraction_-sedF,vos_limiter_);
      coeff = pf *( (mContact_/den1) + (nContact_/den2) );
 	} 
-
+//      if (den1  > 0.0 )
+//	{
+//     printf("den1 --> %2.20f", den1);
+//	} 
+//      if (den2  > 0.0 )
+//	{
+//     printf("den2 --> %2.20f", den2);
+//	} 
+//      if (pf  > 0.0 )
+//	{
+//     printf("pf --> %2.20f", pf);
+//	} 
+//      if (coeff  > 0.0 )
+//	{
+//     printf("coeff --> %2.20f", coeff);
+//	} 
+	  
 	  
       return coeff;
     }
@@ -556,23 +599,28 @@ public:
       double s13 = 0.5*(du_dz + dw_dx);
       double s23 = 0.5*(dv_dz + dw_dy);
       double sumS = s11*s11 + s22*s22 + s33*s33 + 2.*s12*s12 + 2.*s13*s13 + 2.*s23*s23;
-      double mu_sf = pf * sqrt(2.) * sin(angFriction_) / (2 * sqrt(sumS) + small_);
-      double mu_fr = std::max(mu_sf,mu_fr_limiter_); 
-//      if (divU  > 0.0 )
+      double mu_sf = 0.0;
+      double mu_fr = 0.0;
+      if (sedF > frFraction_) 
+	{
+     mu_sf = pf * sqrt(2.) * sin(angFriction_) / (2 * sqrt(sumS) + small_);
+     mu_fr = std::min(mu_sf,mu_fr_limiter_); 
+	} 
+//      if (sedF  > 0.0 )
 //	{
-//     printf("divU --> %2.20f", divU);
-//	} 
-//      if (du_dx  > 0.0 )
-//	{
-//     printf("du_dx --> %2.20f", du_dx);
-//	} 
-//      if (dv_dy  > 0.0 )
-//	{
-//     printf("dv_dy --> %2.20f", dv_dy);
+//     printf("sedF --> %2.20f", sedF);
 //	} 
 //      if (mu_sf  > 0.0 )
 //	{
 //     printf("mu_sf --> %2.20f", mu_sf);
+//	} 
+//      if (mu_fr  > 0.0 )
+//	{
+//     printf("mu_fr --> %2.20f", mu_fr);
+//	} 
+//      if (pf  > 0.0 )
+//	{
+//     printf("pf --> %2.20f", pf);
 //	} 
 
       return mu_fr;

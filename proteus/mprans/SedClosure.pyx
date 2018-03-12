@@ -197,6 +197,9 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 
 
         double p_friction(double sedF)
+
+        double gradp_friction(double sedF)
+
         double mu_fr(double sedF,
 		      double du_dx,
 		      double du_dy,
@@ -313,7 +316,7 @@ cdef class HsuSedStress:
         return self.thisptr.eR_
     @property
     def fContact(self):
-        return self.thisptr.eR_
+        return self.thisptr.fContact_
     @property
     def mContact(self):
         return self.thisptr.mContact_
@@ -577,9 +580,12 @@ cdef class HsuSedStress:
 
     def k_diff(self,  sedF, rhoSolid, theta ):
         return self.thisptr.k_diff( sedF, rhoSolid, theta)
-
+    
     def p_friction(self, sedF):
         return self.thisptr.p_friction(sedF)
+
+    def gradp_friction(self, sedF):
+        return self.thisptr.gradp_friction(sedF)
 
 
     def  mIntFluid(self,
