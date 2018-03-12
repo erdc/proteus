@@ -18,7 +18,7 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double,double,int); 
+  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double,double,double,int); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
@@ -76,6 +76,7 @@ class MeshAdaptPUMIDrvr{
   int nEstimate; //counter for number of error estimator calls
   int nsd; //number of spatial dimensions
   int maxAspect; //maximum aspect ratio
+  double gradingFactor;
 
   //User Inputs
   std::string size_field_config; //What type of size field: interface, ERM, isotropic

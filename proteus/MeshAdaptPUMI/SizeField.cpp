@@ -13,8 +13,8 @@
 #include <queue>
 
 static void SmoothField(apf::Field *f);
-void gradeAnisoMesh(apf::Mesh* m);
-void gradeAspectRatio(apf::Mesh* m, int idx);
+void gradeAnisoMesh(apf::Mesh* m,double gradingFactor);
+void gradeAspectRatio(apf::Mesh* m, int idx, double gradingFactor);
 
 /* Based on the distance from the interface epsilon can be controlled to determine
    thickness of refinement near the interface */
@@ -946,11 +946,11 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     m->end(it);
 
     //Do simple size and aspect ratio grading
-    gradeAnisoMesh(m);
+    gradeAnisoMesh(m,gradingFactor);
     std::cout<<"Finished grading size 0\n";
-    gradeAspectRatio(m,1);
+    gradeAspectRatio(m,1,gradingFactor);
     std::cout<<"Finished grading size 1\n";
-    gradeAspectRatio(m,2);
+    gradeAspectRatio(m,2,gradingFactor);
     std::cout<<"Finished grading size 2\n";
 
     apf::synchronize(size_scale);
@@ -1121,7 +1121,7 @@ int MeshAdaptPUMIDrvr::gradeMesh()
   apf::MeshEntity* edge;
   apf::Adjacent edgAdjVert;
   apf::Adjacent vertAdjEdg;
-  double gradingFactor = 1.5;
+  //double gradingFactor = 1.5;
   double size[2];
   std::queue<apf::MeshEntity*> markedEdges;
   apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
@@ -1194,7 +1194,7 @@ int MeshAdaptPUMIDrvr::gradeMesh()
     std::cout<<"Completed grading\n";
 }
 
-void gradeAnisoMesh(apf::Mesh* m)
+void gradeAnisoMesh(apf::Mesh* m,double gradingFactor)
 //Function to grade anisotropic mesh through comparison of edge vertex aspect ratios and minimum sizes
 //For simplicity, we do not bother with accounting for entities across partitions
 {
@@ -1205,7 +1205,7 @@ void gradeAnisoMesh(apf::Mesh* m)
   apf::MeshEntity* edge;
   apf::Adjacent edgAdjVert;
   apf::Adjacent vertAdjEdg;
-  double gradingFactor = 1.3;
+  //double gradingFactor = 1.3;
   double size[2];
   apf::Vector3 sizeVec;
   std::queue<apf::MeshEntity*> markedEdges;
@@ -1291,7 +1291,7 @@ void gradeAnisoMesh(apf::Mesh* m)
   //  std::cout<<"Completed minimum size grading\n";
 }
 
-void gradeAspectRatio(apf::Mesh* m,int idx)
+void gradeAspectRatio(apf::Mesh* m,int idx,double gradingFactor)
 //Function to grade anisotropic mesh through comparison of edge vertex aspect ratios and minimum sizes
 //For simplicity, we do not bother with accounting for entities across partitions
 {
@@ -1300,7 +1300,7 @@ void gradeAspectRatio(apf::Mesh* m,int idx)
   apf::MeshEntity* edge;
   apf::Adjacent edgAdjVert;
   apf::Adjacent vertAdjEdg;
-  double gradingFactor = 1.3;
+  //double gradingFactor = 1.3;
   double size[2];
   apf::Vector3 sizeVec;
   std::queue<apf::MeshEntity*> markedEdges;
