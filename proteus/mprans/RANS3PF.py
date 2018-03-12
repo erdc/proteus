@@ -223,7 +223,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_alpha = particle_alpha
         self.particle_beta = particle_beta
         self.particle_penalty_constant = particle_penalty_constant
-        self.particle_sdfList = particle_sdfList
+        self.particles = particle_sdfList
         self.particle_velocityList = particle_velocityList
         self.granular_sdf_Calc = granular_sdf_Calc
         self.granular_vel_Calc = granular_vel_Calc
@@ -460,17 +460,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                             self.ebq_global_phi_s[ebN,kb]=sdf
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
         else:
-            for i, sdf, vel in zip(range(self.nParticles),
-                                   self.particle_sdfList, self.particle_velocityList):
+            for i in range(self.nParticles):
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
-                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(0, self.model.q['x'][eN, k])
-                        self.particle_velocities[i, eN, k] = vel(0, self.model.q['x'][eN, k])
+                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] \
+                            = self.particles[i].sdf(0, self.model.q['x'][eN, k])
+                        self.particle_velocities[i, eN, k] = self.particles[i].vel(0, self.model.q['x'][eN, k])
                 self.model.q[('phis', i)] = self.particle_signed_distances[i]
                 self.model.q[('phis_vel', i)] = self.particle_velocities[i]
                 for ebN in range(self.model.ebq_global['x'].shape[0]):
                     for kb in range(self.model.ebq_global['x'].shape[1]):
-                        sdf_ebN_kb,sdNormals = sdf(0,self.model.ebq_global['x'][ebN,kb],)
+                        sdf_ebN_kb,sdNormals = self.particles[i].sdf(0,self.model.ebq_global['x'][ebN,kb],)
                         if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                             self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
@@ -610,11 +610,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     if (abs(sdf) < abs(self.phi_s[j])):
                         self.phi_s[j] = sdf
         else:
-            for i, sdf in zip(range(self.nParticles),
-                              self.particle_sdfList):
+            for i in range(self.nParticles):
                 for j in range(mesh.nodeArray.shape[0]):
                     #self.phi_s[j], sdNormals = sdf(0, mesh.nodeArray[j, :])
-                    sdf_j,sdNormals=sdf(0,mesh.nodeArray[j,:])
+                    sdf_j,sdNormals=self.particles[i].sdf(0,mesh.nodeArray[j,:])
                     if (abs(sdf_j) < abs(self.phi_s[j])):
                         self.phi_s[j] = sdf_j
 
@@ -955,6 +954,18 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def preStep(self, t, firstStep=False):
+
+        # DEM particles
+        if (self.nParticles!=self.particles.size()):
+            self.nParticles = self.particles.size()
+            self.particle_netForces = np.zeros((self.nParticles, 3), 'd')
+            self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
+            self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
+            self.particle_centroids = np.zeros((self.nParticles, 3), 'd')
+            self.particle_signed_distances = np.zeros((self.nParticles,) + self.model.q[('u', 0)].shape, 'd')
+            self.particle_signed_distance_normals = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape, 'd')
+            self.particle_velocities = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape, 'd')
+        
         # Save old solutions
         # solution at tnm1
         self.model.u_dof_old_old[:] = self.model.u_dof_old[:]
@@ -1018,21 +1029,20 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.q[('phis')] = self.phisField
 
         else:
-            for i, sdf, vel in zip(range(self.nParticles),
-                                   self.particle_sdfList, self.particle_velocityList
-                                   ):
+            for i in range(self.nParticles):
                 for j in range(self.mesh.nodeArray.shape[0]):
-                    myvel = vel(t, self.mesh.nodeArray[j, :])
-                    mysdf, sdNormals = sdf(t, self.mesh.nodeArray[j, :])
+                    myvel = self.particles[i].vel(t, self.mesh.nodeArray[j, :])
+                    mysdf, sdNormals = self.particles[i].sdf(t, self.mesh.nodeArray[j, :])
                     if (abs(mysdf) < abs(self.phi_s[j])):
                         self.phi_s[j] = mysdf
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
-                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(t, self.model.q['x'][eN, k])
-                        self.particle_velocities[i, eN, k] = vel(t, self.model.q['x'][eN, k])
+                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] \
+                            = self.particles[i].sdf(t, self.model.q['x'][eN, k])
+                        self.particle_velocities[i, eN, k] = self.particles[i].vel(t, self.model.q['x'][eN, k])
                 for ebN in range(self.model.ebq_global['x'].shape[0]):
                     for kb in range(self.model.ebq_global['x'].shape[1]):
-                        sdf_ebN_kb,sdNormals = sdf(t, self.model.ebq_global['x'][ebN,kb])
+                        sdf_ebN_kb,sdNormals = self.particles[i].sdf(t, self.model.ebq_global['x'][ebN,kb])
                         if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                             self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
@@ -1050,6 +1060,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.particle_forceHistory.flush()
                 self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0, :]))
                 self.particle_momentHistory.flush()
+                self.particles.calculate(self.particle_netForces,
+                                         self.particle_netMoments,
+                                         self.model.dt_last,
+                                         t)
 
 
 class LevelModel(proteus.Transport.OneLevelTransport):
