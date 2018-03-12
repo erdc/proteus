@@ -87,8 +87,8 @@ class TestEllipticRedistancing():
                                                sList,
                                                opts)
         ns.calculateSolution('rdls3P')
-        actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_1.h5','r')
-        assert np.isclose(np.amax(actual.root.u_t2),0.14467815316,atol=1e-10)
+        actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_1.h5','r')        
+        assert np.isclose(np.amax(actual.root.u_t2),0.144686270399,atol=1e-10)
         actual.close()
 
     def test_ELLIPTIC_REDISTANCING_2(self):
@@ -117,8 +117,8 @@ class TestEllipticRedistancing():
                                                sList,
                                                opts)
         ns.calculateSolution('rdls3P')
-        actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_2.h5','r')
-        assert np.isclose(np.amax(actual.root.u_t2),0.113000689281,atol=1e-10)
+        actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_2.h5','r')        
+        assert np.isclose(np.amax(actual.root.u_t2),0.113047815938,atol=1e-10)
         actual.close()
 
     def test_ELLIPTIC_REDISTANCING_3(self):
@@ -148,5 +148,6 @@ class TestEllipticRedistancing():
                                                opts)
         ns.calculateSolution('rdls3P')
         actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_3.h5','r')
-        assert np.isclose(np.amax(actual.root.u_t2),0.113000689281,atol=1e-10)
+        print np.amax(actual.root.u_t2)
+        assert np.isclose(np.amax(actual.root.u_t2),0.113047815938,atol=1e-10)
         actual.close()
