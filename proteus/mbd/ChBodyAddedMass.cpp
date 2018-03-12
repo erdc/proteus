@@ -4,7 +4,7 @@
 namespace chrono {
 
 	// Register into the object factory, to enable run-time dynamic creation and persistence
-	CH_FACTORY_REGISTER(ChVariablesBodyAddedMass)
+	CH_FACTORY_REGISTER(ChBodyAddedMass)
 
     ChBodyAddedMass::ChBodyAddedMass() {
         ChBody::variables = variables;
