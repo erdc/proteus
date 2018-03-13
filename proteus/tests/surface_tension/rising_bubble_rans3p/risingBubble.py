@@ -6,20 +6,20 @@ from proteus.Profiling import logEvent
 from parameters import *
 
 test_case=1
-AUTOMATED_TEST = False
+AUTOMATED_TEST = True
     
 # ----- PARAMETERS FOR ELLIPTIC REDISTANCING ----- #
 EXPLICIT_VOF=True
 EXPLICIT_NCLS=True
 ELLIPTIC_REDISTANCING=2
-alpha_REDISTANCING='inf'#1.0E6
+alpha_REDISTANCING='inf' #1.0E6
 
 # ----- DIMENSIONS AND REFINEMENT ----- #
 nd=ct.nd
 if AUTOMATED_TEST==True:
     Refinement = 1
 else:
-    Refinement = 4
+    Refinement = 2
     
 # ----- PHYSICAL PARAMETERS ----- #
 if nd==3:
