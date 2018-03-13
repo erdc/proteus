@@ -58,7 +58,7 @@ class Shape(object):
         proteus.BoundaryConditions.BC_Base or
         proteus.BoundaryConditions.mprans.BC_RANS).
     """
-    count = 0
+    count_all = 0
 
     def __init__(self, domain, nd=None, BC_class=None):
         if nd != domain.nd:
@@ -67,8 +67,8 @@ class Shape(object):
             sys.exit()
         self.Domain = domain
         domain.shape_list.append(self)
-        self.__class__.count += 1
-        self.name = 'shape'+str(self.__class__.count)
+        self.__class__.count_all += 1
+        self.name = 'shape'+str(self.__class__.count_all)
         self.nd = nd
         self.BC_class = BC_class or bc.BC_Base
         self.vertices = None
@@ -241,7 +241,7 @@ class Shape(object):
         """
         self._checkListOfLists(holes)
         self.holes = np.array(holes)
-        if indices is not None:
+        if indice is not None:
             self.holes_ind = indice
 
     def rotate(self, rot, axis=(0, 0, 1), pivot=None):

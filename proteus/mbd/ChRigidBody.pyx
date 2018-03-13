@@ -1402,6 +1402,7 @@ cdef class ProtChSystem:
         self.next_sample = 0.
         self.record_values = True
         self.t = 0.
+        self.chrono_dt = 1.
         self.ProtChAddedMass = ProtChAddedMass(self)
 
     def GetChTime(self):

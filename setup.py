@@ -561,6 +561,7 @@ def setup_given_extensions(extensions):
                       'proteus.tests.cylinder2D.conforming_rans3p',
                       'proteus.tests.cylinder2D.ibm_method',
                       'proteus.tests.cylinder2D.sbm_method',
+                      'proteus.tests.AddedMass',
           ],
           cmdclass = {'build_ext':build_ext},
           ext_package='proteus',
