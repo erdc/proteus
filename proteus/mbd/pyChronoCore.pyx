@@ -1,4 +1,8 @@
 # distutils: language = c++
+"""
+This file defines python object using a syntax as close as possible to the
+Chrono syntax. This creates and gives access to C++ objects.
+"""
 
 cimport numpy as np
 import numpy as np
@@ -75,6 +79,21 @@ cdef class ChQuaternion:
 
     cpdef double e3(self):
         return self.cppobj.e3()
+
+
+cdef class ChCoordsys:
+    """Cython class for ChCoordSys
+    (!) Does not use pointer
+    """
+
+    def __cinit__(self, ChVector mv, ChQuaternion mq):
+        self.cppobj = ch.ChCoordsys(mv.cppobj, mq.cppobj)
+
+    cpdef np.ndarray getPos(self):
+        return ChVector_to_npArray(self.cppobj.pos)
+
+    cpdef np.ndarray getRot(self):
+        return ChQuaternion_to_npArray(self.cppobj.rot)
 
 
 cdef class ChFrame:

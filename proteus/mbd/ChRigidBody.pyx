@@ -1,8 +1,20 @@
 # distutils: language = c++
+"""
+Coupling between Chrono and Proteus is done in this file.
 
+Objects (classes) starting with 'ProtCh' (e.g. ProtChBody) are objects that
+have logic specifically developed for communication between Proteus and Chrono.
 
-# TO DO:
-# get velocity gradients for added mass force (moorings)
+Objects starting with 'Ch' (e.g. ChBody) are objects that only have Chrono
+logic associated to them.
+
+Some ProtCh objects give access to the Chrono object:
+my_protchsystem = ProtChSystem(gravity=np.ndarray([0.,-9.81,0.]))
+my_protchbody = ProtChBody(system=my_protchsystem)
+my_chbody = ProtChBody.ChBody
+my_chbody.SetPos(...)
+"""
+
 
 import os
 import sys
@@ -26,7 +38,6 @@ cimport ChronoHeaders as ch
 # chrono Python headers
 from proteus.mbd cimport pyChronoCore as pych
 from proteus.mprans import BodyDynamics as bd
-
 
 
 cdef extern from "ChRigidBody.h":
@@ -172,6 +183,16 @@ cdef extern from "ChRigidBody.h":
         void setPrescribedMotionPoly(double coeff1)
         void setPrescribedMotionSine(double a, double f)
     cppRigidBody * newRigidBody(cppSystem* system)
+    void ChLinkLockBodies(shared_ptr[ch.ChBody] body1,
+                          shared_ptr[ch.ChBody] body2,
+                          ch.ChSystemSMC& system,
+                          ch.ChCoordsys coordsys,
+                          double limit_X,
+                          double limit_Y,
+                          double limit_Z,
+                          double limit_Rx,
+                          double limit_Ry,
+                          double limit_Rz)
 
 cdef class ProtChBody:
     cdef cppRigidBody * thisptr
@@ -2721,12 +2742,6 @@ def getLocalElement(femSpace, coords, node):
     return None
 
 
-cpdef void attachNodeToNode(ProtChMoorings cable1, int node1, ProtChMoorings cable2, int node2):
-    if cable1.beam_type == "CableANCF":
-        cppAttachNodeToNodeFEAxyzD(cable1.thisptr, node1, cable2.thisptr, node2)
-    elif cable1.beam_type == "BeamEuler":
-        cppAttachNodeToNodeFEAxyzrot(cable1.thisptr, node1, cable2.thisptr, node2)
-
 cdef class ProtChAddedMass:
     """
     Class (hack) to attach added mass model to ProtChSystem
@@ -2757,3 +2772,58 @@ cdef class ProtChAddedMass:
 
     def calculate(self):
         pass
+
+
+cpdef void attachNodeToNode(ProtChMoorings cable1, int node1, ProtChMoorings cable2, int node2):
+    if cable1.beam_type == "CableANCF":
+        cppAttachNodeToNodeFEAxyzD(cable1.thisptr, node1, cable2.thisptr, node2)
+    elif cable1.beam_type == "BeamEuler":
+        cppAttachNodeToNodeFEAxyzrot(cable1.thisptr, node1, cable2.thisptr, node2)
+
+
+cpdef linkBodies(ProtChBody body1,
+                 ProtChBody body2,
+                 ProtChSystem system,
+                 pych.ChCoordsys coordsys,
+                 double limit_X=0.,
+                 double limit_Y=0.,
+                 double limit_Z=0.,
+                 double limit_Rx=0.,
+                 double limit_Ry=0.,
+                 double limit_Rz=0.):
+    """Create a link between 2 bodies.
+    Master body is body2.
+
+    Parameters:
+    -----------
+    body1: ProtChBody
+        Instance of first body
+    body2: ProtChBody
+        Instance of second body
+    body2: ProtChSystem
+        Instance of system to add link
+    coordsys: proteus.mbd.pyChronoCore.ChCoordsys
+        Coordinate system of link
+    limit_X: double
+        Limit in x direction
+    limit_Y: double
+        Limit in y direction
+    limit_Z: double
+        Limit in z direction
+    limit_Rx: double
+        Limit rotation around x axis
+    limit_Ry: double
+        Limit rotation around y axis
+    limit_Rz: double
+        Limit rotation around z axis
+    """
+    ChLinkLockBodies(body1.ChBody.sharedptr_chbody,
+                     body2.ChBody.sharedptr_chbody,
+                     system.thisptr.system,
+                     coordsys.cppobj,
+                     limit_X,
+                     limit_Y,
+                     limit_Z,
+                     limit_Rx,
+                     limit_Ry,
+                     limit_Rz)

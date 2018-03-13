@@ -20,6 +20,11 @@ cdef class ChQuaternion:
     cpdef double e2(self)
     cpdef double e3(self)
 
+cdef class ChCoordsys:
+    cdef ch.ChCoordsys cppobj
+    cpdef np.ndarray getPos(self)
+    cpdef np.ndarray getRot(self)
+
 cdef class ChFrame:
     cdef shared_ptr[ch.ChFrame] sharedptr_chframe
     cpdef np.ndarray GetPos(self)

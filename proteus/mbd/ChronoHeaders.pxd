@@ -1,3 +1,9 @@
+"""
+This file declares a list of C++ objects from Chrono that can be used in
+ cython files.
+"""
+
+
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp cimport bool
@@ -22,6 +28,13 @@ cdef extern from "ChMoorings.h":
         double e3()
         ChQuaternion(double e0, double e1, double e2, double e3)
         ChQuaternion()
+
+    cdef cppclass ChCoordsys[double]:
+        ChVector pos
+        ChQuaternion rot
+        ChCoordsys()
+        ChCoordsys(ChVector &mv, ChQuaternion &mq)
+        ChCoordsys(ChVector &mv, double Alpha, ChVector &mu)
 
     cdef cppclass ChMatrix:
         double GetElement(int row, int col)
@@ -256,7 +269,7 @@ cdef extern from "ChMoorings.h":
         #virtual 
         ChLinkPointPoint()
         int Initialize(shared_ptr[ChNodeFEAxyz] anodeA, shared_ptr[ChNodeFEAxyz] anodeB)
-
+    
 
 cdef extern from "ChBodyAddedMass.h":
     cdef cppclass ChBodyAddedMass(ChBody):
@@ -269,4 +282,5 @@ cdef extern from "ChBodyAddedMass.h":
         # ChVector GetInertiaXY()
         void SetMfullmass(ChMatrixDynamic Mfullmass_in)
         void SetInvMfullmass(ChMatrixDynamic inv_Mfullmass_in)
+
 
