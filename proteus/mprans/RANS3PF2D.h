@@ -3596,9 +3596,12 @@ namespace proteus
                     r_y = y_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 1];
                     Mz  += r_x*Fy-r_y*Fx;
                   }//kb
-                particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += Fx;
-                particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Fy;
-                particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2] += Mz;
+                if (ebN < nElementBoundaries_owned)
+                {
+                    particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += Fx;
+                    particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Fy;
+                    particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2] += Mz;
+                }
               }//ebN_s
             //std::cout<<" sbm force over surrogate boundary is: "<<Fx<<"\t"<<Fy<<std::endl;
             //
