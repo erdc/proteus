@@ -1,32 +1,28 @@
 #!/usr/bin/env python
 import os
-import pytest
 from proteus.iproteus import *
-from proteus import Comm
-comm = Comm.get()
-import addedmass2D
-import addedmass2D_so
-import numpy as np
-import collections as cll
-import csv
-from proteus.test_utils import TestTools
 import unittest
 import numpy.testing as npt
-import numpy as np
-from nose.tools import eq_
+from importlib import import_module
+from petsc4py import PETSc
 
 class TestAddedMass2D(unittest.TestCase):
 
-    def teardown_method(self):
+    def teardown_method(self, method):
         """ Tear down function """
         FileList = ['addedmass2D.xmf',
                     'addedmass2D.h5',
+                    'addedmass3D.xmf',
+                    'addedmass3D.h5',
                     'record_rectangle1.csv',
                     'record_rectangle1_Aij.csv',
+                    'record_cuboid1.csv',
+                    'record_cuboid1_Aij.csv',
                     'mesh.ele',
                     'mesh.edge',
                     'mesh.node',
-                    'mesh.neig',
+                    'mesh.neigh',
+                    'mesh.face',
                     'mesh.poly',
                     'forceHistory_p.txt',
                     'forceHistory_v.txt',
@@ -34,6 +30,7 @@ class TestAddedMass2D(unittest.TestCase):
                     'wettedAreaHistory.txt',
                     'proteus.log'
                     'addedmass2D_so.log'
+                    'addedmass3D_so.log'
                     ]
         for file in FileList:
             if os.path.isfile(file):
@@ -41,13 +38,13 @@ class TestAddedMass2D(unittest.TestCase):
             else:
                 pass
 
-    def test_run(self):
-        from petsc4py import PETSc
+    def test_AddedMass_2D(self):
+        import addedmass2D_so
         pList = []
         nList = []
         for (p,n) in addedmass2D_so.pnList:
-            pList.append(__import__(p))
-            nList.append(__import__(n))
+            pList.append(import_module("."+p,"proteus.tests.AddedMass"))
+            nList.append(import_module("."+n,"proteus.tests.AddedMass"))
             if pList[-1].name == None:
                 pList[-1].name = p
         so = addedmass2D_so
@@ -60,7 +57,8 @@ class TestAddedMass2D(unittest.TestCase):
         Profiling.verbose=True
         # PETSc solver configuration
         OptDB = PETSc.Options()
-        with open("petsc.options.superlu_dist") as f:
+        dirloc = os.path.dirname(os.path.realpath(__file__))
+        with open(os.path.join(dirloc, "petsc.options.superlu_dist")) as f:
             all = f.read().split()
             i=0
             while i < len(all):
@@ -82,4 +80,7 @@ class TestAddedMass2D(unittest.TestCase):
         Aij = ns.so.ct.body.Aij
         npt.assert_almost_equal(Aij[0,0], 500.17986551764352)
         npt.assert_almost_equal(Aij[1,1], 1299.5165614689747)
-        self.teardown_method()
+        self.teardown_method(self)
+
+if __name__ == "__main__":
+    unittest.main()

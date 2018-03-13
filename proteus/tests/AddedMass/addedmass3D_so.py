@@ -5,7 +5,8 @@ Split operator module for two-phase flow
 import os
 from proteus.default_so import *
 from proteus import Context
-import addedmass2D
+from importlib import import_module
+import addedmass3D
 
 # Create context from main module
 name_so = os.path.basename(__file__)
@@ -16,7 +17,7 @@ elif '_so.pyc' in name_so[-7:]:
 else:
     raise NameError, 'Split operator module must end with "_so.py"'
 
-Context.setFromModule(addedmass2D)
+Context.setFromModule(addedmass3D)
 ct = Context.get()
 
 # List of p/n files
