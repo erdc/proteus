@@ -15,7 +15,8 @@ cdef extern from "Fourier.cpp":
 
 def writeInput(waveheight,
                depth,
-               period,
+               period=None,
+               wavelength=None,
                mode='Period',
                current_criterion=1,
                current_magnitude=0,
@@ -62,6 +63,11 @@ def writeInput(waveheight,
         Number of vertical points in each profile
     '''
     # Data input file
+    assert period is not None or wavelength is not None, 'Period or wavelength must be set for Fenton wave'
+    if period is None and wavelength is not None:
+        mode = 'Wavelength'
+    if period is not None and wavelength is None:
+        mode = 'Period'
     filename = 'Data.dat'
     with open(filename, 'w') as f:
         waveheight_dimless = waveheight/depth
@@ -69,7 +75,7 @@ def writeInput(waveheight,
         if mode == 'Period':
             length_dimless = period*np.sqrt(g/depth)
         elif mode == 'Wavelength':
-            length_dimless = period*np.sqrt(g/depth)
+            length_dimless = wavelength/depth
         current_magnitude_dimless = current_magnitude/np.sqrt(g*depth)
         f.write('''Wave
 {waveheight}
