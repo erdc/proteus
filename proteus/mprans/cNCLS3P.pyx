@@ -55,7 +55,13 @@ cdef extern from "mprans/NCLS3P.h" namespace "proteus":
                                double * ebqe_rd_u_ext,
                                double * ebqe_bc_u_ext,
                                double * ebqe_u,
-                               double * interface_locator,
+                               double * cell_interface_locator,
+                               double * interface_locator,                               
+                               int EXPLICIT_METHOD,
+                               double degree_polynomial,
+                               int stage,
+                               double * uTilde_dof,
+                               double dt,
                                int PURE_BDF)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -100,6 +106,7 @@ cdef extern from "mprans/NCLS3P.h" namespace "proteus":
                                double * ebqe_rd_u_ext,
                                double * ebqe_bc_u_ext,
                                int * csrColumnOffsets_eb_u_u,
+                               int EXPLICIT_METHOD,
                                int PURE_BDF)
         void calculateWaterline(int * wlc,
                                 double * waterline,
@@ -235,7 +242,13 @@ cdef class NCLS3P:
                           numpy.ndarray ebqe_rd_u_ext,
                           numpy.ndarray ebqe_bc_u_ext,
                           numpy.ndarray ebqe_u,
-                          numpy.ndarray interface_locator,
+                          numpy.ndarray cell_interface_locator,
+                          numpy.ndarray interface_locator,                          
+                          int EXPLICIT_METHOD,
+                          double degree_polynomial,
+                          int stage,
+                          numpy.ndarray uTilde_dof,
+                          double dt,
                           int PURE_BDF):
         self.thisptr.calculateResidual(< double*>mesh_trial_ref.data,
                                        < double * >mesh_grad_trial_ref.data,
@@ -290,7 +303,13 @@ cdef class NCLS3P:
                                        < double * >ebqe_rd_u_ext.data,
                                        < double * >ebqe_bc_u_ext.data,
                                        < double * >ebqe_u.data,
+                                       < double * >cell_interface_locator.data,
                                        < double * >interface_locator.data,
+                                       EXPLICIT_METHOD,
+                                       degree_polynomial,
+                                       stage,
+                                       < double * >uTilde_dof.data,
+                                       dt,
                                        PURE_BDF)
 
     def calculateJacobian(self,
@@ -337,6 +356,7 @@ cdef class NCLS3P:
                           numpy.ndarray ebqe_rd_u_ext,
                           numpy.ndarray ebqe_bc_u_ext,
                           numpy.ndarray csrColumnOffsets_eb_u_u,
+                          int EXPLICIT_METHOD,
                           int PURE_BDF):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
@@ -383,6 +403,7 @@ cdef class NCLS3P:
                                        < double * >ebqe_rd_u_ext.data,
                                        < double * >ebqe_bc_u_ext.data,
                                        < int * >csrColumnOffsets_eb_u_u.data,
+                                       EXPLICIT_METHOD,
                                        PURE_BDF)
 
     def calculateWaterline(self,
