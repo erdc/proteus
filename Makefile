@@ -246,6 +246,7 @@ install: profile $(wildcard *.py) proteus
 
 develop: proteus profile 
 	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/* ${PROTEUS}/${PROTEUS_ARCH}/lib
+	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/cmake/* ${PROTEUS}/${PROTEUS_ARCH}/lib/cmake
 	@echo "************************"
 	@echo "Installing development version"
 	@echo "************************"
