@@ -944,6 +944,8 @@ cdef class ProtChBody:
         # barycenter0 used for moment calculations
         if self.Shape is not None:
             self.barycenter0 = self.Shape.barycenter.copy()
+        else:
+            self.barycenter0 = self.ChBody.GetPos()
         # get the initial values for F and M
         cdef np.ndarray zeros = np.zeros(3)
         self.setExternalForces(zeros, zeros)
