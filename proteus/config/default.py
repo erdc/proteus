@@ -69,6 +69,17 @@ PROTEUS_EXTRA_LINK_ARGS=[]
 
 PROTEUS_CHRONO_INCLUDE_DIR, PROTEUS_CHRONO_LIB_DIR = get_flags('chrono')
 
+PROTEUS_CHRONO_CXX_FLAGS = []
+with open(os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','ChronoConfig.cmake'),'r') as f:
+    for l in f:
+        if 'set(CHRONO_CXX_FLAGS' in l:
+            args = l.split()
+            for arg in args:
+                if arg[0] == '-':
+                    arg = arg.replace('"', '')
+                    arg = arg.replace(')', '')
+                    PROTEUS_CHRONO_CXX_FLAGS += [arg]
+
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
 PROTEUS_EXTRA_FC_LINK_ARGS=[]
 

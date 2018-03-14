@@ -25,9 +25,11 @@ cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","")
 cv["CFLAGS"] = cv["CFLAGS"].replace("-Wall","-w")
 cv["CFLAGS"] = cv["CFLAGS"].replace("-Wstrict-prototypes","")
 
+
 PROTEUS_PETSC_EXTRA_LINK_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_LINK_ARGS', [])
 PROTEUS_PETSC_EXTRA_COMPILE_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_COMPILE_ARGS', [])
 NOOPT=['-O0']
+PROTEUS_CHRONO_CXX_FLAGS = getattr(config, 'PROTEUS_CHRONO_CXX_FLAGS', [])
 
 proteus_install_path = os.path.join(sysconfig.get_python_lib(), 'proteus')
 
@@ -180,8 +182,7 @@ EXTENSIONS_TO_BUILD = [Extension("MeshAdaptPUMI.MeshAdaptPUMI",
                                    'ChronoEngine_fea',
                                    'stdc++',
                                    'm'],
-                        extra_compile_args=["-std=c++11",
-                                            "-mavx"]+NOOPT,
+                        extra_compile_args=PROTEUS_CHRONO_CXX_FLAGS+NOOPT,
                         extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
               Extension("mbd.ChRigidBody",
                         sources=['proteus/mbd/ChRigidBody.pyx'],
@@ -199,8 +200,7 @@ EXTENSIONS_TO_BUILD = [Extension("MeshAdaptPUMI.MeshAdaptPUMI",
                                    'ChronoEngine_fea',
                                    'stdc++',
                                    'm'],
-                        extra_compile_args=["-std=c++11",
-                                            "-mavx"]+NOOPT,
+                        extra_compile_args=PROTEUS_CHRONO_CXX_FLAGS+NOOPT,
                         extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
               Extension("WaveTools",['proteus/WaveTools.py'],
                         depends=['proteus/WaveTools.h'],
@@ -603,7 +603,7 @@ def setup_given_extensions(extensions):
                        ['proteus/tests/surface_tension/rising_bubble_rans3p/comparison_files/risingBubble_2D_supg.h5',
                         'proteus/tests/surface_tension/rising_bubble_rans3p/comparison_files/risingBubble_2D_ev.h5',
                         'proteus/tests/surface_tension/rising_bubble_rans3p/comparison_files/risingBubble_3D_supg.h5',
-                        'proteus/tests/surface_tension/rising_bubble_rans3p/comparison_files/risingBubble_3D_ev.h5']),                  
+                        'proteus/tests/surface_tension/rising_bubble_rans3p/comparison_files/risingBubble_3D_ev.h5']),
                       (os.path.join(proteus_install_path,'tests','solver_tests','import_modules'),
                        ['proteus/tests/solver_tests/import_modules/quad_mass_matrix.npy',
                         'proteus/tests/solver_tests/import_modules/sol_10.npy',
