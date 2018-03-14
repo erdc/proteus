@@ -15,6 +15,7 @@
 extern int approx_order; //shape function order
 extern int int_order; //integration order
 extern double nu_0,nu_1,rho_0,rho_1;
+double dt_err;
 
 struct Inputs{
   apf::Vector3 vel_vect;  
@@ -29,6 +30,7 @@ struct Inputs{
   apf::Element* visc_elem;
   apf::Element* velo_elem;
   apf::Element* vof_elem;
+  apf::Element* velo_elem_old;
   apf::Matrix3x3 KJ;
   double* g;
 };
@@ -37,20 +39,22 @@ double get_nu_err(struct Inputs info);
 apf::Vector3 getResidual(apf::Vector3 qpt,struct Inputs &info);
 
 
-inline void getProps(double*rho,double*nu)
+inline void getProps(double*rho,double*nu,double deltaT)
 //Function used to transfer MeshAdaptPUMIDrvr variables into global variables
 {
   rho_0 = rho[0];
   nu_0 = nu[0];      
   rho_1 = rho[1];
   nu_1 = nu[1];
+  dt_err = deltaT;
+  std::cout<<"What is dt_err "<<dt_err<<std::endl;
   return;
 }
 
 void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error) 
 {
   std::cout<<"The beginning of the VMS\n";
-  getProps(rho,nu);
+  getProps(rho,nu,delta_T);
   approx_order = approximation_order; 
   int_order = integration_order;
   nsd = m->getDimension();
@@ -62,6 +66,15 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
   assert(velf);
   apf::Field* pref = m->findField("p");
   assert(pref);
+  apf::Field* velf_old;
+  if(m->findField("velocity_old")!=NULL)
+    velf_old = m->findField("velocity_old");
+  else{
+    velf_old = velf;
+    std::cout<<"WARNING: old velocity field not found. Will proceed as if unsteady term is 0. \n";
+    dt_err = 1.0;
+  }
+  assert(velf_old);
   //*****               *****//
 
   std::cout<<"Got the solution fields\n";
@@ -84,7 +97,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
   //apf::EntityShape* elem_shape;
   apf::Vector3 qpt; //container for quadrature points
   apf::MeshElement* element;
-  apf::Element* visc_elem, *pres_elem,*velo_elem,*vof_elem;
+  apf::Element* visc_elem, *pres_elem,*velo_elem,*vof_elem,*velo_elem_old;
   apf::Matrix3x3 J; //actual Jacobian matrix
   apf::Matrix3x3 invJ; //inverse of Jacobian
   apf::Matrix3x3 KJ(1.0,0.5,0.0,0.5,1.0,0.0,0.0,0.0,1.0); //Jacobian correction matrix for proper metric tensor
@@ -106,6 +119,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     element = apf::createMeshElement(m,ent);
     pres_elem = apf::createElement(pref,element);
     velo_elem = apf::createElement(velf,element);
+    velo_elem_old = apf::createElement(velf_old,element);
     visc_elem = apf::createElement(visc,element);
     vof_elem = apf::createElement(voff,element);
     
@@ -236,6 +250,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     info.visc_elem = visc_elem;
     info.velo_elem = velo_elem;
     info.vof_elem = vof_elem;
+    info.velo_elem_old = velo_elem_old;
     info.KJ = KJ;
     info.nsd = nsd;
     info.density = density;
@@ -317,6 +332,8 @@ apf::Vector3 getResidual(apf::Vector3 qpt,struct Inputs &info){
     double visc_val = apf::getScalar(info.visc_elem,qpt);
     apf::Vector3 vel_vect;
     apf::getVector(info.velo_elem,qpt,vel_vect);
+    apf::Vector3 vel_vect_old;
+    apf::getVector(info.velo_elem_old,qpt,vel_vect_old);
     apf::Matrix3x3 grad_vel;
     apf::getVectorGrad(info.velo_elem,qpt,grad_vel);
     grad_vel = apf::transpose(grad_vel);
@@ -332,6 +349,9 @@ apf::Vector3 getResidual(apf::Vector3 qpt,struct Inputs &info){
       tempConv[i] = tempConv[i] - info.g[i]; //body force contribution
     }
     apf::Vector3 tempResidual = (tempConv + grad_pres/info.density);
+    //acceleration term
+    tempResidual = tempResidual + (vel_vect-vel_vect_old)/dt_err;
+    std::cout<<"What is the acceleration contribution? "<<(vel_vect-vel_vect_old)/dt_err<<std::endl;
 
     info.vel_vect = vel_vect;
     info.grad_vel = grad_vel;
