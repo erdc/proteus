@@ -39,6 +39,8 @@ class TestAddedMass2D(unittest.TestCase):
                 pass
 
     def test_AddedMass_2D(self):
+        from proteus import default_so
+        reload(default_so)
         import addedmass2D_so
         pList = []
         nList = []
