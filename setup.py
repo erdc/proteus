@@ -682,7 +682,9 @@ def setup_given_extensions(extensions):
                       (os.path.join(proteus_install_path,'tests','cylinder2D','sbm_method','comparison_files'),
                        ['proteus/tests/cylinder2D/sbm_method/comparison_files/T1_sbm_rans3p.h5']),
                       (os.path.join(proteus_install_path,'tests','cylinder2D','conforming_rans2p','comparison_files'),
-                       ['proteus/tests/cylinder2D/conforming_rans2p/comparison_files/T1_rans2p.h5'])
+                       ['proteus/tests/cylinder2D/conforming_rans2p/comparison_files/T1_rans2p.h5']),
+                      (os.path.join(proteus_install_path,'tests','AddedMass'),
+                       ['proteus/tests/AddedMass/petsc.options.superlu_dist']),
           ],
           scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/povgen.py',
                      'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
