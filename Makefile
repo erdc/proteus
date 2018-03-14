@@ -182,7 +182,7 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find 
 
 	$(call show_info)
 
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop -j ${N} ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
 
 	@echo "************************"
 	@echo "Dependency build complete"
@@ -371,4 +371,4 @@ hashdist_package:
 	sed -i '/- key:/c\# -key:' stack/pkgs/proteus.yaml
 	sed -i '/  url:/c\#  url:' stack/pkgs/proteus.yaml
 	./hashdist/bin/hit fetch https://github.com/erdc/proteus/archive/${PROTEUS_VERSION}.zip >> stack/pkgs/proteus.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit build -v proteus_stack.yaml
+	cd stack && ${PROTEUS}/hashdist/bin/hit build -j ${N} -v proteus_stack.yaml
