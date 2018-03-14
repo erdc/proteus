@@ -13,7 +13,6 @@ coefficients = RDLS3P.Coefficients(applyRedistancing=True,
                                    rdModelId=1,
                                    useMetrics=useMetrics,
                                    ELLIPTIC_REDISTANCING=ct.ELLIPTIC_REDISTANCING,
-                                   ELLIPTIC_REDISTANCING_TYPE=ct.ELLIPTIC_REDISTANCING_TYPE,
                                    alpha=ct.alpha)
 
 #now define the Dirichlet boundary conditions
