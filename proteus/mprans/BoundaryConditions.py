@@ -180,7 +180,8 @@ class BC_RANS(BC_Base):
         self.k_dirichlet.setConstantBC(0.)  
         # advective
         self.p_advective.setConstantBC(0.)
-        self.pInit_advective.setConstantBC(0.)  
+        self.pInit_advective.setConstantBC(0.)
+        self.pInc_advective.setConstantBC(0.)  
         self.vof_advective.setConstantBC(0.)
         self.vos_advective.setConstantBC(0.)
         # diffusive

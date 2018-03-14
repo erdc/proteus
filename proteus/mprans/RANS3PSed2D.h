@@ -888,6 +888,14 @@ namespace proteus
       mom_u_source += coeff * grad_vos[0];
       mom_v_source += coeff * grad_vos[1];
       //mom_w_source += coeff * grad_vos[2];
+      if (grad_vos[0] > 0.0)
+    {
+     printf("grad_vos[0] --> %2.20f ", grad_vos[0]);
+    }
+      if (grad_vos[1] > 0.0)
+    {
+      printf("grad_vos[1] --> %2.20f ", grad_vos[1]);
+    }
 
     }  
 

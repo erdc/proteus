@@ -148,7 +148,7 @@ class Coefficients(TC_base):
             ebqe_vos = self.model.ebqe_vos
             q_a = 1.0/(q_vos*self.rho_s_min + (1.0-q_vos)*self.rho_f_min)/alphaBDF
             ebqe_a = 1.0/(ebqe_vos*self.rho_s_min + (1.0-ebqe_vos)*self.rho_f_min)/alphaBDF
-            for i in range(self.fluidModel.q[('velocity',0)].shape[-1]): 
+            for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
                 self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * (1.0 - q_vos) * q_a 
                 self.fluidModel.ebqe[('velocity',0)][...,i] = (1.0-ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]                
                 self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * (q_vos) * q_a

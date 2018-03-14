@@ -511,7 +511,7 @@ public:
       //if ((sedF > frFraction_) && (sedF < maxFraction_ ))
       if (sedF > frFraction_)
 	{
-      sedN = std::min( sedF - frFraction_  , vos_limiter_ );
+      sedN = std::min(sedF - frFraction_, maxFraction_ - frFraction_); //sedF - frFraction_;// std::min( sedF - frFraction_  , vos_limiter_ );
       sedD = std::max( maxFraction_ - sedF , vos_limiter_ );
       num = pow( sedN , mContact_ );
       den = pow( sedD , nContact_ );
@@ -534,10 +534,10 @@ public:
 //	{
 //     printf("sedD --> %2.20f", sedD);
 //	} 
-      if (pf  > 0.0 )
-	{
-     printf("pf --> %2.20f", pf);
-	} 
+//      if (pf  > 0.0 )
+//	{
+//     printf("pf --> %2.20f", pf);
+//	} 
 	  
       return pf;
 
@@ -554,7 +554,7 @@ public:
       //if ((sedF > frFraction_) && (sedF < maxFraction_ ))
       if (sedF > frFraction_) 
 	{
-     den1 = std::min(sedF-frFraction_,vos_limiter_);
+     den1 = std::min(sedF-frFraction_,vos_limiter_);//std::min(sedF - frFraction_, maxFraction_ - frFraction_); //
      den2 = std::max(maxFraction_-sedF,vos_limiter_);
      coeff = pf *( (mContact_/den1) + (nContact_/den2) );
 	} 
