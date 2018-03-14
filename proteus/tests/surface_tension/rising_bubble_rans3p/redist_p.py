@@ -14,7 +14,6 @@ coefficients = RDLS3P.Coefficients(applyRedistancing=applyRedistancing,
                                    rdModelId=RD_model,
                                    useMetrics=useMetrics,
                                    ELLIPTIC_REDISTANCING=ELLIPTIC_REDISTANCING,
-                                   ELLIPTIC_REDISTANCING_TYPE=ELLIPTIC_REDISTANCING_TYPE,
                                    alpha=alpha_REDISTANCING)
 
 def getDBC_rd(x,flag):

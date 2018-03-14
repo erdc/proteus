@@ -9,10 +9,10 @@ test_case=1
 AUTOMATED_TEST = True
     
 # ----- PARAMETERS FOR ELLIPTIC REDISTANCING ----- #
-PURE_BDF_NCLS=False
-ELLIPTIC_REDISTANCING=True
-ELLIPTIC_REDISTANCING_TYPE=2 # 2: linear, 3: non-linear
-alpha_REDISTANCING=1E6
+EXPLICIT_VOF=True
+EXPLICIT_NCLS=True
+ELLIPTIC_REDISTANCING=2
+alpha_REDISTANCING='inf' #1.0E6
 
 # ----- DIMENSIONS AND REFINEMENT ----- #
 nd=ct.nd
@@ -48,7 +48,7 @@ else:
         # Gravity
         g = [0.0, -0.98]
     elif test_case==2:
-        T=3.0    
+        T=3.0
         # Water
         rho_0 = 1000.0
         nu_0 = 10.0/rho_0
@@ -79,7 +79,7 @@ applyRedistancing = True
 useOldPETSc = False
 useSuperlu = True
 timeDiscretization = 'vbdf'#vbdf'#'vbdf'  # 'vbdf', 'be', 'flcbdf'
-spaceOrder = 2
+spaceOrder = 1
 pspaceOrder = 1
 useHex = False
 useRBLES = 0.0
@@ -265,7 +265,7 @@ if useMetrics:
     vof_sc_beta = 1.0
     rd_shockCapturingFactor  = 0.5
     rd_lag_shockCapturing = False
-    epsFact_density    = 3.0
+    epsFact_density    = 1.5
     epsFact_viscosity  = epsFact_curvature  = epsFact_vof = epsFact_consrv_heaviside = epsFact_consrv_dirac = epsFact_density
     epsFact_redistance = 0.33
     epsFact_consrv_diffusion = 10.0
@@ -337,6 +337,7 @@ dragAlpha = 0.0
 
 # Time stepping
 dt_fixed = 0.01#0.03
+#dt_init = dt_fixed
 dt_init = min(0.1*dt_fixed,0.001)
 runCFL=0.33
 nDTout = int(round(T/dt_fixed))
