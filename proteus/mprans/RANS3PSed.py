@@ -396,6 +396,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.q_grad_p_fluid = modelList[self.PRESSURE_model].q[('grad(u)', 0)]
             self.model.ebqe_grad_p_fluid = modelList[self.PRESSURE_model].ebqe[('grad(u)', 0)]
         if self.VOS_model is not None:
+            self.model.vosModel = modelList[self.VOS_model]
             self.model.vos_dof = modelList[self.VOS_model].u[0].dof
             self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
             self.model.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
@@ -852,6 +853,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.firstStep=False
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
+        if self.model.vosModel:
+            self.model.q_grad_vos = self.model.vosModel.q[('grad(u)',0)]
+            self.q_grad_vos = self.model.q_grad_vos
+            logEvent('FORZA NAPOLI!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            if self.q_grad_vos.all != 0.0:
+                logEvent('q_grad_vos from RANS3PSed.py --> %s ' % self.q_grad_vos)
 
 
 class LevelModel(proteus.Transport.OneLevelTransport):

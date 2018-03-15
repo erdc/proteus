@@ -186,6 +186,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.q_dvos_dt = modelList[self.VOF_model].q[('mt',0)].copy()
             self.q_dvos_dt[:] = 0.0
             self.ebqe_vos = modelList[self.VOF_model].ebqe[('u',0)].copy()
+            self.qebqe_vos = modelList[self.VOF_model].ebqe[('u',0)].copy()
             if self.vos_function is not None:
                 self.vos_dof[:] = 0.0
                 for eN in range(self.model.q['x'].shape[0]):
@@ -988,6 +989,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u', 0)],
+            self.q[('grad(u)', 0)],
             self.timeIntegration.beta_bdf[0],
             self.q['dV'],
             self.q['dV_last'],
