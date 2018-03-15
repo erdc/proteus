@@ -194,12 +194,17 @@ class NS_base:  # (HasTraits):
                                                                        nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                        parallelPartitioningType=n.parallelPartitioningType)
                     else:
+                        if hasattr(n,'triangleFlag')==True:
+                            triangleFlag=n.triangleFlag
+                        else:
+                            triangleFlag=0
                         mlMesh = MeshTools.MultilevelTriangularMesh(nnx,nny,1,
                                                                     p.domain.x[0], p.domain.x[1], 0.0,
                                                                     p.domain.L[0],p.domain.L[1],1,
                                                                     refinementLevels=n.nLevels,
                                                                     nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                    parallelPartitioningType=n.parallelPartitioningType)
+                                                                    parallelPartitioningType=n.parallelPartitioningType,
+                                                                    triangleFlag=triangleFlag)
 
                 elif p.domain.nd == 3:
                     if (n.nnx == n.nny == n.nnz  is None):
