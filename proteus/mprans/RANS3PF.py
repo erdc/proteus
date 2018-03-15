@@ -136,7 +136,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def __init__(self,
                  CORRECT_VELOCITY=True,
-                 STABILIZATION_TYPE=0, #0: SUPG, 1: EV via weak residual, 2: EV via strong residual
+                 USE_SUPG=1,
+                 ARTIFICIAL_VISCOSITY=1, #0: no art viscosity, 1: shock capturing, 2: entropy viscosity
                  cMax=1.0,  # For entropy viscosity (mql)
                  cE=1.0,  # For entropy viscosity (mql)
                  epsFact=1.5,
@@ -286,7 +287,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nd = nd
         #
         # mql: for entropy viscosity
-        self.STABILIZATION_TYPE=STABILIZATION_TYPE
+        assert (USE_SUPG==0 or USE_SUPG==1), "USE_SUPG must be 0, or 1"
+        self.USE_SUPG=USE_SUPG
+        assert (ARTIFICIAL_VISCOSITY>=0 and ARTIFICIAL_VISCOSITY<=2), "ARTIFICIAL_VISCOSITY must be 0,1 or 2"
+        self.ARTIFICIAL_VISCOSITY=ARTIFICIAL_VISCOSITY
+        # ARTIFICIAL_VISCOSITY. 0: No artificial viscosity, 1: shock capturing, 2: entropy viscosity
         self.cMax = cMax
         self.cE = cE
         #
@@ -2248,20 +2253,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             Cz = numpy.zeros(Cx.shape, 'd')
 
-        # mql: select appropiate functions to compute residual and jacobian
-        if (self.coefficients.STABILIZATION_TYPE == 1 or self.coefficients.STABILIZATION_TYPE == 2):
-            self.calculateResidual = self.rans3pf.calculateResidual_entropy_viscosity
-            self.calculateJacobian = self.rans3pf.calculateJacobian_entropy_viscosity
-        else:
-            self.calculateResidual = self.rans3pf.calculateResidual
-            self.calculateJacobian = self.rans3pf.calculateJacobian
-
         self.pressureModel.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.isActiveDOF = np.ones_like(r);
-        self.calculateResidual(  # element
+        self.rans3pf.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -2477,7 +2474,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_nitsche,
             self.q['phisError'],
             self.phisErrorNodal,
-            self.coefficients.STABILIZATION_TYPE,
+            self.coefficients.USE_SUPG,
+            self.coefficients.ARTIFICIAL_VISCOSITY,
             self.elementQuadratureWeights[('u', 0)].sum(),
             self.coefficients.cMax,
             self.coefficients.cE,
@@ -2578,7 +2576,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 1)] = self.csrColumnOffsets[(0, 1)]
             self.csrColumnOffsets_eb[(2, 2)] = self.csrColumnOffsets[(0, 1)]
 
-        self.calculateJacobian(  # element
+        self.rans3pf.calculateJacobian(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -2789,6 +2787,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_velocities,
             self.coefficients.particle_centroids,
             self.coefficients.particle_nitsche,
+            self.coefficients.USE_SUPG,
             self.KILL_PRESSURE_TERM,
             self.timeIntegration.dt,
             self.hasMaterialParametersAsFunctions,
