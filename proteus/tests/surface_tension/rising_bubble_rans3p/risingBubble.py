@@ -5,8 +5,8 @@ from proteus.default_n import *
 from proteus.Profiling import logEvent
 from parameters import *
 
-test_case=1
-AUTOMATED_TEST = True
+test_case=2
+AUTOMATED_TEST = False
     
 # ----- PARAMETERS FOR ELLIPTIC REDISTANCING ----- #
 EXPLICIT_VOF=True
@@ -14,13 +14,16 @@ EXPLICIT_NCLS=True
 ELLIPTIC_REDISTANCING=2
 alpha_REDISTANCING='inf' #1.0E6
 
+# ----- PARAMETERS FOR STABILIZATION OF NS ----- #
+USE_SUPG_NS=0
+ARTIFICIAL_VISCOSITY_NS=0
 # ----- DIMENSIONS AND REFINEMENT ----- #
 nd=ct.nd
 if AUTOMATED_TEST==True:
     Refinement = 1
 else:
-    Refinement = 2
-    
+    Refinement = 1
+
 # ----- PHYSICAL PARAMETERS ----- #
 if nd==3:
     T=1.0
@@ -79,7 +82,7 @@ applyRedistancing = True
 useOldPETSc = False
 useSuperlu = True
 timeDiscretization = 'vbdf'#vbdf'#'vbdf'  # 'vbdf', 'be', 'flcbdf'
-spaceOrder = 1
+spaceOrder = 2
 pspaceOrder = 1
 useHex = False
 useRBLES = 0.0
@@ -105,6 +108,7 @@ if useMetrics not in [0.0, 1.0]:
 if spaceOrder == 1:
     hFactor = 1.0
     if useHex:
+        quad=True
         basis = C0_AffineLinearOnCubeWithNodalBasis
         elementQuadrature = CubeGaussQuadrature(nd, 2)
         elementBoundaryQuadrature = CubeGaussQuadrature(nd - 1, 2)
@@ -115,6 +119,7 @@ if spaceOrder == 1:
 elif spaceOrder == 2:
     hFactor = 0.5
     if useHex:
+        quad=True
         basis = C0_AffineLagrangeOnCubeWithNodalBasis
         elementQuadrature = CubeGaussQuadrature(nd, 4)
         elementBoundaryQuadrature = CubeGaussQuadrature(nd - 1, 4)
@@ -137,6 +142,7 @@ elif pspaceOrder == 2:
 if AUTOMATED_TEST==True:
     T=0.01 
 # Domain and mesh
+structured = False
 if nd==2:
     L = (1.0 , 2.0)
     he = L[0]/float(4*Refinement-1)
@@ -146,15 +152,17 @@ else:
     L = (1.0 , 1.0, 2.0)
     he = L[0]/float(4*Refinement-1)
     if AUTOMATED_TEST==False:
-        he*=0.65 
+        he*=0.65
+            
 weak_bc_penalty_constant = 1.0E6
 nLevels = 1
 #parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
 parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.node
 nLayersOfOverlapForParallel = 0
-structured = False
 
 if useHex:
+    boundaries = ['left', 'right', 'bottom', 'top', 'front', 'back']
+    boundaryTags = dict([(key, i + 1) for (i, key) in enumerate(boundaries)])
     nnx = 2 * Refinement + 1
     if nd==2:
         nny = 4 * Refinement + 1
@@ -164,15 +172,18 @@ if useHex:
     hex = True
     domain = Domain.RectangularDomain(L)
 else:
-    boundaries = ['left', 'right', 'bottom', 'top', 'front', 'back']
+    boundaries = ['bottom', 'right', 'top', 'left', 'front', 'back']
     boundaryTags = dict([(key, i + 1) for (i, key) in enumerate(boundaries)])
     if structured:
-        nnx = 2 * Refinement
-        if nx==2:
-            nny = 4 * Refinement
+        nnx = 4 * Refinement**2 + 1
+        if nd==2:
+            nny = 2*nnx
         else:
-            nny = 2 * Refinement + 1
-            nnz = 4 * Refinement + 1
+            nny = nnx
+            nnz = 2*nnx
+        triangleFlag=1
+        domain = Domain.RectangularDomain(L)
+        he = L[0]/(nnx - 1)
     else:
         if nd==2:
             vertices = [[0.0, 0.0],  #0
@@ -246,7 +257,7 @@ else:
         else:
             triangleOptions="VApq1.4q12feena%21.16e" % ((he**3)/6.0,)
             
-logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
+        logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 
 # Numerical parameters
 ns_forceStrongDirichlet = False
