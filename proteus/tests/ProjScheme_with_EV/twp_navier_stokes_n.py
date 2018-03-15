@@ -2,7 +2,6 @@ from proteus import *
 from twp_navier_stokes_p import *
 from NS_convergence import *
 
-STABILIZATION_TYPE = STABILIZATION_TYPE 
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF
     timeOrder=2

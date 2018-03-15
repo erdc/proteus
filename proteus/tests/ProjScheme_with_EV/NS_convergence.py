@@ -4,20 +4,28 @@ from proteus import Domain
 from proteus.default_n import *
 from proteus.Profiling import logEvent
 
-#  Discretization -- input options
-#Refinement = 20#45min on a single core for spaceOrder=1, useHex=False
-mu = 1.0E-4 #Just to compute force terms for convergence test
 manufactured_solution = 1 #1: u.n!=0, 2: u.n=0
+
+# ----- PARAMETERS ABOUT STABILIZATION OF NS ----- #
+USE_SUPG=0
+ARTIFICIAL_VISCOSITY=2
+
+# ----- OTHER IMPORTANT PARAMETERS FOR CONVERGENCE TEST ----- #
 KILL_PRESSURE_TERM = False
-fixNullSpace_PresInc = True
-INTEGRATE_BY_PARTS_DIV_U_PresInc = True
-CORRECT_VELOCITY = True
-ns_forceStrongDirichlet = True
-STABILIZATION_TYPE = 1 #0: SUPG, 1: EV via weak residual, 2: EV via strong residual
+ns_forceStrongDirichlet = False
+mu = 1.0 
+Refinement = 1
+
+# ----- ENTROPY VISCOSITY PARAMETERS ----- #
 cE = 1.0
 cMax = 1.0
 
-Refinement = 2
+# ----- numerical options to RANS3PF ----- #
+fixNullSpace_PresInc = True
+INTEGRATE_BY_PARTS_DIV_U_PresInc = True
+CORRECT_VELOCITY = True
+
+# ----- Discretization -- input options ----- #
 sedimentDynamics=False
 genMesh = True
 movingDomain = False
@@ -37,6 +45,7 @@ useRANS = 0  # 0 -- None
              # 1 -- K-Epsilon
              # 2 -- K-Omega
 openTop=True
+
 # Input checks
 if spaceOrder not in [1, 2]:
     print "INVALID: spaceOrder" + spaceOrder
@@ -95,7 +104,7 @@ he*=0.5
 #he*=0.5
 #he*=0.5
 
-weak_bc_penalty_constant = 100.0
+weak_bc_penalty_constant = 1E6
 nLevels = 1
 #parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
 parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.node
