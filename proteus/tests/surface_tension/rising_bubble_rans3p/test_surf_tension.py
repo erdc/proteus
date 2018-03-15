@@ -69,7 +69,6 @@ class TestSurfaceTension():
     def teardown_method(self,method):
         pass
     
-    @pytest.mark.skip(reason="in development")
     def test_2D_with_supg(self):
         # Set parameters for this test
         parameters.ct.NS_STABILIZATION_TYPE=0 #SUPG
@@ -113,7 +112,6 @@ class TestSurfaceTension():
         expected.close()
         actual.close()
 
-    @pytest.mark.skip(reason="in development")
     def test_2D_with_EV(self):
         # Set parameters for this test        
         parameters.ct.NS_STABILIZATION_TYPE=0 #EV #TMP 1
