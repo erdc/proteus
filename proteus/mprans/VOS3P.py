@@ -345,6 +345,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #                                                        self.model.ebqe['n'],
             #                                                        self.model.mesh)
             #log("Divergence = %12.5e" % (divergence,),level=2)
+        self.model.q_grad_vos = self.model.q[('grad(u)',0)]
+        self.q_grad_vos = self.model.q_grad_vos
         copyInstructions = {}
         return copyInstructions
 

@@ -511,7 +511,7 @@ public:
       //if ((sedF > frFraction_) && (sedF < maxFraction_ ))
       if (sedF > frFraction_)
 	{
-      sedN = std::min(sedF - frFraction_, maxFraction_ - frFraction_); //sedF - frFraction_;// std::min( sedF - frFraction_  , vos_limiter_ );
+      sedN = std::min( sedF - frFraction_  , vos_limiter_ );//std::min(sedF - frFraction_, maxFraction_ - frFraction_); //sedF - frFraction_;// 
       sedD = std::max( maxFraction_ - sedF , vos_limiter_ );
       num = pow( sedN , mContact_ );
       den = pow( sedD , nContact_ );

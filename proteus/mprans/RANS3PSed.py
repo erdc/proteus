@@ -856,7 +856,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.model.vosModel:
             self.model.q_grad_vos = self.model.vosModel.q[('grad(u)',0)]
             self.q_grad_vos = self.model.q_grad_vos
-            logEvent('FORZA NAPOLI!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
             if self.q_grad_vos.all != 0.0:
                 logEvent('q_grad_vos from RANS3PSed.py --> %s ' % self.q_grad_vos)
 

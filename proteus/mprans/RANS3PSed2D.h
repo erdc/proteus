@@ -888,8 +888,6 @@ namespace proteus
       mom_u_source += coeff * grad_vos[0];
       mom_v_source += coeff * grad_vos[1];
       //mom_w_source += coeff * grad_vos[2];
-//      printf("grad_vos[0] --> %2.20f ", grad_vos[0]);
-//      printf("grad_vos[1] --> %2.20f ", grad_vos[1]);
 
     }  
 
@@ -1859,13 +1857,7 @@ namespace proteus
                 for (int I=0;I<nSpace;I++)
                   grad_vos[I] = q_grad_vos[eN_k_nSpace + I];
                 if (grad_vos[1]  > 0.0 )
-              {
-               printf("grad_vos[1] --> %2.20f ", grad_vos[1]);
-              } 
-                if (q_grad_vos[eN_k_nSpace + 1]  > 0.0 )
-              {
-               printf("q_grad_vos[1] --> %2.20f ", q_grad_vos[eN_k_nSpace + 1]);
-              }                               
+                           
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
                 /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w); */

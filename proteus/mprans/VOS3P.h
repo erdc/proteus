@@ -424,25 +424,25 @@ namespace proteus
                 porosity,
                 //
                 G[nSpace*nSpace],G_dd_G,tr_G;//norm_Rv;
-              // //
-              // //compute solution and gradients at quadrature points
-              // //
-              // u=0.0;
-              // for (int I=0;I<nSpace;I++)
-              //   {
-              //     grad_u[I]=0.0;
-              //   }
-              // for (int j=0;j<nDOF_trial_element;j++)
-              //   {
-              //     int eN_j=eN*nDOF_trial_element+j;
-              //     int eN_k_j=eN_k*nDOF_trial_element+j;
-              //     int eN_k_j_nSpace = eN_k_j*nSpace;
-              //     u += valFromDOF_c(u_dof[u_l2g[eN_j]],u_trial[eN_k_j]);
-              //     for (int I=0;I<nSpace;I++)
-              //       {
-              //         grad_u[I] += gradFromDOF_c(u_dof[u_l2g[eN_j]],u_grad_trial[eN_k_j_nSpace+I]);
-              //       }
-              //   }
+//               //
+//               //compute solution and gradients at quadrature points
+//               //
+//               u=0.0;
+//               for (int I=0;I<nSpace;I++)
+//                 {
+//                   grad_u[I]=0.0;
+//                 }
+//               for (int j=0;j<nDOF_trial_element;j++)
+//                 {
+//                   int eN_j=eN*nDOF_trial_element+j;
+//                   int eN_k_j=eN_k*nDOF_trial_element+j;
+//                   int eN_k_j_nSpace = eN_k_j*nSpace;
+//                   u += valFromDOF_c(u_dof[u_l2g[eN_j]],u_trial[eN_k_j]);
+//                   for (int I=0;I<nSpace;I++)
+//                     {
+//                       grad_u[I] += gradFromDOF_c(u_dof[u_l2g[eN_j]],u_grad_trial[eN_k_j_nSpace+I]);
+//                     }
+//                 }
               ck.calculateMapping_element(eN,
                                           k,
                                           mesh_dof,
@@ -478,6 +478,14 @@ namespace proteus
                       u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
                     }
                 }
+              //
+              //load gradient of vos into q_grad_vos
+              //
+              for(int I=0;I<nSpace;I++)
+                {
+                  q_grad_u[eN_k_nSpace+I] = grad_u[I];
+                }
+
               //VRANS
               porosity = q_porosity[eN_k];
               //
@@ -581,7 +589,7 @@ namespace proteus
               //
               q_u[eN_k] = u;
               q_m[eN_k] = m;
-              q_grad_u = grad_u;
+
             }
           //
           //load element into global residual and save element residual
