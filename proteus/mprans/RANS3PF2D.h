@@ -3380,7 +3380,7 @@ namespace proteus
             std::memset(particle_netForces,0,nParticles*3*sizeof(double));
             std::memset(particle_netMoments,0,nParticles*3*sizeof(double));
             for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
-              {
+                {
                 // Initialization of the force to 0
                 register double Fx = 0.0, Fy = 0.0, Mz = 0.0;
                 register int ebN = surrogate_boundaries[ebN_s],
@@ -3394,6 +3394,7 @@ namespace proteus
                   //elementResidual_w[nDOF_test_element],
                   eps_rho,eps_mu;
                 //std::cout<<"Surrogate edge "<<ebN<<" element neighbor "<<eN<<" local element boundary "<<ebN_local<<std::endl;
+                if (ebN >= nElementBoundaries_owned) continue;
                 for (int i=0;i<nDOF_test_element;i++)
                   {
                     elementResidual_mesh[i]=0.0;
