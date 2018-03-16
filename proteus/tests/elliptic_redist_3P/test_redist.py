@@ -32,7 +32,6 @@ class TestEllipticRedistancing():
     def teardown_method(self,method):
         pass
 
-#    @pytest.mark.skip(reason="in development")
     def test_ELLIPTIC_REDISTANCING_0(self):
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = 0
@@ -63,7 +62,6 @@ class TestEllipticRedistancing():
         assert np.isclose(np.amax(actual.root.u_t2),0.137547581396,atol=1e-10)
         actual.close()
 
-    @pytest.mark.skip(reason="in development")
     def test_ELLIPTIC_REDISTANCING_1(self):
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = 1
@@ -94,7 +92,6 @@ class TestEllipticRedistancing():
         assert np.isclose(np.amax(actual.root.u_t2),0.144686270399,atol=1e-10)
         actual.close()
 
-    @pytest.mark.skip(reason="in development")
     def test_ELLIPTIC_REDISTANCING_2(self):
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = 2
@@ -125,7 +122,6 @@ class TestEllipticRedistancing():
         assert np.isclose(np.amax(actual.root.u_t2),0.113047815938,atol=1e-10)
         actual.close()
 
-    @pytest.mark.skip(reason="in development")
     def test_ELLIPTIC_REDISTANCING_3(self):
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = 3

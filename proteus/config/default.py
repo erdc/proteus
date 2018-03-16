@@ -8,6 +8,10 @@ prefix = os.getenv('PROTEUS_PREFIX')
 if not prefix:
     prefix = sys.exec_prefix
 
+PROTEUS_OPT = os.getenv('PROTEUS_OPT')
+if not PROTEUS_OPT:
+    PROTEUS_OPT=['-O0','-UNDEBUG']
+
 PROTEUS_INCLUDE_DIR = pjoin(prefix, 'include')
 PROTEUS_LIB_DIR = pjoin(prefix, 'lib')
 
