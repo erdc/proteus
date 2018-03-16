@@ -19,8 +19,6 @@ else:
 
 femSpaces = {0:basis,
 	     1:basis}
-#femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis,
-#             1:C0_AffineQuadraticOnSimplexWithNodalBasis}
 
 massLumping       = False
 numericalFluxType = None
