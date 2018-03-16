@@ -24,7 +24,6 @@ class TestIsosurface():
             if os.path.isfile(file):
                 os.remove(file)
 
-    @pytest.mark.skip(reason="in development")
     def test_povgen(self):
         import difflib
         import urllib
