@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <cstring>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
@@ -1602,7 +1603,8 @@ namespace proteus
             dmom_v_adv_v[1] += D_s * porosity * nu * fluid_outward_normal[1];
           }
       }
-      inline void compute_force_around_solid(const double dV,
+      inline void compute_force_around_solid(bool element_owned,
+                                             const double dV,
                                              const int nParticles,
                                              const int sd_offset,
                                              double *particle_signed_distances,
@@ -1635,8 +1637,8 @@ namespace proteus
                                              const double grad_u[nSpace],
                                              const double grad_v[nSpace],
                                              const double grad_w[nSpace],
-                                             double& Fx,
-                                             double& Fy)
+                                             double* particle_netForces,
+                                             double* particle_netMoments)
       {
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
         double *phi_s_normal;
@@ -1647,66 +1649,45 @@ namespace proteus
         rho = rho_0 * (1.0 - H_mu) + rho_1 * H_mu;
         mu = rho_0 * nu_0 * (1.0 - H_mu) + rho_1 * nu_1 * H_mu;
         C = 0.0;
+        for (int i = 0; i < nParticles; i++)
+        {
+            phi_s = particle_signed_distances[i * sd_offset];
+            phi_s_normal = &particle_signed_distance_normals[i * sd_offset * nSpace];
+            fluid_outward_normal[0] = -phi_s_normal[0];
+            fluid_outward_normal[1] = -phi_s_normal[1];
+            vel = &particle_velocities[i * sd_offset * nSpace];
+            u_s = vel[0];
+            v_s = vel[1];
+            w_s = 0;
+            H_s = smoothedHeaviside(eps_s, phi_s);
+            D_s = smoothedDirac(eps_s, phi_s);
+            double rel_vel_norm = sqrt((uStar - u_s) * (uStar - u_s) +(vStar - v_s) * (vStar - v_s) + (wStar - w_s) * (wStar - w_s));
+            double C_surf = (phi_s > 0.0) ? 0.0 : nu * penalty;
+            double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
 
-        phi_s = particle_signed_distances[0];
-        phi_s_normal = &particle_signed_distance_normals[0];
-        fluid_outward_normal[0] = -phi_s_normal[0];
-        fluid_outward_normal[1] = -phi_s_normal[1];
-        vel = &particle_velocities[0];
-        u_s = vel[0]; //particle_velocities[i*3+0];
-        v_s = vel[1]; //particle_velocities[i*3+1];
-        w_s = 0;
-        H_s = smoothedHeaviside(eps_s, phi_s);
-        D_s = smoothedDirac(eps_s, phi_s);
-        double rel_vel_norm = sqrt((uStar - u_s) * (uStar - u_s) +
-                                   (vStar - v_s) * (vStar - v_s) +
-                                   (wStar - w_s) * (wStar - w_s));
+            C = (D_s * C_surf + (1.0 - H_s) * C_vol);
+            force_x = dV * D_s * (p * fluid_outward_normal[0]
+                                  -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
+                                  );
+            //+dV*D_s*C_surf*rel_vel_norm*(u-u_s)*rho
+            //+dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
+            force_y = dV * D_s * (p * fluid_outward_normal[1]
+                                  -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
+                                  );
+            //+dV*D_s*C_surf*rel_vel_norm*(v-v_s)*rho
+            //+dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
 
-        double C_surf = (phi_s > 0.0) ? 0.0 : nu * penalty;
-        double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
+            //always 3D for particle centroids
+            r_x = x - particle_centroids[i * 3 + 0];
+            r_y = y - particle_centroids[i * 3 + 1];
 
-        C = (D_s * C_surf + (1.0 - H_s) * C_vol);
-        force_x = dV * D_s * (p * fluid_outward_normal[0]
-                              - mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
-                              );
-        //+dV*D_s*C_surf*rel_vel_norm*(u-u_s)*rho
-        //+dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
-
-        force_y = dV * D_s * (p * fluid_outward_normal[1]
-                              - mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
-                              );
-        //+dV*D_s*C_surf*rel_vel_norm*(v-v_s)*rho
-        //+dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
-
-        if(0)
-          std::cout<<nu<<","
-                   <<penalty<<","
-                   <<phi_s<<","
-                   <<C_surf<<","
-                   <<C_vol<<","
-                   <<dV<<","
-                   <<D_s<<","
-                   <<H_s<<","
-                   <<p<<","
-                   <<fluid_outward_normal[0]<<","
-                   <<fluid_outward_normal[1]<<","
-                   <<grad_u[0]<<","
-                   <<grad_u[1]<<","
-                   <<grad_v[0]<<","
-                   <<grad_v[1]<<","
-                   <<u<<","
-                   <<v<<","
-                   <<u_s<<","
-                   <<v_s<<","
-                   <<rho<<","
-                   <<force_x<<","
-                   <<force_y<<","
-                   <<Fx<<","
-                   <<Fy<<","
-                   <<std::endl;
-
-        Fx += force_x;
-        Fy += force_y;
+            if (element_owned)
+              {
+                particle_netForces[i * 3 + 0] += force_x;
+                particle_netForces[i * 3 + 1] += force_y;
+                particle_netMoments[i * 3 + 2] += (r_x * force_y - r_y * force_x);
+              }
+        }
       }
       inline
         void calculateCFL(const double& hFactor,
@@ -2550,9 +2531,8 @@ namespace proteus
           mesh_volume_conservation_err_max_weak=0.0;
         double globalConservationError=0.0;
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-        std::vector<int> surrogate_boundaries, surrogate_boundary_elements;
+        std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
         //std::set<int> active_velocity_dof;
-        double Fx = 0.0,Fy = 0.0,Fx2=0.0,Fy2=0.0;
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
@@ -2613,6 +2593,26 @@ namespace proteus
                       surrogate_boundary_elements.push_back(1);
                     else
                       surrogate_boundary_elements.push_back(0);
+                    //check which particle is this surrogate edge related to.
+                    //The method is to check one quadrature point inside of this element.
+                    //It works based on the assumption that the distance between any two particles
+                    //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
+                    //or one edge belongs to two particles .
+                    //But in any case, phi_s is well defined as the minimum.
+                    int j=-1;
+                    double distance=1e10, distance_to_ith_particle;
+                    for (int i=0;i<nParticles;++i)
+                    {
+                        distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
+                                                                           +eN*nQuadraturePoints_element
+                                                                           +0];//0-th quadrature point
+                        if (distance_to_ith_particle<distance)
+                        {
+                            distance = distance_to_ith_particle;
+                            j = i;
+                        }
+                    }
+                    surrogate_boundary_particle.push_back(j);
                   }
                 else if (pos_counter == 3)
                   {
@@ -2994,7 +2994,9 @@ namespace proteus
                                            particle_netForces,
                                            particle_netMoments,
                                            particle_surfaceArea);
-                compute_force_around_solid(dV,
+                if(USE_SBM>0)
+                compute_force_around_solid(eN < nElements_owned,
+                                           dV,
                                            nParticles,
                                            nQuadraturePoints_global,
                                            &particle_signed_distances[eN_k],
@@ -3027,8 +3029,8 @@ namespace proteus
                                            grad_u,
                                            grad_v,
                                            grad_w,
-                                           Fx2,
-                                           Fy2);
+                                           particle_netForces,
+                                           particle_netMoments);
                 //Turbulence closure model
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
@@ -3373,14 +3375,14 @@ namespace proteus
         //
         //loop over the surrogate boundaries in SB method and assembly into residual
         //
-        //std::cout<<"    Force use delta function    "<<Fx2<<"\t"<<Fy2<<std::endl;
         if(USE_SBM>0)
           {
-            // Initialization of the force to 0
-            Fx = 0.0;
-            Fy = 0.0;
+            std::memset(particle_netForces,0,nParticles*3*sizeof(double));
+            std::memset(particle_netMoments,0,nParticles*3*sizeof(double));
             for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
               {
+                // Initialization of the force to 0
+                register double Fx = 0.0, Fy = 0.0, Mz = 0.0;
                 register int ebN = surrogate_boundaries[ebN_s],
                   eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
                   ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
@@ -3573,8 +3575,8 @@ namespace proteus
                       {
                         p_ext += p_dof[p_l2g[eN*nDOF_per_element_pressure+i]]*p_trial_trace_ref[ebN_local_kb*nDOF_per_element_pressure+i];
                       }
-                    double nx = -P_normal[0]; //YY: normal direction outward of the solid. Use normal or P_normal ? normal is arbitrary now.
-                    double ny = -P_normal[1];
+                    double nx = P_normal[0]; //YY: normal direction outward of the solid.
+                    double ny = P_normal[1];
 
                     double S_xx = 2*visco*grad_u_ext[0];
                     double S_xy = visco*(grad_u_ext[1] + grad_v_ext[0]); // sym tensor -> S_yx = S_xy
@@ -3590,7 +3592,16 @@ namespace proteus
                     //                  Fy += dS*(C_adim*(v_ext - bc_v_ext)
                     //                          - visco * (normal[0]*(grad_u_ext[1]+grad_v_ext[0]) + normal[1]*2*grad_v_ext[1])
                     //                          + C_adim*dd2);
+                    r_x = x_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 0];
+                    r_y = y_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 1];
+                    Mz  += r_x*Fy-r_y*Fx;
                   }//kb
+                if (ebN < nElementBoundaries_owned)
+                {
+                    particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += Fx;
+                    particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Fy;
+                    particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2] += Mz;
+                }
               }//ebN_s
             //std::cout<<" sbm force over surrogate boundary is: "<<Fx<<"\t"<<Fy<<std::endl;
             //
@@ -4489,13 +4500,6 @@ namespace proteus
                 /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
               }//i
           }//ebNE
-        if(USE_SBM>0)//TODO: only for 1 particle now.
-          {
-            particle_netForces[0] = Fx;//Method1: integral over surrogate boundary
-            particle_netForces[1] = Fy;
-            particle_netMoments[0] = Fx2;//Method2: integral using delta function
-            particle_netMoments[1] = Fy2;
-          }
         /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
         /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
         /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
