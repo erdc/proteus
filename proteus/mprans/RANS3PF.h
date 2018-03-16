@@ -337,6 +337,7 @@ namespace proteus
                                    double hFactor,
                                    int nElements_global,
                                    int nElements_owned,
+                                   int nElementBoundaries_owned,
                                    double useRBLES,
                                    double useMetrics,
                                    double alphaBDF,
@@ -791,6 +792,7 @@ namespace proteus
                                                      double hFactor,
                                                      int nElements_global,
                                                      int nElements_owned,
+                                                     int nElementBoundaries_owned,
                                                      double useRBLES,
                                                      double useMetrics,
                                                      double alphaBDF,
@@ -2229,6 +2231,10 @@ namespace proteus
           res[1] = u[2]*v[0]-u[0]*v[2];
           res[2] = u[0]*v[1]-u[1]*v[0];
       }
+      double get_dot_product(const double *u, const double *v)
+      {
+          return u[0]*v[0]+u[1]*v[1]+u[2]*v[2];
+      }
       void calculateResidual(//element
                              double *mesh_trial_ref,
                              double *mesh_grad_trial_ref,
@@ -3438,18 +3444,15 @@ namespace proteus
                     distance[3] = -P_normal[2]*dist;
 //                    P_tangent[0] = -P_normal[1];
 //                    P_tangent[1] = P_normal[0];
-                    double dx = distance[0];
-                    double dy = distance[1];
-                    double dz = distance[2];
                     double visco = nu_0*rho_0;
                     double Csb=10;
                     double C_adim = Csb*visco/h_penalty;
                     double beta = 0.0;
                     double beta_adim = beta*h_penalty*visco;
 
-                    double dd1 = dx*grad_u_ext[0] + dy*grad_u_ext[1] + dz*grad_u_ext[2];
-                    double dd2 = dx*grad_v_ext[0] + dy*grad_v_ext[1] + dz*grad_v_ext[2];
-                    double dd3 = dx*grad_w_ext[0] + dy*grad_w_ext[1] + dz*grad_w_ext[2];
+                    const double grad_u_d[3] = {get_dot_product(distance,grad_u_ext),
+                                                get_dot_product(distance,grad_v_ext),
+                                                get_dot_product(distance,grad_w_ext)};
                     double res[3];
                     const double u_m_uD[3] = {u_ext - bc_u_ext,v_ext - bc_v_ext,u_ext - bc_w_ext};
                     const double zero_vec[3]={0.,0.,0.};
@@ -3467,16 +3470,14 @@ namespace proteus
                         int GlobPos_u = offset_u+stride_u*vel_l2g[eN_i];
                         int GlobPos_v = offset_v+stride_v*vel_l2g[eN_i];
                         int GlobPos_w = offset_w+stride_w*vel_l2g[eN_i];
-                        double phi_i = vel_test_dS[i];
-                        double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
-                        double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
-                        double Gzphi_i = vel_grad_test_dS[i*nSpace+2];
+                        const double phi_i = vel_test_dS[i];
                         double *grad_phi_i = &vel_grad_test_dS[i*nSpace+0];
-                        // Classical Nitsche
+                        const double grad_phi_i_dot_d =  get_dot_product(distance,grad_phi_i);
+
                         // (1)
-                        globalResidual[GlobPos_u] += phi_i*C_adim*(u_ext - bc_u_ext);
-                        globalResidual[GlobPos_v] += phi_i*C_adim*(v_ext - bc_v_ext);
-                        globalResidual[GlobPos_w] += phi_i*C_adim*(w_ext - bc_w_ext);
+                        globalResidual[GlobPos_u] += C_adim*phi_i*u_m_uD[0];
+                        globalResidual[GlobPos_v] += C_adim*phi_i*u_m_uD[1];
+                        globalResidual[GlobPos_w] += C_adim*phi_i*u_m_uD[2];
 
                         // (2)
                         get_symmetric_gradient_dot_vec(grad_u_ext,grad_v_ext,grad_w_ext,P_normal,res);
@@ -3486,35 +3487,34 @@ namespace proteus
 
                         // (3)
                         get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,u_m_uD,res);
-                        globalResidual[GlobPos_u] -= visco * (P_normal[0]*res[0]+P_normal[1]*res[1]+P_normal[2]*res[2]);
+                        globalResidual[GlobPos_u] -= visco * get_dot_product(P_normal,res);
                         get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,u_m_uD,res);
-                        globalResidual[GlobPos_v] -= visco * (P_normal[0]*res[0]+P_normal[1]*res[1]+P_normal[2]*res[2]);
+                        globalResidual[GlobPos_v] -= visco * get_dot_product(P_normal,res);
                         get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,u_m_uD,res);
-                        globalResidual[GlobPos_w] -= visco * (P_normal[0]*res[0]+P_normal[1]*res[1]+P_normal[2]*res[2]);
+                        globalResidual[GlobPos_w] -= visco * get_dot_product(P_normal,res);
 
-                        // second order Taylor expansion
                         // (4)
-                        globalResidual[GlobPos_u] += C_adim*(dx*Gxphi_i + dy*Gyphi_i + dz*Gzphi_i)*(u_ext - bc_u_ext);
-                        globalResidual[GlobPos_v] += C_adim*(dx*Gxphi_i + dy*Gyphi_i + dz*Gzphi_i)*(v_ext - bc_v_ext);
-                        globalResidual[GlobPos_w] += C_adim*(dx*Gxphi_i + dy*Gyphi_i + dz*Gzphi_i)*(w_ext - bc_w_ext);
+                        globalResidual[GlobPos_u] += C_adim*grad_phi_i_dot_d*u_m_uD[0];
+                        globalResidual[GlobPos_v] += C_adim*grad_phi_i_dot_d*u_m_uD[1];
+                        globalResidual[GlobPos_w] += C_adim*grad_phi_i_dot_d*u_m_uD[2];
 
                         // (5)
-                        globalResidual[GlobPos_u] += C_adim*(dx*Gxphi_i + dy*Gyphi_i + dz*Gzphi_i)*dd1;
-                        globalResidual[GlobPos_v] += C_adim*(dx*Gxphi_i + dy*Gyphi_i + dz*Gzphi_i)*dd2;
-                        globalResidual[GlobPos_w] += C_adim*(dx*Gxphi_i + dy*Gyphi_i + dz*Gzphi_i)*dd3;
+                        globalResidual[GlobPos_u] += C_adim*grad_phi_i_dot_d*grad_u_d[0];
+                        globalResidual[GlobPos_v] += C_adim*grad_phi_i_dot_d*grad_u_d[1];
+                        globalResidual[GlobPos_w] += C_adim*grad_phi_i_dot_d*grad_u_d[2];
 
                         // (6)
-                        globalResidual[GlobPos_u] += C_adim*phi_i*dd1;
-                        globalResidual[GlobPos_v] += C_adim*phi_i*dd2;
-                        globalResidual[GlobPos_w] += C_adim*phi_i*dd3;
+                        globalResidual[GlobPos_u] += C_adim*phi_i*grad_u_d[0];
+                        globalResidual[GlobPos_v] += C_adim*phi_i*grad_u_d[1];
+                        globalResidual[GlobPos_w] += C_adim*phi_i*grad_u_d[2];
 
                         // (7)
                         get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,P_normal,res);
-                        globalResidual[GlobPos_u] -= visco*(res[0]*dd1+res[1]*dd2+res[2]*dd3);
+                        globalResidual[GlobPos_u] -= visco*get_dot_product(grad_u_d,res);
                         get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,P_normal,res);
-                        globalResidual[GlobPos_v] -= visco*(res[0]*dd1+res[1]*dd2+res[2]*dd3);
+                        globalResidual[GlobPos_v] -= visco*get_dot_product(grad_u_d,res);
                         get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,P_normal,res);
-                        globalResidual[GlobPos_w] -= visco*(res[0]*dd1+res[1]*dd2+res[2]*dd3);
+                        globalResidual[GlobPos_w] -= visco*get_dot_product(grad_u_d,res);
 
                         // the penalization on the tangential derivative (8)
 //                        globalResidual[GlobPos_u] += beta_adim*dt1*(Gxphi_i*P_tangent[0] + Gyphi_i*P_tangent[1]);
@@ -4542,6 +4542,7 @@ namespace proteus
                              double hFactor,
                              int nElements_global,
                              int nElements_owned,
+                             int nElementBoundaries_owned,
                              double useRBLES,
                              double useMetrics,
                              double alphaBDF,
@@ -4695,9 +4696,11 @@ namespace proteus
         //
         std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles * 3), particle_netMoments(nParticles * 3);
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
+        std::vector<int> surrogate_boundaries, surrogate_boundary_elements;
         for(int eN=0;eN<nElements_global;eN++)
           {
             register double eps_rho,eps_mu;
+            double element_active=1.0;//value 1 is because it is ibm by default
 
             register double  elementJacobian_p_p[nDOF_test_element][nDOF_trial_element],
               elementJacobian_p_u[nDOF_test_element][nDOF_trial_element],
@@ -4735,6 +4738,47 @@ namespace proteus
                   elementJacobian_w_v[i][j]=0.0;
                   elementJacobian_w_w[i][j]=0.0;
                 }
+            if(USE_SBM>0)
+            {
+                //
+                //detect cut cells
+                //
+                int pos_counter=0;
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                {
+                    if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] >= 0)
+                        pos_counter++;
+                }
+                if (pos_counter == 3)//surrogate face
+                {
+                    element_active=0.0;
+                    int opp_node=-1;
+                    for (int I=0;I<nDOF_mesh_trial_element;I++)
+                    {
+                        if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] < 0)
+                            opp_node = I;
+                    }
+                    assert(opp_node >=0);
+                    assert(opp_node <nDOF_mesh_trial_element);
+                    int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+                    surrogate_boundaries.push_back(ebN);
+                    //now find which element neighbor this element is
+                    //since each face has 2 neighbor elements.
+                    //YY: what if this face is a boundary face?
+                    if (eN == elementBoundaryElementsArray[eN*2+0])
+                        surrogate_boundary_elements.push_back(1);
+                    else
+                        surrogate_boundary_elements.push_back(0);
+
+                }else if (pos_counter == 4)// element is in fluid totally
+                {
+                    element_active=1.0;
+                }
+                else
+                {
+                    element_active=0.0;
+                }
+            }
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
@@ -5052,7 +5096,7 @@ namespace proteus
                                                   dmom_v_source,
                                                   dmom_w_source);
                 double C_particles=0.0;
-                if (nParticles > 0)
+                if (nParticles > 0 && USE_SBM==0)
                   updateSolidParticleTerms(eN < nElements_owned,
                                            particle_nitsche,
                                            dV,
@@ -5523,6 +5567,270 @@ namespace proteus
                   }//j
               }//i
           }//elements
+        //
+        //loop over surrogate boundary
+        //
+        if(USE_SBM>0)
+        {
+            for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
+            {
+                register int ebN = surrogate_boundaries[ebN_s],
+                        eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
+                        ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
+                        eN_nDOF_trial_element = eN*nDOF_trial_element;
+                register double eps_rho,eps_mu;
+                if (ebN >= nElementBoundaries_owned) continue;//for parallel
+                for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+                {
+                    register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
+                            ebN_kb_nSpace = ebN_kb*nSpace,
+                            ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                            ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+
+                    register double u_ext=0.0,
+                            v_ext=0.0,
+                            w_ext=0.0,
+                            bc_u_ext=0.0,
+                            bc_v_ext=0.0,
+                            bc_w_ext=0.0,
+                            grad_u_ext[nSpace],
+                            grad_v_ext[nSpace],
+                            grad_w_ext[nSpace],
+                            jac_ext[nSpace*nSpace],
+                            jacDet_ext,
+                            jacInv_ext[nSpace*nSpace],
+                            boundaryJac[nSpace*(nSpace-1)],
+                            metricTensor[(nSpace-1)*(nSpace-1)],
+                            metricTensorDetSqrt,
+                            vel_grad_trial_trace[nDOF_trial_element*nSpace],
+                            dS,
+                            vel_test_dS[nDOF_test_element],
+                            normal[2],
+                            x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
+                            vel_grad_test_dS[nDOF_trial_element*nSpace],
+                            G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty;
+                    ck.calculateMapping_elementBoundary(eN,
+                            ebN_local,
+                            kb,
+                            ebN_local_kb,
+                            mesh_dof,
+                            mesh_l2g,
+                            mesh_trial_trace_ref,
+                            mesh_grad_trial_trace_ref,
+                            boundaryJac_ref,
+                            jac_ext,
+                            jacDet_ext,
+                            jacInv_ext,
+                            boundaryJac,
+                            metricTensor,
+                            metricTensorDetSqrt,
+                            normal_ref,
+                            normal,
+                            x_ext,y_ext,z_ext);
+                    ck.calculateMappingVelocity_elementBoundary(eN,
+                            ebN_local,
+                            kb,
+                            ebN_local_kb,
+                            mesh_velocity_dof,
+                            mesh_l2g,
+                            mesh_trial_trace_ref,
+                            xt_ext,yt_ext,zt_ext,
+                            normal,
+                            boundaryJac,
+                            metricTensor,
+                            integralScaling);
+                    dS = metricTensorDetSqrt*dS_ref[kb];
+                    ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+                    //compute shape and solution information
+                    //shape
+                    ck.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,vel_grad_trial_trace);
+                    //solution and gradients
+                    ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+                    ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_ext);
+                    ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],w_ext);
+
+                    ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
+                    ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
+                    ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_w_ext);
+                    //precalculate test function products with integration weights
+                    for (int j=0;j<nDOF_trial_element;j++)
+                    {
+                        vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+                        for (int I=0;I<nSpace;I++)
+                            vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
+                    }
+                    //
+                    //load the boundary values
+                    //
+                    ck.calculateGScale(G,normal,h_penalty);
+                    penalty = h_penalty;
+                    //
+                    //update the global Jacobian from the flux Jacobian
+                    //
+                    double dist = ebq_global_phi_solid[ebN_kb];
+                    double distance[3], P_normal[3], P_tangent[3]={0.0}; // distance vector, normal and tangent of the physical boundary
+                    P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
+                    P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
+                    P_normal[2] = ebq_global_grad_phi_solid[ebN_kb*nSpace+2];
+                    distance[0] = -P_normal[0]*dist;
+                    distance[1] = -P_normal[1]*dist;
+                    distance[2] = -P_normal[2]*dist;
+//                    P_tangent[0] = -P_normal[1];
+//                    P_tangent[1] = P_normal[0];
+                    double dx = distance[0];
+                    double dy = distance[1];
+                    double dz = distance[2];
+//                    double tx = P_tangent[0] ; double ty = P_tangent[1];
+                    double visco = nu_0*rho_0;
+                    double Csb=10;
+                    double C_adim = Csb*visco/h_penalty;
+                    double beta = 0.0;
+                    double beta_adim = beta*h_penalty*visco;
+
+
+                    double res[3];
+                    const double zero_vec[3]={0.,0.,0.};
+                    for (int i=0;i<nDOF_test_element;i++)
+                    {
+                        register int eN_i = eN*nDOF_test_element+i;
+                        double phi_i = vel_test_dS[i];
+                        double* grad_phi_i = &vel_grad_test_dS[i*nSpace+0];
+                        const double grad_phi_i_dot_d = get_dot_product(grad_phi_i,distance);
+                        for (int j=0;j<nDOF_trial_element;j++)
+                        {
+                            register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j,
+                                    ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
+
+                            double phi_j = vel_test_dS[j]/dS;//since phi_i has dS
+                            const double grad_phi_j[3]={vel_grad_test_dS[j*nSpace+0]/dS,
+                                                    vel_grad_test_dS[j*nSpace+1]/dS,
+                                                    vel_grad_test_dS[j*nSpace+2]/dS};
+                            const double grad_phi_j_dot_d = get_dot_product(grad_phi_j,distance);
+
+                            // Classical Nitsche
+                            // (1)
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                                    C_adim*phi_i*phi_j;
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                                    C_adim*phi_i*phi_j;
+                            globalJacobian[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] +=
+                                    C_adim*phi_i*phi_j;
+
+                            // (2)
+                            get_symmetric_gradient_dot_vec(grad_phi_j,zero_vec,zero_vec,P_normal,res);
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
+                                    visco * phi_i * res[0];
+                            globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+                                    visco * phi_i * res[1];
+                            globalJacobian[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_eb_u_w[ebN_i_j]] -=
+                                    visco * phi_i * res[2];
+
+                            get_symmetric_gradient_dot_vec(zero_vec,grad_phi_j,zero_vec,P_normal,res);
+                            globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+                                    visco * phi_i * res[0] ;
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
+                                    visco * phi_i * res[1];
+                            globalJacobian[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_eb_v_w[ebN_i_j]] -=
+                                    visco * phi_i * res[2];
+
+                            get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_j,P_normal,res);
+                            globalJacobian[csrRowIndeces_w_u[eN_i] + csrColumnOffsets_eb_w_u[ebN_i_j]] -=
+                                    visco * phi_i * res[0] ;
+                            globalJacobian[csrRowIndeces_w_v[eN_i] + csrColumnOffsets_eb_w_v[ebN_i_j]] -=
+                                    visco * phi_i * res[1];
+                            globalJacobian[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] -=
+                                    visco * phi_i * res[2];
+
+                            // (3)
+                            get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,P_normal,res);
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
+                                    visco * phi_j * res[0];
+                            globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+                                    visco * phi_j * res[1];
+                            globalJacobian[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_eb_u_w[ebN_i_j]] -=
+                                    visco * phi_j * res[2];
+
+                            get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,P_normal,res);
+                            globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+                                    visco * phi_j * res[0] ;
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
+                                    visco * phi_j * res[1];
+                            globalJacobian[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_eb_v_w[ebN_i_j]] -=
+                                    visco * phi_j * res[2];
+
+                            get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,P_normal,res);
+                            globalJacobian[csrRowIndeces_w_u[eN_i] + csrColumnOffsets_eb_w_u[ebN_i_j]] -=
+                                    visco * phi_j * res[0] ;
+                            globalJacobian[csrRowIndeces_w_v[eN_i] + csrColumnOffsets_eb_w_v[ebN_i_j]] -=
+                                    visco * phi_j * res[1];
+                            globalJacobian[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] -=
+                                    visco * phi_j * res[2];
+
+                            // (4)
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                                    C_adim*grad_phi_i_dot_d*phi_j;
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                                    C_adim*grad_phi_i_dot_d*phi_j;
+                            globalJacobian[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] +=
+                                    C_adim*grad_phi_i_dot_d*phi_j;
+                            // (5)
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                                    C_adim*grad_phi_i_dot_d*grad_phi_j_dot_d;
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                                    C_adim*grad_phi_i_dot_d*grad_phi_j_dot_d;
+                            globalJacobian[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] +=
+                                    C_adim*grad_phi_i_dot_d*grad_phi_j_dot_d;
+                            // (6)
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+                                    C_adim*grad_phi_j_dot_d*phi_i;
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+                                    C_adim*grad_phi_j_dot_d*phi_i;
+                            globalJacobian[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] +=
+                                    C_adim*grad_phi_j_dot_d*phi_i;
+                            // (7)
+                            get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,P_normal,res);
+                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
+                                    visco * grad_phi_j_dot_d * res[0];
+                            globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
+                                    visco * grad_phi_j_dot_d * res[1];
+                            globalJacobian[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_eb_u_w[ebN_i_j]] -=
+                                    visco * grad_phi_j_dot_d * res[2];
+
+                            get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,P_normal,res);
+                            globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+                                    visco * grad_phi_j_dot_d * res[0] ;
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
+                                    visco * grad_phi_j_dot_d * res[1];
+                            globalJacobian[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_eb_v_w[ebN_i_j]] -=
+                                    visco * grad_phi_j_dot_d * res[2];
+
+                            get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,P_normal,res);
+                            globalJacobian[csrRowIndeces_w_u[eN_i] + csrColumnOffsets_eb_w_u[ebN_i_j]] -=
+                                    visco * grad_phi_j_dot_d * res[0] ;
+                            globalJacobian[csrRowIndeces_w_v[eN_i] + csrColumnOffsets_eb_w_v[ebN_i_j]] -=
+                                    visco * grad_phi_j_dot_d * res[1];
+                            globalJacobian[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] -=
+                                    visco * grad_phi_j_dot_d * res[2];
+
+                            // the penalization on the tangential derivative
+                            // B < Gw t , (Gu - GuD) t >
+//                            // diag
+//                            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+//                                    beta_adim*(tx*Gxphi_i+ ty*Gyphi_i)*(tx*Gxphi_j+ ty*Gyphi_j);
+//                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+//                                    beta_adim*(tx*Gxphi_i+ ty*Gyphi_i)*(tx*Gxphi_j+ ty*Gyphi_j);
+                            //                        // extra diag
+                            //                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+                            //                          beta_adim*tx*(Gxphi_i*ty*Gxphi_j + Gyphi_i*ty*Gyphi_j);
+                            //                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+                            //                          beta_adim*ty*(Gxphi_i*tx*Gxphi_j + Gyphi_i*tx*Gyphi_j);
+
+                        }//j
+                    }//i
+
+                }
+            }
+        }
         //
         //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
         //
@@ -8655,6 +8963,7 @@ namespace proteus
                                                double hFactor,
                                                int nElements_global,
                                                int nElements_owned,
+                                               int nElementBoundaries_owned,
                                                double useRBLES,
                                                double useMetrics,
                                                double alphaBDF,
