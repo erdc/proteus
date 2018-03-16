@@ -2217,6 +2217,18 @@ namespace proteus
         return tmp;
       }
 
+      void get_symmetric_gradient_dot_vec(const double *grad_u, const double *grad_v, const double *grad_w, const double *n,double res[3])
+      {
+          res[0] =         2.0*grad_u[0]*n[0]+(grad_u[1]+grad_v[0])*n[1]+(grad_u[2]+grad_w[0])*n[2];
+          res[1] = (grad_v[0]+grad_u[1])*n[0]+          2*grad_v[1]*n[1]+(grad_v[2]+grad_w[1])*n[2];
+          res[2] = (grad_w[0]+grad_u[2])*n[0]+(grad_w[1]+grad_v[2])*n[1]+          2*grad_w[2]*n[2];
+      }
+      void get_cross_product(const double *u, const double *v,double res[3])
+      {
+          res[0] = u[1]*v[2]-u[2]*v[1];
+          res[1] = u[2]*v[0]-u[0]*v[2];
+          res[2] = u[0]*v[1]-u[1]*v[0];
+      }
       void calculateResidual(//element
                              double *mesh_trial_ref,
                              double *mesh_grad_trial_ref,
@@ -3301,11 +3313,240 @@ namespace proteus
         {
             for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
             {
+                register double Force[3] = {0.0}, position_vector_to_mass_center[3],Torque[3] = {0.0};
                 register int ebN = surrogate_boundaries[ebN_s],
                         eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
                         ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
                         eN_nDOF_trial_element = eN*nDOF_trial_element;
+                register double elementResidual_mesh[nDOF_test_element],
+                elementResidual_p[nDOF_test_element],
+                elementResidual_u[nDOF_test_element],
+                elementResidual_v[nDOF_test_element],
+                elementResidual_w[nDOF_test_element],
+                eps_rho,eps_mu;
 
+                if (ebN >= nElementBoundaries_owned) continue;//for parallel
+                for (int i=0;i<nDOF_test_element;i++)
+                {
+                    elementResidual_mesh[i]=0.0;
+                    elementResidual_p[i]=0.0;
+                    elementResidual_u[i]=0.0;
+                    elementResidual_v[i]=0.0;
+                    elementResidual_w[i]=0.0;
+                }
+                for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+                {
+                    register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
+                            /* ebNE_kb_nSpace = ebNE_kb*nSpace, */
+                            ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                            ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+                    register double u_ext=0.0, v_ext=0.0, w_ext=0.0,
+                    bc_u_ext=0.0, bc_v_ext=0.0, bc_w_ext=0.0,
+                    grad_u_ext[nSpace], grad_v_ext[nSpace], grad_w_ext[nSpace],
+                    jac_ext[nSpace*nSpace],
+                    jacDet_ext,
+                    jacInv_ext[nSpace*nSpace],
+                    boundaryJac[nSpace*(nSpace-1)],
+                    metricTensor[(nSpace-1)*(nSpace-1)],
+                    metricTensorDetSqrt,
+                    dS,
+                    p_test_dS[nDOF_test_element],p_grad_trial_trace[nDOF_trial_element*nSpace],
+                    vel_test_dS[nDOF_test_element],
+                    vel_grad_trial_trace[nDOF_trial_element*nSpace],
+                    vel_grad_test_dS[nDOF_trial_element*nSpace],
+                    normal[3],
+                    x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
+                    G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty,
+                    force_x,force_y,force_z,
+                    force_p_x,force_p_y,force_p_z,
+                    force_v_x,force_v_y,force_v_z,
+                    r_x,r_y,r_z;
+                    //compute information about mapping from reference element to physical element
+                    ck.calculateMapping_elementBoundary(eN,
+                            ebN_local,
+                            kb,
+                            ebN_local_kb,
+                            mesh_dof,
+                            mesh_l2g,
+                            mesh_trial_trace_ref,
+                            mesh_grad_trial_trace_ref,
+                            boundaryJac_ref,
+                            jac_ext,
+                            jacDet_ext,
+                            jacInv_ext,
+                            boundaryJac,
+                            metricTensor,
+                            metricTensorDetSqrt,
+                            normal_ref,
+                            normal,
+                            x_ext,y_ext,z_ext);
+                    ck.calculateMappingVelocity_elementBoundary(eN,
+                            ebN_local,
+                            kb,
+                            ebN_local_kb,
+                            mesh_velocity_dof,
+                            mesh_l2g,
+                            mesh_trial_trace_ref,
+                            xt_ext,yt_ext,zt_ext,
+                            normal,
+                            boundaryJac,
+                            metricTensor,
+                            integralScaling);
+                    dS = metricTensorDetSqrt*dS_ref[kb];
+                    //get the metric tensor
+                    ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+                    //compute shape and solution information
+                    //shape
+                    ck.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,vel_grad_trial_trace);
+                    //solution and gradients
+                    ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+                    ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_ext);
+                    ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],w_ext);
+
+                    ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
+                    ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
+                    ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_w_ext);
+                    for (int j=0;j<nDOF_trial_element;j++)
+                    {
+                        vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+                        for (int I=0;I<nSpace;I++)
+                            vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
+                    }
+                    bc_u_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*3
+                                                   +eN*nQuadraturePoints_element*3
+                                                   +kb*3
+                                                   +0];
+                    bc_v_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*3
+                                                   +eN*nQuadraturePoints_element*3
+                                                   +kb*3
+                                                   +1];
+                    bc_w_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*3
+                                                   +eN*nQuadraturePoints_element*3
+                                                   +kb*3
+                                                   +2];
+                    ck.calculateGScale(G,normal,h_penalty);
+                    //
+                    //update the element and global residual storage
+                    //
+                    double dist = ebq_global_phi_solid[ebN_kb];
+                    double distance[3], P_normal[3], P_tangent[3]; // distance vector, normal and tangent of the physical boundary
+                    P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
+                    P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
+                    P_normal[3] = ebq_global_grad_phi_solid[ebN_kb*nSpace+2];
+                    distance[0] = -P_normal[0]*dist;
+                    distance[1] = -P_normal[1]*dist;
+                    distance[3] = -P_normal[2]*dist;
+//                    P_tangent[0] = -P_normal[1];
+//                    P_tangent[1] = P_normal[0];
+                    double dx = distance[0];
+                    double dy = distance[1];
+                    double dz = distance[2];
+                    double visco = nu_0*rho_0;
+                    double Csb=10;
+                    double C_adim = Csb*visco/h_penalty;
+                    double beta = 0.0;
+                    double beta_adim = beta*h_penalty*visco;
+
+                    double dd1 = dx*grad_u_ext[0] + dy*grad_u_ext[1] + dz*grad_u_ext[2];
+                    double dd2 = dx*grad_v_ext[0] + dy*grad_v_ext[1] + dz*grad_v_ext[2];
+                    double dd3 = dx*grad_w_ext[0] + dy*grad_w_ext[1] + dz*grad_w_ext[2];
+                    double res[3];
+                    const double u_m_uD[3] = {u_ext - bc_u_ext,v_ext - bc_v_ext,u_ext - bc_w_ext};
+                    const double zero_vec[3]={0.,0.,0.};
+                    //YY: How to define tangent penalty? There are two directions.
+//                    double dt1 = P_tangent[0]*grad_u_ext[0] + P_tangent[1]*grad_u_ext[1];
+//                    double dt2 = P_tangent[0]*grad_v_ext[0] + P_tangent[1]*grad_v_ext[1];
+                    for (int i=0;i<nDOF_test_element;i++)
+                    {
+                        int eN_i = eN*nDOF_test_element+i;
+                        //globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=
+                        //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*Csb*(u_ext - bc_u_ext)*dS/h_penalty;
+                        //globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=
+                        //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*Csb*(v_ext - bc_u_ext)*dS/h_penalty;
+
+                        int GlobPos_u = offset_u+stride_u*vel_l2g[eN_i];
+                        int GlobPos_v = offset_v+stride_v*vel_l2g[eN_i];
+                        int GlobPos_w = offset_w+stride_w*vel_l2g[eN_i];
+                        double phi_i = vel_test_dS[i];
+                        double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
+                        double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
+                        double Gzphi_i = vel_grad_test_dS[i*nSpace+2];
+                        double *grad_phi_i = &vel_grad_test_dS[i*nSpace+0];
+                        // Classical Nitsche
+                        // (1)
+                        globalResidual[GlobPos_u] += phi_i*C_adim*(u_ext - bc_u_ext);
+                        globalResidual[GlobPos_v] += phi_i*C_adim*(v_ext - bc_v_ext);
+                        globalResidual[GlobPos_w] += phi_i*C_adim*(w_ext - bc_w_ext);
+
+                        // (2)
+                        get_symmetric_gradient_dot_vec(grad_u_ext,grad_v_ext,grad_w_ext,P_normal,res);
+                        globalResidual[GlobPos_u] -= visco * phi_i*res[0];
+                        globalResidual[GlobPos_v] -= visco * phi_i*res[1];
+                        globalResidual[GlobPos_w] -= visco * phi_i*res[2];
+
+                        // (3)
+                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,u_m_uD,res);
+                        globalResidual[GlobPos_u] -= visco * (P_normal[0]*res[0]+P_normal[1]*res[1]+P_normal[2]*res[2]);
+                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,u_m_uD,res);
+                        globalResidual[GlobPos_v] -= visco * (P_normal[0]*res[0]+P_normal[1]*res[1]+P_normal[2]*res[2]);
+                        get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,u_m_uD,res);
+                        globalResidual[GlobPos_w] -= visco * (P_normal[0]*res[0]+P_normal[1]*res[1]+P_normal[2]*res[2]);
+
+                        // second order Taylor expansion
+                        // (4)
+                        globalResidual[GlobPos_u] += C_adim*(dx*Gxphi_i + dy*Gyphi_i + dz*Gzphi_i)*(u_ext - bc_u_ext);
+                        globalResidual[GlobPos_v] += C_adim*(dx*Gxphi_i + dy*Gyphi_i + dz*Gzphi_i)*(v_ext - bc_v_ext);
+                        globalResidual[GlobPos_w] += C_adim*(dx*Gxphi_i + dy*Gyphi_i + dz*Gzphi_i)*(w_ext - bc_w_ext);
+
+                        // (5)
+                        globalResidual[GlobPos_u] += C_adim*(dx*Gxphi_i + dy*Gyphi_i + dz*Gzphi_i)*dd1;
+                        globalResidual[GlobPos_v] += C_adim*(dx*Gxphi_i + dy*Gyphi_i + dz*Gzphi_i)*dd2;
+                        globalResidual[GlobPos_w] += C_adim*(dx*Gxphi_i + dy*Gyphi_i + dz*Gzphi_i)*dd3;
+
+                        // (6)
+                        globalResidual[GlobPos_u] += C_adim*phi_i*dd1;
+                        globalResidual[GlobPos_v] += C_adim*phi_i*dd2;
+                        globalResidual[GlobPos_w] += C_adim*phi_i*dd3;
+
+                        // (7)
+                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,P_normal,res);
+                        globalResidual[GlobPos_u] -= visco*(res[0]*dd1+res[1]*dd2+res[2]*dd3);
+                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,P_normal,res);
+                        globalResidual[GlobPos_v] -= visco*(res[0]*dd1+res[1]*dd2+res[2]*dd3);
+                        get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,P_normal,res);
+                        globalResidual[GlobPos_w] -= visco*(res[0]*dd1+res[1]*dd2+res[2]*dd3);
+
+                        // the penalization on the tangential derivative (8)
+//                        globalResidual[GlobPos_u] += beta_adim*dt1*(Gxphi_i*P_tangent[0] + Gyphi_i*P_tangent[1]);
+//                        globalResidual[GlobPos_v] += beta_adim*dt2*(Gxphi_i*P_tangent[0] + Gyphi_i*P_tangent[1]);
+
+                    }//i
+
+                    //
+                    // Forces
+                    //
+                    //compute pressure at the quadrature point of the edge from dof-value of the pressure
+                    double p_ext = 0.0;
+                    for (int i=0; i<nDOF_per_element_pressure;++i)
+                      {
+                        p_ext += p_dof[p_l2g[eN*nDOF_per_element_pressure+i]]*p_trial_trace_ref[ebN_local_kb*nDOF_per_element_pressure+i];
+                      }
+                    get_symmetric_gradient_dot_vec(grad_u_ext,grad_v_ext,grad_w_ext,P_normal,res);
+                    Force[0] += (-p_ext*P_normal[0]+res[0])*dS;
+                    Force[1] += (-p_ext*P_normal[1]+res[1])*dS;
+                    Force[2] += (-p_ext*P_normal[2]+res[2])*dS;
+                    position_vector_to_mass_center[0] = x_ext-particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 0];
+                    position_vector_to_mass_center[1] = y_ext-particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 1];
+                    position_vector_to_mass_center[2] = z_ext-particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 2];
+                    get_cross_product(position_vector_to_mass_center,Force,Torque);
+                }
+                particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += Force[0];
+                particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Force[1];
+                particle_netForces[3*surrogate_boundary_particle[ebN_s]+2] += Force[2];
+                particle_netMoments[3*surrogate_boundary_particle[ebN_s]+0]+= Torque[0];
+                particle_netMoments[3*surrogate_boundary_particle[ebN_s]+1]+= Torque[1];
+                particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2]+= Torque[2];
+                //for debug
                 double x1 = mesh_dof[3*mesh_l2g[eN*4+0]+0], y1 = mesh_dof[3*mesh_l2g[eN*4+0]+1], z1 = mesh_dof[3*mesh_l2g[eN*4+0]+2];
                 double x2 = mesh_dof[3*mesh_l2g[eN*4+1]+0], y2 = mesh_dof[3*mesh_l2g[eN*4+1]+1], z2 = mesh_dof[3*mesh_l2g[eN*4+1]+2];
                 double x3 = mesh_dof[3*mesh_l2g[eN*4+2]+0], y3 = mesh_dof[3*mesh_l2g[eN*4+2]+1], z3 = mesh_dof[3*mesh_l2g[eN*4+2]+2];
