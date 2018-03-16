@@ -7,7 +7,6 @@
 
 #define ENTROPY(u)  u
 #define DENTROPY(u) 1.0
-
 #define cE 0.1
 #define cMax 0.1
 
