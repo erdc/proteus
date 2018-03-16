@@ -336,6 +336,7 @@ namespace proteus
                                    double hFactor,
                                    int nElements_global,
                                    int nElements_owned,
+                                   int nElementBoundaries_owned,
                                    double useRBLES,
                                    double useMetrics,
                                    double alphaBDF,
@@ -790,6 +791,7 @@ namespace proteus
                                                      double hFactor,
                                                      int nElements_global,
                                                      int nElements_owned,
+                                                     int nElementBoundaries_owned,
                                                      double useRBLES,
                                                      double useMetrics,
                                                      double alphaBDF,
@@ -2577,7 +2579,6 @@ namespace proteus
                 if (pos_counter == 2)
                   {
                     element_active=0.0;
-                    //std::cout<<"Identified cut cell"<<std::endl;
                     int opp_node=-1;
                     for (int I=0;I<nDOF_mesh_trial_element;I++)
                       {
@@ -4549,6 +4550,7 @@ namespace proteus
                              double hFactor,
                              int nElements_global,
                              int nElements_owned,
+                             int nElementBoundaries_owned,
                              double useRBLES,
                              double useMetrics,
                              double alphaBDF,
@@ -8896,6 +8898,7 @@ namespace proteus
                                                double hFactor,
                                                int nElements_global,
                                                int nElements_owned,
+                                               int nElementBoundaries_owned,
                                                double useRBLES,
                                                double useMetrics,
                                                double alphaBDF,
