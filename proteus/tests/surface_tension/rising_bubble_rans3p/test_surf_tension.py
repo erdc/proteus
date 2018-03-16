@@ -68,7 +68,8 @@ class TestSurfaceTension():
     
     def test_2D_with_supg(self):
         # Set parameters for this test
-        parameters.ct.NS_STABILIZATION_TYPE=0 #SUPG
+        parameters.ct.USE_SUPG_NS=1
+        parameters.ct.ARTIFICIAL_VISCOSITY_NS=1
         parameters.ct.nd=2
         # RELOAD MODULES
         self.reload_modules()
@@ -110,8 +111,9 @@ class TestSurfaceTension():
         actual.close()
 
     def test_2D_with_EV(self):
-        # Set parameters for this test        
-        parameters.ct.NS_STABILIZATION_TYPE=0 #EV #TMP 1
+        # Set parameters for this test
+        parameters.ct.USE_SUPG_NS=0
+        parameters.ct.ARTIFICIAL_VISCOSITY_NS=2
         parameters.ct.nd=2 
         # RELOAD MODULES
         self.reload_modules()
@@ -153,9 +155,10 @@ class TestSurfaceTension():
         actual.close()
 
     def test_3D_with_SUPG(self):
-        # Set parameters for this test        
-        parameters.ct.NS_STABILIZATION_TYPE=0 #SUPG
-        parameters.ct.nd=2 # TMP 3
+        # Set parameters for this test
+        parameters.ct.USE_SUPG_NS=1
+        parameters.ct.ARTIFICIAL_VISCOSITY_NS=1
+        parameters.ct.nd=3
         # RELOAD MODULES
         self.reload_modules()
         pnList = [(vof_p,               vof_n),
@@ -196,9 +199,10 @@ class TestSurfaceTension():
         actual.close()
 
     def test_3D_with_EV(self):
-        # Set parameters for this test        
-        parameters.ct.NS_STABILIZATION_TYPE=0 #EV TMP 1
-        parameters.ct.nd=2 # TMP 3
+        # Set parameters for this test
+        parameters.ct.USE_SUPG_NS=0
+        parameters.ct.ARTIFICIAL_VISCOSITY_NS=2
+        parameters.ct.nd=3
         # RELOAD MODULES
         self.reload_modules()
         pnList = [(vof_p,               vof_n),

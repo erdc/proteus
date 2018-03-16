@@ -5,9 +5,9 @@ from proteus.default_n import *
 from proteus.Profiling import logEvent
 from parameters import *
 
-test_case=2
-AUTOMATED_TEST = False
-    
+test_case=1
+AUTOMATED_TEST = True
+
 # ----- PARAMETERS FOR ELLIPTIC REDISTANCING ----- #
 EXPLICIT_VOF=True
 EXPLICIT_NCLS=True
@@ -15,14 +15,15 @@ ELLIPTIC_REDISTANCING=2
 alpha_REDISTANCING='inf' #1.0E6
 
 # ----- PARAMETERS FOR STABILIZATION OF NS ----- #
-USE_SUPG_NS=0
-ARTIFICIAL_VISCOSITY_NS=0
+# see parameters.py
+
 # ----- DIMENSIONS AND REFINEMENT ----- #
 nd=ct.nd
+structured = True
 if AUTOMATED_TEST==True:
     Refinement = 1
 else:
-    Refinement = 1
+    Refinement = 2
 
 # ----- PHYSICAL PARAMETERS ----- #
 if nd==3:
@@ -59,7 +60,7 @@ else:
         rho_1 = 1.0
         nu_1 = 0.1/rho_1
         # Surface tension
-        sigma_01 = 1.96
+        sigma_01 = 1.96 
         # Gravity
         g = [0.0, -0.98]
     else:
@@ -142,7 +143,6 @@ elif pspaceOrder == 2:
 if AUTOMATED_TEST==True:
     T=0.01 
 # Domain and mesh
-structured = False
 if nd==2:
     L = (1.0 , 2.0)
     he = L[0]/float(4*Refinement-1)
