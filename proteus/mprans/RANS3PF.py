@@ -2551,8 +2551,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         log("Global residual", level=9, data=r)
         # mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
-        import pdb
-        pdb.set_trace()
+
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
