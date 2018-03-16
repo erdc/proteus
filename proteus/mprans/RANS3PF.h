@@ -3,6 +3,8 @@
 #include <cmath>
 #include <valarray>
 #include <iostream>
+#include <vector>
+#include <set>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
@@ -2467,6 +2469,7 @@ namespace proteus
           mesh_volume_conservation_err_max_weak=0.0;
         double globalConservationError=0.0;
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
+        std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
@@ -2476,6 +2479,7 @@ namespace proteus
               phisErrorElement[nDOF_test_element],
               elementResidual_w[nDOF_test_element],
               eps_rho,eps_mu;
+            double element_active=1;//use 1 since by default it is ibm
             double mesh_volume_conservation_element=0.0,
               mesh_volume_conservation_element_weak=0.0;
             for (int i=0;i<nDOF_test_element;i++)
@@ -2489,6 +2493,81 @@ namespace proteus
                 phisErrorElement[i]=0.0;
                 elementResidual_w[i]=0.0;
               }//i
+            if(USE_SBM>0)
+              {
+                //since by default it has value 1 and it is ibm.
+                for (int i=0;i<nDOF_test_element;i++)
+                  {
+                    isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + i]]=0.0;
+                    isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + i]]=0.0;
+                    isActiveDOF[offset_w+stride_w*vel_l2g[eN*nDOF_trial_element + i]]=0.0;
+                  }
+                //
+                //detect cut cells
+                //
+                int pos_counter=0;
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                {
+                    if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] >= 0)
+                        pos_counter++;
+                }
+                if (pos_counter == 3)//surrogate face
+                {
+                    element_active=0.0;
+                    int opp_node=-1;
+                    for (int I=0;I<nDOF_mesh_trial_element;I++)
+                    {
+                        if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] < 0)
+                            opp_node = I;
+                    }
+                    assert(opp_node >=0);
+                    assert(opp_node <nDOF_mesh_trial_element);
+                    int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+                    surrogate_boundaries.push_back(ebN);
+                    //now find which element neighbor this element is
+                    //since each face has 2 neighbor elements.
+                    //YY: what if this face is a boundary face?
+                    if (eN == elementBoundaryElementsArray[eN*2+0])
+                        surrogate_boundary_elements.push_back(1);
+                    else
+                        surrogate_boundary_elements.push_back(0);
+
+                    //check which particle is this surrogate edge related to.
+                    //The method is to check one quadrature point inside of this element.
+                    //It works based on the assumption that the distance between any two particles
+                    //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
+                    //or one edge belongs to two particles .
+                    //But in any case, phi_s is well defined as the minimum.
+                    int j=-1;
+                    double distance=1e10, distance_to_ith_particle;
+                    for (int i=0;i<nParticles;++i)
+                    {
+                        distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
+                                                                               +eN*nQuadraturePoints_element
+                                                                               +0];//0-th quadrature point
+                        if (distance_to_ith_particle<distance)
+                        {
+                            distance = distance_to_ith_particle;
+                            j = i;
+                        }
+                    }
+                    surrogate_boundary_particle.push_back(j);
+                }
+                else if (pos_counter == 4)// element is in fluid totally
+                {
+                    element_active=1.0;
+                    for (int i=0;i<nDOF_test_element;i++)
+                      {
+                        isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + i]]=1.0;
+                        isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + i]]=1.0;
+                        isActiveDOF[offset_w+stride_w*vel_l2g[eN*nDOF_trial_element + i]]=1.0;
+                      }
+                }
+                else
+                  {
+                    element_active=0.0;
+                  }
+            }
             //
             //loop over quadrature points and compute integrands
             //
@@ -2801,7 +2880,7 @@ namespace proteus
                                                   dmom_v_source,
                                                   dmom_w_source);
                 double C_particles = 0.0;
-                if (nParticles > 0)
+                if (nParticles > 0 && USE_SBM==0)
                   updateSolidParticleTerms(eN < nElements_owned,
                                            particle_nitsche,
                                            dV,
@@ -3215,6 +3294,71 @@ namespace proteus
             /* mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element)); */
             /* mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak)); */
           }//elements
+        //
+        //loop over the surrogate boundaries in SB method and assembly into residual
+        //
+        if(USE_SBM>0)
+        {
+            for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
+            {
+                register int ebN = surrogate_boundaries[ebN_s],
+                        eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
+                        ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
+                        eN_nDOF_trial_element = eN*nDOF_trial_element;
+
+                double x1 = mesh_dof[3*mesh_l2g[eN*4+0]+0], y1 = mesh_dof[3*mesh_l2g[eN*4+0]+1], z1 = mesh_dof[3*mesh_l2g[eN*4+0]+2];
+                double x2 = mesh_dof[3*mesh_l2g[eN*4+1]+0], y2 = mesh_dof[3*mesh_l2g[eN*4+1]+1], z2 = mesh_dof[3*mesh_l2g[eN*4+1]+2];
+                double x3 = mesh_dof[3*mesh_l2g[eN*4+2]+0], y3 = mesh_dof[3*mesh_l2g[eN*4+2]+1], z3 = mesh_dof[3*mesh_l2g[eN*4+2]+2];
+                double x4 = mesh_dof[3*mesh_l2g[eN*4+3]+0], y4 = mesh_dof[3*mesh_l2g[eN*4+3]+1], z4 = mesh_dof[3*mesh_l2g[eN*4+3]+2];
+                std::cout<<"yyPDB-Surrogate bc: ";
+                if(ebN_local==0)
+                {
+                    std::cout<<x2<<"\t"
+                            <<y2<<"\t"
+                            <<z2<<"\t"
+                            <<x3<<"\t"
+                            <<y3<<"\t"
+                            <<z3<<"\t"
+                            <<x4<<"\t"
+                            <<y4<<"\t"
+                            <<z4<<"\t";
+                }else if(ebN_local==1){
+
+                    std::cout<<x3<<"\t"
+                            <<y3<<"\t"
+                            <<z3<<"\t"
+                            <<x4<<"\t"
+                            <<y4<<"\t"
+                            <<z4<<"\t"
+                            <<x1<<"\t"
+                            <<y1<<"\t"
+                            <<z1<<"\t";
+                }else if(ebN_local==2){
+
+                    std::cout<<x4<<"\t"
+                            <<y4<<"\t"
+                            <<z4<<"\t"
+                            <<x1<<"\t"
+                            <<y1<<"\t"
+                            <<z1<<"\t"
+                            <<x2<<"\t"
+                            <<y2<<"\t"
+                            <<z2<<"\t";
+                }else if(ebN_local==3){
+
+                    std::cout<<x1<<"\t"
+                            <<y1<<"\t"
+                            <<z1<<"\t"
+                            <<x2<<"\t"
+                            <<y2<<"\t"
+                            <<z2<<"\t"
+                            <<x3<<"\t"
+                            <<y3<<"\t"
+                            <<z3<<"\t";
+                }
+                std::cout<<"\n";
+            }
+        }
         //
         //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
         //
