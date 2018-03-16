@@ -97,6 +97,8 @@ class TestEllipticRedistancing():
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = True
         vortex2D.ct.ELLIPTIC_REDISTANCING_TYPE = 2
+        reload(default_p)
+        reload(default_so)
         reload(rdls_p)
         reload(vortex2D_so)
         pnList = [(ncls_p,ncls_n),
