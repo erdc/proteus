@@ -21,11 +21,6 @@
 //      * Turbulence: double check eddy_viscosity within evaluateCoefficients
 // ***** END OF TODO *****
 
-#define POWER_SMOOTHNESS_INDICATOR 2
-#define u_alpha_min 0.25
-#define v_alpha_min 0.25
-#define gamma 0.5
-
 const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
 const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
 const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume change
@@ -2044,7 +2039,7 @@ namespace proteus
                   eN_k_nSpace = eN_k*nSpace,
                   eN_k_3d     = eN_k*3,
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
-                register double p=0.0,u=0.0,v=0.0,w=0.0,
+                register double p=0.0,u=0.0,v=0.0,w=0.0,un=0.0,vn=0.0,wn=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
                   hess_u[nSpace2],hess_v[nSpace2],hess_w[nSpace2],
                   mom_u_acc=0.0,
@@ -2178,6 +2173,10 @@ namespace proteus
                 ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
                 ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
                 ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],w);
+		// get old solution at quad points
+		ck.valFromDOF(u_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],un);
+                ck.valFromDOF(v_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],vn);
+                ck.valFromDOF(w_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],wn);
                 //get the solution gradients
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p); */
                 for (int I=0;I<nSpace;I++)
@@ -2609,12 +2608,51 @@ namespace proteus
                     //
                   }
 
-                norm_Rv = sqrt(pdeResidual_u*pdeResidual_u + pdeResidual_v*pdeResidual_v + pdeResidual_w*pdeResidual_w);
-                q_numDiff_u[eN_k] = C_dc*norm_Rv*(useMetrics/sqrt(G_dd_G+1.0e-12)  +
-                                                  (1.0-useMetrics)*hFactor*hFactor*elementDiameter[eN]*elementDiameter[eN]);
-                q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
-                q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
-                //
+		if (ARTIFICIAL_VISCOSITY==0)
+		  {
+		    q_numDiff_u[eN_k] = 0;
+		    q_numDiff_v[eN_k] = 0;
+		    q_numDiff_w[eN_k] = 0;
+		  }
+		else if (ARTIFICIAL_VISCOSITY==1) // SHOCK CAPTURING
+		  {
+		    norm_Rv = sqrt(pdeResidual_u*pdeResidual_u + pdeResidual_v*pdeResidual_v + pdeResidual_w*pdeResidual_w);
+		    q_numDiff_u[eN_k] = C_dc*norm_Rv*(useMetrics/sqrt(G_dd_G+1.0e-12)  +
+						      (1.0-useMetrics)*hFactor*hFactor*elementDiameter[eN]*elementDiameter[eN]);
+		    q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
+		    q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+		  }
+		else // ENTROPY VISCOSITY
+		  {
+		    double rho = q_rho[eN_k];
+		    double mu = q_rho[eN_k]*q_nu[eN_k];
+		    double vel2 = u*u + v*v + w*w;
+		    // entropy residual
+		    double Res_in_x =
+                      rho*((u-un)/dt + (u*grad_u[0]+v*grad_u[1]+w*grad_u[2]) - g[0])
+		      + (KILL_PRESSURE_TERM == 1 ? 0 : 1.)*grad_p[0] - forcex[eN_k]
+                      - mu*(hess_u[0] + hess_u[4] + hess_u[8]) //  u_xx + u_yy + u_zz
+                      - mu*(hess_u[0] + hess_v[1] + hess_w[2]); // u_xx + v_xy + w_xz
+                    double Res_in_y =
+                      rho*((v-vn)/dt + (u*grad_v[0]+v*grad_v[1]+w*grad_v[2]) - g[1])
+		      + (KILL_PRESSURE_TERM == 1 ? 0 : 1.)*grad_p[1] - forcey[eN_k]
+                      - mu*(hess_v[0] + hess_v[4] + hess_v[8])  // v_xx + v_yy + v_zz
+                      - mu*(hess_u[1] + hess_v[4] + hess_w[5]); // u_xy + v_yy + w_yz
+                    double Res_in_z =
+                      rho*((w-wn)/dt + (u*grad_w[0]+v*grad_w[1]+w*grad_w[2]) - g[2])
+		      + (KILL_PRESSURE_TERM == 1 ? 0 : 1.)*grad_p[2] - forcez[eN_k]
+                      - mu*(hess_w[0] + hess_w[4] + hess_w[8])  // w_xx + w_yy + w_zz
+                      - mu*(hess_u[2] + hess_v[5] + hess_w[8]); // u_xz + v_yz + w_zz
+		    // compute entropy residual
+		    double entRes = Res_in_x*u + Res_in_y*v + Res_in_z*w;
+		    double hK = elementDiameter[eN]/order_polynomial;
+		    q_numDiff_u[eN_k] = fmin(cMax*rho*hK*std::sqrt(vel2),
+					     cE*hK*hK*fabs(entRes)/(vel2+1E-10));
+		    q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
+		    q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+		  }
+
+		//
                 //update element residual
                 //
                 double mesh_vel[3];
@@ -2704,7 +2742,7 @@ namespace proteus
                       ck.Reaction_weak(mom_u_source,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) +
                       //ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
-                      ck.SubgridError(subgridError_u,Lstar_u_u[i]) +
+                      USE_SUPG*ck.SubgridError(subgridError_u,Lstar_u_u[i]) +
                       ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]) +
                       //surface tension
                       ck.NumericalDiffusion(delta*sigma*dV,v1,vel_tgrad_test_i) +  //exp.
@@ -2719,7 +2757,7 @@ namespace proteus
                       ck.Reaction_weak(mom_v_source,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) +
                       //ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
-                      ck.SubgridError(subgridError_v,Lstar_v_v[i]) +
+                      USE_SUPG*ck.SubgridError(subgridError_v,Lstar_v_v[i]) +
                       ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]) +
                       //surface tension
                       ck.NumericalDiffusion(delta*sigma*dV,v2,vel_tgrad_test_i) +  //exp.
@@ -2734,7 +2772,7 @@ namespace proteus
                       ck.Reaction_weak(mom_w_source,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_w_ham,vel_test_dV[i]) +
                       //ck.SubgridError(subgridError_p,Lstar_p_w[i]) +
-                      ck.SubgridError(subgridError_w,Lstar_w_w[i]) +
+                      USE_SUPG*ck.SubgridError(subgridError_w,Lstar_w_w[i]) +
                       ck.NumericalDiffusion(q_numDiff_w_last[eN_k],grad_w,&vel_grad_test_dV[i_nSpace]) +
                       //surface tension
                       ck.NumericalDiffusion(delta*sigma*dV,v3,vel_tgrad_test_i) +  //exp.
@@ -4563,7 +4601,7 @@ namespace proteus
                           ck.ReactionJacobian_weak(dmom_u_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           //
                           //ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
-                          ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) +
+                          USE_SUPG*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) +
                           ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
                           // surface tension
                           ck.NumericalDiffusion(dt*delta*sigma*dV,
@@ -4604,7 +4642,7 @@ namespace proteus
                           ck.ReactionJacobian_weak(dmom_v_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           //
                           //ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
-                          ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) +
+                          USE_SUPG*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) +
                           ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
                           // surface tension
                           ck.NumericalDiffusion(dt*delta*sigma*dV,
@@ -4644,7 +4682,7 @@ namespace proteus
                           ck.ReactionJacobian_weak(dmom_w_source[2],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           //
                           //ck.SubgridErrorJacobian(dsubgridError_p_w[j],Lstar_p_w[i]) +
-                          ck.SubgridErrorJacobian(dsubgridError_w_w[j],Lstar_w_w[i]) +
+                          USE_SUPG*ck.SubgridErrorJacobian(dsubgridError_w_w[j],Lstar_w_w[i]) +
                           ck.NumericalDiffusionJacobian(q_numDiff_w_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
                           // surface tension
                           ck.NumericalDiffusion(dt*delta*sigma*dV,
