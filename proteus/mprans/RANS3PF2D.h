@@ -3479,11 +3479,11 @@ namespace proteus
                         for (int I=0;I<nSpace;I++)
                           vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
                       }
-                    bc_u_ext = particle_velocities[0*nElements_global*nQuadraturePoints_element*2
+                    bc_u_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*2
                                                    +eN*nQuadraturePoints_element*2
                                                    +kb*2
-                                                   +0];//first particle
-                    bc_v_ext = particle_velocities[0*nElements_global*nQuadraturePoints_element*2
+                                                   +0];
+                    bc_v_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*2
                                                    +eN*nQuadraturePoints_element*2
                                                    +kb*2
                                                    +1];
