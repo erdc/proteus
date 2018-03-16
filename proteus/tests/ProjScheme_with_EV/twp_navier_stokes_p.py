@@ -39,8 +39,8 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     cE=cE,
                                     cMax=cMax, 
                                     CORRECT_VELOCITY=CORRECT_VELOCITY,
-                                    USE_SUPG=USE_SUPG,
-                                    ARTIFICIAL_VISCOSITY=ARTIFICIAL_VISCOSITY)
+                                    USE_SUPG=ct.USE_SUPG_NS,
+                                    ARTIFICIAL_VISCOSITY=ct.ARTIFICIAL_VISCOSITY_NS)
 
 #################################
 # DIRICHLET BOUNDARY CONDITIONS #

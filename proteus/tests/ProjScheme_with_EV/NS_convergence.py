@@ -3,16 +3,16 @@ import proteus.MeshTools
 from proteus import Domain
 from proteus.default_n import *
 from proteus.Profiling import logEvent
+from parameters import *
 
 manufactured_solution = 2 #1: u.n!=0, 2: u.n=0
 
 # ----- PARAMETERS ABOUT STABILIZATION OF NS ----- #
-USE_SUPG=0
-ARTIFICIAL_VISCOSITY=2
+# see parameters.py
 
 # ----- OTHER IMPORTANT PARAMETERS FOR CONVERGENCE TEST ----- #
 KILL_PRESSURE_TERM = False #True just for debigging
-Refinement = 1
+Refinement = 0
 mu = 1.0 
 ns_forceStrongDirichlet = False
 
