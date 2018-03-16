@@ -1526,7 +1526,7 @@ namespace proteus
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
                 register double
                   coeff, delta,
-                  abs_grad_u, qx, qy, qz, normalReconstruction[nSpace],
+                  abs_grad_u, qx, qy, qz, normalReconstruction[3],
                   u=0,grad_u[nSpace],
                   m=0.0,
                   jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],

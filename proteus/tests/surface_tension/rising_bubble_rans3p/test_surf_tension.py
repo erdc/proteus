@@ -10,6 +10,8 @@ Profiling.verbose=True
 import os
 import numpy as np
 import tables
+import pytest
+from proteus import default_so
 from . import (parameters,
                risingBubble_so, risingBubble,
                vof_p,
@@ -41,6 +43,7 @@ class TestSurfaceTension():
         pass
     
     def reload_modules(self):
+        reload(default_so)
         reload(risingBubble)
         reload(risingBubble_so)
         reload(vof_p)
