@@ -94,6 +94,14 @@ nnz = None
 triangleOptions="q30DenA"
 """Options string for triangle or tetGen"""
 
+triangleFlag=0
+"""Set the diagonal direction when triangulating a quadrilateral mesh
+
+0 - left leaning
+1 - alternating 'union jack'
+2 - right leaning
+"""
+
 nLevels = 1
 """Number of levels for multilevel mesh"""
 
