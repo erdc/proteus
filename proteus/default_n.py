@@ -97,9 +97,9 @@ triangleOptions="q30DenA"
 triangleFlag=0
 """Set the diagonal direction when triangulating a quadrilateral mesh
 
-0 - left leaning
+0 - right leaning
 1 - alternating 'union jack'
-2 - right leaning
+2 - left leaning
 """
 
 nLevels = 1
