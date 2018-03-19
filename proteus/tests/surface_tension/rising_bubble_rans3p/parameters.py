@@ -1,6 +1,7 @@
 from proteus import Context
 
 ct=Context.Options([
-    ("NS_STABILIZATION_TYPE",0,"Stab on NS. 0: SUPG, 1, 2: EV via weak and strong residual"),
+    ("USE_SUPG_NS",0,"Use SUPG stabilization"),
+    ("ARTIFICIAL_VISCOSITY_NS",2,"0: no art visc., 1: shock capturing, 2: entropy-viscosity"),
     ("nd",2,"Physical dimensioln")
 ],mutable=True)
