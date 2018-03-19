@@ -3604,7 +3604,6 @@ namespace proteus
                 particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Fy;
                 particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2]+= Mz;
 
-                }
               }//ebN_s
             //std::cout<<" sbm force over surrogate boundary is: "<<Fx<<"\t"<<Fy<<std::endl;
             //
