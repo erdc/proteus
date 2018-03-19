@@ -13,6 +13,13 @@ my_protchsystem = ProtChSystem(gravity=np.ndarray([0.,-9.81,0.]))
 my_protchbody = ProtChBody(system=my_protchsystem)
 my_chbody = ProtChBody.ChBody
 my_chbody.SetPos(...)
+my_chbody.SetPos(...)
+
+# pass the index of the boundaries (or particle index) where forces must be integrated
+my_protchbody.setIndexBoundary(i_start=1, i_end=5)
+# alternatively, if you use a Shape instance from proteus.SpatialTools
+# the boundaries indice will be set automatically after calling SpatialTools.assembleDomain()
+my_protchbody.setShape(my_shape)
 """
 
 
@@ -255,29 +262,27 @@ cdef class ProtChBody:
       bool applyAddedMass  # will apply added mass if True (default)
 
     def __cinit__(self,
-                  ProtChSystem system,
-                  shape=None,
-                  nd=None, sampleRate=0):
+                  ProtChSystem system=None):
         self.ProtChSystem = system
+        # create new cppRigidBody
         self.thisptr = newRigidBody(system.thisptr)
         self.ChBody = pych.ChBodyAddedMass()
         self.thisptr.body = self.ChBody.sharedptr_chbody  # give pointer to cpp class
-        self.ProtChSystem.thisptr.system.AddBody(self.ChBody.sharedptr_chbody)
-        self.setRotation(np.array([1.,0.,0.,0.]))  # initialise rotation (nan otherwise)
-        self.attachShape(shape)  # attach shape (if any)
-        self.ProtChSystem.addSubcomponent(self)  # add body to system (for pre and post steps)
+        # add body to system
+        if system is not None:
+            self.ProtChSystem.addProtChBody(self)
+        # initialise values
         self.record_dict = OrderedDict()
+        self.setRotation(np.array([1.,0.,0.,0.]))  # initialise rotation (nan otherwise)
         self.F_prot = np.zeros(3)  # initialise empty Proteus force
         self.M_prot = np.zeros(3)  # initialise empty Proteus moment
         self.F_applied = np.zeros(3)  # initialise empty Applied force
         self.M_applied = np.zeros(3)  # initialise empty Applied moment
-        self.prescribed_motion_function = None
-        self.acceleration = np.zeros(3)
-        self.acceleration_last = np.zeros(3)
         self.velocity = np.zeros(3)
         self.velocity_last = np.zeros(3)
         self.ang_velocity = np.zeros(3)
-        self.position_last = self.position
+        self.position = np.zeros(3)
+        self.position_last = np.zeros(3)
         self.ang_vel_norm = 0.  # used for mesh disp prediction
         self.ang_vel_norm_last = 0.  # used for mesh disp prediction
         self.h_predict = np.zeros(3)
@@ -288,12 +293,8 @@ cdef class ProtChBody:
         self.h_ang_vel_predict_last = np.zeros(3)
         self.predicted = False
         self.adams_vel = np.zeros((5, 3))
-        self.ChBody.SetBodyFixed(False)
         self.Aij = np.zeros((6, 6))  # added mass array
         self.applyAddedMass = True  # will apply added mass in Chrono calculations if True
-        # if self.nd is None:
-        #     assert nd is not None, "must set nd if SpatialTools.Shape is not passed"
-        #     self.nd = nd
 
     def attachShape(self, shape):
         """Attach proteus.SpatialTools shape to body.
@@ -307,14 +308,32 @@ cdef class ProtChBody:
             instance of shape from proteus.SpatialTools or
             proteus.mprans.SpatialTools
         """
-        if shape is not None:
-            assert self.Shape is None, 'Shape '+self.Shape.name+' was already attached'
-            self.Shape = shape
-            if 'ChRigidBody' not in shape.auxiliaryVariables:
-                shape.auxiliaryVariables['ChRigidBody'] = self
-                self.setName(shape.name)
-            self.nd = shape.Domain.nd
-            self.SetPosition(shape.barycenter)
+        assert self.Shape is None, 'Shape '+self.Shape.name+' was already attached'
+        self.Shape = shape
+        if 'ChRigidBody' not in shape.auxiliaryVariables:
+            shape.auxiliaryVariables['ChRigidBody'] = self
+            self.setName(shape.name)
+        self.nd = shape.Domain.nd
+        self.SetPosition(shape.barycenter)
+
+    def setIndexBoundary(self, i_start, i_end=None):
+        """Sets the flags of the boundaries of the body
+        numbers must be gloabal (from domain.segmentFlags or
+        domain.facetFlags) and a range from i_start to i_end.
+
+        Parameters
+        ----------
+        i_start: int
+            first global flag of body boundaries
+        i_end: int
+            last global flag (+1) of body boundaries. If i_end is None, it will
+            only take as single index i_start
+        """
+        self.i_start = i_start
+        if i_end is None:
+            self.i_end = i_start+1
+        else:
+            self.i_end = i_end
 
     def SetBodyFixed(self, bool state):
         """Fix body in space
@@ -335,21 +354,6 @@ cdef class ProtChBody:
             width of the body
         """
         self.width_2D = width
-
-    def set_indices(self, i_start, i_end):
-        """Sets the flags of the boundaries of the body
-        numbers must be gloabal (from domain.segmentFlags or
-        domain.facetFlags) and a range from i_start to i_end.
-
-        Parameters
-        ----------
-        i_start: int
-            first global flag of body boundaries
-        i_end: int
-            last global flag (+1) of body boundaries
-        """
-        self.i_start = i_start
-        self.i_end = i_end
 
     def attachAuxiliaryVariables(self,avDict):
         pass
@@ -667,7 +671,10 @@ cdef class ProtChBody:
             pressure forces (x, y, z) as provided by Proteus
         """
         i0, i1 = self.i_start, self.i_end
-        F_p = self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_p[i0:i1, :]
+        if self.ProtChSystem.model_module == "RANS2P":
+            F_p = self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_p[i0:i1, :]
+        elif self.ProtChSystem.model_module == "RANS3PF":
+            F_p = self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netForces[i0:i1, :]
         F_t = np.sum(F_p, axis=0)
         return F_t
 
@@ -680,8 +687,11 @@ cdef class ProtChBody:
         F_v: array_like
             shear forces (x, y, z) as provided by Proteus
         """
-        i0, i1 = self.i_start, self.i_end
-        F_v = self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_v[i0:i1, :]
+        if self.ProtChSystem.model_module == "RANS2P":
+            i0, i1 = self.i_start, self.i_end
+            F_v = self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_v[i0:i1, :]
+        elif self.ProtChSystem.model_module == "RANS3PF":
+            F_v = np.zeros(3)
         F_t = np.sum(F_v, axis=0)
         return F_t
 
@@ -695,7 +705,10 @@ cdef class ProtChBody:
             moments (x, y, z) as provided by Proteus
         """
         i0, i1 = self.i_start, self.i_end
-        M = self.ProtChSystem.model.levelModelList[-1].coefficients.netMoments[i0:i1, :]
+        if self.ProtChSystem.model_module == "RANS2P":
+            M = self.ProtChSystem.model.levelModelList[-1].coefficients.netMoments[i0:i1, :]
+        if self.ProtChSystem.model_module == "RANS3PF":
+            M = self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netMoments[i0:i1, :]
         M_t = np.sum(M, axis=0)
         # !!!!!!!!!!!! UPDATE BARYCENTER !!!!!!!!!!!!
         Fx, Fy, Fz = self.F_prot
@@ -843,7 +856,6 @@ cdef class ProtChBody:
             self.thisptr.setPosition(<double*> new_x.data)
         self.thisptr.poststep()
         self.getValues()
-
         comm = Comm.get().comm.tompi4py()
         cdef ch.ChQuaternion rotq
         cdef ch.ChQuaternion rotq_last
@@ -946,6 +958,8 @@ cdef class ProtChBody:
             self.barycenter0 = self.Shape.barycenter.copy()
         else:
             self.barycenter0 = self.ChBody.GetPos()
+        self.position_last[:] = self.ChBody.GetPos()
+        self.position[:] = self.ChBody.GetPos()
         # get the initial values for F and M
         cdef np.ndarray zeros = np.zeros(3)
         self.setExternalForces(zeros, zeros)
@@ -1336,8 +1350,6 @@ cdef class ProtChBody:
 
 cdef class ProtChSystem:
     cdef cppSystem * thisptr
-    cdef public object model
-    cdef public double dt_init
     cdef double proteus_dt
     cdef double proteus_dt_last
     cdef double proteus_dt_next
@@ -1348,13 +1360,16 @@ cdef class ProtChSystem:
     cdef object femSpace_pressure
     cdef object nodes_kdtree
     cdef int min_nb_steps
-    cdef double dt_fluid
-    cdef double dt_fluid_last
     cdef double dt_fluid_next
     cdef double dt
     cdef double dt_last
     cdef double t
     cdef public:
+        object model
+        object model_module
+        double dt_init
+        double dt_fluid
+        double dt_fluid_last
         cdef object subcomponents
         double chrono_dt
         bool build_kdtree
@@ -1373,8 +1388,9 @@ cdef class ProtChSystem:
         object model_addedmass
         ProtChAddedMass ProtChAddedMass
 
-    def __cinit__(self, np.ndarray gravity, int nd=3, dt_init=0., sampleRate=0):
-        self.thisptr = newSystem(<double*> gravity.data)
+    def __cinit__(self, np.ndarray gravity=None, int nd=3, dt_init=0., sampleRate=0):
+        if gravity is not None:
+            self.thisptr = newSystem(<double*> gravity.data)
         self.subcomponents = []
         self.dt_init = dt_init
         self.model = None
@@ -1391,12 +1407,12 @@ cdef class ProtChSystem:
         self.parallel_mode = parallel_mode
         self.chrono_processor = chrono_processor
         self.min_nb_steps = 1  # minimum number of chrono substeps
-        self.proteus_dt = 0.
+        self.proteus_dt = 1.
         self.first_step = True  # just to know if first step
         self.setCouplingScheme("CSS")
-        self.dt_fluid = 0
-        self.dt_fluid_next = 0
-        self.proteus_dt_next = 0.
+        self.dt_fluid = 1.
+        self.dt_fluid_next = 1.
+        self.proteus_dt_next = 1.
         self.dt = 0.
         self.step_nb = 0
         self.step_start = 0
@@ -1406,6 +1422,11 @@ cdef class ProtChSystem:
         self.t = 0.
         self.chrono_dt = 1.
         self.ProtChAddedMass = ProtChAddedMass(self)
+
+    def addProtChBody(self, ProtChBody body):
+        self.thisptr.system.AddBody(body.ChBody.sharedptr_chbody)
+        body.ProtChSystem = self
+        self.addSubcomponent(body)  # add body to system (for pre and post steps)
 
     def GetChTime(self):
         """Gives time of Chrono system simulation
@@ -1427,6 +1448,12 @@ cdef class ProtChSystem:
     def attachModel(self, model, ar):
         """Attaches Proteus model to auxiliary variable
         """
+        c = model.levelModelList[-1].coefficients
+        assert "RANS3PF" in c.__module__ or "RANS2P" in c.__module__, "Wrong model attached to body for FSI: must be RANS2P or RANS3PF, got {model}".format(model=c.__module__)
+        if "RANS3PF" in c.__module__:
+            self.model_module = "RANS3PF"
+        elif "RANS2P" in c.__module__:
+            self.model_module = "RANS2P"
         self.model = model
         return self
 
@@ -1506,7 +1533,7 @@ cdef class ProtChSystem:
             self.proteus_dt_next = proteus_dt  # BAD PREDICTION IF TIME STEP NOT REGULAR
             self.t = t = self.thisptr.system.GetChTime()
         else:
-            sys.exit('no time step set')
+            sys.exit('ProtChSystem: no time step set in calculate()')
         if self.model is not None:
             if self.build_kdtree is True and self.dist_search is False:
                 Profiling.logEvent("Building k-d tree for mooring nodes lookup")
