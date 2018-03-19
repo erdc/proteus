@@ -336,6 +336,7 @@ namespace proteus
                                    double hFactor,
                                    int nElements_global,
                                    int nElements_owned,
+                                   int nElementBoundaries_owned,
                                    double useRBLES,
                                    double useMetrics,
                                    double alphaBDF,
@@ -790,6 +791,7 @@ namespace proteus
                                                      double hFactor,
                                                      int nElements_global,
                                                      int nElements_owned,
+                                                     int nElementBoundaries_owned,
                                                      double useRBLES,
                                                      double useMetrics,
                                                      double alphaBDF,
@@ -2577,7 +2579,6 @@ namespace proteus
                 if (pos_counter == 2)
                   {
                     element_active=0.0;
-                    //std::cout<<"Identified cut cell"<<std::endl;
                     int opp_node=-1;
                     for (int I=0;I<nDOF_mesh_trial_element;I++)
                       {
@@ -3393,8 +3394,9 @@ namespace proteus
                   elementResidual_v[nDOF_test_element],
                   //elementResidual_w[nDOF_test_element],
                   eps_rho,eps_mu;
-                //std::cout<<"Surrogate edge "<<ebN<<" element neighbor "<<eN<<" local element boundary "<<ebN_local<<std::endl;
                 if (ebN >= nElementBoundaries_owned) continue;
+                //std::cout<<"Surrogate edge "<<ebN<<" element neighbor "<<eN<<" local element boundary "<<ebN_local<<std::endl;
+
                 for (int i=0;i<nDOF_test_element;i++)
                   {
                     elementResidual_mesh[i]=0.0;
@@ -3478,11 +3480,11 @@ namespace proteus
                         for (int I=0;I<nSpace;I++)
                           vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
                       }
-                    bc_u_ext = particle_velocities[0*nElements_global*nQuadraturePoints_element*2
+                    bc_u_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*2
                                                    +eN*nQuadraturePoints_element*2
                                                    +kb*2
-                                                   +0];//first particle
-                    bc_v_ext = particle_velocities[0*nElements_global*nQuadraturePoints_element*2
+                                                   +0];
+                    bc_v_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*2
                                                    +eN*nQuadraturePoints_element*2
                                                    +kb*2
                                                    +1];
@@ -3597,11 +3599,11 @@ namespace proteus
                     r_y = y_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 1];
                     Mz  += r_x*Fy-r_y*Fx;
                   }//kb
-                if (ebN < nElementBoundaries_owned)
-                {
-                    particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += Fx;
-                    particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Fy;
-                    particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2] += Mz;
+
+                particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += Fx;
+                particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Fy;
+                particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2]+= Mz;
+
                 }
               }//ebN_s
             //std::cout<<" sbm force over surrogate boundary is: "<<Fx<<"\t"<<Fy<<std::endl;
@@ -4550,6 +4552,7 @@ namespace proteus
                              double hFactor,
                              int nElements_global,
                              int nElements_owned,
+                             int nElementBoundaries_owned,
                              double useRBLES,
                              double useMetrics,
                              double alphaBDF,
@@ -5580,6 +5583,7 @@ namespace proteus
                   ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
                 register double eps_rho,eps_mu;
+                if (ebN >= nElementBoundaries_owned) continue;
                 for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
                   {
                     register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
@@ -8897,6 +8901,7 @@ namespace proteus
                                                double hFactor,
                                                int nElements_global,
                                                int nElements_owned,
+                                               int nElementBoundaries_owned,
                                                double useRBLES,
                                                double useMetrics,
                                                double alphaBDF,
