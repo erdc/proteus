@@ -11,7 +11,7 @@
 #define ENTROPY(u) std::log(fabs(u*(1.0-u))+1E-14)
 #define DENTROPY(u) (1.0-2*u)/(u*(1.0-u)+1E-14)
 
-#define cE 0.1
+#define cE 1.0
 #define cMax 0.1
 #define cK 1.0
 
