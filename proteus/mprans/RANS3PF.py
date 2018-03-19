@@ -997,6 +997,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
 
+        # Save uncorrected velocity
+        self.model.q[('uncorrectedVelocity',0)][:] = self.model.q[('velocity',0)]
+        self.model.ebqe[('uncorrectedVelocity',0)][:] = self.model.ebqe[('velocity',0)]
+
         self.phi_s[:] = 1e10
         self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
         if self.granular_sdf_Calc is not None:
@@ -1382,6 +1386,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                   self.nQuadraturePoints_element,
                   self.nSpace_global),
                  'd')
+        self.q[
+            ('uncorrectedVelocity',
+             0)] = numpy.zeros(
+                 (self.mesh.nElements_global,
+                  self.nQuadraturePoints_element,
+                  self.nSpace_global),
+                 'd')
         self.q['velocity_solid'] = numpy.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
@@ -1523,16 +1534,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
+        #self.ebqe[ #mql: I think these two are not needed. All the info is interleaved insided the "0"-th component
+        #    ('velocity',
+        #     1)] = numpy.zeros(
+        #    (self.mesh.nExteriorElementBoundaries_global,
+        #     self.nElementBoundaryQuadraturePoints_elementBoundary,
+        #     self.nSpace_global),
+        #    'd')
+        #self.ebqe[
+        #    ('velocity',
+        #     2)] = numpy.zeros(
+        #    (self.mesh.nExteriorElementBoundaries_global,
+        #     self.nElementBoundaryQuadraturePoints_elementBoundary,
+        #     self.nSpace_global),
+        #    'd')
         self.ebqe[
-            ('velocity',
-             1)] = numpy.zeros(
-            (self.mesh.nExteriorElementBoundaries_global,
-             self.nElementBoundaryQuadraturePoints_elementBoundary,
-             self.nSpace_global),
-            'd')
-        self.ebqe[
-            ('velocity',
-             2)] = numpy.zeros(
+            ('uncorrectedVelocity',
+             0)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
