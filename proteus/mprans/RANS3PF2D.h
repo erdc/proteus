@@ -3513,8 +3513,6 @@ namespace proteus
                     distance[1] = -P_normal[1]*dist;
                     P_tangent[0] = -P_normal[1];
                     P_tangent[1] = P_normal[0];
-                    double dx = distance[0];
-                    double dy = distance[1];
                     double visco = nu_0*rho_0;
                     double Csb=10;
                     double C_adim = Csb*visco/h_penalty;
@@ -3527,7 +3525,6 @@ namespace proteus
                     double res[2];
                     const double u_m_uD[2] = {u_ext - bc_u_ext,v_ext - bc_v_ext};
                     const double zero_vec[2]={0.,0.};
-
                     const double grad_u_t[2] = {get_dot_product(P_tangent,grad_u_ext),
                                                 get_dot_product(P_tangent,grad_v_ext)};
                     for (int i=0;i<nDOF_test_element;i++)
@@ -5687,11 +5684,8 @@ namespace proteus
                     P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
                     distance[0] = -P_normal[0]*dist;
                     distance[1] = -P_normal[1]*dist;
-                    P_tangent[0] = -P_normal[1];
-                    P_tangent[1] = P_normal[0];
-                    double dx = distance[0];
-                    double dy = distance[1];
-                    double tx = P_tangent[0] ; double ty = P_tangent[1];
+                    P_tangent[0]= -P_normal[1];
+                    P_tangent[1]= P_normal[0];
                     double visco = nu_0*rho_0;
                     double Csb=10;
                     double C_adim = Csb*visco/h_penalty;
@@ -5704,7 +5698,6 @@ namespace proteus
                         double phi_i = vel_test_dS[i];
                         double* grad_phi_i = &vel_grad_test_dS[i*nSpace+0];
                         const double grad_phi_i_dot_d = get_dot_product(grad_phi_i,distance);
-
                         const double grad_phi_i_dot_t = get_dot_product(P_tangent,grad_phi_i);
 
                         double res[2];
@@ -5716,29 +5709,29 @@ namespace proteus
 
                             double phi_j = vel_test_dS[j]/dS;
                             const double grad_phi_j[2]={vel_grad_test_dS[j*nSpace+0]/dS,
-                                                    vel_grad_test_dS[j*nSpace+1]/dS};
-                            const double grad_phi_j_dot_d = get_dot_product(grad_phi_j,distance);
+                                                        vel_grad_test_dS[j*nSpace+1]/dS};
+                            const double grad_phi_j_dot_d = get_dot_product(distance, grad_phi_j);
                             const double grad_phi_j_dot_t = get_dot_product(P_tangent,grad_phi_j);
 
                             // Classical Nitsche
                             // (1)
                             globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
-                              phi_i*phi_j*C_adim;
+                                    phi_i*phi_j*C_adim;
                             globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
-                              phi_i*phi_j*C_adim;
+                                    phi_i*phi_j*C_adim;
 
                             // (2)
                             get_symmetric_gradient_dot_vec(grad_phi_j,zero_vec,P_normal,res);
                             globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
-                              visco * phi_i * res[0];
+                                    visco * phi_i * res[0];
                             globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
-                              visco * phi_i * res[1];
+                                    visco * phi_i * res[1];
 
                             get_symmetric_gradient_dot_vec(zero_vec,grad_phi_j,P_normal,res);
-                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
-                              visco * phi_i * res[0];
                             globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
-                              visco * phi_i * res[1];
+                                    visco * phi_i * res[0];
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
+                                    visco * phi_i * res[1];
 
                             // (3)
                             get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,P_normal,res);
@@ -5747,9 +5740,9 @@ namespace proteus
                             globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
                                     visco * phi_j * res[1];
                             get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,P_normal,res);
-                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
-                                    visco * phi_j * res[0];
                             globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
+                                    visco * phi_j * res[0];
+                            globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
                                     visco * phi_j * res[1];
 
                             // (4)
@@ -5787,9 +5780,9 @@ namespace proteus
                             // the penalization on the tangential derivative
                             // B < Gw t , (Gu - GuD) t >
                             globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
-                              beta_adim*grad_phi_j_dot_t*grad_phi_i_dot_t;
+                                    beta_adim*grad_phi_j_dot_t*grad_phi_i_dot_t;
                             globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
-                              beta_adim*grad_phi_j_dot_t*grad_phi_i_dot_t;
+                                    beta_adim*grad_phi_j_dot_t*grad_phi_i_dot_t;
 
                           }//j
                       }//i
