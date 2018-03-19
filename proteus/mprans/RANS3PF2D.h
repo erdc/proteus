@@ -2295,7 +2295,7 @@ namespace proteus
           }
         return tmp;
       }
-      void get_symmetric_gradient_dot_vec(const double *grad_u, const double *grad_v, const double *grad_w, const double *n,double res[3])
+      void get_symmetric_gradient_dot_vec(const double *grad_u, const double *grad_v, const double *n,double res[2])
       {
           res[0] =         2.0*grad_u[0]*n[0]+(grad_u[1]+grad_v[0])*n[1];
           res[1] = (grad_v[0]+grad_u[1])*n[0]+          2*grad_v[1]*n[1];
