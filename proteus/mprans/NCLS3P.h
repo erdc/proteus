@@ -5,11 +5,10 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-#define ENTROPY(u)  0.5*u*u
-#define DENTROPY(u) fabs(u)
-
-#define cE 0.0
-#define cMax 0.0
+#define ENTROPY(u)  u
+#define DENTROPY(u) 1.0
+#define cE 0.1
+#define cMax 0.1
 
 #define Sign(z) (z >= 0.0 ? 1.0 : -1.0)
 
@@ -646,8 +645,9 @@ namespace proteus
                       {
 			if (stage == 1)
 			  elementResidual_u[i] +=
-			    ck.Mass_weak(u-un,u_test_dV[i]) +  // time derivative
-			    1./3*dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) + // v*grad(phi)
+			    //ck.Mass_weak(u-un,u_test_dV[i]) +  // time derivative
+			    ck.Mass_weak(dt*m_t,u_test_dV[i]) +  // time derivative
+			    1./3*dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) + // v*grad(phi) 
 			    1./9*dt*dt*ck.NumericalDiffusion(Hn,dH,&u_grad_test_dV[i_nSpace]) +
 			    1./3*dt*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
 							  grad_u_old,
@@ -655,8 +655,9 @@ namespace proteus
 			// TODO: Add part about moving mesh
 			else
 			  elementResidual_u[i] +=
-			    ck.Mass_weak(u-un,u_test_dV[i]) +  // time derivative
-			    dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) + // v*grad(phi)
+			    //ck.Mass_weak(u-un,u_test_dV[i]) +  // time derivative
+			    ck.Mass_weak(dt*m_t,u_test_dV[i]) +  // time derivative
+			    dt*ck.Hamiltonian_weak(Hn,u_test_dV[i]) + // v*grad(phi) 
 			    0.5*dt*dt*ck.NumericalDiffusion(HTilde,dH,&u_grad_test_dV[i_nSpace]) +
 			    dt*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
 						     grad_u_old,
