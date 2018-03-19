@@ -2295,6 +2295,19 @@ namespace proteus
           }
         return tmp;
       }
+      void get_symmetric_gradient_dot_vec(const double *grad_u, const double *grad_v, const double *grad_w, const double *n,double res[3])
+      {
+          res[0] =         2.0*grad_u[0]*n[0]+(grad_u[1]+grad_v[0])*n[1];
+          res[1] = (grad_v[0]+grad_u[1])*n[0]+          2*grad_v[1]*n[1];
+      }
+      double get_cross_product(const double *u, const double *v)
+      {
+          return u[0]*v[1]-u[1]*v[0];
+      }
+      double get_dot_product(const double *u, const double *v)
+      {
+          return u[0]*v[0]+u[1]*v[1];
+      }
 
       void calculateResidual(//element
                              double* mesh_trial_ref,
@@ -3509,62 +3522,64 @@ namespace proteus
                     double beta = 0.0;
                     double beta_adim = beta*h_penalty*visco;
 
-                    double dd1 = dx*grad_u_ext[0] + dy*grad_u_ext[1];
-                    double dd2 = dx*grad_v_ext[0] + dy*grad_v_ext[1];
-                    double dt1 = P_tangent[0]*grad_u_ext[0] + P_tangent[1]*grad_u_ext[1];
-                    double dt2 = P_tangent[0]*grad_v_ext[0] + P_tangent[1]*grad_v_ext[1];
+                    const double grad_u_d[2] = {get_dot_product(distance,grad_u_ext),
+                                                get_dot_product(distance,grad_v_ext)};
+                    double res[2];
+                    const double u_m_uD[2] = {u_ext - bc_u_ext,v_ext - bc_v_ext};
+                    const double zero_vec[2]={0.,0.};
+
+                    const double grad_u_t[2] = {get_dot_product(P_tangent,grad_u_ext),
+                                                get_dot_product(P_tangent,grad_v_ext)};
                     for (int i=0;i<nDOF_test_element;i++)
                       {
                         int eN_i = eN*nDOF_test_element+i;
-                        //globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=
-                        //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*Csb*(u_ext - bc_u_ext)*dS/h_penalty;
-                        //globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=
-                        //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*Csb*(v_ext - bc_u_ext)*dS/h_penalty;
 
                         int GlobPos_u = offset_u+stride_u*vel_l2g[eN_i];
                         int GlobPos_v = offset_v+stride_v*vel_l2g[eN_i];
                         double phi_i = vel_test_dS[i];
                         double Gxphi_i = vel_grad_test_dS[i*nSpace+0];
                         double Gyphi_i = vel_grad_test_dS[i*nSpace+1];
+                        double *grad_phi_i = &vel_grad_test_dS[i*nSpace+0];
+                        const double grad_phi_i_dot_d =  get_dot_product(distance,grad_phi_i);
+                        const double grad_phi_i_dot_t =  get_dot_product(P_tangent,grad_phi_i);
 
-                        // Classical Nitsche
-                        // C < w , u - uD > (1)
-                        globalResidual[GlobPos_u] += phi_i*C_adim*(u_ext - bc_u_ext);
-                        globalResidual[GlobPos_v] += phi_i*C_adim*(v_ext - bc_v_ext);
+                        // (1)
+                        globalResidual[GlobPos_u] += C_adim*phi_i*u_m_uD[0];
+                        globalResidual[GlobPos_v] += C_adim*phi_i*u_m_uD[1];
 
-                        // - < w , mu Gu.nt > (2)
-                        globalResidual[GlobPos_u] -= visco * phi_i*(P_normal[0]*2*grad_u_ext[0] + P_normal[1]*(grad_u_ext[1]+grad_v_ext[0]));
-                        globalResidual[GlobPos_v] -= visco * phi_i*(P_normal[0]*(grad_u_ext[1]+grad_v_ext[0]) + P_normal[1]*2*grad_v_ext[1]);
+                        // (2)
+                        get_symmetric_gradient_dot_vec(grad_u_ext,grad_v_ext,P_normal,res);
+                        globalResidual[GlobPos_u] -= visco * phi_i*res[0];
+                        globalResidual[GlobPos_v] -= visco * phi_i*res[1];
 
-                        // - < mu Gw.nt , u - uD > (3)
-                        globalResidual[GlobPos_u] -= visco * (2*Gxphi_i*P_normal[0] + Gxphi_i*P_normal[1] + Gyphi_i*P_normal[1])*(u_ext - bc_u_ext);
-                        globalResidual[GlobPos_v] -= visco * (Gxphi_i*P_normal[0] + Gyphi_i*P_normal[0] + 2*Gyphi_i*P_normal[1])*(v_ext - bc_v_ext);
+                        // (3)
+                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,u_m_uD,res);
+                        globalResidual[GlobPos_u] -= visco * get_dot_product(P_normal,res);
+                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,u_m_uD,res);
+                        globalResidual[GlobPos_v] -= visco * get_dot_product(P_normal,res);
 
-                        // second order Taylor expansion
-                        //
-                        // missing part of (1) :: C < w + Gw d , u + Gu d - ud >
-                        // C < Gw d , u - uD >
-                        globalResidual[GlobPos_u] += C_adim*(dx*Gxphi_i + dy*Gyphi_i)*(u_ext - bc_u_ext);
-                        globalResidual[GlobPos_v] += C_adim*(dx*Gxphi_i + dy*Gyphi_i)*(v_ext - bc_v_ext);
+                        // (4)
+                        globalResidual[GlobPos_u] += C_adim*grad_phi_i_dot_d*u_m_uD[0];
+                        globalResidual[GlobPos_v] += C_adim*grad_phi_i_dot_d*u_m_uD[1];
 
-                        // C < Gv d , Gu d >
-                        globalResidual[GlobPos_u] += C_adim*(dx*Gxphi_i + dy*Gyphi_i)*dd1;
-                        globalResidual[GlobPos_v] += C_adim*(dx*Gxphi_i + dy*Gyphi_i)*dd2;
+                        // (5)
+                        globalResidual[GlobPos_u] += C_adim*grad_phi_i_dot_d*grad_u_d[0];
+                        globalResidual[GlobPos_v] += C_adim*grad_phi_i_dot_d*grad_u_d[1];
 
-                        // C < v , Gu d >
-                        globalResidual[GlobPos_u] += C_adim*phi_i*dd1;
-                        globalResidual[GlobPos_v] += C_adim*phi_i*dd2;
+                        // (6)
+                        globalResidual[GlobPos_u] += C_adim*phi_i*grad_u_d[0];
+                        globalResidual[GlobPos_v] += C_adim*phi_i*grad_u_d[1];
 
-                        //
-                        // missing part of (3)
-                        // - < mu Gw.nt , Gu.d >
-                        globalResidual[GlobPos_u] -= visco*(2*Gxphi_i*P_normal[0] + Gxphi_i*P_normal[1] + Gyphi_i*P_normal[1])*dd1;
-                        globalResidual[GlobPos_v] -= visco*(Gxphi_i*P_normal[0] + Gyphi_i*P_normal[0] + 2*Gyphi_i*P_normal[1])*dd2;
+                        // (7)
+                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,P_normal,res);
+                        globalResidual[GlobPos_u] -= visco*get_dot_product(grad_u_d,res);
+                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,P_normal,res);
+                        globalResidual[GlobPos_v] -= visco*get_dot_product(grad_u_d,res);
 
                         // the penalization on the tangential derivative
                         // B < Gw t , (Gu - GuD) t >
-                        globalResidual[GlobPos_u] += beta_adim*dt1*(Gxphi_i*P_tangent[0] + Gyphi_i*P_tangent[1]);
-                        globalResidual[GlobPos_v] += beta_adim*dt2*(Gxphi_i*P_tangent[0] + Gyphi_i*P_tangent[1]);
+                        globalResidual[GlobPos_u] += beta_adim*grad_u_t[0]*grad_phi_i_dot_t;
+                        globalResidual[GlobPos_v] += beta_adim*grad_u_t[1]*grad_phi_i_dot_t;
 
                       }//i
 
