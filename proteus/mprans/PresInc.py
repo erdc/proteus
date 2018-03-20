@@ -169,14 +169,14 @@ class Coefficients(TC_base):
                         self.sedModel.ebqe[('velocity',0)][...,i] = 0.0  
                         self.fluidModel.coefficients.q_velocity_solid[...,i] = 0.0
                         self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = 0.0 
-                for eN in range(self.model.q_vos.shape[0]):
-                    for k in range(self.model.q_vos.shape[1]):
-                        if self.model.q_vos[eN,k] >= self.sedModel.coefficients.maxFraction:
-                            self.sedModel.q[('velocity',0)][eN,k] = 0.0
-                for eN in range(self.model.ebqe_vos.shape[0]):
-                    for k in range(self.model.ebqe_vos.shape[1]):
-                        if self.model.ebqe_vos[eN,k] >= self.sedModel.coefficients.maxFraction:
-                            self.sedModel.ebqe[('velocity',0)][eN,k] = 0.0 
+                #for eN in range(self.model.q_vos.shape[0]):
+                #    for k in range(self.model.q_vos.shape[1]):
+                #        if self.model.q_vos[eN,k] >= self.sedModel.coefficients.maxFraction:
+                #            self.sedModel.q[('velocity',0)][eN,k] = 0.0
+                #for eN in range(self.model.ebqe_vos.shape[0]):
+                #    for k in range(self.model.ebqe_vos.shape[1]):
+                #        if self.model.ebqe_vos[eN,k] >= self.sedModel.coefficients.maxFraction:
+                #            self.sedModel.ebqe[('velocity',0)][eN,k] = 0.0 
 
         copyInstructions = {}
         return copyInstructions

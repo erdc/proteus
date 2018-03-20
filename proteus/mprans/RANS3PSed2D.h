@@ -1855,9 +1855,7 @@ namespace proteus
                 for (int I=0;I<nSpace;I++)
                   grad_p[I] = q_grad_p[eN_k_nSpace + I];
                 for (int I=0;I<nSpace;I++)
-                  grad_vos[I] = q_grad_vos[eN_k_nSpace + I];
-                if (grad_vos[1]  > 0.0 )
-                           
+                  grad_vos[I] = q_grad_vos[eN_k_nSpace + I];                         
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
                 /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w); */
