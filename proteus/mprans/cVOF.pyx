@@ -91,7 +91,9 @@ cdef extern from "VOF.h" namespace "proteus":
                                double * dL_minus_dC,
                                double * min_u_bc,
                                double * max_u_bc,
-                               double * quantDOFs)
+                               double * quantDOFs,
+                               int DEBUG_SSP,
+                               double * force)
         void calculateJacobian(double dt,
                                double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -239,7 +241,9 @@ cdef extern from "VOF.h" namespace "proteus":
                                                  double * dL_minus_dC,
                                                  double * min_u_bc,
                                                  double * max_u_bc,
-                                                 double * quantDOFs)
+                                                 double * quantDOFs,
+                                                 int DEBUG_SSP,
+                                                 double * force)
         void calculateMassMatrix(double dt,
                                  double * mesh_trial_ref,
                                  double * mesh_grad_trial_ref,
@@ -404,7 +408,9 @@ cdef class cVOF_base:
                           numpy.ndarray dt_times_dH_minus_dL,
                           numpy.ndarray min_u_bc,
                           numpy.ndarray max_u_bc,
-                          numpy.ndarray quantDOFs):
+                          numpy.ndarray quantDOFs,
+                          int DEBUG_SSP,
+                          numpy.ndarray force):
         self.thisptr.calculateResidual(dt,
                                        < double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
@@ -490,7 +496,9 @@ cdef class cVOF_base:
                                        < double * > dt_times_dH_minus_dL.data,
                                        < double * > min_u_bc.data,
                                        < double * > max_u_bc.data,
-                                       < double * > quantDOFs.data)
+                                       < double * > quantDOFs.data,
+                                       DEBUG_SSP,
+                                       < double * > force.data)
 
     def calculateJacobian(self,
                           double dt,
@@ -709,7 +717,9 @@ cdef class cVOF_base:
                                             numpy.ndarray dt_times_dH_minus_dL,
                                             numpy.ndarray min_u_bc,
                                             numpy.ndarray max_u_bc,
-                                            numpy.ndarray quantDOFs):
+                                            numpy.ndarray quantDOFs,
+                                            int DEBUG_SSP,
+                                            numpy.ndarray force):
         self.thisptr.calculateResidual_entropy_viscosity(dt,
                                                          < double * > mesh_trial_ref.data,
                                                          < double * > mesh_grad_trial_ref.data,
@@ -795,7 +805,9 @@ cdef class cVOF_base:
                                                          < double * > dt_times_dH_minus_dL.data,
                                                          < double * > min_u_bc.data,
                                                          < double * > max_u_bc.data,
-                                                         < double * > quantDOFs.data)
+                                                         < double * > quantDOFs.data,
+                                                         DEBUG_SSP,
+                                                         < double * > force.data)
 
     def calculateMassMatrix(self,
                             double dt,

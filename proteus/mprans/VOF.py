@@ -451,6 +451,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebqe_porosity = numpy.ones(cebqe[('u', 0)].shape, 'd')
 
     def preStep(self, t, firstStep=False):
+        # COMPUTE FORCE TERMS AS FUNCTIONS
+        if self.model.DEBUG_SSP:
+            self.model.updateForceTerms()
+
         # SAVE OLD SOLUTION #
         self.model.u_dof_old[:] = self.model.u[0].dof
 
@@ -948,6 +952,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape, 'd')
 
+        self.q[('force', 0)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.DEBUG_SSP = False
+        if ('forceTerms') in dir(options):
+            self.forceTerms = options.forceTerms
+            self.DEBUG_SSP = True
+
+    def updateForceTerms(self):
+        x = self.q[('x')][:, :, 0]
+        y = self.q[('x')][:, :, 1]
+        z = self.q[('x')][:, :, 2]
+        X = {0: x,
+             1: y,
+             2: z}
+        t = self.timeIntegration.t
+        self.q[('force', 0)][:] = self.forceTerms[0](X, t)
+
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         limited_solution = numpy.zeros(self.u[0].dof.shape)
@@ -1323,8 +1344,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dt_times_dC_minus_dL,
             self.min_u_bc,
             self.max_u_bc,
-            self.quantDOFs)
+            self.quantDOFs,
+            self.DEBUG_SSP,
+            self.q[('force', 0)])
 
+        if self.DEBUG_SSP:
+            self.edge_based_cfl[:] = self.q[('cfl', 0)].max()
+            
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
