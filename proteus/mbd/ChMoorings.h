@@ -28,6 +28,8 @@
 //using namespace std;
 using namespace chrono;
 using namespace chrono::fea;
+using namespace chrono::collision;
+using namespace chrono::geometry;
 
 
 

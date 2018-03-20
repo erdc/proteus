@@ -8,6 +8,7 @@
 #include <fstream>
 
 using namespace chrono;
+using namespace chrono::collision;
 using namespace std;
 
 
@@ -34,6 +35,7 @@ class cppRigidBody {
   ChVector<> free_r;
   ChVector<> pos;
   ChVector<> pos_last;
+  std::vector<ChVector<>> trimesh_pos_last;
   ChVector<> vel;
   ChVector<> vel_last;
   ChVector<> acc;
@@ -57,6 +59,7 @@ class cppRigidBody {
   std::shared_ptr<ChLinkSpring> spring;
   /* ChVector <> inertia; */
   double* inertia;
+  ChTriangleMeshConnected trimesh;
   std::shared_ptr<ChBody> body;
   cppSystem* system;
   cppRigidBody(cppSystem* system);
@@ -88,6 +91,11 @@ class cppRigidBody {
                                  std::vector<double> y, std::vector<double> z,
                                  std::vector<double> ang, std::vector<double> ang2,
                                  std::vector<double> ang3, double t_max);
+  void getTriangleMeshSDF(ChVector<> pos_node,
+                          double* dist_n);
+  void getTriangleMeshVel(double *x,
+                          double dt,
+                          double *vel);
 };
 
 cppSystem::cppSystem(double* gravity):
@@ -219,6 +227,7 @@ void cppRigidBody::prestep(double* force, double* torque)
   /* step to call before running chrono system step */
   pos_last = body->GetPos();
   vel_last = body->GetPos_dt();
+  trimesh_pos_last = trimesh.getCoordsVertices();
   acc_last = body->GetPos_dtdt();
   rotm_last = body->GetA();
   rotq_last = body->GetRot();
@@ -488,6 +497,60 @@ void cppRigidBody::addPrismaticLinksWithSpring(double* pris1,
 
 void cppRigidBody::setName(std::string name) {
   body->SetNameString(name);
+}
+
+void cppRigidBody::getTriangleMeshSDF(ChVector<> pos,
+                                      double* dist_n) {
+  auto xxs = trimesh.getCoordsVertices();
+  auto nns = trimesh.getCoordsNormals();
+  ChVector<> dist_vec;
+  double min_dist=1e10;
+  double dist;
+  for (int i = 0; i < xxs.size(); i++) {
+    dist_vec = pos-xxs[i];
+    dist = dist_vec.Length();
+    if (dist < min_dist) {
+      min_dist = dist;
+    }
+    if (dist_vec.Dot(nns[i]) > 0) { // outside
+      min_dist = min_dist;
+    }
+    else {  // inside
+      min_dist = -min_dist;
+    }
+  }
+  dist_n[0] = min_dist;
+  // normal to shape
+  // actually just vector to closest node here
+  dist_n[1] = dist_vec[0];
+  dist_n[1] = dist_vec[1];
+  dist_n[2] = dist_vec[2];
+};
+
+void cppRigidBody::getTriangleMeshVel(double *x,
+                                      double dt,
+                                      double *vel) {
+  auto xxs = trimesh.getCoordsVertices();
+  auto nns = trimesh.getCoordsNormals();
+  double min_dist = 1e10;
+  ChVector<> p(x[0], x[1], x[2]);
+  ChVector<> d_vector(0.0);
+  ChVector<> ddlast;
+  // find closest node
+  int node_closest = -1;
+  for (int i = 0; i < xxs.size(); i++) {
+    double dist = (p - xxs[i]).Length();
+    if (dist < min_dist) {
+      min_dist = dist;
+      node_closest = i;
+    }
+  }
+  if (node_closest != -1) {
+    ddlast = xxs[node_closest]-trimesh_pos_last[node_closest];
+    vel[0] = ddlast.x()/dt;
+    vel[1] = ddlast.y()/dt;
+    vel[2] = ddlast.z()/dt;
+  }
 }
 
 
