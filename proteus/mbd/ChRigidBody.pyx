@@ -160,6 +160,7 @@ cdef extern from "ChRigidBody.h":
         ch.ChVector F_last
         ch.ChVector M
         ch.ChVector M_last
+        ch.ChTriangleMeshConnected trimesh
         cppRigidBody(cppSystem* system)
         void prestep(double* force, double* torque)
         void poststep()
@@ -205,6 +206,8 @@ cdef class ProtChBody:
     cdef cppRigidBody * thisptr
     cdef ch.ChQuaternion rotation
     cdef ch.ChQuaternion rotation_last
+    cdef vector[ch.ChTriangle] trimesh_triangles
+    cdef vector[ch.ChVector] trimesh_vectors
     cdef public:
       str record_file
       object model
@@ -235,6 +238,7 @@ cdef class ProtChBody:
       np.ndarray acceleration
       np.ndarray acceleration_last
       np.ndarray velocity
+      np.ndarray velocity_fluid
       np.ndarray velocity_last
       np.ndarray ang_acceleration_last
       np.ndarray ang_acceleration
@@ -260,6 +264,8 @@ cdef class ProtChBody:
       np.ndarray h_ang_vel_predict_last  # predicted angular velocity
       np.ndarray Aij  # added mass array
       bool applyAddedMass  # will apply added mass if True (default)
+      int[:,:] trimesh_triangles_array
+      double[:,:] trimesh_vectors_array
 
     def __cinit__(self,
                   ProtChSystem system=None):
@@ -279,6 +285,7 @@ cdef class ProtChBody:
         self.F_applied = np.zeros(3)  # initialise empty Applied force
         self.M_applied = np.zeros(3)  # initialise empty Applied moment
         self.velocity = np.zeros(3)
+        self.velocity_fluid = np.zeros(3)
         self.velocity_last = np.zeros(3)
         self.ang_velocity = np.zeros(3)
         self.position = np.zeros(3)
@@ -315,6 +322,33 @@ cdef class ProtChBody:
             self.setName(shape.name)
         self.nd = shape.Domain.nd
         self.SetPosition(shape.barycenter)
+
+    def addTriangleMesh(self, shape=None, sphereswept_thickness=0.005):
+        """Adds triangle mesh to collision model and for IBM calculations
+        """
+        if shape is not None:
+            self.Shape = shape
+        assert self.Shape is not None, 'no Shape was defined for making a triangle mesh'
+        for v in self.Shape.vertices:
+            self.trimesh_vectors.push_back(ch.ChVector(v[0], v[1], v[2]))
+            self.trimesh_vectors_array = np.append(self.trimesh_vectors_array, [v])
+        for facet in self.Shape.facets:
+            f = facet[0]
+            assert len(f) == 3, 'Facets must be triangles for triangle mesh'
+            self.trimesh_triangles.push_back(ch.ChTriangle(self.trimesh_vectors[f[0]],
+                                                           self.trimesh_vectors[f[1]],
+                                                           self.trimesh_vectors[f[2]]))
+            self.trimesh_triangles_array = np.append(self.trimesh_triangles_array, [f])
+            self.thisptr.trimesh.addTriangle(self.trimesh_triangles[-1])
+        deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(self.thisptr.trimesh,
+                                                                            False,
+                                                                            False,
+                                                                            ch.ChVector(self.position[0],
+                                                                                        self.position[1],
+                                                                                        self.position[2]),
+                                                                            deref(self.thisptr.body).GetA(),
+                                                                            sphereswept_thickness)
+
 
     def setIndexBoundary(self, i_start, i_end=None):
         """Sets the flags of the boundaries of the body
@@ -893,6 +927,7 @@ cdef class ProtChBody:
         if self.ProtChSystem.model_addedmass is not None:
             am = self.ProtChSystem.model_addedmass.levelModelList[-1]
             am.barycenters[self.i_start:self.i_end] = self.ChBody.GetPos()
+        self.velocity_fluid = (self.position-self.position_last)/self.ProtChSystem.dt_fluid
 
     def prediction(self):
         comm = Comm.get().comm.tompi4py()

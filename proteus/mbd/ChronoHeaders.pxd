@@ -56,6 +56,33 @@ cdef extern from "ChMoorings.h":
         ChVector Get_A_Yaxis()
         ChVector Get_A_Zaxis()
 
+    cdef cppclass ChTriangle:
+        ChTriangle(const ChVector &mp1,
+                   const ChVector &mp2,
+                   const ChVector &mp3)
+
+    cdef cppclass ChTriangleMesh:
+        void addTriangle(const ChVector &vertex0,
+                         const ChVector &vertex1,
+                         const ChVector &vertex2)
+        void addTriangle(const ChTriangle &atriangle)
+
+    cdef cppclass ChTriangleMeshConnected(ChTriangleMesh):
+        ChTriangleMeshConnected()
+        vector[ChVector[double]]& getCoordsVertices()
+        vector[ChVector[double]]& getCoordsNormals()
+
+    cdef cppclass ChCollisionModel:
+        bool AddTriangleMesh(const ChTriangleMesh &trimesh,
+                             bool is_static,
+                             bool is_convex,
+                             const ChVector &pos,
+                             const ChMatrix33 &rot,
+                             double sphereswept_thickness)
+
+    ChQuaternion Q_from_AngAxis(double angle,
+                                const ChVector &axis)
+
     # ------- PHYSICS ------- #
 
     cdef cppclass ChSystem:
@@ -104,6 +131,7 @@ cdef extern from "ChMoorings.h":
         void SetBodyFixed(bool state) except +
         void SetMaterialSurface(const shared_ptr[ChMaterialSurface] &mnewsurf) except +
         void SetMass(double newmass)
+        shared_ptr[ChCollisionModel] GetCollisionModel()
         double GetMass()
 
     cdef cppclass ChBodyEasyBox(ChBody):
