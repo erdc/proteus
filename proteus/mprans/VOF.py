@@ -80,14 +80,12 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.lstage = 0  # last stage completed
         # storage vectors
         self.u_dof_last = {}
+        self.m_old = {}
         # per component stage values, list with array at each stage
-        self.u_dof_stage = {}
         for ci in range(self.nc):
-            if transport.q.has_key(('m', ci)):
-                self.u_dof_last[ci] = transport.u[ci].dof.copy()
-                self.u_dof_stage[ci] = []
-                for k in range(self.nStages + 1):
-                    self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
+            self.m_last[ci] = transport.q[('u',ci)].copy()
+            self.m_old[ci] = transport.q[('u',ci)].copy()
+            self.u_dof_last[ci] = transport.u[ci].dof.copy()
 
     # def set_dt(self, DTSET):
     #    self.dt = DTSET #  don't update t
@@ -130,48 +128,59 @@ class RKEV(proteus.TimeIntegration.SSP):
             if self.lstage == 1:
                 logEvent("First stage of SSP33 method", level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
-                    # update u_dof_old
-                    self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
+                    # save stage at quad points
+                    self.m_last[ci][:] = self.transport.q[('u',ci)]
+                    # DOFs
+                    self.transport.u_dof_old[:] = self.transport.u[ci].dof
+                    # re-compute force terms
+                    self.transport.updateForceTerms(self.t) #force terms at t=tn+dt
             elif self.lstage == 2:
                 logEvent("Second stage of SSP33 method", level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
-                    self.u_dof_stage[ci][self.lstage] *= 1. / 4.
-                    self.u_dof_stage[ci][self.lstage] += 3. / 4. * self.u_dof_last[ci]
-                    # Update u_dof_old
-                    self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
+                    # Quad points
+                    self.m_last[ci][:] = 1./4*self.transport.q[('u',ci)]
+                    self.m_last[ci][:] += 3./4*self.m_old[ci]
+                    # DOFs
+                    self.transport.u_dof_old[:] = 1./4*self.transport.u[ci].dof
+                    self.transport.u_dof_old[:] += 3./4* self.u_dof_last[ci]
+                    # re-compute force terms
+                    self.transport.updateForceTerms(self.t-self.dt/2.0) #force terms at t=tn+dt
             elif self.lstage == 3:
                 logEvent("Third stage of SSP33 method", level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
-                    self.u_dof_stage[ci][self.lstage] *= 2.0 / 3.0
-                    self.u_dof_stage[ci][self.lstage] += 1.0 / 3.0 * self.u_dof_last[ci]
+                    # Quad points
+                    self.m_last[ci][:] = 2./3*self.transport.q[('u',ci)]
+                    self.m_last[ci][:] += 1./3*self.m_old[ci]
+                    # DOFs
+                    self.transport.u[0].dof[:] = 2./3*self.transport.u[ci].dof
+                    self.transport.u[0].dof[:] += 1./3* self.u_dof_last[ci]
                     # update u_dof_old
                     self.transport.u_dof_old[:] = self.u_dof_last[ci]
-                    # update solution to u[0].dof
-                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage]
         elif self.timeOrder == 2:
             if self.lstage == 1:
                 logEvent("First stage of SSP22 method", level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
-                    # Update u_dof_old
+                    # save stage at quad points
+                    self.m_last[ci][:] = self.transport.q[('u',ci)]
+                    # DOFs
                     self.transport.u_dof_old[:] = self.transport.u[ci].dof
+                    # re-compute force terms
+                    self.transport.updateForceTerms(self.t) #force terms at t=tn+dt
             elif self.lstage == 2:
                 logEvent("Second stage of SSP22 method", level=4)
                 for ci in range(self.nc):
-                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
-                    self.u_dof_stage[ci][self.lstage][:] *= 1. / 2.
-                    self.u_dof_stage[ci][self.lstage][:] += 1. / 2. * self.u_dof_last[ci]
+                    # quad points
+                    self.m_last[ci][:] = 1./2*self.transport.q[('u',ci)]
+                    self.m_last[ci][:] += 1./2*self.m_old[ci]
+                    # DOFs
+                    self.transport.u[ci].dof[:]  = 1./2*self.transport.u[ci].dof
+                    self.transport.u[ci].dof[:] += 1./2*self.u_dof_last[ci]
                     # update u_dof_old
                     self.transport.u_dof_old[:] = self.u_dof_last[ci]
-                    # update solution to u[0].dof
-                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage]
         else:
             assert self.timeOrder == 1
             for ci in range(self.nc):
-                self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
+                self.m_last[ci][:] = self.transport.q[('u',ci)]
 
     def initializeTimeHistory(self, resetFromDOF=True):
         """
@@ -453,7 +462,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def preStep(self, t, firstStep=False):
         # COMPUTE FORCE TERMS AS FUNCTIONS
         if self.model.DEBUG_SSP:
-            self.model.updateForceTerms()
+            self.model.updateForceTerms(self.model.timeIntegration.t-self.model.timeIntegration.dt)
 
         # SAVE OLD SOLUTION #
         self.model.u_dof_old[:] = self.model.u[0].dof
@@ -959,14 +968,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.forceTerms = options.forceTerms
             self.DEBUG_SSP = True
 
-    def updateForceTerms(self):
+    def updateForceTerms(self,t):
         x = self.q[('x')][:, :, 0]
         y = self.q[('x')][:, :, 1]
         z = self.q[('x')][:, :, 2]
         X = {0: x,
              1: y,
              2: z}
-        t = self.timeIntegration.t
         self.q[('force', 0)][:] = self.forceTerms[0](X, t)
 
     def FCTStep(self):
