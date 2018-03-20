@@ -3325,7 +3325,6 @@ namespace proteus
             std::memset(particle_netMoments,0,nParticles*3*sizeof(double));
             for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
             {
-                register double Force[3] = {0.0,0.0,0.0}, position_vector_to_mass_center[3],Torque[3] = {0.0,0.0,0.0};
                 register int ebN = surrogate_boundaries[ebN_s],
                         eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
                         ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
@@ -3534,7 +3533,7 @@ namespace proteus
                         p_ext += p_dof[p_l2g[eN*nDOF_per_element_pressure+i]]*p_trial_trace_ref[ebN_local_kb*nDOF_per_element_pressure+i];
                       }
                     get_symmetric_gradient_dot_vec(grad_u_ext,grad_v_ext,grad_w_ext,P_normal,res);
-                    double force_quad_pt[3]={0.0,0.0,0.0},torque_quad_pt[3]={0.0,0.0,0.0};
+                    double force_quad_pt[3]={0.0,0.0,0.0},torque_quad_pt[3]={0.0,0.0,0.0},position_vector_to_mass_center[3];
                     force_quad_pt[0] = (-p_ext*P_normal[0]+res[0])*dS;
                     force_quad_pt[1] = (-p_ext*P_normal[1]+res[1])*dS;
                     force_quad_pt[2] = (-p_ext*P_normal[2]+res[2])*dS;
@@ -3543,19 +3542,13 @@ namespace proteus
                     position_vector_to_mass_center[2] = z_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 2];
                     get_cross_product(position_vector_to_mass_center,force_quad_pt,torque_quad_pt);
 
-                    Force[0] += force_quad_pt[0];
-                    Force[1] += force_quad_pt[1];
-                    Force[2] += force_quad_pt[2];
-                    Torque[0] += torque_quad_pt[0];
-                    Torque[1] += torque_quad_pt[1];
-                    Torque[2] += torque_quad_pt[2];
+                    particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += force_quad_pt[0];
+                    particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += force_quad_pt[1];
+                    particle_netForces[3*surrogate_boundary_particle[ebN_s]+2] += force_quad_pt[2];
+                    particle_netMoments[3*surrogate_boundary_particle[ebN_s]+0] += torque_quad_pt[0];
+                    particle_netMoments[3*surrogate_boundary_particle[ebN_s]+1] += torque_quad_pt[1];
+                    particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2] += torque_quad_pt[2];
                 }//kb
-                particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += Force[0];
-                particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Force[1];
-                particle_netForces[3*surrogate_boundary_particle[ebN_s]+2] += Force[2];
-                particle_netMoments[3*surrogate_boundary_particle[ebN_s]+0]+= Torque[0];
-                particle_netMoments[3*surrogate_boundary_particle[ebN_s]+1]+= Torque[1];
-                particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2]+= Torque[2];
                 if(0)
                 {
                     //for debug
