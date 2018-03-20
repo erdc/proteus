@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <cstring>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
@@ -2221,9 +2222,12 @@ namespace proteus
 
       void get_symmetric_gradient_dot_vec(const double *grad_u, const double *grad_v, const double *grad_w, const double *n,double res[3])
       {
-          res[0] =         2.0*grad_u[0]*n[0]+(grad_u[1]+grad_v[0])*n[1]+(grad_u[2]+grad_w[0])*n[2];
-          res[1] = (grad_v[0]+grad_u[1])*n[0]+          2*grad_v[1]*n[1]+(grad_v[2]+grad_w[1])*n[2];
-          res[2] = (grad_w[0]+grad_u[2])*n[0]+(grad_w[1]+grad_v[2])*n[1]+          2*grad_w[2]*n[2];
+//          res[0] =         2.0*grad_u[0]*n[0]+(grad_u[1]+grad_v[0])*n[1]+(grad_u[2]+grad_w[0])*n[2];
+//          res[1] = (grad_v[0]+grad_u[1])*n[0]+          2*grad_v[1]*n[1]+(grad_v[2]+grad_w[1])*n[2];
+//          res[2] = (grad_w[0]+grad_u[2])*n[0]+(grad_w[1]+grad_v[2])*n[1]+          2*grad_w[2]*n[2];
+          res[0] = grad_u[0]*n[0]+grad_u[1]*n[1]+grad_u[2]*n[2];
+          res[1] = grad_v[0]*n[0]+grad_v[1]*n[1]+grad_v[2]*n[2];
+          res[2] = grad_w[0]*n[0]+grad_w[1]*n[1]+grad_w[2]*n[2];;
       }
       void get_cross_product(const double *u, const double *v,double res[3])
       {
@@ -2550,7 +2554,7 @@ namespace proteus
                     else
                         surrogate_boundary_elements.push_back(0);
 
-                    //check which particle is this surrogate edge related to.
+                    //check which particle this surrogate edge is related to.
                     //The method is to check one quadrature point inside of this element.
                     //It works based on the assumption that the distance between any two particles
                     //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
@@ -2571,7 +2575,7 @@ namespace proteus
                     }
                     surrogate_boundary_particle.push_back(j);
                 }
-                else if (pos_counter == 4)// element is in fluid totally
+                else if (pos_counter == 4)// so the element is in fluid totally
                 {
                     element_active=1.0;
                     for (int i=0;i<nDOF_test_element;i++)
@@ -3317,9 +3321,11 @@ namespace proteus
         //
         if(USE_SBM>0)
         {
+            std::memset(particle_netForces,0,nParticles*3*sizeof(double));
+            std::memset(particle_netMoments,0,nParticles*3*sizeof(double));
             for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
             {
-                register double Force[3] = {0.0}, position_vector_to_mass_center[3],Torque[3] = {0.0};
+                register double Force[3] = {0.0,0.0,0.0}, position_vector_to_mass_center[3],Torque[3] = {0.0,0.0,0.0};
                 register int ebN = surrogate_boundaries[ebN_s],
                         eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
                         ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
@@ -3438,10 +3444,10 @@ namespace proteus
                     double distance[3], P_normal[3], P_tangent[3]; // distance vector, normal and tangent of the physical boundary
                     P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
                     P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
-                    P_normal[3] = ebq_global_grad_phi_solid[ebN_kb*nSpace+2];
+                    P_normal[2] = ebq_global_grad_phi_solid[ebN_kb*nSpace+2];
                     distance[0] = -P_normal[0]*dist;
                     distance[1] = -P_normal[1]*dist;
-                    distance[3] = -P_normal[2]*dist;
+                    distance[2] = -P_normal[2]*dist;
 //                    P_tangent[0] = -P_normal[1];
 //                    P_tangent[1] = P_normal[0];
                     double visco = nu_0*rho_0;
@@ -3454,7 +3460,7 @@ namespace proteus
                                                 get_dot_product(distance,grad_v_ext),
                                                 get_dot_product(distance,grad_w_ext)};
                     double res[3];
-                    const double u_m_uD[3] = {u_ext - bc_u_ext,v_ext - bc_v_ext,u_ext - bc_w_ext};
+                    const double u_m_uD[3] = {u_ext - bc_u_ext,v_ext - bc_v_ext,w_ext - bc_w_ext};
                     const double zero_vec[3]={0.,0.,0.};
                     //YY: How to define tangent penalty? There are two directions.
 //                    double dt1 = P_tangent[0]*grad_u_ext[0] + P_tangent[1]*grad_u_ext[1];
@@ -3462,10 +3468,6 @@ namespace proteus
                     for (int i=0;i<nDOF_test_element;i++)
                     {
                         int eN_i = eN*nDOF_test_element+i;
-                        //globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=
-                        //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*Csb*(u_ext - bc_u_ext)*dS/h_penalty;
-                        //globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=
-                        //  vel_trial_trace_ref[ebN_local_kb*nDOF_test_element+i]*Csb*(v_ext - bc_u_ext)*dS/h_penalty;
 
                         int GlobPos_u = offset_u+stride_u*vel_l2g[eN_i];
                         int GlobPos_v = offset_v+stride_v*vel_l2g[eN_i];
@@ -3532,73 +3534,85 @@ namespace proteus
                         p_ext += p_dof[p_l2g[eN*nDOF_per_element_pressure+i]]*p_trial_trace_ref[ebN_local_kb*nDOF_per_element_pressure+i];
                       }
                     get_symmetric_gradient_dot_vec(grad_u_ext,grad_v_ext,grad_w_ext,P_normal,res);
-                    Force[0] += (-p_ext*P_normal[0]+res[0])*dS;
-                    Force[1] += (-p_ext*P_normal[1]+res[1])*dS;
-                    Force[2] += (-p_ext*P_normal[2]+res[2])*dS;
-                    position_vector_to_mass_center[0] = x_ext-particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 0];
-                    position_vector_to_mass_center[1] = y_ext-particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 1];
-                    position_vector_to_mass_center[2] = z_ext-particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 2];
-                    get_cross_product(position_vector_to_mass_center,Force,Torque);
-                }
+                    double force_quad_pt[3]={0.0,0.0,0.0},torque_quad_pt[3]={0.0,0.0,0.0};
+                    force_quad_pt[0] = (-p_ext*P_normal[0]+res[0])*dS;
+                    force_quad_pt[1] = (-p_ext*P_normal[1]+res[1])*dS;
+                    force_quad_pt[2] = (-p_ext*P_normal[2]+res[2])*dS;
+                    position_vector_to_mass_center[0] = x_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 0];
+                    position_vector_to_mass_center[1] = y_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 1];
+                    position_vector_to_mass_center[2] = z_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 2];
+                    get_cross_product(position_vector_to_mass_center,force_quad_pt,torque_quad_pt);
+
+                    Force[0] += force_quad_pt[0];
+                    Force[1] += force_quad_pt[1];
+                    Force[2] += force_quad_pt[2];
+                    Torque[0] += torque_quad_pt[0];
+                    Torque[1] += torque_quad_pt[1];
+                    Torque[2] += torque_quad_pt[2];
+                }//kb
                 particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += Force[0];
                 particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Force[1];
                 particle_netForces[3*surrogate_boundary_particle[ebN_s]+2] += Force[2];
                 particle_netMoments[3*surrogate_boundary_particle[ebN_s]+0]+= Torque[0];
                 particle_netMoments[3*surrogate_boundary_particle[ebN_s]+1]+= Torque[1];
                 particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2]+= Torque[2];
-                //for debug
-                double x1 = mesh_dof[3*mesh_l2g[eN*4+0]+0], y1 = mesh_dof[3*mesh_l2g[eN*4+0]+1], z1 = mesh_dof[3*mesh_l2g[eN*4+0]+2];
-                double x2 = mesh_dof[3*mesh_l2g[eN*4+1]+0], y2 = mesh_dof[3*mesh_l2g[eN*4+1]+1], z2 = mesh_dof[3*mesh_l2g[eN*4+1]+2];
-                double x3 = mesh_dof[3*mesh_l2g[eN*4+2]+0], y3 = mesh_dof[3*mesh_l2g[eN*4+2]+1], z3 = mesh_dof[3*mesh_l2g[eN*4+2]+2];
-                double x4 = mesh_dof[3*mesh_l2g[eN*4+3]+0], y4 = mesh_dof[3*mesh_l2g[eN*4+3]+1], z4 = mesh_dof[3*mesh_l2g[eN*4+3]+2];
-                std::cout<<"yyPDB-Surrogate bc: ";
-                if(ebN_local==0)
+                if(0)
                 {
-                    std::cout<<x2<<"\t"
-                            <<y2<<"\t"
-                            <<z2<<"\t"
-                            <<x3<<"\t"
-                            <<y3<<"\t"
-                            <<z3<<"\t"
-                            <<x4<<"\t"
-                            <<y4<<"\t"
-                            <<z4<<"\t";
-                }else if(ebN_local==1){
+                    //for debug
+                    double x1 = mesh_dof[3*mesh_l2g[eN*4+0]+0], y1 = mesh_dof[3*mesh_l2g[eN*4+0]+1], z1 = mesh_dof[3*mesh_l2g[eN*4+0]+2];
+                    double x2 = mesh_dof[3*mesh_l2g[eN*4+1]+0], y2 = mesh_dof[3*mesh_l2g[eN*4+1]+1], z2 = mesh_dof[3*mesh_l2g[eN*4+1]+2];
+                    double x3 = mesh_dof[3*mesh_l2g[eN*4+2]+0], y3 = mesh_dof[3*mesh_l2g[eN*4+2]+1], z3 = mesh_dof[3*mesh_l2g[eN*4+2]+2];
+                    double x4 = mesh_dof[3*mesh_l2g[eN*4+3]+0], y4 = mesh_dof[3*mesh_l2g[eN*4+3]+1], z4 = mesh_dof[3*mesh_l2g[eN*4+3]+2];
 
-                    std::cout<<x3<<"\t"
-                            <<y3<<"\t"
-                            <<z3<<"\t"
-                            <<x4<<"\t"
-                            <<y4<<"\t"
-                            <<z4<<"\t"
-                            <<x1<<"\t"
-                            <<y1<<"\t"
-                            <<z1<<"\t";
-                }else if(ebN_local==2){
+                    std::cout<<"yyPDB-Surrogate bc: ";
+                    if(ebN_local==0)
+                    {
+                        std::cout<<x2<<"\t"
+                                <<y2<<"\t"
+                                <<z2<<"\t"
+                                <<x3<<"\t"
+                                <<y3<<"\t"
+                                <<z3<<"\t"
+                                <<x4<<"\t"
+                                <<y4<<"\t"
+                                <<z4<<"\t";
+                    }else if(ebN_local==1){
 
-                    std::cout<<x4<<"\t"
-                            <<y4<<"\t"
-                            <<z4<<"\t"
-                            <<x1<<"\t"
-                            <<y1<<"\t"
-                            <<z1<<"\t"
-                            <<x2<<"\t"
-                            <<y2<<"\t"
-                            <<z2<<"\t";
-                }else if(ebN_local==3){
+                        std::cout<<x3<<"\t"
+                                <<y3<<"\t"
+                                <<z3<<"\t"
+                                <<x4<<"\t"
+                                <<y4<<"\t"
+                                <<z4<<"\t"
+                                <<x1<<"\t"
+                                <<y1<<"\t"
+                                <<z1<<"\t";
+                    }else if(ebN_local==2){
 
-                    std::cout<<x1<<"\t"
-                            <<y1<<"\t"
-                            <<z1<<"\t"
-                            <<x2<<"\t"
-                            <<y2<<"\t"
-                            <<z2<<"\t"
-                            <<x3<<"\t"
-                            <<y3<<"\t"
-                            <<z3<<"\t";
+                        std::cout<<x4<<"\t"
+                                <<y4<<"\t"
+                                <<z4<<"\t"
+                                <<x1<<"\t"
+                                <<y1<<"\t"
+                                <<z1<<"\t"
+                                <<x2<<"\t"
+                                <<y2<<"\t"
+                                <<z2<<"\t";
+                    }else if(ebN_local==3){
+
+                        std::cout<<x1<<"\t"
+                                <<y1<<"\t"
+                                <<z1<<"\t"
+                                <<x2<<"\t"
+                                <<y2<<"\t"
+                                <<z2<<"\t"
+                                <<x3<<"\t"
+                                <<y3<<"\t"
+                                <<z3<<"\t";
+                    }
+                    std::cout<<"\n";
                 }
-                std::cout<<"\n";
-            }
+            }//ebN_s
         }
         //
         //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
@@ -5657,7 +5671,7 @@ namespace proteus
                     {
                         vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
                         for (int I=0;I<nSpace;I++)
-                            vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
+                            vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;
                     }
                     //
                     //load the boundary values
@@ -5667,7 +5681,7 @@ namespace proteus
                     //
                     //update the global Jacobian from the flux Jacobian
                     //
-                    double dist = ebq_global_phi_solid[ebN_kb];
+                    const double dist = ebq_global_phi_solid[ebN_kb];
                     double distance[3], P_normal[3], P_tangent[3]={0.0}; // distance vector, normal and tangent of the physical boundary
                     P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
                     P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
@@ -5677,9 +5691,6 @@ namespace proteus
                     distance[2] = -P_normal[2]*dist;
 //                    P_tangent[0] = -P_normal[1];
 //                    P_tangent[1] = P_normal[0];
-                    double dx = distance[0];
-                    double dy = distance[1];
-                    double dz = distance[2];
 //                    double tx = P_tangent[0] ; double ty = P_tangent[1];
                     double visco = nu_0*rho_0;
                     double Csb=10;
@@ -5825,12 +5836,12 @@ namespace proteus
                             //                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
                             //                          beta_adim*ty*(Gxphi_i*tx*Gxphi_j + Gyphi_i*tx*Gyphi_j);
 
-                        }//j
-                    }//i
+                        }//for-j
+                    }//for-i
 
-                }
-            }
-        }
+                }//for kb
+            }//for ebN_s
+        }//if USE_SBM
         //
         //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
         //
