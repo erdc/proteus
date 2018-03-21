@@ -6,11 +6,19 @@ all: develop
 #otherwise we try our best to determine them automatically.
 
 SHELL=/usr/bin/env bash
-
+N=1
 PROTEUS ?= $(shell python -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
-PROTEUS_INSTALL_CMD = python setup.py install -O2
+PROTEUS_BUILD_CMD = python setup.py build_ext
+PROTEUS_INSTALL_CMD = python setup.py install
+PROTEUS_DEVELOP_BUILD_CMD = python setup.py build_ext -i
 PROTEUS_DEVELOP_CMD = pip --disable-pip-version-check install -v -e .
+#
+ifeq (${N}, 1)
+PROTEUS_BUILD_CMD = python -c "print('Letting install handle build_ext')"
+PROTEUS_DEVELOP_BUILD_CMD = python -c "print('Letting install handle build_ext')"
+endif
+
 # shell hack for now to automatically detect Garnet front-end nodes
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python -c "import sys; print sys.platform")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = onyx* ]] && echo "onyx" || python -c "import sys; print sys.platform")
@@ -174,8 +182,9 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find 
 
 	$(call show_info)
 
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
-	ln -s ${PROTEUS_PREFIX}/lib64/* ${PROTEUS_PREFIX}/lib/
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop -j ${N} ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
+	-ln -s ${PROTEUS_PREFIX}/lib64/* ${PROTEUS_PREFIX}/lib/
+
 	@echo "************************"
 	@echo "Dependency build complete"
 	@echo "************************"
@@ -216,6 +225,7 @@ install: profile $(wildcard *.py) proteus
 	@echo "Installing..."
 	@echo "************************"
 	$(call show_info)
+	${PROTEUS_ENV} ${PROTEUS_BUILD_CMD}
 	${PROTEUS_ENV} ${PROTEUS_INSTALL_CMD}
 	@echo "************************"
 	@echo "done installing standard extension modules"
@@ -237,11 +247,13 @@ install: profile $(wildcard *.py) proteus
 
 develop: proteus profile 
 	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/* ${PROTEUS}/${PROTEUS_ARCH}/lib
+	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/cmake/* ${PROTEUS}/${PROTEUS_ARCH}/lib/cmake
 	@echo "************************"
 	@echo "Installing development version"
 	@echo "************************"
 	$(call show_info)
-	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG" ${PROTEUS_DEVELOP_CMD}
+	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG -Og" ${PROTEUS_DEVELOP_BUILD_CMD}
+	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG -Og" ${PROTEUS_DEVELOP_CMD}
 	@echo "************************"
 	@echo "installing scripts"
 	cd scripts && ${PROTEUS_ENV} PROTEUS_PREFIX=${PROTEUS_PREFIX} make
@@ -312,7 +324,7 @@ doc:
 test: check
 	@echo "************************************"
 	@echo "Running test suite"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
 	@echo "Tests complete "
 	@echo "************************************"
 
@@ -320,8 +332,7 @@ jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/lab/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip install configparser
-	pip install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0 hide_code==0.4.0 matplotlib ipympl ipymesh
+	pip install configparser==3.5.0 ipyparallel==6.1.1 ipython==5.5.0 terminado==0.8.1 jupyter==1.0.0 jupyterlab==0.31.12 ipywidgets==7.1.2 ipyleaflet==0.7.1 jupyter_dashboards==0.7.0 pythreejs==0.4.1 rise==5.2.0 cesiumpy==0.3.3 bqplot==0.10.5 hide_code==0.5.0 ipympl==0.1.0 sympy==1.1.1 transforms3d==0.3.1 ipymesh
 	ipcluster nbextension enable --user
 	jupyter serverextension enable --py jupyterlab --sys-prefix
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
@@ -344,6 +355,7 @@ jupyter:
 	printf "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.MPIEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 lfs:
 	pip install pyliblzma
@@ -359,4 +371,4 @@ hashdist_package:
 	sed -i '/- key:/c\# -key:' stack/pkgs/proteus.yaml
 	sed -i '/  url:/c\#  url:' stack/pkgs/proteus.yaml
 	./hashdist/bin/hit fetch https://github.com/erdc/proteus/archive/${PROTEUS_VERSION}.zip >> stack/pkgs/proteus.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit build -v proteus_stack.yaml
+	cd stack && ${PROTEUS}/hashdist/bin/hit build -j ${N} -v proteus_stack.yaml

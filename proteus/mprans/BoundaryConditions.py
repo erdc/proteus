@@ -9,7 +9,8 @@ Module for creating boundary conditions. Imported in mprans.SpatialTools.py
 """
 import sys
 import numpy as np
-from proteus import AuxiliaryVariables
+from proteus import (AuxiliaryVariables,
+                     BoundaryConditions)
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
 from proteus import WaveTools as wt
@@ -17,7 +18,7 @@ from proteus.Profiling import logEvent
 from math import cos, sin, sqrt, atan2, acos, asin
 
 
-class BC_RANS(BC_Base):
+class BC_RANS(BoundaryConditions.BC_Base):
     """
     Class regrouping boundary conditions for two-phase flows
     """
@@ -1264,7 +1265,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         # projection of u vector over an ortoganal plane to b_or
         self.tanU = self.meanV - self.meanV * (self.nV**2)
         # tangential unit vector
-        self.tV = self.tanU / np.sqrt(np.sum(self.tanU**2))
+        self.tV = self.tanU/np.sqrt(np.sum(self.tanU**2))
 
     def getVariables(self, x, t):
         """

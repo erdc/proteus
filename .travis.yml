@@ -4,7 +4,8 @@ sudo: required
 language: python
 
 env:
-- TEST_PROFILE="test.proteus.yaml"
+  - TEST_PROFILE="proteus"
+#  - TEST_PROFILE="air-water-vv"
 
 python:
 - 2.7
@@ -35,18 +36,38 @@ install:
 - ./hashdist/bin/hit init-home
 - ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
 - ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
+- pushd $HOME
+- mkdir -p hashdist_src
+- mkdir -p hashdist_bld
+- cd .hashdist
+- rm -rf src bld
+- ln -s ../hashdist_src src 
+- ln -s ../hashdist_bld bld
+- pwd
+- ls bld src
+- popd
 - cd stack
-- ../hashdist/bin/hit build -v default.yaml
+- ../hashdist/bin/hit build -j 2 -v default.yaml
 - cd ..
+- git submodule init
+- git submodule update --recursive --remote  
 - make profile
-- FC=gfortran CC=mpicc CXX=mpicxx make install
+- make distclean
+- FC=gfortran CC=mpicc CXX=mpicxx make install N=2
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
 
+cache:
+  - timeout: 1000
+  - directories:
+    - $HOME/hashdist_src    
+    - $HOME/hashdist_bld    
+
 script:
-- py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus
+  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then py.test --forked -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus; fi
+  - if [[ "${TEST_PROFILE}" == "air-water-vv" ]]; then py.test --forked -v air-water-vv/Tests/; fi
 
 notifications:
   email:
