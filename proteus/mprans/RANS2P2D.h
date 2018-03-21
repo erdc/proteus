@@ -1232,8 +1232,8 @@ namespace proteus
 		  }
 		else
 		  {
-                flux_umom+=n[1]*bc_f_umom[1];
-                flux_vmom+=n[1]*bc_f_vmom[1];
+                    flux_umom+=n[1]*bc_f_umom[1];
+                    flux_vmom+=n[1]*bc_f_vmom[1];
 		  }
               }
           }
