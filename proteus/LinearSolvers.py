@@ -503,6 +503,12 @@ class KSP_petsc4py(LinearSolver):
 
         if self.bdyNullSpace is True:
             self._setNullSpace(par_b)
+        if self.preconditioner:
+            try:
+                if self.preconditioner.hasNullSpace:
+                    self.preconditioner.nsp.remove(par_b)
+            except:
+                pass
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
@@ -725,7 +731,7 @@ class KSP_petsc4py(LinearSolver):
                 self.preconditioner = SimpleDarcyFC(par_L)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokesPressureCorrection:
-                self.preconditioner = NavierStokesPressureCorrection(par_L)
+                self.preconditioner = NavierStokesPressureCorrection(par_L, prefix)
                 self.pc = self.preconditioner.pc
 
 class SchurOperatorConstructor:
@@ -1595,6 +1601,9 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
          * mass form - This flag allows the user to specify what form
            the mass matrix takes, lumped (True) or full (False).
 
+         * number chebyshev its - This integer allows the user to
+           specify how many Chebyshev its to use if a full mass matrix
+           is used and a direct solver is not applied.
     """
     def __init__(self,
                  L,
@@ -1630,7 +1639,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
             a chebyshev semi-iteration.  0  indicates the semi-
             iteration should not be used, where as a number 1,2,...
             indicates the number of iterations the method should take.
-
         """
         NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
         # Initialize the discrete operators

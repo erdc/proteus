@@ -1,3 +1,8 @@
+"""
+This file declares a list of C++ objects from Chrono that can be used in
+ cython files.
+"""
+
 
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -24,13 +29,32 @@ cdef extern from "ChMoorings.h":
         ChQuaternion(double e0, double e1, double e2, double e3)
         ChQuaternion()
 
-    cdef cppclass ChMatrix
+    cdef cppclass ChCoordsys[double]:
+        ChVector pos
+        ChQuaternion rot
+        ChCoordsys()
+        ChCoordsys(ChVector &mv, ChQuaternion &mq)
+        ChCoordsys(ChVector &mv, double Alpha, ChVector &mu)
+
+    cdef cppclass ChMatrix:
+        double GetElement(int row, int col)
+        double SetElement(int row, int col, double element)
 
     cdef cppclass ChMatrix33[double]:
         ChVector Get_A_Xaxis()
         ChVector Get_A_Yaxis()
         ChVector Get_A_Zaxis()
+        double GetElement(int row, int col)
+        void SetElement(int row, int col, double elem)
 
+    cdef cppclass ChMatrixDynamic[double](ChMatrix):
+        ChMatrixDynamic()
+        ChMatrixDynamic(const int row, const int col)
+        ChMatrixDynamic operator=(const ChMatrix& matbis)
+        ChMatrixDynamic operator+(const ChMatrix& matbis)
+        ChVector Get_A_Xaxis()
+        ChVector Get_A_Yaxis()
+        ChVector Get_A_Zaxis()
 
     # ------- PHYSICS ------- #
 
@@ -76,6 +100,7 @@ cdef extern from "ChMoorings.h":
         # void SetRot(ChQuaternion &rot) except +
         void SetInertiaXX(ChVector &iner)
         void SetInertiaXY(ChVector &iner)
+        const ChMatrix33& GetInertia()
         void SetBodyFixed(bool state) except +
         void SetMaterialSurface(const shared_ptr[ChMaterialSurface] &mnewsurf) except +
         void SetMass(double newmass)
@@ -244,4 +269,18 @@ cdef extern from "ChMoorings.h":
         #virtual 
         ChLinkPointPoint()
         int Initialize(shared_ptr[ChNodeFEAxyz] anodeA, shared_ptr[ChNodeFEAxyz] anodeB)
+    
+
+cdef extern from "ChBodyAddedMass.h":
+    cdef cppclass ChBodyAddedMass(ChBody):
+        ChBodyAddedMass() except +
+        # void SetMass(double newmass)
+        # void SetInertia(ChMatrix33& newXInertia)
+        # void SetInertiaXX(ChVector& newXInertia)
+        # void SetInertiaXY(ChVector& newXInertia)
+        # ChVector GetInertiaXX()
+        # ChVector GetInertiaXY()
+        void SetMfullmass(ChMatrixDynamic Mfullmass_in)
+        void SetInvMfullmass(ChMatrixDynamic inv_Mfullmass_in)
+
 
