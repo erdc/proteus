@@ -1721,6 +1721,7 @@ namespace proteus
 		      eN_nDOF_trial_element = eN*nDOF_trial_element;
 		    register double
 		      u=0.0,un=0.0,
+		      grad_u[nSpace],grad_u_old[nSpace],
 		      m=0.0,dm=0.0,
 		      m_t=0.0,dm_t=0.0,
 		      jac[nSpace*nSpace],jacDet,jacInv[nSpace*nSpace],
@@ -1740,13 +1741,24 @@ namespace proteus
 						x,y,z);
 		    //get the physical integration weight
 		    dV = fabs(jacDet)*dV_ref[k];
+		    //get the trial function gradients
+		    ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		    //get the solution
 		    ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
-		    ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);		    
+		    ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+		    //get the solution gradients
+		    ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+		    ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u_old);
 		    //precalculate test function products with integration weights
 		    for (int j=0;j<nDOF_trial_element;j++)
-		      u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
-
+		      {
+			u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+			for (int I=0;I<nSpace;I++)
+			  {
+			    u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+			  }
+		      }
+		    
 		    double fake_vel[nSpace];
 		    for (int I=0; I<nSpace; I++)
 		      fake_vel[I] = 1.0/std::sqrt(2);			
@@ -1756,16 +1768,28 @@ namespace proteus
 		    //calculate time derivative at quadrature points
 		    //
 		    m=u;
-		    dm=1.0;		    
+		    dm=1.0;
+		    if (q_dV_last[eN_k] <= -100)
+		      q_dV_last[eN_k] = dV;
+		    q_dV[eN_k] = dV;
 		    ck.bdf(alphaBDF,
 			   q_m_betaBDF[eN_k]*q_dV_last[eN_k]/dV,//ensure prior mass integral is correct for  m_t with BDF1
 			   m,
 			   dm,
 			   m_t,
 			   dm_t);
+
 		    for(int i=0;i<nDOF_test_element;i++)
-		      elementResidual_u[i] += (u-un-dt*force[eN_k])*u_test_dV[i];
-		      //elementResidual_u[i] += (u-force[eN_k])*u_test_dV[i];
+		      {
+			register int i_nSpace=i*nSpace;
+			elementResidual_u[i] +=
+			  (u-un-dt*force[eN_k])*u_test_dV[i];
+			  //(m_t-force[eN_k])*u_test_dV[i];
+			  //+ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace]);
+		      }
+		    //elementResidual_u[i] += one_over_alpha*(m_t-force[eN_k])*u_test_dV[i]
+		    //elementResidual_u[i] += (u-un-dt*force[eN_k])*u_test_dV[i];
+		    //elementResidual_u[i] += (u-force[eN_k])*u_test_dV[i];
 		    q_u[eN_k] = u;
 		    q_m[eN_k] = m;
 		  }
@@ -2537,7 +2561,9 @@ namespace proteus
 			    int i_nSpace = i*nSpace;
 			    //std::cout<<"jac "<<'\t'<<q_numDiff_u_last[eN_k]<<'\t'<<dm_t<<'\t'<<df[0]<<df[1]<<'\t'<<dsubgridError_u_u[j]<<std::endl;
 			    elementJacobian_u_u[i][j] +=
-			      dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]);
+			      ck.MassJacobian_weak(1.0,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]);
+			      //ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]);
+			      //+ck.NumericalDiffusion(1.0,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); //implicit
 			  }
 		      }//j
 		  }//i

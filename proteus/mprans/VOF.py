@@ -460,10 +460,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebqe_porosity = numpy.ones(cebqe[('u', 0)].shape, 'd')
 
     def preStep(self, t, firstStep=False):
+        #assert np.isclose(self.model.timeIntegration.dt,5.E-3)
         # COMPUTE FORCE TERMS AS FUNCTIONS
         if self.model.DEBUG_SSP:
             self.model.updateForceTerms(self.model.timeIntegration.t-self.model.timeIntegration.dt)
-
+            #self.model.updateForceTerms(self.model.timeIntegration.t)
+            
         # SAVE OLD SOLUTION #
         self.model.u_dof_old[:] = self.model.u[0].dof
 
@@ -850,20 +852,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setupFieldStrides()
 
         # mql. Some ASSERTS to restrict the combination of the methods
-        if self.coefficients.STABILIZATION_TYPE > 0:
-            assert self.timeIntegration.isSSP == True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within VOF model"
-            cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver ==
-                                                               ExplicitLumpedMassMatrix or options.levelNonlinearSolver == ExplicitConsistentMassMatrixForVOF)
-            assert cond, "If STABILIZATION_TYPE>0, use levelNonlinearSolver=ExplicitLumpedMassMatrix or ExplicitConsistentMassMatrixForVOF"
-        if 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver == ExplicitLumpedMassMatrix:
-            assert self.coefficients.LUMPED_MASS_MATRIX, "If levelNonlinearSolver=ExplicitLumpedMassMatrix, use LUMPED_MASS_MATRIX=True"
-        if self.coefficients.LUMPED_MASS_MATRIX == True:
-            cond = self.coefficients.STABILIZATION_TYPE == 2
-            assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
-            cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver == ExplicitLumpedMassMatrix
-            assert cond, "Use levelNonlinearSolver=ExplicitLumpedMassMatrix when the mass matrix is lumped"
-        if self.coefficients.FCT == True:
-            cond = self.coefficients.STABILIZATION_TYPE > 0, "Use FCT just with STABILIZATION_TYPE>0; i.e., edge based stabilization"
+        #if self.coefficients.STABILIZATION_TYPE > 0:
+        #    assert self.timeIntegration.isSSP == True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within VOF model"
+        #    cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver ==
+        #                                                       ExplicitLumpedMassMatrix or options.levelNonlinearSolver == ExplicitConsistentMassMatrixForVOF)
+        #    assert cond, "If STABILIZATION_TYPE>0, use levelNonlinearSolver=ExplicitLumpedMassMatrix or ExplicitConsistentMassMatrixForVOF"
+        #if 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver == ExplicitLumpedMassMatrix:
+        #    assert self.coefficients.LUMPED_MASS_MATRIX, "If levelNonlinearSolver=ExplicitLumpedMassMatrix, use LUMPED_MASS_MATRIX=True"
+        #if self.coefficients.LUMPED_MASS_MATRIX == True:
+        #    cond = self.coefficients.STABILIZATION_TYPE == 2
+        #    assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
+        #    cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver == ExplicitLumpedMassMatrix
+        #    assert cond, "Use levelNonlinearSolver=ExplicitLumpedMassMatrix when the mass matrix is lumped"
+        #if self.coefficients.FCT == True:
+        #    cond = self.coefficients.STABILIZATION_TYPE > 0, "Use FCT just with STABILIZATION_TYPE>0; i.e., edge based stabilization"
         # END OF ASSERTS
 
         # cek adding empty data member for low order numerical viscosity structures here for now
@@ -1356,9 +1358,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.DEBUG_SSP,
             self.q[('force', 0)])
 
-        if self.DEBUG_SSP:
-            self.edge_based_cfl[:] = self.q[('cfl', 0)].max()
-            
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
