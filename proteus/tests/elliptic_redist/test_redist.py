@@ -10,6 +10,7 @@ Profiling.verbose=True
 import os
 import numpy as np
 import tables
+import pytest
 from . import (vortex2D, vortex2D_so,
                ncls_p, ncls_n,
                rdls_p, rdls_n)
@@ -96,6 +97,8 @@ class TestEllipticRedistancing():
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = True
         vortex2D.ct.ELLIPTIC_REDISTANCING_TYPE = 2
+        reload(default_p)
+        reload(default_so)
         reload(rdls_p)
         reload(vortex2D_so)
         pnList = [(ncls_p,ncls_n),
