@@ -13,11 +13,21 @@ if ct.STABILIZATION_TYPE==0: #SUPG
 else:
     fullNewtonFlag = False
     updateJacobian = False
-    timeIntegration = VOF.RKEV # SSP33 
+    timeIntegration = VOF.RKEV # SSP33
+    timeOrder = ct.SSPOrder
+    nStagesTime = ct.SSPOrder
     if ct.LUMPED_MASS_MATRIX==True: 
         levelNonlinearSolver = ExplicitLumpedMassMatrix
     else:
         levelNonlinearSolver = ExplicitConsistentMassMatrixForVOF
+
+runCFL = ct.cfl
+
+#fullNewtonFlag = True
+#updateJacobian = True
+#timeIntegration = VBDF
+#timeOrder=2
+levelNonlinearSolver = Newton
 
 class fixed_dt(Min_dt_controller):
     def __init__(self,model,nOptions):
@@ -26,13 +36,13 @@ class fixed_dt(Min_dt_controller):
         self.dt_model=my_fixed_dt
         self.set_dt_allLevels()
         self.setSubsteps([self.t_model])        
-
-stepController = fixed_dt
-#stepController = Min_dt_controller
-
-runCFL = ct.cfl
-timeOrder = ct.SSPOrder
-nStagesTime = ct.SSPOrder
+    def initialize_dt_model(self,t0,tOut):
+        self.dt_model=my_fixed_dt
+        self.set_dt_allLevels()
+        self.setSubsteps([self.t_model])        
+        
+#stepController = fixed_dt
+stepController  = Min_dt_cfl_controller
 
 if useHex:
     hex=True
@@ -59,8 +69,8 @@ else:
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vof_quad_order)
 
 #numericalFluxType = VOF.NumericalFlux
-#numericalFluxType = DoNothing
-numericalFluxType = Advection_DiagonalUpwind_IIPG_exterior # PERIODIC
+numericalFluxType = DoNothing
+#numericalFluxType = Advection_DiagonalUpwind_IIPG_exterior # PERIODIC
 
 shockCapturing = VOF.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_vof,lag=lag_shockCapturing_vof)
 
@@ -77,7 +87,7 @@ else:
 if checkMass:
     auxiliaryVariables = [MassOverRegion()]
 
-#tnList=[0.,1E-6]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
-tnList=[0.]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
+tnList=[0.,1E-6]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
+#tnList=[0.]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
 #tnList=[0.,1E-6]
 

@@ -8,7 +8,7 @@ import math
 
 ct=Context.Options([
     # General parameters #
-    ("problem",0,"0: 1D problem with periodic BCs. 1: 2D rotation of zalesak disk"),
+    ("problem",1,"0: 1D problem with periodic BCs. 1: 2D rotation of zalesak disk"),
     ("T",1.0,"Final time"),
     ("nDTout",10,"Number of time steps to archive"),
     ("refinement",1,"Level of refinement"),
@@ -21,7 +21,7 @@ ct=Context.Options([
     # Numerical parameters #
     ("cE",0.1,"Entropy viscosity constant"),
     ("cK",1.0,"Artificial compression constant"),
-    ("cfl",0.1,"Target cfl"),
+    ("cfl",0.5,"Target cfl"),
     ("SSPOrder",2,"SSP method of order 1, 2 or 3")
 ],mutable=True)
 
