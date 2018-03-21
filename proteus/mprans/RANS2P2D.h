@@ -1168,6 +1168,13 @@ namespace proteus
                 flux_umom += n[0]*f_umom[0];
                 flux_vmom += n[0]*f_vmom[0];
               }
+            else
+              {
+                if (NONCONSERVATIVE_FORM > 0.0)
+                  {
+                    flux_umom+=(0.0-u)*flowSpeedNormal;
+                  }
+              }
           }
         else
           {
@@ -1199,6 +1206,13 @@ namespace proteus
               {
                 flux_umom+=n[1]*f_umom[1];
                 flux_vmom+=n[1]*f_vmom[1];
+              }
+            else
+              {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    flux_vmom+=(0.0-v)*flowSpeedNormal;
+		  }
               }
           }
         else
@@ -1344,6 +1358,14 @@ namespace proteus
                 dflux_vmom_du += n[0]*df_vmom_du[0];
                 dflux_vmom_dv += n[0]*df_vmom_dv[0];
               }
+            else
+              {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_umom_du+=(  dmom_u_acc_u*n[0]*(0.0 - u) - flowSpeedNormal ) ;
+		    dflux_umom_dv+= dmom_u_acc_u * (0.0 - u) * n[1];
+		  }
+              }
           }
         else
           {
@@ -1381,6 +1403,14 @@ namespace proteus
                 
                 dflux_vmom_du += n[1]*df_vmom_du[1];
                 dflux_vmom_dv += n[1]*df_vmom_dv[1];
+              }
+            else
+              {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_vmom_du += dmom_u_acc_u * n[0] * (0.0 - v);
+		    dflux_vmom_dv += ( dmom_u_acc_u * n[1] * (0.0 - v) - flowSpeedNormal) ;
+		  }
               }
           }
         else
