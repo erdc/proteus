@@ -586,6 +586,17 @@ class BC_RANS(BoundaryConditions.BC_Base):
                                             -
                                             smoothedHeaviside_integral(smoothing, phi)))
 
+        def diffusiveFlux_u(x,t):
+            g = hydrostaticPressureOutletWithDepth_p_dirichlet(x,t)
+            phi = x[vert_axis] - seaLevel
+            if phi >= smoothing:
+                H = 1.
+            elif smoothing > 0 and -smoothing < phi < smoothing:
+                H = smoothedHeaviside(smoothing, phi)
+            elif phi <= -smoothing:
+                H = 0.
+            return H*(1.500e-5*1.205)*g + (1-H)*(1.004e-6*998.2)*g
+
         def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
             phi = x[vert_axis] - seaLevel
             if phi >= smoothing:
@@ -621,7 +632,9 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.w_dirichlet.setConstantBC(0.)
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
-        self.u_diffusive.setConstantBC(0.)
+        self.u_diffusive.uOfXT = diffusiveFlux_u
+        self.v_diffusive.setConstantBC(0.)
+#        self.u_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
 
