@@ -177,10 +177,11 @@ namespace proteus
 				       double* u_test_ref,
 				       //physics
 				       int nElements_global,
+				       int useMetrics,
 				       int* u_l2g, 
 				       double* elementDiameter,
-				       //double* nodeDiametersArray,
-				       double degree_polynomial,
+				       double* nodeDiametersArray,
+				       double degree_polynomial,				       
 				       double epsFactHeaviside,
 				       double* u_dof,
 				       double* u0_dof,
@@ -203,10 +204,11 @@ namespace proteus
 				       double* u_test_ref,
 				       //physics
 				       int nElements_global,
+				       int useMetrics,
 				       int* u_l2g, 
 				       double* elementDiameter,
-				       //double* nodeDiametersArray,
-				       double degree_polynomial,
+				       double* nodeDiametersArray,
+				       double degree_polynomial,				       
 				       double epsFactHeaviside,
 				       double* u_dof,
 				       double* u_dof_old,
@@ -527,8 +529,7 @@ namespace proteus
 		  eN_nDOF_trial_element = eN*nDOF_trial_element;
 		register double 
 		  //for mass matrix contributions
-		  un, grad_un[nSpace], grad_unHalf[nSpace], 
-		  u, grad_u[nSpace],
+		  u, un, grad_u[nSpace], grad_un[nSpace], grad_unHalf[nSpace], 
 		  normalReconstruction[3], // assume 3D always
 		  qxn, qyn, qzn, qxnStar, qynStar, qznStar,
 		  relative_velocity[nSpace], relative_velocity_old[nSpace],
@@ -563,42 +564,21 @@ namespace proteus
 						    mesh_trial_ref,
 						    xt,yt,zt);	      
 		dV = fabs(jacDet)*dV_ref[k];
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
-				    jacInv,u_grad_trial);
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		// get the components of the normal reconstruction
-		ck.valFromDOF(lumped_qx,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      qxn);
-		ck.valFromDOF(lumped_qy,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      qyn);
-		ck.valFromDOF(lumped_qz,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      qzn);
-		ck.valFromDOF(lumped_qx_tStar,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      qxnStar);
-		ck.valFromDOF(lumped_qy_tStar,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      qynStar);
-		ck.valFromDOF(lumped_qz_tStar,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      qznStar);
+		ck.valFromDOF(lumped_qx,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qxn);
+		ck.valFromDOF(lumped_qy,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qyn);
+		ck.valFromDOF(lumped_qz,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qzn);
+		ck.valFromDOF(lumped_qx_tStar,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qxnStar);
+		ck.valFromDOF(lumped_qy_tStar,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qynStar);
+		ck.valFromDOF(lumped_qz_tStar,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qznStar);
 		// get the solution (of Newton's solver)
-		ck.valFromDOF(u_dof,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      u);
+		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
 		// get old solution
-		ck.valFromDOF(u_dof_old,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      un);
+		ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
 		//get the solution gradients at quad points	      
-		ck.gradFromDOF(u_dof,
-			       &u_l2g[eN_nDOF_trial_element],u_grad_trial,
-			       grad_u);
-		ck.gradFromDOF(u_dof_old,
-			       &u_l2g[eN_nDOF_trial_element],u_grad_trial,
-			       grad_un);
+		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+		ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
 		//precalculate test function products with integration weights for mass matrix terms
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
@@ -610,7 +590,6 @@ namespace proteus
 		if (q_dV_last[eN_k] <= -100)
 		  q_dV_last[eN_k] = dV;
 		q_dV[eN_k] = dV;
-
 		/////////////////
 		// MOVING MESH //
 		/////////////////
@@ -619,21 +598,20 @@ namespace proteus
 		mesh_velocity[1] = yt;
 		mesh_velocity[2] = zt;
 
-		double lambda = lambdaFact;	      
-		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
+		double lambda = lambdaFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged;
+		double epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
 		double Hn = smoothedSign(epsHeaviside,un);
 		double Hnp1 = smoothedSign(epsHeaviside,u);
 		
 		for (int I=0;I<nSpace;I++)
 		  {
 		    relative_velocity[I] = (velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
-		    relative_velocity_old[I] = (velocity_old[eN_k_nSpace+I]
-						-MOVING_DOMAIN*mesh_velocity[I]);
+		    relative_velocity_old[I] = (velocity_old[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
 		    fnp1[I] = relative_velocity[I]*Hnp1; //implicit advection via BDF
-		    fnHalf[I] = 0.5*(relative_velocity[I]*Hnp1
-				     +relative_velocity_old[I]*Hn); //implicit advection via CN
-		    grad_unHalf[I] = 0.5*(grad_u[I] + grad_un[I]);
+		    fnHalf[I] = 0.5*(relative_velocity[I]*Hnp1+relative_velocity_old[I]*Hn); //implicit advection via CN
+		    grad_unHalf[I] = 0.5*(grad_u[I]+grad_un[I]);
 		  }
+
 		//////////////////////////////
 		// CALCULATE CELL BASED CFL //
 		//////////////////////////////
@@ -643,12 +621,6 @@ namespace proteus
 		// TIME DERIVATIVE //
 		/////////////////////
 		double time_derivative_residual = (Hnp1-Hn)/dt;
-
-		///////////////////
-		// COMPUTE GAMMA // = h/norm_factor_lagged
-		///////////////////
-		double gamma = (useMetrics*h_phi + (1.0-useMetrics)
-				*elementDiameter[eN])/degree_polynomial/norm_factor_lagged;
 
 		// CALCULATE min, max and mean distance
 		min_distance = fmin(min_distance,u);
@@ -690,13 +662,13 @@ namespace proteus
 			  // ADVECTION TERM. This is IMPLICIT
 			  + ck.Advection_weak(fnp1,&u_grad_test_dV[i_nSpace])
 			  // REGULARIZATION TERM. This is IMPLICIT
-			  + gamma*lambda*ck.NumericalDiffusion(1.0,
-							       grad_u,
-							       &u_grad_test_dV[i_nSpace])
+			  + lambda*ck.NumericalDiffusion(1.0,
+							 grad_u,
+							 &u_grad_test_dV[i_nSpace])
 			  // TARGET for PENALIZATION. This is EXPLICIT
-			  - gamma*lambda*ck.NumericalDiffusion(1.0,
-							       normalReconstruction,
-							       &u_grad_test_dV[i_nSpace]);
+			  - lambda*ck.NumericalDiffusion(1.0,
+							 normalReconstruction,
+							 &u_grad_test_dV[i_nSpace]);
 		      }
 		    else // timeOrder=2
 		      elementResidual_u[i] +=
@@ -705,13 +677,13 @@ namespace proteus
 			// ADVECTION TERM. This is IMPLICIT
 			+ ck.Advection_weak(fnHalf,&u_grad_test_dV[i_nSpace])
 			// REGULARIZATION TERM. This is IMPLICIT
-			+ gamma*lambda*ck.NumericalDiffusion(1.0,
-							     grad_unHalf,
-							     &u_grad_test_dV[i_nSpace])
+			+ lambda*ck.NumericalDiffusion(1.0,
+						       grad_unHalf,
+						       &u_grad_test_dV[i_nSpace])
 			// TARGET for PENALIZATION. This is EXPLICIT 
-			- gamma*lambda*ck.NumericalDiffusion(1.0,
-							     normalReconstruction,
-							     &u_grad_test_dV[i_nSpace]);
+			- lambda*ck.NumericalDiffusion(1.0,
+						       normalReconstruction,
+						       &u_grad_test_dV[i_nSpace]);
 		  }//i
 		//save solution for other models 
 		q_u[eN_k] = u;
@@ -728,7 +700,7 @@ namespace proteus
 		globalResidual[gi] += elementResidual_u[i];
 	      }//i
 	  }//elements
-
+	// COMPUTE NORMALIZATION FACTOR
 	norm_factor[0] = fmax(fabs(max_distance - mean_distance),
 			      fabs(mean_distance - min_distance));
 	  
@@ -901,6 +873,7 @@ namespace proteus
 		for (int I=0; I<nSpace; I++)
 		  flow += normal[I]*df_ext[I];
 
+		//double epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
 		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
 		double sHu_ext = smoothedSign(epsHeaviside,u_ext);
 
@@ -1045,15 +1018,10 @@ namespace proteus
 		//get the physical integration weight
 		dV = fabs(jacDet)*dV_ref[k];
 		//get the trial function gradients
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
-				    jacInv,u_grad_trial);
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		//get the solution 	
-		ck.valFromDOF(u_dof,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      u);
-		ck.valFromDOF(u_dof_old,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      un);
+		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+		ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
@@ -1070,12 +1038,11 @@ namespace proteus
 		mesh_velocity[1] = yt;
 		mesh_velocity[2] = zt;
 
-		double lambda = lambdaFact;
-		//double lambda = lambdaFact*elementDiameter[eN]/degree_polynomial/dt;
-		double epsDirac = epsFactDirac*elementDiameter[eN]/degree_polynomial;
+		double lambda = lambdaFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged;
+		double epsDirac = epsFactDirac*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
+		double epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
 		double dHnp1 = smoothedDerivativeSign(epsDirac,u); //derivative of smoothed sign
-		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
-				
+		
 		for (int I=0;I<nSpace;I++)
 		  {
 		    relative_velocity[I] = (velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
@@ -1086,12 +1053,6 @@ namespace proteus
 		// TIME DERIVATIVE //
 		/////////////////////
 		double time_derivative_jacobian = dHnp1/dt;
-
-		///////////////////
-		// COMPUTE GAMMA // = h/norm_factor_lagged
-		///////////////////
-		double gamma = (useMetrics*h_phi + (1.0-useMetrics)
-				*elementDiameter[eN])/degree_polynomial/norm_factor_lagged;
 
 		//////////////////
 		// LOOP ON DOFs //
@@ -1111,9 +1072,9 @@ namespace proteus
 			  (ck.AdvectionJacobian_weak(df,
 						     u_trial_ref[k*nDOF_trial_element+j],
 						     &u_grad_test_dV[i_nSpace])
-			   + gamma*lambda*ck.NumericalDiffusionJacobian(1.0,
-									&u_grad_trial[j_nSpace],
-									&u_grad_test_dV[i_nSpace]));
+			   + lambda*ck.NumericalDiffusionJacobian(1.0,
+								  &u_grad_trial[j_nSpace],
+								  &u_grad_test_dV[i_nSpace]));
 		      }//j
 		  }//i
 	      }//k
@@ -1322,21 +1283,22 @@ namespace proteus
       }//computeJacobian for MCorr with CLSVOF      
 
       void calculateMetricsAtEOS( //EOS=End Of Simulation
-				 double* mesh_trial_ref, //
-				 double* mesh_grad_trial_ref, //
-				 double* mesh_dof, //
-				 int* mesh_l2g, //
-				 double* dV_ref, //
+				 double* mesh_trial_ref, 
+				 double* mesh_grad_trial_ref, 
+				 double* mesh_dof, 
+				 int* mesh_l2g, 
+				 double* dV_ref, 
 				 double* u_trial_ref, 
 				 double* u_grad_trial_ref,
-				 double* u_test_ref, //
+				 double* u_test_ref, 
 				 //physics
-				 int nElements_global, //
-				 int* u_l2g, //
+				 int nElements_global, 
+				 int useMetrics,
+				 int* u_l2g, 
 				 double* elementDiameter,
-				 //double* nodeDiametersArray,
-				 double degree_polynomial,
-				  double epsFactHeaviside,
+				 double* nodeDiametersArray,				 
+				 double degree_polynomial,				 
+				 double epsFactHeaviside,
 				 double* u_dof,
 				 double* u0_dof,
 				 double* u_exact,
@@ -1380,7 +1342,7 @@ namespace proteus
 		  grad_uh[nSpace], 
 		  //for general use
 		  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
-		  dV,x,y,z;
+		  dV,x,y,z,h_phi;
 		//get the physical integration weight
 		ck.calculateMapping_element(eN,
 					    k,
@@ -1392,22 +1354,22 @@ namespace proteus
 					    jacDet,
 					    jacInv,
 					    x,y,z);
+                ck.calculateH_element(eN,
+                                      k,
+                                      nodeDiametersArray,
+                                      mesh_l2g,
+                                      mesh_trial_ref,
+                                      h_phi);		
 		dV = fabs(jacDet)*dV_ref[k];
 		// get functions at quad points
-		ck.valFromDOF(u_dof,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      uh);
-		ck.valFromDOF(u0_dof,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      u0);
+		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],uh);
+		ck.valFromDOF(u0_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u0);
 		u = u_exact[eN_k];
 		// get gradients
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
-				    jacInv,
-				    u_grad_trial);
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_uh);
 
-		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
+		double epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
 		// compute (smoothed) heaviside functions //		
 		double Hu0 = heaviside(u0);
 		double Hu = heaviside(u);
@@ -1446,19 +1408,20 @@ namespace proteus
 
       void calculateMetricsAtETS( // ETS=Every Time Step
 				 double dt,
-				 double* mesh_trial_ref, //
-				 double* mesh_grad_trial_ref, //
-				 double* mesh_dof, //
-				 int* mesh_l2g, //
-				 double* dV_ref, //
+				 double* mesh_trial_ref, 
+				 double* mesh_grad_trial_ref, 
+				 double* mesh_dof, 
+				 int* mesh_l2g,
+				 double* dV_ref, 
 				 double* u_trial_ref, 
 				 double* u_grad_trial_ref,
-				 double* u_test_ref, //
+				 double* u_test_ref, 
 				 //physics
-				 int nElements_global, //
-				 int* u_l2g, //
+				 int nElements_global, 
+				 int useMetrics,
+				 int* u_l2g, 
 				 double* elementDiameter,
-				 //double* nodeDiametersArray,
+				 double* nodeDiametersArray,
 				 double degree_polynomial,
 				 double epsFactHeaviside,
 				 double* u_dof,
@@ -1519,7 +1482,7 @@ namespace proteus
 		  u_test_dV[nDOF_trial_element], 
 		  //for general use
 		  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
-		  dV,x,y,z;
+		  dV,x,y,z,h_phi;
 		//get the physical integration weight
 		ck.calculateMapping_element(eN,
 					    k,
@@ -1531,23 +1494,20 @@ namespace proteus
 					    jacDet,
 					    jacInv,
 					    x,y,z);
+                ck.calculateH_element(eN,
+                                      k,
+                                      nodeDiametersArray,
+                                      mesh_l2g,
+                                      mesh_trial_ref,
+                                      h_phi);		
 		dV = fabs(jacDet)*dV_ref[k];
 		// get functions at quad points
-		ck.valFromDOF(u_dof,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      unp1);
-		ck.valFromDOF(u_dof_old,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      un);
-		ck.valFromDOF(u0_dof,
-			      &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
-			      u0);     
+		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],unp1);
+		ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+		ck.valFromDOF(u0_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u0);     
 		// get gradients
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
-				    jacInv,
-				    u_grad_trial);
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_unp1);
-
 		//precalculate test function products with integration weights for mass matrix terms
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
@@ -1555,8 +1515,8 @@ namespace proteus
 		    for (int I=0;I<nSpace;I++)
 		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
 		  }
-		
-		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
+
+		double epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
 		// compute (smoothed) heaviside functions //		
 		double Hu0 = heaviside(u0);
 		double Hunp1 = heaviside(unp1);
@@ -1690,12 +1650,8 @@ namespace proteus
 					    jacInv,
 					    x,y,z);
 		dV = fabs(jacDet)*dV_ref[k];
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
-				    jacInv,
-				    u_grad_trial);
-		ck.gradFromDOF(u_dof,
-			       &u_l2g[eN_nDOF_trial_element],u_grad_trial,
-			       grad_u);	      
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);	      
 		//precalculate test function products with integration weights for mass matrix terms
 		for (int j=0;j<nDOF_trial_element;j++)
 		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
@@ -1709,8 +1665,7 @@ namespace proteus
 		double norm_grad_u = 0;
 		for (int I=0;I<nSpace; I++)
 		  norm_grad_u += grad_u[I]*grad_u[I];
-		//norm_grad_u = std::sqrt(grad_u);+1E-10;
-		norm_grad_u = std::sqrt(norm_grad_u+1E-10);
+		norm_grad_u = std::sqrt(norm_grad_u);+1E-10;
 	      
 		for(int i=0;i<nDOF_test_element;i++)
 		  {

@@ -688,8 +688,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.u[0].femSpace.psi,
              #physics
              self.mesh.nElements_global,
+             self.coefficients.useMetrics,
              self.u[0].femSpace.dofMap.l2g,
              self.mesh.elementDiametersArray,
+             self.mesh.nodeDiametersArray,
              degree_polynomial,
              self.coefficients.epsFactHeaviside,             
              self.u[0].dof, # This unp1
@@ -724,8 +726,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.u[0].femSpace.psi,
              #physics
              self.mesh.nElements_global,
+             self.coefficients.useMetrics,
              self.u[0].femSpace.dofMap.l2g,
              self.mesh.elementDiametersArray,
+             self.mesh.nodeDiametersArray,
              degree_polynomial,
              self.coefficients.epsFactHeaviside, 
              self.u[0].dof, # This is u_lstage due to update stages in RKEV
