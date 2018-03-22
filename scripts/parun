@@ -17,7 +17,7 @@ import os
 import proteus
 
 #remove blanket import statements until after Comm initialized for petsc4py
-from proteus import Profiling, Comm, version, Context
+from proteus import Profiling, Comm, version, Context, physics
 from warnings import *
 import optparse
 import sys
@@ -293,7 +293,8 @@ if len(args) == 1:#arg should be an sso file or an so module
             so.name = args[0][:-3]
         for (pModule,nModule) in so.pnList:
             log("Loading p module = "+pModule)
-            pList.append(__import__(pModule))
+            #pList.append(__import__(pModule))
+            pList.append(physics.load_from_module(pModule))
             if pList[-1].name == None:
                 pList[-1].name = pModule
             log("Loading n module = "+nModule)
