@@ -3,6 +3,9 @@ from libcpp cimport bool
 cimport numpy as np
 from proteus.BoundaryConditions cimport (BC_Base,
                                          BoundaryCondition)
+# needed for cython > 0.27
+from proteus cimport BoundaryConditions
+
 ctypedef double[:,:,:] double_memview3
 ctypedef double[:,:] double_memview2
 ctypedef double[:] double_memview1

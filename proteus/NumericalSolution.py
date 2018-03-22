@@ -194,12 +194,17 @@ class NS_base:  # (HasTraits):
                                                                        nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                        parallelPartitioningType=n.parallelPartitioningType)
                     else:
+                        if hasattr(n,'triangleFlag')==True:
+                            triangleFlag=n.triangleFlag
+                        else:
+                            triangleFlag=0
                         mlMesh = MeshTools.MultilevelTriangularMesh(nnx,nny,1,
                                                                     p.domain.x[0], p.domain.x[1], 0.0,
                                                                     p.domain.L[0],p.domain.L[1],1,
                                                                     refinementLevels=n.nLevels,
                                                                     nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                    parallelPartitioningType=n.parallelPartitioningType)
+                                                                    parallelPartitioningType=n.parallelPartitioningType,
+                                                                    triangleFlag=triangleFlag)
 
                 elif p.domain.nd == 3:
                     if (n.nnx == n.nny == n.nnz  is None):
@@ -1198,7 +1203,7 @@ class NS_base:  # (HasTraits):
         for index,m in self.modelSpinUp.iteritems():
             spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
-            logEvent("Attaching models to model "+p.name)
+            logEvent("Attaching models to model "+m.name)
             m.attachModels(self.modelList)
             if index not in self.modelSpinUp:
                 spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
@@ -1333,6 +1338,7 @@ class NS_base:  # (HasTraits):
        #     print "Min / Max residual %s / %s" %(lr.min(),lr.max())
 
         self.nSequenceSteps = 0
+        nSequenceStepsLast=self.nSequenceSteps # prevent archiving the same solution twice
         self.nSolveSteps=self.nList[0].adaptMesh_nSteps-1
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
@@ -1481,7 +1487,8 @@ class NS_base:  # (HasTraits):
                 if(self.PUMI_estimateError()):
                     self.PUMI_adaptMesh()
             #end system step iterations
-            if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
+            if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
+                nSequenceStepsLast = self.nSequenceSteps
                 self.tCount+=1
                 for index,model in enumerate(self.modelList):
                     self.archiveSolution(model,index,self.systemStepController.t_system_last)

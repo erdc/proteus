@@ -6,6 +6,8 @@
 #include "ModelFactory.h"
 #include PROTEUS_LAPACK_H
 
+#define FAST_ASSEMBLY 1
+
 namespace proteus
 {
   class cppMCorr3P_base
@@ -58,7 +60,9 @@ namespace proteus
                                    int nExteriorElementBoundaries_global,
                                    int* exteriorElementBoundariesArray,
                                    int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray)=0;
+                                   int* elementBoundaryLocalElementBoundariesArray,
+				   // fast (jacobian) assembly
+				   double* interface_lumpedMassMatrix)=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -94,7 +98,13 @@ namespace proteus
                                    double* q_H,
                                    double* q_vos,
                                    int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                                   double* globalJacobian)=0;
+                                   double* globalJacobian,
+				   // Fast assembly
+				   int numDOFs,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops,
+				   double* stiffness_matrix,
+				   double* interface_lumpedMassMatrix)=0;
     virtual void elementSolve(//element
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -342,6 +352,20 @@ namespace proteus
                                    int* elementBoundaryElementsArray,
                                    int* elementBoundaryLocalElementBoundariesArray,
                                    double* H_dof)=0;
+    virtual void calculateStiffnessMatrix(//element
+					  double* mesh_trial_ref,
+					  double* mesh_grad_trial_ref,
+					  double* mesh_dof,
+					  int* mesh_l2g,
+					  double* dV_ref,
+					  double* u_grad_trial_ref,
+					  int nElements_global,
+					  int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+					  double* globalJacobian,
+					  double useMetrics,
+					  double epsFactDiffusion,
+					  double* elementDiameter,
+					  double* nodeDiametersArray)=0;    
   };
 
   template<class CompKernelType,
@@ -457,6 +481,7 @@ namespace proteus
                                          double* q_vos,
                                          int offset_u, int stride_u,
                                          double* elementResidual_u,
+					 double* elementInterface_lumpedMassMatrix,
                                          int nExteriorElementBoundaries_global,
                                          int* exteriorElementBoundariesArray,
                                          int* elementBoundaryElementsArray,
@@ -467,6 +492,7 @@ namespace proteus
       for (int i=0;i<nDOF_test_element;i++)
         {
           elementResidual_u[i]=0.0;
+	  elementInterface_lumpedMassMatrix[i]=0.0;
         }//i
       double epsHeaviside,epsDirac,epsDiffusion,norm;
       //loop over quadrature points and compute integrands
@@ -533,16 +559,12 @@ namespace proteus
                   u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
                 }
             }
-
-
-
           //
           //calculate pde coefficients at quadrature points
           //
           epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
           epsDirac     = epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-          epsDiffusion = epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-          // *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	  epsDiffusion = epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
           evaluateCoefficients(epsHeaviside,
                                epsDirac,
                                q_phi[eN_k],
@@ -559,9 +581,12 @@ namespace proteus
               //register int eN_k_i=eN_k*nDOF_test_element+i;
               //register int eN_k_i_nSpace = eN_k_i*nSpace;
               register int  i_nSpace=i*nSpace;
+	      elementResidual_u[i] +=
+		ck.Reaction_weak(r,u_test_dV[i]) +
+		ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]);
 
-              elementResidual_u[i] += ck.Reaction_weak(r,u_test_dV[i]) +
-                ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]);
+	      // interface lumped mass matrix
+	      elementInterface_lumpedMassMatrix[i] += dr*u_test_dV[i];
             }//i
           //
           //save momentum for time history and velocity for subgrid error
@@ -571,7 +596,6 @@ namespace proteus
           q_r[eN_k] = r;
           q_u[eN_k] = u;
 
-
           norm = 1.0e-8;
           for (int I=0;I<nSpace;I++)
             norm += grad_u[I]*grad_u[I];
@@ -580,6 +604,7 @@ namespace proteus
             q_n[eN_k_nSpace+I] = grad_u[I]/norm;
         }
     }
+    
     void calculateResidual(//element
                            double* mesh_trial_ref,
                            double* mesh_grad_trial_ref,
@@ -626,7 +651,9 @@ namespace proteus
                            int nExteriorElementBoundaries_global,
                            int* exteriorElementBoundariesArray,
                            int* elementBoundaryElementsArray,
-                           int* elementBoundaryLocalElementBoundariesArray)
+                           int* elementBoundaryLocalElementBoundariesArray,
+			   // fast (jacobian) assembly
+			   double* interface_lumpedMassMatrix)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -641,7 +668,9 @@ namespace proteus
       for(int eN=0;eN<nElements_global;eN++)
         {
           //declare local storage for element residual and initialize
-          register double elementResidual_u[nDOF_test_element],element_u[nDOF_trial_element];
+          register double elementResidual_u[nDOF_test_element],
+	    element_u[nDOF_trial_element],
+	    elementInterface_lumpedMassMatrix[nDOF_test_element];
           for (int i=0;i<nDOF_test_element;i++)
             {
               register int eN_i=eN*nDOF_test_element+i;
@@ -686,7 +715,8 @@ namespace proteus
                                    q_r,
                                    q_vos,
                                    offset_u,stride_u,
-                                   elementResidual_u,
+                                   elementResidual_u,				   
+				   elementInterface_lumpedMassMatrix,
                                    nExteriorElementBoundaries_global,
                                    exteriorElementBoundariesArray,
                                    elementBoundaryElementsArray,
@@ -699,8 +729,11 @@ namespace proteus
           for(int i=0;i<nDOF_test_element;i++)
             {
               register int eN_i=eN*nDOF_test_element+i;
+	      int gi = offset_u+stride_u*u_l2g[eN_i];
+              globalResidual[gi] += elementResidual_u[i];
 
-              globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
+	      // interface lumped mass matrix. For fast assembly of Jacobian
+	      interface_lumpedMassMatrix[gi] += elementInterface_lumpedMassMatrix[i];
             }//i
         }//elements
       //
@@ -917,8 +950,7 @@ namespace proteus
           //
           epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
           epsDirac    =epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-          epsDiffusion=epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-          //    *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	  epsDiffusion = epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
           evaluateCoefficients(epsHeaviside,
                                epsDirac,
                                q_phi[eN_k],
@@ -938,8 +970,13 @@ namespace proteus
                   //int eN_k_j_nSpace = eN_k_j*nSpace;
                   int j_nSpace = j*nSpace;
 
-                  elementJacobian_u_u[i*nDOF_trial_element+j] += ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
-                    ck.NumericalDiffusionJacobian(epsDiffusion,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
+                  elementJacobian_u_u[i*nDOF_trial_element+j] +=		    
+		    ck.ReactionJacobian_weak(dr,
+					     u_trial_ref[k*nDOF_trial_element+j],
+					     u_test_dV[i]) +
+                    ck.NumericalDiffusionJacobian(epsDiffusion,
+						  &u_grad_trial[j_nSpace],
+						  &u_grad_test_dV[i_nSpace]);
                 }//j
             }//i
         }//k
@@ -983,68 +1020,91 @@ namespace proteus
                            double* q_H,
                            double* q_vos,
                            int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                           double* globalJacobian)
+                           double* globalJacobian,
+			   // Fast assembly
+			   int numDOFs,
+			   int* csrRowIndeces_DofLoops,
+			   int* csrColumnOffsets_DofLoops,
+			   double* stiffness_matrix,
+			   double* interface_lumpedMassMatrix)
     {
-      //
-      //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
-      //
-      for(int eN=0;eN<nElements_global;eN++)
-        {
-          register double  elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element];
-          for (int j=0;j<nDOF_trial_element;j++)
-            {
-              register int eN_j = eN*nDOF_trial_element+j;
-              element_u[j] = u_dof[u_l2g[eN_j]];
-            }
-          calculateElementJacobian(mesh_trial_ref,
-                                   mesh_grad_trial_ref,
-                                   mesh_dof,
-                                   mesh_l2g,
-                                   dV_ref,
-                                   u_trial_ref,
-                                   u_grad_trial_ref,
-                                   u_test_ref,
-                                   u_grad_test_ref,
-                                   mesh_trial_trace_ref,
-                                   mesh_grad_trial_trace_ref,
-                                   dS_ref,
-                                   u_trial_trace_ref,
-                                   u_grad_trial_trace_ref,
-                                   u_test_trace_ref,
-                                   u_grad_test_trace_ref,
-                                   normal_ref,
-                                   boundaryJac_ref,
-                                   nElements_global,
-                                   useMetrics,
-                                   epsFactHeaviside,
-                                   epsFactDirac,
-                                   epsFactDiffusion,
-                                   u_l2g,
-                                   elementDiameter,
-                                   nodeDiametersArray,
-                                   u_dof,
-                                   q_phi,
-                                   q_normal_phi,
-                                   q_H,
-                                   q_vos,
-                                   elementJacobian_u_u,
-                                   element_u,
-                                   eN);
-          //
-          //load into element Jacobian into global Jacobian
-          //
-          for (int i=0;i<nDOF_test_element;i++)
-            {
-              int eN_i = eN*nDOF_test_element+i;
-              for (int j=0;j<nDOF_trial_element;j++)
-                {
-                  int eN_i_j = eN_i*nDOF_trial_element+j;
-
-                  globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
-                }//j
-            }//i
-        }//elements
+      if (FAST_ASSEMBLY==1) 
+	{
+	  int ij=0;
+	  for (int i=0; i<numDOFs; i++)
+	    for (int offset=csrRowIndeces_DofLoops[i];
+		 offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	      {
+		int j = csrColumnOffsets_DofLoops[offset];		  
+		if (i==j)
+		  globalJacobian[ij] = interface_lumpedMassMatrix[i] + stiffness_matrix[ij];
+		else
+		  globalJacobian[ij] = stiffness_matrix[ij];		    
+		//update ij
+		ij++;
+	      }
+	}
+      else // slow assembly: loop over the elements
+	{
+	  for(int eN=0;eN<nElements_global;eN++)
+	    {
+	      register double  elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element];
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  register int eN_j = eN*nDOF_trial_element+j;
+		  element_u[j] = u_dof[u_l2g[eN_j]];
+		}
+	      calculateElementJacobian(mesh_trial_ref,
+				       mesh_grad_trial_ref,
+				       mesh_dof,
+				       mesh_l2g,
+				       dV_ref,
+				       u_trial_ref,
+				       u_grad_trial_ref,
+				       u_test_ref,
+				       u_grad_test_ref,
+				       mesh_trial_trace_ref,
+				       mesh_grad_trial_trace_ref,
+				       dS_ref,
+				       u_trial_trace_ref,
+				       u_grad_trial_trace_ref,
+				       u_test_trace_ref,
+				       u_grad_test_trace_ref,
+				       normal_ref,
+				       boundaryJac_ref,
+				       nElements_global,
+				       useMetrics,
+				       epsFactHeaviside,
+				       epsFactDirac,
+				       epsFactDiffusion,
+				       u_l2g,
+				       elementDiameter,
+				       nodeDiametersArray,
+				       u_dof,
+				       q_phi,
+				       q_normal_phi,
+				       q_H,
+				       q_vos,
+				       elementJacobian_u_u,
+				       element_u,
+				       eN);
+	      //
+	      //load into element Jacobian into global Jacobian
+	      //
+	      for (int i=0;i<nDOF_test_element;i++)
+		{
+		  int eN_i = eN*nDOF_test_element+i;
+		  for (int j=0;j<nDOF_trial_element;j++)
+		    {
+		      int eN_i_j = eN_i*nDOF_trial_element+j;
+		    
+		      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
+		    }//j
+		}//i
+	    }//elements
+	}
     }//computeJacobian
+    
     void elementSolve(//element
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -1111,6 +1171,7 @@ namespace proteus
           register double element_u[nDOF_test_element],
             element_du[nDOF_test_element],
             elementResidual_u[nDOF_test_element],
+	    dummy[nDOF_test_element],
             elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],scale=1.0;
           register PROTEUS_LAPACK_INTEGER elementPivots[nDOF_test_element],
             elementColPivots[nDOF_test_element];
@@ -1159,6 +1220,7 @@ namespace proteus
                                    q_vos,
                                    offset_u,stride_u,
                                    elementResidual_u,
+				   dummy,
                                    nExteriorElementBoundaries_global,
                                    exteriorElementBoundariesArray,
                                    elementBoundaryElementsArray,
@@ -1293,6 +1355,7 @@ namespace proteus
                                            q_vos,
                                            offset_u,stride_u,
                                            elementResidual_u,
+					   dummy,
                                            nExteriorElementBoundaries_global,
                                            exteriorElementBoundariesArray,
                                            elementBoundaryElementsArray,
@@ -1370,7 +1433,9 @@ namespace proteus
         {
           //declare local storage for element residual and initialize
           register double element_u[nDOF_test_element],elementConstant_u,
-            elementResidual_u[nDOF_test_element],elementConstantResidual,
+            elementResidual_u[nDOF_test_element],
+	    dummy[nDOF_test_element],
+	    elementConstantResidual,
             elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],elementConstantJacobian,resNorm;
           elementConstant_u=0.0;
           for (int i=0;i<nDOF_test_element;i++)
@@ -1417,6 +1482,7 @@ namespace proteus
                                    q_vos,
                                    offset_u,stride_u,
                                    elementResidual_u,
+				   dummy,
                                    nExteriorElementBoundaries_global,
                                    exteriorElementBoundariesArray,
                                    elementBoundaryElementsArray,
@@ -1527,6 +1593,7 @@ namespace proteus
                                        q_vos,
                                        offset_u,stride_u,
                                        elementResidual_u,
+				       dummy,
                                        nExteriorElementBoundaries_global,
                                        exteriorElementBoundariesArray,
                                        elementBoundaryElementsArray,
@@ -1600,6 +1667,7 @@ namespace proteus
     {
       register double element_u[nDOF_test_element],
         elementResidual_u[nDOF_test_element],
+	dummy[nDOF_test_element],
         elementJacobian_u_u[nDOF_test_element*nDOF_trial_element];
       *constantResidual = 0.0;
       *constantJacobian = 0.0;
@@ -1650,6 +1718,7 @@ namespace proteus
                                    q_vos,
                                    offset_u,stride_u,
                                    elementResidual_u,
+				   dummy,
                                    nExteriorElementBoundaries_global,
                                    exteriorElementBoundariesArray,
                                    elementBoundaryElementsArray,
@@ -1927,6 +1996,102 @@ namespace proteus
             }
         }//elements
     }
+
+    void calculateStiffnessMatrix(//element
+				  double* mesh_trial_ref,
+				  double* mesh_grad_trial_ref,
+				  double* mesh_dof,
+				  int* mesh_l2g,
+				  double* dV_ref,
+				  double* u_grad_trial_ref,
+				  //physics
+				  int nElements_global,
+				  int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				  double* globalJacobian,
+				  // for weight within stiffness matrix
+				  double useMetrics,
+				  double epsFactDiffusion,
+				  double* elementDiameter,
+				  double* nodeDiametersArray)
+    {
+      //
+      //loop over elements
+      //
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    for (int j=0;j<nDOF_trial_element;j++)
+	      elementJacobian_u_u[i][j]=0.0;
+	  // loop on quad points
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      register double
+		epsDiffusion,
+		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		u_grad_trial[nDOF_trial_element*nSpace],
+		dV, u_grad_test_dV[nDOF_test_element*nSpace],
+		x,y,z,h_phi;
+	      //
+	      //calculate solution and gradients at quadrature points
+	      //
+	      ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,
+					  x,y,z);
+	      ck.calculateH_element(eN,
+				    k,
+				    nodeDiametersArray,
+				    mesh_l2g,
+				    mesh_trial_ref,
+				    h_phi);
+	      //get the physical integration weight
+	      dV = fabs(jacDet)*dV_ref[k];
+	      //get the trial function gradients
+	      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				  jacInv,
+				  u_grad_trial);
+	      //precalculate test function products with integration weights
+	      for (int j=0;j<nDOF_trial_element;j++)
+		  for (int I=0;I<nSpace;I++)
+		    u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
+
+	      epsDiffusion = epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	      for(int i=0;i<nDOF_test_element;i++)
+		{
+		  int i_nSpace = i*nSpace;
+		  for(int j=0;j<nDOF_trial_element;j++)
+		    {
+		      int j_nSpace = j*nSpace;
+		      elementJacobian_u_u[i][j] +=
+			ck.NumericalDiffusionJacobian(epsDiffusion,
+						      &u_grad_trial[j_nSpace],
+						      &u_grad_test_dV[i_nSpace]);
+		    }//j
+		}//i
+	    }//k
+	  //
+	  //load into element Jacobian into global Jacobian
+	  //
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      int eN_i = eN*nDOF_test_element+i;
+	      for (int j=0;j<nDOF_trial_element;j++)
+		{
+		  int eN_i_j = eN_i*nDOF_trial_element+j;
+		  globalJacobian[csrRowIndeces_u_u[eN_i]
+				 + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+		}//j
+	    }//i
+	}//elements
+    }//calculateStiffnessMatrix
+    
   };//cppMCorr3P
 
   inline cppMCorr3P_base* newMCorr3P(int nSpaceIn,

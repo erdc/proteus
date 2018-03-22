@@ -47,6 +47,7 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                double * ebqe_bc_u_ext,
                                double * ebqe_adv_flux,
                                double * ebqe_diff_flux,
+                               double * bc_adv_flux,
                                double * bc_diff_flux,
                                int offset_u,
                                int stride_u,
@@ -176,6 +177,7 @@ cdef class PresInc:
                           numpy.ndarray ebqe_bc_u_ext,
                           numpy.ndarray ebqe_adv_flux,
                           numpy.ndarray ebqe_diff_flux,
+                          numpy.ndarray bc_adv_flux,
                           numpy.ndarray bc_diff_flux,
                           int offset_u,
                           int stride_u,
@@ -238,7 +240,7 @@ cdef class PresInc:
                                        < int * > exteriorElementBoundariesArray.data,
                                        < int * > elementBoundaryElementsArray.data,
                                        < int * > elementBoundaryLocalElementBoundariesArray.data, 
-				        INTEGRATE_BY_PARTS_DIV_U,
+				                        INTEGRATE_BY_PARTS_DIV_U,
                                         <double*> q_a.data,
                                         <double*> ebqe_a.data)
 

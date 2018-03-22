@@ -2789,7 +2789,6 @@ namespace proteus
                                             bc_mom_w_source_ext);                                         
                   }
 
-
                 //
                 //moving domain
                 //
@@ -5086,7 +5085,6 @@ namespace proteus
                 ck.valFromDOF(v_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],v_right);
                 /* ck.valFromDOF(w_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],w_right); */
                 //
-
                 velocityAverage[ebN_kb_nSpace+0]=0.5*(u_left + u_right);
                 velocityAverage[ebN_kb_nSpace+1]=0.5*(v_left + v_right);
                 /* velocityAverage[ebN_kb_nSpace+2]=0.5*(w_left + w_right); */

@@ -150,9 +150,12 @@ class Coefficients(TC_base):
             ebqe_a = 1.0/(ebqe_vos*self.rho_s_min + (1.0-ebqe_vos)*self.rho_f_min)/alphaBDF
             for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
                 self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * (1.0 - q_vos) * q_a 
-                self.fluidModel.ebqe[('velocity',0)][...,i] = (1.0-ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]                
+                self.fluidModel.ebqe[('velocity',0)][...,i] += (1.0-ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)]-self.fluidModel.ebqe[('velocity', 0)][..., i])*self.model.ebqe['n'][...,i]                
                 self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * (q_vos) * q_a
-                self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]   
+                if self.sedModelIndex is not None:
+                    self.fluidModel.coefficients.ebqe_velocity_solid[...,i] += (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)]-self.sedModel.ebqe[('velocity', 0)][..., i])*self.model.ebqe['n'][...,i]   
+                else:
+                    self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]   
             self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
             self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
             if self.sedModelIndex is not None:
@@ -837,6 +840,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('advectiveFlux', 0)],
             self.ebqe[('diffusiveFlux', 0, 0)],
+            self.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('diffusiveFlux_bc', 0, 0)],
             self.offset[0], self.stride[0],
             r,
