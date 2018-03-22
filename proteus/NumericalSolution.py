@@ -1197,7 +1197,7 @@ class NS_base:  # (HasTraits):
         logEvent("Attaching models and running spin-up step if requested")
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         spinup = []
-        if not self.opts.hotStart:
+        if not self.so.skipSpinupOnHotstart:
             for index,m in self.modelSpinUp.iteritems():
                 spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
