@@ -2231,6 +2231,21 @@ namespace proteus
           res[1] = grad_v[0]*n[0]+grad_v[1]*n[1]+grad_v[2]*n[2];
           res[2] = grad_w[0]*n[0]+grad_w[1]*n[1]+grad_w[2]*n[2];;
       }
+      // n is the outward unit normal direction
+      void get_stress_in_n(const double *grad_u, const double *grad_v, const double *grad_w, const double *n, double p, double mu, double f[3])
+      {
+          f[0] =         2.0*grad_u[0]*n[0]+(grad_u[1]+grad_v[0])*n[1]+(grad_u[2]+grad_w[0])*n[2];
+          f[1] = (grad_v[0]+grad_u[1])*n[0]+          2*grad_v[1]*n[1]+(grad_v[2]+grad_w[1])*n[2];
+          f[2] = (grad_w[0]+grad_u[2])*n[0]+(grad_w[1]+grad_v[2])*n[1]+          2*grad_w[2]*n[2];
+
+          f[0] *= mu;
+          f[1] *= mu;
+          f[2] *= mu;
+
+          f[0] -= p*n[0];
+          f[1] -= p*n[1];
+          f[2] -= p*n[2];
+      }
       void get_cross_product(const double *u, const double *v,double res[3])
       {
           res[0] = u[1]*v[2]-u[2]*v[1];
@@ -3537,9 +3552,13 @@ namespace proteus
                     }
                     get_symmetric_gradient_dot_vec(grad_u_ext,grad_v_ext,grad_w_ext,P_normal,res);
                     double force_quad_pt[3]={0.0,0.0,0.0},torque_quad_pt[3]={0.0,0.0,0.0},position_vector_to_mass_center[3];
-                    force_quad_pt[0] = (-p_ext*P_normal[0]+res[0])*dS;
-                    force_quad_pt[1] = (-p_ext*P_normal[1]+res[1])*dS;
-                    force_quad_pt[2] = (-p_ext*P_normal[2]+res[2])*dS;
+
+                    get_stress_in_n(grad_u_ext,grad_v_ext,grad_w_ext,P_normal,p_ext,visco,force_quad_pt);
+
+                    force_quad_pt[0] *= dS;
+                    force_quad_pt[1] *= dS;
+                    force_quad_pt[2] *= dS;
+
                     position_vector_to_mass_center[0] = x_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 0];
                     position_vector_to_mass_center[1] = y_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 1];
                     position_vector_to_mass_center[2] = z_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 2];
