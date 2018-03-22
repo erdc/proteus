@@ -250,6 +250,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  sc_beta=1.0,
                  waterline_interval=-1,
                  movingDomain=False,
+                 PURE_BDF=False,
                  # PARAMETERS FOR EV
                  STABILIZATION_TYPE=0,
                  LUMPED_MASS_MATRIX=False,
@@ -270,6 +271,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # OUTPUT quantDOFs
                  outputQuantDOFs=False):
 
+        self.PURE_BDF=PURE_BDF
         self.DO_SMOOTHING = DO_SMOOTHING
         self.COUPEZ = COUPEZ
         self.SATURATED_LEVEL_SET = SATURATED_LEVEL_SET
@@ -1262,6 +1264,8 @@ class LevelModel(OneLevelTransport):
             self.coefficients.rdModel.ebqe[('u', 0)],
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('u', 0)],
+            # TO KILL SUPG AND SHOCK CAPTURING
+            self.coefficients.PURE_BDF,
             # PARAMETERS FOR EDGE VISCOSITY
             len(rowptr) - 1,
             self.nnz,
@@ -1444,6 +1448,7 @@ class LevelModel(OneLevelTransport):
             self.coefficients.rdModel.ebqe[('u', 0)],
             self.numericalFlux.ebqe[('u', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
+            self.coefficients.PURE_BDF,
             self.coefficients.LUMPED_MASS_MATRIX)
 
         # Load the Dirichlet conditions directly into residual

@@ -64,6 +64,7 @@ cdef extern from "NCLS.h" namespace "proteus":
                                double * ebqe_rd_u_ext,
                                double * ebqe_bc_u_ext,
                                double * ebqe_u,
+                               int PURE_BDF,
                                int numDOFs,
                                int NNZ,
                                int * csrRowIndeces_DofLoops,
@@ -131,6 +132,7 @@ cdef extern from "NCLS.h" namespace "proteus":
                                double * ebqe_rd_u_ext,
                                double * ebqe_bc_u_ext,
                                int * csrColumnOffsets_eb_u_u,
+                               int PURE_BDF,
                                int LUMPED_MASS_MATRIX)
         void calculateWaterline(int * wlc,
                                 double * waterline,
@@ -287,6 +289,7 @@ cdef extern from "NCLS.h" namespace "proteus":
                                                  double * ebqe_rd_u_ext,
                                                  double * ebqe_bc_u_ext,
                                                  double * ebqe_u,
+                                                 int PURE_BDF,
                                                  int numDOFs,
                                                  int NNZ,
                                                  int * csrRowIndeces_DofLoops,
@@ -354,6 +357,7 @@ cdef extern from "NCLS.h" namespace "proteus":
                                  double * ebqe_rd_u_ext,
                                  double * ebqe_bc_u_ext,
                                  int * csrColumnOffsets_eb_u_u,
+                                 int PURE_BDF,
                                  int LUMPED_MASS_MATRIX)
         void calculateSmoothingMatrix(double dt,
                                       double * mesh_trial_ref,
@@ -490,6 +494,7 @@ cdef class cNCLS_base:
                           numpy.ndarray ebqe_rd_u_ext,
                           numpy.ndarray ebqe_bc_u_ext,
                           numpy.ndarray ebqe_u,
+                          int PURE_BDF,
                           int numDOFs,
                           int NNZ,
                           numpy.ndarray csrRowIndeces_DofLoops,
@@ -569,6 +574,7 @@ cdef class cNCLS_base:
                                        < double * >ebqe_rd_u_ext.data,
                                        < double * >ebqe_bc_u_ext.data,
                                        < double * >ebqe_u.data,
+                                       PURE_BDF,
                                        numDOFs,
                                        NNZ,
                                        < int * >csrRowIndeces_DofLoops.data,
@@ -637,6 +643,7 @@ cdef class cNCLS_base:
                           numpy.ndarray ebqe_rd_u_ext,
                           numpy.ndarray ebqe_bc_u_ext,
                           numpy.ndarray csrColumnOffsets_eb_u_u,
+                          int PURE_BDF,
                           int LUMPED_MASS_MATRIX):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
@@ -685,6 +692,7 @@ cdef class cNCLS_base:
                                        < double * >ebqe_rd_u_ext.data,
                                        < double * >ebqe_bc_u_ext.data,
                                        < int * >csrColumnOffsets_eb_u_u.data,
+                                       PURE_BDF,
                                        LUMPED_MASS_MATRIX)
 
     def calculateWaterline(self,
@@ -952,6 +960,7 @@ cdef class cNCLS_base:
                                             numpy.ndarray ebqe_rd_u_ext,
                                             numpy.ndarray ebqe_bc_u_ext,
                                             numpy.ndarray ebqe_u,
+                                            int PURE_BDF,
                                             int numDOFs,
                                             int NNZ,
                                             numpy.ndarray csrRowIndeces_DofLoops,
@@ -1031,6 +1040,7 @@ cdef class cNCLS_base:
                                                          < double * >ebqe_rd_u_ext.data,
                                                          < double * >ebqe_bc_u_ext.data,
                                                          < double * >ebqe_u.data,
+                                                         PURE_BDF,
                                                          numDOFs,
                                                          NNZ,
                                                          < int * >csrRowIndeces_DofLoops.data,
@@ -1099,6 +1109,7 @@ cdef class cNCLS_base:
                             numpy.ndarray ebqe_rd_u_ext,
                             numpy.ndarray ebqe_bc_u_ext,
                             numpy.ndarray csrColumnOffsets_eb_u_u,
+                            int PURE_BDF,
                             int LUMPED_MASS_MATRIX):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
@@ -1147,6 +1158,7 @@ cdef class cNCLS_base:
                                          < double * >ebqe_rd_u_ext.data,
                                          < double * >ebqe_bc_u_ext.data,
                                          < int * >csrColumnOffsets_eb_u_u.data,
+                                         PURE_BDF,
                                          LUMPED_MASS_MATRIX)
 
     def calculateSmoothingMatrix(self,
