@@ -232,6 +232,7 @@ cdef class PresInc:
                                         < double* > ebqe_bc_u_ext.data,
                                         < double* > ebqe_adv_flux.data,
                                         < double* > ebqe_diff_flux.data,
+                                        < double* > bc_adv_flux.data,
                                         < double* > bc_diff_flux.data,
                                        offset_u,
                                        stride_u,
