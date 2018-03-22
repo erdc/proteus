@@ -1225,120 +1225,23 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
         # Nonlinear solved finished. 
         # L2 projection of corrected VOF solution at quad points 
 
-class TwoStageNewton_for_CLSVOF(Newton):
-    """
-    This is a fake solver meant to be used with optimized code
-    A simple iterative solver that is Newton's method
-    if you give it the right Jacobian
-    """
+class CLSVOFNewton(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        """
-        Solve F(u) = b
-
-        b -- right hand side
-        u -- solution
-        r -- F(u) - b
-        """
-
-        import Viewers
-        memory()
-        r=self.solveInitialize(u,r,b)
-        if par_u != None:
-            #allow linear solver to know what type of assembly to use
-            self.linearSolver.par_fullOverlap = self.par_fullOverlap
-            #no overlap
-            if not self.par_fullOverlap:
-                par_r.scatter_reverse_add()
-            else:
-                #no overlap or overlap (until we compute norms over only owned dof)
-                par_r.scatter_forward_insert()
-
-        self.norm_r0 = self.norm(r)
-        self.norm_r_hist = []
-        self.norm_du_hist = []
-        self.gammaK_max=0.0
-        self.linearSolverFailed = False
-
         logEvent("+++++ First stage of nonlinear solver +++++",level=2)
-        while (not self.converged(r) and not self.failed()):
-            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
-                     % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
-            if self.updateJacobian or self.fullNewton:
-                self.updateJacobian = False
-                self.F.getJacobian(self.J)
-                self.linearSolver.prepare(b=r)            
-            self.du[:]=0.0
-            if not self.directSolver:
-                if self.EWtol:
-                    self.setLinearSolverTolerance(r)
-            if not self.linearSolverFailed:
-                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                self.linearSolverFailed = self.linearSolver.failed()
-            u-=self.du 
-            if par_u != None:
-                par_u.scatter_forward_insert()
-            # reconstruct normal before evaluating residual of Newton's solution
-            #self.F.getNormalReconstruction() #TMP
-            self.computeResidual(u,r,b)
-            if par_r != None:
-                #no overlap
-                if not self.par_fullOverlap:
-                    par_r.scatter_reverse_add()
-                else:
-                    par_r.scatter_forward_insert()
-        else:
+        Newton.solve(self,u,r,b,par_u,par_r)
+        # Try to save number of newton iterations
+        if hasattr(self.F,'newton_iterations_stage1'):
+            self.F.newton_iterations_stage1 = self.its
+        if self.F.coefficients.timeOrder==2:
+            logEvent("+++++ Second stage of nonlinear solver +++++",level=2)
+            self.F.timeStage=2
+            self.F.getNormalReconstruction()
+            Newton.solve(self,u,r,b,par_u,par_r)
+            self.F.timeStage=1
             # Try to save number of newton iterations
-            if hasattr(self.F,'newton_iterations_stage1'):
-                self.F.newton_iterations_stage1 = self.its
-            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-                     % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-            logEvent(memory("Newton","Newton"),level=4)
-            if (self.failedFlag == True):
-                return self.failedFlag
-            else:
-                if self.F.coefficients.timeOrder==2:
-                    logEvent("+++++ Second stage of nonlinear solver +++++",level=2)
-                    self.F.timeStage=2                
-                    self.F.getNormalReconstruction()                    
-                    r=self.solveInitialize(u,r,b)                    
-                    self.norm_r0 = self.norm(r)
-                    self.norm_r_hist = []
-                    self.norm_du_hist = []
-                    self.gammaK_max=0.0
-                    self.linearSolverFailed = False
-                    #############
-                    while (not self.converged(r) and not self.failed()):
-                        logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
-                                 % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
-                        if self.updateJacobian or self.fullNewton:
-                            self.updateJacobian = False
-                            self.F.getJacobian(self.J)                
-                            self.linearSolver.prepare(b=r)            
-                        self.du[:]=0.0
-                        if not self.directSolver:
-                            if self.EWtol:
-                                self.setLinearSolverTolerance(r)
-                        if not self.linearSolverFailed:
-                            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                            self.linearSolverFailed = self.linearSolver.failed()
-                        u-=self.du
-                        if par_u != None:
-                            par_u.scatter_forward_insert()
-                        self.computeResidual(u,r,b)
-                        if par_r != None:
-                            #no overlap
-                            if not self.par_fullOverlap:
-                                par_r.scatter_reverse_add()
-                            else:
-                                par_r.scatter_forward_insert()
-                    else:
-                        self.F.timeStage=1
-                        #############
-                        logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-                                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            if hasattr(self.F,'newton_iterations_stage2'):
+                self.F.newton_iterations_stage2 = self.its
 
-                        if hasattr(self.F,'newton_iterations_stage2'):
-                            self.F.newton_iterations_stage2 = self.its
 import deim_utils
 class POD_Newton(Newton):
     """Newton's method on the reduced order system based on POD"""
@@ -3427,8 +3330,8 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
         levelNonlinearSolverType = ExplicitConsistentMassMatrixForVOF
     elif (levelNonlinearSolverType == NewtonWithL2ProjectionForMassCorrection):
         levelNonlinearSolverType = NewtonWithL2ProjectionForMassCorrection
-    elif (levelNonlinearSolverType == TwoStageNewton_for_CLSVOF):
-        levelNonlinearSolverType = TwoStageNewton_for_CLSVOF        
+    elif (levelNonlinearSolverType == CLSVOFNewton):
+        levelNonlinearSolverType = CLSVOFNewton
     elif (multilevelNonlinearSolverType == Newton or
         multilevelNonlinearSolverType == NLJacobi or
         multilevelNonlinearSolverType == NLGaussSeidel or
