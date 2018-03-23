@@ -5399,8 +5399,6 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
         self.XdmfWriter.writeFunctionXdmf_C0P2Lagrange(ar,u,tCount=tCount,init=init)
     def readFunctionXdmf(self,ar,u,tCount=0):
-#         import pdb
-#         pdb.set_trace()
         if ar.has_h5py:
             if ar.global_sync:
                 permute = np.argsort(u.femSpace.dofMap.subdomain2global)
