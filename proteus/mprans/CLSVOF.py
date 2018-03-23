@@ -584,7 +584,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.lumped_qx_tStar = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qy_tStar = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qz_tStar = numpy.zeros(self.u[0].dof.shape,'d')
-        
+
+        assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "Use BackwardEuler_cfl"
+        assert options.levelNonlinearSolver == proteus.NonlinearSolvers.CLSVOFNewton, "Use levelNonlinearSolver=CLSVOFNewton"
+            
         # METRICS #
         self.hasExactSolution = False
         if ('exactSolution') in dir (options):
@@ -879,7 +882,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u',0)],
             self.ebqe[('advectiveFlux_bc_flag',0)],
             self.ebqe[('advectiveFlux_bc',0)],
-            self.coefficients.ebqe_phi,self.coefficients.epsFact,
             self.ebqe[('u',0)],
             self.ebqe[('advectiveFlux',0)],
             # FOR NONLINEAR CLSVOF; i.e., MCorr with VOF
