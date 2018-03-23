@@ -9,10 +9,11 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
-import pytest
+import os, pytest
 from proteus.iproteus import *
 from proteus import Comm, defaults
 comm = Comm.get()
+modulepath = os.path.dirname(os.path.abspath(__file__))
 
 @pytest.mark.modelTest
 @pytest.mark.poissonTest
@@ -47,8 +48,10 @@ class TestPoissonTetgen():
 
     @pytest.mark.slowTest
     def test_c0p1(genMesh=True):
-        pList = [defaults.load_physics('poisson_3d_tetgen_p')]
-        nList = [defaults.load_numerics('poisson_3d_tetgen_c0p1_n')]
+        pList = [defaults.load_physics('poisson_3d_tetgen_p',
+                                       modulepath)]
+        nList = [defaults.load_numerics('poisson_3d_tetgen_c0p1_n',
+                                        modulepath)]
         so = defaults.System_base()
         so.name = pList[0].name = "poisson_3d_tetgen_c0p1"+"pe"+`comm.size()`
         so.sList=[default_s]
@@ -65,8 +68,10 @@ class TestPoissonTetgen():
 
     @pytest.mark.slowTest
     def test_c0p2(genMesh=True):
-        pList = [defaults.load_physics('poisson_3d_tetgen_p')]
-        nList = [defaults.load_numerics('poisson_3d_tetgen_c0p2_n')]
+        pList = [defaults.load_physics('poisson_3d_tetgen_p',
+                                       modulepath)]
+        nList = [defaults.load_numerics('poisson_3d_tetgen_c0p2_n',
+                                        modulepath)]
         so = defaults.System_base()
         so.name = pList[0].name = "poisson_3d_tetgen_c0p2"+"pe"+`comm.size()`
         so.sList=[default_s]

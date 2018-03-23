@@ -23,11 +23,13 @@ import numpy as np
 import numpy.testing as npt
 import ladr_2d_p
 import ladr_2d_n
+import os
+modulepath = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_minModelStep_stepExactTrue():
-    pList = [load_p('ladr_2d_p')]
-    nList = [load_n('ladr_2d_n')]
+    pList = [load_p('ladr_2d_p', modulepath)]
+    nList = [load_n('ladr_2d_n', modulepath)]
     so = So()
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
@@ -53,8 +55,8 @@ def test_minModelStep_stepExactTrue():
     del ns
 
 def test_minModelStep_stepExactFalse():
-    pList = [load_p('ladr_2d_p')]
-    nList = [load_n('ladr_2d_n')]
+    pList = [load_p('ladr_2d_p', modulepath)]
+    nList = [load_n('ladr_2d_n', modulepath)]
     so = So()
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
@@ -80,8 +82,8 @@ def test_minModelStep_stepExactFalse():
     del ns
 
 def test_fixedStep_stepExactFalse():
-    pList = [load_p('ladr_2d_p')]
-    nList = [load_n('ladr_2d_n')]
+    pList = [load_p('ladr_2d_p', modulepath)]
+    nList = [load_n('ladr_2d_n', modulepath)]
     so = So()
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
@@ -117,8 +119,8 @@ def test_fixedStep_stepExactFalse():
     del ns
 
 def test_fixedStep_stepExactTrue():
-    pList = [load_p('ladr_2d_p')]
-    nList = [load_n('ladr_2d_n')]
+    pList = [load_p('ladr_2d_p', modulepath)]
+    nList = [load_n('ladr_2d_n', modulepath)]
     so = So()
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
@@ -145,8 +147,8 @@ def test_fixedStep_stepExactTrue():
     del ns
 
 def test_fixedStep_stepSimple():
-    pList = [load_p('ladr_2d_p')]
-    nList = [load_n('ladr_2d_n')]
+    pList = [load_p('ladr_2d_p', modulepath)]
+    nList = [load_n('ladr_2d_n', modulepath)]
     so = So()
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
