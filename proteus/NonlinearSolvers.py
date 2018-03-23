@@ -1225,6 +1225,23 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
         # Nonlinear solved finished. 
         # L2 projection of corrected VOF solution at quad points 
 
+class CLSVOFNewton(Newton):
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        logEvent("+++++ First stage of nonlinear solver +++++",level=2)
+        Newton.solve(self,u,r,b,par_u,par_r)
+        # Try to save number of newton iterations
+        if hasattr(self.F,'newton_iterations_stage1'):
+            self.F.newton_iterations_stage1 = self.its
+        if self.F.coefficients.timeOrder==2:
+            logEvent("+++++ Second stage of nonlinear solver +++++",level=2)
+            self.F.timeStage=2
+            self.F.getNormalReconstruction()
+            Newton.solve(self,u,r,b,par_u,par_r)
+            self.F.timeStage=1
+            # Try to save number of newton iterations
+            if hasattr(self.F,'newton_iterations_stage2'):
+                self.F.newton_iterations_stage2 = self.its
+
 import deim_utils
 class POD_Newton(Newton):
     """Newton's method on the reduced order system based on POD"""
@@ -3313,6 +3330,8 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
         levelNonlinearSolverType = ExplicitConsistentMassMatrixForVOF
     elif (levelNonlinearSolverType == NewtonWithL2ProjectionForMassCorrection):
         levelNonlinearSolverType = NewtonWithL2ProjectionForMassCorrection
+    elif (levelNonlinearSolverType == CLSVOFNewton):
+        levelNonlinearSolverType = CLSVOFNewton
     elif (multilevelNonlinearSolverType == Newton or
         multilevelNonlinearSolverType == NLJacobi or
         multilevelNonlinearSolverType == NLGaussSeidel or
