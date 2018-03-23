@@ -400,6 +400,14 @@ class VerifySteadyCurrent(unittest.TestCase):
         WW = SteadyCurrent(U,mwl,0.2)
         self.assertAlmostEqual(Up.all(), WW.u(xx,t).all())
         self.assertAlmostEqual(0., WW.eta(xx,t))
+    def testCurrentFailure(self):
+        from proteus.WaveTools import SteadyCurrent
+        U = 1.
+        mwl = 0.5
+
+        with self.assertRaises(SystemExit) as cm1:
+            SteadyCurrent(U,mwl,0.2)
+        self.assertEqual(cm1.exception.code, 1)
 
         
         
@@ -685,7 +693,6 @@ class CheckRandomWavesFailures(unittest.TestCase):
         self.assertTrue(None is None)
 
 class VerifyRandomWaves(unittest.TestCase):
-#    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandom(self):
         from proteus.WaveTools import RandomWaves
         import random
@@ -1618,7 +1625,6 @@ class CheckRandomWavesFastFailureModes(unittest.TestCase):
 
 class VerifyRandomWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
-#    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandomFast(self):
         from proteus.WaveTools import RandomWaves,TimeSeries,RandomWavesFast
         import random
@@ -1994,7 +2000,6 @@ class VerifyRandomNLWaves(unittest.TestCase):
 
 class VerifyRandomNLWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
-#    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandomNLFast(self):
         from proteus.WaveTools import RandomNLWaves,RandomNLWavesFast,TimeSeries
         import random

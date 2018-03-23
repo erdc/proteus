@@ -29,11 +29,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             epsFactHeaviside=0.0,
             epsFactDirac=1.0,
             epsFactDiffusion=2.0,
-            LS_model=3,
-            V_model=2,
-            ME_model=5,
-            VOS_model=0,
-            VOF_model=4,
+            LS_model=None,
+            V_model=None,
+            ME_model=None,
+            VOS_model=None,
+            VOF_model=None,
             checkMass=True,
             sd=True,
             nd=None,
@@ -517,7 +517,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             elif self.nSpace_global == 1:
                 assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 1)
 
-        # pdb.set_trace()
         #
         # simplified allocations for test==trial and also check if space is mixed or not
         #
@@ -616,6 +615,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if comm.size() > 1:
             assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions, "You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
+        # STIFFNESS MATRIX #
+        self.interface_lumpedMassMatrix = numpy.zeros(self.u[0].dof.shape,'d')
+        self.stiffness_matrix_array = None
+        self.stiffness_matrix = None
+        
         log(memory("stride+offset", "OneLevelTransport"), level=4)
         if numericalFluxType is not None:
             if options is None or options.periodicDirichletConditions is None:
@@ -696,6 +700,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.coefficients.set_vos:
             self.coefficients.set_vos(self.q['x'], self.coefficients.q_vos)
         r.fill(0.0)
+        self.interface_lumpedMassMatrix.fill(0.0)
         # Load the unknowns into the finite element dof
         self.setUnknowns(u)
 
@@ -746,7 +751,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray)
+            self.mesh.elementBoundaryLocalElementBoundariesArray,
+            # FOR FAST ASSEMBLY of Jacobian matrix
+            self.interface_lumpedMassMatrix)
+
         log("Global residual", level=9, data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         log("   Mass Conservation Error", level=3,
@@ -755,9 +763,40 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape, 'd')
 
+    def getStiffnessMatrix(self):
+        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+        nnz = nzval.shape[-1]  # number of non-zero entries in sparse matrix
+        self.stiffness_matrix_array = nzval.copy()
+        self.stiffness_matrix = SparseMat(self.nFreeDOF_global[0],
+                                          self.nFreeDOF_global[0],
+                                          nnz,
+                                          self.stiffness_matrix_array,
+                                          colind,
+                                          rowptr)
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       self.stiffness_matrix)
+        self.mcorr3p.calculateStiffnessMatrix(
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u', 0)],
+            self.u[0].femSpace.grad_psi,
+            self.mesh.nElements_global,
+            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
+            self.stiffness_matrix,
+            self.coefficients.useMetrics,
+            self.coefficients.epsFactDiffusion,
+            self.elementDiameter,  
+            self.mesh.nodeDiametersArray)        
+        
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian, jacobian)
-        self.mcorr3p.calculateJacobian(  # element
+
+        if self.stiffness_matrix is None:
+            self.getStiffnessMatrix()
+            
+        self.mcorr3p.calculateJacobian(# element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -791,7 +830,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_H_vof,
             self.coefficients.q_vos,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian)
+            jacobian,
+            # FAST ASSEMBLY
+            len(self.u[0].dof),
+            self.rowptr,
+            self.colind,
+            self.stiffness_matrix_array,
+            self.interface_lumpedMassMatrix)
+        
         log("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1

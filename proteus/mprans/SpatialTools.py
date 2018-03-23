@@ -262,7 +262,7 @@ class ShapeRANS(Shape):
         center: array_like
             Coordinates of the center of the absorption zone.
         orientation: array_like
-            Orientation vector pointing TOWARDS incoming waves.
+            Orientation vector pointing ACCORDING WITH the direction of generated waves.
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
         dragAlpha: Optional[float]
