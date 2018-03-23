@@ -11,15 +11,8 @@ This module solves equations of the form
 """
 import pytest
 from proteus.iproteus import *
-from proteus import Comm
+from proteus import Comm, defaults
 comm = Comm.get()
-import poisson_3d_tetgen_p
-import poisson_3d_tetgen_c0p1_n
-import poisson_3d_tetgen_c0p2_n
-reload(poisson_3d_tetgen_p)
-reload(poisson_3d_tetgen_c0p1_n)
-reload(poisson_3d_tetgen_c0p2_n)
-import pytest
 
 @pytest.mark.modelTest
 @pytest.mark.poissonTest
@@ -34,7 +27,7 @@ class TestPoissonTetgen():
         pass
 
     def setup_method(self,method):
-        reload(poisson_3d_tetgen_p)
+        pass
 
     def teardown_method(self,method):
         """ Tear down function """
@@ -52,11 +45,11 @@ class TestPoissonTetgen():
             if os.path.isfile(file):
                 os.remove(file)
 
+    @pytest.mark.slowTest
     def test_c0p1(genMesh=True):
-        reload(poisson_3d_tetgen_c0p1_n)
-        pList = [poisson_3d_tetgen_p]
-        nList = [poisson_3d_tetgen_c0p1_n]
-        so = default_so
+        pList = [defaults.load_physics('poisson_3d_tetgen_p')]
+        nList = [defaults.load_numerics('poisson_3d_tetgen_c0p1_n')]
+        so = defaults.System_base()
         so.name = pList[0].name = "poisson_3d_tetgen_c0p1"+"pe"+`comm.size()`
         so.sList=[default_s]
         Profiling.logLevel=7
@@ -74,10 +67,9 @@ class TestPoissonTetgen():
 
     @pytest.mark.slowTest
     def test_c0p2(genMesh=True):
-        reload(poisson_3d_tetgen_c0p2_n)
-        pList = [poisson_3d_tetgen_p]
-        nList = [poisson_3d_tetgen_c0p2_n]
-        so = default_so
+        pList = [defaults.load_physics('poisson_3d_tetgen_p')]
+        nList = [defaults.load_numerics('poisson_3d_tetgen_c0p2_n')]
+        so = defaults.System_base()
         so.name = pList[0].name = "poisson_3d_tetgen_c0p2"+"pe"+`comm.size()`
         so.sList=[default_s]
         Profiling.logLevel=7
@@ -90,38 +82,6 @@ class TestPoissonTetgen():
         ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
         ns.calculateSolution('poisson_3d_c0p2')
         assert(True)
-
-# def test_c0q1():
-#     import poisson_3d_p
-#     import poisson_3d_c0q1_n
-#     pList = [poisson_3d_p]
-#     nList = [poisson_3d_c0q1_n]
-#     so = default_so
-#     so.name = pList[0].name = "poisson_3d_c0q1"+"pe"+`comm.size()`
-#     so.sList=[default_s]
-#     opts.logLevel=7
-#     opts.verbose=True
-#     nList[0].linearSolver=default_n.KSP_petsc4py
-#     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
-#     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
-#     ns.calculateSolution('poisson_3d_c0q1')
-#     assert(True)
-
-# def test_c0q2():
-#     import poisson_3d_p
-#     import poisson_3d_c0q2_n
-#     pList = [poisson_3d_p]
-#     nList = [poisson_3d_c0q2_n]
-#     so = default_so
-#     so.name = pList[0].name = "poisson_3d_c0q2"+"pe"+`comm.size()`
-#     so.sList=[default_s]
-#     opts.logLevel=7
-#     opts.verbose=True
-#     nList[0].linearSolver=default_n.KSP_petsc4py
-#     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
-#     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
-#     ns.calculateSolution('poisson_3d_c0q2')
-#     assert(True)
 
 if __name__ == '__main__':
     pass
