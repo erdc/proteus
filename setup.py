@@ -28,7 +28,6 @@ cv["CFLAGS"] = cv["CFLAGS"].replace("-Wstrict-prototypes","")
 
 PROTEUS_PETSC_EXTRA_LINK_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_LINK_ARGS', [])
 PROTEUS_PETSC_EXTRA_COMPILE_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_COMPILE_ARGS', [])
-PROTEUS_OPT=['-O0','-UNDEBUG']
 PROTEUS_CHRONO_CXX_FLAGS = getattr(config, 'PROTEUS_CHRONO_CXX_FLAGS', [])
 
 proteus_install_path = os.path.join(sysconfig.get_python_lib(), 'proteus')
