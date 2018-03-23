@@ -1,4 +1,4 @@
-import sys, recordtype
+import sys, recordtype, os, imp
 from . import (TransportCoefficients,
                Transport,
                default_p,
@@ -46,13 +46,11 @@ def reset_default_p():
     for k,v in Physics_base().__dict__.iteritems():
         default_p.__dict__[k] = v
 
-def load_physics(pModule):
+def load_physics(pModule, path='.'):
     reset_default_p()
-    if pModule in sys.modules:
-        p = __import__(pModule)
-        reload(p)
-    else:
-        p = __import__(pModule)
+    sys.path.append(path)
+    p = imp.load_source(pModule, os.path.join(path, pModule+".py"))
+    sys.path.remove(path)
     physics_object = Physics_base()
     for k,v in p.__dict__.iteritems():
         if k not in physics_excluded_keys:
@@ -102,13 +100,11 @@ def reset_default_n():
     for k,v in Numerics_base().__dict__.iteritems():
         default_n.__dict__[k] = v
 
-def load_numerics(nModule):
+def load_numerics(nModule, path='.'):
     reset_default_n()
-    if nModule in sys.modules:
-        n = __import__(nModule)
-        reload(n)
-    else:
-        n = __import__(nModule)
+    sys.path.append(path)
+    n = imp.load_source(nModule, os.path.join(path, nModule+".py"))
+    sys.path.remove(path)
     numerics_object = Numerics_base()
     for k,v in n.__dict__.iteritems():
         if k not in numerics_excluded_keys:
@@ -136,9 +132,12 @@ def reset_default_so():
     for k,v in System_base().__dict__.iteritems():
         default_so.__dict__[k] = v
 
-def load_system(soModule):
+def load_system(soModule, path='.'):
     reset_default_so()
-    so = __import__(soModule)
+    sys.path.append(path)
+    so = imp.load_source(soModule, os.path.join(path, soModule+".py"))
+    sys.path.remove(path)
+    modulefile.close()
     system_object = System_base()
     for k,v in so.__dict__.iteritems():
         if k not in system_excluded_keys:
