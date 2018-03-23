@@ -8,7 +8,7 @@ prefix = os.getenv('PROTEUS_PREFIX')
 if not prefix:
     prefix = sys.exec_prefix
 
-PROTEUS_OPT = os.getenv('PROTEUS_OPT')
+PROTEUS_OPT = os.getenv('PROTEUS_OPT').split()
 if not PROTEUS_OPT:
     PROTEUS_OPT=['-O3','-DNDEBUG']
 
