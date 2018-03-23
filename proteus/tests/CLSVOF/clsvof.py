@@ -1,7 +1,7 @@
 from proteus import Domain
 from proteus import Norms
-from proteus import Profiling 
-from proteus import Context 
+from proteus import Profiling
+from proteus import Context
 from proteus.mprans import CLSVOF
 import numpy as np
 import math
@@ -19,6 +19,7 @@ AUTOMATED_TEST=True
 # ----- PARAMETERS FOR CLSVOF ----- #
 timeOrder=2
 lambdaFact=1.0
+computeMetrics=0 #0: don't compute metrics, 1: compute at EOS, 2: compute at ETS
 
 # ----- REFINEMENT ----- #
 triangleFlag=1
@@ -50,7 +51,7 @@ if AUTOMATED_TEST==True:
     refinement=1
     T=0.1
     nDTout=1
-    
+
 # ----- General parameters ----- #
 parallel = False # if True use PETSc solvers
 linearSmoother = None
@@ -80,7 +81,7 @@ else:
     else:
         nn=nnx=nny=nnz=int((2**refinement)*refinementMultiplier+1)
         L=[1.0,1.0,1.0]
-# definition of he        
+# definition of he
 he=1.0/(nnx-1.0)
 
 unstructured=unstructured #True for tetgen, false for tet or hex from rectangular grid

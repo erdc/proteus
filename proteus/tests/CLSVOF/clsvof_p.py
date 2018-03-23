@@ -11,7 +11,7 @@ name=soname
 nd=2
 if ct.test_case>2:
     nd=3
-    
+
 coefficients = MyCoefficients(
     useMetrics=useMetrics,
     timeOrder=timeOrder,
@@ -19,7 +19,7 @@ coefficients = MyCoefficients(
     epsFactDirac=1.5,
     lambdaFact=lambdaFact,
     outputQuantDOFs=False,
-    computeMetrics=2)
+    computeMetrics=computeMetrics)
 coefficients.variableNames=['u']
 
 ##################
@@ -38,7 +38,7 @@ def velx(X,t):
 
 def vely(X,t):
     x=X[0]
-    y=X[1]    
+    y=X[1]
     if ct.test_case==1:
         return 2*np.sin(pi*y)**2*np.sin(pi*x)*np.cos(pi*x)*np.sin(2*pi*t/T)
     elif ct.test_case==2 or ct.test_case==3:
@@ -57,10 +57,10 @@ def velz(X,t):
         return -np.sin(2*pi*x)*np.sin(2*pi*y)*np.sin(pi*z)**2*np.cos(pi*t/3.0)
 
 if ct.test_case==1 or ct.test_case==2:
-    velocityFieldAsFunction={0:velx, 
+    velocityFieldAsFunction={0:velx,
                              1:vely}
 else:
-    velocityFieldAsFunction={0:velx, 
+    velocityFieldAsFunction={0:velx,
                              1:vely,
                              2:velz}
 
@@ -82,9 +82,9 @@ def exact_solution(X,t):
         else: #LeVeque test
             xc = 0.35
             yc = 0.35
-            zc = 0.35            
+            zc = 0.35
         r = np.sqrt((X[0]-xc)**2 + (X[1]-yc)**2 + (X[2]-zc)**2)
-        return radius - r    
+        return radius - r
 exactSolution={0:exact_solution}
 
 #####################

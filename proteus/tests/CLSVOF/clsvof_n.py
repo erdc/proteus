@@ -6,7 +6,7 @@ from clsvof import *
 nd=2
 if ct.test_case==3 or ct.test_case==4:
     nd=3
-    
+
 multilevelNonlinearSolver  = Newton
 levelNonlinearSolver = CLSVOFNewton
 fullNewtonFlag = True
@@ -39,7 +39,7 @@ else:
     elif pDegree_clsvof == 2:
         if useBernstein:
             femSpaces = {0:C0_AffineBernsteinOnSimplex}
-        else:                
+        else:
             femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
         print "pDegree = %s not recognized " % pDegree_clsvof
@@ -48,7 +48,7 @@ else:
 
 #numericalFluxType = CLSVOF.NumericalFlux
 #numericalFluxType = DoNothing
-numericalFluxType = Advection_DiagonalUpwind_IIPG_exterior 
+numericalFluxType = Advection_DiagonalUpwind_IIPG_exterior
 
 matrix = SparseMatrix
 if parallel:
@@ -57,7 +57,7 @@ if parallel:
     linear_solver_options_prefix = 'clsvof_'
     linearSolverConvergenceTest = 'r-true'
 else:
-    multilevelLinearSolver = LU    
+    multilevelLinearSolver = LU
     levelLinearSolver = LU
 
 tnList=[0.,1E-6]+[float(n)*T/float(nDTout) for n in range(1,nDTout+1)]
