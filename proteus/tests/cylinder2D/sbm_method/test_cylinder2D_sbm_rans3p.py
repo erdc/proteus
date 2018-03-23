@@ -37,7 +37,7 @@ class Test_sbm():
 
     def test_ex2(self):
         self.compare_name = "T1_sbm_rans3p"
-        self.example_setting("T=1.0 onlySaveFinalSolution=True")
+        self.example_setting("T=0.01 onlySaveFinalSolution=True")
 
 
     def example_setting(self, pre_setting):

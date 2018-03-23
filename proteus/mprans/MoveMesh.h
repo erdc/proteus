@@ -643,8 +643,7 @@ namespace proteus
               //
               ck.calculateGScale(G,normal,h_penalty);
               //cek hack
-              h_penalty = 10.0/h_penalty;
-              h_penalty=100.0;
+              h_penalty = 100.0/h_penalty;
               exteriorNumericalStressFlux(isDOFBoundary_u[ebNE_kb],
                                           isDOFBoundary_v[ebNE_kb],
                                           isDOFBoundary_w[ebNE_kb],
@@ -982,8 +981,7 @@ namespace proteus
               //
               ck.calculateGScale(G,normal,h_penalty);
               //cek hack
-              h_penalty = 10.0/h_penalty;
-              h_penalty = 100.0;
+              h_penalty = 100.0/h_penalty;
               // for (int II=0;II<nSymTen;II++)
               //   for (int JJ=0;<nSymTen;JJ++)
               //     dstress[II*nSymTen+JJ] = 0.0;
