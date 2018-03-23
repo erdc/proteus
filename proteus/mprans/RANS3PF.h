@@ -1472,6 +1472,10 @@ namespace proteus
         if (isDOFBoundary_u != 1)
           {
             flux_mass += n[0]*f_mass[0];
+            if (flowSpeedNormal < 0.0)
+              {
+                flux_umom+=flowSpeedNormal*(0.0 - u);
+              }
           }
         else
           {
@@ -1485,6 +1489,10 @@ namespace proteus
         if (isDOFBoundary_v != 1)
           {
             flux_mass+=n[1]*f_mass[1];
+            if (flowSpeedNormal < 0.0)
+              {
+                flux_vmom+=flowSpeedNormal*(0.0 - v);
+              }
           }
         else
           {
@@ -1498,6 +1506,10 @@ namespace proteus
         if (isDOFBoundary_w != 1)
           {
             flux_mass+=n[2]*f_mass[2];
+            if (flowSpeedNormal < 0.0)
+              {
+                flux_wmom+=flowSpeedNormal*(0.0 - w);
+              }
           }
         else
           {
@@ -1624,6 +1636,8 @@ namespace proteus
         if (isDOFBoundary_u != 1)
           {
             dflux_mass_du += n[0]*df_mass_du[0];
+            if (flowSpeedNormal < 0.0)
+              dflux_umom_du -= flowSpeedNormal;
           }
         else
           {
@@ -1634,6 +1648,8 @@ namespace proteus
         if (isDOFBoundary_v != 1)
           {
             dflux_mass_dv += n[1]*df_mass_dv[1];
+            if (flowSpeedNormal < 0.0)
+              dflux_vmom_dv -= flowSpeedNormal;
           }
         else
           {
@@ -1644,6 +1660,8 @@ namespace proteus
         if (isDOFBoundary_w != 1)
           {
             dflux_mass_dw+=n[2]*df_mass_dw[2];
+            if (flowSpeedNormal < 0.0)
+              dflux_wmom_dw -= flowSpeedNormal;
           }
         else
           {
