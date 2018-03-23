@@ -8,10 +8,11 @@ name = "pressureincrement"
 from proteus.mprans import PresInc
 LevelModelType = PresInc.LevelModel
 coefficients=PresInc.Coefficients(rho_f_min = (1.0-1.0e-8)*rho_1,
-                                 rho_s_min = (1.0-1.0e-8)*rho_s,
-                                 nd = nd,
-                                 modelIndex=PINC_model,
-                                 fluidModelIndex=V_model)
+                                  rho_s_min = (1.0-1.0e-8)*rho_s,
+                                  nd = nd,
+                                  modelIndex=PINC_model,
+                                  fluidModelIndex=V_model,
+                                  fixNullSpace=True)
 
 #pressure increment should be zero on any pressure dirichlet boundaries
 def getDBC_phi(x,flag):

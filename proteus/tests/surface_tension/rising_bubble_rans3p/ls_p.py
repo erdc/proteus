@@ -13,7 +13,8 @@ coefficients = NCLS3P.Coefficients(V_model=V_model,
                                    sc_uref=ls_sc_uref,
                                    sc_beta=ls_sc_beta,
                                    movingDomain=movingDomain,
-                                   PURE_BDF=PURE_BDF_NCLS)
+                                   EXPLICIT_METHOD=EXPLICIT_NCLS,
+                                   outputQuantDOFs=True)
 
 def getDBC_ls(x,flag):
     return None

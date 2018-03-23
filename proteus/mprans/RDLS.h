@@ -1575,7 +1575,8 @@ namespace proteus
                                   qz);
                     normalReconstruction[0] = qx;
                     normalReconstruction[1] = qy;
-                    normalReconstruction[2] = qz;
+                    if (nSpace == 3)
+                      normalReconstruction[2] = qz;
                   }
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)

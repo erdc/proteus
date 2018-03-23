@@ -20,6 +20,11 @@ cdef class ChQuaternion:
     cpdef double e2(self)
     cpdef double e3(self)
 
+cdef class ChCoordsys:
+    cdef ch.ChCoordsys cppobj
+    cpdef np.ndarray getPos(self)
+    cpdef np.ndarray getRot(self)
+
 cdef class ChFrame:
     cdef shared_ptr[ch.ChFrame] sharedptr_chframe
     cpdef np.ndarray GetPos(self)
@@ -49,6 +54,7 @@ cdef class ChBody(ChBodyFrame):
     cpdef void SetInertiaXX(self, ChVector iner)
     cpdef void SetInertiaXY(self, ChVector iner)
     cpdef void SetMass(self, double newmass)
+    cpdef np.ndarray GetInertia(self)
     cpdef double GetMass(self)
 
 cdef class ChBodyEasyBox(ChBody):
@@ -99,3 +105,8 @@ cdef ch.ChQuaternion npArray_to_ChQuaternion(np.ndarray arr)
 #         self.sharedptr = make_shared[ch.ChLinkPointPoint]()
 #     def Initialize(shared_ptr[ChNodeFEAxyz] anodeA, shared_ptr[ChNodeFEAxyz])
 #         deref(self.sharedptr).Initialize(<shared_ptr[ch.ChNodeFEAxyz]> anodeA, <shared_ptr[ch.ChNodeFEAxyz]> anodeB)
+
+cdef class ChBodyAddedMass(ChBody):
+    cdef shared_ptr[ch.ChBodyAddedMass] sharedptr_chbodyaddedmass
+    cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in)
+    cdef void SetInvMfullmass(self, ch.ChMatrixDynamic Mfullmass_in)
