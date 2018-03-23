@@ -1283,8 +1283,9 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         Up = np.sqrt(np.sum(self.tanU**2))
         # viscous layer
         if self.Ystar < 11.225:
-            logEvent('Prescribed near-wall point outside log-law region!')
-            sys.exit(1)
+            self.Ustar = self.Ystar
+            self.uDir = (self.utStar*self.Ystar) * self.tV
+            self.gradU = ( (self.utStar**2) / self.nu ) * self.tV
         # log-law layer
         else:
             # Wall function theory from S.B. Pope, page 442-443
@@ -1448,6 +1449,4 @@ class kWall(AuxiliaryVariables.AV_base, object):
         else:
             kInit = True
         self.kappaNearWall(xi, element, rank, kInit)
-        #logEvent('kappa --> %s' % self.kappa)
-        #logEvent('t --> %s' % t)
         return abs(self.kappa)
