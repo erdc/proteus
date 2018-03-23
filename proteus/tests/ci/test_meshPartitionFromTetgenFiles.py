@@ -31,7 +31,7 @@ class TestPoissonTetgen():
 
     def teardown_method(self,method):
         """ Tear down function """
-        FileList = ['meshNoVessel.1.neigh',
+        FileList = ['meshNoVessel.neigh',
                     'meshNoVessel.edge',
                     'meshNoVessel.ele',
                     'meshNoVessel.face',
@@ -59,8 +59,6 @@ class TestPoissonTetgen():
         pList[0].genMesh=genMesh
         nList[0].linearSolver=default_n.KSP_petsc4py
         nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
-        #nList[0].linearSolver=default_n.LU
-        #nList[0].multilevelLinearSolver=default_n.LU
         ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
         ns.calculateSolution('poisson_3d_c0p1')
         assert(True)
