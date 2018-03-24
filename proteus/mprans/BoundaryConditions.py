@@ -586,6 +586,116 @@ class BC_RANS(BoundaryConditions.BC_Base):
                                             -
                                             smoothedHeaviside_integral(smoothing, phi)))
 
+        def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
+            phi = x[vert_axis] - seaLevel
+            if phi >= smoothing:
+                H = 1.
+            elif smoothing > 0 and -smoothing < phi < smoothing:
+                H = smoothedHeaviside(smoothing, phi)
+            elif phi <= -smoothing:
+                H = 0.
+            return H * air + (1 - H) * water
+
+        def inlet_k_dirichlet(x, t):
+            phi = x[vert_axis] - seaLevel
+            if phi <= 0.:
+                H = 0.0
+            elif 0 < phi <= smoothing:
+                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+            else:
+                H = 1.0
+            return H * kInflowAir + (1 - H) * kInflow
+
+        def inlet_dissipation_dirichlet(x, t):
+            phi = x[vert_axis] - seaLevel
+            if phi <= 0.:
+                H = 0.0
+            elif 0 < phi <= smoothing:
+                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+            else:
+                H = 1.0
+            return H * dissipationInflowAir + (1 - H) * dissipationInflow
+
+        self.u_dirichlet.setConstantBC(0.)
+        self.v_dirichlet.setConstantBC(0.)
+        self.w_dirichlet.setConstantBC(0.)
+        self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
+        self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
+        self.u_diffusive.setConstantBC(0.)
+        self.k_diffusive.setConstantBC(0.)
+        self.dissipation_diffusive.setConstantBC(0.)
+
+        if U is not None:
+            def get_inlet_ux_dirichlet(i):
+                def ux_dirichlet(x, t):
+                    phi = x[vert_axis] - seaLevel
+                    if phi <= 0.:
+                        H = 0.0
+                    elif 0 < phi <= smoothing:
+                        H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                    else:
+                        H = 1.0
+                    return H * Uwind[i] + (1 - H) * U[i]
+                return ux_dirichlet
+
+            if Uwind is None:
+                Uwind = np.zeros(3)
+            U = np.array(U)
+            Uwind = np.array(Uwind)
+            self.u_dirichlet.uOfXT = get_inlet_ux_dirichlet(0)
+            self.v_dirichlet.uOfXT = get_inlet_ux_dirichlet(1)
+            self.w_dirichlet.uOfXT = get_inlet_ux_dirichlet(2)
+            self.u_diffusive.resetBC()
+
+        if kInflow is not None:
+            self.k_dirichlet.uOfXT = inlet_k_dirichlet
+            self.k_advective.resetBC()
+            self.k_diffusive.resetBC()
+        if dissipationInflow is not None:
+            self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
+            self.dissipation_advective.resetBC()
+            self.dissipation_diffusive.resetBC()
+
+
+    def setHydrostaticPressureOutletWithDepth_stressFree(self, seaLevel, rhoUp, rhoDown, nuUp, nuDown, g,
+                                                         refLevel, smoothing, U=None, Uwind=None,
+                                                         pRef=0.0, vert_axis=None,
+                                                         air=1.0, water=0.0,
+                                                         kInflow=None, dissipationInflow=None,
+                                                         kInflowAir=None, dissipationInflowAir=None):
+        """
+        Returns the pressure and vof profile based on the known depth.
+        If the boundary is aligned with one of the main axes, sets the tangential
+        velocity components to zero as well.
+        (!) This condition is best used for boundaries and gravity aligned with
+            one of the main axes.
+
+        Parameters
+        ----------
+        rhoUp: Phase density of the upper part.
+        rhoDown: Phase density of the lower part.
+        nuUp: Phase viscosity of the upper part.
+        nuDown: Phase viscosity of the lower part.
+        g: Gravitational acceleration vector.
+        refLevel: Level at which pressure = pRef.
+        pRef: Reference value for the pressure at x[vert_axis]=refLevel, by default set to 0.
+        vert_axis: index of vertical in position vector, must always be aligned with gravity, by default set to 1.
+        """
+        self.reset()
+
+        if vert_axis is None:
+            vert_axis = self.nd - 1
+
+        def hydrostaticPressureOutletWithDepth_p_dirichlet(x, t):
+            p_top = pRef
+            phi_top = refLevel - seaLevel
+            phi = x[vert_axis] - seaLevel
+            return p_top - g[vert_axis] * (rhoDown * (phi_top - phi) +
+                                           (rhoUp - rhoDown) *
+                                           (smoothedHeaviside_integral(smoothing, phi_top)
+                                            -
+                                            smoothedHeaviside_integral(smoothing, phi)))
+
         def diffusiveFlux_u(x,t):
             g = hydrostaticPressureOutletWithDepth_p_dirichlet(x,t)
             phi = x[vert_axis] - seaLevel
@@ -595,7 +705,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
                 H = smoothedHeaviside(smoothing, phi)
             elif phi <= -smoothing:
                 H = 0.
-            return H*(1.500e-5*1.205)*g + (1-H)*(1.004e-6*998.2)*g
+            return H*(nuUp*rhoUp)*g + (1-H)*(nuDown*rhoDown)*g
 
         def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
             phi = x[vert_axis] - seaLevel
@@ -634,7 +744,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
         self.u_diffusive.uOfXT = diffusiveFlux_u
         self.v_diffusive.setConstantBC(0.)
-#        self.u_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
 
@@ -668,7 +777,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
             self.dissipation_advective.resetBC()
             self.dissipation_diffusive.resetBC()
-
 
 # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
 
@@ -1296,8 +1404,9 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         Up = np.sqrt(np.sum(self.tanU**2))
         # viscous layer
         if self.Ystar < 11.225:
-            logEvent('Prescribed near-wall point outside log-law region!')
-            sys.exit(1)
+            self.Ustar = self.Ystar
+            self.uDir = (self.utStar*self.Ystar) * self.tV
+            self.gradU = ( (self.utStar**2) / self.nu ) * self.tV
         # log-law layer
         else:
             # Wall function theory from S.B. Pope, page 442-443
@@ -1461,6 +1570,4 @@ class kWall(AuxiliaryVariables.AV_base, object):
         else:
             kInit = True
         self.kappaNearWall(xi, element, rank, kInit)
-        #logEvent('kappa --> %s' % self.kappa)
-        #logEvent('t --> %s' % t)
         return abs(self.kappa)

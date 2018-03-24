@@ -28,7 +28,6 @@ cv["CFLAGS"] = cv["CFLAGS"].replace("-Wstrict-prototypes","")
 
 PROTEUS_PETSC_EXTRA_LINK_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_LINK_ARGS', [])
 PROTEUS_PETSC_EXTRA_COMPILE_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_COMPILE_ARGS', [])
-PROTEUS_OPT=['-O0','-UNDEBUG']
 PROTEUS_CHRONO_CXX_FLAGS = getattr(config, 'PROTEUS_CHRONO_CXX_FLAGS', [])
 
 proteus_install_path = os.path.join(sysconfig.get_python_lib(), 'proteus')
@@ -428,6 +427,11 @@ EXTENSIONS_TO_BUILD = [Extension("MeshAdaptPUMI.MeshAdaptPUMI",
                         libraries=['hdf5','stdc++','m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS+PROTEUS_HDF5_LIBS,
                         extra_link_args=PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_LINK_ARGS,
                         extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS+PROTEUS_OPT),
+              Extension("mprans.cCLSVOF",["proteus/mprans/cCLSVOF.pyx"],
+                        depends=["proteus/mprans/CLSVOF.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+                        language="c++",
+                        extra_compile_args=PROTEUS_OPT,
+                        include_dirs=[numpy.get_include(), 'proteus']),
               Extension("mprans.cNCLS",["proteus/mprans/cNCLS.pyx"],
                         depends=["proteus/mprans/NCLS.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
                         language="c++",
@@ -555,6 +559,7 @@ def setup_given_extensions(extensions):
                       'proteus.tests.elliptic_redist_3P',
                       'proteus.tests.surface_tension',
                       'proteus.tests.surface_tension.rising_bubble_rans3p',
+                      'proteus.tests.CLSVOF',
                       'proteus.tests.matrix_constructor',
                       'proteus.tests.matrix_constructor.import_modules',
                       'proteus.MeshAdaptPUMI',
@@ -620,6 +625,11 @@ def setup_given_extensions(extensions):
                         'proteus/tests/surface_tension/rising_bubble_rans3p/comparison_files/risingBubble_2D_ev.h5',
                         'proteus/tests/surface_tension/rising_bubble_rans3p/comparison_files/risingBubble_3D_supg.h5',
                         'proteus/tests/surface_tension/rising_bubble_rans3p/comparison_files/risingBubble_3D_ev.h5']),
+                      (os.path.join(proteus_install_path,'tests','CLSVOF','comparison_files'),
+                       ['proteus/tests/CLSVOF/comparison_files/clsvof_test_case_1.h5',
+                        'proteus/tests/CLSVOF/comparison_files/clsvof_test_case_2.h5',
+                        'proteus/tests/CLSVOF/comparison_files/clsvof_test_case_3.h5',
+                        'proteus/tests/CLSVOF/comparison_files/clsvof_test_case_4.h5']),
                       (os.path.join(proteus_install_path,'tests','solver_tests','import_modules'),
                        ['proteus/tests/solver_tests/import_modules/quad_mass_matrix.npy',
                         'proteus/tests/solver_tests/import_modules/sol_10.npy',
