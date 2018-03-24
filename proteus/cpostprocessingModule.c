@@ -481,7 +481,6 @@ cpostprocessingBuildLocalBDM2projectionMatrices(PyObject* self,
   PyObject *w_dS_f,*ebq_n,*ebq_v,*BDMmat_element,*q_basis_vals,
     *w_int_test_grads,*w_int_div_free,*piola_trial_fun,*degree,
     *edgeFlags;
-  printf("HERE");
   
   if(!PyArg_ParseTuple(args,"OOOOOOOOOO",
 		       &degree,
