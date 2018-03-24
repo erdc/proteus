@@ -9,46 +9,46 @@ namespace chrono {
     ChBodyAddedMass::ChBodyAddedMass() {
         ChBody::variables = variables;
 	}
-  void ChBodyAddedMass::SetMass(double newmass) {
-        variables.SetBodyMass(newmass);
-    }
-    void ChBodyAddedMass::SetInertia(const ChMatrix33<>& newXInertia) {
-        variables.SetBodyInertia(newXInertia);
-    }
+  // void ChBodyAddedMass::SetMass(double newmass) {
+  //       variables.SetBodyMass(newmass);
+  //   }
+  //   void ChBodyAddedMass::SetInertia(const ChMatrix33<>& newXInertia) {
+  //       variables.SetBodyInertia(newXInertia);
+  //   }
 
-    void ChBodyAddedMass::SetInertiaXX(const ChVector<>& iner) {
-        ChMatrix33<> Miner;
-        Miner.SetElement(0, 0, iner.x());
-        Miner.SetElement(1, 1, iner.y());
-        Miner.SetElement(2, 2, iner.z());
-        variables.SetBodyInertia(Miner);
-    }
-    void ChBodyAddedMass::SetInertiaXY(const ChVector<>& iner) {
-        ChMatrix33<> Miner;
-        Miner.SetElement(0, 1, iner.x());
-        Miner.SetElement(0, 2, iner.y());
-        Miner.SetElement(1, 2, iner.z());
-        Miner.SetElement(1, 0, iner.x());
-        Miner.SetElement(2, 0, iner.y());
-        Miner.SetElement(2, 1, iner.z());
-        variables.SetBodyInertia(Miner);
-    }
+  //   void ChBodyAddedMass::SetInertiaXX(const ChVector<>& iner) {
+  //       ChMatrix33<> Miner;
+  //       Miner.SetElement(0, 0, iner.x());
+  //       Miner.SetElement(1, 1, iner.y());
+  //       Miner.SetElement(2, 2, iner.z());
+  //       variables.SetBodyInertia(Miner);
+  //   }
+  //   void ChBodyAddedMass::SetInertiaXY(const ChVector<>& iner) {
+  //       ChMatrix33<> Miner;
+  //       Miner.SetElement(0, 1, iner.x());
+  //       Miner.SetElement(0, 2, iner.y());
+  //       Miner.SetElement(1, 2, iner.z());
+  //       Miner.SetElement(1, 0, iner.x());
+  //       Miner.SetElement(2, 0, iner.y());
+  //       Miner.SetElement(2, 1, iner.z());
+  //       variables.SetBodyInertia(Miner);
+  //   }
 
-    ChVector<> ChBodyAddedMass::GetInertiaXX() {
-        ChVector<> iner;
-        iner.x() = variables.GetBodyInertia().GetElement(0, 0);
-        iner.y() = variables.GetBodyInertia().GetElement(1, 1);
-        iner.z() = variables.GetBodyInertia().GetElement(2, 2);
-        return iner;
-    }
+  //   ChVector<> ChBodyAddedMass::GetInertiaXX() {
+  //       ChVector<> iner;
+  //       iner.x() = variables.GetBodyInertia().GetElement(0, 0);
+  //       iner.y() = variables.GetBodyInertia().GetElement(1, 1);
+  //       iner.z() = variables.GetBodyInertia().GetElement(2, 2);
+  //       return iner;
+  //   }
 
-    ChVector<> ChBodyAddedMass::GetInertiaXY() {
-        ChVector<> iner;
-        iner.x() = variables.GetBodyInertia().GetElement(0, 1);
-        iner.y() = variables.GetBodyInertia().GetElement(0, 2);
-        iner.z() = variables.GetBodyInertia().GetElement(1, 2);
-        return iner;
-    }
+  //   ChVector<> ChBodyAddedMass::GetInertiaXY() {
+  //       ChVector<> iner;
+  //       iner.x() = variables.GetBodyInertia().GetElement(0, 1);
+  //       iner.y() = variables.GetBodyInertia().GetElement(0, 2);
+  //       iner.z() = variables.GetBodyInertia().GetElement(1, 2);
+  //       return iner;
+  //   }
 
     void ChBodyAddedMass::SetMfullmass(ChMatrixDynamic<> Mfullmass_in) {
         assert(Mfullmass_in.GetRows() == variables.Get_ndof());
@@ -189,7 +189,6 @@ void ChBodyAddedMass::IntLoadResidual_Mv(const unsigned int off,      // offset 
   for (int i=0; i < 6; i++) {
     ww.SetElement(i, 0, w(off+i));
   }
-  R += variables.GetMfullmass()*ww;
-  R *= c;
+  R.PasteSumMatrix(variables.GetMfullmass()*ww*c, off, 0);
 }
 }  // end namespace chrono
