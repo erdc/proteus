@@ -137,7 +137,6 @@ def load_system(soModule, path='.'):
     sys.path.append(path)
     so = imp.load_source(soModule, os.path.join(path, soModule+".py"))
     sys.path.remove(path)
-    modulefile.close()
     system_object = System_base()
     for k,v in so.__dict__.iteritems():
         if k not in system_excluded_keys:
