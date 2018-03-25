@@ -13,7 +13,7 @@ if not PROTEUS_OPT:
     PROTEUS_OPT=['-O3','-DNDEBUG']
 else:
     PROTEUS_OPT=PROTEUS_OPT.split()
-    
+
 PROTEUS_INCLUDE_DIR = pjoin(prefix, 'include')
 PROTEUS_LIB_DIR = pjoin(prefix, 'lib')
 
