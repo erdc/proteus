@@ -357,7 +357,7 @@ jupyter:
 	jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 lfs:
-	pip install pyliblzma
+	pip install -U pyliblzma
 	wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
 	tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
 	cd git-lfs-1.5.5 && PREFIX=${HOME} ./install.sh
