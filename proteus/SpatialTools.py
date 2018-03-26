@@ -1533,6 +1533,8 @@ def _generateMesh(domain):
     # --------------------------- #
     # ----- MESH GENERATION ----- #
     # --------------------------- #
+    from proteus import Comm
+    comm = Comm.get()
     mesh = domain.MeshOptions
     if comm.isMaster():
         if mesh.outputFiles['poly'] is True:
