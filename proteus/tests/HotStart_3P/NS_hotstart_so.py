@@ -1,5 +1,8 @@
+import proteus.default_so
+reload(proteus.default_so)
 from proteus.default_so import *
 import NS_hotstart
+reload(NS_hotstart)
 
 from proteus.SplitOperator import Sequential_FixedStep_Simple, defaultSystem
 
@@ -25,7 +28,7 @@ name = "NS_hotstart"
 #         
 # systemStepControllerType = Sequential_MinAdaptiveModelStepPS
 
-modelSpinUpList = [3]#[NS_hotstart.PINIT_model]
+modelSpinUpList = [NS_hotstart.PINIT_model]
 
 class Sequential_MinAdaptiveModelStepPS(Sequential_FixedStep):
     def __init__(self,modelList,system=defaultSystem,stepExact=True):

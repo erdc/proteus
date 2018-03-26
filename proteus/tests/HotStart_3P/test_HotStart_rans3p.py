@@ -33,12 +33,12 @@ class Test_HotStart_rans3p():
     def test_hotstart_p1(self):
         self.compare_name = "T01P1_hotstart"
         self.example_setting("T=0.1 vspaceOrder=1 onlySaveFinalSolution=True",h5_filename="solution_p1")
-        self.example_setting("T=0.1 vspaceOrder=1 isHotStart=True", h5_filename="solution_p1", check_result=True, isHotstart=True,hotstart_t=0.1)
+        self.example_setting("T=0.1 vspaceOrder=1 onlySaveFinalSolution=True isHotStart=True", h5_filename="solution_p1", check_result=True, isHotstart=True,hotstart_t=0.1)
 
     def test_hotstart_p2(self):
         self.compare_name = "T01P2_hotstart"
-        self.example_setting("T=0.1 vspaceOrder=1 onlySaveFinalSolution=True",h5_filename="solution_p2")
-        self.example_setting("T=0.1 vspaceOrder=2 isHotStart=True", h5_filename="solution_p2", check_result=True, isHotstart=True,hotstart_t=0.1)
+        self.example_setting("T=0.1 vspaceOrder=2 onlySaveFinalSolution=True",h5_filename="solution_p2")
+        self.example_setting("T=0.1 vspaceOrder=2 onlySaveFinalSolution=True isHotStart=True", h5_filename="solution_p2", check_result=True, isHotstart=True,hotstart_t=0.1)
 
 
     def example_setting(self, pre_setting, h5_filename, check_result=False, isHotstart=False, hotstart_t=0.0):
