@@ -509,12 +509,16 @@ class NS_base:  # (HasTraits):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
+            
+            try:
+              n.useModel
+            except NameError:
+              n.useModel=False    
             if (n.useModel) and not isinstance(p.domain,Domain.PUMIDomain) :
               logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
               p = self.pList[0]
               n = self.nList[0]
               p.domain.PUMIMesh=n.MeshAdaptMesh
-              p.domain.hasModel = n.useModel
            
               from scipy import spatial
               meshVertexTree = spatial.cKDTree(mesh.nodeArray)
@@ -961,73 +965,73 @@ class NS_base:  # (HasTraits):
             if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
                 sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
             p0.domain.PUMIMesh=n0.MeshAdaptMesh
-            p0.domain.hasModel = n0.useModel
-            numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
-            #force initialization of arrays to enable passage through to C++ code
-            mesh2Model_v= numpy.asarray([[0,0]]).astype("i")
-            mesh2Model_e=numpy.asarray([[0,0]]).astype("i")
-            mesh2Model_b=numpy.asarray([[0,0]]).astype("i")
+            #p0.domain.hasModel = n0.useModel
+            #numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
+            ##force initialization of arrays to enable passage through to C++ code
+            #mesh2Model_v= numpy.asarray([[0,0]]).astype("i")
+            #mesh2Model_e=numpy.asarray([[0,0]]).astype("i")
+            #mesh2Model_b=numpy.asarray([[0,0]]).astype("i")
 
-            segmentList = numpy.asarray([[0,0]]).astype("i")
-            newFacetList = numpy.asarray([[0,0]]).astype("i")
-            #only appropriate for 2D use at the moment
-            if p0.domain.vertices and p0.domain.hasModel and p0.domain.nd==2:
-              p0.domain.getMesh2ModelClassification(self.modelList[0].levelModelList[0].mesh)
-              segmentList = numpy.asarray(p0.domain.segments).astype("i")
-              #force initialize the unused arrays for proper cythonization
-              import copy
-              newFacetList = []
-              if(not p0.domain.facets):
-                p0.domain.facets = [(-1,-1)]
-                newFacetList = copy.deepcopy(p0.domain.facets)
-              else:
-                facetList = []
-                maxFacetLength = 0
-                numHoles = len(p0.domain.holes)
-                if(numHoles): #if there are holes, there can be multiple lists of facets
-                  for i in range(numHoles,len(p0.domain.facets)):
-                    for j in range(len(p0.domain.facets[i])):
-                      maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i][j]))
-                  for i in range(numHoles,len(p0.domain.facets)):
-                    facetList.append(list(p0.domain.facets[i][0]))
-                    if(len(p0.domain.facets[i][0])<maxFacetLength):
-                      initLength = len(p0.domain.facets[i][0])
-                      lenDiff = maxFacetLength-initLength
-                      for j in range(lenDiff):
-                        facetList[i-numHoles].append(-1)
-                else:
-                  for i in range(len(p0.domain.facets)):
-                    maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i]))
-                  for i in range(len(p0.domain.facets)):
-                    facetList.append(list(p0.domain.facets[i]))
-                    if(len(p0.domain.facets[i])<maxFacetLength):
-                      initLength = len(p0.domain.facets[i])
-                      lenDiff = maxFacetLength-initLength
-                      for j in range(lenDiff):
-                        facetList[i-numHoles].append(-1)
+            #segmentList = numpy.asarray([[0,0]]).astype("i")
+            #newFacetList = numpy.asarray([[0,0]]).astype("i")
+            ##only appropriate for 2D use at the moment
+            #if p0.domain.vertices and p0.domain.hasModel and p0.domain.nd==2:
+            #  p0.domain.getMesh2ModelClassification(self.modelList[0].levelModelList[0].mesh)
+            #  segmentList = numpy.asarray(p0.domain.segments).astype("i")
+            #  #force initialize the unused arrays for proper cythonization
+            #  import copy
+            #  newFacetList = []
+            #  if(not p0.domain.facets):
+            #    p0.domain.facets = [(-1,-1)]
+            #    newFacetList = copy.deepcopy(p0.domain.facets)
+            #  else:
+            #    facetList = []
+            #    maxFacetLength = 0
+            #    numHoles = len(p0.domain.holes)
+            #    if(numHoles): #if there are holes, there can be multiple lists of facets
+            #      for i in range(numHoles,len(p0.domain.facets)):
+            #        for j in range(len(p0.domain.facets[i])):
+            #          maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i][j]))
+            #      for i in range(numHoles,len(p0.domain.facets)):
+            #        facetList.append(list(p0.domain.facets[i][0]))
+            #        if(len(p0.domain.facets[i][0])<maxFacetLength):
+            #          initLength = len(p0.domain.facets[i][0])
+            #          lenDiff = maxFacetLength-initLength
+            #          for j in range(lenDiff):
+            #            facetList[i-numHoles].append(-1)
+            #    else:
+            #      for i in range(len(p0.domain.facets)):
+            #        maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i]))
+            #      for i in range(len(p0.domain.facets)):
+            #        facetList.append(list(p0.domain.facets[i]))
+            #        if(len(p0.domain.facets[i])<maxFacetLength):
+            #          initLength = len(p0.domain.facets[i])
+            #          lenDiff = maxFacetLength-initLength
+            #          for j in range(lenDiff):
+            #            facetList[i-numHoles].append(-1)
 
-                #substitute the vertex IDs with segment IDs
-                newFacetList = copy.deepcopy(facetList)
-                for i in range(len(facetList)):
-                  for j in range(maxFacetLength):
-                    if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
-                      testSegment = [facetList[i][j],facetList[i][0]]
-                    else:
-                      testSegment = [facetList[i][j],facetList[i][j+1]]
-                    try:
-                      edgIdx = p0.domain.segments.index(testSegment)
-                    except ValueError:
-                      edgIdx = p0.domain.segments.index(list(reversed(testSegment)))
-                    newFacetList[i][j] = edgIdx
-                    if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
-                      break
-              newFacetList = numpy.asarray(newFacetList).astype("i")
-              mesh2Model_v = numpy.asarray(p0.domain.meshVertex2Model).astype("i")
-              mesh2Model_e = numpy.asarray(p0.domain.meshEdge2Model).astype("i")
-              mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
+            #    #substitute the vertex IDs with segment IDs
+            #    newFacetList = copy.deepcopy(facetList)
+            #    for i in range(len(facetList)):
+            #      for j in range(maxFacetLength):
+            #        if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
+            #          testSegment = [facetList[i][j],facetList[i][0]]
+            #        else:
+            #          testSegment = [facetList[i][j],facetList[i][j+1]]
+            #        try:
+            #          edgIdx = p0.domain.segments.index(testSegment)
+            #        except ValueError:
+            #          edgIdx = p0.domain.segments.index(list(reversed(testSegment)))
+            #        newFacetList[i][j] = edgIdx
+            #        if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
+            #          break
+            #  newFacetList = numpy.asarray(newFacetList).astype("i")
+            #  mesh2Model_v = numpy.asarray(p0.domain.meshVertex2Model).astype("i")
+            #  mesh2Model_e = numpy.asarray(p0.domain.meshEdge2Model).astype("i")
+            #  mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
 
-            p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
-            p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
+            #p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
+            #p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
         if (hasattr(p0.domain, 'PUMIMesh') and
             n0.adaptMesh and
             self.so.useOneMesh and
