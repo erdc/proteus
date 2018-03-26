@@ -509,12 +509,12 @@ class NS_base:  # (HasTraits):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
-            if hasattr(p.domain,'useModel') and p.domain.useModel and not isinstance(p.domain,Domain.PUMIDomain) :
+            if (n.useModel) and not isinstance(p.domain,Domain.PUMIDomain) :
               logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
               p = self.pList[0]
               n = self.nList[0]
               p.domain.PUMIMesh=n.MeshAdaptMesh
-              p.domain.hasModel = p.domain.useModel#n.useModel
+              p.domain.hasModel = n.useModel
            
               from scipy import spatial
               meshVertexTree = spatial.cKDTree(mesh.nodeArray)
@@ -961,7 +961,7 @@ class NS_base:  # (HasTraits):
             if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
                 sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
             p0.domain.PUMIMesh=n0.MeshAdaptMesh
-            p0.domain.hasModel = p0.domain.useModel#n0.useModel
+            p0.domain.hasModel = n0.useModel
             numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
             #force initialization of arrays to enable passage through to C++ code
             mesh2Model_v= numpy.asarray([[0,0]]).astype("i")
