@@ -2039,7 +2039,6 @@ cdef class ProtChMoorings:
         dset[...] = element_connection
         # strain
         datav = np.append(self.getNodesTension(eta=-1), [self.getNodesTension(eta=1)[-1]], axis=0)
-        print(datav, datav.shape, datav.shape[0])
         dset = f.create_dataset('tensions_t'+str(tCount), datav.shape)
         dset[...] = datav
         dset = f.create_dataset('sx_t'+str(tCount), (datav.shape[0],))
@@ -2095,14 +2094,14 @@ cdef class ProtChMoorings:
         xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
         if tCount == 0:
             root = ET.Element("Xdmf",
-                            {"Version":"2.0",
-                             "xmlns:xi":"http://www.w3.org/2001/XInclude"})
+                              {"Version": "2.0",
+                               "xmlns:xi": "http://www.w3.org/2001/XInclude"})
             domain = ET.SubElement(root, "Domain")
             arGridCollection = ET.SubElement(domain,
                                             "Grid",
-                                            {"Name":"Mesh"+" Spatial_Domain",
-                                             "GridType":"Collection",
-                                             "CollectionType":"Temporal"})
+                                            {"Name": "Mesh"+" Spatial_Domain",
+                                             "GridType": "Collection",
+                                             "CollectionType": "Temporal"})
         else:
             tree = ET.parse(xmlFile)
             root = tree.getroot()
@@ -2114,35 +2113,51 @@ cdef class ProtChMoorings:
         Xdmf_NodesPerElement = 2
         dataItemFormat = "HDF"
 
-        arGrid = ET.SubElement(arGridCollection,"Grid",{"GridType":"Uniform"})
-        arTime = ET.SubElement(arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+        arGrid = ET.SubElement(arGridCollection,
+                               "Grid",
+                               {"GridType": "Uniform"})
+        arTime = ET.SubElement(arGrid,
+                               "Time",
+                               {"Value": str(t),
+                                "Name": str(tCount)})
         topology = ET.SubElement(arGrid,
                                 "Topology",
-                                {"Type":Xdmf_ElementTopology,
-                                "NumberOfElements":str(Xdmf_NumberOfElements)})
+                                {"Type": Xdmf_ElementTopology,
+                                "NumberOfElements": str(Xdmf_NumberOfElements)})
 
         elements = ET.SubElement(topology,
                                 "DataItem",
-                                {"Format":dataItemFormat,
-                                "DataType":"Int",
-                                "Dimensions":"%i %i" % (Xdmf_NumberOfElements,Xdmf_NodesPerElement)})
+                                {"Format": dataItemFormat,
+                                "DataType": "Int",
+                                "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
+                                                         Xdmf_NodesPerElement)})
         elements.text = self.hdfFileName+".h5:/elements_t"+str(tCount)
         geometry = ET.SubElement(arGrid,"Geometry",{"Type":"XYZ"})
-        nodes = ET.SubElement(geometry,"DataItem",
-                              {"Format":dataItemFormat,
-                               "DataType":"Float",
-                               "Precision":"8",
-                               "Dimensions":"%i %i" % (pos.shape[0], pos.shape[1]) })
+        nodes = ET.SubElement(geometry,
+                              "DataItem",
+                              {"Format": dataItemFormat,
+                               "DataType": "Float",
+                               "Precision": "8",
+                               "Dimensions": "%i %i" % (pos.shape[0],
+                                                        pos.shape[1])})
         nodes.text = self.hdfFileName+".h5:/nodes_t"+str(tCount)
-        attrs = ['ux', 'uy', 'uz', 'ax', 'ay', 'az', 'dragx', 'dragy', 'dragz', 'amx', 'amy', 'amz', 'sx', 'sy', 'sz']
+        attrs = ['ux', 'uy', 'uz',
+                 'ax', 'ay', 'az',
+                 'dragx', 'dragy', 'dragz',
+                 'amx', 'amy', 'amz',
+                 'sx', 'sy', 'sz']
         for name in attrs:
-            attr = ET.SubElement(arGrid,"Attribute",{"Name":name,
-                                                     "AttributeType":"Scalar",
-                                                     "Center":"Node"})
-            data = ET.SubElement(attr,"DataItem",{"Name":name,
-                                                  "DataType":"Float",
-                                                  "Precision":"8",
-                                                  "Dimensions":"%i" % (pos.shape[0])})
+            attr = ET.SubElement(arGrid,
+                                 "Attribute",
+                                 {"Name": name,
+                                  "AttributeType": "Scalar",
+                                  "Center": "Node"})
+            data = ET.SubElement(attr,
+                                 "DataItem",
+                                 {"Format": dataItemFormat,
+                                  "DataType": "Float",
+                                  "Precision": "8",
+                                  "Dimensions": "%i" % (pos.shape[0])})
             data.text = self.hdfFileName+".h5:/"+name+"_t"+str(tCount)
 
         tree = ET.ElementTree(root)
