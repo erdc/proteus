@@ -18,7 +18,7 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double); 
+  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double,int); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh

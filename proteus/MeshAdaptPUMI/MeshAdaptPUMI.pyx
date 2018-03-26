@@ -17,7 +17,7 @@ cdef extern from "cmeshToolsModule.h":
 
 cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
-        MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*,double,double)
+        MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*,double,double,int)
         int numIter, numAdaptSteps
         string size_field_config, adapt_type_config
         int isReconstructed
@@ -50,9 +50,9 @@ cdef class MeshAdaptPUMI:
     cdef double hmax, hmin
     cdef int numIter, numAdaptSteps
     cdef int isReconstructed
-    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="ERM",maType="test",logType="off",targetError=0,targetElementCount=0):
+    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="ERM",maType="test",logType="off",targetError=0,targetElementCount=0,reconstructedFlag=0):
         logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
-        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType,targetError,targetElementCount)
+        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType,targetError,targetElementCount,reconstructedFlag)
     def __dealloc__(self):
         del self.thisptr
     def size_field_config(self):
