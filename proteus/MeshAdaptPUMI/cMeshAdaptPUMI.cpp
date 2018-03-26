@@ -29,7 +29,7 @@
  @{ 
 */
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
-    const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount)
+    const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount,int reconstructedFlag)
 /**
  * MeshAdaptPUMIDrvr is the highest level class that handles the interface between Proteus and the PUMI libraries
  * See MeshAdaptPUMI.h for the list of class variables/functions/objects
@@ -77,7 +77,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   target_element_count = targetElementCount;
   domainVolume = 0.0;
   THRESHOLD = 0.0;
-  isReconstructed=0;
+  isReconstructed = reconstructedFlag;
   initialReconstructed = 0;
 }
 
