@@ -30,6 +30,49 @@ using namespace chrono;
 using namespace chrono::fea;
 
 
+// override some functions of ChElement
+
+class ChElementCableANCFmod : public ChElementCableANCF {
+  virtual void SetupInitial(ChSystem* system) override {
+    assert(section);
+
+    // Compute rest length, mass:
+    double length2 = (nodes[1]->GetX0() - nodes[0]->GetX0()).Length();
+    this->mass = this->length * this->section->Area * this->section->density;
+
+    // Here we calculate the internal forces in the initial configuration
+    // Contribution of initial configuration in elastic forces is automatically subtracted
+    ChMatrixDynamic<> FVector0(12, 1);
+    FVector0.FillElem(0.0);
+    this->m_GenForceVec0.FillElem(0.0);
+    ComputeInternalForces(FVector0);
+    this->m_GenForceVec0 = FVector0;
+
+    // Compute mass matrix
+    ComputeMassMatrix();
+  };
+};
+
+class ChElementBeamEulermod : public ChElementBeamEuler {
+  virtual void SetupInitial(ChSystem* system) override {
+    assert(section);
+
+    // Compute rest length, mass:
+    //this->length = (nodes[1]->GetX0().GetPos() - nodes[0]->GetX0().GetPos()).Length();
+    this->mass = this->length * this->section->Area * this->section->density;
+
+    // Compute initial rotation
+    ChMatrix33<> A0;
+    ChVector<> mXele = nodes[1]->GetX0().GetPos() - nodes[0]->GetX0().GetPos();
+    ChVector<> myele = nodes[0]->GetX0().GetA().Get_A_Yaxis();
+    A0.Set_A_Xdir(mXele, myele);
+    q_element_ref_rot = A0.Get_A_quaternion();
+
+    // Compute local stiffness matrix:
+    ComputeStiffnessMatrix();
+  };
+};
+
 
 class MyLoaderTriangular : public ChLoaderUdistributed {
  public:
@@ -665,7 +708,7 @@ void cppCable::buildElementsCableANCF(bool set_lastnodes) {
   elems_loads_triangular.clear();
   elems_loads.clear();
   for (int i = 0; i < nb_elems; ++i) {
-    auto element = std::make_shared<ChElementCableANCF>();
+    auto element = std::make_shared<ChElementCableANCFmod>();
     auto load_distributed = std::make_shared<ChLoadBeamWrenchDistributed>(element);
     auto load = std::make_shared<ChLoadBeamWrench>(element);
     std::shared_ptr<ChLoad<MyLoaderTriangular>> loadtri(new ChLoad<MyLoaderTriangular>(element));
@@ -680,6 +723,7 @@ void cppCable::buildElementsCableANCF(bool set_lastnodes) {
     elems_loads_triangular.push_back(loadtri);
     elems_loads_volumetric.push_back(load_volumetric);
     element->SetSection(msection_cable);
+    element->SetRestLength(length/nb_elems);
     if (i < nb_elems-1) {
       element->SetNodes(nodes[i], nodes[i + 1]);
     }
@@ -700,7 +744,7 @@ void cppCable::buildElementsBeamEuler(bool set_lastnodes) {
   elems_loads_triangular.clear();
   elems_loads.clear();
   for (int i = 0; i < nodesRot.size() - 1; ++i) {
-    auto element = std::make_shared<ChElementBeamEuler>();
+    auto element = std::make_shared<ChElementBeamEulermod>();
     auto load_distributed = std::make_shared<ChLoadBeamWrenchDistributed>(element);
     auto load = std::make_shared<ChLoadBeamWrench>(element);
     std::shared_ptr<ChLoad<MyLoaderTriangular>> loadtri(new ChLoad<MyLoaderTriangular>(element));
@@ -715,6 +759,7 @@ void cppCable::buildElementsBeamEuler(bool set_lastnodes) {
     elems_loads_triangular.push_back(loadtri);
     elems_loads_volumetric.push_back(load_volumetric);
     element->SetSection(msection_advanced);
+    element->SetRestLength(length/nb_elems);
     if (i < nb_elems-1) {
       element->SetNodes(nodesRot[i], nodesRot[i + 1]);
     }
