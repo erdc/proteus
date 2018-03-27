@@ -1,3 +1,4 @@
+
 from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
@@ -26,7 +27,9 @@ class GlobalVariables():
         self.mContact = 2.
         self.nContact = 5.
         self.angFriction = np.pi/6.
-        self.sedSt = HsuSedStress( self.aDarcy, self.bForch, self.grain, self.packFraction,  self.packMargin,self.maxFraction, self.frFraction, self.sigmaC, self.C3e, self.C4e, self.eR ,self.fContact, self.mContact, self.nContact, self.angFriction)
+        self.vos_limiter = 0.6
+        self.mu_fr_limiter  = 0.01
+        self.sedSt = HsuSedStress( self.aDarcy, self.bForch, self.grain, self.packFraction,  self.packMargin,self.maxFraction, self.frFraction, self.sigmaC, self.C3e, self.C4e, self.eR ,self.fContact, self.mContact, self.nContact, self.angFriction, self.vos_limiter, self.mu_fr_limiter)
     
 
 class TestHsu(unittest.TestCase):
@@ -48,7 +51,7 @@ class TestHsu(unittest.TestCase):
             drag /=drag2
             drag2/=drag2
         npt.assert_almost_equal(drag,drag2)
-    @pytest.mark.skip(reason="in development")
+#    @pytest.mark.skip(reason="in development")
     def testGranularDrag2(self):
         gl=GlobalVariables()
         import random
@@ -69,7 +72,7 @@ class TestHsu(unittest.TestCase):
         #if you use npt.assert_almost_equal you get more info on failure...
         #self.assertTrue(round(drag,10) == round(drag2,10))
         npt.assert_almost_equal(drag,drag2)
-    @pytest.mark.skip(reason="in development")
+#    @pytest.mark.skip(reason="in development")
     def testGranularDrag3(self):
         gl=GlobalVariables()
         import random
@@ -89,7 +92,7 @@ class TestHsu(unittest.TestCase):
             drag2/=drag2
         #self.assertTrue(round(drag,10) == round(drag2,10))
         npt.assert_almost_equal(drag, drag2)
-    @pytest.mark.skip(reason="in development")
+#    @pytest.mark.skip(reason="in development")
     def testGranularDrag4(self):
         gl=GlobalVariables()
         import random
