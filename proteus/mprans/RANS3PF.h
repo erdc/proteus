@@ -920,11 +920,6 @@ namespace proteus
         mom_v_source -= forcey; 
         mom_w_source -= forcez; 
 
-        // mql: add general force term
-        mom_u_source -= forcex;
-        mom_v_source -= forcey;
-        mom_w_source -= forcez;
-
         //u momentum Hamiltonian (pressure)
         mom_u_ham = phi_s_effect*porosity*grad_p[0]*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
         dmom_u_ham_grad_p[0]=phi_s_effect*porosity*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
