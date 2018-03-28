@@ -1,4 +1,4 @@
-import sys, recordtype, os, imp
+import sys, recordtype, os, imp, copy
 from . import (TransportCoefficients,
                Transport,
                default_p,
@@ -20,6 +20,21 @@ from . import (TransportCoefficients,
                default_so)
 
 from .Archiver import ArchiveFlags
+from .Profiling import logEvent
+
+import sys
+
+if sys.version_info.major < 3:  # Python 2?
+    # Using exec avoids a SyntaxError in Python 3.
+    exec("""def reraise(exc_type, exc_value, exc_traceback=None):
+                raise exc_type, exc_value, exc_traceback""")
+else:
+    def reraise(exc_type, exc_value, exc_traceback=None):
+        if exc_value is None:
+            exc_value = exc_type()
+        if exc_value.__traceback__ is not exc_traceback:
+            raise exc_value.with_traceback(exc_traceback)
+        raise exc_value
 
 physics_default_keys = []
 physics_excluded_keys = []
@@ -38,7 +53,7 @@ for k in (set(dir(default_p)) -
         physics_excluded_keys.append(k)
 
 Physics_base = recordtype.recordtype('Physics_base',
-                                     [(k,default_p.__dict__[k])
+                                     [(k,copy.deepcopy(default_p.__dict__[k]))
                                       for k in physics_default_keys],
                                      use_slots=False)
 
@@ -92,7 +107,7 @@ for k in (set(dir(default_n)) -
         numerics_excluded_keys.append(k)
 
 Numerics_base = recordtype.recordtype('Numerics_base',
-                                      [(k,default_n.__dict__[k])
+                                      [(k,copy.deepcopy(default_n.__dict__[k]))
                                        for k in numerics_default_keys],
                                       use_slots=False)
 
@@ -124,7 +139,7 @@ for k in (set(dir(default_so)) -
         system_excluded_keys.append(k)
 
 System_base = recordtype.recordtype('System_base',
-                                    [(k,default_so.__dict__[k])
+                                    [(k,copy.deepcopy(default_so.__dict__[k]))
                                      for k in system_default_keys],
                                     use_slots=False)
 
