@@ -147,8 +147,8 @@ cdef extern from "ChRigidBody.h":
         ch.ChMatrix33 rotm_last
         ch.ChQuaternion rotq
         ch.ChQuaternion rotq_last
-        # double* free_x
-        # double* free_r
+        ch.ChVector free_x
+        ch.ChVector free_r
         ch.ChVector F
         ch.ChVector F_last
         ch.ChVector M
@@ -769,11 +769,23 @@ cdef class ProtChBody:
                     self.Aij += am.Aij[i]
         # setting added mass
         if self.applyAddedMass is True:
-            FF = self.Aij*self.acceleration[1]
+            Aij = np.zeros((6,6))
+            Aij[:] = self.Aij[:]
+            Aij[0, 1:] *= self.thisptr.free_x.x()
+            Aij[1, 0] *= self.thisptr.free_x.y()
+            Aij[1, 2:] *= self.thisptr.free_x.y()
+            Aij[2, :2] *= self.thisptr.free_x.z()
+            Aij[2, 3:] *= self.thisptr.free_x.z()
+            Aij[3, :3] *= self.thisptr.free_r.x()
+            Aij[3, 4:] *= self.thisptr.free_r.x()
+            Aij[4, :4] *= self.thisptr.free_r.y()
+            Aij[4, 5] *= self.thisptr.free_r.y()
+            Aij[5, :5] *= self.thisptr.free_r.z()
+            self.setAddedMass(Aij)
             aa = np.zeros(6)
             aa[:3] = self.acceleration
-            Aija = np.dot(self.Aij, aa)
-            self.setAddedMass(self.Aij)
+            aa[3:] = self.ang_acceleration
+            Aija = np.dot(Aij, aa)
         if self.ProtChSystem.model is not None:
             self.F_prot = self.getPressureForces()+self.getShearForces()
             self.M_prot = self.getMoments()
@@ -830,8 +842,8 @@ cdef class ProtChBody:
         if self.width_2D:
             self.F_applied *= self.width_2D
             self.M_applied *= self.width_2D
-        self.thisptr.prestep(<double*> forces.data,
-                             <double*> moments.data)
+        self.thisptr.prestep(<double*> self.F_applied.data,
+                             <double*> self.M_applied.data)
 
     def poststep(self):
         """Called after Chrono system step.
