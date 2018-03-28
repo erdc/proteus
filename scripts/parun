@@ -258,6 +258,8 @@ if opts.dataDir != '':
             comm.rank(),
             opts.dataDir))
         comm.comm.tompi4py().Abort()
+    from proteus import Profiling
+    Profiling.logDir = opts.dataDir
 
 #blanket import statements can go below here now that petsc4py should be initialized
 from proteus import *
