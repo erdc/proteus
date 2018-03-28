@@ -1,4 +1,4 @@
-import sys, recordtype, os, imp, copy
+import sys, recordtype, os, imp, copy, inspect
 from . import (TransportCoefficients,
                Transport,
                default_p,
@@ -60,7 +60,9 @@ class Physics_base(_Physics_base):
     def __init__(self, **args):
         super(Physics_base,self).__init__(**args)
         for k in set(physics_default_keys) - set(args.keys()):
-                self.__dict__[k] = copy.deepcopy(default_p.__dict__[k])
+            v = default_p.__dict__[k]
+            if not inspect.isclass(v):
+                self.__dict__[k] = copy.deepcopy(v)
 
 def reset_default_p():
     for k,v in Physics_base().__dict__.iteritems():
@@ -119,6 +121,8 @@ class Numerics_base(_Numerics_base):
     def __init__(self, **args):
         super(Numerics_base,self).__init__(**args)
         for k in set(numerics_default_keys) - set(args.keys()):
+            v = default_n.__dict__[k]
+            if not inspect.isclass(v):
                 self.__dict__[k] = copy.deepcopy(default_n.__dict__[k])
 
 def reset_default_n():
@@ -157,6 +161,8 @@ class System_base(_System_base):
     def __init__(self, **args):
         super(System_base,self).__init__(**args)
         for k in set(system_default_keys) - set(args.keys()):
+            v = default_so.__dict__[k]
+            if not inspect.isclass(v):
                 self.__dict__[k] = copy.deepcopy(default_so.__dict__[k])
 
 def reset_default_so():
