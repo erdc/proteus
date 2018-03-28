@@ -230,15 +230,15 @@ class Coefficients(TC_base):
         #a is really a scalar diffusion but defining it as diagonal tensor
         #if we push phase momentum interchange (drag) to correction
         #then a may become a full  tensor
-        a_penalty = (1.0-vos)*self.rho_f_min*alphaBDF + vos*self.rho_s_min*alphaBDF
-        c['a_f'] = (1.0-vos)/a_penalty
-        c['a_s'] = (vos)/a_penalty
-        #c[('a',0,0)][...,0] = 1./a_penalty 
-        c[('a',0,0)][...,0] = c['a_f'] + c['a_s'] 
-        #c[('a',0,0)][...,0] = ((1.0-vos)*self.rho_f_min + vos*self.rho_s_min)*alphaBDF
-        #c[('a',0,0)][...,0] = (self.rho_f_min/(1.0-vos) + self.rho_s_min/vos)*alphaBDF
-        #c[('a',0,0)][...,0] = (1.0-vos)*c['a_f'] + vos*c['a_s']
-        #c[('a',0,0)][...,0] = c['a_f']/(1.0-vos) + c['a_s']/vos
+        if self.sedModelIndex is not None:
+            a_penalty = (1.0-vos)*self.rho_f_min*alphaBDF + vos*self.rho_s_min*alphaBDF
+            c['a_f'] = (1.0-vos)/a_penalty
+            c['a_s'] = (vos)/a_penalty
+            c[('a',0,0)][...,0] = c['a_f'] + c['a_s']
+        else:
+            c['a_f'] = 1.0 / (self.rho_f_min * alphaBDF)
+            c['a_s'] = 1.0 / (self.rho_s_min * alphaBDF)
+            c[('a', 0, 0)][..., 0] = (1.0 - vos) * c['a_f'] + vos * c['a_s']
         for i in range(1,c[('a',0,0)].shape[-1]):
             c[('a',0,0)][...,i] = c[('a',0,0)][...,0]
 
