@@ -12,6 +12,9 @@ This module solves equations of the form
 import pytest
 from proteus.iproteus import *
 from proteus import Comm
+from proteus.defaults import (load_physics as load_p,
+                              load_numerics as load_n,
+                              System_base as So)
 comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=False
@@ -20,15 +23,14 @@ import numpy as np
 import numpy.testing as npt
 import ladr_2d_p
 import ladr_2d_n
+import os
+modulepath = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_minModelStep_stepExactTrue():
-    reload(ladr_2d_p)
-    reload(ladr_2d_n)
-    pList = [ladr_2d_p]
-    nList = [ladr_2d_n]
-    reload(default_so)
-    so = default_so
+    pList = [load_p('ladr_2d_p', modulepath)]
+    nList = [load_n('ladr_2d_n', modulepath)]
+    so = So()
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
     so.systemStepControllerType = SplitOperator.Sequential_MinModelStep
@@ -53,12 +55,9 @@ def test_minModelStep_stepExactTrue():
     del ns
 
 def test_minModelStep_stepExactFalse():
-    reload(ladr_2d_p)
-    reload(ladr_2d_n)
-    pList = [ladr_2d_p]
-    nList = [ladr_2d_n]
-    reload(default_so)
-    so = default_so
+    pList = [load_p('ladr_2d_p', modulepath)]
+    nList = [load_n('ladr_2d_n', modulepath)]
+    so = So()
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
     so.systemStepControllerType = SplitOperator.Sequential_MinModelStep
@@ -83,12 +82,9 @@ def test_minModelStep_stepExactFalse():
     del ns
 
 def test_fixedStep_stepExactFalse():
-    reload(ladr_2d_p)
-    reload(ladr_2d_n)
-    pList = [ladr_2d_p]
-    nList = [ladr_2d_n]
-    reload(default_so)
-    so = default_so
+    pList = [load_p('ladr_2d_p', modulepath)]
+    nList = [load_n('ladr_2d_n', modulepath)]
+    so = So()
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
     so.systemStepControllerType = SplitOperator.Sequential_FixedStep
@@ -123,12 +119,9 @@ def test_fixedStep_stepExactFalse():
     del ns
 
 def test_fixedStep_stepExactTrue():
-    reload(ladr_2d_p)
-    reload(ladr_2d_n)
-    pList = [ladr_2d_p]
-    nList = [ladr_2d_n]
-    reload(default_so)
-    so = default_so
+    pList = [load_p('ladr_2d_p', modulepath)]
+    nList = [load_n('ladr_2d_n', modulepath)]
+    so = So()
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
     so.systemStepControllerType = SplitOperator.Sequential_FixedStep
@@ -154,12 +147,9 @@ def test_fixedStep_stepExactTrue():
     del ns
 
 def test_fixedStep_stepSimple():
-    reload(ladr_2d_p)
-    reload(ladr_2d_n)
-    pList = [ladr_2d_p]
-    nList = [ladr_2d_n]
-    reload(default_so)
-    so = default_so
+    pList = [load_p('ladr_2d_p', modulepath)]
+    nList = [load_n('ladr_2d_n', modulepath)]
+    so = So()
     so.name = pList[0].name = "ladr"
     so.tnList = nList[0].tnList
     so.systemStepControllerType = SplitOperator.Sequential_FixedStep_Simple
