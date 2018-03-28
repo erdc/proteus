@@ -62,8 +62,11 @@ class Physics_base(_Physics_base):
         for k in set(physics_default_keys) - set(args.keys()):
             v = default_p.__dict__[k]
             if not inspect.isclass(v):
-                self.__dict__[k] = copy.deepcopy(v)
-
+                try:
+                    self.__dict__[k] = copy.deepcopy(v)
+                except:
+                    pass
+                
 def reset_default_p():
     for k,v in Physics_base().__dict__.iteritems():
         default_p.__dict__[k] = v
@@ -114,7 +117,7 @@ for k in (set(dir(default_n)) -
         numerics_excluded_keys.append(k)
 
 _Numerics_base = recordtype.recordtype('Numerics_base',
-                                      [(k,copy.deepcopy(default_n.__dict__[k]))
+                                      [(k,default_n.__dict__[k])
                                        for k in numerics_default_keys],
                                       use_slots=False)
 class Numerics_base(_Numerics_base):
@@ -123,8 +126,10 @@ class Numerics_base(_Numerics_base):
         for k in set(numerics_default_keys) - set(args.keys()):
             v = default_n.__dict__[k]
             if not inspect.isclass(v):
-                self.__dict__[k] = copy.deepcopy(default_n.__dict__[k])
-
+                try:
+                    self.__dict__[k] = copy.deepcopy(default_n.__dict__[k])
+                except:
+                    pass
 def reset_default_n():
     for k,v in Numerics_base().__dict__.iteritems():
         default_n.__dict__[k] = v
@@ -153,7 +158,7 @@ for k in (set(dir(default_so)) -
         system_excluded_keys.append(k)
 
 _System_base = recordtype.recordtype('System_base',
-                                    [(k,copy.deepcopy(default_so.__dict__[k]))
+                                    [(k,default_so.__dict__[k])
                                      for k in system_default_keys],
                                     use_slots=False)
 
@@ -163,8 +168,10 @@ class System_base(_System_base):
         for k in set(system_default_keys) - set(args.keys()):
             v = default_so.__dict__[k]
             if not inspect.isclass(v):
-                self.__dict__[k] = copy.deepcopy(default_so.__dict__[k])
-
+                try:
+                    self.__dict__[k] = copy.deepcopy(default_so.__dict__[k])
+                except:
+                    pass
 def reset_default_so():
     for k,v in System_base().__dict__.iteritems():
         default_so.__dict__[k] = v
