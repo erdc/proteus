@@ -52,10 +52,15 @@ for k in (set(dir(default_p)) -
     else:
         physics_excluded_keys.append(k)
 
-Physics_base = recordtype.recordtype('Physics_base',
-                                     [(k,copy.deepcopy(default_p.__dict__[k]))
+_Physics_base = recordtype.recordtype('Physics_base',
+                                     [(k,default_p.__dict__[k])
                                       for k in physics_default_keys],
                                      use_slots=False)
+class Physics_base(_Physics_base):
+    def __init__(self, **args):
+        super(Physics_base,self).__init__(**args)
+        for k in set(physics_default_keys) - set(args.keys()):
+                self.__dict__[k] = copy.deepcopy(default_p.__dict__[k])
 
 def reset_default_p():
     for k,v in Physics_base().__dict__.iteritems():
@@ -106,10 +111,15 @@ for k in (set(dir(default_n)) -
     else:
         numerics_excluded_keys.append(k)
 
-Numerics_base = recordtype.recordtype('Numerics_base',
+_Numerics_base = recordtype.recordtype('Numerics_base',
                                       [(k,copy.deepcopy(default_n.__dict__[k]))
                                        for k in numerics_default_keys],
                                       use_slots=False)
+class Numerics_base(_Numerics_base):
+    def __init__(self, **args):
+        super(Numerics_base,self).__init__(**args)
+        for k in set(numerics_default_keys) - set(args.keys()):
+                self.__dict__[k] = copy.deepcopy(default_n.__dict__[k])
 
 def reset_default_n():
     for k,v in Numerics_base().__dict__.iteritems():
@@ -138,10 +148,16 @@ for k in (set(dir(default_so)) -
     else:
         system_excluded_keys.append(k)
 
-System_base = recordtype.recordtype('System_base',
+_System_base = recordtype.recordtype('System_base',
                                     [(k,copy.deepcopy(default_so.__dict__[k]))
                                      for k in system_default_keys],
                                     use_slots=False)
+
+class System_base(_System_base):
+    def __init__(self, **args):
+        super(System_base,self).__init__(**args)
+        for k in set(system_default_keys) - set(args.keys()):
+                self.__dict__[k] = copy.deepcopy(default_so.__dict__[k])
 
 def reset_default_so():
     for k,v in System_base().__dict__.iteritems():
