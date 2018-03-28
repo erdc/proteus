@@ -225,6 +225,10 @@ cdef class ProtChBody:
       np.ndarray M_applied  # moment applied and passed to Chrono
       np.ndarray F_applied_last
       np.ndarray M_applied_last
+      np.ndarray F_Aij
+      np.ndarray M_Aij
+      np.ndarray F_Aij_last
+      np.ndarray M_Aij_last
       np.ndarray acceleration
       np.ndarray acceleration_last
       np.ndarray velocity
@@ -271,6 +275,8 @@ cdef class ProtChBody:
         self.M_prot = np.zeros(3)  # initialise empty Proteus moment
         self.F_applied = np.zeros(3)  # initialise empty Applied force
         self.M_applied = np.zeros(3)  # initialise empty Applied moment
+        self.F_Aij = np.zeros(3)  # initialise empty added mass force
+        self.M_Aij = np.zeros(3)  # initialise empty added mass moment
         self.prescribed_motion_function = None
         self.acceleration = np.zeros(3)
         self.acceleration_last = np.zeros(3)
@@ -767,6 +773,8 @@ cdef class ProtChBody:
                 am = self.ProtChSystem.model_addedmass.levelModelList[-1]
                 for i in range(self.i_start, self.i_end):
                     self.Aij += am.Aij[i]
+                if self.width_2D:
+                    self.Aij *= self.width_2D
         # setting added mass
         if self.applyAddedMass is True:
             Aij = np.zeros((6,6))
@@ -789,9 +797,14 @@ cdef class ProtChBody:
         if self.ProtChSystem.model is not None:
             self.F_prot = self.getPressureForces()+self.getShearForces()
             self.M_prot = self.getMoments()
+            if self.width_2D:
+                self.F_prot *= self.width_2D
+                self.M_prot *= self.width_2D
             if self.applyAddedMass is True:
-                self.F_prot += Aija[:3]
-                self.M_prot += Aija[3:]
+                self.F_Aij = Aija[:3]
+                self.M_Aij = Aija[3:]
+                self.F_prot += self.F_Aij
+                self.M_prot += self.M_Aij
             if self.ProtChSystem.first_step is True:
                 # just apply initial conditions for 1st time step
                 F_bar = self.F_prot
@@ -839,9 +852,6 @@ cdef class ProtChBody:
         """
         self.F_applied = forces
         self.M_applied = moments
-        if self.width_2D:
-            self.F_applied *= self.width_2D
-            self.M_applied *= self.width_2D
         self.thisptr.prestep(<double*> self.F_applied.data,
                              <double*> self.M_applied.data)
 
@@ -1097,6 +1107,8 @@ cdef class ProtChBody:
         self.M_prot_last = np.array(self.M_prot)
         self.F_applied_last = np.array(self.F_applied)
         self.M_applied_last = np.array(self.M_applied)
+        self.F_Aij_last = np.array(self.F_Aij)
+        self.M_Aij_last = np.array(self.M_Aij)
         if self.ProtChSystem.parallel_mode is True:
             comm = Comm.get().comm.tompi4py()
             self.position_last = comm.bcast(self.position_last,
@@ -1123,6 +1135,8 @@ cdef class ProtChBody:
                                              self.ProtChSystem.chrono_processor)
             self.M_applied_last = comm.bcast(self.M_applied_last,
                                              self.ProtChSystem.chrono_processor)
+            self.F_Aij_last = comm.bcast(self.F_Aij_last,
+                                         self.ProtChSystem.chrono_processor)
 
     def getValues(self):
         """Get values (pos, vel, acc, etc.) from C++ to python
@@ -1227,6 +1241,9 @@ cdef class ProtChBody:
             self.record_dict['Fx_applied'] = ['F_applied', 0]
             self.record_dict['Fy_applied'] = ['F_applied', 1]
             self.record_dict['Fz_applied'] = ['F_applied', 2]
+            self.record_dict['Fx_Aij'] = ['F_Aij', 0]
+            self.record_dict['Fy_Aij'] = ['F_Aij', 1]
+            self.record_dict['Fz_Aij'] = ['F_Aij', 2]
             Fx = Fy = Fz = True
         if M is True:
             self.record_dict['Mx'] = ['M', 0]
