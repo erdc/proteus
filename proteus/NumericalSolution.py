@@ -1152,7 +1152,7 @@ class NS_base:  # (HasTraits):
                 offset=0
                 while tCount > 0:
                     time = float(self.ar[index].tree.getroot()[-1][-1][-1-offset][0].attrib['Value'])
-                    if time < self.opts.hotStartTime:
+                    if time <= self.opts.hotStartTime:
                         break
                     else:
                         tCount -=1
@@ -1185,8 +1185,8 @@ class NS_base:  # (HasTraits):
             if time >= self.tnList[-1] - 1.0e-5:
                 logEvent("Modifying time interval to be tnList[-1] + tnList since tnList hasn't been modified already")
                 ndtout = len(self.tnList)
-                dtout = (self.tnList[-1] - self.tnList[0])/float(ndtout-1)
-                self.tnList = [time + i*dtout for i in range(ndtout)]
+                self.tnList = [time + i for i in self.tnList]
+                self.tnList.insert(1, 0.9*self.tnList[0]+0.1*self.tnList[1])
                 logEvent("New tnList"+`self.tnList`)
             else:
                 tnListNew=[time]
@@ -1200,8 +1200,9 @@ class NS_base:  # (HasTraits):
         logEvent("Attaching models and running spin-up step if requested")
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         spinup = []
-        for index,m in self.modelSpinUp.iteritems():
-            spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
+        if (not self.opts.hotStart) or (not self.so.skipSpinupOnHotstart):
+            for index,m in self.modelSpinUp.iteritems():
+                spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
             logEvent("Attaching models to model "+m.name)
             m.attachModels(self.modelList)
