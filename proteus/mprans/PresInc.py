@@ -148,17 +148,16 @@ class Coefficients(TC_base):
             ebqe_vos = self.model.ebqe_vos
             q_a = 1.0/(q_vos*self.rho_s_min + (1.0-q_vos)*self.rho_f_min)/alphaBDF
             ebqe_a = 1.0/(ebqe_vos*self.rho_s_min + (1.0-ebqe_vos)*self.rho_f_min)/alphaBDF
-            for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
-                self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * (1.0 - q_vos) * q_a 
-                self.fluidModel.ebqe[('velocity',0)][...,i] += (1.0-ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)]-self.fluidModel.ebqe[('velocity', 0)][..., i])*self.model.ebqe['n'][...,i]                
-                self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * (q_vos) * q_a
-                if self.sedModelIndex is not None:
-                    self.fluidModel.coefficients.ebqe_velocity_solid[...,i] += (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)]-self.sedModel.ebqe[('velocity', 0)][..., i])*self.model.ebqe['n'][...,i]   
-                else:
-                    self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]   
-            self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
-            self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
             if self.sedModelIndex is not None:
+            
+                for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
+                    self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * (1.0 - q_vos) * q_a 
+                    self.fluidModel.ebqe[('velocity',0)][...,i] += (1.0-ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)]-self.fluidModel.ebqe[('velocity', 0)][..., i])*self.model.ebqe['n'][...,i]                
+                    self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * (q_vos) * q_a
+                    self.fluidModel.coefficients.ebqe_velocity_solid[...,i] += (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)]-self.sedModel.ebqe[('velocity', 0)][..., i])*self.model.ebqe['n'][...,i]   
+# end of loop
+                self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
+                self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
                 self.sedModel.q[('velocity',0)] = self.fluidModel.coefficients.q_velocity_solid
                 self.sedModel.ebqe[('velocity',0)] = self.fluidModel.coefficients.ebqe_velocity_solid
                 self.sedModel.stabilization.v_last[:] = self.sedModel.q[('velocity',0)]
@@ -180,6 +179,18 @@ class Coefficients(TC_base):
                 #    for k in range(self.model.ebqe_vos.shape[1]):
                 #        if self.model.ebqe_vos[eN,k] >= self.sedModel.coefficients.maxFraction:
                 #            self.sedModel.ebqe[('velocity',0)][eN,k] = 0.0 
+            else:
+                for i in range(self.fluidModel.q[('velocity', 0)].shape[-1]):
+                    self.fluidModel.q[('velocity', 0)][..., i] -= self.model.q[('grad(u)', 0)][..., i] / (self.rho_f_min * alphaBDF)
+                    # cek hack, need to do scale this right for 3p flow
+                    self.fluidModel.ebqe[('velocity', 0)][..., i] += (self.model.ebqe[('advectiveFlux', 0)] +
+                                                                  self.model.ebqe[('diffusiveFlux', 0, 0)] -
+                                                                  self.fluidModel.ebqe[('velocity', 0)][..., i]) * self.model.ebqe['n'][..., i]
+                    self.fluidModel.coefficients.q_velocity_solid[..., i] -= self.model.q[('grad(u)', 0)][..., i] / (self.rho_s_min * alphaBDF)
+                    self.fluidModel.coefficients.ebqe_velocity_solid[..., i] -= self.model.ebqe[('grad(u)', 0)][..., i] / (self.rho_s_min * alphaBDF)
+                self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity', 0)]
+                self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity', 0)]
+                
 
         copyInstructions = {}
         return copyInstructions
