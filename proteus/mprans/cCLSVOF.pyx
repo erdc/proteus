@@ -186,8 +186,8 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                    double* velocity,
                                    int offset_u, int stride_u,
                                    int numDOFs,
-                                   double* global_R,
-                                   double* global_sR,
+                                   double* R_vector,
+                                   double* sR_vector,
                         	   double* global_V,
 				   double* global_V0,
 				   double* global_sV,
@@ -589,9 +589,9 @@ cdef class cCLSVOF_base:
                              numpy.ndarray u0_dof,
                              numpy.ndarray velocity,
                              int offset_u, int stride_u,
-                             int numDOFs):
-        cdef double global_R
-        cdef double global_sR
+                             int numDOFs,
+			     numpy.ndarray R_vector,
+			     numpy.ndarray sR_vector):
         cdef double global_V
         cdef double global_V0
         cdef double global_sV
@@ -621,16 +621,14 @@ cdef class cCLSVOF_base:
                                            offset_u,
                                            stride_u,
                                            numDOFs,
-                                           &global_R,
-                                           &global_sR,
+                                           <double*>R_vector.data,
+                                           <double*>sR_vector.data,
                            		   &global_V,
 					   &global_V0,
                                            &global_sV,
 					   &global_sV0,
                                            &global_D_err)
-        return(global_R,
-               global_sR,
-               global_V,
+        return(global_V,
 	       global_V0,
                global_sV,
 	       global_sV0,

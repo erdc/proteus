@@ -222,8 +222,8 @@ namespace proteus
                                        double* velocity,
                                        int offset_u, int stride_u,
                                        int numDOFs,
-                                       double* global_R,
-                                       double* global_sR,
+                                       double* R_vector,
+                                       double* sR_vector,
                                        double* global_V,
 				       double* global_V0,
                                        double* global_sV,
@@ -1091,7 +1091,7 @@ namespace proteus
 		    double norm2_grad_uh = 0.;
 		    for (int I=0; I<nSpace; I++)
 		      norm2_grad_uh += grad_uh[I]*grad_uh[I];
-		    cell_D_err += dV; //TMP std::pow(std::sqrt(norm2_grad_uh) - 1, 2.)*dV;
+		    cell_D_err += std::pow(std::sqrt(norm2_grad_uh) - 1, 2.)*dV;
 		  }
 		*global_V += cell_V;
 		*global_V0 += cell_V0;
@@ -1103,7 +1103,7 @@ namespace proteus
 		*global_D_err    += cell_D_err;
 	      }//elements
 	  }
-        //*global_D_err *= 0.5; //TMP
+        *global_D_err *= 0.5; 
       }
 
       void calculateMetricsAtETS( // ETS=Every Time Step
@@ -1131,23 +1131,14 @@ namespace proteus
                                  double* velocity,
                                  int offset_u, int stride_u,
                                  int numDOFs,
-                                 double* global_R, // TODO (mql): for now it works just in serial
-                                 double* global_sR, // TODO (mql): for now it works just in serial
+                                 double* R_vector,
+                                 double* sR_vector,
                                  double* global_V,
 				 double* global_V0,
 				 double* global_sV,
 				 double* global_sV0,
                                  double* global_D_err)
       {
-        register double R_vector[numDOFs], sR_vector[numDOFs];
-        for (int i=0; i<numDOFs; i++)
-          {
-            R_vector[i] = 0.;
-            sR_vector[i] = 0.;
-          }
-
-        *global_R = 0.0;
-        *global_sR = 0.0;
         *global_V = 0.0;
 	*global_V0 = 0.0;
         *global_sV = 0.0;
@@ -1165,7 +1156,7 @@ namespace proteus
                 element_R[i] = 0.;
                 element_sR[i] = 0.;
               }
-            double cell_R = 0., cell_sR = 0.,
+            double 
               cell_V = 0., cell_V0 = 0., cell_sV = 0., cell_sV0 = 0.,
               cell_D_err = 0.;
             //loop over quadrature points and compute integrands
@@ -1262,18 +1253,15 @@ namespace proteus
                 R_vector[gi] += element_R[i];
                 sR_vector[gi] += element_sR[i];
               }
-            *global_V += cell_V;
-            *global_V0 += cell_V0;
-            *global_sV += cell_sV;
-            *global_sV0 += cell_sV0;
-            // metrics //
-            *global_D_err    += cell_D_err;
+	    if (eN<nElements_owned) // just consider the locally owned cells
+	      {
+		*global_V += cell_V;
+		*global_V0 += cell_V0;
+		*global_sV += cell_sV;
+		*global_sV0 += cell_sV0;
+		*global_D_err    += cell_D_err;
+	      }
           }//elements
-        for (int i=0; i<numDOFs; i++)
-          {
-            *global_R += R_vector[i]*R_vector[i];
-            *global_sR += sR_vector[i]*sR_vector[i];
-          }
         *global_D_err *= 0.5;
       }
 

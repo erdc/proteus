@@ -613,6 +613,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_I_err = 0.0
         self.global_sI_err = 0.0
         # for residual of conservation law
+        self.R_vector = numpy.zeros(self.u[0].dof.shape,'d')
+        self.sR_vector = numpy.zeros(self.u[0].dof.shape,'d')
         self.global_R = 0.0
         self.global_sR = 0.0
         # for conservation of volume
@@ -697,10 +699,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         except:
             pass
 
-        #TODO (mql): global_R and global_sR work just in serial for now
-        (self.global_R,
-         self.global_sR,
-         global_V,
+        self.R_vector.fill(0.)
+        self.sR_vector.fill(0.)
+        (global_V,
          global_V0,
          global_sV,
          global_sV0,
@@ -728,7 +729,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.u0_dof,
              self.coefficients.q_v,
              self.offset[0],self.stride[0],
-             self.nFreeDOF_global[0]) #numDOFs
+             self.nFreeDOF_global[0], #numDOFs
+             self.R_vector,
+             self.sR_vector)
 
         from proteus.flcbdfWrappers import globalSum
         # metrics about conservation 
@@ -740,6 +743,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_sV_err = np.abs(self.global_sV-self.global_sV0)/self.global_sV0
         # metrics about distance property
         self.global_D_err = globalSum(global_D_err)
+        # compute global_R and global_sR
+        n=self.mesh.subdomainMesh.nNodes_owned
+        self.global_R = np.sqrt(globalSum(np.dot(self.R_vector[0:n],self.R_vector[0:n])))
+        self.global_sR = np.sqrt(globalSum(np.dot(self.sR_vector[0:n],self.sR_vector[0:n])))
         
     def getMetricsAtEOS(self,u_exact): #EOS=End Of Simulation
         import copy
