@@ -10,14 +10,11 @@ This module solves equations of the form
 
 """
 from proteus.iproteus import *
+from proteus.defaults import load_physics, load_numerics, System_base
 from petsc4py import PETSc
 import os
-import poisson_3d_p
-import poisson_3d_c0p1_n
-import poisson_3d_c0p2_n
-import poisson_3d_c0q1_n
-import poisson_3d_c0q2_n
 import pytest
+modulepath = os.path.dirname(os.path.abspath(__file__))
 
 @pytest.mark.modelTest
 @pytest.mark.poissonTest
@@ -35,7 +32,6 @@ class TestPoisson():
         OptDB = PETSc.Options()
         OptDB.setValue("ksp_type", "cg")
         OptDB.setValue("pc_type", "gamg")
-        reload(poisson_3d_p)
 
     def teardown_method(self,method):
         """ Tear down function """
@@ -67,12 +63,11 @@ class TestPoisson():
                 os.remove(file)
 
     def test_c0p1(self):
-        reload(poisson_3d_p)
-        reload(poisson_3d_c0p1_n)
-        pList = [poisson_3d_p]
-        nList = [poisson_3d_c0p1_n]
-        reload(default_so)
-        so = default_so
+        pList = [load_physics('poisson_3d_p',
+                              modulepath)]
+        nList = [load_numerics('poisson_3d_c0p1_n',
+                               modulepath)]
+        so = System_base()
         so.name = pList[0].name = "poisson_3d_c0p1"+"pe"+`comm.size()`
         so.sList=[default_s]
         opts.logLevel=7
@@ -90,12 +85,11 @@ class TestPoisson():
 
     @pytest.mark.slowTest
     def test_c0p2(self):
-        reload(poisson_3d_p)
-        reload(poisson_3d_c0p2_n)
-        pList = [poisson_3d_p]
-        nList = [poisson_3d_c0p2_n]
-        reload(default_so)
-        so = default_so
+        pList = [load_physics('poisson_3d_p',
+                              modulepath)]
+        nList = [load_numerics('poisson_3d_c0p2_n',
+                               modulepath)]
+        so = System_base()
         so.name = pList[0].name = "poisson_3d_c0p2"+"pe"+`comm.size()`
         so.sList=[default_s]
         opts.logLevel=7
@@ -109,8 +103,10 @@ class TestPoisson():
         assert(True)
 
     def check_c0q1(self,test_hexMesh_3x3=False,use_petsc=False,name="_hexMesh_"):
-        reload(poisson_3d_p)
-        reload(poisson_3d_c0q1_n)
+        poisson_3d_p = load_physics('poisson_3d_p',
+                                    modulepath)
+        poisson_3d_c0q1_n = load_numerics('poisson_3d_c0q1_n',
+                                          modulepath)
         poisson_3d_c0q1_n.hex=True
         if test_hexMesh_3x3 == True:
             poisson_3d_p.meshfile='hexMesh_3x3'
@@ -119,8 +115,7 @@ class TestPoisson():
             poisson_3d_p.L  = ( 6., 6., 6.)
         pList = [poisson_3d_p]
         nList = [poisson_3d_c0q1_n]
-        reload(default_so)
-        so = default_so
+        so = System_base()
         so.name = pList[0].name = "poisson_3d_c0q1"+name+"pe"+`comm.size()`
         so.sList=[default_s]
         opts.logLevel=7
@@ -152,12 +147,11 @@ class TestPoisson():
 
     @pytest.mark.slowTest
     def test_c0q2(self):
-        reload(poisson_3d_p)
-        reload(poisson_3d_c0q2_n)
-        pList = [poisson_3d_p]
-        nList = [poisson_3d_c0q2_n]
-        reload(default_so)
-        so = default_so
+        pList = [load_physics('poisson_3d_p',
+                              modulepath)]
+        nList = [load_numerics('poisson_3d_c0q2_n',
+                               modulepath)]
+        so = System_base()
         so.name = pList[0].name = "poisson_3d_c0q2"+"pe"+`comm.size()`
         so.sList=[default_s]
         opts.logLevel=7

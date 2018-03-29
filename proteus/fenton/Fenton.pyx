@@ -154,13 +154,13 @@ def copyFiles():
     '''
     Copy the files to log directory
     '''
-    Profiling.logDir = './log'
-    copy('Data.dat',Profiling.logDir)
-    copy('Convergence.dat',Profiling.logDir)
-    copy('Points.dat',Profiling.logDir)
-    copy('Solution.res',Profiling.logDir)
-    copy('Surface.res',Profiling.logDir)
-    copy('Flowfield.res',Profiling.logDir)
+    if Profiling.logDir != '.':
+        copy('Data.dat',Profiling.logDir)
+        copy('Convergence.dat',Profiling.logDir)
+        copy('Points.dat',Profiling.logDir)
+        copy('Solution.res',Profiling.logDir)
+        copy('Surface.res',Profiling.logDir)
+        copy('Flowfield.res',Profiling.logDir)
 
 def __get_dir():
     return os.path.dirname(__file__)
