@@ -1,6 +1,6 @@
 import proteus
 from proteus.mprans.cCLSVOF import *
-            
+
 class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
@@ -154,7 +154,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.getNormalReconstruction()
         # SAVE OLD SOLUTION (and VELOCITY) #
         self.model.u_dof_old[:] = self.model.u[0].dof
-        
+
         copyInstructions = {}
         return copyInstructions
 
@@ -162,7 +162,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # Norm factor
         self.model.norm_factor_lagged = np.maximum(self.model.max_distance - self.model.mean_distance,
                                                    self.model.mean_distance - self.model.min_distance)
-        
+
         # Compute metrics at end of time step
         if self.computeMetrics == 2:
             self.model.getMetricsAtETS()
@@ -609,7 +609,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u0_dof = numpy.copy(self.u[0].dof)
         self.newton_iterations_stage1 = 0.0
         self.newton_iterations_stage2 = 0.0
-        # for interface quality 
+        # for interface quality
         self.global_I_err = 0.0
         self.global_sI_err = 0.0
         # for residual of conservation law
@@ -625,7 +625,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_V_err = 0.0
         self.global_sV_err = 0.0
         # for distance property
-        self.global_D_err = 0.0                
+        self.global_D_err = 0.0
         # At ETS #
         if self.coefficients.computeMetrics > 0 and self.comm.isMaster():
             # At EOS #
@@ -734,7 +734,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.sR_vector)
 
         from proteus.flcbdfWrappers import globalSum
-        # metrics about conservation 
+        # metrics about conservation
         self.global_V = globalSum(global_V)
         self.global_V0 = globalSum(global_V0)
         self.global_sV = globalSum(global_sV)
@@ -747,7 +747,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         n=self.mesh.subdomainMesh.nNodes_owned
         self.global_R = np.sqrt(globalSum(np.dot(self.R_vector[0:n],self.R_vector[0:n])))
         self.global_sR = np.sqrt(globalSum(np.dot(self.sR_vector[0:n],self.sR_vector[0:n])))
-        
+
     def getMetricsAtEOS(self,u_exact): #EOS=End Of Simulation
         import copy
         """
@@ -758,7 +758,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             degree_polynomial = self.u[0].femSpace.order
         except:
             pass
-        
+
         (global_I_err,
          global_sI_err,
          global_V,
@@ -801,7 +801,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_sV_err = np.abs(self.global_sV-self.global_sV0)/self.global_sV0
         # distance property metric
         self.global_D_err = globalSum(global_D_err)
-        
+
     ###############################################
 
     def calculateElementResidual(self):
@@ -809,7 +809,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
 
     def updateParVectors(self):
-        # create vectors 
+        # create vectors
         if self.par_lumped_qx_tn is None:
             n=self.mesh.subdomainMesh.nNodes_owned
             N=self.mesh.nNodes_global
@@ -848,7 +848,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.par_lumped_qx_tStar.scatter_forward_insert()
             self.par_lumped_qy_tStar.scatter_forward_insert()
             self.par_lumped_qz_tStar.scatter_forward_insert()
-            
+
     def getNormalReconstruction(self):
         if self.timeStage==1:
             self.clsvof.normalReconstruction(#element
@@ -1020,7 +1020,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.min_distance = -globalMax(-min_distance[0])
         self.max_distance = globalMax(max_distance[0])
         self.mean_distance = globalSum(mean_distance[0])
-        
+
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
