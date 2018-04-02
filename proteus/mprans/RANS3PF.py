@@ -532,7 +532,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             # VOF part #
             self.q_vf = modelList[self.CLSVOF_model].q[('H(u)', 0)]
             self.ebq_vf = None# Not used. What is this for? 
-            self.ebqe_vf = modelList[self.VOF_model].ebqe[('H(u)', 0)]
+            self.ebqe_vf = modelList[self.CLSVOF_model].ebqe[('H(u)', 0)]
             self.bc_ebqe_vf = 0.5*(1.0+modelList[self.CLSVOF_model].numericalFlux.ebqe[('u',0)]) # Dirichlet BCs for VOF. What I have is BCs for Signed function
         else: # use NCLS-RDLS-VOF-MCORR instead
             if self.LS_model is not None: #LEVEL SET MODEL
