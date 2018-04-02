@@ -24,9 +24,15 @@ numericalFluxType = NCLS3P.NumericalFlux
 subgridError      = NCLS3P.SubgridError(coefficients,nd)
 shockCapturing    = NCLS3P.ShockCapturing(coefficients,nd,shockCapturingFactor=ls_shockCapturingFactor,lag=ls_lag_shockCapturing)
 
-fullNewtonFlag  = True
+if EXPLICIT_NCLS==True:
+    fullNewtonFlag  = False
+    timeIntegration = BackwardEuler_cfl
+    stepController  = Min_dt_cfl_controller
+else:
+    fullNewtonFlag  = True
+    
 multilevelNonlinearSolver = Newton
-levelNonlinearSolver      = Newton
+levelNonlinearSolver      = TwoStageNewton
 
 nonlinearSmoother = None
 linearSmoother    = None

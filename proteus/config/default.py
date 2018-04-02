@@ -8,6 +8,12 @@ prefix = os.getenv('PROTEUS_PREFIX')
 if not prefix:
     prefix = sys.exec_prefix
 
+PROTEUS_OPT = os.getenv('PROTEUS_OPT')
+if not PROTEUS_OPT:
+    PROTEUS_OPT=['-O3','-DNDEBUG']
+else:
+    PROTEUS_OPT=PROTEUS_OPT.split()
+
 PROTEUS_INCLUDE_DIR = pjoin(prefix, 'include')
 PROTEUS_LIB_DIR = pjoin(prefix, 'lib')
 
@@ -68,6 +74,17 @@ else:
 PROTEUS_EXTRA_LINK_ARGS=[]
 
 PROTEUS_CHRONO_INCLUDE_DIR, PROTEUS_CHRONO_LIB_DIR = get_flags('chrono')
+
+PROTEUS_CHRONO_CXX_FLAGS = []
+with open(os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','ChronoConfig.cmake'),'r') as f:
+    for l in f:
+        if 'set(CHRONO_CXX_FLAGS' in l:
+            args = l.split()
+            for arg in args:
+                if arg[0] == '-':
+                    arg = arg.replace('"', '')
+                    arg = arg.replace(')', '')
+                    PROTEUS_CHRONO_CXX_FLAGS += [arg]
 
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
 PROTEUS_EXTRA_FC_LINK_ARGS=[]
@@ -162,3 +179,4 @@ if sys.platform == 'linux2':
     PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_ZOLTAN_LIB_DIR]
     PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_LAPACK_LIB_DIR]
     PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_BLAS_LIB_DIR]
+    PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_CHRONO_LIB_DIR]

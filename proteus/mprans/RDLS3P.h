@@ -78,7 +78,9 @@ namespace proteus
                                    double* ebqe_u,
                                    double* ebqe_n,
                                    // elliptic redistancing
-                                   int ELLIPTIC_REDISTANCING_TYPE,
+				   double* cell_interface_locator,
+				   double* interface_lumpedMassMatrix,
+                                   int ELLIPTIC_REDISTANCING,
                                    double* abs_grad_u_dof,
                                    double* lumped_qx,
                                    double* lumped_qy,
@@ -139,7 +141,13 @@ namespace proteus
                                    double* ebqe_bc_u_ext,
                                    int* csrColumnOffsets_eb_u_u,
                                    // elliptic redistancing
+				   double * cell_interface_locator,
                                    int ELLIPTIC_REDISTANCING,
+				   int numDOFs,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops,
+				   double* stiffness_matrix,
+				   double* interface_lumpedMassMatrix,
                                    double* abs_grad_u_dof,
                                    double alpha)=0;
     virtual void calculateResidual_ellipticRedist(//element
@@ -205,7 +213,9 @@ namespace proteus
                                                   double* ebqe_u,
                                                   double* ebqe_n,
                                                   // elliptic redistancing
-                                                  int ELLIPTIC_REDISTANCING_TYPE,
+						  double * cell_interface_locator,
+						  double* interface_lumpedMassMatrix, 
+                                                  int ELLIPTIC_REDISTANCING,
                                                   double* abs_grad_u_dof,
                                                   double* lumped_qx,
                                                   double* lumped_qy,
@@ -266,9 +276,25 @@ namespace proteus
                                                   double* ebqe_bc_u_ext,
                                                   int* csrColumnOffsets_eb_u_u,
                                                   // elliptic redistancing
+						  double * cell_interface_locator,
                                                   int ELLIPTIC_REDISTANCING,
+						  int numDOFs,
+						  int* csrRowIndeces_DofLoops,
+						  int* csrColumnOffsets_DofLoops,
+						  double* stiffness_matrix,
+						  double* interface_lumpedMassMatrix,
                                                   double* abs_grad_u_dof,
                                                   double alpha)=0;
+    virtual void calculateStiffnessMatrix(//element
+					  double* mesh_trial_ref,
+					  double* mesh_grad_trial_ref,
+					  double* mesh_dof,
+					  int* mesh_l2g,
+					  double* dV_ref,
+					  double* u_grad_trial_ref,
+					  int nElements_global,
+					  int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+					  double* globalJacobian)=0;    
     virtual void normalReconstruction(double* mesh_trial_ref,
                                       double* mesh_grad_trial_ref,
                                       double* mesh_dof,
@@ -480,7 +506,9 @@ namespace proteus
                              double* ebqe_u,
                              double* ebqe_n,
                              // elliptic redistancing
-                             int ELLIPTIC_REDISTANCING_TYPE,
+			     double * cell_interface_locator,
+			     double* interface_lumpedMassMatrix, 
+                             int ELLIPTIC_REDISTANCING,
                              double* abs_grad_u_dof,
                              double* lumped_qx,
                              double* lumped_qy,
@@ -995,7 +1023,13 @@ namespace proteus
                              double* ebqe_bc_u_ext,
                              int* csrColumnOffsets_eb_u_u,
                              // elliptic redistancing
+			     double * cell_interface_locator,
                              int ELLIPTIC_REDISTANCING,
+			     int numDOFs,
+			     int* csrRowIndeces_DofLoops,
+			     int* csrColumnOffsets_DofLoops,
+			     double* stiffness_matrix,
+			     double* interface_lumpedMassMatrix,
                              double* abs_grad_u_dof,
                              double alpha)
       {
@@ -1455,7 +1489,9 @@ namespace proteus
                                             double* ebqe_u,
                                             double* ebqe_n,
                                             // elliptic redistancing
-                                            int ELLIPTIC_REDISTANCING_TYPE,
+					    double * cell_interface_locator,
+					    double* interface_lumpedMassMatrix, 
+                                            int ELLIPTIC_REDISTANCING,
                                             double* abs_grad_u_dof,
                                             double* lumped_qx,
                                             double* lumped_qy,
@@ -1490,7 +1526,7 @@ namespace proteus
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
                 register double
                   coeff, delta,
-                  abs_grad_u, qx, qy, qz, normalReconstruction[nSpace],
+                  abs_grad_u, qx, qy, qz, normalReconstruction[3],
                   u=0,grad_u[nSpace],
                   m=0.0,
                   jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
@@ -1581,18 +1617,22 @@ namespace proteus
                   coeff = 1.0+2*std::pow(norm_grad_u,2)-3*norm_grad_u;
 
                 // COMPUTE DELTA FUNCTION //
-                epsilon_redist = epsFact_redist*(useMetrics*h_phi
-                                                 +(1.0-useMetrics)*elementDiameter[eN]);
-                delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
-
-                // UPDATE ELEMENT RESIDUAL //
-                if (ELLIPTIC_REDISTANCING_TYPE > 1) // (NON)LINEAR VIA C0 NORMAL RECONSTRUCTION
+		delta = smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
+		//delta = (cell_interface_locator[eN] == 1 ? 1.0 : 0)*
+		//smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
+		
+		// UPDATE ELEMENT RESIDUAL //
+                if (ELLIPTIC_REDISTANCING > 1) // (NON)LINEAR VIA C0 NORMAL RECONSTRUCTION
                   for(int i=0;i<nDOF_test_element;i++)
                     {
                       register int i_nSpace = i*nSpace;
                       // global i-th index
                       int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
 
+		      // diagonal matrix to preserve interface
+		      interface_lumpedMassMatrix[gi] += alpha*delta*u_test_dV[i];
+
+		      // element residual
                       elementResidual_u[i] +=
                         ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace])
                         -ck.NumericalDiffusion(1.0,normalReconstruction,&u_grad_test_dV[i_nSpace])
@@ -1621,6 +1661,77 @@ namespace proteus
                 globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
               }//i
           }//elements
+        //
+        //loop over exterior element boundaries to save soln at quad points
+        //
+        for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+          {
+            register int ebN = exteriorElementBoundariesArray[ebNE],
+              eN  = elementBoundaryElementsArray[ebN*2+0],
+              ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+              eN_nDOF_trial_element = eN*nDOF_trial_element;
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+              {
+                register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+                  ebNE_kb_nSpace = ebNE_kb*nSpace,
+                  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+                register double
+                  u_ext=0.0,
+                  grad_u_ext[nSpace],
+                  jac_ext[nSpace*nSpace],jacDet_ext,jacInv_ext[nSpace*nSpace],
+                  boundaryJac[nSpace*(nSpace-1)],
+                  metricTensor[(nSpace-1)*(nSpace-1)],metricTensorDetSqrt,
+                  u_grad_trial_trace[nDOF_trial_element*nSpace],
+                  normal[nSpace],x_ext,y_ext,z_ext,
+                  dir[nSpace],norm;
+                ck.calculateMapping_elementBoundary(eN,
+                                                    ebN_local,
+                                                    kb,
+                                                    ebN_local_kb,
+                                                    mesh_dof,
+                                                    mesh_l2g,
+                                                    mesh_trial_trace_ref,
+                                                    mesh_grad_trial_trace_ref,
+                                                    boundaryJac_ref,
+                                                    jac_ext,
+                                                    jacDet_ext,
+                                                    jacInv_ext,
+                                                    boundaryJac,
+                                                    metricTensor,
+                                                    metricTensorDetSqrt,
+                                                    normal_ref,
+                                                    normal,
+                                                    x_ext,y_ext,z_ext);
+                //compute shape and solution information
+                //shape
+                ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],
+                                    jacInv_ext,
+                                    u_grad_trial_trace);
+                //solution and gradients
+                ck.valFromDOF(u_dof,
+                              &u_l2g[eN_nDOF_trial_element],
+                              &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
+                              u_ext);
+                ck.gradFromDOF(u_dof,
+                               &u_l2g[eN_nDOF_trial_element],
+                               u_grad_trial_trace,
+                               grad_u_ext);
+                norm = 0;
+                for (int I=0;I<nSpace;I++)
+                  norm += grad_u_ext[I]*grad_u_ext[I];
+                norm = sqrt(norm) + 1.0E-10;
+                for (int I=0;I<nSpace;I++)
+                  dir[I] = grad_u_ext[I]/norm;
+
+                //save for other models
+                ebqe_u[ebNE_kb] = u_ext;
+
+                for (int I=0;I<nSpace;I++)
+                  ebqe_n[ebNE_kb_nSpace+I] = dir[I];
+              }//kb
+          }//ebNE
+        //////
       }
 
       void calculateJacobian_ellipticRedist(//element
@@ -1678,9 +1789,176 @@ namespace proteus
                                             double* ebqe_bc_u_ext,
                                             int* csrColumnOffsets_eb_u_u,
                                             // elliptic redistancing
+					    double * cell_interface_locator,
                                             int ELLIPTIC_REDISTANCING,
+					    int numDOFs,
+					    int* csrRowIndeces_DofLoops,
+					    int* csrColumnOffsets_DofLoops,
+					    double* stiffness_matrix,
+					    double* interface_lumpedMassMatrix,
                                             double* abs_grad_u_dof,
                                             double alpha)
+      {
+	if (ELLIPTIC_REDISTANCING>1) // (non)linear via normal reconstruction
+	  {
+	    int ij=0;
+	    for (int i=0; i<numDOFs; i++)
+	      for (int offset=csrRowIndeces_DofLoops[i];
+		   offset<csrRowIndeces_DofLoops[i+1]; offset++)
+		{
+		  int j = csrColumnOffsets_DofLoops[offset];		  
+		  if (i==j)
+		    globalJacobian[ij] = interface_lumpedMassMatrix[i] + stiffness_matrix[ij];
+		  else
+		    globalJacobian[ij] = stiffness_matrix[ij];		    
+		  //update ij
+		  ij++;
+		}
+	  }
+	else // loop over elements (std assembly of jacobian)
+	  for(int eN=0;eN<nElements_global;eN++) 
+	    {
+	      register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
+	      double epsilon_redist,h_phi, norm;
+	      for (int i=0;i<nDOF_test_element;i++)
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    elementJacobian_u_u[i][j]=0.0;
+		  }
+	      for  (int k=0;k<nQuadraturePoints_element;k++)
+		{
+		  int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
+		    eN_k_nSpace = eN_k*nSpace,
+		    eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
+		  //declare local storage
+		  register double
+		    coeff1, coeff2, delta, abs_grad_u,
+		    grad_u[nSpace],
+		    jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		    u_grad_trial[nDOF_trial_element*nSpace],
+		    dV, u_test_dV[nDOF_test_element], u_grad_test_dV[nDOF_test_element*nSpace],
+		    x,y,z,G[nSpace*nSpace],G_dd_G,tr_G;
+		  //
+		  //calculate solution and gradients at quadrature points
+		  //
+		  ck.calculateMapping_element(eN,
+					      k,
+					      mesh_dof,
+					      mesh_l2g,
+					      mesh_trial_ref,
+					      mesh_grad_trial_ref,
+					      jac,
+					      jacDet,
+					      jacInv,
+					      x,y,z);
+		  ck.calculateH_element(eN,
+					k,
+					nodeDiametersArray,
+					mesh_l2g,
+					mesh_trial_ref,
+					h_phi);
+		  //get the physical integration weight
+		  dV = fabs(jacDet)*dV_ref[k];
+		  ck.calculateG(jacInv,G,G_dd_G,tr_G);
+		  //get the trial function gradients
+		  ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				      jacInv,
+				      u_grad_trial);
+		  //get the solution gradients
+		  ck.gradFromDOF(u_dof,
+				 &u_l2g[eN_nDOF_trial_element],
+				 u_grad_trial,
+				 grad_u);
+		  // get abs_grad_u and lumped_q at quad points
+		  ck.valFromDOF(abs_grad_u_dof,
+				&u_l2g[eN_nDOF_trial_element],
+				&u_trial_ref[k*nDOF_trial_element],
+				abs_grad_u);
+		  //precalculate test function products with integration weights
+		  for (int j=0;j<nDOF_trial_element;j++)
+		    {
+		      u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		      for (int I=0;I<nSpace;I++)
+			u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
+		    }
+		  // MOVING MESH. Omit for now //
+		  // COMPUTE NORM OF GRAD(u) //
+		  double norm_grad_u = 0;
+		  if (USE_ABS_GRAD_U_RECONSTRUCTION==0)
+		    {
+		      for(int I=0;I<nSpace;I++)
+			norm_grad_u += grad_u[I]*grad_u[I];
+		      norm_grad_u = std::sqrt(norm_grad_u) + 1.0E-10;
+		    }
+		  else
+		    norm_grad_u = abs_grad_u;
+		  
+		  // COMPUTE COEFFICIENTS //
+		  if (SINGLE_POTENTIAL==1)
+		    {
+		      coeff1 = 0.; //-1./norm_grad_u;
+		      coeff2 = 1./std::pow(norm_grad_u,3);
+		    }
+		  else
+		    {
+		      coeff1=fmax(1.0E-10, 2*std::pow(norm_grad_u,2)-3*norm_grad_u);
+		      coeff2=fmax(1.0E-10, 4.-3./norm_grad_u);
+		    }
+		  
+		  // COMPUTE DELTA FUNCTION //
+		  delta = smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
+		  //delta = (cell_interface_locator[eN] == 1 ? 1.0 : 0)*
+		  //smoothedDirac(epsFact_redist*elementDiameter[eN],phi_ls[eN_k]);
+		  
+		  for(int i=0;i<nDOF_test_element;i++)
+		    {
+		      int i_nSpace = i*nSpace;
+		      for(int j=0;j<nDOF_trial_element;j++)
+			{
+			  int j_nSpace = j*nSpace;
+			  elementJacobian_u_u[i][j] +=
+			    ck.NumericalDiffusionJacobian(1.0,
+							  &u_grad_trial[j_nSpace],
+							  &u_grad_test_dV[i_nSpace])
+			    + (ELLIPTIC_REDISTANCING == 1 ? 1. : 0.)*
+			    ( ck.NumericalDiffusionJacobian(coeff1,
+							    &u_grad_trial[j_nSpace],
+							    &u_grad_test_dV[i_nSpace])
+			      + coeff2*dV*
+			      ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[i_nSpace])*
+			      ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[j_nSpace]) )
+			    //+alpha*u_trial_ref[k*nDOF_trial_element+j]*delta*u_test_dV[i];//cons.
+			    + (i == j ? alpha*delta*u_test_dV[i] : 0.); //lumped
+			}//j
+		    }//i
+		}//k
+	      //
+	      //load into element Jacobian into global Jacobian
+	      //
+	      for (int i=0;i<nDOF_test_element;i++)
+		{
+		  int eN_i = eN*nDOF_test_element+i;
+		  for (int j=0;j<nDOF_trial_element;j++)
+		    {
+		      int eN_i_j = eN_i*nDOF_trial_element+j;
+		      globalJacobian[csrRowIndeces_u_u[eN_i]
+				     + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+		    }//j
+		}//i
+	    }//elements
+      }//computeJacobian
+      
+      void calculateStiffnessMatrix(//element
+				    double* mesh_trial_ref,
+				    double* mesh_grad_trial_ref,
+				    double* mesh_dof,
+				    int* mesh_l2g,
+				    double* dV_ref,
+				    double* u_grad_trial_ref,
+				    //physics
+				    int nElements_global,
+				    int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				    double* globalJacobian)
       {
         //
         //loop over elements
@@ -1688,25 +1966,17 @@ namespace proteus
         for(int eN=0;eN<nElements_global;eN++)
           {
             register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
-            double epsilon_redist,h_phi, norm;
             for (int i=0;i<nDOF_test_element;i++)
               for (int j=0;j<nDOF_trial_element;j++)
-                {
-                  elementJacobian_u_u[i][j]=0.0;
-                }
+		elementJacobian_u_u[i][j]=0.0;
+	    // loop on quad points
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
-                int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
-                  eN_k_nSpace = eN_k*nSpace,
-                  eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
-                //declare local storage
                 register double
-                  coeff1, coeff2, delta, abs_grad_u,
-                  grad_u[nSpace],
-                  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
                   u_grad_trial[nDOF_trial_element*nSpace],
-                  dV, u_test_dV[nDOF_test_element], u_grad_test_dV[nDOF_test_element*nSpace],
-                  x,y,z,G[nSpace*nSpace],G_dd_G,tr_G;
+                  dV, u_grad_test_dV[nDOF_test_element*nSpace],
+                  x,y,z;
                 //
                 //calculate solution and gradients at quadrature points
                 //
@@ -1720,64 +1990,16 @@ namespace proteus
                                             jacDet,
                                             jacInv,
                                             x,y,z);
-                ck.calculateH_element(eN,
-                                      k,
-                                      nodeDiametersArray,
-                                      mesh_l2g,
-                                      mesh_trial_ref,
-                                      h_phi);
                 //get the physical integration weight
                 dV = fabs(jacDet)*dV_ref[k];
-                ck.calculateG(jacInv,G,G_dd_G,tr_G);
                 //get the trial function gradients
                 ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
                                     jacInv,
                                     u_grad_trial);
-                //get the solution gradients
-                ck.gradFromDOF(u_dof,
-                               &u_l2g[eN_nDOF_trial_element],
-                               u_grad_trial,
-                               grad_u);
-                // get abs_grad_u and lumped_q at quad points
-                ck.valFromDOF(abs_grad_u_dof,
-                              &u_l2g[eN_nDOF_trial_element],
-                              &u_trial_ref[k*nDOF_trial_element],
-                              abs_grad_u);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
-                  {
-                    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
-                    for (int I=0;I<nSpace;I++)
-                      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
-                  }
-                // MOVING MESH. Omit for now //
-                // COMPUTE NORM OF GRAD(u) //
-                double norm_grad_u = 0;
-                if (USE_ABS_GRAD_U_RECONSTRUCTION==0)
-                  {
-                    for(int I=0;I<nSpace;I++)
-                      norm_grad_u += grad_u[I]*grad_u[I];
-                    norm_grad_u = std::sqrt(norm_grad_u) + 1.0E-10;
-                  }
-                else
-                  norm_grad_u = abs_grad_u;
-
-                // COMPUTE COEFFICIENTS //
-                if (SINGLE_POTENTIAL==1)
-                  {
-                    coeff1 = 0.; //-1./norm_grad_u;
-                    coeff2 = 1./std::pow(norm_grad_u,3);
-                  }
-                else
-                  {
-                    coeff1=fmax(1.0E-10, 2*std::pow(norm_grad_u,2)-3*norm_grad_u);
-                    coeff2=fmax(1.0E-10, 4.-3./norm_grad_u);
-                  }
-
-                // COMPUTE DELTA FUNCTION //
-                epsilon_redist = epsFact_redist*(useMetrics*h_phi
-                                                 +(1.0-useMetrics)*elementDiameter[eN]);
-                delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
+		  for (int I=0;I<nSpace;I++)
+		    u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
 
                 for(int i=0;i<nDOF_test_element;i++)
                   {
@@ -1788,16 +2010,7 @@ namespace proteus
                         elementJacobian_u_u[i][j] +=
                           ck.NumericalDiffusionJacobian(1.0,
                                                         &u_grad_trial[j_nSpace],
-                                                        &u_grad_test_dV[i_nSpace])
-                          + (ELLIPTIC_REDISTANCING == 1 ? 1. : 0.)*
-                          ( ck.NumericalDiffusionJacobian(coeff1,
-                                                          &u_grad_trial[j_nSpace],
-                                                          &u_grad_test_dV[i_nSpace])
-                            + coeff2*dV*
-                            ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[i_nSpace])*
-                            ck.NumericalDiffusion(1.0,grad_u,&u_grad_trial[j_nSpace]) )
-                          //+alpha*u_trial_ref[k*nDOF_trial_element+j]*delta*u_test_dV[i];//cons.
-                          + (i == j ? alpha*delta*u_test_dV[i] : 0.); //lumped
+                                                        &u_grad_test_dV[i_nSpace]);
                       }//j
                   }//i
               }//k
@@ -1815,8 +2028,8 @@ namespace proteus
                   }//j
               }//i
           }//elements
-      }//computeJacobian
-
+      }//calculateStiffnessMatrix
+      
       void normalReconstruction(//element
                                 double* mesh_trial_ref,//
                                 double* mesh_grad_trial_ref,

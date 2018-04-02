@@ -36,7 +36,8 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                const double * q_vos,
                                int * u_l2g,
                                double * elementDiameter,
-                               double * u_dof, double * u_dof_old,
+                               double * u_dof,
+                               double * u_dof_old,
                                double * velocity,
                                double * q_m,
                                double * q_u,
@@ -60,7 +61,12 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * ebqe_bc_flux_u_ext,
                                double * ebqe_phi, double epsFact,
                                double * ebqe_u,
-                               double * ebqe_flux)
+                               double * ebqe_flux,
+                               int EXPLICIT_METHOD,
+                               double degree_polynomial,
+                               int stage,
+                               double * uTilde_dof,
+                               double dt)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -107,7 +113,8 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * ebqe_bc_u_ext,
                                int * isFluxBoundary_u,
                                double * ebqe_bc_flux_u_ext,
-                               int * csrColumnOffsets_eb_u_u)
+                               int * csrColumnOffsets_eb_u_u,
+                               int EXPLICIT_METHOD)
     cppVOF3P_base * newVOF3P(int nSpaceIn,
                              int nQuadraturePoints_elementIn,
                              int nDOF_mesh_trial_elementIn,
@@ -172,7 +179,8 @@ cdef class VOF3P:
                           numpy.ndarray q_vos,
                           numpy.ndarray u_l2g,
                           numpy.ndarray elementDiameter,
-                          numpy.ndarray u_dof, numpy.ndarray u_dof_old,
+                          numpy.ndarray u_dof,
+                          numpy.ndarray u_dof_old,
                           numpy.ndarray velocity,
                           numpy.ndarray q_m,
                           numpy.ndarray q_u,
@@ -196,7 +204,12 @@ cdef class VOF3P:
                           numpy.ndarray ebqe_bc_flux_u_ext,
                           numpy.ndarray ebqe_phi, double epsFact,
                           numpy.ndarray ebqe_u,
-                          numpy.ndarray ebqe_flux):
+                          numpy.ndarray ebqe_flux,
+                          int EXPLICIT_METHOD,
+                          double degree_polynomial,
+                          int stage,
+                          numpy.ndarray uTilde_dof,
+                          double dt):
         self.thisptr.calculateResidual(< double*> mesh_trial_ref.data,
                                         < double * > mesh_grad_trial_ref.data,
                                         < double * > mesh_dof.data,
@@ -254,7 +267,12 @@ cdef class VOF3P:
                                         < double * > ebqe_phi.data,
                                         epsFact,
                                         < double * > ebqe_u.data,
-                                        < double * > ebqe_flux.data)
+                                        < double * > ebqe_flux.data,
+                                        EXPLICIT_METHOD,
+                                        degree_polynomial,
+                                        stage,
+                                        < double * > uTilde_dof.data,
+                                        dt)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -303,7 +321,8 @@ cdef class VOF3P:
                           numpy.ndarray ebqe_bc_u_ext,
                           numpy.ndarray isFluxBoundary_u,
                           numpy.ndarray ebqe_bc_flux_u_ext,
-                          numpy.ndarray csrColumnOffsets_eb_u_u):
+                          numpy.ndarray csrColumnOffsets_eb_u_u,
+                          int EXPLICIT_METHOD):
         """
         Optimized jacobian calculation
         """
@@ -355,4 +374,5 @@ cdef class VOF3P:
                                         < double * > ebqe_bc_u_ext.data,
                                         < int * > isFluxBoundary_u.data,
                                         < double * > ebqe_bc_flux_u_ext.data,
-                                        < int * > csrColumnOffsets_eb_u_u.data)
+                                        < int * > csrColumnOffsets_eb_u_u.data,
+                                        EXPLICIT_METHOD)
