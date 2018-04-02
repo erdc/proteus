@@ -154,6 +154,26 @@ def test_Schur_Sp_solve(load_nse_step_matrix,
     assert np.allclose(ksp_obj.norm, 394.7036050627)
     assert ksp_obj.reason == 2
 
+class TestSmoothingAlgorithms(proteus.test_utils.TestTools.BasicTest):
+
+    def setup_method(self,method):
+        self._scriptdir = os.path.dirname(__file__)
+        self.saddle_point_matrix = LAT.petsc_load_matrix(os.path.join(self._scriptdir,
+                                                                      'import_modules/saddle_point_matrix'))
+    def test_matrix_splitting_1(self):
+        vals_F  =    [3.2, 1.1, 5.4, 6.3, 1., -5.1, 1.2]
+        col_idx_F  = [0, 1, 2, 0, 2, 0, 1]
+        row_idx_F  = [0, 3, 5, 7]
+
+        num_v_unkwn = len(row_idx_F) - 1
+
+        petsc_matF = LAT.csr_2_petsc(size = (num_v_unkwn,num_v_unkwn),
+                                     csr = (row_idx_F,col_idx_F,vals_F))
+
+        A = LAT.split_PETSc_Mat(petsc_matF)
+        A[0].axpy(1.0,A[1])
+        assert np.allclose(A[0].getValuesCSR()[2], petsc_matF.getValuesCSR()[2])
+
 class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
 
     def setup_method(self,method):
