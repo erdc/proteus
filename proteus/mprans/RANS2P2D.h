@@ -1168,6 +1168,13 @@ namespace proteus
                 flux_umom += n[0]*f_umom[0];
                 flux_vmom += n[0]*f_vmom[0];
               }
+            else
+              {
+                if (NONCONSERVATIVE_FORM > 0.0)
+                  {
+                    flux_umom+=(0.0-u)*flowSpeedNormal;
+                  }
+	      }
           }
         else
           {
@@ -1179,10 +1186,17 @@ namespace proteus
                 flux_vmom += n[0]*f_vmom[0];
               }
             else
-              {
-                flux_umom+=n[0]*bc_f_umom[0];
-                flux_vmom+=n[0]*bc_f_vmom[0];
-              }
+	      {
+	      if (NONCONSERVATIVE_FORM > 0.0)
+		{
+		  flux_umom+=(bc_u-u)*flowSpeedNormal;
+		}
+	      else
+		{
+		  flux_umom+=n[0]*bc_f_umom[0];
+		  flux_vmom+=n[0]*bc_f_vmom[0];
+		}
+	      }
           }
         if (isDOFBoundary_v != 1)
           {
@@ -1193,6 +1207,13 @@ namespace proteus
                 flux_umom+=n[1]*f_umom[1];
                 flux_vmom+=n[1]*f_vmom[1];
               }
+          else
+              {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    flux_vmom+=(0.0-v)*flowSpeedNormal;
+		  }
+	      }
           }
         else
           {
@@ -1205,8 +1226,15 @@ namespace proteus
               }
             else
               {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    flux_vmom+=(bc_v-v)*flowSpeedNormal;
+		  }
+		else
+		  {
                 flux_umom+=n[1]*bc_f_umom[1];
                 flux_vmom+=n[1]*bc_f_vmom[1];
+		  }
               }
           }
         if (isDOFBoundary_p == 1)
@@ -1251,6 +1279,8 @@ namespace proteus
                                                        const double& oneByRho,
                                                        const double n[nSpace],
                                                        const double& bc_p,
+						       const double& bc_u,
+						       const double& bc_v,
                                                        const double bc_f_mass[nSpace],
                                                        const double bc_f_umom[nSpace],
                                                        const double bc_f_vmom[nSpace],
@@ -1260,6 +1290,9 @@ namespace proteus
                                                        const double& bc_flux_vmom,
                                                        const double& bc_flux_wmom,
                                                        const double& p,
+						       const double& u,
+						       const double& v,
+						       const double& dmom_u_acc_u,
                                                        const double f_mass[nSpace],
                                                        const double f_umom[nSpace],
                                                        const double f_vmom[nSpace],
@@ -1321,9 +1354,17 @@ namespace proteus
               {
                 dflux_umom_du += n[0]*df_umom_du[0];
                 dflux_umom_dv += n[0]*df_umom_dv[0];
-                
+
                 dflux_vmom_du += n[0]*df_vmom_du[0];
                 dflux_vmom_dv += n[0]*df_vmom_dv[0];
+              }
+           else
+              {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_umom_du+=(  dmom_u_acc_u*n[0]*(0.0 - u) - flowSpeedNormal ) ;
+		    dflux_umom_dv+= dmom_u_acc_u * (0.0 - u) * n[1];
+		  }
               }
           }
         else
@@ -1334,14 +1375,22 @@ namespace proteus
               {
                 dflux_umom_du += n[0]*df_umom_du[0];
                 dflux_umom_dv += n[0]*df_umom_dv[0];
-                
+
                 dflux_vmom_du += n[0]*df_vmom_du[0];
                 dflux_vmom_dv += n[0]*df_vmom_dv[0];
               }
             else
               {
-                if (isDOFBoundary_v != 1)
-                  dflux_vmom_dv += n[0]*df_vmom_dv[0];
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_umom_du+=(  dmom_u_acc_u*n[0]*(bc_u-u) - flowSpeedNormal ) ;
+		    dflux_umom_dv+= dmom_u_acc_u * (bc_u - u) * n[1];
+		  }
+		else
+		  {
+		    if (isDOFBoundary_v != 1)
+		      dflux_vmom_dv += n[0]*df_vmom_dv[0];
+		  }
               }
           }
         if (isDOFBoundary_v != 1)
@@ -1351,9 +1400,17 @@ namespace proteus
               {
                 dflux_umom_du += n[1]*df_umom_du[1];
                 dflux_umom_dv += n[1]*df_umom_dv[1];
-                
+
                 dflux_vmom_du += n[1]*df_vmom_du[1];
                 dflux_vmom_dv += n[1]*df_vmom_dv[1];
+              }
+           else
+              {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_vmom_du += dmom_u_acc_u * n[0] * (0.0 - v);
+		    dflux_vmom_dv += ( dmom_u_acc_u * n[1] * (0.0 - v) - flowSpeedNormal) ;
+		  }
               }
           }
         else
@@ -1370,8 +1427,17 @@ namespace proteus
               }
             else
               {
-                if (isDOFBoundary_u != 1)
-                  dflux_umom_du += n[1]*df_umom_du[1];
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+
+		    dflux_vmom_du += dmom_u_acc_u * n[0] * (bc_v - v);
+		    dflux_vmom_dv += ( dmom_u_acc_u * n[1] * (bc_v - v) - flowSpeedNormal) ;
+		  }
+		else
+		  {
+		  if (isDOFBoundary_u != 1)
+		    dflux_umom_du += n[1]*df_umom_du[1];
+		  }
               }
           }
         if (isDOFBoundary_p == 1)
@@ -2219,7 +2285,7 @@ namespace proteus
                       ck.Reaction_weak(mass_source,p_test_dV[i])   + //VRANS source term for wave maker
                       //
 		      PRESSURE_PROJECTION_STABILIZATION * ck.pressureProjection_weak(mom_uu_diff_ten[1], p, p_element_avg, p_test_ref[k*nDOF_test_element+i], dV) +
-		      (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_u,Lstar_u_p[i]) + 
+		      (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_u,Lstar_u_p[i]) +
                       (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_v,Lstar_v_p[i]);
 
                     elementResidual_u[i] += ck.Mass_weak(mom_u_acc_t,vel_test_dV[i]) +
@@ -3786,17 +3852,18 @@ namespace proteus
                     for(int j=0;j<nDOF_trial_element;j++)
                       {
                         register int j_nSpace = j*nSpace;
-                        elementJacobian_p_p[i][j] += (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) + 
+                        elementJacobian_p_p[i][j] += (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) +
                                                      (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]) +
 			  PRESSURE_PROJECTION_STABILIZATION*ck.pressureProjection_weak(mom_uu_diff_ten[1], p_trial_ref[k*nDOF_trial_element+j], 1./3., p_test_ref[k*nDOF_test_element +i],dV);
-                        
-                        elementJacobian_p_u[i][j] += ck.AdvectionJacobian_weak(dmass_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) + 
-                          (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]); 
-                        elementJacobian_p_v[i][j] += ck.AdvectionJacobian_weak(dmass_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) + 
-                          (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]); 
 
-                        elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) + 
-                          MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]); 
+                        elementJacobian_p_u[i][j] += ck.AdvectionJacobian_weak(dmass_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) +
+                          (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]);
+                        elementJacobian_p_v[i][j] += ck.AdvectionJacobian_weak(dmass_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) +
+                          (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]);
+
+                        elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) +
+                          MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]);
+
                         elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           ck.MassJacobian_weak(dmom_u_ham_u,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + //cek hack for nonlinear hamiltonian
                           ck.HamiltonianJacobian_weak(dmom_u_ham_grad_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]) +
@@ -4404,6 +4471,8 @@ namespace proteus
                                                           dmom_u_ham_grad_p_ext[0],//=1/rho
                                                           normal,
                                                           bc_p_ext,
+							  bc_u_ext,
+							  bc_v_ext,
                                                           bc_mass_adv_ext,
                                                           bc_mom_u_adv_ext,
                                                           bc_mom_v_adv_ext,
@@ -4413,6 +4482,9 @@ namespace proteus
                                                           ebqe_bc_flux_mom_v_adv_ext[ebNE_kb],
                                                           ebqe_bc_flux_mom_w_adv_ext[ebNE_kb],
                                                           p_ext,
+							  u_ext,
+							  v_ext,
+							  dmom_u_acc_u_ext,
                                                           mass_adv_ext,
                                                           mom_u_adv_ext,
                                                           mom_v_adv_ext,
@@ -4989,7 +5061,7 @@ namespace proteus
 
                   int j_nSpace = j*nSpace;
 
-                  local_matrix_p_p[i][j] += ck.HamiltonianJacobian_weak(dmass_adv_p,&p_grad_trial[j_nSpace],p_test_dV[i]);
+                  local_matrix_p_p[i][j] -= ck.HamiltonianJacobian_weak(dmass_adv_p,&p_grad_test_dV[i_nSpace],p_trial_ref[j]);
                   local_matrix_u_u[i][j] += ck.HamiltonianJacobian_weak(dmom_u_adv_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]);
                   local_matrix_v_v[i][j] += ck.HamiltonianJacobian_weak(dmom_v_adv_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]);
                 }
