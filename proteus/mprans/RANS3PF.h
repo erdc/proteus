@@ -6542,13 +6542,6 @@ namespace proteus
               }//ebNI
           }
       }
-                                     0);
-                                     0);
-                                     0);
-                                               int nElementBoundaries_owned,
-                                     0);
-                                     0);
-                                     0);
     };//RANS3PF
 
   inline cppRANS3PF_base* newRANS3PF(int nSpaceIn,
