@@ -669,6 +669,192 @@ class Newton(NonlinearSolver):
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
         logEvent(memory("Newton","Newton"),level=4)
 
+class AddedMassNewton(Newton):
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        if self.F.coefficients.nd == 3:
+            accelerations = range(6)
+        elif self.F.coefficients.nd == 2:
+            accelerations = [0,1,5]
+        else:
+            exit(1)
+        for i in accelerations:
+            self.F.added_mass_i=i
+            Newton.solve(self,u,r,b,par_u,par_r)
+
+class TwoStageNewton(Newton):
+    """Solves a 2 Stage problem via Newton's solve"""
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        r""" Solves a 2 Stage problem via Newton's solve"""
+        import Viewers
+        memory()
+        r=self.solveInitialize(u,r,b)
+        if par_u is not None:
+            #allow linear solver to know what type of assembly to use
+            self.linearSolver.par_fullOverlap = self.par_fullOverlap
+            #no overlap
+            if not self.par_fullOverlap:
+                par_r.scatter_reverse_add()
+            else:
+                #no overlap or overlap (until we compute norms over only owned dof)
+                par_r.scatter_forward_insert()
+
+        self.norm_r0 = self.norm(r)
+        self.norm_r_hist = []
+        self.norm_du_hist = []
+        self.gammaK_max=0.0
+        self.linearSolverFailed = False
+        ###############
+        # FIRST STAGE #
+        ###############
+        logEvent(" FIRST STAGE",level=1)        
+        hasStage = hasattr(self.F,'stage') and hasattr(self.F,'useTwoStageNewton') and self.F.useTwoStageNewton==True 
+        if hasStage==False:            
+            logEvent(" WARNING: TwoStageNewton will consider a single stage",level=1)
+        else:
+            self.F.stage = 1
+        while (not self.converged(r) and
+               not self.failed()):
+            logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
+                     %(self.its-1, self.norm_r), level=1)
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+                     % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+            if self.updateJacobian or self.fullNewton:
+                self.updateJacobian = False
+                self.F.getJacobian(self.J)
+                self.linearSolver.prepare(b=r)
+            self.du[:]=0.0
+            if not self.directSolver:
+                if self.EWtol:
+                    self.setLinearSolverTolerance(r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed()
+            u-=self.du
+            if par_u is not None:
+                par_u.scatter_forward_insert()
+            self.computeResidual(u,r,b)
+            if par_r is not None:
+                #no overlap
+                if not self.par_fullOverlap:
+                    par_r.scatter_reverse_add()
+                else:
+                    par_r.scatter_forward_insert()
+            if self.lineSearch:
+                norm_r_cur = self.norm(r)
+                ls_its = 0
+                if norm_r_cur > self.rtol_r*self.norm_r0 + self.atol_r:#make sure hasn't converged already
+                    while ( (norm_r_cur >= 0.9999 * self.norm_r) and
+                            (ls_its < self.maxLSits)):
+                        self.convergingIts = 0
+                        ls_its +=1
+                        self.du *= 0.5
+                        u += self.du
+                        if par_u is not None:
+                            par_u.scatter_forward_insert()
+                        self.computeResidual(u,r,b)
+                        #no overlap
+                        if par_r is not None:
+                            #no overlap
+                            if not self.par_fullOverlap:
+                                par_r.scatter_reverse_add()
+                            else:
+                                par_r.scatter_forward_insert()
+                        norm_r_cur = self.norm(r)
+                        logEvent("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
+                                                                               norm_r_cur,
+                                                                               self.atol_r,
+                                                                               self.rtol_r))
+                    if ls_its > 0:
+                        logEvent("Linesearches = %i" % ls_its,level=3)
+        else: # Newton solver has converged            
+            logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
+                %(self.its-1, self.norm_r), level=1)
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            logEvent(memory("Newton","Newton"),level=4)
+        # END OF FIRST STAGE #
+        ################
+        # SECOND STAGE #
+        ################
+        if hasStage==False:
+            return self.failedFlag
+        else:
+            logEvent(" SECOND STAGE",level=1)
+            self.F.stage = 2
+            r=self.solveInitialize(u,r,b)
+            self.norm_r0 = self.norm(r)
+            self.norm_r_hist = []
+            self.norm_du_hist = []
+            self.gammaK_max=0.0
+            self.linearSolverFailed = False        
+            while (not self.converged(r) and
+                   not self.failed()):
+                logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
+                         %(self.its-1, self.norm_r), level=1)
+                logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+                         % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+                if self.updateJacobian or self.fullNewton:
+                    self.updateJacobian = False
+                    self.F.getJacobian(self.J)
+                    self.linearSolver.prepare(b=r)
+                self.du[:]=0.0
+                if not self.directSolver:
+                    if self.EWtol:
+                        self.setLinearSolverTolerance(r)
+                if not self.linearSolverFailed:
+                    self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                    self.linearSolverFailed = self.linearSolver.failed()
+                u-=self.du
+                if par_u is not None:
+                    par_u.scatter_forward_insert()
+                self.computeResidual(u,r,b)
+                if par_r is not None:
+                    #no overlap
+                    if not self.par_fullOverlap:
+                        par_r.scatter_reverse_add()
+                    else:
+                        par_r.scatter_forward_insert()
+                if self.lineSearch:
+                    norm_r_cur = self.norm(r)
+                    ls_its = 0
+                    if norm_r_cur > self.rtol_r*self.norm_r0 + self.atol_r:#make sure hasn't converged already
+                        while ( (norm_r_cur >= 0.9999 * self.norm_r) and
+                                (ls_its < self.maxLSits)):
+                            self.convergingIts = 0
+                            ls_its +=1
+                            self.du *= 0.5
+                            u += self.du
+                            if par_u is not None:
+                                par_u.scatter_forward_insert()
+                            self.computeResidual(u,r,b)
+                            #no overlap
+                            if par_r is not None:
+                                #no overlap
+                                if not self.par_fullOverlap:
+                                    par_r.scatter_reverse_add()
+                                else:
+                                    par_r.scatter_forward_insert()
+                            norm_r_cur = self.norm(r)
+                            logEvent("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
+                                                                                   norm_r_cur,
+                                                                                   self.atol_r,
+                                                                                   self.rtol_r))
+                        if ls_its > 0:
+                            logEvent("Linesearches = %i" % ls_its,level=3)
+            else: # Newton solver has converged            
+                logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
+                         %(self.its-1, self.norm_r), level=1)
+                logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+                         % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                logEvent(memory("Newton","Newton"),level=4)
+                return self.failedFlag
+        # END OF SECOND STAGE #
+        logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
+            %(self.its-1, self.norm_r), level=1)
+        logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+        logEvent(memory("Newton","Newton"),level=4)
+        
 class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
     """
     This is a fake solver meant to be used with optimized code
@@ -1038,6 +1224,23 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
 
         # Nonlinear solved finished. 
         # L2 projection of corrected VOF solution at quad points 
+
+class CLSVOFNewton(Newton):
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        logEvent("+++++ First stage of nonlinear solver +++++",level=2)
+        Newton.solve(self,u,r,b,par_u,par_r)
+        # Try to save number of newton iterations
+        if hasattr(self.F,'newton_iterations_stage1'):
+            self.F.newton_iterations_stage1 = self.its
+        if self.F.coefficients.timeOrder==2:
+            logEvent("+++++ Second stage of nonlinear solver +++++",level=2)
+            self.F.timeStage=2
+            self.F.getNormalReconstruction()
+            Newton.solve(self,u,r,b,par_u,par_r)
+            self.F.timeStage=1
+            # Try to save number of newton iterations
+            if hasattr(self.F,'newton_iterations_stage2'):
+                self.F.newton_iterations_stage2 = self.its
 
 import deim_utils
 class POD_Newton(Newton):
@@ -3113,7 +3316,9 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                      maxLSits=100,
                                      parallelUsesFullOverlap = True,
                                      nonlinearSolverNorm = l2Norm):
-    if (levelNonlinearSolverType == ExplicitLumpedMassMatrixShallowWaterEquationsSolver):
+    if (levelNonlinearSolverType == TwoStageNewton):
+        levelNonlinearSolverType = TwoStageNewton
+    elif (levelNonlinearSolverType == ExplicitLumpedMassMatrixShallowWaterEquationsSolver):
         levelNonlinearSolverType = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
     elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixShallowWaterEquationsSolver):
         levelNonlinearSolverType = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
@@ -3125,6 +3330,8 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
         levelNonlinearSolverType = ExplicitConsistentMassMatrixForVOF
     elif (levelNonlinearSolverType == NewtonWithL2ProjectionForMassCorrection):
         levelNonlinearSolverType = NewtonWithL2ProjectionForMassCorrection
+    elif (levelNonlinearSolverType == CLSVOFNewton):
+        levelNonlinearSolverType = CLSVOFNewton
     elif (multilevelNonlinearSolverType == Newton or
         multilevelNonlinearSolverType == NLJacobi or
         multilevelNonlinearSolverType == NLGaussSeidel or
@@ -3416,6 +3623,28 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                         EWtol=EWtol,
                                                         maxLSits=maxLSits ))
 
+    elif levelNonlinearSolverType == AddedMassNewton:
+        for l in range(nLevels):
+            if par_duList is not None and len(par_duList) > 0:
+                par_du=par_duList[l]
+            else:
+                par_du=None
+            levelNonlinearSolverList.append(AddedMassNewton(linearSolver=linearSolverList[l],
+                                                            F=nonlinearOperatorList[l],
+                                                            J=jacobianList[l],
+                                                            du=duList[l],
+                                                            par_du=par_du,
+                                                            rtol_r=relativeToleranceList[l],
+                                                            atol_r=absoluteTolerance,
+                                                            maxIts=maxSolverIts,
+                                                            norm = nonlinearSolverNorm,
+                                                            convergenceTest = levelSolverConvergenceTest,
+                                                            computeRates = computeLevelSolverRates,
+                                                            printInfo=printLevelSolverInfo,
+                                                            fullNewton=levelSolverFullNewtonFlag,
+                                                            directSolver=linearDirectSolverFlag,
+                                                            EWtol=EWtol,
+                                                            maxLSits=maxLSits ))     
     else:
         try:
             for l in range(nLevels):
@@ -3453,6 +3682,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                          computeRates = computeSolverRates,
                                          printInfo=printSolverInfo)
     elif (multilevelNonlinearSolverType == Newton or
+          multilevelNonlinearSolverType == AddedMassNewton or
           multilevelNonlinearSolverType == POD_Newton or
           multilevelNonlinearSolverType == POD_DEIM_Newton or
           multilevelNonlinearSolverType == NewtonNS or
