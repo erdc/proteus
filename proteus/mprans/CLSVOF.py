@@ -637,14 +637,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_D_err = 0.0
         # At ETS #
         if self.coefficients.computeMetrics > 0 and self.comm.isMaster():
-            # At EOS #
-            self.metricsAtEOS = open(self.name+"_metricsAtEOS.csv","w")
-            self.metricsAtEOS.write('global_I_err'+","+
-                                    'global_sI_err'+","+
-                                    'global_V_err'+","+
-                                    'global_sV_err'+","+
-                                    'global_D_err'+"\n")
-            if self.coefficients.computeMetrics==2:
+            if self.hasExactSolution: # at EOS
+                self.metricsAtEOS = open(self.name+"_metricsAtEOS.csv","w")
+                self.metricsAtEOS.write('global_I_err'+","+
+                                        'global_sI_err'+","+
+                                        'global_V_err'+","+
+                                        'global_sV_err'+","+
+                                        'global_D_err'+"\n")
+            if self.coefficients.computeMetrics==2: # at ETS
                 self.metricsAtETS = open(self.name+"_metricsAtETS.csv","w")
                 self.metricsAtETS.write('time_step'+","+
                                         'newton_iterations_stage1'+","+
@@ -680,7 +680,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_v[...,2] = self.velocityFieldAsFunction[2](ebqe_X,time)
 
     def runAtEOS(self):
-        if self.coefficients.computeMetrics > 0 and self.hasExactSolution==True:
+        if self.coefficients.computeMetrics > 0 and self.hasExactSolution:
             # Get exact solution at quad points
             u_exact = numpy.zeros(self.q[('u',0)].shape,'d')
             X = {0:self.q[('x')][:,:,0],
