@@ -635,6 +635,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_sV_err = 0.0
         # for distance property
         self.global_D_err = 0.0
+        self.global_L2_err = 0.0
         # At ETS #
         if self.coefficients.computeMetrics > 0 and self.comm.isMaster():
             if self.hasExactSolution: # at EOS
@@ -643,7 +644,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                         'global_sI_err'+","+
                                         'global_V_err'+","+
                                         'global_sV_err'+","+
-                                        'global_D_err'+"\n")
+                                        'global_D_err'+","+
+                                        'global_L2_err'+"\n")
             if self.coefficients.computeMetrics==2: # at ETS
                 self.metricsAtETS = open(self.name+"_metricsAtETS.csv","w")
                 self.metricsAtETS.write('time_step'+","+
@@ -694,7 +696,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                         repr(self.global_sI_err)+","+
                                         repr(self.global_V_err)+","+
                                         repr(self.global_sV_err)+","+
-                                        repr(self.global_D_err)+"\n")
+                                        repr(self.global_D_err)+","+
+                                        repr(self.global_L2_err)+"\n")
                 self.metricsAtEOS.flush()
 
     ####################################3
@@ -774,7 +777,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
          global_V0,
          global_sV,
          global_sV0,
-         global_D_err) = self.clsvof.calculateMetricsAtEOS(#element
+         global_D_err,
+         global_L2_err) = self.clsvof.calculateMetricsAtEOS(#element
              self.u[0].femSpace.elementMaps.psi,
              self.u[0].femSpace.elementMaps.grad_psi,
              self.mesh.nodeArray,
@@ -810,6 +814,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_sV_err = np.abs(self.global_sV-self.global_sV0)/self.global_sV0
         # distance property metric
         self.global_D_err = globalSum(global_D_err)
+        # L2 error on level set
+        self.global_L2_err = globalSum(global_L2_err)
 
     ###############################################
 

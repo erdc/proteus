@@ -53,7 +53,7 @@ namespace proteus
                                    double* nodeDiametersArray,
                                    int degree_polynomial,
                                    double* u_dof,
-                                   double* u_dof_old,				   
+                                   double* u_dof_old,
                                    double* velocity,
                                    double* velocity_old,
                                    double* q_m,
@@ -202,7 +202,8 @@ namespace proteus
                                        double* global_V0,
                                        double* global_sV,
                                        double* global_sV0,
-                                       double* global_D_err)=0;
+                                       double* global_D_err,
+				       double* gloval_L2_err)=0;
     virtual void calculateMetricsAtETS( //ETS=Every Time Step
                                        double dt,
                                        double* mesh_trial_ref,
@@ -430,7 +431,7 @@ namespace proteus
                              double* nodeDiametersArray,
                              int degree_polynomial,
                              double* u_dof,
-                             double* u_dof_old,			     
+                             double* u_dof_old,
                              double* velocity,
                              double* velocity_old,
                              double* q_m,
@@ -1059,7 +1060,8 @@ namespace proteus
                                  double* global_V0,
                                  double* global_sV,
                                  double* global_sV0,
-                                 double* global_D_err)
+                                 double* global_D_err,
+				 double* global_L2_err)
       {
         *global_I_err = 0.0;
         *global_sI_err = 0.0;
@@ -1068,6 +1070,7 @@ namespace proteus
         *global_sV = 0.0;
         *global_sV0 = 0.0;
         *global_D_err = 0.0;
+	*global_L2_err = 0.0;
         //////////////////////
         // ** LOOP IN CELLS //
         //////////////////////
@@ -1078,7 +1081,7 @@ namespace proteus
                 //declare local storage for local contributions and initialize
                 double cell_I_err = 0., cell_sI_err = 0.,
                   cell_V = 0., cell_V0 = 0., cell_sV = 0., cell_sV0 = 0.,
-                  cell_D_err = 0.;
+                  cell_D_err = 0., cell_L2_err = 0.;
 
                 //loop over quadrature points and compute integrands
                 for  (int k=0;k<nQuadraturePoints_element;k++)
@@ -1133,6 +1136,8 @@ namespace proteus
                     cell_I_err += fabs(Hu - Huh)*dV;
                     cell_sI_err += fabs(sHu - sHuh)*dV;
 
+		    cell_L2_err += std::pow(u-uh,2)*dV;
+
                     cell_V   += Huh*dV;
                     cell_V0  += Hu0*dV;
                     cell_sV  += sHuh*dV;
@@ -1151,6 +1156,7 @@ namespace proteus
                 *global_I_err    += cell_I_err;
                 *global_sI_err += cell_sI_err;
                 *global_D_err    += cell_D_err;
+		*global_L2_err += cell_L2_err;
               }//elements
           }
         *global_D_err *= 0.5;

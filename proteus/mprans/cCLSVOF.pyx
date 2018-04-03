@@ -168,7 +168,8 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                    double* global_V0,
                                    double* global_sV,
                                    double* global_sV0,
-                                   double* global_D_err)
+                                   double* global_D_err,
+				   double* global_L2_err)
         void calculateMetricsAtETS(double dt,
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -562,6 +563,7 @@ cdef class cCLSVOF_base:
         cdef double global_sV
         cdef double global_sV0
         cdef double global_D_err
+        cdef double global_L2_err
         self.thisptr.calculateMetricsAtEOS(<double*>mesh_trial_ref.data,
                                            <double*>mesh_grad_trial_ref.data,
                                            <double*>mesh_dof.data,
@@ -589,14 +591,16 @@ cdef class cCLSVOF_base:
                                            &global_V0,
                                            &global_sV,
                                            &global_sV0,
-                                           &global_D_err)
+                                           &global_D_err,
+                                           &global_L2_err)
         return(global_I_err,
                global_sI_err,
                global_V,
                global_V0,
                global_sV,
                global_sV0,
-               global_D_err)
+               global_D_err,
+               global_L2_err)
    def calculateMetricsAtETS(self,
                              double dt,
                              numpy.ndarray mesh_trial_ref,
