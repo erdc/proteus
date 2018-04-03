@@ -28,6 +28,7 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                double* normal_ref,
                                double* boundaryJac_ref,
                                int nElements_global,
+                               int nElements_owned,
                                double useMetrics,
                                double alphaBDF,
                                double* q_porosity,
@@ -65,7 +66,9 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                double epsFactHeaviside,
                                double epsFactDirac,
                                double lambdaFact,
-                               double* norm_factor,
+                               double* min_distance,
+                               double* max_distance,
+                               double* mean_distance,
                                double norm_factor_lagged,
                                double* lumped_qx,
                                double* lumped_qy,
@@ -142,6 +145,7 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                    double* u_grad_trial_ref,
                                    double* u_test_ref,
                                    int nElements_global,
+                                   int nElements_owned,
                                    int useMetrics,
                                    int* u_l2g,
                                    double* elementDiameter,
@@ -153,9 +157,11 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                    double* u_exact,
                                    int offset_u, int stride_u,
                                    double* global_I_err,
-                                   double* global_Ieps_err,
-                                   double* global_V_err,
-                                   double* global_Veps_err,
+                                   double* global_sI_err,
+                                   double* global_V,
+                                   double* global_V0,
+                                   double* global_sV,
+                                   double* global_sV0,
                                    double* global_D_err)
         void calculateMetricsAtETS(double dt,
                                    double* mesh_trial_ref,
@@ -167,6 +173,7 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                    double* u_grad_trial_ref,
                                    double* u_test_ref,
                                    int nElements_global,
+                                   int nElements_owned,
                                    int useMetrics,
                                    int* u_l2g,
                                    double* elementDiameter,
@@ -179,10 +186,12 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                    double* velocity,
                                    int offset_u, int stride_u,
                                    int numDOFs,
-                                   double* global_I_err,
-                                   double* global_Ieps_err,
-                                   double* global_V_err,
-                                   double* global_Veps_err,
+                                   double* R_vector,
+                                   double* sR_vector,
+                                   double* global_V,
+                                   double* global_V0,
+                                   double* global_sV,
+                                   double* global_sV0,
                                    double* global_D_err)
         void normalReconstruction(double* mesh_trial_ref,
                                   double* mesh_grad_trial_ref,
@@ -251,6 +260,7 @@ cdef class cCLSVOF_base:
                          numpy.ndarray normal_ref,
                          numpy.ndarray boundaryJac_ref,
                          int nElements_global,
+                         int nElements_owned,
                          double useMetrics,
                          double alphaBDF,
                          numpy.ndarray q_porosity,
@@ -288,7 +298,9 @@ cdef class cCLSVOF_base:
                          double epsFactHeaviside,
                          double epsFactDirac,
                          double lambdaFact,
-                         numpy.ndarray norm_factor,
+                         numpy.ndarray min_distance,
+                         numpy.ndarray max_distance,
+                         numpy.ndarray mean_distance,
                          double norm_factor_lagged,
                          numpy.ndarray lumped_qx,
                          numpy.ndarray lumped_qy,
@@ -319,6 +331,7 @@ cdef class cCLSVOF_base:
                                       <double*> normal_ref.data,
                                       <double*> boundaryJac_ref.data,
                                       nElements_global,
+                                      nElements_owned,
                                       useMetrics,
                                       alphaBDF,
                                       <double*> q_porosity.data,
@@ -356,7 +369,9 @@ cdef class cCLSVOF_base:
                                       epsFactHeaviside,
                                       epsFactDirac,
                                       lambdaFact,
-                                      <double*> norm_factor.data,
+                                      <double*> min_distance.data,
+                                      <double*> max_distance.data,
+                                      <double*> mean_distance.data,
                                       norm_factor_lagged,
                                       <double*> lumped_qx.data,
                                       <double*> lumped_qy.data,
@@ -498,6 +513,7 @@ cdef class cCLSVOF_base:
                              numpy.ndarray u_grad_trial_ref,
                              numpy.ndarray u_test_ref,
                              int nElements_global,
+                             int nElements_owned,
                              int useMetrics,
                              numpy.ndarray u_l2g,
                              numpy.ndarray elementDiameter,
@@ -509,9 +525,11 @@ cdef class cCLSVOF_base:
                              numpy.ndarray u_exact,
                              int offset_u, int stride_u):
         cdef double global_I_err
-        cdef double global_Ieps_err
-        cdef double global_V_err
-        cdef double global_Veps_err
+        cdef double global_sI_err
+        cdef double global_V
+        cdef double global_V0
+        cdef double global_sV
+        cdef double global_sV0
         cdef double global_D_err
         self.thisptr.calculateMetricsAtEOS(<double*>mesh_trial_ref.data,
                                            <double*>mesh_grad_trial_ref.data,
@@ -522,6 +540,7 @@ cdef class cCLSVOF_base:
                                            <double*>u_grad_trial_ref.data,
                                            <double*>u_test_ref.data,
                                            nElements_global,
+                                           nElements_owned,
                                            useMetrics,
                                            <int*>u_l2g.data,
                                            <double*>elementDiameter.data,
@@ -534,14 +553,18 @@ cdef class cCLSVOF_base:
                                            offset_u,
                                            stride_u,
                                            &global_I_err,
-                                           &global_Ieps_err,
-                                           &global_V_err,
-                                           &global_Veps_err,
+                                           &global_sI_err,
+                                           &global_V,
+                                           &global_V0,
+                                           &global_sV,
+                                           &global_sV0,
                                            &global_D_err)
         return(global_I_err,
-               global_Ieps_err,
-               global_V_err,
-               global_Veps_err,
+               global_sI_err,
+               global_V,
+               global_V0,
+               global_sV,
+               global_sV0,
                global_D_err)
    def calculateMetricsAtETS(self,
                              double dt,
@@ -554,6 +577,7 @@ cdef class cCLSVOF_base:
                              numpy.ndarray u_grad_trial_ref,
                              numpy.ndarray u_test_ref,
                              int nElements_global,
+                             int nElements_owned,
                              int useMetrics,
                              numpy.ndarray u_l2g,
                              numpy.ndarray elementDiameter,
@@ -565,11 +589,13 @@ cdef class cCLSVOF_base:
                              numpy.ndarray u0_dof,
                              numpy.ndarray velocity,
                              int offset_u, int stride_u,
-                             int numDOFs):
-        cdef double global_I_err
-        cdef double global_Ieps_err
-        cdef double global_V_err
-        cdef double global_Veps_err
+                             int numDOFs,
+                             numpy.ndarray R_vector,
+                             numpy.ndarray sR_vector):
+        cdef double global_V
+        cdef double global_V0
+        cdef double global_sV
+        cdef double global_sV0
         cdef double global_D_err
         self.thisptr.calculateMetricsAtETS(dt,
                                            <double*>mesh_trial_ref.data,
@@ -581,6 +607,7 @@ cdef class cCLSVOF_base:
                                            <double*>u_grad_trial_ref.data,
                                            <double*>u_test_ref.data,
                                            nElements_global,
+                                           nElements_owned,
                                            useMetrics,
                                            <int*>u_l2g.data,
                                            <double*>elementDiameter.data,
@@ -594,15 +621,17 @@ cdef class cCLSVOF_base:
                                            offset_u,
                                            stride_u,
                                            numDOFs,
-                                           &global_I_err,
-                                           &global_Ieps_err,
-                                           &global_V_err,
-                                           &global_Veps_err,
+                                           <double*>R_vector.data,
+                                           <double*>sR_vector.data,
+                                           &global_V,
+                                           &global_V0,
+                                           &global_sV,
+                                           &global_sV0,
                                            &global_D_err)
-        return(global_I_err,
-               global_Ieps_err,
-               global_V_err,
-               global_Veps_err,
+        return(global_V,
+               global_V0,
+               global_sV,
+               global_sV0,
                global_D_err)
    def normalReconstruction(self,
                             numpy.ndarray mesh_trial_ref,
