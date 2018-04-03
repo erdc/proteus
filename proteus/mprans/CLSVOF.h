@@ -486,7 +486,7 @@ namespace proteus
         min_distance[0] = 1E10;
         max_distance[0] = -1E10;
         mean_distance[0] = 0.;
-	
+
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for local contributions and initialize
@@ -691,6 +691,7 @@ namespace proteus
 	// COMPUTE LUMPED L2 PROJECTION
         for (int i=0; i<numDOFs; i++)
 	  H_dof[i] /= lumped_mass_matrix[i];
+	
         //////////////
         // BOUNDARY //
         //////////////
@@ -1135,9 +1136,7 @@ namespace proteus
                     // compute cell metrics //
                     cell_I_err += fabs(Hu - Huh)*dV;
                     cell_sI_err += fabs(sHu - sHuh)*dV;
-
 		    cell_L2_err += std::pow(u-uh,2)*dV;
-
                     cell_V   += Huh*dV;
                     cell_V0  += Hu0*dV;
                     cell_sV  += sHuh*dV;

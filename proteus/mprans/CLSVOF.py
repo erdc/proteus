@@ -1070,6 +1070,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.max_distance = globalMax(max_distance[0])
         self.mean_distance = globalSum(mean_distance[0])
 
+        # Quantities to compute normalization factor
+        from proteus.flcbdfWrappers import globalSum, globalMax
+        self.min_distance = -globalMax(-min_distance[0])
+        self.max_distance = globalMax(max_distance[0])
+        self.mean_distance = globalSum(mean_distance[0])
+
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
