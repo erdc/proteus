@@ -826,9 +826,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def updateParVectors(self):
         # create vectors
         if self.par_lumped_qx_tn is None:
-            n=self.mesh.subdomainMesh.nNodes_owned
-            N=self.mesh.nNodes_global
-            nghosts=self.mesh.subdomainMesh.nNodes_global - self.mesh.subdomainMesh.nNodes_owned
+            #n=self.mesh.subdomainMesh.nNodes_owned
+            #N=self.mesh.nNodes_global
+            #nghosts=self.mesh.subdomainMesh.nNodes_global - self.mesh.subdomainMesh.nNodes_owned
+            n=self.u[0].par_dof.dim_proc
+            N=self.u[0].femSpace.dofMap.nDOF_all_processes
+            nghosts = self.u[0].par_dof.nghosts
             subdomain2global=self.u[0].femSpace.dofMap.subdomain2global
             self.par_lumped_qx_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.lumped_qx_tn,
                                                                                bs=1,

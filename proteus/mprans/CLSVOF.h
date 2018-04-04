@@ -203,7 +203,7 @@ namespace proteus
                                        double* global_sV,
                                        double* global_sV0,
                                        double* global_D_err,
-				       double* gloval_L2_err)=0;
+				       double* global_L2_err)=0;
     virtual void calculateMetricsAtETS( //ETS=Every Time Step
                                        double dt,
                                        double* mesh_trial_ref,
