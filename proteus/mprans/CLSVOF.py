@@ -697,7 +697,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                         repr(self.global_V_err)+","+
                                         repr(self.global_sV_err)+","+
                                         repr(self.global_D_err)+","+
-                                        repr(self.global_L2_err)+"\n")
+                                        repr(np.sqrt(self.global_L2_err))+"\n")
                 self.metricsAtEOS.flush()
 
     ####################################3
