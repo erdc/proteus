@@ -1505,8 +1505,9 @@ class NS_base:  # (HasTraits):
               self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
         # compute auxiliary quantities at last time step
-        if hasattr(self.modelList[-1].levelModelList[-1],'runAtEOS'):
-            self.modelList[-1].levelModelList[-1].runAtEOS()
+        for index,model in enumerate(self.modelList):
+            if hasattr(model.levelModelList[-1],'runAtEOS'):
+                model.levelModelList[-1].runAtEOS()
 
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
