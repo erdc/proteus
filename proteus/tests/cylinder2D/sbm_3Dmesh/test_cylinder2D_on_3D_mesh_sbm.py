@@ -43,7 +43,7 @@ class Test_sbm_cylinder2D_on_mesh3D():
     def example_setting(self, pre_setting):
         Context.contextOptionsString = pre_setting
 
-        my_so = defaults.load_system("cylinder_so")
+        my_so = defaults.load_system("cylinder_so",modulepath)
 
         opts.profile = False
         opts.gatherArchive = True
@@ -52,8 +52,8 @@ class Test_sbm_cylinder2D_on_mesh3D():
         nList=[]
         sList=[]
         for (pModule,nModule) in my_so.pnList:
-            pList.append(defaults.load_physics(pModule))
-            nList.append(defaults.load_numerics(nModule))
+            pList.append(defaults.load_physics(pModule,modulepath))
+            nList.append(defaults.load_numerics(nModule,modulepath))
             if pList[-1].name == None:
                 pList[-1].name = pModule
 
