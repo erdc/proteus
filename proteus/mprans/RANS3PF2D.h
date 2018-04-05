@@ -1,4 +1,3 @@
-
 #ifndef RANS3PF2D_H
 #define RANS3PF2D_H
 #include <cmath>
@@ -47,10 +46,10 @@ namespace proteus
                                double mContact,
                                double nContact,
                                double angFriction,double vos_limiter,double mu_fr_limiter ){}
-    virtual void calculateResidual(double* mesh_trial_ref,
-                                   double* mesh_grad_trial_ref,
-                                   double* mesh_dof,
-                                   double* mesh_velocity_dof,
+    virtual void calculateResidual(double *mesh_trial_ref,
+                                   double *mesh_grad_trial_ref,
+                                   double *mesh_dof,
+                                   double *mesh_velocity_dof,
                                    double MOVING_DOMAIN,//0 or 1
                                    double PSTAB,
                                    int *mesh_l2g,
@@ -796,11 +795,11 @@ namespace proteus
         //u momentum accumulation
         mom_u_acc=phi_s_effect * u;//trick for non-conservative form
         dmom_u_acc_u=phi_s_effect * rho*porosity;
-      
+
         //v momentum accumulation
         mom_v_acc=phi_s_effect * v;
         dmom_v_acc_v=phi_s_effect * rho*porosity;
-      
+
         /* //w momentum accumulation */
         /* mom_w_acc=w; */
         /* dmom_w_acc_w=rho*porosity; */
@@ -2347,8 +2346,8 @@ namespace proteus
                 mesh_volume_conservation_element += (alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity)*dV;
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
                 //VRANS
-                porosity      = 1.0 - q_vos[eN_k]; 
-                //meanGrainSize = q_meanGrain[eN_k]; 
+                porosity      = 1.0 - q_vos[eN_k];
+                //meanGrainSize = q_meanGrain[eN_k];
                 //
                 q_x[eN_k_3d+0]=x;
                 q_x[eN_k_3d+1]=y;
@@ -2674,13 +2673,13 @@ namespace proteus
        		//calculate subgrid error (strong residual and adjoint)
        		//
        		//calculate strong residual
-       		pdeResidual_p =
-       		  ck.Mass_strong(-q_dvos_dt[eN_k]) + // mql. CHECK.
-       		  ck.Advection_strong(dmass_adv_u,grad_u) +
-       		  ck.Advection_strong(dmass_adv_v,grad_v) +
-       		  /* ck.Advection_strong(dmass_adv_w,grad_w) + */
-       		  DM2*MOVING_DOMAIN*ck.Reaction_strong(alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity) +
-       		  //VRANS
+		pdeResidual_p =
+		  ck.Mass_strong(-q_dvos_dt[eN_k]) + // mql. CHECK.
+		  ck.Advection_strong(dmass_adv_u,grad_u) +
+		  ck.Advection_strong(dmass_adv_v,grad_v) +
+      		  /* ck.Advection_strong(dmass_adv_w,grad_w) + */
+		  DM2*MOVING_DOMAIN*ck.Reaction_strong(alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity) +
+		  //VRANS
        		  ck.Reaction_strong(mass_source);
        		//
        		
@@ -2758,7 +2757,7 @@ namespace proteus
        		for (int i=0;i<nDOF_test_element;i++)
        		  {
        		    register int i_nSpace = i*nSpace;
-        		    /* Lstar_u_p[i]=ck.Advection_adjoint(dmass_adv_u,&p_grad_test_dV[i_nSpace]); */
+		    /* Lstar_u_p[i]=ck.Advection_adjoint(dmass_adv_u,&p_grad_test_dV[i_nSpace]); */
        		    /* Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]); */
        		    /* Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]); */
        		    //use the same advection adjoint for all three since we're approximating the linearized adjoint
@@ -4552,7 +4551,7 @@ namespace proteus
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
                 //
                 //VRANS
-                porosity = 1.0 - q_vos[eN_k]; 
+                porosity = 1.0 - q_vos[eN_k];
                 //
                 //
                 //calculate pde coefficients and derivatives at quadrature points
@@ -4824,7 +4823,7 @@ namespace proteus
 		
                 mom_u_acc_t *= dmom_u_acc_u; //multiply by porosity*rho. mql. CHECK.
                 mom_v_acc_t *= dmom_v_acc_v; 
-		
+
                 //
                 dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
                 dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
@@ -5893,7 +5892,7 @@ namespace proteus
                 bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext; //times rho*porosity
                 bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
                 /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
-             
+
                 bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext;
                 bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
                 /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
@@ -5901,9 +5900,9 @@ namespace proteus
                 /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */ 
                 /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
                 /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
-                // 
-                //calculate the numerical fluxes 
-                // 
+                //
+                //calculate the numerical fluxes
+                //
                 exteriorNumericalAdvectiveFluxDerivatives(isDOFBoundary_p[ebNE_kb],
                                                           isDOFBoundary_u[ebNE_kb],
                                                           isDOFBoundary_v[ebNE_kb],
