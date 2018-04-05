@@ -43,6 +43,8 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                double* velocity_old,
                                double* q_m,
                                double* q_u,
+			       double* q_n,
+			       double* q_H,
                                double* q_m_betaBDF,
                                double* q_dV,
                                double* q_dV_last,
@@ -60,6 +62,8 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                int* isFluxBoundary_u,
                                double* ebqe_bc_flux_u_ext,
                                double* ebqe_u,
+			       double* ebqe_n,
+			       double* ebqe_H,
                                double* ebqe_flux,
                                int timeOrder,
                                int timeStage,
@@ -76,7 +80,9 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                double* lumped_qx_tStar,
                                double* lumped_qy_tStar,
                                double* lumped_qz_tStar,
-                               double* quantDOFs)
+                               int numDOFs,
+                               double* lumped_mass_matrix,                               
+			       double* H_dof)
         void calculateJacobian(double dt,
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -162,7 +168,8 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                    double* global_V0,
                                    double* global_sV,
                                    double* global_sV0,
-                                   double* global_D_err)
+                                   double* global_D_err,
+				   double* global_L2_err)
         void calculateMetricsAtETS(double dt,
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -210,6 +217,19 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                   double* lumped_qx,
                                   double* lumped_qy,
                                   double* lumped_qz)
+        void calculateLumpedMassMatrix(double* mesh_trial_ref,
+                                       double* mesh_grad_trial_ref,
+                                       double* mesh_dof,
+                                       int* mesh_l2g,
+                                       double* dV_ref,
+                                       double* u_trial_ref,
+                                       double* u_grad_trial_ref,
+                                       double* u_test_ref,
+                                       int nElements_global,
+                                       int* u_l2g,
+                                       double* elementDiameter,
+                                       double* lumped_mass_matrix,
+                                       int offset_u, int stride_u)
     CLSVOF_base* newCLSVOF(int nSpaceIn,
                            int nQuadraturePoints_elementIn,
                            int nDOF_mesh_trial_elementIn,
@@ -275,6 +295,8 @@ cdef class cCLSVOF_base:
                          numpy.ndarray velocity_old,
                          numpy.ndarray q_m,
                          numpy.ndarray q_u,
+			 numpy.ndarray q_n,
+			 numpy.ndarray q_H,
                          numpy.ndarray q_m_betaBDF,
                          numpy.ndarray q_dV,
                          numpy.ndarray q_dV_last,
@@ -292,6 +314,8 @@ cdef class cCLSVOF_base:
                          numpy.ndarray isFluxBoundary_u,
                          numpy.ndarray ebqe_bc_flux_u_ext,
                          numpy.ndarray ebqe_u,
+			 numpy.ndarray ebqe_n,
+			 numpy.ndarray ebqe_H,			 
                          numpy.ndarray ebqe_flux,
                          int timeOrder,
                          int timeStage,
@@ -308,7 +332,9 @@ cdef class cCLSVOF_base:
                          numpy.ndarray lumped_qx_tStar,
                          numpy.ndarray lumped_qy_tStar,
                          numpy.ndarray lumped_qz_tStar,
-                         numpy.ndarray quantDOFs):
+                         int numDOFs,
+                         numpy.ndarray lumped_mass_matrix,                         
+			 numpy.ndarray H_dof):
        self.thisptr.calculateResidual(dt,
                                       <double*> mesh_trial_ref.data,
                                       <double*> mesh_grad_trial_ref.data,
@@ -346,6 +372,8 @@ cdef class cCLSVOF_base:
                                       <double*> velocity_old.data,
                                       <double*> q_m.data,
                                       <double*> q_u.data,
+				      <double*> q_n.data,
+				      <double*> q_H.data,
                                       <double*> q_m_betaBDF.data,
                                       <double*> q_dV.data,
                                       <double*> q_dV_last.data,
@@ -363,6 +391,8 @@ cdef class cCLSVOF_base:
                                       <int*> isFluxBoundary_u.data,
                                       <double*> ebqe_bc_flux_u_ext.data,
                                       <double*> ebqe_u.data,
+				      <double*> ebqe_n.data,
+				      <double*> ebqe_H.data,
                                       <double*> ebqe_flux.data,
                                       timeOrder,
                                       timeStage,
@@ -379,7 +409,9 @@ cdef class cCLSVOF_base:
                                       <double*> lumped_qx_tStar.data,
                                       <double*> lumped_qy_tStar.data,
                                       <double*> lumped_qz_tStar.data,
-                                      <double*> quantDOFs.data)
+                                      numDOFs,
+                                      <double*> lumped_mass_matrix.data,                                      
+				      <double*> H_dof.data)
    def calculateJacobian(self,
                          double dt,
                          numpy.ndarray mesh_trial_ref,
@@ -531,6 +563,7 @@ cdef class cCLSVOF_base:
         cdef double global_sV
         cdef double global_sV0
         cdef double global_D_err
+        cdef double global_L2_err
         self.thisptr.calculateMetricsAtEOS(<double*>mesh_trial_ref.data,
                                            <double*>mesh_grad_trial_ref.data,
                                            <double*>mesh_dof.data,
@@ -558,14 +591,16 @@ cdef class cCLSVOF_base:
                                            &global_V0,
                                            &global_sV,
                                            &global_sV0,
-                                           &global_D_err)
+                                           &global_D_err,
+                                           &global_L2_err)
         return(global_I_err,
                global_sI_err,
                global_V,
                global_V0,
                global_sV,
                global_sV0,
-               global_D_err)
+               global_D_err,
+               global_L2_err)
    def calculateMetricsAtETS(self,
                              double dt,
                              numpy.ndarray mesh_trial_ref,
@@ -668,3 +703,30 @@ cdef class cCLSVOF_base:
                                          <double*> lumped_qx.data,
                                          <double*> lumped_qy.data,
                                          <double*> lumped_qz.data)
+   def calculateLumpedMassMatrix(self,
+                                 numpy.ndarray mesh_trial_ref,
+                                 numpy.ndarray mesh_grad_trial_ref,
+                                 numpy.ndarray mesh_dof,
+                                 numpy.ndarray mesh_l2g,
+                                 numpy.ndarray dV_ref,
+                                 numpy.ndarray u_trial_ref,
+                                 numpy.ndarray u_grad_trial_ref,
+                                 numpy.ndarray u_test_ref,
+                                 int nElements_global,
+                                 numpy.ndarray u_l2g,
+                                 numpy.ndarray elementDiameter,
+                                 numpy.ndarray lumped_mass_matrix,
+                                 int offset_u, int stride_u):
+       self.thisptr.calculateLumpedMassMatrix(<double*> mesh_trial_ref.data,
+                                              <double*> mesh_grad_trial_ref.data,
+                                              <double*> mesh_dof.data,
+                                              <int*> mesh_l2g.data,
+                                              <double*> dV_ref.data,
+                                              <double*> u_trial_ref.data,
+                                              <double*> u_grad_trial_ref.data,
+                                              <double*> u_test_ref.data,
+                                              nElements_global,
+                                              <int*> u_l2g.data,
+                                              <double*> elementDiameter.data,
+                                              <double*> lumped_mass_matrix.data,
+                                              offset_u, stride_u)
