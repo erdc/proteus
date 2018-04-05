@@ -690,13 +690,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.q_dragAlpha,
                 self.q_dragBeta)
         else:
-            # TODO make loops faster
+            #Leave porosity in when porosity types are used
             if self.porosityTypes is not None:
                 for eN in range(self.q_porosity.shape[0]):
                     self.q_porosity[
                         eN, :] = self.porosityTypes[
                         self.elementMaterialTypes[eN]]
-                #convert from porosity to volume of sediment
             if self.dragAlphaTypes is not None:
                 for eN in range(self.q_dragAlpha.shape[0]):
                     self.q_dragAlpha[
@@ -823,12 +822,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                     ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                     eN = self.mesh.elementBoundaryElementsArray[ebN, 0]
-                    self.ebqe_vos[
+                    self.ebqe_porosity[
                         ebNE, :] = self.porosityTypes[
                         self.elementMaterialTypes[eN]]
-                #convert from porosity to volume of sediment
-                self.ebqe_vos -= 1.0
-                self.ebqe_vos *= -1.0
+                #convert from porosity to volume of sediment - ASD: Leave porosity in for porosity Types for now!!!
+#                self.ebqe_vos -= 1.0
+#                self.ebqe_vos *= -1.0
             if self.dragAlphaTypes is not None:
                 for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                     ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -2192,7 +2191,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.isActiveDOF = np.ones_like(r);
-        self.rans3pf.calculateResidual(   self.pressureModel.u[0].femSpace.elementMaps.psi,
+        self.rans3pf.calculateResidual(
+            self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.nodeVelocityArray,
