@@ -50,7 +50,7 @@ namespace proteus
                                    double *mesh_grad_trial_ref,
                                    double *mesh_dof,
                                    double *mesh_velocity_dof,
-                                   double MOVING_DOMAIN,//0 or 1
+                                   double MOVING_DOMAIN, //0 or 1
                                    double PSTAB,
                                    int *mesh_l2g,
                                    double *dV_ref,
@@ -741,7 +741,7 @@ namespace proteus
               nu_t0 = smagorinskyConstant*smagorinskyConstant*h_e*h_e*norm_S;
               nu_t1 = smagorinskyConstant*smagorinskyConstant*h_e*h_e*norm_S;
             }
-	  case 2:
+          case 2: 
             {
               double re_0,cs_0=0.0,re_1,cs_1=0.0;
               norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +//grad_w[2]*grad_w[2] + 
@@ -999,7 +999,6 @@ namespace proteus
 					    fluid_velocity,
 					    solid_velocity,
 					    viscosity);
-
 
         mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s);
         mom_v_source += (1.0 - phi_s) * new_beta * (v - v_s);
@@ -2670,9 +2669,9 @@ namespace proteus
                 mom_u_acc_t *= dmom_u_acc_u; //multiply by rho*porosity. mql. CHECK.
                 mom_v_acc_t *= dmom_v_acc_v;
 
-       		//calculate subgrid error (strong residual and adjoint)
-       		//
-       		//calculate strong residual
+		//calculate subgrid error (strong residual and adjoint)
+		//
+		//calculate strong residual
 		pdeResidual_p =
 		  ck.Mass_strong(-q_dvos_dt[eN_k]) + // mql. CHECK.
 		  ck.Advection_strong(dmass_adv_u,grad_u) +
@@ -2891,7 +2890,7 @@ namespace proteus
                     /*   /\* ck.SubgridError(subgridError_w,Lstar_w_p[i]); *\/ */
 
                     elementResidual_u[i] += // mql. CHECK.
-                      ck.Mass_weak(mom_u_acc_t,vel_test_dV[i]) + 
+                      ck.Mass_weak(mom_u_acc_t,vel_test_dV[i]) +
                       ck.Advection_weak(mom_u_adv,&vel_grad_test_dV[i_nSpace]) +
                       ck.Diffusion_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) +
                       ck.Diffusion_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) +
@@ -4820,7 +4819,7 @@ namespace proteus
                 /*           dmom_w_acc_w_t); */
                 //
                 //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
-		
+
                 mom_u_acc_t *= dmom_u_acc_u; //multiply by porosity*rho. mql. CHECK.
                 mom_v_acc_t *= dmom_v_acc_v; 
 
