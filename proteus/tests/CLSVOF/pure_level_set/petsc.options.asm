@@ -1,0 +1,2 @@
+-clsvof_ksp_type  gmres -clsvof_pc_type hypre -clsvof_pc_hypre_type boomeramg -clsvof_ksp_max_it 2000
+-log_summary
