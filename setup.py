@@ -584,6 +584,7 @@ def setup_given_extensions(extensions):
                       'proteus.tests.cylinder2D.sbm_method',
                       'proteus.tests.HotStart_3P',
                       'proteus.tests.AddedMass',
+                      'proteus.tests.wave_tests',
           ],
           cmdclass = {'build_ext':build_ext},
           ext_package='proteus',
