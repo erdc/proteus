@@ -925,7 +925,7 @@ class  MonochromaticWaves:
                  waveDir,
                  wavelength=None,
                  waveType="Linear",
-                 autoFenton=True,
+                 autoFenton=False,
                  autoFentonOpts=None,
                  Ycoeff = np.zeros(1000,),
                  Bcoeff =np.zeros(1000,), 
