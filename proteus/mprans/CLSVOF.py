@@ -22,7 +22,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  movingDomain=False,
                  forceStrongConditions=0,
                  # OUTPUT quantDOFs
-                 outputQuantDOFs = False,
+                 outputQuantDOFs = True, # mql. I use it to visualize H(u) at the DOFs via a lumped L2 projection
                  computeMetrics = 0, #0, 1 or 2
                  # NONLINEAR CLSVOF
                  timeOrder=2,
@@ -159,6 +159,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def postStep(self,t,firstStep=False):
+        # Fix parallel vector H_dof and visualize it
+        self.model.par_H_dof.scatter_forward_insert()
+        self.model.quantDOFs[:] = self.model.H_dof
+        
         # Norm factor
         self.model.norm_factor_lagged = np.maximum(self.model.max_distance - self.model.mean_distance,
                                                    self.model.mean_distance - self.model.min_distance)
@@ -400,6 +404,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
         self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
         self.q[('u',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('H(u)',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('dV_u',0)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('grad(u)',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q[('m',0)] = self.q[('u',0)]
@@ -411,6 +416,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('cfl',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('numDiff',0,0)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.ebqe[('u',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.ebqe[('H(u)',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.ebqe[('grad(u)',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         self.ebqe[('advectiveFlux_bc_flag',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
         self.ebqe[('advectiveFlux_bc',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
@@ -573,7 +579,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if ('velocityFieldAsFunction') in dir (options):
             self.velocityFieldAsFunction = options.velocityFieldAsFunction
             self.hasVelocityFieldAsFunction = True
-
+            
+        self.H_dof = numpy.zeros(self.u[0].dof.shape,'d')
+        self.par_H_dof = None
+        self.lumped_mass_matrix = None
         # Aux quantity at DOFs to be filled by optimized code
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
         # FOR nonlinear CLSVOF; i.e., MCorr with VOF
@@ -626,16 +635,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_sV_err = 0.0
         # for distance property
         self.global_D_err = 0.0
+        self.global_L2_err = 0.0
         # At ETS #
         if self.coefficients.computeMetrics > 0 and self.comm.isMaster():
-            # At EOS #
-            self.metricsAtEOS = open(self.name+"_metricsAtEOS.csv","w")
-            self.metricsAtEOS.write('global_I_err'+","+
-                                    'global_sI_err'+","+
-                                    'global_V_err'+","+
-                                    'global_sV_err'+","+
-                                    'global_D_err'+"\n")
-            if self.coefficients.computeMetrics==2:
+            if self.hasExactSolution: # at EOS
+                self.metricsAtEOS = open(self.name+"_metricsAtEOS.csv","w")
+                self.metricsAtEOS.write('global_I_err'+","+
+                                        'global_sI_err'+","+
+                                        'global_V_err'+","+
+                                        'global_sV_err'+","+
+                                        'global_D_err'+","+
+                                        'global_L2_err'+"\n")
+            if self.coefficients.computeMetrics==2: # at ETS
                 self.metricsAtETS = open(self.name+"_metricsAtETS.csv","w")
                 self.metricsAtETS.write('time_step'+","+
                                         'newton_iterations_stage1'+","+
@@ -671,7 +682,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_v[...,2] = self.velocityFieldAsFunction[2](ebqe_X,time)
 
     def runAtEOS(self):
-        if self.coefficients.computeMetrics > 0 and self.hasExactSolution==True:
+        if self.coefficients.computeMetrics > 0 and self.hasExactSolution:
             # Get exact solution at quad points
             u_exact = numpy.zeros(self.q[('u',0)].shape,'d')
             X = {0:self.q[('x')][:,:,0],
@@ -685,7 +696,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                         repr(self.global_sI_err)+","+
                                         repr(self.global_V_err)+","+
                                         repr(self.global_sV_err)+","+
-                                        repr(self.global_D_err)+"\n")
+                                        repr(self.global_D_err)+","+
+                                        repr(np.sqrt(self.global_L2_err))+"\n")
                 self.metricsAtEOS.flush()
 
     ####################################3
@@ -765,7 +777,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
          global_V0,
          global_sV,
          global_sV0,
-         global_D_err) = self.clsvof.calculateMetricsAtEOS(#element
+         global_D_err,
+         global_L2_err) = self.clsvof.calculateMetricsAtEOS(#element
              self.u[0].femSpace.elementMaps.psi,
              self.u[0].femSpace.elementMaps.grad_psi,
              self.mesh.nodeArray,
@@ -801,6 +814,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_sV_err = np.abs(self.global_sV-self.global_sV0)/self.global_sV0
         # distance property metric
         self.global_D_err = globalSum(global_D_err)
+        # L2 error on level set
+        self.global_L2_err = globalSum(global_L2_err)
 
     ###############################################
 
@@ -811,9 +826,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def updateParVectors(self):
         # create vectors
         if self.par_lumped_qx_tn is None:
-            n=self.mesh.subdomainMesh.nNodes_owned
-            N=self.mesh.nNodes_global
-            nghosts=self.mesh.subdomainMesh.nNodes_global - self.mesh.subdomainMesh.nNodes_owned
+            #n=self.mesh.subdomainMesh.nNodes_owned
+            #N=self.mesh.nNodes_global
+            #nghosts=self.mesh.subdomainMesh.nNodes_global - self.mesh.subdomainMesh.nNodes_owned
+            n=self.u[0].par_dof.dim_proc
+            N=self.u[0].femSpace.dofMap.nDOF_all_processes
+            nghosts = self.u[0].par_dof.nghosts
             subdomain2global=self.u[0].femSpace.dofMap.subdomain2global
             self.par_lumped_qx_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.lumped_qx_tn,
                                                                                bs=1,
@@ -839,6 +857,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                                   bs=1,
                                                                                   n=n,N=N,nghosts=nghosts,
                                                                                   subdomain2global=subdomain2global)
+            #
+            self.par_H_dof = proteus.LinearAlgebraTools.ParVec_petsc4py(self.H_dof,
+                                                                        bs=1,
+                                                                        n=n,N=N,nghosts=nghosts,
+                                                                        subdomain2global=subdomain2global)
+                        
         # update parallel vectors
         if self.timeStage==1:
             self.par_lumped_qx_tn.scatter_forward_insert()
@@ -891,13 +915,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # update parallel vectors
         self.updateParVectors()
 
+    def getLumpedMassMatrix(self):
+        self.lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d')
+        self.clsvof.calculateLumpedMassMatrix(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.mesh.elementDiametersArray,
+            self.lumped_mass_matrix,
+            self.offset[0],self.stride[0])
+                
     def getResidual(self,u,r):
         import pdb
         import copy
         """
         Calculate the element residuals and add in to the global residual
         """
-        if self.getResidualBeforeFirstStep:
+
+        if self.lumped_mass_matrix is None:
+            self.getLumpedMassMatrix()            
+        if self.getResidualBeforeFirstStep and self.hasVelocityFieldAsFunction:
             self.updateVelocityFieldAsFunction()
         if self.coefficients.porosity_dof is None:
             self.coefficients.porosity_dof = numpy.ones(self.u[0].dof.shape,'d')
@@ -906,7 +950,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u_dof_old = numpy.copy(self.u[0].dof)
 
         r.fill(0.0)
-
+        self.H_dof.fill(0.0)
+        
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -974,7 +1019,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_v,
             self.coefficients.q_v_old,
             self.timeIntegration.m_tmp[0],
-            self.q[('u',0)],
+            self.q[('u',0)], #level set
+            self.q[('grad(u)',0)], #normal 
+            self.q[('H(u)',0)], #VOF. Heaviside of level set
             self.timeIntegration.beta_bdf[0],
             self.q['dV'],
             self.q['dV_last'],
@@ -993,7 +1040,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u',0)],
             self.ebqe[('advectiveFlux_bc_flag',0)],
             self.ebqe[('advectiveFlux_bc',0)],
-            self.ebqe[('u',0)],
+            self.ebqe[('u',0)], #level set
+            self.ebqe[('grad(u)',0)], #normal 
+            self.ebqe[('H(u)',0)], #VOF. Heaviside of level set
             self.ebqe[('advectiveFlux',0)],
             # FOR NONLINEAR CLSVOF; i.e., MCorr with VOF
             self.coefficients.timeOrder,
@@ -1013,7 +1062,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_qx_tStar,
             self.lumped_qy_tStar,
             self.lumped_qz_tStar,
-            self.quantDOFs)
+            # To compute H at DOFs
+            self.nFreeDOF_global[0], #numDOFs
+            self.lumped_mass_matrix,
+            self.H_dof)
+
+        # Quantities to compute normalization factor
+        from proteus.flcbdfWrappers import globalSum, globalMax
+        self.min_distance = -globalMax(-min_distance[0])
+        self.max_distance = globalMax(max_distance[0])
+        self.mean_distance = globalSum(mean_distance[0])
 
         # Quantities to compute normalization factor
         from proteus.flcbdfWrappers import globalSum, globalMax
