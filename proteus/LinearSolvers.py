@@ -1658,7 +1658,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.num_chebyshev_its = num_chebyshev_its
         # Strong Dirichlet Pressure DOF
         try:
-#            self.strongPressureDOF = self.L.pde.numericalFlux.isDOFBoundary[0][:,0]
             self.strongPressureDOF = L.pde.dirichletConditionsForceDOF[0].DOFBoundaryPointDict.keys()
         except KeyError:
             self.strongPressureDOF = []
@@ -1720,9 +1719,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                                                     dt,
                                                     num_chebyshev_its = self.num_chebyshev_its,
                                                     strong_dirichlet_DOF = self.strongPressureDOF)
-#        else:
-#            self.matcontext_inv.update(self.Np_rho)
-        # ARB Note - I'm trying to reduce work 
         self.TP_PCDInv_shell.setPythonContext(self.matcontext_inv)
         self.TP_PCDInv_shell.setUp()
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')

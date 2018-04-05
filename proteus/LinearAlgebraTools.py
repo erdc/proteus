@@ -886,7 +886,7 @@ class InvOperatorShell(OperatorShell):
             exit()
         num_dof = self.getSize()
         num_unknown_dof = num_dof - num_known_dof
-#        import pdb ; pdb.set_trace()
+
         # Use boolean mask to collect unknown DOF indices
         self.dof_indices = numpy.arange(num_dof,
                                         dtype = 'int32')
@@ -1274,12 +1274,15 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
                                                     self.Ap_rho)
         self.kspAp_rho.getOperators()[0].zeroRows(self.known_dof_is)
 
-
+        self.Np_rho_reduced = self.Np_rho.getSubMatrix(self.unknown_dof_is,
+                                                       self.unknown_dof_is)
         if self.num_chebyshev_its:
-            self.Qp_visc = LS.ChebyshevSemiIteration(self.Qp_visc,
+            self.Qp_visc = LS.ChebyshevSemiIteration(self.Qp_visc.getSubMatrix(self.unknown_dof_is,
+                                                                               self.unknown_dof_is),
                                                      0.5,
                                                      2.0)
-            self.Qp_dens = LS.ChebyshevSemiIteration(self.Qp_dens,
+            self.Qp_dens = LS.ChebyshevSemiIteration(self.Qp_dens.getSubMatrix(self.unknown_dof_is,
+                                                                               self.unknown_dof_is),
                                                      0.5,
                                                      2.0)
         else:
@@ -1287,14 +1290,6 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
                                                         self.Qp_visc)
             self.kspQp_dens = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_dens_',
                                                         self.Qp_dens)
-
-
-    # def update(self, Np_rho):
-    #     """ """
-    #     import pdb ; pdb.set_trace()
-    #     self.Np_rho = Np_rho
-    #     self.Np_rho_reduced = self.Np_rho.getSubMatrix(self.unknown_dof_is,
-    #                                                    self.unknown_dof_is)
 
     def getSize(self):
         """ Return the total number of DOF for the shell problem. """
@@ -1348,7 +1343,6 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
             self.kspQp_dens.solve(x_tmp,tmp1)
 
         self.Np_rho.mult(tmp1,tmp2)
-#        self.Np_rho_reduced.mult(tmp1,tmp2)
 
         if self.alpha is True:
             tmp2.axpy(1./self.delta_t,x_tmp)
