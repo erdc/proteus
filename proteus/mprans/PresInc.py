@@ -206,22 +206,18 @@ class Coefficients(TC_base):
         alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
         if  u_shape == self.fluidModel.q[('u',0)].shape:
             vf = self.fluidModel.q[('velocity',0)]
-            vs = self.sedModel.q[('velocity',0)]
-            vos = self.sedModel.coefficients.q_vos
-            rho_s = self.sedModel.coefficients.rho_s
             rho_f = self.fluidModel.coefficients.q_rho
+            if sedModelIndex is not None:
+                vs = self.sedModel.q[('velocity',0)]
+                vos = self.sedModel.coefficients.q_vos
+                rho_s = self.sedModel.coefficients.rho_s
         if  u_shape == self.fluidModel.ebqe[('u',0)].shape:
             vf = self.fluidModel.ebqe[('velocity',0)]
-            vs = self.sedModel.ebqe[('velocity',0)]
-            vos = self.sedModel.coefficients.ebqe_vos
-            rho_s = self.sedModel.coefficients.rho_s
             rho_f = self.fluidModel.coefficients.ebqe_rho
-        #if  u_shape == self.fluidModel.ebq[('u',0)].shape:
-        #    vf = self.fluidModel.ebq[('velocity',0)]
-        #    vs = self.sedModel.ebq[('velocity',0)]
-        #    vos = self.sedModel.ebq_vos
-        #    rho_s = self.sedModel.coefficients.rho_s
-        #    rho_f = self.fluidModel.coefficients.ebqe_rho
+            if sedModelIndex is not None:
+                vs = self.sedModel.ebqe[('velocity',0)]
+                vos = self.sedModel.coefficients.ebqe_vos
+                rho_s = self.sedModel.coefficients.rho_s
         
         assert rho_s >= self.rho_s_min, "solid density out of bounds"
         assert (rho_f >= self.rho_f_min).all(), "fluid density out of bounds"
