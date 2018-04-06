@@ -207,14 +207,14 @@ class Coefficients(TC_base):
         if  u_shape == self.fluidModel.q[('u',0)].shape:
             vf = self.fluidModel.q[('velocity',0)]
             rho_f = self.fluidModel.coefficients.q_rho
-            if sedModelIndex is not None:
+            if self.sedModelIndex is not None:
                 vs = self.sedModel.q[('velocity',0)]
                 vos = self.sedModel.coefficients.q_vos
                 rho_s = self.sedModel.coefficients.rho_s
         if  u_shape == self.fluidModel.ebqe[('u',0)].shape:
             vf = self.fluidModel.ebqe[('velocity',0)]
             rho_f = self.fluidModel.coefficients.ebqe_rho
-            if sedModelIndex is not None:
+            if self.sedModelIndex is not None:
                 vs = self.sedModel.ebqe[('velocity',0)]
                 vos = self.sedModel.coefficients.ebqe_vos
                 rho_s = self.sedModel.coefficients.rho_s
