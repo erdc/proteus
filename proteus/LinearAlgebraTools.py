@@ -81,6 +81,28 @@ def petsc_load_vector(filename):
         output = None
     return output
 
+def petsc_load_IS(filename):
+    """ This function loads a PETSc index-set from a binary format.
+    (Eg. what is saved using the petsc_view function).
+
+    Parameters
+    ----------
+    filename : str
+        This is the name of the binary with the file stored.
+
+    Returns
+    -------
+    matrix : petsc4py IS
+        The index-set that is stored in the binary file.
+    """
+    try:
+        viewer = p4pyPETSc.Viewer().createBinary(filename,'r')
+        output = p4pyPETSc.IS().load(viewer)
+    except:
+        logEvent("Either you've entered an invalid file name or your object is not an index set.")
+        output = None
+    return output
+
 def csr_2_petsc(size,csr):
     """ Create an petsc4py matrix from size and CSR information.
 
@@ -849,7 +871,6 @@ class InvOperatorShell(OperatorShell):
         ksp_obj : PETSc ksp
         """
         ksp_obj = p4pyPETSc.KSP().create()
-
         ksp_obj.setOperators(matrix_operator,
                              matrix_operator)
         ksp_obj.setOptionsPrefix(petsc_option_prefix)

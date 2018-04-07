@@ -74,6 +74,71 @@ def initialize_schur_ksp_obj(matrix_A, schur_approx):
     ksp_obj.pc.setUp()
     return ksp_obj
 
+def initialize_asm_ksp_obj(matrix_A):
+    """
+    Creates a right-hand-side and solution PETSc4Py vector for
+    testing ksp solves.
+
+    Parameters
+    ----------
+    matrix_A: :class:`p4pyPETSc.Mat`
+        Global matrix object.
+
+    Returns
+    -------
+    ksp_obj: :class:`p4pyPETSc.KSP`
+    """
+    ksp_obj = p4pyPETSc.KSP().create()
+    ksp_obj.setOperators(matrix_A,matrix_A)
+    ksp_obj.setFromOptions()
+    ksp_obj.setUp()
+    return ksp_obj
+
+
+def build_amg_index_sets(L_sizes):
+    """
+    Create PETSc index sets for the velocity components of a saddle
+    point matrix
+
+    Parameters
+    ----------
+    L_sizes : 
+        Sizes of original saddle-point system
+
+    Returns:
+    --------
+    Index_Sets : lst
+        List of velocity index sets
+    """
+    neqns = L_sizes[0][0]
+    velocityDOF=[]
+    for start in range(1,3):
+        velocityDOF.append(np.arange(start=start,
+                                     stop=1+neqns,
+                                     step=3,
+                                     dtype='i'))
+        velocityDOF_full=np.vstack(velocityDOF).transpose().flatten()
+    velocity_u_DOF = []
+    velocity_u_DOF.append(np.arange(start=1,
+                                    stop=1+neqns,
+                                    step=3,
+                                    dtype='i'))
+    velocity_u_DOF_full = np.vstack(velocity_u_DOF).transpose().flatten()
+    velocity_v_DOF = []
+    velocity_v_DOF.append(np.arange(start=2,
+                                    stop=2+neqns,
+                                    step=3,
+                                    dtype='i'))
+    velocity_v_DOF_full = np.vstack(velocity_v_DOF).transpose().flatten()
+    isvelocity = p4pyPETSc.IS()
+    isvelocity.createGeneral(velocityDOF_full)
+    isu = p4pyPETSc.IS()
+    isu.createGeneral(velocity_u_DOF_full)
+    isv = p4pyPETSc.IS()
+    isv.createGeneral(velocity_v_DOF_full)
+    return [isvelocity, isu, isv]
+
+
 @pytest.fixture()
 def initialize_petsc_options(request):
     """Initializes schur complement petsc options. """
@@ -89,6 +154,17 @@ def initialize_petsc_options(request):
     petsc_options.setValue('fieldsplit_velocity_pc_type', 'lu')
     petsc_options.setValue('fieldsplit_pressure_ksp_type','preonly')
 
+@pytest.fixture()
+def initialize_velocity_block_petsc_options(request):
+    petsc_options = p4pyPETSc.Options()
+    petsc_options.setValue('ksp_type','gmres')
+    petsc_options.setValue('ksp_gmres_restart',100)
+    petsc_options.setValue('ksp_pc_side','right')
+    petsc_options.setValue('ksp_atol',1e-8)
+    petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
+    petsc_options.setValue('pc_type','hypre')
+    petsc_options.setValue('pc_type_hypre_type','boomeramg')
+    
 @pytest.fixture()
 def load_nse_cavity_matrix(request):
     """Loads a Navier-Stokes matrix drawn from the MPRANS module. """
@@ -107,6 +183,29 @@ def load_nse_step_matrix(request):
     A = LAT.petsc_load_matrix(os.path.join
                               (os.path.dirname(__file__),
                                'import_modules/NSE_step_no_slip'))
+    yield A
+
+@pytest.fixture()
+def load_small_step_matrix(request):
+    """
+    Loads a small example of a backwards facing step matrix for
+    testing purposes. (Note: this matrix does not have advection)
+    """
+    A = LAT.petsc_load_matrix(os.path.join
+                              (os.path.dirname(__file__),
+                               'import_modules/saddle_point_small'))
+    yield A
+
+@pytest.fixture()
+def load_medium_step_matrix(request):
+    """
+    Loads a medium sized backwards facing step matrix for studying
+    different AMG preconditioners. (Note: this matrix does not have
+    advection)
+    """
+    A = LAT.petsc_load_matrix(os.path.join
+                              (os.path.dirname(__file__),
+                               'import_modules/saddle_point_matrix'))
     yield A
 
 @pytest.mark.LinearSolvers
@@ -153,13 +252,53 @@ def test_Schur_Sp_solve(load_nse_step_matrix,
     assert ksp_obj.its == 45
     assert np.allclose(ksp_obj.norm, 394.7036050627)
     assert ksp_obj.reason == 2
+    
+@pytest.mark.amg
+def test_amg_basic(load_small_step_matrix,
+                   initialize_velocity_block_petsc_options):
+    mat_A = load_small_step_matrix
 
+    petsc_options = initialize_velocity_block_petsc_options
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    #Initialize ksp object
+    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+                                                index_sets[0]))   
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 9
+
+@pytest.mark.amg
+def test_amg_iteration_performance(load_medium_step_matrix):
+    mat_A = load_medium_step_matrix
+    petsc_options = initialize_velocity_block_petsc_options
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+                                                index_sets[0]))
+
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 41
+    
+    import pdb ; pdb.set_trace()
+    
+    
+
+    
+    
 class TestSmoothingAlgorithms(proteus.test_utils.TestTools.BasicTest):
 
     def setup_method(self,method):
         self._scriptdir = os.path.dirname(__file__)
-        self.saddle_point_matrix = LAT.petsc_load_matrix(os.path.join(self._scriptdir,
-                                                                      'import_modules/saddle_point_matrix'))
+        self.saddle_point_matrix=LAT.petsc_load_matrix(os.path.join(self._scriptdir,
+                                                                    'import_modules/saddle_point_small'))
+        # self.saddle_point_matrix = LAT.petsc_load_matrix(os.path.join(self._scriptdir,
+        #                                                               'import_modules/saddle_point_matrix'))
     def test_matrix_splitting_1(self):
         vals_F  =    [3.2, 1.1, 5.4, 6.3, 1., -5.1, 1.2]
         col_idx_F  = [0, 1, 2, 0, 2, 0, 1]
@@ -174,68 +313,68 @@ class TestSmoothingAlgorithms(proteus.test_utils.TestTools.BasicTest):
         A[0].axpy(1.0,A[1])
         assert np.allclose(A[0].getValuesCSR()[2], petsc_matF.getValuesCSR()[2])
 
-class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
+# class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
 
-    def setup_method(self,method):
-        self.petsc_options = p4pyPETSc.Options()
-        self._scriptdir = os.path.dirname(__file__)
-        self.quad_mass_matrix = np.load(os.path.join(self._scriptdir,
-                                        'import_modules/quad_mass_matrix.npy'))
+#     def setup_method(self,method):
+#         self.petsc_options = p4pyPETSc.Options()
+#         self._scriptdir = os.path.dirname(__file__)
+#         self.quad_mass_matrix = np.load(os.path.join(self._scriptdir,
+#                                         'import_modules/quad_mass_matrix.npy'))
 
-    def teardown_method(self,method):
-        pass
+#     def teardown_method(self,method):
+#         pass
 
-    @pytest.mark.LinearAlgebraTools
-    def test_dense_numpy_2_petsc4py(self):
-        A_petsc = LAT.dense_numpy_2_petsc4py(self.quad_mass_matrix)
-        A_new = LAT.petsc4py_sparse_2_dense(A_petsc)
-        assert np.linalg.norm(self.quad_mass_matrix - A_new) == 0
+#     @pytest.mark.LinearAlgebraTools
+#     def test_dense_numpy_2_petsc4py(self):
+#         A_petsc = LAT.dense_numpy_2_petsc4py(self.quad_mass_matrix)
+#         A_new = LAT.petsc4py_sparse_2_dense(A_petsc)
+#         assert np.linalg.norm(self.quad_mass_matrix - A_new) == 0
 
-    @pytest.mark.LinearSolvers
-    def test_chebyshev_iteration_1(self):
-        '''  Tests the pcd_shell operators produce correct output. '''
-        A = self.quad_mass_matrix
-        n = self.quad_mass_matrix.shape[0]
-        alpha = 1./4
-        beta = 9./4
-        x0 = np.zeros(n)
-        b1 = np.ones(n)
-        for i in range(0,n,2):
-            b1[i] = 0.
-        A_petsc = LAT.dense_numpy_2_petsc4py(A)
-        x0_petsc = p4pyPETSc.Vec().createWithArray(x0)
-        b1_petsc = p4pyPETSc.Vec().createWithArray(b1)
-        solver = LS.ChebyshevSemiIteration(A_petsc,
-                                           alpha,
-                                           beta,
-                                           True)
-        solver.apply(b1_petsc, x0_petsc, 20)
-        expected = np.load(os.path.join(self._scriptdir,'import_modules/sol_10.npy'))
-        actual = x0_petsc
-        assert np.allclose(expected,actual.getArray())
+#     @pytest.mark.LinearSolvers
+#     def test_chebyshev_iteration_1(self):
+#         '''  Tests the pcd_shell operators produce correct output. '''
+#         A = self.quad_mass_matrix
+#         n = self.quad_mass_matrix.shape[0]
+#         alpha = 1./4
+#         beta = 9./4
+#         x0 = np.zeros(n)
+#         b1 = np.ones(n)
+#         for i in range(0,n,2):
+#             b1[i] = 0.
+#         A_petsc = LAT.dense_numpy_2_petsc4py(A)
+#         x0_petsc = p4pyPETSc.Vec().createWithArray(x0)
+#         b1_petsc = p4pyPETSc.Vec().createWithArray(b1)
+#         solver = LS.ChebyshevSemiIteration(A_petsc,
+#                                            alpha,
+#                                            beta,
+#                                            True)
+#         solver.apply(b1_petsc, x0_petsc, 20)
+#         expected = np.load(os.path.join(self._scriptdir,'import_modules/sol_10.npy'))
+#         actual = x0_petsc
+#         assert np.allclose(expected,actual.getArray())
 
-    @pytest.mark.LinearSolvers
-    def test_chebyshev_iteration_2(self):
-        '''  Tests the pcd_shell operators produce correct output. '''
-        A = np.diag(1./np.diag(self.quad_mass_matrix)).dot(self.quad_mass_matrix)
-        n = self.quad_mass_matrix.shape[0]
-        alpha = 1./4
-        beta = 9./4
-        x0 = np.zeros(n)
-        b1 = np.zeros(n)
-        for i in range(0,n):
-            b1[i] = i
-        A_petsc = LAT.dense_numpy_2_petsc4py(A)
-        x0_petsc = p4pyPETSc.Vec().createWithArray(x0)
-        b1_petsc = p4pyPETSc.Vec().createWithArray(b1)
-        solver = LS.ChebyshevSemiIteration(A_petsc,
-                                           alpha,
-                                           beta,
-                                           save_iterations=True)
-        solver.apply(b1_petsc, x0_petsc, 20)
-        expected = np.load(os.path.join(self._scriptdir,'import_modules/sol_20_lst.npy'))
-        for i,item in enumerate(expected):
-            assert np.allclose(item,solver.iteration_results[i],1e-12)
+#     @pytest.mark.LinearSolvers
+#     def test_chebyshev_iteration_2(self):
+#         '''  Tests the pcd_shell operators produce correct output. '''
+#         A = np.diag(1./np.diag(self.quad_mass_matrix)).dot(self.quad_mass_matrix)
+#         n = self.quad_mass_matrix.shape[0]
+#         alpha = 1./4
+#         beta = 9./4
+#         x0 = np.zeros(n)
+#         b1 = np.zeros(n)
+#         for i in range(0,n):
+#             b1[i] = i
+#         A_petsc = LAT.dense_numpy_2_petsc4py(A)
+#         x0_petsc = p4pyPETSc.Vec().createWithArray(x0)
+#         b1_petsc = p4pyPETSc.Vec().createWithArray(b1)
+#         solver = LS.ChebyshevSemiIteration(A_petsc,
+#                                            alpha,
+#                                            beta,
+#                                            save_iterations=True)
+#         solver.apply(b1_petsc, x0_petsc, 20)
+#         expected = np.load(os.path.join(self._scriptdir,'import_modules/sol_20_lst.npy'))
+#         for i,item in enumerate(expected):
+#             assert np.allclose(item,solver.iteration_results[i],1e-12)
 
 if __name__ == '__main__':
     pass
