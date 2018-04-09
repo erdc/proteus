@@ -208,6 +208,8 @@ class Coefficients(TC_base):
             vf = self.fluidModel.q[('velocity',0)]
             rho_f = self.fluidModel.coefficients.q_rho
             rho_s =  self.rho_s_min
+            vs = 0.
+            vos = 0.
             if self.sedModelIndex is not None:
                 vs = self.sedModel.q[('velocity',0)]
                 vos = self.sedModel.coefficients.q_vos
@@ -216,6 +218,8 @@ class Coefficients(TC_base):
             vf = self.fluidModel.ebqe[('velocity',0)]
             rho_f = self.fluidModel.coefficients.ebqe_rho
             rho_s =  self.rho_s_min
+            vs = 0.
+            vos = 0.
             if self.sedModelIndex is not None:
                 vs = self.sedModel.ebqe[('velocity',0)]
                 vos = self.sedModel.coefficients.ebqe_vos
