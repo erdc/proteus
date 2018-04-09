@@ -194,12 +194,17 @@ class NS_base:  # (HasTraits):
                                                                        nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                        parallelPartitioningType=n.parallelPartitioningType)
                     else:
+                        if hasattr(n,'triangleFlag')==True:
+                            triangleFlag=n.triangleFlag
+                        else:
+                            triangleFlag=0
                         mlMesh = MeshTools.MultilevelTriangularMesh(nnx,nny,1,
                                                                     p.domain.x[0], p.domain.x[1], 0.0,
                                                                     p.domain.L[0],p.domain.L[1],1,
                                                                     refinementLevels=n.nLevels,
                                                                     nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                    parallelPartitioningType=n.parallelPartitioningType)
+                                                                    parallelPartitioningType=n.parallelPartitioningType,
+                                                                    triangleFlag=triangleFlag)
 
                 elif p.domain.nd == 3:
                     if (n.nnx == n.nny == n.nnz  is None):
@@ -1147,7 +1152,7 @@ class NS_base:  # (HasTraits):
                 offset=0
                 while tCount > 0:
                     time = float(self.ar[index].tree.getroot()[-1][-1][-1-offset][0].attrib['Value'])
-                    if time < self.opts.hotStartTime:
+                    if time <= self.opts.hotStartTime:
                         break
                     else:
                         tCount -=1
@@ -1180,8 +1185,8 @@ class NS_base:  # (HasTraits):
             if time >= self.tnList[-1] - 1.0e-5:
                 logEvent("Modifying time interval to be tnList[-1] + tnList since tnList hasn't been modified already")
                 ndtout = len(self.tnList)
-                dtout = (self.tnList[-1] - self.tnList[0])/float(ndtout-1)
-                self.tnList = [time + i*dtout for i in range(ndtout)]
+                self.tnList = [time + i for i in self.tnList]
+                self.tnList.insert(1, 0.9*self.tnList[0]+0.1*self.tnList[1])
                 logEvent("New tnList"+`self.tnList`)
             else:
                 tnListNew=[time]
@@ -1195,8 +1200,9 @@ class NS_base:  # (HasTraits):
         logEvent("Attaching models and running spin-up step if requested")
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         spinup = []
-        for index,m in self.modelSpinUp.iteritems():
-            spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
+        if (not self.opts.hotStart) or (not self.so.skipSpinupOnHotstart):
+            for index,m in self.modelSpinUp.iteritems():
+                spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
             logEvent("Attaching models to model "+m.name)
             m.attachModels(self.modelList)
@@ -1333,6 +1339,7 @@ class NS_base:  # (HasTraits):
        #     print "Min / Max residual %s / %s" %(lr.min(),lr.max())
 
         self.nSequenceSteps = 0
+        nSequenceStepsLast=self.nSequenceSteps # prevent archiving the same solution twice
         self.nSolveSteps=self.nList[0].adaptMesh_nSteps-1
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
@@ -1480,7 +1487,8 @@ class NS_base:  # (HasTraits):
                 if(self.PUMI_estimateError()):
                     self.PUMI_adaptMesh()
             #end system step iterations
-            if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
+            if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
+                nSequenceStepsLast = self.nSequenceSteps
                 self.tCount+=1
                 for index,model in enumerate(self.modelList):
                     self.archiveSolution(model,index,self.systemStepController.t_system_last)
@@ -1497,8 +1505,9 @@ class NS_base:  # (HasTraits):
               self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
         # compute auxiliary quantities at last time step
-        if hasattr(self.modelList[-1].levelModelList[-1],'runAtEOS'):
-            self.modelList[-1].levelModelList[-1].runAtEOS()
+        for index,model in enumerate(self.modelList):
+            if hasattr(model.levelModelList[-1],'runAtEOS'):
+                model.levelModelList[-1].runAtEOS()
 
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)

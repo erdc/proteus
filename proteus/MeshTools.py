@@ -304,9 +304,6 @@ class Quadrilateral(Polygon):
             elif node.p[var1]==var1_max and node.p[var2]==var2_min:
                 newList[3] = node
 
-#        import pdb
-#        pdb.set_trace()
-
         for i,item in enumerate(newList):
             if not newList[i]:
                 assert 0,'Quadrialteral Mesh Generation Error '+`newList`+" i = "+`i`
@@ -4647,8 +4644,6 @@ Number of nodes : %d\n""" % (self.nElements_global,
 
     def refine(self,oldMesh):
         logEvent("Refining Using Standard Quadrilateral Refinement")
-        import pdb
-#        pdb.set_trace()
         childrenDict={}
         for q in oldMesh.quadDict.values():
             qNodes = [Node(nN,n.p[X],n.p[Y],n.p[Z]) for nN,n in enumerate(q.nodes)]

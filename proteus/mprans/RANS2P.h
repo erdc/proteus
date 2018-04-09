@@ -17,6 +17,7 @@ namespace proteus
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
+				   double PRESSURE_PROJECTION_STABLIZATION,
                                    double* numerical_viscosity,
                                    //element
                                    double* mesh_trial_ref,
@@ -91,6 +92,7 @@ namespace proteus
                                    double* w_dof,
                                    double* g,
                                    const double useVF,
+				   double* q_rho,
                                    double* vf,
                                    double* phi,
                                    double* normal_phi,
@@ -174,6 +176,7 @@ namespace proteus
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
+				   double PRESSURE_PROJECTION_STABLIZATION,
                                    //element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -611,9 +614,10 @@ namespace proteus
                                   double dmom_w_ham_grad_w[nSpace],
                                   double& dmom_w_ham_u,
                                   double& dmom_w_ham_v,
-                                  double& dmom_w_ham_w)
+                                  double& dmom_w_ham_w,
+				  double& rho)
       {
-        double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
+        double nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
         d_rho = (1.0-useVF)*smoothedDirac(eps_rho,phi);
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -1119,11 +1123,6 @@ namespace proteus
         nu_t_komega = turb_var_0/(fabs(turb_var_1) + div_zero);
         //
         nu_t = isKEpsilon*nu_t_keps + (1.0-isKEpsilon)*nu_t_komega;
-        //mwf debug
-        //if (nu_t > 1.e6*nu)
-        //{
-        //  std::cout<<"RANS2P WARNING isKEpsilon = "<<isKEpsilon<<" nu_t = " <<nu_t<<" nu= "<<nu<<" k= "<<turb_var_0<<" turb_var_1= "<<turb_var_1<<std::endl;
-        //}
 
         nu_t = fmax(nu_t,1.0e-4*nu); //limit according to Lew, Buscaglia etal 01
         //mwf hack
@@ -1377,6 +1376,13 @@ namespace proteus
                 flux_vmom += n[0]*f_vmom[0];
                 flux_wmom += n[0]*f_wmom[0];
               }
+            else
+              {
+                if (NONCONSERVATIVE_FORM > 0.0)
+                  {
+                    flux_umom+=(0.0-u)*flowSpeedNormal;
+                  }
+              }
           }
         else
           {
@@ -1390,9 +1396,16 @@ namespace proteus
               }
             else
               {
-                flux_umom+=n[0]*bc_f_umom[0];
-                flux_vmom+=n[0]*bc_f_vmom[0];
-                flux_wmom+=n[0]*bc_f_wmom[0];
+	      if (NONCONSERVATIVE_FORM > 0.0)
+		{
+		  flux_umom+=(bc_u-u)*flowSpeedNormal;
+		}
+	      else
+		{
+                  flux_umom+=n[0]*bc_f_umom[0];
+                  flux_vmom+=n[0]*bc_f_vmom[0];
+                  flux_wmom+=n[0]*bc_f_wmom[0];
+                }
               }
           }
         if (isDOFBoundary_v != 1)
@@ -1404,6 +1417,13 @@ namespace proteus
                 flux_umom+=n[1]*f_umom[1];
                 flux_vmom+=n[1]*f_vmom[1];
                 flux_wmom+=n[1]*f_wmom[1];
+              }
+            else
+              {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    flux_vmom+=(0.0-v)*flowSpeedNormal;
+		  }
               }
           }
         else
@@ -1418,9 +1438,16 @@ namespace proteus
               }
             else
               {
-                flux_umom+=n[1]*bc_f_umom[1];
-                flux_vmom+=n[1]*bc_f_vmom[1];
-                flux_wmom+=n[1]*bc_f_wmom[1];
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    flux_vmom+=(bc_v-v)*flowSpeedNormal;
+		  }
+		else
+		  {
+                    flux_umom+=n[1]*bc_f_umom[1];
+                    flux_vmom+=n[1]*bc_f_vmom[1];
+                    flux_wmom+=n[1]*bc_f_wmom[1];
+                  }
               }
           }
         if (isDOFBoundary_w != 1)
@@ -1432,6 +1459,13 @@ namespace proteus
                 flux_umom+=n[2]*f_umom[2];
                 flux_vmom+=n[2]*f_vmom[2];
                 flux_wmom+=n[2]*f_wmom[2];
+              }
+            else
+              {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    flux_wmom+=(0.0-w)*flowSpeedNormal;
+		  }
               }
           }
         else
@@ -1446,9 +1480,16 @@ namespace proteus
               }
             else
               {
-                flux_umom+=n[2]*bc_f_umom[2];
-                flux_vmom+=n[2]*bc_f_vmom[2];
-                flux_wmom+=n[2]*bc_f_wmom[2];
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    flux_wmom+=(bc_w-w)*flowSpeedNormal;
+		  }
+		else
+		  {
+                    flux_umom+=n[2]*bc_f_umom[2];
+                    flux_vmom+=n[2]*bc_f_vmom[2];
+                    flux_wmom+=n[2]*bc_f_wmom[2];
+                  }
               }
           }
         if (isDOFBoundary_p == 1)
@@ -1500,6 +1541,9 @@ namespace proteus
                                                        const double& oneByRho,
                                                        const double n[nSpace],
                                                        const double& bc_p,
+                                                       const double& bc_u,
+                                                       const double& bc_v,
+                                                       const double& bc_w,
                                                        const double bc_f_mass[nSpace],
                                                        const double bc_f_umom[nSpace],
                                                        const double bc_f_vmom[nSpace],
@@ -1509,6 +1553,10 @@ namespace proteus
                                                        const double& bc_flux_vmom,
                                                        const double& bc_flux_wmom,
                                                        const double& p,
+						       const double& u,
+						       const double& v,
+						       const double& w,
+						       const double& dmom_u_acc_u,
                                                        const double f_mass[nSpace],
                                                        const double f_umom[nSpace],
                                                        const double f_vmom[nSpace],
@@ -1572,10 +1620,25 @@ namespace proteus
             if (flowSpeedNormal >= 0.0)
               {
                 dflux_umom_du += n[0]*df_umom_du[0];
+                dflux_umom_dv += n[0]*df_umom_dv[0];
+                dflux_umom_dw += n[0]*df_umom_dw[0];
+
                 dflux_vmom_du += n[0]*df_vmom_du[0];
                 dflux_vmom_dv += n[0]*df_vmom_dv[0];
+                dflux_vmom_dw += n[0]*df_vmom_dw[0];
+                
                 dflux_wmom_du += n[0]*df_wmom_du[0];
+                dflux_wmom_dv += n[0]*df_wmom_dv[0];
                 dflux_wmom_dw += n[0]*df_wmom_dw[0];
+              }
+            else
+              {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_umom_du+=(  dmom_u_acc_u*n[0]*(0.0 - u) - flowSpeedNormal ) ;
+		    dflux_umom_dv+= dmom_u_acc_u * (0.0 - u) * n[1];
+		    dflux_umom_dw+= dmom_u_acc_u * (0.0 - u) * n[2];
+		  }
               }
           }
         else
@@ -1585,17 +1648,32 @@ namespace proteus
             if (flowSpeedNormal >= 0.0)
               {
                 dflux_umom_du += n[0]*df_umom_du[0];
+                dflux_umom_dv += n[0]*df_umom_dv[0];
+                dflux_umom_dw += n[0]*df_umom_dw[0];
+                
                 dflux_vmom_du += n[0]*df_vmom_du[0];
                 dflux_vmom_dv += n[0]*df_vmom_dv[0];
+                dflux_vmom_dw += n[0]*df_vmom_dw[0];
+                
                 dflux_wmom_du += n[0]*df_wmom_du[0];
+                dflux_wmom_dv += n[0]*df_wmom_dv[0];
                 dflux_wmom_dw += n[0]*df_wmom_dw[0];
               }
             else
               {
-                if (isDOFBoundary_v != 1)
-                  dflux_vmom_dv += n[0]*df_vmom_dv[0];
-                if (isDOFBoundary_w != 1)
-                  dflux_wmom_dw += n[0]*df_wmom_dw[0];
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_umom_du+=(  dmom_u_acc_u*n[0]*(bc_u-u) - flowSpeedNormal ) ;
+		    dflux_umom_dv+= dmom_u_acc_u * (bc_u - u) * n[1];
+		    dflux_umom_dw+= dmom_u_acc_u * (bc_u - u) * n[2];
+		  }
+		else
+		  {
+                    if (isDOFBoundary_v != 1)
+                      dflux_vmom_dv += n[0]*df_vmom_dv[0];
+                    if (isDOFBoundary_w != 1)
+                      dflux_wmom_dw += n[0]*df_wmom_dw[0];
+                  }
               }
           }
         if (isDOFBoundary_v != 1)
@@ -1605,9 +1683,24 @@ namespace proteus
               {
                 dflux_umom_du += n[1]*df_umom_du[1];
                 dflux_umom_dv += n[1]*df_umom_dv[1];
+                dflux_umom_dw += n[1]*df_umom_dw[1];
+                
+                dflux_vmom_du += n[1]*df_vmom_du[1];
                 dflux_vmom_dv += n[1]*df_vmom_dv[1];
-                dflux_wmom_dw += n[1]*df_wmom_dw[1];
+                dflux_vmom_dw += n[1]*df_vmom_dw[1];
+                
+                dflux_wmom_du += n[1]*df_wmom_du[1];
                 dflux_wmom_dv += n[1]*df_wmom_dv[1];
+                dflux_wmom_dw += n[1]*df_wmom_dw[1];
+              }
+            else
+              {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_vmom_du += dmom_u_acc_u * n[0] * (0.0 - v);
+		    dflux_vmom_dv += ( dmom_u_acc_u * n[1] * (0.0 - v) - flowSpeedNormal) ;
+		    dflux_vmom_dw += dmom_u_acc_u * n[2] * (0.0 - v);
+		  }
               }
           }
         else
@@ -1618,16 +1711,31 @@ namespace proteus
               {
                 dflux_umom_du += n[1]*df_umom_du[1];
                 dflux_umom_dv += n[1]*df_umom_dv[1];
+                dflux_umom_dw += n[1]*df_umom_dw[1];
+
+                dflux_vmom_du += n[1]*df_vmom_du[1];
                 dflux_vmom_dv += n[1]*df_vmom_dv[1];
-                dflux_wmom_dw += n[1]*df_wmom_dw[1];
+                dflux_vmom_dw += n[1]*df_vmom_dw[1];
+                
+                dflux_wmom_du += n[1]*df_wmom_du[1];
                 dflux_wmom_dv += n[1]*df_wmom_dv[1];
+                dflux_wmom_dw += n[1]*df_wmom_dw[1];
               }
             else
               {
-                if (isDOFBoundary_u != 1)
-                  dflux_umom_du += n[1]*df_umom_du[1];
-                if (isDOFBoundary_w != 1)
-                  dflux_wmom_dw += n[1]*df_wmom_dw[1];
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_vmom_du += dmom_u_acc_u * n[0] * (bc_v - v);
+		    dflux_vmom_dv += ( dmom_u_acc_u * n[1] * (bc_v - v) - flowSpeedNormal) ;
+		    dflux_vmom_dw += dmom_u_acc_u * n[2] * (bc_v - v);
+		  }
+		else
+		  {
+                    if (isDOFBoundary_u != 1)
+                      dflux_umom_du += n[1]*df_umom_du[1];
+                    if (isDOFBoundary_w != 1)
+                      dflux_wmom_dw += n[1]*df_wmom_dw[1];
+                  }
               }
           }
         if (isDOFBoundary_w != 1)
@@ -1636,10 +1744,25 @@ namespace proteus
             if (flowSpeedNormal >= 0.0)
               {
                 dflux_umom_du += n[2]*df_umom_du[2];
+                dflux_umom_dv += n[2]*df_umom_dv[2];
                 dflux_umom_dw += n[2]*df_umom_dw[2];
+
+                dflux_vmom_du += n[2]*df_vmom_du[2];
                 dflux_vmom_dv += n[2]*df_vmom_dv[2];
                 dflux_vmom_dw += n[2]*df_vmom_dw[2];
+                
+                dflux_wmom_du += n[2]*df_wmom_du[2];
+                dflux_wmom_dv += n[2]*df_wmom_dv[2];
                 dflux_wmom_dw += n[2]*df_wmom_dw[2];
+              }
+            else
+              {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_wmom_du += dmom_u_acc_u * n[0] * (0.0 - w);
+		    dflux_wmom_dv += dmom_u_acc_u * n[1] * (0.0 - w);
+		    dflux_wmom_dw += ( dmom_u_acc_u * n[2] * (0.0 - w) - flowSpeedNormal) ;
+		  }
               }
           }
         else
@@ -1649,17 +1772,32 @@ namespace proteus
             if (flowSpeedNormal >= 0.0)
               {
                 dflux_umom_du += n[2]*df_umom_du[2];
+                dflux_umom_dv += n[2]*df_umom_dv[2];
                 dflux_umom_dw += n[2]*df_umom_dw[2];
+
+                dflux_vmom_du += n[2]*df_vmom_du[2];
                 dflux_vmom_dv += n[2]*df_vmom_dv[2];
                 dflux_vmom_dw += n[2]*df_vmom_dw[2];
+
+                dflux_wmom_du += n[2]*df_wmom_du[2];
+                dflux_wmom_dv += n[2]*df_wmom_dv[2];
                 dflux_wmom_dw += n[2]*df_wmom_dw[2];
               }
             else
               {
-                if (isDOFBoundary_u != 1)
-                  dflux_umom_du += n[2]*df_umom_du[2];
-                if (isDOFBoundary_v != 1)
-                  dflux_vmom_dv += n[2]*df_vmom_dv[2];
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_wmom_du += dmom_u_acc_u * n[0] * (0.0 - w);
+		    dflux_wmom_dv += dmom_u_acc_u * n[1] * (0.0 - w);
+		    dflux_wmom_dw += ( dmom_u_acc_u * n[2] * (0.0 - w) - flowSpeedNormal) ;
+		  }
+                else
+                  {
+                    if (isDOFBoundary_u != 1)
+                      dflux_umom_du += n[2]*df_umom_du[2];
+                    if (isDOFBoundary_v != 1)
+                      dflux_vmom_dv += n[2]*df_vmom_dv[2];
+                  }
               }
           }
         if (isDOFBoundary_p == 1)
@@ -1744,6 +1882,7 @@ namespace proteus
               }
             penaltyFlux = max_a*penalty*(u-bc_u);
             flux += penaltyFlux;
+            //cek: need to investigate this issue more
             //contact line slip
             //flux*=(smoothedDirac(eps,0) - smoothedDirac(eps,phi))/smoothedDirac(eps,0);
           }
@@ -1782,6 +1921,7 @@ namespace proteus
                 tmp += dvel_I*n[I];
               }
             tmp +=max_a*penalty*v;
+            //cek: need to investigate this issue more
             //contact line slip
             //tmp*=(smoothedDirac(eps,0) - smoothedDirac(eps,phi))/smoothedDirac(eps,0);
           }
@@ -1792,6 +1932,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
+                             double PRESSURE_PROJECTION_STABLIZATION,
                              double* numerical_viscosity,
                              //element
                              double* mesh_trial_ref,
@@ -1867,6 +2008,7 @@ namespace proteus
                              double* w_dof,
                              double* g,
                              const double useVF,
+			     double* q_rho,
                              double* vf,
                              double* phi,
                              double* normal_phi,
@@ -2245,7 +2387,8 @@ namespace proteus
                                      dmom_w_ham_grad_w,
                                      dmom_w_ham_u,
                                      dmom_w_ham_v,
-                                     dmom_w_ham_w);
+                                     dmom_w_ham_w,
+				     q_rho[eN_k]);
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not?
@@ -2331,53 +2474,56 @@ namespace proteus
                 //
                 //moving mesh
                 //
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    mom_u_adv[0] -= MOVING_DOMAIN*dmom_u_acc_u*u*xt;
-                    mom_u_adv[1] -= MOVING_DOMAIN*dmom_u_acc_u*u*yt;
-                    mom_u_adv[2] -= MOVING_DOMAIN*dmom_u_acc_u*u*zt;
+                    mom_u_ham -= MOVING_DOMAIN*dmom_u_acc_u*(grad_u[0]*xt + grad_u[1]*yt + grad_u[2]*zt);
+                    dmom_u_ham_grad_u[0] -= MOVING_DOMAIN*dmom_u_acc_u*xt;
+                    dmom_u_ham_grad_u[1] -= MOVING_DOMAIN*dmom_u_acc_u*yt;
+                    dmom_u_ham_grad_u[2] -= MOVING_DOMAIN*dmom_u_acc_u*zt;
                   }
                 else
                   {
                     mom_u_adv[0] -= MOVING_DOMAIN*mom_u_acc*xt;
                     mom_u_adv[1] -= MOVING_DOMAIN*mom_u_acc*yt;
                     mom_u_adv[2] -= MOVING_DOMAIN*mom_u_acc*zt;
+                    dmom_u_adv_u[0] -= MOVING_DOMAIN*dmom_u_acc_u*xt;
+                    dmom_u_adv_u[1] -= MOVING_DOMAIN*dmom_u_acc_u*yt;
+                    dmom_u_adv_u[2] -= MOVING_DOMAIN*dmom_u_acc_u*zt;
                   }
-                dmom_u_adv_u[0] -= MOVING_DOMAIN*dmom_u_acc_u*xt;
-                dmom_u_adv_u[1] -= MOVING_DOMAIN*dmom_u_acc_u*yt;
-                dmom_u_adv_u[2] -= MOVING_DOMAIN*dmom_u_acc_u*zt;
 
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    mom_v_adv[0] -= MOVING_DOMAIN*dmom_v_acc_v*v*xt;
-                    mom_v_adv[1] -= MOVING_DOMAIN*dmom_v_acc_v*v*yt;
-                    mom_v_adv[2] -= MOVING_DOMAIN*dmom_v_acc_v*v*zt;
+                    mom_v_ham -= MOVING_DOMAIN*dmom_v_acc_v*(grad_v[0]*xt + grad_v[1]*yt + grad_v[2]*zt);
+                    dmom_v_ham_grad_v[0] -= MOVING_DOMAIN*dmom_v_acc_v*xt;
+                    dmom_v_ham_grad_v[1] -= MOVING_DOMAIN*dmom_v_acc_v*yt;
+                    dmom_v_ham_grad_v[2] -= MOVING_DOMAIN*dmom_v_acc_v*zt;
                   }
                 else
                   {
                     mom_v_adv[0] -= MOVING_DOMAIN*mom_v_acc*xt;
                     mom_v_adv[1] -= MOVING_DOMAIN*mom_v_acc*yt;
                     mom_v_adv[2] -= MOVING_DOMAIN*mom_v_acc*zt;
+                    dmom_v_adv_v[0] -= MOVING_DOMAIN*dmom_v_acc_v*xt;
+                    dmom_v_adv_v[1] -= MOVING_DOMAIN*dmom_v_acc_v*yt;
+                    dmom_v_adv_v[2] -= MOVING_DOMAIN*dmom_v_acc_v*zt;
                   }
-                dmom_v_adv_v[0] -= MOVING_DOMAIN*dmom_v_acc_v*xt;
-                dmom_v_adv_v[1] -= MOVING_DOMAIN*dmom_v_acc_v*yt;
-                dmom_v_adv_v[2] -= MOVING_DOMAIN*dmom_v_acc_v*zt;
 
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    mom_w_adv[0] -= MOVING_DOMAIN*dmom_w_acc_w*w*xt;
-                    mom_w_adv[1] -= MOVING_DOMAIN*dmom_w_acc_w*w*yt;
-                    mom_w_adv[2] -= MOVING_DOMAIN*dmom_w_acc_w*w*zt;
+                    mom_w_ham -= MOVING_DOMAIN*dmom_w_acc_w*(grad_w[0]*xt + grad_w[1]*yt + grad_w[2]*zt);
+                    dmom_w_ham_grad_w[0] -= MOVING_DOMAIN*dmom_w_acc_w*xt;
+                    dmom_w_ham_grad_w[1] -= MOVING_DOMAIN*dmom_w_acc_w*yt;
+                    dmom_w_ham_grad_w[2] -= MOVING_DOMAIN*dmom_w_acc_w*zt;
                   }
                 else
                   {
                     mom_w_adv[0] -= MOVING_DOMAIN*mom_w_acc*xt;
                     mom_w_adv[1] -= MOVING_DOMAIN*mom_w_acc*yt;
                     mom_w_adv[2] -= MOVING_DOMAIN*mom_w_acc*zt;
+                    dmom_w_adv_w[0] -= MOVING_DOMAIN*dmom_w_acc_w*xt;
+                    dmom_w_adv_w[1] -= MOVING_DOMAIN*dmom_w_acc_w*yt;
+                    dmom_w_adv_w[2] -= MOVING_DOMAIN*dmom_w_acc_w*zt;
                   }
-                dmom_w_adv_w[0] -= MOVING_DOMAIN*dmom_w_acc_w*xt;
-                dmom_w_adv_w[1] -= MOVING_DOMAIN*dmom_w_acc_w*yt;
-                dmom_w_adv_w[2] -= MOVING_DOMAIN*dmom_w_acc_w*zt;
                 //
                 //calculate time derivative at quadrature points
                 //
@@ -2402,7 +2548,7 @@ namespace proteus
                        dmom_w_acc_w,
                        mom_w_acc_t,
                        dmom_w_acc_w_t);
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
                     mom_u_acc_t *= dmom_u_acc_u;
                     mom_v_acc_t *= dmom_v_acc_v;
@@ -2421,12 +2567,12 @@ namespace proteus
                 //
                 if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    dmom_adv_sge[0] =  - dmom_u_acc_u*MOVING_DOMAIN*xt;
-                    dmom_adv_sge[1] =  - dmom_u_acc_u*MOVING_DOMAIN*yt;
-                    dmom_adv_sge[2] =  - dmom_u_acc_u*MOVING_DOMAIN*zt;
-                    dmom_ham_grad_sge[0] = dmom_u_acc_u*q_velocity_sge[eN_k_nSpace+0];
-                    dmom_ham_grad_sge[1] = dmom_u_acc_u*q_velocity_sge[eN_k_nSpace+1];
-                    dmom_ham_grad_sge[2] = dmom_u_acc_u*q_velocity_sge[eN_k_nSpace+2];
+                    dmom_adv_sge[0] = 0.0;
+                    dmom_adv_sge[1] = 0.0;
+                    dmom_adv_sge[2] = 0.0;
+                    dmom_ham_grad_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
+                    dmom_ham_grad_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
+                    dmom_ham_grad_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt);
                   }
                 else
                   {
@@ -2447,24 +2593,24 @@ namespace proteus
                   ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_u) +
                   ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
                   ck.Reaction_strong(mom_u_source) -
-                  ck.Reaction_strong(u*div_mesh_velocity);
+                  ck.Reaction_strong(dmom_u_acc_u*u*div_mesh_velocity);
 
                 pdeResidual_v = ck.Mass_strong(mom_v_acc_t) +
                   ck.Advection_strong(dmom_adv_sge,grad_v) +
                   ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_v) +
                   ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) +
                   ck.Reaction_strong(mom_v_source) -
-                  ck.Reaction_strong(v*div_mesh_velocity);
+                  ck.Reaction_strong(dmom_v_acc_v*v*div_mesh_velocity);
 
                 pdeResidual_w = ck.Mass_strong(mom_w_acc_t) +
                   ck.Advection_strong(dmom_adv_sge,grad_w) +
                   ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_w) +
                   ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) +
                   ck.Reaction_strong(mom_w_source) -
-                  ck.Reaction_strong(w*div_mesh_velocity);
+                  ck.Reaction_strong(dmom_w_acc_w*w*div_mesh_velocity);
 
                 //calculate tau and tau*Res
-                //cek debug
+                //add contributions from mass and source terms
                 double tmpR=dmom_u_acc_u_t + dmom_u_source[0];
                 calculateSubgridError_tau(hFactor,
                                           elementDiameter[eN],
@@ -2575,7 +2721,7 @@ namespace proteus
                       ck.Diffusion_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) +
                       ck.Diffusion_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) +
                       ck.Diffusion_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +
-                      ck.Reaction_weak(mom_u_source,vel_test_dV[i]) +
+                      ck.Reaction_weak(mom_u_source+NONCONSERVATIVE_FORM*dmom_u_acc_u*u*div_mesh_velocity,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) +
                       MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
                       MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridError(subgridError_u,Lstar_u_u[i]) +
@@ -2586,7 +2732,7 @@ namespace proteus
                       ck.Diffusion_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) +
                       ck.Diffusion_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) +
                       ck.Diffusion_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +
-                      ck.Reaction_weak(mom_v_source,vel_test_dV[i]) +
+                      ck.Reaction_weak(mom_v_source+NONCONSERVATIVE_FORM*dmom_v_acc_v*v*div_mesh_velocity,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) +
                       MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
                       MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridError(subgridError_v,Lstar_v_v[i]) +
@@ -2597,7 +2743,7 @@ namespace proteus
                       ck.Diffusion_weak(sdInfo_w_u_rowptr,sdInfo_w_u_colind,mom_wu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) +
                       ck.Diffusion_weak(sdInfo_w_v_rowptr,sdInfo_w_v_colind,mom_wv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) +
                       ck.Diffusion_weak(sdInfo_w_w_rowptr,sdInfo_w_w_colind,mom_ww_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +
-                      ck.Reaction_weak(mom_w_source,vel_test_dV[i]) +
+                      ck.Reaction_weak(mom_w_source+NONCONSERVATIVE_FORM*dmom_w_acc_w*w*div_mesh_velocity,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_w_ham,vel_test_dV[i]) +
                       MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridError(subgridError_p,Lstar_p_w[i]) +
                       MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridError(subgridError_w,Lstar_w_w[i]) +
@@ -2885,6 +3031,7 @@ namespace proteus
                 //calculate the pde coefficients using the solution and the boundary values for the solution
                 //
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
+		double rho;
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
@@ -2965,7 +3112,8 @@ namespace proteus
                                      dmom_w_ham_grad_w_ext,
                                      dmom_w_ham_u_ext,
                                      dmom_w_ham_v_ext,
-                                     dmom_w_ham_w_ext);
+                                     dmom_w_ham_w_ext,
+				     rho);
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
@@ -3046,7 +3194,8 @@ namespace proteus
                                      bc_dmom_w_ham_grad_w_ext,
                                      bc_dmom_w_ham_u_ext,
                                      bc_dmom_w_ham_v_ext,
-                                     bc_dmom_w_ham_w_ext);
+                                     bc_dmom_w_ham_w_ext,
+				     rho);
 
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
@@ -3118,92 +3267,71 @@ namespace proteus
                 //
                 //moving domain
                 //
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*xt_ext;
-                    mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*yt_ext;
-                    mom_u_adv_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*zt_ext;
+                    mom_u_ham_ext -= MOVING_DOMAIN*dmom_u_acc_u_ext*(grad_u_ext[0]*xt_ext + grad_u_ext[1]*yt_ext + grad_u_ext[2]*zt_ext);
+                    dmom_u_ham_grad_u_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*xt_ext;
+                    dmom_u_ham_grad_u_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*yt_ext;
+                    dmom_u_ham_grad_u_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*zt_ext;
                   }
                 else
                   {
                     mom_u_adv_ext[0] -= MOVING_DOMAIN*mom_u_acc_ext*xt_ext;
                     mom_u_adv_ext[1] -= MOVING_DOMAIN*mom_u_acc_ext*yt_ext;
                     mom_u_adv_ext[2] -= MOVING_DOMAIN*mom_u_acc_ext*zt_ext;
+                    dmom_u_adv_u_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*xt_ext;
+                    dmom_u_adv_u_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*yt_ext;
+                    dmom_u_adv_u_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*zt_ext;
                   }
 
-                dmom_u_adv_u_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*xt_ext;
-                dmom_u_adv_u_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*yt_ext;
-                dmom_u_adv_u_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*zt_ext;
 
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*xt_ext;
-                    mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*yt_ext;
-                    mom_v_adv_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*zt_ext;
+                    mom_v_ham_ext -= MOVING_DOMAIN*dmom_v_acc_v_ext*(grad_v_ext[0]*xt_ext + grad_v_ext[1]*yt_ext + grad_v_ext[2]*zt_ext);
+                    dmom_v_ham_grad_v_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*xt_ext;
+                    dmom_v_ham_grad_v_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*yt_ext;
+                    dmom_v_ham_grad_v_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*zt_ext;
                   }
                 else
                   {
                     mom_v_adv_ext[0] -= MOVING_DOMAIN*mom_v_acc_ext*xt_ext;
                     mom_v_adv_ext[1] -= MOVING_DOMAIN*mom_v_acc_ext*yt_ext;
                     mom_v_adv_ext[2] -= MOVING_DOMAIN*mom_v_acc_ext*zt_ext;
+                    dmom_v_adv_v_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*xt_ext;
+                    dmom_v_adv_v_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*yt_ext;
+                    dmom_v_adv_v_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*zt_ext;
                   }
 
-                dmom_v_adv_v_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*xt_ext;
-                dmom_v_adv_v_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*yt_ext;
-                dmom_v_adv_v_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*zt_ext;
 
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    mom_w_adv_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*z_ext*xt_ext;
-                    mom_w_adv_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*z_ext*yt_ext;
-                    mom_w_adv_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*z_ext*zt_ext;
+                    mom_w_ham_ext -= MOVING_DOMAIN*dmom_w_acc_w_ext*(grad_w_ext[0]*xt_ext + grad_w_ext[1]*yt_ext + grad_w_ext[2]*zt_ext);
+                    dmom_w_ham_grad_w_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*xt_ext;
+                    dmom_w_ham_grad_w_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*yt_ext;
+                    dmom_w_ham_grad_w_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*zt_ext;
                   }
                 else
                   {
                     mom_w_adv_ext[0] -= MOVING_DOMAIN*mom_w_acc_ext*xt_ext;
                     mom_w_adv_ext[1] -= MOVING_DOMAIN*mom_w_acc_ext*yt_ext;
                     mom_w_adv_ext[2] -= MOVING_DOMAIN*mom_w_acc_ext*zt_ext;
+                    dmom_w_adv_w_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*xt_ext;
+                    dmom_w_adv_w_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*yt_ext;
+                    dmom_w_adv_w_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*zt_ext;
                   }
 
-                dmom_w_adv_w_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*xt_ext;
-                dmom_w_adv_w_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*yt_ext;
-                dmom_w_adv_w_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*zt_ext;
 
                 //bc's
-                if (NONCONSERVATIVE_FORM)
-                  {
-                    bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_u_ext*xt_ext;
-                    bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_u_ext*yt_ext;
-                    bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_u_ext*zt_ext;
-                  }
-                else
+                if (NONCONSERVATIVE_FORM < 1.0)
                   {
                     bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_mom_u_acc_ext*xt_ext;
                     bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_mom_u_acc_ext*yt_ext;
                     bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_mom_u_acc_ext*zt_ext;
-                  }
 
-                if (NONCONSERVATIVE_FORM)
-                  {
-                    bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_v_ext*xt_ext;
-                    bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_v_ext*yt_ext;
-                    bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_v_ext*zt_ext;
-                  }
-                else
-                  {
                     bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_mom_v_acc_ext*xt_ext;
                     bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_mom_v_acc_ext*yt_ext;
                     bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*bc_mom_v_acc_ext*zt_ext;
-                  }
 
-                if (NONCONSERVATIVE_FORM)
-                  {
-                    bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_mom_w_acc_ext*bc_w_ext*xt_ext;
-                    bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*bc_mom_w_acc_ext*bc_w_ext*yt_ext;
-                    bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*bc_mom_w_acc_ext*bc_w_ext*zt_ext;
-                  }
-                else
-                  {
                     bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_mom_w_acc_ext*xt_ext;
                     bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*bc_mom_w_acc_ext*yt_ext;
                     bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*bc_mom_w_acc_ext*zt_ext;
@@ -3584,6 +3712,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
+                             double PRESSURE_PROJECTION_STABLIZATION,
                              //element
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
@@ -3982,6 +4111,7 @@ namespace proteus
                 //calculate pde coefficients and derivatives at quadrature points
                 //
                 double eddy_viscosity(0.);//not really interested in saving eddy_viscosity in jacobian
+		double rho;
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
@@ -4062,7 +4192,8 @@ namespace proteus
                                      dmom_w_ham_grad_w,
                                      dmom_w_ham_u,
                                      dmom_w_ham_v,
-                                     dmom_w_ham_w);
+                                     dmom_w_ham_w,
+				     rho);
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not
@@ -4138,53 +4269,56 @@ namespace proteus
                 //
                 //moving mesh
                 //
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    mom_u_adv[0] -= MOVING_DOMAIN*dmom_u_acc_u*u*xt;
-                    mom_u_adv[1] -= MOVING_DOMAIN*dmom_u_acc_u*u*yt;
-                    mom_u_adv[2] -= MOVING_DOMAIN*dmom_u_acc_u*u*zt;
+                    mom_u_ham -= MOVING_DOMAIN*dmom_u_acc_u*(grad_u[0]*xt + grad_u[1]*yt + grad_u[2]*zt);
+                    dmom_u_ham_grad_u[0] -= MOVING_DOMAIN*dmom_u_acc_u*xt;
+                    dmom_u_ham_grad_u[1] -= MOVING_DOMAIN*dmom_u_acc_u*yt;
+                    dmom_u_ham_grad_u[2] -= MOVING_DOMAIN*dmom_u_acc_u*zt;
                   }
                 else
                   {
                     mom_u_adv[0] -= MOVING_DOMAIN*mom_u_acc*xt;
                     mom_u_adv[1] -= MOVING_DOMAIN*mom_u_acc*yt;
                     mom_u_adv[2] -= MOVING_DOMAIN*mom_u_acc*zt;
+                    dmom_u_adv_u[0] -= MOVING_DOMAIN*dmom_u_acc_u*xt;
+                    dmom_u_adv_u[1] -= MOVING_DOMAIN*dmom_u_acc_u*yt;
+                    dmom_u_adv_u[2] -= MOVING_DOMAIN*dmom_u_acc_u*zt;
                   }
-                dmom_u_adv_u[0] -= MOVING_DOMAIN*dmom_u_acc_u*xt;
-                dmom_u_adv_u[1] -= MOVING_DOMAIN*dmom_u_acc_u*yt;
-                dmom_u_adv_u[2] -= MOVING_DOMAIN*dmom_u_acc_u*zt;
 
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    mom_v_adv[0] -= MOVING_DOMAIN*dmom_v_acc_v*v*xt;
-                    mom_v_adv[1] -= MOVING_DOMAIN*dmom_v_acc_v*v*yt;
-                    mom_v_adv[2] -= MOVING_DOMAIN*dmom_v_acc_v*v*zt;
+                    mom_v_ham -= MOVING_DOMAIN*dmom_v_acc_v*(grad_v[0]*xt + grad_v[1]*yt + grad_v[2]*zt);
+                    dmom_v_ham_grad_v[0] -= MOVING_DOMAIN*dmom_v_acc_v*xt;
+                    dmom_v_ham_grad_v[1] -= MOVING_DOMAIN*dmom_v_acc_v*yt;
+                    dmom_v_ham_grad_v[2] -= MOVING_DOMAIN*dmom_v_acc_v*zt;
                   }
                 else
                   {
                     mom_v_adv[0] -= MOVING_DOMAIN*mom_v_acc*xt;
                     mom_v_adv[1] -= MOVING_DOMAIN*mom_v_acc*yt;
                     mom_v_adv[2] -= MOVING_DOMAIN*mom_v_acc*zt;
+                    dmom_v_adv_v[0] -= MOVING_DOMAIN*dmom_v_acc_v*xt;
+                    dmom_v_adv_v[1] -= MOVING_DOMAIN*dmom_v_acc_v*yt;
+                    dmom_v_adv_v[2] -= MOVING_DOMAIN*dmom_v_acc_v*zt;
                   }
-                dmom_v_adv_v[0] -= MOVING_DOMAIN*dmom_v_acc_v*xt;
-                dmom_v_adv_v[1] -= MOVING_DOMAIN*dmom_v_acc_v*yt;
-                dmom_v_adv_v[2] -= MOVING_DOMAIN*dmom_v_acc_v*zt;
 
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    mom_w_adv[0] -= MOVING_DOMAIN*dmom_w_acc_w*w*xt;
-                    mom_w_adv[1] -= MOVING_DOMAIN*dmom_w_acc_w*w*yt;
-                    mom_w_adv[2] -= MOVING_DOMAIN*dmom_w_acc_w*w*zt;
+                    mom_w_ham -= MOVING_DOMAIN*dmom_w_acc_w*(grad_w[0]*xt + grad_w[1]*yt + grad_w[2]*zt);
+                    dmom_w_ham_grad_w[0] -= MOVING_DOMAIN*dmom_w_acc_w*xt;
+                    dmom_w_ham_grad_w[1] -= MOVING_DOMAIN*dmom_w_acc_w*yt;
+                    dmom_w_ham_grad_w[2] -= MOVING_DOMAIN*dmom_w_acc_w*zt;
                   }
                 else
                   {
                     mom_w_adv[0] -= MOVING_DOMAIN*mom_w_acc*xt;
                     mom_w_adv[1] -= MOVING_DOMAIN*mom_w_acc*yt;
                     mom_w_adv[2] -= MOVING_DOMAIN*mom_w_acc*zt;
+                    dmom_w_adv_w[0] -= MOVING_DOMAIN*dmom_w_acc_w*xt;
+                    dmom_w_adv_w[1] -= MOVING_DOMAIN*dmom_w_acc_w*yt;
+                    dmom_w_adv_w[2] -= MOVING_DOMAIN*dmom_w_acc_w*zt;
                   }
-                dmom_w_adv_w[0] -= MOVING_DOMAIN*dmom_w_acc_w*xt;
-                dmom_w_adv_w[1] -= MOVING_DOMAIN*dmom_w_acc_w*yt;
-                dmom_w_adv_w[2] -= MOVING_DOMAIN*dmom_w_acc_w*zt;
                 //
                 //calculate time derivatives
                 //
@@ -4206,7 +4340,7 @@ namespace proteus
                        dmom_w_acc_w,
                        mom_w_acc_t,
                        dmom_w_acc_w_t);
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
                     mom_u_acc_t *= dmom_u_acc_u;
                     mom_v_acc_t *= dmom_v_acc_v;
@@ -4217,12 +4351,12 @@ namespace proteus
                 //
                 if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    dmom_adv_sge[0] =  - dmom_u_acc_u*MOVING_DOMAIN*xt;
-                    dmom_adv_sge[1] =  - dmom_u_acc_u*MOVING_DOMAIN*yt;
-                    dmom_adv_sge[2] =  - dmom_u_acc_u*MOVING_DOMAIN*zt;
-                    dmom_ham_grad_sge[0] = dmom_u_acc_u*q_velocity_sge[eN_k_nSpace+0];
-                    dmom_ham_grad_sge[1] = dmom_u_acc_u*q_velocity_sge[eN_k_nSpace+1];
-                    dmom_ham_grad_sge[2] = dmom_u_acc_u*q_velocity_sge[eN_k_nSpace+2];
+                    dmom_adv_sge[0] = 0.0;
+                    dmom_adv_sge[1] = 0.0;
+                    dmom_adv_sge[2] = 0.0;
+                    dmom_ham_grad_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
+                    dmom_ham_grad_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
+                    dmom_ham_grad_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt);
                   }
                 else
                   {
@@ -4253,21 +4387,21 @@ namespace proteus
                   ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_u) +
                   ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
                   ck.Reaction_strong(mom_u_source) -
-                  ck.Reaction_strong(u*div_mesh_velocity);
+                  ck.Reaction_strong(dmom_u_acc_u*u*div_mesh_velocity);
 
                 pdeResidual_v = ck.Mass_strong(mom_v_acc_t) +
                   ck.Advection_strong(dmom_adv_sge,grad_v) +
                   ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_v) +
                   ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) +
                   ck.Reaction_strong(mom_v_source)  -
-                  ck.Reaction_strong(v*div_mesh_velocity);
+                  ck.Reaction_strong(dmom_v_acc_v*v*div_mesh_velocity);
 
                 pdeResidual_w = ck.Mass_strong(mom_w_acc_t) +
                   ck.Advection_strong(dmom_adv_sge,grad_w) +
                   ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_w) +
                   ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) +
                   ck.Reaction_strong(mom_w_source) -
-                  ck.Reaction_strong(w*div_mesh_velocity);
+                  ck.Reaction_strong(dmom_w_acc_w*w*div_mesh_velocity);
 
                 //calculate the Jacobian of strong residual
                 for (int j=0;j<nDOF_trial_element;j++)
@@ -4281,19 +4415,19 @@ namespace proteus
                     dpdeResidual_u_u[j]=ck.MassJacobian_strong(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j]) +
                       ck.HamiltonianJacobian_strong(dmom_ham_grad_sge,&vel_grad_trial[j_nSpace]) +
                       ck.AdvectionJacobian_strong(dmom_adv_sge,&vel_grad_trial[j_nSpace]) -
-                      ck.ReactionJacobian_strong(div_mesh_velocity,vel_trial_ref[k*nDOF_trial_element+j]);
+                      ck.ReactionJacobian_strong(dmom_u_acc_u*div_mesh_velocity,vel_trial_ref[k*nDOF_trial_element+j]);
 
                     dpdeResidual_v_p[j]=ck.HamiltonianJacobian_strong(dmom_v_ham_grad_p,&p_grad_trial[j_nSpace]);
                     dpdeResidual_v_v[j]=ck.MassJacobian_strong(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j]) +
                       ck.HamiltonianJacobian_strong(dmom_ham_grad_sge,&vel_grad_trial[j_nSpace]) +
                       ck.AdvectionJacobian_strong(dmom_adv_sge,&vel_grad_trial[j_nSpace]) -
-                      ck.ReactionJacobian_strong(div_mesh_velocity,vel_trial_ref[k*nDOF_trial_element+j]);
+                      ck.ReactionJacobian_strong(dmom_v_acc_v*div_mesh_velocity,vel_trial_ref[k*nDOF_trial_element+j]);
 
                     dpdeResidual_w_p[j]=ck.HamiltonianJacobian_strong(dmom_w_ham_grad_p,&p_grad_trial[j_nSpace]);
                     dpdeResidual_w_w[j]=ck.MassJacobian_strong(dmom_w_acc_w_t,vel_trial_ref[k*nDOF_trial_element+j]) +
                       ck.HamiltonianJacobian_strong(dmom_ham_grad_sge,&vel_grad_trial[j_nSpace]) +
                       ck.AdvectionJacobian_strong(dmom_adv_sge,&vel_grad_trial[j_nSpace]) -
-                      ck.ReactionJacobian_strong(div_mesh_velocity,vel_trial_ref[k*nDOF_trial_element+j]);
+                      ck.ReactionJacobian_strong(dmom_w_acc_w*div_mesh_velocity,vel_trial_ref[k*nDOF_trial_element+j]);
 
                     //VRANS account for drag terms, diagonal only here ... decide if need off diagonal terms too
                     dpdeResidual_u_u[j]+= ck.ReactionJacobian_strong(dmom_u_source[0],vel_trial_ref[k*nDOF_trial_element+j]);
@@ -4301,7 +4435,7 @@ namespace proteus
                     dpdeResidual_w_w[j]+= ck.ReactionJacobian_strong(dmom_w_source[2],vel_trial_ref[k*nDOF_trial_element+j]);
                   }
                 //calculate tau and tau*Res
-                //cek debug
+                //add contributions from mass and sourced terms
                 double tmpR=dmom_u_acc_u_t + dmom_u_source[0];
                 calculateSubgridError_tau(hFactor,
                                           elementDiameter[eN],
@@ -4423,7 +4557,7 @@ namespace proteus
                           ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
                           ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
                           //VRANS
-                          ck.ReactionJacobian_weak(dmom_u_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
+                          ck.ReactionJacobian_weak(dmom_u_source[0]+NONCONSERVATIVE_FORM*dmom_u_acc_u*div_mesh_velocity,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           //
                           MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
                           MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) +
@@ -4460,7 +4594,7 @@ namespace proteus
                           ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
                           ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
                           //VRANS
-                          ck.ReactionJacobian_weak(dmom_v_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
+                          ck.ReactionJacobian_weak(dmom_v_source[1]+NONCONSERVATIVE_FORM*dmom_v_acc_v*div_mesh_velocity,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           //
                           MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
                           MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) +
@@ -4497,7 +4631,7 @@ namespace proteus
                           ck.AdvectionJacobian_weak(dmom_w_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
                           ck.SimpleDiffusionJacobian_weak(sdInfo_w_w_rowptr,sdInfo_w_w_colind,mom_ww_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
                           //VRANS
-                          ck.ReactionJacobian_weak(dmom_w_source[2],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
+                          ck.ReactionJacobian_weak(dmom_w_source[2]+NONCONSERVATIVE_FORM*dmom_w_acc_w*div_mesh_velocity,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           //
                           MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridErrorJacobian(dsubgridError_p_w[j],Lstar_p_w[i]) +
                           MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_w_w[j],Lstar_w_w[i]) +
@@ -4794,6 +4928,7 @@ namespace proteus
                 //calculate the internal and external trace of the pde coefficients
                 //
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.);//not interested in saving boundary eddy viscosity for now
+		double rho;
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
@@ -4874,7 +5009,8 @@ namespace proteus
                                      dmom_w_ham_grad_w_ext,
                                      dmom_w_ham_u_ext,
                                      dmom_w_ham_v_ext,
-                                     dmom_w_ham_w_ext);
+                                     dmom_w_ham_w_ext,
+				     rho);
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
@@ -4955,7 +5091,8 @@ namespace proteus
                                      bc_dmom_w_ham_grad_w_ext,
                                      bc_dmom_w_ham_u_ext,
                                      bc_dmom_w_ham_v_ext,
-                                     bc_dmom_w_ham_w_ext);
+                                     bc_dmom_w_ham_w_ext,
+				     rho);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -5024,91 +5161,74 @@ namespace proteus
                 //
                 //moving domain
                 //
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*xt_ext;
-                    mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*yt_ext;
-                    mom_u_adv_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*zt_ext;
+                    mom_u_ham_ext -= MOVING_DOMAIN*dmom_u_acc_u_ext*(grad_u_ext[0]*xt_ext +
+                                                                     grad_u_ext[1]*yt_ext +
+                                                                     grad_u_ext[2]*zt_ext);
+                    dmom_u_ham_grad_u_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*xt_ext;
+                    dmom_u_ham_grad_u_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*yt_ext;
+                    dmom_u_ham_grad_u_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*zt_ext;
                   }
                 else
                   {
                     mom_u_adv_ext[0] -= MOVING_DOMAIN*mom_u_acc_ext*xt_ext;
                     mom_u_adv_ext[1] -= MOVING_DOMAIN*mom_u_acc_ext*yt_ext;
                     mom_u_adv_ext[2] -= MOVING_DOMAIN*mom_u_acc_ext*zt_ext;
+                    dmom_u_adv_u_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*xt_ext;
+                    dmom_u_adv_u_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*yt_ext;
+                    dmom_u_adv_u_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*zt_ext;
                   }
-                dmom_u_adv_u_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*xt_ext;
-                dmom_u_adv_u_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*yt_ext;
-                dmom_u_adv_u_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*zt_ext;
 
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*xt_ext;
-                    mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*yt_ext;
-                    mom_v_adv_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*zt_ext;
+                    mom_v_ham_ext -= MOVING_DOMAIN*dmom_v_acc_v_ext*(grad_v_ext[0]*xt_ext +
+                                                                     grad_v_ext[1]*yt_ext +
+                                                                     grad_v_ext[2]*zt_ext);
+                    dmom_v_ham_grad_v_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*xt_ext;
+                    dmom_v_ham_grad_v_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*yt_ext;
+                    dmom_v_ham_grad_v_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*zt_ext;
                   }
                 else
                   {
                     mom_v_adv_ext[0] -= MOVING_DOMAIN*mom_v_acc_ext*xt_ext;
                     mom_v_adv_ext[1] -= MOVING_DOMAIN*mom_v_acc_ext*yt_ext;
                     mom_v_adv_ext[2] -= MOVING_DOMAIN*mom_v_acc_ext*zt_ext;
+                    dmom_v_adv_v_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*xt_ext;
+                    dmom_v_adv_v_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*yt_ext;
+                    dmom_v_adv_v_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*zt_ext;
                   }
 
-                dmom_v_adv_v_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*xt_ext;
-                dmom_v_adv_v_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*yt_ext;
-                dmom_v_adv_v_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*zt_ext;
-
-                if (NONCONSERVATIVE_FORM)
+                if (NONCONSERVATIVE_FORM > 0.0)
                   {
-                    mom_w_adv_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*w_ext*xt_ext;
-                    mom_w_adv_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*w_ext*yt_ext;
-                    mom_w_adv_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*w_ext*zt_ext;
+                    mom_w_ham_ext -= MOVING_DOMAIN*dmom_w_acc_w_ext*(grad_w_ext[0]*xt_ext +
+                                                                     grad_w_ext[1]*yt_ext +
+                                                                     grad_w_ext[2]*zt_ext);
+                    dmom_w_ham_grad_w_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*xt_ext;
+                    dmom_w_ham_grad_w_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*yt_ext;
+                    dmom_w_ham_grad_w_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*zt_ext;
                   }
                 else
                   {
                     mom_w_adv_ext[0] -= MOVING_DOMAIN*mom_w_acc_ext*xt_ext;
                     mom_w_adv_ext[1] -= MOVING_DOMAIN*mom_w_acc_ext*yt_ext;
                     mom_w_adv_ext[2] -= MOVING_DOMAIN*mom_w_acc_ext*zt_ext;
+                    dmom_w_adv_w_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*xt_ext;
+                    dmom_w_adv_w_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*yt_ext;
+                    dmom_w_adv_w_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*zt_ext;
                   }
-
-                dmom_w_adv_w_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*xt_ext;
-                dmom_w_adv_w_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*yt_ext;
-                dmom_w_adv_w_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*zt_ext;
 
                 //moving domain bc's
-                if (NONCONSERVATIVE_FORM)
-                  {
-                    bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*u_ext*xt_ext;
-                    bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*u_ext*yt_ext;
-                    bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*u_ext*zt_ext;
-                  }
-                else
+                if (NONCONSERVATIVE_FORM < 1.0)
                   {
                     bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_mom_u_acc_ext*xt_ext;
                     bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_mom_u_acc_ext*yt_ext;
                     bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_mom_u_acc_ext*zt_ext;
-                  }
 
-                if (NONCONSERVATIVE_FORM)
-                  {
-                    bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*v_ext*xt_ext;
-                    bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*v_ext*yt_ext;
-                    bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*v_ext*zt_ext;
-                  }
-                else
-                  {
                     bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_mom_v_acc_ext*xt_ext;
                     bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_mom_v_acc_ext*yt_ext;
                     bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*bc_mom_v_acc_ext*zt_ext;
-                  }
 
-                if (NONCONSERVATIVE_FORM)
-                  {
-                    bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*w_ext*xt_ext;
-                    bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*w_ext*yt_ext;
-                    bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*w_ext*zt_ext;
-                  }
-                else
-                  {
                     bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_mom_w_acc_ext*xt_ext;
                     bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*bc_mom_w_acc_ext*yt_ext;
                     bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*bc_mom_w_acc_ext*zt_ext;
@@ -5128,6 +5248,9 @@ namespace proteus
                                                           dmom_u_ham_grad_p_ext[0],//=1/rho
                                                           normal,
                                                           bc_p_ext,
+                                                          bc_u_ext,
+                                                          bc_v_ext,
+                                                          bc_w_ext,
                                                           bc_mass_adv_ext,
                                                           bc_mom_u_adv_ext,
                                                           bc_mom_v_adv_ext,
@@ -5137,6 +5260,10 @@ namespace proteus
                                                           ebqe_bc_flux_mom_v_adv_ext[ebNE_kb],
                                                           ebqe_bc_flux_mom_w_adv_ext[ebNE_kb],
                                                           p_ext,
+                                                          u_ext,
+                                                          v_ext,
+                                                          w_ext,
+                                                          dmom_u_acc_u_ext,
                                                           mass_adv_ext,
                                                           mom_u_adv_ext,
                                                           mom_v_adv_ext,

@@ -1,3 +1,5 @@
+//#pragma once
+
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/solver/ChSolverMINRES.h"
@@ -19,7 +21,6 @@ class cppSystem {
   cppSystem(double* gravity);
   void step(double proteus_dt, int n_substeps);
   void setChTimeStep(double dt);
-  void recordBodyList();
   void setGravity(double* gravity);
   void setDirectory(std::string dir);
   void setTimestepperType(std::string tstype, bool verbose);
@@ -79,6 +80,7 @@ class cppRigidBody {
                                    double stiffness,
                                    double damping,
                                    double rest_length);
+  void addPrismaticLinkX(double* pris1);
   void setName(std::string name);
   void setPrescribedMotionPoly(double coeff1);
   void setPrescribedMotionSine(double a, double f);
@@ -101,7 +103,7 @@ gravity(gravity)
   system.SetSolverWarmStarting(true);  // this helps a lot to speedup convergence in this class of problems
   system.SetMaxItersSolverSpeed(100); // max iteration for iterative solvers
   system.SetMaxItersSolverStab(100); // max iteration for stabilization (iterative solvers)
-  system.SetTolForce(1e-13);
+  system.SetTolForce(1e-10);
   //system.SetMaxItersSolverSpeed(100);  
   //system.SetMaxItersSolverStab(100);  
   //system.SetTolForce(1e-14); // default: 0.001
@@ -140,50 +142,11 @@ void cppSystem::setGravity(double* gravity)
 
 void cppSystem::step(double proteus_dt, int n_substeps=1)
 {
-  /* std::vector<std::shared_ptr<ChBody>>& bodylist = *system.Get_bodylist(); */
-  /* std::shared_ptr<ChBody> bod = bodylist[0]; */
-  /* GetLog() << "nan test2" << bod->GetPos() ; */
     double dt2 = proteus_dt/(double)n_substeps;
    for (int i = 0; i < n_substeps; ++i) {
-      /* GetLog() << dt2*i << " " << dt2 << " "  << i << " "<< n_substeps << bod->GetPos(); */
      system.DoStepDynamics(dt2);
    }
 }
-
-void cppSystem::recordBodyList() {
-      std::vector<std::shared_ptr<ChBody>>& bodylist = *system.Get_bodylist();
-      double t = system.GetChTime();
-      if (t == 0) {
-          for (int i = 0; i<bodylist.size(); i++) {
-              std::shared_ptr<ChBody> bod = bodylist[i];
-              fstream myfile;
-              myfile.open (directory+bod->GetNameString()+".csv", std::ios_base::out);
-              myfile << "t,x,y,z,e0,e1,e2,e3,ux,uy,uz,ax,ay,az,Fx,Fy,Fz,Mx,My,Mz,\n";
-              myfile.close();
-          }
-      }
-      for (int i = 0; i<bodylist.size(); i++) {
-          std::shared_ptr<ChBody> bod = bodylist[i];
-          fstream myfile;
-          myfile.open (directory+bod->GetNameString()+".csv", std::ios_base::app);     
-          ChVector<> bpos = bod->GetPos();
-          ChVector<> bvel = bod->GetPos_dt();
-          ChVector<> bacc = bod->GetPos_dtdt();
-          ChVector<> bfor = bod->Get_Xforce();
-          ChVector<> btor = bod->Get_Xtorque();
-          ChQuaternion<> brot = bod->GetRot();
-          myfile << t << ",";     
-          myfile << bpos.x() << "," << bpos.y() << "," << bpos.z() << ",";     
-          myfile << brot.e0() << "," << brot.e1() << "," << brot.e2() << "," << brot.e3() << ",";     
-          myfile << bvel.x() << "," << bvel.y() << "," << bvel.z() << ",";     
-          myfile << bacc.x() << "," << bacc.y() << "," << bacc.z() << ",";     
-          myfile << bfor.x() << "," << bfor.y() << "," << bfor.z() << ",";     
-          myfile << btor.x() << "," << btor.y() << "," << btor.z() << ",";     
-          myfile << "\n";        
-          myfile.close();
-    }
-}
-
 
 void cppSystem::setChTimeStep(double dt) {
     chrono_dt = dt;
@@ -204,6 +167,7 @@ cppRigidBody::cppRigidBody(cppSystem* system):
   body->SetMass(mass);
   free_x = {1., 1., 1.};
   free_r = {1., 1., 1.};
+  lock_motion_t_max = 0.;
 }
 
 
@@ -449,6 +413,20 @@ void cppRigidBody::addSpring(double stiffness,
   system->system.AddLink(spring);
 }
 
+void cppRigidBody::addPrismaticLinkX(double* pris1)
+{
+  auto mybod2 = std::make_shared<ChBody>();
+  mybod2->SetName("PRIS1");
+  mybod2->SetPos(ChVector<>(pris1[0], pris1[1], pris1[2]));
+  mybod2->SetMass(0.00001);
+  mybod2->SetBodyFixed(true);
+  system->system.AddBody(mybod2);
+  auto mylink1 = std::make_shared<ChLinkLockPrismatic>();
+  auto mycoordsys1 = ChCoordsys<>(mybod2->GetPos(),Q_from_AngAxis(CH_C_PI/2., VECT_Y));//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+  mylink1->Initialize(mybod2, body, mycoordsys1);
+  system->system.AddLink(mylink1);
+}
+
 void cppRigidBody::addPrismaticLinksWithSpring(double* pris1,
                                                double* pris2,
                                                double stiffness,
@@ -526,3 +504,42 @@ cppRigidBody * newRigidBody(cppSystem* system)
 }
 
 
+
+void ChLinkLockBodies(std::shared_ptr<ChBody> body1,
+                      std::shared_ptr<ChBody> body2,
+                      ChSystemSMC& system,
+                      ChCoordsys<> coordsys,
+                      double limit_X=0.,
+                      double limit_Y=0.,
+                      double limit_Z=0.,
+                      double limit_Rx=0.,
+                      double limit_Ry=0.,
+                      double limit_Rz=0.) {
+  auto mylink = std::make_shared<ChLinkLock>();
+  system.AddLink(mylink);
+  auto chlimit_X = ChLinkLimit();
+  chlimit_X.Set_active(true);
+  chlimit_X.Set_max(limit_X);
+  auto chlimit_Y = ChLinkLimit();
+  chlimit_X.Set_active(true);
+  chlimit_Y.Set_max(limit_Y);
+  auto chlimit_Z = ChLinkLimit();
+  chlimit_X.Set_active(true);
+  chlimit_Z.Set_max(limit_Z);
+  auto chlimit_Rx = ChLinkLimit();
+  chlimit_Rx.Set_max(limit_Rx);
+  chlimit_X.Set_active(true);
+  auto chlimit_Ry = ChLinkLimit();
+  chlimit_X.Set_active(true);
+  chlimit_Ry.Set_max(limit_Ry);
+  auto chlimit_Rz = ChLinkLimit();
+  chlimit_X.Set_active(true);
+  chlimit_Rz.Set_max(limit_Rz);
+  mylink->SetLimit_X(&chlimit_X);
+  mylink->SetLimit_Y(&chlimit_Y);
+  mylink->SetLimit_Z(&chlimit_Z);
+  mylink->SetLimit_Rx(&chlimit_Rx);
+  mylink->SetLimit_Ry(&chlimit_Ry);
+  mylink->SetLimit_Rz(&chlimit_Rz);
+  mylink->Initialize(body1, body2, coordsys);
+}
