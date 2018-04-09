@@ -266,6 +266,22 @@ namespace proteus
 					   double* elementDiameter,
 					   double* lumped_mass_matrix,
 					   int offset_u, int stride_u)=0;
+    virtual void assembleSpinUpSystem(//element
+				      double* mesh_trial_ref,
+				      double* mesh_grad_trial_ref,
+				      double* mesh_dof,
+				      int* mesh_l2g,
+				      double* dV_ref,
+				      double* u_trial_ref,
+				      double* u_test_ref,
+				      //physics
+				      int nElements_global,
+				      int* u_l2g,
+				      double* uInitial,
+				      int offset_u, int stride_u,
+				      double* globalResidual,
+				      int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				      double* globalMassMatrix)=0;
   };
 
   template<class CompKernelType,
@@ -1499,6 +1515,91 @@ namespace proteus
                 int eN_i=eN*nDOF_test_element+i;
                 int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
                 lumped_mass_matrix[gi] += element_lumped_mass_matrix[i];
+              }//i
+          }//elements
+      }
+
+      void assembleSpinUpSystem(//element
+				double* mesh_trial_ref,
+				double* mesh_grad_trial_ref,
+				double* mesh_dof,
+				int* mesh_l2g,
+				double* dV_ref,
+				double* u_trial_ref,
+				double* u_test_ref,
+				//physics
+				int nElements_global,
+				int* u_l2g,
+				double* uInitial,
+				int offset_u, int stride_u,
+				double* globalResidual,
+				int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				double* globalMassMatrix)
+      {
+        for(int eN=0;eN<nElements_global;eN++)
+          {
+            register double
+	      elementResidual_u[nDOF_test_element],
+	      elementMassMatrix_u_u[nDOF_test_element][nDOF_trial_element];
+            for (int i=0;i<nDOF_test_element;i++)
+	      {
+		elementResidual_u[i]=0;
+		for (int j=0;j<nDOF_trial_element;j++)
+		  elementMassMatrix_u_u[i][j]=0.0;
+	      }
+            for  (int k=0;k<nQuadraturePoints_element;k++)
+              {
+                int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
+                  eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
+                //declare local storage
+                register double
+                  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+                  u_test_dV[nDOF_test_element], u_grad_test_dV[nDOF_test_element*nSpace],
+                  dV, x,y,z;
+                //get jacobian, etc for mapping reference element
+                ck.calculateMapping_element(eN,
+                                            k,
+                                            mesh_dof,
+                                            mesh_l2g,
+                                            mesh_trial_ref,
+                                            mesh_grad_trial_ref,
+                                            jac,
+                                            jacDet,
+                                            jacInv,
+                                            x,y,z);
+                //get the physical integration weight
+                dV = fabs(jacDet)*dV_ref[k];
+                //precalculate test function products with integration weights
+                for (int j=0;j<nDOF_trial_element;j++)
+		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+                //////////////////
+                // LOOP ON DOFs //
+                //////////////////
+                for(int i=0;i<nDOF_test_element;i++)
+                  {
+		    elementResidual_u[i] += uInitial[eN_k]*u_test_dV[i];
+                    for(int j=0;j<nDOF_trial_element;j++)
+                      {
+                        elementMassMatrix_u_u[i][j] +=
+			  u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i];
+                      }//j
+                  }//i
+              }//k
+            //
+            //load into element Jacobian into global Jacobian
+            //
+            for (int i=0;i<nDOF_test_element;i++)
+              {
+                int eN_i = eN*nDOF_test_element+i;
+		int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		globalResidual[gi] += elementResidual_u[i];
+                for (int j=0;j<nDOF_trial_element;j++)
+                  {
+                    int eN_i_j = eN_i*nDOF_trial_element+j;
+                    globalMassMatrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] +=
+                      elementMassMatrix_u_u[i][j];
+                  }//j
               }//i
           }//elements
       }      

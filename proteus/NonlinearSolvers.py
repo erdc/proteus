@@ -1227,6 +1227,20 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
 
 class CLSVOFNewton(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        if self.F.coefficients.doSpinUpStep==True and self.F.spinUpStepTaken==False:
+            logEvent("***** Spin up step for CLSVOF model *****",level=2)
+            self.F.spinUpStepTaken=True
+            # Assemble residual and Jacobian for spin up step
+            self.F.assembleSpinUpSystem(r,self.J)
+            self.linearSolver.prepare(b=r)
+            self.du[:]=0.0
+            if not self.directSolver:
+                if self.EWtol:
+                    self.setLinearSolverTolerance(r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed()
+            self.F.u[0].dof[:] = self.du
         logEvent("+++++ First stage of nonlinear solver +++++",level=2)
         Newton.solve(self,u,r,b,par_u,par_r)
         # Try to save number of newton iterations

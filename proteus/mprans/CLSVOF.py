@@ -24,6 +24,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # OUTPUT quantDOFs
                  outputQuantDOFs = True, # mql. I use it to visualize H(u) at the DOFs via a lumped L2 projection
                  computeMetrics = 0, #0, 1 or 2
+                 # SPIN UP STEP #
+                 doSpinUpStep=False,
                  # NONLINEAR CLSVOF
                  timeOrder=2,
                  epsFactHeaviside=1.5,
@@ -33,6 +35,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         assert computeMetrics in [0,1,2]
         # 0: don't compute metrics, 1: compute metrics at EOS (end of simulations), 2: compute metrics at ETS (every time step) and EOS
         self.useMetrics=useMetrics
+        self.doSpinUpStep=doSpinUpStep
         self.timeOrder=timeOrder
         self.computeMetrics=computeMetrics
         self.epsFactHeaviside=epsFactHeaviside
@@ -610,6 +613,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "Use BackwardEuler_cfl"
         assert options.levelNonlinearSolver == proteus.NonlinearSolvers.CLSVOFNewton, "Use levelNonlinearSolver=CLSVOFNewton"
 
+        # SPIN UP STEP #
+        self.spinUpStepTaken=False
+        self.uInitial = None
+        if self.coefficients.doSpinUpStep:
+            self.uInitial = numpy.zeros(self.q[('u',0)].shape,'d')
+            X = {0:self.q[('x')][:,:,0],
+                 1:self.q[('x')][:,:,1],
+                 2:self.q[('x')][:,:,2]}
+            self.uInitial[:] = options.initialConditions[0].uOfXT(X,0)
+
         # METRICS #
         self.hasExactSolution = False
         if ('exactSolution') in dir (options):
@@ -661,6 +674,26 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
+
+    def assembleSpinUpSystem(self,residual,jacobian):
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       jacobian)
+        residual.fill(0.0)
+        self.clsvof.assembleSpinUpSystem(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.uInitial,
+            self.offset[0],self.stride[0],
+            residual,
+            self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
+            jacobian)
 
     def updateVelocityFieldAsFunction(self):
         X = {0:self.q[('x')][:,:,0],
