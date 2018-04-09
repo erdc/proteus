@@ -725,7 +725,7 @@ def setup_given_extensions(extensions):
                        ['proteus/tests/wave_tests/data_timeSeries.dat',
                         'proteus/tests/wave_tests/data_timeSeries.txt',
                         'proteus/tests/wave_tests/data_timeSeries_err1.csv',
-                        'proteus/tests/wave_tests/data_timeSeries_err2.csv',
+                        'proteus/tests/wave_tests/data_timeSeries_err2.txt',
                         'proteus/tests/wave_tests/randomFastSeries.txt',
                         'proteus/tests/wave_tests/randomSeries.txt']),
          ],
