@@ -1031,6 +1031,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
         self.phi_s[:] = 1e10
         self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
+        self.ebq_global_phi_s[:] = 1e10
         if self.granular_sdf_Calc is not None:
             print ("updating", self.nParticles, " particles...")
             for i in range(self.nParticles):
