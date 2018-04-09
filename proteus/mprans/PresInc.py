@@ -204,12 +204,14 @@ class Coefficients(TC_base):
         """
         u_shape = c[('u', 0)].shape
         alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
+
+        vs = None
+        vos = None
+
         if  u_shape == self.fluidModel.q[('u',0)].shape:
             vf = self.fluidModel.q[('velocity',0)]
             rho_f = self.fluidModel.coefficients.q_rho
             rho_s =  self.rho_s_min
-            vs = 0.
-            vos = 0.
             if self.sedModelIndex is not None:
                 vs = self.sedModel.q[('velocity',0)]
                 vos = self.sedModel.coefficients.q_vos
@@ -218,8 +220,6 @@ class Coefficients(TC_base):
             vf = self.fluidModel.ebqe[('velocity',0)]
             rho_f = self.fluidModel.coefficients.ebqe_rho
             rho_s =  self.rho_s_min
-            vs = 0.
-            vos = 0.
             if self.sedModelIndex is not None:
                 vs = self.sedModel.ebqe[('velocity',0)]
                 vos = self.sedModel.coefficients.ebqe_vos
@@ -227,9 +227,15 @@ class Coefficients(TC_base):
         
         assert rho_s >= self.rho_s_min, "solid density out of bounds"
         assert (rho_f >= self.rho_f_min).all(), "fluid density out of bounds"
-        for i in range(vs.shape[-1]):
-            c[('f',0)][...,i] = (1.0-vos)*vf[...,i] + vos*vs[...,i]
-        #a is really a scalar diffusion but defining it as diagonal tensor
+
+        if self.sedModelIndex is not None:        
+            for i in range(vs.shape[-1]):
+                c[('f',0)][...,i] = (1.0-vos)*vf[...,i] + vos*vs[...,i]
+        else:
+            for i in range(vs.shape[-1]):
+                c[('f',0)][...,i] = vf[...,i] 
+
+                #a is really a scalar diffusion but defining it as diagonal tensor
         #if we push phase momentum interchange (drag) to correction
         #then a may become a full  tensor
         if self.sedModelIndex is not None:
