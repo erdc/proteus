@@ -232,7 +232,7 @@ class Coefficients(TC_base):
             for i in range(vs.shape[-1]):
                 c[('f',0)][...,i] = (1.0-vos)*vf[...,i] + vos*vs[...,i]
         else:
-            for i in range(vs.shape[-1]):
+            for i in range(vf.shape[-1]):
                 c[('f',0)][...,i] = vf[...,i] 
 
                 #a is really a scalar diffusion but defining it as diagonal tensor
@@ -245,8 +245,7 @@ class Coefficients(TC_base):
             c[('a',0,0)][...,0] = c['a_f'] + c['a_s']
         else:
             c['a_f'] = 1.0 / (self.rho_f_min * alphaBDF)
-            c['a_s'] = 1.0 / (self.rho_s_min * alphaBDF)
-            c[('a', 0, 0)][..., 0] = (1.0 - vos) * c['a_f'] + vos * c['a_s']
+            c[('a', 0, 0)][..., 0] =  c['a_f'] 
         for i in range(1,c[('a',0,0)].shape[-1]):
             c[('a',0,0)][...,i] = c[('a',0,0)][...,0]
 
