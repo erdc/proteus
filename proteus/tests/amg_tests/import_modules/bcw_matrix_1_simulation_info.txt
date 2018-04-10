@@ -1,0 +1,11 @@
+# This matrix was generate from a RANS2P simulation of the broad-crested weir problem
+
+  * Model step t=0.1
+  * dt = 4.47285e-03
+  * Maximum CFL = 0.657
+  * 29593 triangles and 15080 nodes (he = 0.01)
+  * Weakly enforced, default boundary condtions
+  * Uses nonconservative form of the NSE
+  * Full SUPG stablization
+  * Viscosity / density values: default air-water values
+  * This comes from the initial Newton iteration
