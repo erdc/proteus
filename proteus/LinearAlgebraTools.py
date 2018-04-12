@@ -855,7 +855,8 @@ class InvOperatorShell(OperatorShell):
 
     def create_petsc_ksp_obj(self,
                              petsc_option_prefix,
-                             matrix_operator):
+                             matrix_operator,
+                             constant_null_space = False):
         """ Create a PETSc4py KSP object.
 
         Arguments
@@ -864,6 +865,8 @@ class InvOperatorShell(OperatorShell):
             PETSc commandline option prefix.
         matrix_operator : mat
             PETSc matrix object for the ksp class.
+        null_space : bool
+            True if the KSP object has a constant null space.
 
         Returns
         -------
@@ -873,12 +876,14 @@ class InvOperatorShell(OperatorShell):
         ksp_obj.setOperators(matrix_operator,
                              matrix_operator)
         ksp_obj.setOptionsPrefix(petsc_option_prefix)
+
+        if constant_null_space:
+            const_nullspace_str = ''.join([petsc_option_prefix,
+                                           'ksp_constant_null_space'])
+            self.options.setValue(const_nullspace_str,'')
+            matrix_operator.setNullSpace(self.const_null_space)
         ksp_obj.setFromOptions()
 
-        const_nullspace_str = ''.join([petsc_option_prefix,
-                                       'ksp_constant_null_space'])
-        if self.options.hasName(const_nullspace_str):
-            matrix_operator.setNullSpace(self.const_null_space)
         ksp_obj.setUp()
         return ksp_obj
 
@@ -1290,8 +1295,10 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         #                                                 self.Qp_dens.getSubMatrix(self.unknown_dof_is,
         #                                                                           self.unknown_dof_is))
 
+        laplace_null_space = not bool(len(self.strong_dirichlet_DOF))
         self.kspAp_rho = self.create_petsc_ksp_obj('innerTPPCDsolver_Ap_rho_',
-                                                    self.Ap_rho)
+                                                   self.Ap_rho,
+                                                   laplace_null_space)
         self.kspAp_rho.getOperators()[0].zeroRows(self.known_dof_is)
 
 
@@ -1361,9 +1368,9 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
                                tmp1,
                                self.num_chebyshev_its)
         else:
+            # ARB - check for speed            
 #            y_tmp.pointwiseDivide(x_tmp,self.kspQp_visc.getOperators()[0].getDiagonal())
 #            tmp1.pointwiseDivide(x_tmp,self.kspQp_dens.getOperators()[0].getDiagonal())
-            # ARB - check for speed
             self.kspQp_visc.solve(x_tmp,y)
             self.kspQp_dens.solve(x_tmp,tmp1)
 
