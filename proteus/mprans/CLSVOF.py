@@ -145,6 +145,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def preStep(self,t,firstStep=False):
         self.model.getResidualBeforeFirstStep = False
         if (self.computeMetrics > 0 and firstStep==True):
+            # Overwritten if spin up step is taken
             self.model.u0_dof[:] = self.model.u[0].dof
         # SAVE OLD VELOCITY #
         self.q_v_old[:] = self.q_v
@@ -153,11 +154,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.updateVelocityFieldAsFunction()
         if (firstStep==True):
             self.q_v_old[:] = self.q_v
-        # GET NORMALS RECONSTRUCTION; i.e, compute qx_tn, qy_tn
-        self.model.getNormalReconstruction()
+        # GET NORMALS RECONSTRUCTION; i.e, compute qx_tn, qy_tn. This is done within CLSVOF solver
         # SAVE OLD SOLUTION (and VELOCITY) #
         self.model.u_dof_old[:] = self.model.u[0].dof
-
         copyInstructions = {}
         return copyInstructions
 
@@ -252,8 +251,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.reuse_test_trial_quadrature:
             for ci in range(1,coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
-        self.u_dof_old = None
-
+                
         ## Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh #assume the same mesh for  all components for now
         self.testSpace = testSpaceDict
@@ -574,46 +572,77 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
 
+        ################
+        # SOME ASSERTS #
+        ################
+        assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "Use BackwardEuler_cfl"
+        assert options.levelNonlinearSolver == proteus.NonlinearSolvers.CLSVOFNewton, "Use levelNonlinearSolver=CLSVOFNewton"
+
+        #################
+        # GENERAL STUFF #
+        #################
+        self.u_dof_old = None
         # Display info about CFL
         self.displayCFL=False
-        # Allow the user to provide functions to define the velocity field
+        self.timeStage=1 # stage of time integration
+
+        ################################
+        # VELOCITY FIELD AS A FUNCTION #
+        ################################
         self.getResidualBeforeFirstStep = True
         self.hasVelocityFieldAsFunction = False
         if ('velocityFieldAsFunction') in dir (options):
             self.velocityFieldAsFunction = options.velocityFieldAsFunction
             self.hasVelocityFieldAsFunction = True
-            
+
+        ##############################
+        # VISUALIZATION OF VOF FIELD #
+        ##############################
         self.H_dof = numpy.zeros(self.u[0].dof.shape,'d')
         self.par_H_dof = None
         self.lumped_mass_matrix = None
         # Aux quantity at DOFs to be filled by optimized code
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
-        # FOR nonlinear CLSVOF; i.e., MCorr with VOF
-        self.timeStage=1 #First order time integration
-        # For normal reconstruction
+
+        ###################################
+        # PROJECTED NORMAL RECONSTRUCTION #
+        ###################################
+        self.consistentNormalReconstruction=False # for now it will always be False
+        self.degree_polynomial=1
+        try:
+            self.degree_polynomial = self.u[0].femSpace.order
+        except:
+            pass
+        #if self.degree_polynomial>1:
+        #    self.consistentNormalReconstruction=True
+        # For (lambda) normalization factor
         self.min_distance = 0.
         self.max_distance = 0.
         self.mean_distance = 0.
         self.norm_factor_lagged = 1.0
-        # lumped normal reconstruction
-        self.lumped_qx_tn = numpy.zeros(self.u[0].dof.shape,'d')
-        self.lumped_qy_tn = numpy.zeros(self.u[0].dof.shape,'d')
-        self.lumped_qz_tn = numpy.zeros(self.u[0].dof.shape,'d')
-        self.lumped_qx_tStar = numpy.zeros(self.u[0].dof.shape,'d')
-        self.lumped_qy_tStar = numpy.zeros(self.u[0].dof.shape,'d')
-        self.lumped_qz_tStar = numpy.zeros(self.u[0].dof.shape,'d')
+        self.weighted_lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d')
+        # rhs for normal reconstruction
+        self.rhs_qx = numpy.zeros(self.u[0].dof.shape,'d')
+        self.rhs_qy = numpy.zeros(self.u[0].dof.shape,'d')
+        self.rhs_qz = numpy.zeros(self.u[0].dof.shape,'d')
+        # normal reconstruction
+        self.projected_qx_tn = numpy.zeros(self.u[0].dof.shape,'d')
+        self.projected_qy_tn = numpy.zeros(self.u[0].dof.shape,'d')
+        self.projected_qz_tn = numpy.zeros(self.u[0].dof.shape,'d')
+        self.projected_qx_tStar = numpy.zeros(self.u[0].dof.shape,'d')
+        self.projected_qy_tStar = numpy.zeros(self.u[0].dof.shape,'d')
+        self.projected_qz_tStar = numpy.zeros(self.u[0].dof.shape,'d')
+        # parallel vectors for normal reconstruction 
+        self.par_projected_qx_tn = None
+        self.par_projected_qy_tn = None
+        self.par_projected_qz_tn = None
+        self.par_projected_qx_tStar = None
+        self.par_projected_qy_tStar = None
+        self.par_projected_qz_tStar = None
 
-        self.par_lumped_qx_tn = None
-        self.par_lumped_qy_tn = None
-        self.par_lumped_qz_tn = None
-        self.par_lumped_qx_tStar = None
-        self.par_lumped_qy_tStar = None
-        self.par_lumped_qz_tStar = None
-
-        assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "Use BackwardEuler_cfl"
-        assert options.levelNonlinearSolver == proteus.NonlinearSolvers.CLSVOFNewton, "Use levelNonlinearSolver=CLSVOFNewton"
-
+        ################
         # SPIN UP STEP #
+        ################
         self.spinUpStepTaken=False
         self.uInitial = None
         if self.coefficients.doSpinUpStep:
@@ -623,11 +652,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  2:self.q[('x')][:,:,2]}
             self.uInitial[:] = options.initialConditions[0].uOfXT(X,0)
 
+        ###########
         # METRICS #
+        ###########
         self.hasExactSolution = False
         if ('exactSolution') in dir (options):
             self.hasExactSolution = True
             self.exactSolution = options.exactSolution
+
         self.u0_dof = numpy.copy(self.u[0].dof)
         self.newton_iterations_stage1 = 0.0
         self.newton_iterations_stage2 = 0.0
@@ -649,7 +681,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # for distance property
         self.global_D_err = 0.0
         self.global_L2_err = 0.0
-        # At ETS #
+        self.global_L2Banded_err = 0.0
+        self.global_sH_L2_err = 0.0
         if self.coefficients.computeMetrics > 0 and self.comm.isMaster():
             if self.hasExactSolution: # at EOS
                 self.metricsAtEOS = open(self.name+"_metricsAtEOS.csv","w")
@@ -658,7 +691,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                         'global_V_err'+","+
                                         'global_sV_err'+","+
                                         'global_D_err'+","+
-                                        'global_L2_err'+"\n")
+                                        'global_L2_err'+","+
+                                        'global_L2Banded_err'+","+
+                                        'global_sH_L2_err'+"\n")
             if self.coefficients.computeMetrics==2: # at ETS
                 self.metricsAtETS = open(self.name+"_metricsAtETS.csv","w")
                 self.metricsAtETS.write('time_step'+","+
@@ -676,9 +711,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
 
     def assembleSpinUpSystem(self,residual,jacobian):
+        residual.fill(0.0)
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
-        residual.fill(0.0)
         self.clsvof.assembleSpinUpSystem(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -730,7 +765,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                         repr(self.global_V_err)+","+
                                         repr(self.global_sV_err)+","+
                                         repr(self.global_D_err)+","+
-                                        repr(np.sqrt(self.global_L2_err))+"\n")
+                                        repr(np.sqrt(self.global_L2_err))+","+
+                                        repr(np.sqrt(self.global_L2Banded_err))+","+
+                                        repr(np.sqrt(self.global_sH_L2_err))+"\n")
                 self.metricsAtEOS.flush()
 
     ####################################3
@@ -738,11 +775,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate some metrics at ETS (Every Time Step)
         """
-        degree_polynomial = 1
-        try:
-            degree_polynomial = self.u[0].femSpace.order
-        except:
-            pass
 
         self.R_vector.fill(0.)
         self.sR_vector.fill(0.)
@@ -767,7 +799,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.u[0].femSpace.dofMap.l2g,
              self.mesh.elementDiametersArray,
              self.mesh.nodeDiametersArray,
-             degree_polynomial,
+             self.degree_polynomial,
              self.coefficients.epsFactHeaviside,
              self.u[0].dof, # This unp1
              self.u_dof_old,
@@ -798,11 +830,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate some metrics at EOS (End Of Simulation)
         """
-        degree_polynomial = 1
-        try:
-            degree_polynomial = self.u[0].femSpace.order
-        except:
-            pass
 
         (global_I_err,
          global_sI_err,
@@ -811,7 +838,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
          global_sV,
          global_sV0,
          global_D_err,
-         global_L2_err) = self.clsvof.calculateMetricsAtEOS(#element
+         global_L2_err,
+         global_L2Banded_err,
+         global_area_band,
+         global_sH_L2_err) = self.clsvof.calculateMetricsAtEOS(#element
              self.u[0].femSpace.elementMaps.psi,
              self.u[0].femSpace.elementMaps.grad_psi,
              self.mesh.nodeArray,
@@ -827,7 +857,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.u[0].femSpace.dofMap.l2g,
              self.mesh.elementDiametersArray,
              self.mesh.nodeDiametersArray,
-             degree_polynomial,
+             self.degree_polynomial,
              self.coefficients.epsFactHeaviside,
              self.u[0].dof, # This is u_lstage due to update stages in RKEV
              self.u0_dof,
@@ -849,6 +879,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_D_err = globalSum(global_D_err)
         # L2 error on level set
         self.global_L2_err = globalSum(global_L2_err)
+        self.global_L2Banded_err = globalSum(global_L2Banded_err)/globalSum(global_area_band)
+        self.global_sH_L2_err = globalSum(global_sH_L2_err)
 
     ###############################################
 
@@ -858,7 +890,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def updateParVectors(self):
         # create vectors
-        if self.par_lumped_qx_tn is None:
+        if self.par_projected_qx_tn is None:
             #n=self.mesh.subdomainMesh.nNodes_owned
             #N=self.mesh.nNodes_global
             #nghosts=self.mesh.subdomainMesh.nNodes_global - self.mesh.subdomainMesh.nNodes_owned
@@ -866,27 +898,27 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             N=self.u[0].femSpace.dofMap.nDOF_all_processes
             nghosts = self.u[0].par_dof.nghosts
             subdomain2global=self.u[0].femSpace.dofMap.subdomain2global
-            self.par_lumped_qx_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.lumped_qx_tn,
+            self.par_projected_qx_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qx_tn,
                                                                                bs=1,
                                                                                n=n,N=N,nghosts=nghosts,
                                                                                subdomain2global=subdomain2global)
-            self.par_lumped_qy_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.lumped_qy_tn,
+            self.par_projected_qy_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qy_tn,
                                                                                bs=1,
                                                                                n=n,N=N,nghosts=nghosts,
                                                                                subdomain2global=subdomain2global)
-            self.par_lumped_qz_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.lumped_qz_tn,
+            self.par_projected_qz_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qz_tn,
                                                                                bs=1,
                                                                                n=n,N=N,nghosts=nghosts,
                                                                                subdomain2global=subdomain2global)
-            self.par_lumped_qx_tStar = proteus.LinearAlgebraTools.ParVec_petsc4py(self.lumped_qx_tStar,
+            self.par_projected_qx_tStar = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qx_tStar,
                                                                                   bs=1,
                                                                                   n=n,N=N,nghosts=nghosts,
                                                                                   subdomain2global=subdomain2global)
-            self.par_lumped_qy_tStar = proteus.LinearAlgebraTools.ParVec_petsc4py(self.lumped_qy_tStar,
+            self.par_projected_qy_tStar = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qy_tStar,
                                                                                   bs=1,
                                                                                   n=n,N=N,nghosts=nghosts,
                                                                                   subdomain2global=subdomain2global)
-            self.par_lumped_qz_tStar = proteus.LinearAlgebraTools.ParVec_petsc4py(self.lumped_qz_tStar,
+            self.par_projected_qz_tStar = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qz_tStar,
                                                                                   bs=1,
                                                                                   n=n,N=N,nghosts=nghosts,
                                                                                   subdomain2global=subdomain2global)
@@ -898,15 +930,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         
         # update parallel vectors
         if self.timeStage==1:
-            self.par_lumped_qx_tn.scatter_forward_insert()
-            self.par_lumped_qy_tn.scatter_forward_insert()
-            self.par_lumped_qz_tn.scatter_forward_insert()
+            self.par_projected_qx_tn.scatter_forward_insert()
+            self.par_projected_qy_tn.scatter_forward_insert()
+            self.par_projected_qz_tn.scatter_forward_insert()
         else:
-            self.par_lumped_qx_tStar.scatter_forward_insert()
-            self.par_lumped_qy_tStar.scatter_forward_insert()
-            self.par_lumped_qz_tStar.scatter_forward_insert()
+            self.par_projected_qx_tStar.scatter_forward_insert()
+            self.par_projected_qy_tStar.scatter_forward_insert()
+            self.par_projected_qz_tStar.scatter_forward_insert()
 
-    def getNormalReconstruction(self):
+    def FCTStep(self,
+                limited_solution,
+                soln,
+                low_order_solution,
+                high_order_solution,
+                MassMatrix):
+        self.clsvof.FCTStep(self.nnz,
+                            self.nFreeDOF_global[0],
+                            self.weighted_lumped_mass_matrix,
+                            self.u_dof_old,
+                            high_order_solution,
+                            low_order_solution,
+                            limited_solution,
+                            self.rowptr,  # Row indices for Sparsity Pattern
+                            self.colind,  # Column indices for Sparsity Pattern
+                            MassMatrix)
+
+    def getNormalReconstruction(self,weighted_mass_matrix):
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,weighted_mass_matrix)
         if self.timeStage==1:
             self.clsvof.normalReconstruction(#element
                 self.u[0].femSpace.elementMaps.psi,
@@ -923,9 +973,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[0].dof,
                 self.offset[0],self.stride[0],
                 self.nFreeDOF_global[0], #numDOFs
-                self.lumped_qx_tn,
-                self.lumped_qy_tn,
-                self.lumped_qz_tn)
+                self.weighted_lumped_mass_matrix,
+                self.rhs_qx,
+                self.rhs_qy,
+                self.rhs_qz,
+                self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
+                weighted_mass_matrix)
         else:
             self.clsvof.normalReconstruction(#element
                 self.u[0].femSpace.elementMaps.psi,
@@ -942,9 +995,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[0].dof,
                 self.offset[0],self.stride[0],
                 self.nFreeDOF_global[0], #numDOFs
-                self.lumped_qx_tStar,
-                self.lumped_qy_tStar,
-                self.lumped_qz_tStar)
+                self.weighted_lumped_mass_matrix,
+                self.rhs_qx,
+                self.rhs_qy,
+                self.rhs_qz,
+                self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
+                weighted_mass_matrix)
         # update parallel vectors
         self.updateParVectors()
 
@@ -979,12 +1035,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.coefficients.porosity_dof is None:
             self.coefficients.porosity_dof = numpy.ones(self.u[0].dof.shape,'d')
         if self.u_dof_old is None:
-            # Pass initial condition to u_dof_old
+            # Pass initial condition to u_dof_old. Overwritten if spin up step is taken
             self.u_dof_old = numpy.copy(self.u[0].dof)
 
         r.fill(0.0)
         self.H_dof.fill(0.0)
-        
+
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -1000,12 +1056,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.forceStrongConditions:
               for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                   self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
-
-        degree_polynomial = 1
-        try:
-            degree_polynomial = self.u[0].femSpace.order
-        except:
-            pass
 
         min_distance = numpy.zeros(1)
         max_distance = numpy.zeros(1)
@@ -1046,7 +1096,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
-            degree_polynomial,
+            self.degree_polynomial,
             self.u[0].dof,
             self.u_dof_old, #For Backward Euler this is un, for SSP this is the lstage
             self.coefficients.q_v,
@@ -1089,22 +1139,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             mean_distance,
             self.norm_factor_lagged,
             # normal reconstruction
-            self.lumped_qx_tn,
-            self.lumped_qy_tn,
-            self.lumped_qz_tn,
-            self.lumped_qx_tStar,
-            self.lumped_qy_tStar,
-            self.lumped_qz_tStar,
+            self.projected_qx_tn,
+            self.projected_qy_tn,
+            self.projected_qz_tn,
+            self.projected_qx_tStar,
+            self.projected_qy_tStar,
+            self.projected_qz_tStar,
             # To compute H at DOFs
             self.nFreeDOF_global[0], #numDOFs
             self.lumped_mass_matrix,
             self.H_dof)
-
-        # Quantities to compute normalization factor
-        from proteus.flcbdfWrappers import globalSum, globalMax
-        self.min_distance = -globalMax(-min_distance[0])
-        self.max_distance = globalMax(max_distance[0])
-        self.mean_distance = globalSum(mean_distance[0])
 
         # Quantities to compute normalization factor
         from proteus.flcbdfWrappers import globalSum, globalMax
@@ -1131,12 +1175,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
-
-        degree_polynomial = 1
-        try:
-            degree_polynomial = self.u[0].femSpace.order
-        except:
-            pass
 
         self.clsvof.calculateJacobian(#element
             self.timeIntegration.dt,
@@ -1170,7 +1208,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
-            degree_polynomial,
+            self.degree_polynomial,
             self.u[0].dof,
             self.u_dof_old, #For Backward/Forward Euler this is un
             self.coefficients.q_v,
@@ -1196,13 +1234,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.lambdaFact,
-            self.norm_factor_lagged,
-            self.lumped_qx_tn,
-            self.lumped_qy_tn,
-            self.lumped_qz_tn,
-            self.lumped_qx_tStar,
-            self.lumped_qy_tStar,
-            self.lumped_qz_tStar)
+            self.norm_factor_lagged)
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
