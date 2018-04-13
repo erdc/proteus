@@ -1229,6 +1229,17 @@ class CLSVOFNewton(Newton):
     def spinUpStep(self,u,r=None,b=None,par_u=None,par_r=None):
         # Assemble residual and Jacobian for spin up step
         self.F.assembleSpinUpSystem(r,self.J)
+        # For parallelization
+        if par_u is not None:
+            #allow linear solver to know what type of assembly to use
+            self.linearSolver.par_fullOverlap = self.par_fullOverlap
+            #no overlap
+            if not self.par_fullOverlap:
+                par_r.scatter_reverse_add()
+            else:
+                #no overlap or overlap (until we compute norms over only owned dof)
+                par_r.scatter_forward_insert()
+        #
         self.linearSolver.prepare(b=r)
         self.du[:]=0.0
         if not self.directSolver:
@@ -1238,10 +1249,14 @@ class CLSVOFNewton(Newton):
             self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
             self.linearSolverFailed = self.linearSolver.failed()
         u[:] = self.du
+        # For parallelization
+        if par_u is not None:
+            par_u.scatter_forward_insert()
+        #
         # Pass the solution to the corresponding vectors in the model
-        self.F.u[0].dof[:] = self.du
-        self.F.u_dof_old[:] = self.du
-        self.F.u0_dof[:] = self.du #To compute metrics
+        self.F.u[0].dof[:] = u
+        self.F.u_dof_old[:] = u
+        self.F.u0_dof[:] = u #To compute metrics
 
     def getNormalReconstruction(self,u,r=None,b=None,par_u=None,par_r=None):
         # Assemble weighted matrix and rhs for consistent projection
@@ -1252,10 +1267,18 @@ class CLSVOFNewton(Newton):
                 self.F.projected_qx_tn[:] = self.F.rhs_qx/self.F.weighted_lumped_mass_matrix
                 self.F.projected_qy_tn[:] = self.F.rhs_qy/self.F.weighted_lumped_mass_matrix
                 self.F.projected_qz_tn[:] = self.F.rhs_qz/self.F.weighted_lumped_mass_matrix
+                # Update parallel vectors
+                self.F.par_projected_qx_tn.scatter_forward_insert()
+                self.F.par_projected_qy_tn.scatter_forward_insert()
+                self.F.par_projected_qz_tn.scatter_forward_insert()
             else:
                 self.F.projected_qx_tStar[:] = self.F.rhs_qx/self.F.weighted_lumped_mass_matrix
                 self.F.projected_qy_tStar[:] = self.F.rhs_qy/self.F.weighted_lumped_mass_matrix
                 self.F.projected_qz_tStar[:] = self.F.rhs_qz/self.F.weighted_lumped_mass_matrix
+                # Update parallel vectors
+                self.F.par_projected_qx_tStar.scatter_forward_insert()
+                self.F.par_projected_qy_tStar.scatter_forward_insert()
+                self.F.par_projected_qz_tStar.scatter_forward_insert()
         else:
             # If the L2-projection is consistent we need to solve the linear systems
             logEvent("  ... Normal reconstruction via weighted consistent L2-projection ...",level=2)
@@ -1375,6 +1398,12 @@ class CLSVOFNewton(Newton):
             self.F.timeStage=1
             # save number of newton iterations
             self.F.newton_iterations_stage2 = self.its
+
+        # ******************************************** #
+        # ***** UPDATE VECTORS FOR VISUALIZATION ***** #
+        # ******************************************** #
+        self.F.par_H_dof.scatter_forward_insert()
+        self.F.quantDOFs[:] = self.F.H_dof
 
 import deim_utils
 class POD_Newton(Newton):

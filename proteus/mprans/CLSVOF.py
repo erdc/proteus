@@ -161,10 +161,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def postStep(self,t,firstStep=False):
-        # Fix parallel vector H_dof and visualize it
-        self.model.par_H_dof.scatter_forward_insert()
-        self.model.quantDOFs[:] = self.model.H_dof
-        
         # Norm factor
         self.model.norm_factor_lagged = np.maximum(self.model.max_distance - self.model.mean_distance,
                                                    self.model.mean_distance - self.model.min_distance)
@@ -640,6 +636,45 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.par_projected_qy_tStar = None
         self.par_projected_qz_tStar = None
 
+        ###########################
+        # CREATE PARALLEL VECTORS #
+        ###########################
+        #n=self.mesh.subdomainMesh.nNodes_owned
+        #N=self.mesh.nNodes_global
+        #nghosts=self.mesh.subdomainMesh.nNodes_global - self.mesh.subdomainMesh.nNodes_owned
+        n=self.u[0].par_dof.dim_proc
+        N=self.u[0].femSpace.dofMap.nDOF_all_processes
+        nghosts = self.u[0].par_dof.nghosts
+        subdomain2global=self.u[0].femSpace.dofMap.subdomain2global
+        self.par_projected_qx_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qx_tn,
+                                                                              bs=1,
+                                                                              n=n,N=N,nghosts=nghosts,
+                                                                              subdomain2global=subdomain2global)
+        self.par_projected_qy_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qy_tn,
+                                                                              bs=1,
+                                                                              n=n,N=N,nghosts=nghosts,
+                                                                              subdomain2global=subdomain2global)
+        self.par_projected_qz_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qz_tn,
+                                                                              bs=1,
+                                                                              n=n,N=N,nghosts=nghosts,
+                                                                              subdomain2global=subdomain2global)
+        self.par_projected_qx_tStar = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qx_tStar,
+                                                                                 bs=1,
+                                                                                 n=n,N=N,nghosts=nghosts,
+                                                                                 subdomain2global=subdomain2global)
+        self.par_projected_qy_tStar = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qy_tStar,
+                                                                                 bs=1,
+                                                                                 n=n,N=N,nghosts=nghosts,
+                                                                                 subdomain2global=subdomain2global)
+        self.par_projected_qz_tStar = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qz_tStar,
+                                                                                 bs=1,
+                                                                                 n=n,N=N,nghosts=nghosts,
+                                                                                 subdomain2global=subdomain2global)
+        #
+        self.par_H_dof = proteus.LinearAlgebraTools.ParVec_petsc4py(self.H_dof,
+                                                                    bs=1,
+                                                                    n=n,N=N,nghosts=nghosts,
+                                                                    subdomain2global=subdomain2global)
         ################
         # SPIN UP STEP #
         ################
@@ -888,56 +923,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.globalResidualDummy != None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
 
-    def updateParVectors(self):
-        # create vectors
-        if self.par_projected_qx_tn is None:
-            #n=self.mesh.subdomainMesh.nNodes_owned
-            #N=self.mesh.nNodes_global
-            #nghosts=self.mesh.subdomainMesh.nNodes_global - self.mesh.subdomainMesh.nNodes_owned
-            n=self.u[0].par_dof.dim_proc
-            N=self.u[0].femSpace.dofMap.nDOF_all_processes
-            nghosts = self.u[0].par_dof.nghosts
-            subdomain2global=self.u[0].femSpace.dofMap.subdomain2global
-            self.par_projected_qx_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qx_tn,
-                                                                               bs=1,
-                                                                               n=n,N=N,nghosts=nghosts,
-                                                                               subdomain2global=subdomain2global)
-            self.par_projected_qy_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qy_tn,
-                                                                               bs=1,
-                                                                               n=n,N=N,nghosts=nghosts,
-                                                                               subdomain2global=subdomain2global)
-            self.par_projected_qz_tn = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qz_tn,
-                                                                               bs=1,
-                                                                               n=n,N=N,nghosts=nghosts,
-                                                                               subdomain2global=subdomain2global)
-            self.par_projected_qx_tStar = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qx_tStar,
-                                                                                  bs=1,
-                                                                                  n=n,N=N,nghosts=nghosts,
-                                                                                  subdomain2global=subdomain2global)
-            self.par_projected_qy_tStar = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qy_tStar,
-                                                                                  bs=1,
-                                                                                  n=n,N=N,nghosts=nghosts,
-                                                                                  subdomain2global=subdomain2global)
-            self.par_projected_qz_tStar = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_qz_tStar,
-                                                                                  bs=1,
-                                                                                  n=n,N=N,nghosts=nghosts,
-                                                                                  subdomain2global=subdomain2global)
-            #
-            self.par_H_dof = proteus.LinearAlgebraTools.ParVec_petsc4py(self.H_dof,
-                                                                        bs=1,
-                                                                        n=n,N=N,nghosts=nghosts,
-                                                                        subdomain2global=subdomain2global)
-                        
-        # update parallel vectors
-        if self.timeStage==1:
-            self.par_projected_qx_tn.scatter_forward_insert()
-            self.par_projected_qy_tn.scatter_forward_insert()
-            self.par_projected_qz_tn.scatter_forward_insert()
-        else:
-            self.par_projected_qx_tStar.scatter_forward_insert()
-            self.par_projected_qy_tStar.scatter_forward_insert()
-            self.par_projected_qz_tStar.scatter_forward_insert()
-
     def FCTStep(self,
                 limited_solution,
                 soln,
@@ -1001,8 +986,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.rhs_qz,
                 self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
                 weighted_mass_matrix)
-        # update parallel vectors
-        self.updateParVectors()
 
     def getLumpedMassMatrix(self):
         self.lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d')
