@@ -15,7 +15,7 @@ if ct.test_case>2:
 epsFactHeaviside=1.5
 if ct.test_case==4:
     epsFactHeaviside=0.5
-    
+
 coefficients = MyCoefficients(useMetrics=useMetrics,
                               doSpinUpStep=doSpinUpStep,
                               timeOrder=timeOrder,
@@ -33,7 +33,7 @@ def velx(X,t):
     x=X[0]
     y=X[1]
     if ct.test_case==1:
-        return -2*np.sin(pi*x)**2*np.sin(pi*y)*np.cos(pi*y)*np.sin(2*pi*t/8.0)
+        return -2*np.sin(pi*x)**2*np.sin(pi*y)*np.cos(pi*y)*np.sin(2*pi*t/T)
     elif ct.test_case==2 or ct.test_case==3:
         return -2*pi*(y-0.5)
     else:
@@ -44,7 +44,7 @@ def vely(X,t):
     x=X[0]
     y=X[1]
     if ct.test_case==1:
-        return 2*np.sin(pi*y)**2*np.sin(pi*x)*np.cos(pi*x)*np.sin(2*pi*t/8.0)
+        return 2*np.sin(pi*y)**2*np.sin(pi*x)*np.cos(pi*x)*np.sin(2*pi*t/T)
     elif ct.test_case==2 or ct.test_case==3:
         return 2*pi*(x-0.5)
     else:
