@@ -14,7 +14,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  LS_model=None,
                  V_model=0,
                  RD_model=None,
-                 ME_model=0,
+                 ME_model=1,
                  checkMass=False,
                  epsFact=0.0,
                  useMetrics=0.0,
