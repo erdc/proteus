@@ -6,15 +6,15 @@ from multiphase import *
 from proteus.mprans import CLSVOF
 
 LevelModelType = CLSVOF.LevelModel
-coefficients = CLSVOF.Coefficients(
-    V_model=V_model,
-    useMetrics=useMetrics,
-    timeOrder=timeOrder_clsvof,
-    epsFactHeaviside=epsFactHeaviside_clsvof,
-    epsFactDirac=epsFactHeaviside_clsvof,
-    lambdaFact=lambdaFact_clsvof,
-    outputQuantDOFs=True,
-    computeMetrics=computeMetrics_clsvof)
+coefficients = CLSVOF.Coefficients(V_model=V_model,
+                                   ME_model=CLSVOF_model,
+                                   useMetrics=useMetrics,
+                                   timeOrder=timeOrder_clsvof,
+                                   epsFactHeaviside=epsFactHeaviside_clsvof,
+                                   epsFactDirac=epsFactHeaviside_clsvof,
+                                   lambdaFact=lambdaFact_clsvof,
+                                   outputQuantDOFs=True,
+                                   computeMetrics=computeMetrics_clsvof)
 coefficients.variableNames=['phi']
 name="clsvof"
 
