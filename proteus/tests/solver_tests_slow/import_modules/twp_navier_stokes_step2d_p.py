@@ -55,7 +55,7 @@ class vTrue:
     def uOfXT(self,x,t):
         return self.vOfX(x)
 
-boundary_condition_type = 'ns' #'ns' (no-slip) 'fs' (free-slip)
+boundary_condition_type = 'fs' #'ns' (no-slip) 'fs' (free-slip)
 
 def getDBC_p(x,flag):
     if flag in [boundaryTags['right']]:

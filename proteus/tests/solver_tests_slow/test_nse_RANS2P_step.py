@@ -32,13 +32,13 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         reload(step2d)
         reload(twp_navier_stokes_step2d_p)
         reload(twp_navier_stokes_step2d_n)
-        import pdb ; pdb.set_trace()
-        # self.pList = [t2d_p]
-        # self.nList = [nseDrivenCavity_2d_n]
-        # self.so = default_so
-        # self.so.name = self.pList[0].name
-        # self.so.sList = self.pList[0].name
-        # self.so.sList = [default_s]
+        self.pList = [twp_navier_stokes_step2d_p]
+        self.nList = [twp_navier_stokes_step2d_n]
+        self.pList[0].name = 'test_1'        
+        self.so = step2d_so
+        self.so.name = self.pList[0].name
+        self.so.sList = self.pList[0].name
+        self.so.sList = [default_s]
         self._scriptdir = os.path.dirname(__file__)
         Profiling.openLog("proteus.log",10)
         Profiling.logAllProcesses = True
@@ -48,12 +48,12 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
 
     def _runTest(self):
         assert 1 == 1
-        # self.ns = NumericalSolution.NS_base(self.so,
-        #                                     self.pList,
-        #                                     self.nList,
-        #                                     self.so.sList,
-        #                                     opts)
-        # self.ns.calculateSolution('stokes')
+        self.ns = NumericalSolution.NS_base(self.so,
+                                            self.pList,
+                                            self.nList,
+                                            self.so.sList,
+                                            opts)
+        self.ns.calculateSolution('stokes')
 
         # relpath = 'comparison_files/drivenCavityNSE_LSC_expected.h5'
         # expected = tables.open_file(os.path.join(self._scriptdir,relpath))
@@ -64,9 +64,22 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         # expected.close()
         # actual.close()
         # relpath = 'comparison_files/drivenCavityNSE_LSC_expected.log'
-        # actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
+        actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
         # expected_log = TestTools.NumericResults.build_from_proteus_log(os.path.join(self._scriptdir,
         #                                                                             relpath))
+        L1 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,0)])
+        L2 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,1)])
+        L3 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,2)])
+        L4 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,3)])
+        L5 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,4)])
+        L6 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,5)])        
+
+        assert L1[0][1]==25
+        assert L2[0][1]==28
+        assert L3[0][1]==41
+        assert L4[0][1]==37
+        assert L5[0][1]==38
+        assert L6[0][1]==38
         # plot_lst = [(3.7,0,3),(3.2,0,2),(2.7,0,2),(2.2,0,1),(1.7,0,1)]
         # L1 = expected_log.get_ksp_resid_it_info(plot_lst)
         # L2 = actual_log.get_ksp_resid_it_info(plot_lst)
@@ -75,34 +88,9 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
     @pytest.mark.slowTest
     def test_01_FullRun(self):
         """Runs with nsedriven cavity with the following settings.
-        - RE enforced through viscosity
-        - THQuads
-        - LSC
         """
-        assert 1 == 1
-        # nseDrivenCavity_2d_p.coefficients = NavierStokes_ST_LS_SO_VV(epsFact=0.0,
-        #                                                              sigma=0.0,
-        #                                                              rho_0=1.0,
-        #                                                              nu_0=1.0,
-        #                                                              rho_1=1.0,
-        #                                                              nu_1=1.0,
-        #                                                              g=[0.0,0.0],
-        #                                                              nd=2,
-        #                                                              LS_model=None,
-        #                                                              KN_model=None,
-        #                                                              epsFact_density=None,
-        #                                                              stokes=False);
-
-        # nseDrivenCavity_2d_p.coefficients.variableNames = ['p','u','v']
-
-        # nseDrivenCavity_2d_p.dirichletConditions = {0:nseDrivenCavity_2d_p.getDBCp,
-        #                                             1:nseDrivenCavity_2d_p.getDBCu,
-        #                                             2:nseDrivenCavity_2d_p.getDBCv}
-        # nseDrivenCavity_2d_n.nLevels = 1
-        # nseDrivenCavity_2d_n.linearSmoother = nseDrivenCavity_2d_n.Schur_LSC
-        # self.so.tnList = self.nList[0].tnList
-        # self._setPETSc(petsc_file = os.path.join(self._scriptdir,'import_modules/petsc.options.schur_lsc'))
-        # self._runTest()
+        self._setPETSc(petsc_file = os.path.join(self._scriptdir,'import_modules/petsc.options.schur'))
+        self._runTest()
 
 if __name__ == '__main__':
     pass

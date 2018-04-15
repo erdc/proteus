@@ -6,7 +6,7 @@ from proteus.default_so import *
 from proteus import Context
 
 opts=Context.Options([
-    ("he",0.1,"max element diameter"),
+    ("he",0.05,"max element diameter"),
     ("schur_solver", 'two_phase_PCD', "preconditioner type"),
     ])
 
@@ -167,7 +167,7 @@ g = [0.0,0.0]
 # domain.writePLY('step2D')
 # domain.writePoly('step2D')
 
-ns_forceStrongDirichlet = False #True
+ns_forceStrongDirichlet = True #True
 if useMetrics:
     ns_shockCapturingFactor = 0.0
     ns_lag_shockCapturing = False
