@@ -1,4 +1,5 @@
 
+
 from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
@@ -28,7 +29,7 @@ class GlobalVariables():
         self.nContact = 5.
         self.angFriction = np.pi/6.
         self.vos_limiter = 0.6
-        self.mu_fr_limiter  = 0.01
+        self.mu_fr_limiter  = 0.1
         self.sedSt = HsuSedStress( self.aDarcy, self.bForch, self.grain, self.packFraction,  self.packMargin,self.maxFraction, self.frFraction, self.sigmaC, self.C3e, self.C4e, self.eR ,self.fContact, self.mContact, self.nContact, self.angFriction, self.vos_limiter, self.mu_fr_limiter)
     
 
@@ -547,6 +548,74 @@ class TestHsu(unittest.TestCase):
         valid = rhoS * gl.grain * sqrt(theta) * ( 2. *sedF**2 * g0 * (1. + gl.eR) / sqrt(np.pi) + (9./16) *sedF**2 * g0 * (1. + gl.eR) * sqrt(np.pi) +  (15./16.) *sedF * sqrt(np.pi) +  (25./64.) * sqrt(np.pi)/((1+gl.eR)*g0))
         
         self.assertTrue(round(test,f) == round(valid,f))
+
+
+    def test_p_fr_limiter(self):
+        gl=GlobalVariables()
+        import random
+        sqrt = np.sqrt
+        # No stress
+        sedF = 0.1
+        p_friction = 0. 
+        p_ftest = gl.sedSt.p_friction(sedF)
+        self.assertAlmostEqual(p_friction,p_ftest)
+        
+        # No limiter
+        sedF = 0.58
+        p_friction = gl.fContact*(sedF-gl.frFraction)**gl.mContact/(gl.maxFraction-sedF)**gl.nContact
+        p_ftest = gl.sedSt.p_friction(sedF)
+        self.assertAlmostEqual(p_friction,p_ftest)
+        
+        
+        # Exactly at the limiter
+        sedF = 0.6
+        p_friction = gl.fContact*(sedF-gl.frFraction)**gl.mContact/(gl.maxFraction-sedF)**gl.nContact
+        p_ftest = gl.sedSt.p_friction(sedF)
+        self.assertAlmostEqual(p_friction,p_ftest)
+        # Over the limiter
+        sedF=0.62
+        sedFm = min(gl.vos_limiter, sedF)
+        p_friction2 = gl.fContact*(sedFm-gl.frFraction)**gl.mContact/(gl.maxFraction-sedFm)**gl.nContact
+        p_ftest2 = gl.sedSt.p_friction(sedF)
+        self.assertAlmostEqual(p_friction2,p_ftest2)
+        self.assertAlmostEqual(p_friction2,p_ftest)
+        
+    def test_gradp_fr_limiter(self):
+        gl=GlobalVariables()
+        import random
+        sqrt = np.sqrt
+        # No stress
+        # No stress
+        sedF = 0.1
+        gradp = 0. 
+        gradp_test = gl.sedSt.gradp_friction(sedF)
+        self.assertAlmostEqual(gradp,gradp_test)
+        
+        # No limiter
+        sedF = 0.58
+        p_friction = gl.fContact*(sedF-gl.frFraction)**gl.mContact/(gl.maxFraction-sedF)**gl.nContact
+        gradp = p_friction*(gl.mContact/(sedF-gl.frFraction)+gl.nContact/(gl.maxFraction-sedF))
+        gradp_test = gl.sedSt.gradp_friction(sedF)
+        self.assertAlmostEqual(gradp,gradp_test)
+
+        
+        
+        # Exactly at the limiter
+        sedF = 0.6
+        p_friction = gl.fContact*(sedF-gl.frFraction)**gl.mContact/(gl.maxFraction-sedF)**gl.nContact
+        gradp = p_friction*(gl.mContact/(sedF-gl.frFraction)+gl.nContact/(gl.maxFraction-sedF))
+        gradp_test = gl.sedSt.gradp_friction(sedF)
+        self.assertAlmostEqual(gradp,gradp_test)
+        # Over the limiter
+        sedF = 0.62
+        sedFm = min(gl.vos_limiter,sedF)
+        p_friction = gl.fContact*(sedFm-gl.frFraction)**gl.mContact/(gl.maxFraction-sedFm)**gl.nContact
+        gradp = p_friction*(gl.mContact/(sedFm-gl.frFraction)+gl.nContact/(gl.maxFraction-sedFm))
+        gradp_test = gl.sedSt.gradp_friction(sedF)
+        self.assertAlmostEqual(gradp,gradp_test)
+        
+        
+        
     def test_mu_fr(self):
         gl=GlobalVariables()
         import random

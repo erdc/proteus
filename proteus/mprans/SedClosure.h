@@ -504,81 +504,34 @@ public:
 
     {
       double pf = 0.;
-      double sedN = 0.;
-      double sedD = 0.;
-      double num = 0.;
-      double den = 0.;
-      //if ((sedF > frFraction_) && (sedF < maxFraction_ ))
       if (sedF > frFraction_)
 	{
-      sedN = std::min( sedF - frFraction_  , vos_limiter_ );//std::min(sedF - frFraction_, maxFraction_ - frFraction_); //sedF - frFraction_;// 
-      sedD = std::max( maxFraction_ - sedF , vos_limiter_ );
-      num = pow( sedN , mContact_ );
-      den = pow( sedD , nContact_ );
-      pf =  fContact_ *  num / den ;
+	  double sedLim =std::min(sedF,vos_limiter_);
+	  pf =fContact_*pow(sedLim-frFraction_,mContact_) / ( pow(maxFraction_ - sedLim,nContact_) + small_);
 	} 
 
-//      if (num  > 0.0 )
-//	{
-//     printf("num --> %2.20f", num);
-//	} 
-//      if (den  > 0.0 )
-//	{
-//     printf("den --> %2.20f", den);
-//	} 
-//      if (sedN  > 0.0 )
-//	{
-//     printf("sedN --> %2.20f", sedN);
-//	} 
-//      if (sedD  > 0.0 )
-//	{
-//     printf("sedD --> %2.20f", sedD);
-//	} 
-//      if (pf  > 0.0 )
-//	{
-//     printf("pf --> %2.20f", pf);
-//	} 
-	  
       return pf;
 
-    } 
-   
+    }
 
+    
     inline double gradp_friction(double sedF)
 
     {
+      double coeff = 0;
       double pf = p_friction(sedF);
-      double den1 = 0.0;
-      double den2 = 0.0;
-      double coeff = 0.0;
-      //if ((sedF > frFraction_) && (sedF < maxFraction_ ))
-      if (sedF > frFraction_) 
+      if (sedF > frFraction_ ) 
 	{
-     den1 = std::min(sedF-frFraction_,vos_limiter_);//std::min(sedF - frFraction_, maxFraction_ - frFraction_); //
-     den2 = std::max(maxFraction_-sedF,vos_limiter_);
-     coeff = pf *( (mContact_/den1) + (nContact_/den2) );
-	} 
-//      if (den1  > 0.0 )
-//	{
-//     printf("den1 --> %2.20f", den1);
-//	} 
-//      if (den2  > 0.0 )
-//	{
-//     printf("den2 --> %2.20f", den2);
-//	} 
-//      if (pf  > 0.0 )
-//	{
-//     printf("pf --> %2.20f", pf);
-//	} 
-//      if (coeff  > 0.0 )
-//	{
-//     printf("coeff --> %2.20f", coeff);
-//	} 
-	  
+	  double sedLim =std::min(sedF,vos_limiter_);
+
+	  double den1 = (sedLim - frFraction_);
+	  double den2 = (maxFraction_ - sedLim);
+
+	  coeff = pf *( (mContact_/den1) + (nContact_/den2) );
+	}
 	  
       return coeff;
     }
-
     inline double mu_fr(double sedF,
 		      double du_dx,
 		      double du_dy,
