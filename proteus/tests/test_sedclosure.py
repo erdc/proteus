@@ -31,6 +31,7 @@ class GlobalVariables():
         self.vos_limiter = 0.6
         self.mu_fr_limiter  = 0.1
         self.sedSt = HsuSedStress( self.aDarcy, self.bForch, self.grain, self.packFraction,  self.packMargin,self.maxFraction, self.frFraction, self.sigmaC, self.C3e, self.C4e, self.eR ,self.fContact, self.mContact, self.nContact, self.angFriction, self.vos_limiter, self.mu_fr_limiter)
+        self.sedSt_nl = HsuSedStress( self.aDarcy, self.bForch, self.grain, self.packFraction,  self.packMargin,self.maxFraction, self.frFraction, self.sigmaC, self.C3e, self.C4e, self.eR ,self.fContact, self.mContact, self.nContact, self.angFriction, self.vos_limiter, 1e100)
     
 
 class TestHsu(unittest.TestCase):
@@ -620,7 +621,6 @@ class TestHsu(unittest.TestCase):
         gl=GlobalVariables()
         import random
         sqrt = np.sqrt
-        f = 10        
         # Setting 0 t_c
         sedF = 0.3
         theta = random.random() + 1e-30
@@ -634,20 +634,41 @@ class TestHsu(unittest.TestCase):
         dwdy = random.random() + 1e-30
         dwdz = random.random() + 1e-30
         rhoS = 2000
-        test = gl.sedSt.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
         divU = dudx + dvdy + dwdz
         s_tensor = 0.5* np.array([ [ 2.*dudx  -(2./3.)*divU ,  dudy+dvdx,               dudz+dwdx],
                                 [ dudy+dvdx,                   2.*dvdy-(2./3.)*divU,    dvdz+dwdy],
-                                [ dudz+dwdx,                   dvdz+dwdy,               2.* (2./3.) * dwdz]])
+                                [ dudz+dwdx,                   dvdz+dwdy,               2.*dwdz-(2./3.)*divU]])
 
         product = s_tensor * s_tensor
-        valid = 0.
-        for i in product:
-            for j in i:
-                valid+=j / (3.*rhoS*sedF)
-        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./valid
-        self.assertTrue(round(test,f) == round(valid,f))
+        magn = sum(product)
+        magn = sum(magn)
 
+        test = gl.sedSt.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./sqrt(magn)
+        self.assertAlmostEqual(test,valid)
+
+        
+        sedF = 0.58
+        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./sqrt(magn)
+        test = gl.sedSt_nl.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        self.assertAlmostEqual(test,valid)
+
+
+        sedF = 0.6
+        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./sqrt(magn)
+        test = gl.sedSt_nl.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        self.assertAlmostEqual(test,valid)
+
+        sedF = 0.62
+        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./sqrt(magn)
+        test = gl.sedSt_nl.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        self.assertAlmostEqual(test,valid)
+
+        sedF = 0.62
+        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./sqrt(magn)
+        test = gl.sedSt.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        self.assertAlmostEqual(test,min(valid,0.1))
+      
 
 
     def test_p_s(self):
