@@ -287,6 +287,9 @@ public:
                     elementResidual_u[i] += ck.Hamiltonian_strong(grad_u, &grad_phi_dV[i_nSpace])
                             +(grad_velocity_x[0]+grad_velocity_y[1])*phi_dV[i];
                 }
+                // Used to correct velocity at quadrature points
+                for (int I=0;I<nSpace;I++)
+                    q_grad_u[eN_k_nSpace+I] = grad_u[I];
             }//k
 
             for(int i=0;i<nDOF_test_element;i++)
@@ -295,6 +298,103 @@ public:
                 globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
             }//i
         }//elements
+
+        //
+        //loop over exterior element boundaries to calculate levelset gradient
+        //
+        //ebNE is the Exterior element boundary INdex
+        //ebN is the element boundary INdex
+        //eN is the element index
+        for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+        {
+            register int ebN = exteriorElementBoundariesArray[ebNE],
+                    eN  = elementBoundaryElementsArray[ebN*2+0],
+                    ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0];
+            //eN_nDOF_trial_element = eN*nDOF_trial_element;
+            register double elementResidual_u[nDOF_test_element];
+            double element_u[nDOF_trial_element];
+            for (int i=0;i<nDOF_test_element;i++)
+            {
+                register int eN_i=eN*nDOF_test_element+i;
+                element_u[i] = u_dof[u_l2g[eN_i]];
+                elementResidual_u[i] = 0.0;
+            }//i
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+            {
+                register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+                        ebNE_kb_nSpace = ebNE_kb*nSpace,
+                        ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                        ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+                register double h_b=0.0,
+                        penalty=0.0,
+                        u_ext=0.0,
+                        bc_u_ext=0.0,
+                        adv_flux_ext=0.0,
+                        diff_flux_ext=0.0,
+                        a_ext,
+                        f_ext[nSpace],
+                        grad_u_ext[nSpace],
+                        jac_ext[nSpace*nSpace],
+                        jacDet_ext,
+                        jacInv_ext[nSpace*nSpace],
+                        boundaryJac[nSpace*(nSpace-1)],
+                        metricTensor[(nSpace-1)*(nSpace-1)],
+                        metricTensorDetSqrt,
+                        dS,
+                        u_test_dS[nDOF_test_element],
+                        u_grad_trial_trace[nDOF_trial_element*nSpace],
+                        u_grad_test_dS[nDOF_test_element*nSpace],
+                        normal[nSpace],x_ext,y_ext,z_ext,
+                        G[nSpace*nSpace],G_dd_G,tr_G;
+                //
+                //calculate the solution and gradients at quadrature points
+                //
+                ck.calculateMapping_elementBoundary(eN,
+                        ebN_local,
+                        kb,
+                        ebN_local_kb,
+                        mesh_dof,
+                        mesh_l2g,
+                        mesh_trial_trace_ref,
+                        mesh_grad_trial_trace_ref,
+                        boundaryJac_ref,
+                        jac_ext,
+                        jacDet_ext,
+                        jacInv_ext,
+                        boundaryJac,
+                        metricTensor,
+                        metricTensorDetSqrt,
+                        normal_ref,
+                        normal,
+                        x_ext,y_ext,z_ext);
+                dS = metricTensorDetSqrt*dS_ref[kb];
+                //get the metric tensor
+                //cek todo use symmetry
+                ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+                ck.calculateGScale(G,normal,h_b);
+
+
+                ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+                //solution and gradients
+                ck.valFromElementDOF(element_u,&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+                ck.gradFromElementDOF(element_u,u_grad_trial_trace,grad_u_ext);
+
+                for (int j=0;j<nDOF_trial_element;j++)
+                {
+                    u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+                    for (int I=0;I<nSpace;I++)
+                        u_grad_test_dS[j*nSpace+I] = u_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
+                }
+                //
+                //load the boundary values
+                //
+
+                ebqe_u[ebNE_kb] = u_ext;
+                for (int I=0;I<nSpace;I++)
+                    ebqe_grad_u[ebNE_kb_nSpace+I] = grad_u_ext[I];
+            }//kb
+
+        }//ebNE
     }
 
 

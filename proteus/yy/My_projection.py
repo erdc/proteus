@@ -53,7 +53,7 @@ class Coefficients(TC_base):
                                np.array([0, 1, 2], dtype='i'))}
         TC_base.__init__(self,
                          nc=1,
-                         variableNames=['pInc'],
+                         variableNames=['grad_phi'],
                          diffusion={0: {0: {0: 'constant'}}},
                          potential={0: {0: 'u'}},
                          advection={0: {0: 'constant'}},
@@ -710,8 +710,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # fix null space
         self.u[0].dof[0] = 0
-        import pdb
-        pdb.set_trace()
         self.presinc.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
