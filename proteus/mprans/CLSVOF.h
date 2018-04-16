@@ -335,6 +335,7 @@ namespace proteus
                                             const double velocity[nSpace],
                                             double& flux)
       {
+	// NOTE (mql): I assume bc_u\in[0,1]. However, I need bc_u\in[-1,1]. Then I do: 2*bc_u-1
         double flow=0.0;
         for (int I=0; I < nSpace; I++)
           flow += n[I]*velocity[I];
@@ -346,7 +347,7 @@ namespace proteus
               }
             else
               {
-                flux = bc_u*flow;
+                flux = (2*bc_u-1)*flow;
               }
           }
         else if (isFluxBoundary_u == 1)

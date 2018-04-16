@@ -164,7 +164,7 @@ initialConditions  = {0:init_cond()}
 # BOUNDARY CONDITIONS #
 #######################
 def getDBC(x,flag):
-    return lambda x,t: -1.0
+    return lambda x,t: 0.
 dirichletConditions = {0:getDBC}
 
 def zeroadv(x,flag):
