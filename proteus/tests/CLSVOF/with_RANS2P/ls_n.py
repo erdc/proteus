@@ -6,55 +6,35 @@ from proteus import (StepControl,
                      LinearSolvers,
                      LinearAlgebraTools)
 from proteus.mprans import NCLS
-from proteus import Context
+from multiphase import *
 
-ct = Context.get()
-domain = ct.domain
-nd = ct.domain.nd
-mesh = domain.MeshOptions
-
-if ct.timeDiscretization=='vbdf':
+if timeDiscretization=='vbdf':
     timeIntegration = TimeIntegration.VBDF
     timeOrder=2
     stepController  = StepControl.Min_dt_cfl_controller
-elif ct.timeDiscretization=='flcbdf':
+elif timeDiscretization=='flcbdf':
     timeIntegration = TimeIntegration.FLCBDF
     #stepController = FLCBDF_controller
     stepController  = StepControl.Min_dt_cfl_controller
-    time_tol = 10.0*ct.ls_nl_atol_res
+    time_tol = 10.0*ls_nl_atol_res
     atol_u = {0:time_tol}
     rtol_u = {0:time_tol}
 else:
     timeIntegration = TimeIntegration.BackwardEuler_cfl
     stepController  = StepControl.Min_dt_cfl_controller
 
-# time stepping
-runCFL = ct.runCFL
-
-# mesh options
-nLevels = ct.nLevels
-parallelPartitioningType = mesh.parallelPartitioningType
-nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
-restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
-triangleOptions = mesh.triangleOptions
-
-
-
-elementQuadrature = ct.elementQuadrature
-elementBoundaryQuadrature = ct.elementBoundaryQuadrature
-
-femSpaces = {0: ct.basis}
+femSpaces = {0: basis}
 
 massLumping       = False
 conservativeFlux  = None
 numericalFluxType = NCLS.NumericalFlux
 
 subgridError      = NCLS.SubgridError(coefficients=physics.coefficients,
-                                      nd=ct.domain.nd)
+                                      nd=domain.nd)
 shockCapturing    = NCLS.ShockCapturing(physics.coefficients,
-                                        ct.domain.nd,
-                                        shockCapturingFactor=ct.ls_shockCapturingFactor,
-                                        lag=ct.ls_lag_shockCapturing)
+                                        domain.nd,
+                                        shockCapturingFactor=ls_shockCapturingFactor,
+                                        lag=ls_lag_shockCapturing)
 
 fullNewtonFlag  = True
 multilevelNonlinearSolver = NonlinearSolvers.Newton
@@ -65,13 +45,13 @@ linearSmoother    = None
 
 matrix = LinearAlgebraTools.SparseMatrix
 
-if ct.useOldPETSc:
+if useOldPETSc:
     multilevelLinearSolver = LinearSolvers.PETSc
     levelLinearSolver      = LinearSolvers.PETSc
 else:
     multilevelLinearSolver = LinearSolvers.KSP_petsc4py
     levelLinearSolver      = LinearSolvers.KSP_petsc4py
-if ct.useSuperlu:
+if useSuperlu:
     multilevelLinearSolver = LinearSolvers.LU
     levelLinearSolver      = LinearSolvers.LU
 
@@ -80,14 +60,14 @@ levelNonlinearSolverConvergenceTest = 'r'
 linearSolverConvergenceTest         = 'r-true'
 
 tolFac = 0.0
-nl_atol_res = ct.ls_nl_atol_res
+nl_atol_res = ls_nl_atol_res
 
 linTolFac = 0.001
-l_atol_res = 0.001*ct.ls_nl_atol_res
+l_atol_res = 0.001*ls_nl_atol_res
 
 useEisenstatWalker = False
 
 maxNonlinearIts = 50
 maxLineSearches = 0
 
-auxiliaryVariables = ct.domain.auxiliaryVariables['ls']
+auxiliaryVariables = domain.auxiliaryVariables['ls']

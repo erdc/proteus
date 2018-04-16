@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Test module for CLSVOF with RANS2P
+Test module for clsvof with rans2p
 """
 from proteus.iproteus import *
 from proteus import Comm
@@ -12,23 +12,22 @@ import numpy as np
 import tables
 import pytest
 from proteus import default_so
-from . import (multiphase,
-               multiphase_so,
+from . import (multiphase_so, multiphase,
                clsvof_p,
                clsvof_n,
                twp_navier_stokes_p,
                twp_navier_stokes_n)
 
-class TestCLSVOF_with_RANS2P():
+class TestCLSVOFWithRans2p():
 
     @classmethod
     def setup_class(cls):
         pass
-
+    
     @classmethod
     def teardown_class(cls):
         pass
-
+    
     def reload_modules(self):
         reload(default_so)
         reload(multiphase)
@@ -40,15 +39,15 @@ class TestCLSVOF_with_RANS2P():
         
     def setup_method(self,method):
         self._scriptdir = os.path.dirname(__file__)
-
+        
     def teardown_method(self,method):
         pass
-
-    def test_2D_falling_bubble(self):
+    
+    def test_2D_multiphase(self):
         # RELOAD MODULES
         self.reload_modules()
         pnList = [(twp_navier_stokes_p, twp_navier_stokes_n),
-                  (clsvof_p,               clsvof_n)]                  
+                  (clsvof_p,               clsvof_n)]
         self.so = multiphase_so
         pList=[]
         nList=[]
@@ -72,6 +71,7 @@ class TestCLSVOF_with_RANS2P():
         expected_path = 'comparison_files/multiphase_2D_falling_bubble.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('multiphase_2D_falling_bubble.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-8)
+        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
         expected.close()
         actual.close()
+

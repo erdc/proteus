@@ -1,30 +1,19 @@
 from proteus.default_p import *
 from proteus.mprans import MCorr
-from proteus import Context
-
-ct = Context.get()
-domain = ct.domain
-nd = ct.domain.nd
-mesh = domain.MeshOptions
-
-
-genMesh = mesh.genMesh
-movingDomain = ct.movingDomain
-T = ct.T
+from multiphase import *
 
 LevelModelType = MCorr.LevelModel
-
-coefficients = MCorr.Coefficients(LSModel_index=int(ct.movingDomain)+2,
-                                  V_model=int(ct.movingDomain)+0,
-                                  me_model=int(ct.movingDomain)+4,
-                                  VOFModel_index=int(ct.movingDomain)+1,
-                                  applyCorrection=ct.applyCorrection,
+coefficients = MCorr.Coefficients(LSModel_index=int(movingDomain)+2,
+                                  V_model=int(movingDomain)+0,
+                                  me_model=int(movingDomain)+4,
+                                  VOFModel_index=int(movingDomain)+1,
+                                  applyCorrection=applyCorrection,
                                   nd=nd,
                                   checkMass=False,
-                                  useMetrics=ct.useMetrics,
-                                  epsFactHeaviside=ct.ecH,
-                                  epsFactDirac=ct.epsFact_consrv_dirac,
-                                  epsFactDiffusion=ct.epsFact_consrv_diffusion)
+                                  useMetrics=useMetrics,
+                                  epsFactHeaviside=ecH,
+                                  epsFactDirac=epsFact_consrv_dirac,
+                                  epsFactDiffusion=epsFact_consrv_diffusion)
 
 class zero_phi:
     def __init__(self):

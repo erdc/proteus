@@ -163,6 +163,7 @@ tank.BC['x-'].setFreeSlip()
 he = tank_dim[0] / float(4 * refinement - 1)
 domain.MeshOptions.he = he
 st.assembleDomain(domain)
+triangleOptions = "VApq30Dena%8.8f" % ((he ** 2) / 2.0,)
 
 # ----- STRONG DIRICHLET ----- #
 
