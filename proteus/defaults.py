@@ -1,4 +1,4 @@
-import sys, recordtype, os, imp
+import sys, recordtype, os, imp, copy, inspect
 from . import (TransportCoefficients,
                Transport,
                default_p,
@@ -20,6 +20,21 @@ from . import (TransportCoefficients,
                default_so)
 
 from .Archiver import ArchiveFlags
+from .Profiling import logEvent
+
+import sys
+
+if sys.version_info.major < 3:  # Python 2?
+    # Using exec avoids a SyntaxError in Python 3.
+    exec("""def reraise(exc_type, exc_value, exc_traceback=None):
+                raise exc_type, exc_value, exc_traceback""")
+else:
+    def reraise(exc_type, exc_value, exc_traceback=None):
+        if exc_value is None:
+            exc_value = exc_type()
+        if exc_value.__traceback__ is not exc_traceback:
+            raise exc_value.with_traceback(exc_traceback)
+        raise exc_value
 
 physics_default_keys = []
 physics_excluded_keys = []
@@ -37,11 +52,21 @@ for k in (set(dir(default_p)) -
     else:
         physics_excluded_keys.append(k)
 
-Physics_base = recordtype.recordtype('Physics_base',
+_Physics_base = recordtype.recordtype('Physics_base',
                                      [(k,default_p.__dict__[k])
                                       for k in physics_default_keys],
                                      use_slots=False)
-
+class Physics_base(_Physics_base):
+    def __init__(self, **args):
+        super(Physics_base,self).__init__(**args)
+        for k in set(physics_default_keys) - set(args.keys()):
+            v = default_p.__dict__[k]
+            if not inspect.isclass(v):
+                try:
+                    self.__dict__[k] = copy.deepcopy(v)
+                except:
+                    pass
+                
 def reset_default_p():
     for k,v in Physics_base().__dict__.iteritems():
         default_p.__dict__[k] = v
@@ -91,11 +116,20 @@ for k in (set(dir(default_n)) -
     else:
         numerics_excluded_keys.append(k)
 
-Numerics_base = recordtype.recordtype('Numerics_base',
+_Numerics_base = recordtype.recordtype('Numerics_base',
                                       [(k,default_n.__dict__[k])
                                        for k in numerics_default_keys],
                                       use_slots=False)
-
+class Numerics_base(_Numerics_base):
+    def __init__(self, **args):
+        super(Numerics_base,self).__init__(**args)
+        for k in set(numerics_default_keys) - set(args.keys()):
+            v = default_n.__dict__[k]
+            if not inspect.isclass(v):
+                try:
+                    self.__dict__[k] = copy.deepcopy(default_n.__dict__[k])
+                except:
+                    pass
 def reset_default_n():
     for k,v in Numerics_base().__dict__.iteritems():
         default_n.__dict__[k] = v
@@ -123,11 +157,21 @@ for k in (set(dir(default_so)) -
     else:
         system_excluded_keys.append(k)
 
-System_base = recordtype.recordtype('System_base',
+_System_base = recordtype.recordtype('System_base',
                                     [(k,default_so.__dict__[k])
                                      for k in system_default_keys],
                                     use_slots=False)
 
+class System_base(_System_base):
+    def __init__(self, **args):
+        super(System_base,self).__init__(**args)
+        for k in set(system_default_keys) - set(args.keys()):
+            v = default_so.__dict__[k]
+            if not inspect.isclass(v):
+                try:
+                    self.__dict__[k] = copy.deepcopy(default_so.__dict__[k])
+                except:
+                    pass
 def reset_default_so():
     for k,v in System_base().__dict__.iteritems():
         default_so.__dict__[k] = v
