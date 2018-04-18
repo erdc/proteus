@@ -512,8 +512,8 @@ class NS_base:  # (HasTraits):
             
             try:
               n.useModel
-            except NameError:
-              n.useModel=False    
+            except AttributeError:
+              setattr(n,'useModel',False)    
             if (n.useModel) and not isinstance(p.domain,Domain.PUMIDomain) :
               logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
               p = self.pList[0]
@@ -531,14 +531,15 @@ class NS_base:  # (HasTraits):
 
               isModelVert = numpy.asarray(meshVertex2Model).astype("i")
               
-              meshBoundaryConnectivity = numpy.zeros((mesh.nExteriorElementBoundaries_global,5),dtype=numpy.int32)
+              meshBoundaryConnectivity = numpy.zeros((mesh.nExteriorElementBoundaries_global,2+pList[0].nd),dtype=numpy.int32)
               for elementBdyIdx in range(len(mesh.exteriorElementBoundariesArray)):
                 exteriorIdx = mesh.exteriorElementBoundariesArray[elementBdyIdx]
                 meshBoundaryConnectivity[elementBdyIdx][0] =  mesh.elementBoundaryMaterialTypes[exteriorIdx]
                 meshBoundaryConnectivity[elementBdyIdx][1] = mesh.elementBoundaryElementsArray[exteriorIdx][0]
                 meshBoundaryConnectivity[elementBdyIdx][2] = mesh.elementBoundaryNodesArray[exteriorIdx][0]
                 meshBoundaryConnectivity[elementBdyIdx][3] = mesh.elementBoundaryNodesArray[exteriorIdx][1]
-                meshBoundaryConnectivity[elementBdyIdx][4] = mesh.elementBoundaryNodesArray[exteriorIdx][2]
+                if(self.pList[0].nd==3):
+                  meshBoundaryConnectivity[elementBdyIdx][4] = mesh.elementBoundaryNodesArray[exteriorIdx][2]
               
               p.domain.PUMIMesh.reconstructFromProteus2(mesh.cmesh,isModelVert,meshBoundaryConnectivity)
   
