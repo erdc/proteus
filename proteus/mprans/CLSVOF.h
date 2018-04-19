@@ -94,12 +94,12 @@ namespace proteus
                                    double* mean_distance,
                                    double norm_factor_lagged,
                                    // normal reconstruction
-                                   double* lumped_qx,
-                                   double* lumped_qy,
-                                   double* lumped_qz,
-                                   double* lumped_qx_tStar,
-                                   double* lumped_qy_tStar,
-                                   double* lumped_qz_tStar,
+                                   double* projected_qx_tn,
+                                   double* projected_qy_tn,
+                                   double* projected_qz_tn,
+                                   double* projected_qx_tStar,
+                                   double* projected_qy_tStar,
+                                   double* projected_qz_tStar,
 				   // TO COMPUTE H
 				   int numDOFs,
 				   double* lumped_mass_matrix,
@@ -165,15 +165,7 @@ namespace proteus
                                    double epsFactDirac,
                                    double lambdaFact,
                                    // normalization factor
-                                   double norm_factor_lagged,
-                                   // normal reconstruction
-                                   double* lumped_qx,
-                                   double* lumped_qy,
-                                   double* lumped_qz,
-                                   double* lumped_qx_tStar,
-                                   double* lumped_qy_tStar,
-                                   double* lumped_qz_tStar
-                                   )=0;
+                                   double norm_factor_lagged)=0;
     virtual void calculateMetricsAtEOS( //EOS=End Of Simulation
                                        double* mesh_trial_ref,
                                        double* mesh_grad_trial_ref,
@@ -203,7 +195,10 @@ namespace proteus
                                        double* global_sV,
                                        double* global_sV0,
                                        double* global_D_err,
-				       double* global_L2_err)=0;
+				       double* global_L2_err,
+				       double* global_L2Banded_err,
+				       double* global_area_band,
+				       double* global_sH_L2_err)=0;
     virtual void calculateMetricsAtETS( //ETS=Every Time Step
                                        double dt,
                                        double* mesh_trial_ref,
@@ -250,9 +245,13 @@ namespace proteus
                                       double* u_dof,
                                       int offset_u, int stride_u,
                                       int numDOFs,
-                                      double* lumped_qx,
-                                      double* lumped_qy,
-                                      double* lumped_qz)=0;
+				      double* weighted_lumped_mass_matrix,
+				      // normal reconstruction via consistent mass matrix
+				      double* rhs_qx,
+				      double* rhs_qy,
+				      double* rhs_qz,
+				      int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				      double* weighted_mass_matrix)=0;
     virtual void calculateLumpedMassMatrix(double* mesh_trial_ref,
 					   double* mesh_grad_trial_ref,
 					   double* mesh_dof,
@@ -266,6 +265,33 @@ namespace proteus
 					   double* elementDiameter,
 					   double* lumped_mass_matrix,
 					   int offset_u, int stride_u)=0;
+    virtual void assembleSpinUpSystem(//element
+				      double* mesh_trial_ref,
+				      double* mesh_grad_trial_ref,
+				      double* mesh_dof,
+				      int* mesh_l2g,
+				      double* dV_ref,
+				      double* u_trial_ref,
+				      double* u_test_ref,
+				      //physics
+				      int nElements_global,
+				      int* u_l2g,
+				      double* uInitial,
+				      int offset_u, int stride_u,
+				      double* globalResidual,
+				      int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				      double* globalMassMatrix)=0;
+    virtual void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
+                         int numDOFs, //number of DOFs
+                         double* lumped_mass_matrix, //lumped mass matrix (as vector)
+			 double* soln,
+                         double* solH, //DOFs of high order solution at tnp1
+                         double* solL,
+                         double* limited_solution,
+                         int* csrRowIndeces_DofLoops, //csr row indeces
+                         int* csrColumnOffsets_DofLoops, //csr column offsets
+                         double* MassMatrix //mass matrix
+                         )=0;
   };
 
   template<class CompKernelType,
@@ -309,6 +335,7 @@ namespace proteus
                                             const double velocity[nSpace],
                                             double& flux)
       {
+	// NOTE (mql): I assume bc_u\in[0,1]. However, I need bc_u\in[-1,1]. Then I do: 2*bc_u-1
         double flow=0.0;
         for (int I=0; I < nSpace; I++)
           flow += n[I]*velocity[I];
@@ -320,7 +347,7 @@ namespace proteus
               }
             else
               {
-                flux = bc_u*flow;
+                flux = (2*bc_u-1)*flow;
               }
           }
         else if (isFluxBoundary_u == 1)
@@ -472,12 +499,12 @@ namespace proteus
                              double* mean_distance,
                              double norm_factor_lagged,
                              // normal reconstruction
-                             double* lumped_qx,
-                             double* lumped_qy,
-                             double* lumped_qz,
-                             double* lumped_qx_tStar,
-                             double* lumped_qy_tStar,
-                             double* lumped_qz_tStar,
+                             double* projected_qx_tn,
+                             double* projected_qy_tn,
+                             double* projected_qz_tn,
+                             double* projected_qx_tStar,
+                             double* projected_qy_tStar,
+                             double* projected_qz_tStar,
 			     // TO COMPUTE H
 			     int numDOFs,
 			     double* lumped_mass_matrix,
@@ -542,12 +569,12 @@ namespace proteus
                 dV = fabs(jacDet)*dV_ref[k];
                 ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
                 // get the components of the normal reconstruction
-                ck.valFromDOF(lumped_qx,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qxn);
-                ck.valFromDOF(lumped_qy,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qyn);
-                ck.valFromDOF(lumped_qz,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qzn);
-                ck.valFromDOF(lumped_qx_tStar,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qxnStar);
-                ck.valFromDOF(lumped_qy_tStar,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qynStar);
-                ck.valFromDOF(lumped_qz_tStar,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qznStar);
+                ck.valFromDOF(projected_qx_tn,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qxn);
+                ck.valFromDOF(projected_qy_tn,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qyn);
+                ck.valFromDOF(projected_qz_tn,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qzn);
+                ck.valFromDOF(projected_qx_tStar,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qxnStar);
+                ck.valFromDOF(projected_qy_tStar,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qynStar);
+                ck.valFromDOF(projected_qz_tStar,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],qznStar);
                 // get the solution (of Newton's solver)
                 ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
                 // get old solution
@@ -616,6 +643,11 @@ namespace proteus
                     max_distance[0] = fmax(max_distance[0],u);
                     mean_distance[0] += u*dV;
                   }
+
+		//double norm_grad_un = 0;
+                //for (int I=0;I<nSpace; I++)
+		//norm_grad_un += grad_un[I]*grad_un[I];
+                //norm_grad_un = std::sqrt(norm_grad_un)+1E-10;
                 ///////////////////////////
                 // NORMAL RECONSTRUCTION //
                 ///////////////////////////
@@ -630,12 +662,16 @@ namespace proteus
                   }
                 else //timeOrder == 1 or timeStage==1
                   {
+		    //normalReconstruction[0] = grad_un[0]/norm_grad_un;
+		    //normalReconstruction[1] = grad_un[1]/norm_grad_un;
+		    //normalReconstruction[2] = 0.;
+		    
                     normalReconstruction[0] = qxn;
                     normalReconstruction[1] = qyn;
                     if (nSpace==3)
-                      normalReconstruction[2] = qzn;
+		      normalReconstruction[2] = qzn;
                     else
-                      normalReconstruction[2] = 0.;
+		      normalReconstruction[2] = 0.;
                   }
                 //////////////////
                 // LOOP ON DOFs //
@@ -647,18 +683,25 @@ namespace proteus
                     if (timeOrder==1)
                       {
                         elementResidual_u[i] +=
-                          // TIME DERIVATIVE
-                          time_derivative_residual*u_test_dV[i]
+			  //(Snp1-Sn)*u_test_dV[i]
+			  //+ lambda*ck.NumericalDiffusion(1.0,
+			  //				 grad_u,
+			  //				 &u_grad_test_dV[i_nSpace])
+			  //- lambda*ck.NumericalDiffusion(1.0,
+			  //				 normalReconstruction,
+			  //				 &u_grad_test_dV[i_nSpace]);
+			  // TIME DERIVATIVE
+			  time_derivative_residual*u_test_dV[i]
 			  // ADVECTION TERM. This is IMPLICIT
 			  + ck.Advection_weak(fnp1,&u_grad_test_dV[i_nSpace])
                           // REGULARIZATION TERM. This is IMPLICIT
                           + lambda*ck.NumericalDiffusion(1.0,
-							 grad_u,
-							 &u_grad_test_dV[i_nSpace])
+			  				 grad_u,
+			  				 &u_grad_test_dV[i_nSpace])
                           // TARGET for PENALIZATION. This is EXPLICIT
                           - lambda*ck.NumericalDiffusion(1.0,
-							 normalReconstruction,
-							 &u_grad_test_dV[i_nSpace]);
+			  				 normalReconstruction,
+			  				 &u_grad_test_dV[i_nSpace]);
                       }
                     else // timeOrder=2
                       elementResidual_u[i] +=
@@ -896,14 +939,7 @@ namespace proteus
                              double epsFactDirac,
                              double lambdaFact,
                              // normalization factor
-                             double norm_factor_lagged,
-                             // normal reconstruction
-                             double* lumped_qx,
-                             double* lumped_qy,
-                             double* lumped_qz,
-                             double* lumped_qx_tStar,
-                             double* lumped_qy_tStar,
-                             double* lumped_qz_tStar)
+                             double norm_factor_lagged)
       {
         double timeCoeff=1.0;
         if (timeOrder==2)
@@ -999,16 +1035,20 @@ namespace proteus
                         int i_nSpace = i*nSpace;
 
                         elementJacobian_u_u[i][j] +=
+			  //dSnp1*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i]
+			  //+ lambda*ck.NumericalDiffusionJacobian(1.0,
+			  //					 &u_grad_trial[j_nSpace],
+			  //					 &u_grad_test_dV[i_nSpace]);
                           // TIME DERIVATIVE
                           time_derivative_jacobian*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i]
                           // IMPLICIT TERMS: ADVECTION, DIFFUSION
                           + timeCoeff*
                           (ck.AdvectionJacobian_weak(df,
-                                                     u_trial_ref[k*nDOF_trial_element+j],
-                                                     &u_grad_test_dV[i_nSpace])
-                           + lambda*ck.NumericalDiffusionJacobian(1.0,
-                                                                  &u_grad_trial[j_nSpace],
-                                                                  &u_grad_test_dV[i_nSpace]));
+						     u_trial_ref[k*nDOF_trial_element+j],
+						     &u_grad_test_dV[i_nSpace])
+			   + lambda*ck.NumericalDiffusionJacobian(1.0,
+								  &u_grad_trial[j_nSpace],
+								  &u_grad_test_dV[i_nSpace]));
                       }//j
                   }//i
               }//k
@@ -1062,7 +1102,10 @@ namespace proteus
                                  double* global_sV,
                                  double* global_sV0,
                                  double* global_D_err,
-				 double* global_L2_err)
+				 double* global_L2_err,
+				 double* global_L2Banded_err,
+				 double* global_area_band,
+				 double* global_sH_L2_err)
       {
         *global_I_err = 0.0;
         *global_sI_err = 0.0;
@@ -1072,6 +1115,9 @@ namespace proteus
         *global_sV0 = 0.0;
         *global_D_err = 0.0;
 	*global_L2_err = 0.0;
+	*global_L2Banded_err = 0.0;
+	*global_area_band = 0.0;
+	*global_sH_L2_err = 0.0;
         //////////////////////
         // ** LOOP IN CELLS //
         //////////////////////
@@ -1080,9 +1126,13 @@ namespace proteus
             if (eN<nElements_owned) // just consider the locally owned cells
               {
                 //declare local storage for local contributions and initialize
-                double cell_I_err = 0., cell_sI_err = 0.,
+                double
+		  cell_I_err = 0., cell_sI_err = 0.,
                   cell_V = 0., cell_V0 = 0., cell_sV = 0., cell_sV0 = 0.,
-                  cell_D_err = 0., cell_L2_err = 0.;
+                  cell_D_err = 0.,
+		  cell_L2_err = 0.,
+		  cell_L2Banded_err = 0., cell_area_band = 0.,
+		  cell_sH_L2_err = 0.;
 
                 //loop over quadrature points and compute integrands
                 for  (int k=0;k<nQuadraturePoints_element;k++)
@@ -1132,15 +1182,26 @@ namespace proteus
                     double sHu0 = smoothedHeaviside(epsHeaviside,u0);
                     double sHu = smoothedHeaviside(epsHeaviside,u);
                     double sHuh = smoothedHeaviside(epsHeaviside,uh);
-
+		    //////////////////////////
                     // compute cell metrics //
+		    //////////////////////////
+		    // metrics on the interface
                     cell_I_err += fabs(Hu - Huh)*dV;
                     cell_sI_err += fabs(sHu - sHuh)*dV;
+		    // L2 metrics on the level set
 		    cell_L2_err += std::pow(u-uh,2)*dV;
+		    if (fabs(uh) <= 2*epsHeaviside)
+		      {
+			cell_L2Banded_err += std::pow(u-uh,2)*dV;
+			cell_area_band += dV;
+		      }
+		    // L2 metrics on the Heviside of the level set
+		    cell_sH_L2_err += std::pow(sHu-sHuh,2)*dV;
+		    // volume conservation 
                     cell_V   += Huh*dV;
-                    cell_V0  += Hu0*dV;
+                    cell_V0  += Hu0*dV; 
                     cell_sV  += sHuh*dV;
-                    cell_sV0 += sHu0*dV;
+                    cell_sV0 += sHu0*dV; 
 
                     double norm2_grad_uh = 0.;
                     for (int I=0; I<nSpace; I++)
@@ -1156,6 +1217,9 @@ namespace proteus
                 *global_sI_err += cell_sI_err;
                 *global_D_err    += cell_D_err;
 		*global_L2_err += cell_L2_err;
+		*global_L2Banded_err += cell_L2Banded_err;
+		*global_area_band += cell_area_band;
+		*global_sH_L2_err += cell_sH_L2_err;
               }//elements
           }
         *global_D_err *= 0.5;
@@ -1337,18 +1401,20 @@ namespace proteus
                                 int offset_u, int stride_u,
                                 // PARAMETERS FOR EDGE VISCOSITY
                                 int numDOFs,
-                                double* lumped_qx,
-                                double* lumped_qy,
-                                double* lumped_qz)
+				double* weighted_lumped_mass_matrix,
+				// normal reconstruction via consistent mass matrix
+				double* rhs_qx,
+				double* rhs_qy,
+				double* rhs_qz,
+				int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				double* weighted_mass_matrix)				
       {
-        register double
-          weighted_lumped_mass_matrix[numDOFs];
         for (int i=0; i<numDOFs; i++)
           {
-            lumped_qx[i]=0.;
-            lumped_qy[i]=0.;
-            lumped_qz[i]=0.;
             weighted_lumped_mass_matrix[i]=0.;
+	    rhs_qx[i]=0.;
+	    rhs_qy[i]=0.;
+	    rhs_qz[i]=0.;	    
           }
         for(int eN=0;eN<nElements_global;eN++)
           {
@@ -1358,12 +1424,15 @@ namespace proteus
               element_rhsx_normal_reconstruction[nDOF_test_element],
               element_rhsy_normal_reconstruction[nDOF_test_element],
               element_rhsz_normal_reconstruction[nDOF_test_element];
+	    register double element_weighted_mass_matrix[nDOF_test_element][nDOF_trial_element];
             for (int i=0;i<nDOF_test_element;i++)
               {
                 element_weighted_lumped_mass_matrix[i]=0.0;
                 element_rhsx_normal_reconstruction[i]=0.0;
                 element_rhsy_normal_reconstruction[i]=0.0;
                 element_rhsz_normal_reconstruction[i]=0.0;
+		for (int j=0;j<nDOF_trial_element;j++)
+		  element_weighted_mass_matrix[i][j]=0.0;
               }
             //loop over quadrature points and compute integrands
             for(int k=0;k<nQuadraturePoints_element;k++)
@@ -1407,7 +1476,7 @@ namespace proteus
                 double norm_grad_u = 0;
                 for (int I=0;I<nSpace; I++)
                   norm_grad_u += grad_u[I]*grad_u[I];
-                norm_grad_u = std::sqrt(norm_grad_u);+1E-10;
+                norm_grad_u = std::sqrt(norm_grad_u)+1E-10;
 
                 for(int i=0;i<nDOF_test_element;i++)
                   {
@@ -1415,6 +1484,9 @@ namespace proteus
                     element_rhsx_normal_reconstruction[i] += rhsx*u_test_dV[i];
                     element_rhsy_normal_reconstruction[i] += rhsy*u_test_dV[i];
                     element_rhsz_normal_reconstruction[i] += rhsz*u_test_dV[i];
+		    for(int j=0;j<nDOF_trial_element;j++)
+		      element_weighted_mass_matrix[i][j] +=
+			norm_grad_u*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i];		    
                   }
               } //k
             // DISTRIBUTE //
@@ -1424,19 +1496,18 @@ namespace proteus
                 int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
 
                 weighted_lumped_mass_matrix[gi] += element_weighted_lumped_mass_matrix[i];
-                lumped_qx[gi] += element_rhsx_normal_reconstruction[i];
-                lumped_qy[gi] += element_rhsy_normal_reconstruction[i];
-                lumped_qz[gi] += element_rhsz_normal_reconstruction[i];
+		// rhs for reconstruction via consistent mass matrix
+		rhs_qx[gi] += element_rhsx_normal_reconstruction[i];
+		rhs_qy[gi] += element_rhsy_normal_reconstruction[i];
+		rhs_qz[gi] += element_rhsz_normal_reconstruction[i];
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    int eN_i_j = eN_i*nDOF_trial_element+j;
+		    weighted_mass_matrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]]
+		      += element_weighted_mass_matrix[i][j];
+		  }		
               }//i
           }//elements
-        // COMPUTE LUMPED L2 PROJECTION
-        for (int i=0; i<numDOFs; i++)
-          {
-            double weighted_mi = weighted_lumped_mass_matrix[i];
-            lumped_qx[i] /= weighted_mi;
-            lumped_qy[i] /= weighted_mi;
-            lumped_qz[i] /= weighted_mi;
-          }
       }
 
       void calculateLumpedMassMatrix(//element
@@ -1501,7 +1572,175 @@ namespace proteus
                 lumped_mass_matrix[gi] += element_lumped_mass_matrix[i];
               }//i
           }//elements
-      }      
+      }
+
+      void assembleSpinUpSystem(//element
+				double* mesh_trial_ref,
+				double* mesh_grad_trial_ref,
+				double* mesh_dof,
+				int* mesh_l2g,
+				double* dV_ref,
+				double* u_trial_ref,
+				double* u_test_ref,
+				//physics
+				int nElements_global,
+				int* u_l2g,
+				double* uInitial,
+				int offset_u, int stride_u,
+				double* globalResidual,
+				int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
+				double* globalMassMatrix)
+      {
+        for(int eN=0;eN<nElements_global;eN++)
+          {
+            register double
+	      elementResidual_u[nDOF_test_element],
+	      elementMassMatrix_u_u[nDOF_test_element][nDOF_trial_element];
+            for (int i=0;i<nDOF_test_element;i++)
+	      {
+		elementResidual_u[i]=0;
+		for (int j=0;j<nDOF_trial_element;j++)
+		  elementMassMatrix_u_u[i][j]=0.0;
+	      }
+            for  (int k=0;k<nQuadraturePoints_element;k++)
+              {
+                int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
+                  eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
+                //declare local storage
+                register double
+                  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+                  u_test_dV[nDOF_test_element], 
+                  dV, x,y,z;
+                //get jacobian, etc for mapping reference element
+                ck.calculateMapping_element(eN,
+                                            k,
+                                            mesh_dof,
+                                            mesh_l2g,
+                                            mesh_trial_ref,
+                                            mesh_grad_trial_ref,
+                                            jac,
+                                            jacDet,
+                                            jacInv,
+                                            x,y,z);
+                //get the physical integration weight
+                dV = fabs(jacDet)*dV_ref[k];
+                //precalculate test function products with integration weights
+                for (int j=0;j<nDOF_trial_element;j++)
+		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+                //////////////////
+                // LOOP ON DOFs //
+                //////////////////
+                for(int i=0;i<nDOF_test_element;i++)
+                  {
+		    elementResidual_u[i] += uInitial[eN_k]*u_test_dV[i];
+                    for(int j=0;j<nDOF_trial_element;j++)
+                      {
+                        elementMassMatrix_u_u[i][j] +=
+			  u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i];
+                      }//j
+                  }//i
+              }//k
+            //
+            //load into element Jacobian into global Jacobian
+            //
+            for (int i=0;i<nDOF_test_element;i++)
+              {
+                int eN_i = eN*nDOF_test_element+i;
+		int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		globalResidual[gi] += elementResidual_u[i];
+                for (int j=0;j<nDOF_trial_element;j++)
+                  {
+                    int eN_i_j = eN_i*nDOF_trial_element+j;
+                    globalMassMatrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] +=
+                      elementMassMatrix_u_u[i][j];
+                  }//j
+              }//i
+          }//elements
+      }
+
+      void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
+		   int numDOFs, //number of DOFs
+		   double* lumped_mass_matrix, //lumped mass matrix (as vector)
+		   double* soln,
+		   double* solH, //DOFs of high order solution at tnp1
+		   double* solL,
+		   double* limited_solution,
+		   int* csrRowIndeces_DofLoops, //csr row indeces
+		   int* csrColumnOffsets_DofLoops, //csr column offsets
+		   double* MassMatrix //mass matrix
+		   )
+      {
+	register double Rpos[numDOFs], Rneg[numDOFs];
+	register double FluxCorrectionMatrix[NNZ];
+	//////////////////
+	// LOOP in DOFs //
+	//////////////////
+	int ij=0;
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    //read some vectors
+	    double solHi = solH[i];
+	    double solLi = solL[i];
+	    double mi = lumped_mass_matrix[i];
+
+	    double mini=-1.0, maxi=1.0; // global FCT
+	    //double mini=1.0E10, maxi=-1.0E10;
+	    double Pposi=0, Pnegi=0;
+	    // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+	    for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	      {
+		int j = csrColumnOffsets_DofLoops[offset];
+		// i-th row of flux correction matrix
+		FluxCorrectionMatrix[ij] = ((i==j ? 1. : 0.)*mi - MassMatrix[ij]) * (solH[j]-solHi);
+
+		//mini = fmin(mini,limited_solution[j]);
+		//maxi = fmax(maxi,limited_solution[j]);
+		
+		///////////////////////
+		// COMPUTE P VECTORS //
+		///////////////////////
+		Pposi += FluxCorrectionMatrix[ij]*((FluxCorrectionMatrix[ij] > 0) ? 1. : 0.);
+		Pnegi += FluxCorrectionMatrix[ij]*((FluxCorrectionMatrix[ij] < 0) ? 1. : 0.);
+
+		//update ij
+		ij+=1;
+	      }
+	    ///////////////////////
+	    // COMPUTE Q VECTORS //
+	    ///////////////////////
+	    double Qposi = mi*(maxi-solLi);
+	    double Qnegi = mi*(mini-solLi);
+
+	    ///////////////////////
+	    // COMPUTE R VECTORS //
+	    ///////////////////////
+	    Rpos[i] = ((Pposi==0) ? 1. : std::min(1.0,Qposi/Pposi));
+	    Rneg[i] = ((Pnegi==0) ? 1. : std::min(1.0,Qnegi/Pnegi));
+	  } // i DOFs
+
+	//////////////////////
+	// COMPUTE LIMITERS //
+	//////////////////////
+	ij=0;
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double ith_Limiter_times_FluxCorrectionMatrix = 0.;
+	    double Rposi = Rpos[i], Rnegi = Rneg[i];
+	    // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+	    for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	      {
+		int j = csrColumnOffsets_DofLoops[offset];
+		ith_Limiter_times_FluxCorrectionMatrix +=
+		  ((FluxCorrectionMatrix[ij]>0) ? std::min(Rposi,Rneg[j]) : std::min(Rnegi,Rpos[j]))
+		  * FluxCorrectionMatrix[ij];
+		//ith_Limiter_times_FluxCorrectionMatrix += FluxCorrectionMatrix[ij];
+		//update ij
+		ij+=1;
+	      }
+	    limited_solution[i] = solL[i] + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
+	  }
+      }
     };//CLSVOF
 
   inline CLSVOF_base* newCLSVOF(int nSpaceIn,
