@@ -1026,19 +1026,19 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 for j in range(self.mesh.nodeArray.shape[0]):
                     vel = self.granular_vel_Calc(self.mesh.nodeArray[j, :], i)
                     sdf, sdNormals = self.granular_sdf_Calc(self.mesh.nodeArray[j, :], i)
-                    sdf += vel * self.model.dt_last
-                    if (abs(sdf) < abs(self.phi_s[j])):
+                    #sdf += vel * self.model.dt_last
+                    if (abs(sdf) < abs(self.phi_s[j])).any():
                         self.phi_s[j] = sdf
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
                         self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = self.granular_sdf_Calc(self.model.q['x'][eN, k], i)
                         self.particle_velocities[i, eN, k] = self.granular_vel_Calc(self.model.q['x'][eN, k], i)
-                        if (abs(self.particle_signed_distances[i, eN, k]) < abs(self.phisField[eN, k])):
+                        if (abs(self.particle_signed_distances[i, eN, k]) < abs(self.phisField[eN, k])).any():
                             self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
                 for ebN in range(self.model.ebq_global['x'].shape[0]):
                     for kb in range(self.model.ebq_global['x'].shape[1]):
                         sdf,sdNormals = self.granular_sdf_Calc(self.model.ebq_global['x'][ebN,kb],i)
-                        if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                        if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ).any():
                             self.ebq_global_phi_s[ebN,kb]=sdf
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
             self.model.q[('phis')] = self.phisField
