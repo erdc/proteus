@@ -262,6 +262,7 @@ namespace proteus
 				   int ARTIFICIAL_VISCOSITY,
                                    double cMax,
                                    double cE,
+				   int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                    double* forcex,
                                    double* forcey,
                                    double* forcez,
@@ -717,6 +718,7 @@ namespace proteus
                                   double& rhoSave,
                                   double& nuSave,
                                   int KILL_PRESSURE_TERM,
+				  int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                   double forcex,
                                   double forcey,
                                   double forcez,
@@ -909,8 +911,8 @@ namespace proteus
         /* mom_w_source = -porosity*rho*g[2];// - porosity*d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8)); */
 
         // mql: add general force term
-        mom_u_source -= forcex;
-        mom_v_source -= forcey;
+        mom_u_source -= (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcex;
+        mom_v_source -= (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcey;
         /* mom_w_source -= forcez; */
 
         //u momentum Hamiltonian (pressure)
@@ -2057,9 +2059,10 @@ namespace proteus
                              double* phisError,
                              double* phisErrorNodal,
 			     int USE_SUPG,
-			     int ARTIFICIAL_VISCOSITY,						     			     
+			     int ARTIFICIAL_VISCOSITY,
                              double cMax,
                              double cE,
+			     int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                              double* forcex,
                              double* forcey,
                              double* forcez,
@@ -2450,6 +2453,7 @@ namespace proteus
                                      q_rho[eN_k],
                                      q_nu[eN_k],
                                      KILL_PRESSURE_TERM,
+				     MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                      forcex[eN_k],
                                      forcey[eN_k],
                                      forcez[eN_k],
@@ -2774,87 +2778,89 @@ namespace proteus
        		  {
        		    register int i_nSpace = i*nSpace;
 		    /* Lstar_u_p[i]=ck.Advection_adjoint(dmass_adv_u,&p_grad_test_dV[i_nSpace]); */
-       		    /* Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]); */
-       		    /* Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]); */
-       		    //use the same advection adjoint for all three since we're approximating the linearized adjoint
-       		    Lstar_u_u[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
-       		    Lstar_v_v[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
-       		    /* Lstar_w_w[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]); */
-       		    Lstar_p_u[i]=ck.Hamiltonian_adjoint(dmom_u_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
-       		    Lstar_p_v[i]=ck.Hamiltonian_adjoint(dmom_v_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
-       		    /* Lstar_p_w[i]=ck.Hamiltonian_adjoint(dmom_w_ham_grad_p,&vel_grad_test_dV[i_nSpace]); */
-       		    
-       		    //VRANS account for drag terms, diagonal only here ... decide if need off diagonal terms too
-       		    Lstar_u_u[i]+=ck.Reaction_adjoint(dmom_u_source[0],vel_test_dV[i]);
-       		    Lstar_v_v[i]+=ck.Reaction_adjoint(dmom_v_source[1],vel_test_dV[i]);
-       		    /* Lstar_w_w[i]+=ck.Reaction_adjoint(dmom_w_source[2],vel_test_dV[i]); */
-       		    //
-       		  }
-       
-       		if (ARTIFICIAL_VISCOSITY==0)
-       		  {
-       		    q_numDiff_u[eN_k] = 0;
-       		    q_numDiff_v[eN_k] = 0;
-       		    q_numDiff_w[eN_k] = 0;
-       		  }
-       		else if (ARTIFICIAL_VISCOSITY==1) // SHOCK CAPTURING
-       		  {
-       		    norm_Rv = sqrt(pdeResidual_u*pdeResidual_u + pdeResidual_v*pdeResidual_v);// + pdeResidual_w*pdeResidual_w);
-       		    q_numDiff_u[eN_k] = C_dc*norm_Rv*(useMetrics/sqrt(G_dd_G+1.0e-12)  +
-       						      (1.0-useMetrics)*hFactor*hFactor*elementDiameter[eN]*elementDiameter[eN]);
-       		    q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
-       		    q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
-       		  }
-       		else // ENTROPY VISCOSITY
-       		  {
-       		    double rho = q_rho[eN_k];
-       		    double mu = q_rho[eN_k]*q_nu[eN_k];
-       
-       		    double vel2 = u*u + v*v;
-       		    
-       		    // entropy residual
-       		    double Res_in_x =
-       		      rho*((u-un)/dt + (u*grad_u[0]+v*grad_u[1]) - g[0])
-       		      + (KILL_PRESSURE_TERM == 1 ? 0. : 1.)*grad_p[0] - forcex[eN_k]
-       		      - mu*(hess_u[0] + hess_u[3]) //  u_xx + u_yy
-       		      - mu*(hess_u[0] + hess_v[2]); // u_xx + v_yx
-       
-       		    double Res_in_y =
-       		      rho*((v-vn)/dt + (u*grad_v[0]+v*grad_v[1]) - g[1])
-       		      + (KILL_PRESSURE_TERM == 1 ? 0. : 1.)*grad_p[1] - forcey[eN_k]
-       		      - mu*(hess_v[0] + hess_v[3])  // v_xx + v_yy
-       		      - mu*(hess_u[1] + hess_v[3]); // u_xy + v_yy
-       		    
-       		    // compute entropy residual
-       		    double entRes = Res_in_x*u + Res_in_y*v;
-       
-       		    double hK = elementDiameter[eN]/order_polynomial;
-       		    q_numDiff_u[eN_k] = fmin(cMax*rho*hK*std::sqrt(vel2),
-       					     cE*hK*hK*fabs(entRes)/(vel2+1E-10));
-       		    q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
-       		    q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
-       		  }
-       		   
-       		//
-       		//update element residual
-       		//
-       		double mesh_vel[2];
-       		mesh_vel[0] = xt;
-       		mesh_vel[1] = yt;
-       		// Save velocity and its gradient (to be used in other models and to compute errors)
-       		q_velocity[eN_k_nSpace+0]=u;
-       		q_velocity[eN_k_nSpace+1]=v;
-       		/* q_velocity[eN_k_nSpace+2]=w; */
-       		for (int I=0;I<nSpace;I++)
-       		  {
-       		    q_grad_u[eN_k_nSpace+I] = grad_u[I];
-       		    q_grad_v[eN_k_nSpace+I] = grad_v[I];
-       		    /* q_grad_w[eN_k_nSpace+I] = grad_w[I]; */
-       		  }
-       		// save divergence of velocity
-       		q_divU[eN_k] = q_grad_u[eN_k_nSpace+0] + q_grad_v[eN_k_nSpace+1];
-       		
-       		// SURFACE TENSION //
+		    /* Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]); */
+		    /* Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]); */
+		    //use the same advection adjoint for all three since we're approximating the linearized adjoint
+		    Lstar_u_u[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
+		    Lstar_v_v[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
+		    /* Lstar_w_w[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]); */
+		    Lstar_p_u[i]=ck.Hamiltonian_adjoint(dmom_u_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
+		    Lstar_p_v[i]=ck.Hamiltonian_adjoint(dmom_v_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
+		    /* Lstar_p_w[i]=ck.Hamiltonian_adjoint(dmom_w_ham_grad_p,&vel_grad_test_dV[i_nSpace]); */
+		    
+		    //VRANS account for drag terms, diagonal only here ... decide if need off diagonal terms too
+		    Lstar_u_u[i]+=ck.Reaction_adjoint(dmom_u_source[0],vel_test_dV[i]);
+		    Lstar_v_v[i]+=ck.Reaction_adjoint(dmom_v_source[1],vel_test_dV[i]);
+		    /* Lstar_w_w[i]+=ck.Reaction_adjoint(dmom_w_source[2],vel_test_dV[i]); */
+		    //
+		  }
+
+		if (ARTIFICIAL_VISCOSITY==0)
+		  {
+		    q_numDiff_u[eN_k] = 0;
+		    q_numDiff_v[eN_k] = 0;
+		    q_numDiff_w[eN_k] = 0;
+		  }
+		else if (ARTIFICIAL_VISCOSITY==1) // SHOCK CAPTURING
+		  {
+		    norm_Rv = sqrt(pdeResidual_u*pdeResidual_u + pdeResidual_v*pdeResidual_v);// + pdeResidual_w*pdeResidual_w);
+		    q_numDiff_u[eN_k] = C_dc*norm_Rv*(useMetrics/sqrt(G_dd_G+1.0e-12)  +
+						      (1.0-useMetrics)*hFactor*hFactor*elementDiameter[eN]*elementDiameter[eN]);
+		    q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
+		    q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+		  }
+		else // ENTROPY VISCOSITY
+		  {
+		    double rho = q_rho[eN_k];
+		    double mu = q_rho[eN_k]*q_nu[eN_k];
+
+		    double vel2 = u*u + v*v;
+		    
+		    // entropy residual
+		    double Res_in_x =
+		      porosity*rho*((u-un)/dt + (u*grad_u[0]+v*grad_u[1]) - g[0])
+		      + (KILL_PRESSURE_TERM == 1 ? 0. : 1.)*grad_p[0]
+		      - (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcex[eN_k]
+		      - mu*(hess_u[0] + hess_u[3]) //  u_xx + u_yy
+		      - mu*(hess_u[0] + hess_v[2]); // u_xx + v_yx
+
+		    double Res_in_y =
+		      porosity*rho*((v-vn)/dt + (u*grad_v[0]+v*grad_v[1]) - g[1])
+		      + (KILL_PRESSURE_TERM == 1 ? 0. : 1.)*grad_p[1] 
+		      - (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcey[eN_k]
+		      - mu*(hess_v[0] + hess_v[3])  // v_xx + v_yy
+		      - mu*(hess_u[1] + hess_v[3]); // u_xy + v_yy
+		    
+		    // compute entropy residual
+		    double entRes = Res_in_x*u + Res_in_y*v;
+
+		    double hK = elementDiameter[eN]/order_polynomial;
+		    q_numDiff_u[eN_k] = fmin(cMax*porosity*rho*hK*std::sqrt(vel2),
+					     cE*hK*hK*fabs(entRes)/(vel2+1E-10));
+		    q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
+		    q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+		  }
+		   
+		//
+		//update element residual
+		//
+		double mesh_vel[2];
+		mesh_vel[0] = xt;
+		mesh_vel[1] = yt;
+		// Save velocity and its gradient (to be used in other models and to compute errors)
+		q_velocity[eN_k_nSpace+0]=u;
+		q_velocity[eN_k_nSpace+1]=v;
+		/* q_velocity[eN_k_nSpace+2]=w; */
+		for (int I=0;I<nSpace;I++)
+		  {
+		    q_grad_u[eN_k_nSpace+I] = grad_u[I];
+		    q_grad_v[eN_k_nSpace+I] = grad_v[I];
+		    /* q_grad_w[eN_k_nSpace+I] = grad_w[I]; */
+		  }
+		// save divergence of velocity
+		q_divU[eN_k] = q_grad_u[eN_k_nSpace+0] + q_grad_v[eN_k_nSpace+1];
+		
+		// SURFACE TENSION //
                 double unit_normal[nSpace];
                 double norm_grad_phi = 0.;
                 for (int I=0;I<nSpace;I++)
@@ -3527,6 +3533,7 @@ namespace proteus
                                      ebqe_rho[ebNE_kb],
                                      ebqe_nu[ebNE_kb],
                                      KILL_PRESSURE_TERM,
+				     0,
                                      0., // mql: zero force term at boundary
                                      0.,
                                      0.,
@@ -3615,6 +3622,7 @@ namespace proteus
                                      ebqe_rho[ebNE_kb],
                                      ebqe_nu[ebNE_kb],
                                      KILL_PRESSURE_TERM,
+				     0,
                                      0., // mql: zero force term at boundary
                                      0.,
                                      0.,
@@ -4656,6 +4664,7 @@ namespace proteus
                                      rhoSave,
                                      nuSave,
                                      KILL_PRESSURE_TERM,
+				     0,
                                      0., // mql: the force term doesn't play a role in the Jacobian
                                      0.,
                                      0.,
@@ -5695,6 +5704,7 @@ namespace proteus
                                      rhoSave,
                                      nuSave,
                                      KILL_PRESSURE_TERM,
+				     0,
                                      0., // mql: zero force term at boundary
                                      0.,
                                      0.,
@@ -5783,6 +5793,7 @@ namespace proteus
                                      rhoSave,
                                      nuSave,
                                      KILL_PRESSURE_TERM,
+				     0,
                                      0., // mql: zero force term at boundary
                                      0.,
                                      0.,

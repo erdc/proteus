@@ -266,6 +266,7 @@ namespace proteus
                                    int ARTIFICIAL_VISCOSITY,
                                    double cMax,
                                    double cE,
+				   int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                    double* forcex,
                                    double* forcey,
                                    double* forcez,
@@ -728,6 +729,7 @@ namespace proteus
                                   double& rhoSave,
                                   double& nuSave,
                                   int KILL_PRESSURE_TERM,
+				  int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                   double forcex,
                                   double forcey,
                                   double forcez,
@@ -917,14 +919,15 @@ namespace proteus
 
         //momentum sources
         norm_n = sqrt(n[0]*n[0]+n[1]*n[1]+n[2]*n[2]);
-        mom_u_source = -phi_s_effect*rho*porosity*g[0];// - d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
-        mom_v_source = -phi_s_effect*rho*porosity*g[1];// - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
-        mom_w_source = -phi_s_effect*rho*porosity*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
-   
-        // mql: add general force term 
-        mom_u_source -= forcex; 
-        mom_v_source -= forcey; 
-        mom_w_source -= forcez; 
+
+        mom_u_source = -phi_s_effect*porosity*rho*g[0];// - d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
+        mom_v_source = -phi_s_effect*porosity*rho*g[1];// - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
+        mom_w_source = -phi_s_effect*porosity*rho*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
+
+        // mql: add general force term
+        mom_u_source -= (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcex;
+        mom_v_source -= (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcey;
+        mom_w_source -= (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcez;
 
         //u momentum Hamiltonian (pressure)
         mom_u_ham = phi_s_effect*porosity*grad_p[0]*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
@@ -2053,6 +2056,7 @@ namespace proteus
 			     int ARTIFICIAL_VISCOSITY,
                              double cMax,
                              double cE,
+			     int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                              double* forcex,
                              double* forcey,
                              double* forcez,
@@ -2449,6 +2453,7 @@ namespace proteus
                                      q_rho[eN_k],
                                      q_nu[eN_k],
                                      KILL_PRESSURE_TERM,
+				     MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                      forcex[eN_k],
                                      forcey[eN_k],
                                      forcez[eN_k],
@@ -2777,24 +2782,27 @@ namespace proteus
 		    double vel2 = u*u + v*v + w*w;
 		    // entropy residual
 		    double Res_in_x =
-                      rho*((u-un)/dt + (u*grad_u[0]+v*grad_u[1]+w*grad_u[2]) - g[0])
-		      + (KILL_PRESSURE_TERM == 1 ? 0 : 1.)*grad_p[0] - forcex[eN_k]
+                      porosity*rho*((u-un)/dt + (u*grad_u[0]+v*grad_u[1]+w*grad_u[2]) - g[0])
+		      + (KILL_PRESSURE_TERM == 1 ? 0 : 1.)*grad_p[0]
+		      - (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcex[eN_k]
                       - mu*(hess_u[0] + hess_u[4] + hess_u[8]) //  u_xx + u_yy + u_zz
                       - mu*(hess_u[0] + hess_v[1] + hess_w[2]); // u_xx + v_xy + w_xz
                     double Res_in_y =
-                      rho*((v-vn)/dt + (u*grad_v[0]+v*grad_v[1]+w*grad_v[2]) - g[1])
-		      + (KILL_PRESSURE_TERM == 1 ? 0 : 1.)*grad_p[1] - forcey[eN_k]
+                      porosity*rho*((v-vn)/dt + (u*grad_v[0]+v*grad_v[1]+w*grad_v[2]) - g[1])
+		      + (KILL_PRESSURE_TERM == 1 ? 0 : 1.)*grad_p[1]
+		      - (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcey[eN_k]
                       - mu*(hess_v[0] + hess_v[4] + hess_v[8])  // v_xx + v_yy + v_zz
                       - mu*(hess_u[1] + hess_v[4] + hess_w[5]); // u_xy + v_yy + w_yz
                     double Res_in_z =
-                      rho*((w-wn)/dt + (u*grad_w[0]+v*grad_w[1]+w*grad_w[2]) - g[2])
-		      + (KILL_PRESSURE_TERM == 1 ? 0 : 1.)*grad_p[2] - forcez[eN_k]
+                      porosity*rho*((w-wn)/dt + (u*grad_w[0]+v*grad_w[1]+w*grad_w[2]) - g[2])
+		      + (KILL_PRESSURE_TERM == 1 ? 0 : 1.)*grad_p[2] 
+		      - (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcez[eN_k]
                       - mu*(hess_w[0] + hess_w[4] + hess_w[8])  // w_xx + w_yy + w_zz
                       - mu*(hess_u[2] + hess_v[5] + hess_w[8]); // u_xz + v_yz + w_zz
 		    // compute entropy residual
 		    double entRes = Res_in_x*u + Res_in_y*v + Res_in_z*w;
 		    double hK = elementDiameter[eN]/order_polynomial;
-		    q_numDiff_u[eN_k] = fmin(cMax*rho*hK*std::sqrt(vel2),
+		    q_numDiff_u[eN_k] = fmin(cMax*porosity*rho*hK*std::sqrt(vel2),
 					     cE*hK*hK*fabs(entRes)/(vel2+1E-10));
 		    q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
 		    q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
@@ -3591,6 +3599,7 @@ namespace proteus
                                      ebqe_rho[ebNE_kb],
                                      ebqe_nu[ebNE_kb],
                                      KILL_PRESSURE_TERM,
+				     0,
                                      0., // mql: zero force term at boundary
                                      0.,
                                      0.,
@@ -3679,6 +3688,7 @@ namespace proteus
                                      ebqe_rho[ebNE_kb],
                                      ebqe_nu[ebNE_kb],
                                      KILL_PRESSURE_TERM,
+				     0,
                                      0., // mql: zero force term at boundary
                                      0.,
                                      0.,
@@ -4722,6 +4732,7 @@ namespace proteus
                                      rhoSave,
                                      nuSave,
                                      KILL_PRESSURE_TERM,
+				     0,
                                      0., // mql: the force term doesn't play a role in the Jacobian
                                      0.,
                                      0.,
@@ -5822,6 +5833,7 @@ namespace proteus
                                      rhoSave,
                                      nuSave,
                                      KILL_PRESSURE_TERM,
+				     0,
                                      0., // mql: zero force term at boundary
                                      0.,
                                      0.,
@@ -5910,6 +5922,7 @@ namespace proteus
                                      rhoSave,
                                      nuSave,
                                      KILL_PRESSURE_TERM,
+				     0,
                                      0., // mql: zero force term at boundary
                                      0.,
                                      0.,

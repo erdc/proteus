@@ -135,6 +135,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import calculateWaveFunction3d_ref
 
     def __init__(self,
+                 MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=0,
                  CORRECT_VELOCITY=True,
                  USE_SUPG=1,
                  ARTIFICIAL_VISCOSITY=1, #0: no art viscosity, 1: shock capturing, 2: entropy viscosity
@@ -220,37 +221,37 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  vos_limiter = 0.05,
                  mu_fr_limiter = 1.00,
                  use_sbm=0
-		 ):
-        self.CORRECT_VELOCITY=CORRECT_VELOCITY
-        self.vos_function=vos_function
-        self.nParticles=nParticles
-        self.particle_nitsche=particle_nitsche
-        self.particle_epsFact=particle_epsFact
-        self.particle_alpha=particle_alpha
-        self.particle_beta=particle_beta
-        self.particle_penalty_constant=particle_penalty_constant
-        self.particle_sdfList=particle_sdfList
-        self.particle_velocityList=particle_velocityList
-        self.granular_sdf_Calc=granular_sdf_Calc
-        self.granular_vel_Calc=granular_vel_Calc
-        self.aDarcy=aDarcy
-        self.betaForch=betaForch
-        self.grain=grain
-        self.packFraction=packFraction
-        self.packMargin=packMargin
-        self.maxFraction=maxFraction
-        self.frFraction=frFraction
-        self.sigmaC=sigmaC
-        self.C3e=C3e
-        self.C4e=C4e
-        self.eR=eR
-        self.fContact=fContact
-        self.mContact=mContact
-        self.nContact=nContact
-        self.angFriction=angFriction
-        self.set_vos=set_vos
-        self.set_sed=set_sed_velocity
-        self.PSTAB=PSTAB
+                 ):
+        self.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY
+        self.CORRECT_VELOCITY = CORRECT_VELOCITY
+        self.nParticles = nParticles
+        self.particle_nitsche = particle_nitsche
+        self.particle_epsFact = particle_epsFact
+        self.particle_alpha = particle_alpha
+        self.particle_beta = particle_beta
+        self.particle_penalty_constant = particle_penalty_constant
+        self.particle_sdfList = particle_sdfList
+        self.particle_velocityList = particle_velocityList
+        self.granular_sdf_Calc = granular_sdf_Calc
+        self.granular_vel_Calc = granular_vel_Calc
+        self.aDarcy = aDarcy
+        self.betaForch = betaForch
+        self.grain = grain
+        self.packFraction = packFraction
+        self.packMargin = packMargin
+        self.maxFraction = maxFraction
+        self.frFraction = frFraction
+        self.sigmaC = sigmaC
+        self.C3e = C3e
+        self.C4e = C4e
+        self.eR = eR
+        self.fContact = fContact
+        self.mContact = mContact
+        self.nContact = nContact
+        self.angFriction = angFriction
+        self.set_vos = set_vos
+        self.set_sed = set_sed_velocity
+        self.PSTAB = PSTAB
         self.barycenters = barycenters
         self.smagorinskyConstant = smagorinskyConstant
         self.turbulenceClosureModel = turbulenceClosureModel
@@ -2411,6 +2412,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ARTIFICIAL_VISCOSITY,
             self.coefficients.cMax,
             self.coefficients.cE,
+            self.coefficients.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
             self.q[('force', 0)],
             self.q[('force', 1)],
             self.q[('force', 2)],
