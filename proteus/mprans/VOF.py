@@ -156,11 +156,14 @@ class RKEV(proteus.TimeIntegration.SSP):
                     self.transport.u[0].dof[:] += 1./3* self.u_dof_last[ci]
                     # update u_dof_old
                     self.transport.u_dof_old[:] = self.u_dof_last[ci]
+                    # Pass final solution to quad points
+                    dummy = np.copy(self.transport.u[ci].dof)
+                    self.transport.getResidual(self.transport.u[ci].dof[:],dummy)
         elif self.timeOrder == 2:
             if self.lstage == 1:
                 logEvent("First stage of SSP22 method", level=4)
                 for ci in range(self.nc):
-                    # save stage at quad points
+                    # save stage at quad points 
                     self.m_last[ci][:] = self.transport.q[('u',ci)]
                     # DOFs
                     self.transport.u_dof_old[:] = self.transport.u[ci].dof
@@ -177,6 +180,9 @@ class RKEV(proteus.TimeIntegration.SSP):
                     self.transport.u[ci].dof[:] += 1./2*self.u_dof_last[ci]
                     # update u_dof_old
                     self.transport.u_dof_old[:] = self.u_dof_last[ci]
+                    # Pass final solution to quad points
+                    dummy = np.copy(self.transport.u[ci].dof)
+                    self.transport.getResidual(self.transport.u[ci].dof[:],dummy)
         else:
             assert self.timeOrder == 1
             for ci in range(self.nc):
@@ -463,7 +469,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #assert np.isclose(self.model.timeIntegration.dt,5.E-3)
         # COMPUTE FORCE TERMS AS FUNCTIONS
         if self.model.DEBUG_SSP:
-            self.model.updateForceTerms(self.model.timeIntegration.t-self.model.timeIntegration.dt)
+            #self.model.updateForceTerms(self.model.timeIntegration.t-self.model.timeIntegration.dt)
+            self.model.updateForceTerms(self.model.timeIntegration.tLast)
             #self.model.updateForceTerms(self.model.timeIntegration.t)
             
         # SAVE OLD SOLUTION #
@@ -1362,12 +1369,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
 
-        if (self.auxiliaryCallCalculateResidual == False):
-            edge_based_cflMax = globalMax(self.edge_based_cfl.max()) * self.timeIntegration.dt
-            cell_based_cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
-            logEvent("...   Current dt = " + str(self.timeIntegration.dt), level=4)
-            logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax), level=2)
-            logEvent("...   Maximum Edge Based CFL = " + str(edge_based_cflMax), level=2)
+        #if (self.auxiliaryCallCalculateResidual == False):
+        #    edge_based_cflMax = globalMax(self.edge_based_cfl.max()) * self.timeIntegration.dt
+        #    cell_based_cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
+        #    logEvent("...   Current dt = " + str(self.timeIntegration.dt), level=4)
+        #    logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax), level=2)
+        #    logEvent("...   Maximum Edge Based CFL = " + str(edge_based_cflMax), level=2)
 
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
