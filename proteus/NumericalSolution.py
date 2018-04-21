@@ -510,15 +510,10 @@ class NS_base:  # (HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
             
-            try:
-              n.useModel
-            except AttributeError:
-              setattr(n,'useModel',False)    
-            if (n.useModel) and not isinstance(p.domain,Domain.PUMIDomain) :
+            if hasattr(p.domain,"PUMIMesh") and not isinstance(p.domain,Domain.PUMIDomain) :
               logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
               p = self.pList[0]
               n = self.nList[0]
-              p.domain.PUMIMesh=n.MeshAdaptMesh
            
               from scipy import spatial
               meshVertexTree = spatial.cKDTree(mesh.nodeArray)
