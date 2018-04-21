@@ -135,6 +135,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import calculateWaveFunction3d_ref
 
     def __init__(self,
+                 MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=0,
                  CORRECT_VELOCITY=True,
                  USE_SUPG=1,
                  ARTIFICIAL_VISCOSITY=1, #0: no art viscosity, 1: shock capturing, 2: entropy viscosity
@@ -218,6 +219,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  granular_vel_Calc=None,
                  use_sbm=0
                  ):
+        self.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY
         self.CORRECT_VELOCITY = CORRECT_VELOCITY
         self.nParticles = nParticles
         self.particle_nitsche = particle_nitsche
@@ -2359,6 +2361,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ARTIFICIAL_VISCOSITY,
             self.coefficients.cMax,
             self.coefficients.cE,
+            self.coefficients.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
             self.q[('force', 0)],
             self.q[('force', 1)],
             self.q[('force', 2)],
