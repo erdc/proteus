@@ -258,6 +258,8 @@ if opts.dataDir != '':
             comm.rank(),
             opts.dataDir))
         comm.comm.tompi4py().Abort()
+    from proteus import Profiling
+    Profiling.logDir = opts.dataDir
 
 #blanket import statements can go below here now that petsc4py should be initialized
 from proteus import *
@@ -288,16 +290,19 @@ log("Importing input modules")
 if len(args) == 1:#arg should be an sso file or an so module
     if args[0][-3:] == '.py':
         log("Loading so module = "+args[0])
-        so = __import__(args[0][:-3])
+        #so = __import__(args[0][:-3])
+        so = proteus.defaults.load_system(args[0][:-3])
         if so.name == None:
             so.name = args[0][:-3]
         for (pModule,nModule) in so.pnList:
             log("Loading p module = "+pModule)
-            pList.append(__import__(pModule))
+            #pList.append(__import__(pModule))
+            pList.append(proteus.defaults.load_physics(pModule))
             if pList[-1].name == None:
                 pList[-1].name = pModule
             log("Loading n module = "+nModule)
-            nList.append(__import__(nModule))
+            #nList.append(__import__(nModule))
+            nList.append(proteus.defaults.load_numerics(nModule))
         #
         if so.sList == []:
             for i in range(len(so.pnList)):
@@ -305,44 +310,20 @@ if len(args) == 1:#arg should be an sso file or an so module
                 sList.append(s)
         else:
             sList = so.sList
-    else: #so text file is provided; will be deprecated
-        so = default_so
-        so.name = args[0][0:-4]
-        log("Loading old style sso text file = "+args[0])
-        soFile = open(args[0],'r')
-        lines = soFile.readlines()
-        for mLine in lines:
-            filenames = mLine.split()
-            #read the so file as text for now
-            if filenames[0] == "systemStepControllerType":
-                so.systemStepControllerType = eval(filenames[2])
-            elif filenames[0] == "useOneMesh":
-                so.useOneMesh = eval(filenames[1])
-            elif filenames[0] == "name":
-                so.name = filenames[1]
-            elif filenames[0] == "needEBQ_GLOBAL":
-                so.needEBQ_GLOBAL = filenames[1]
-            elif filenames[0] == "needEBQ":
-                so.needEBQ = filenames[1]
-            elif len(filenames) == 2:
-                log("Loading p module = "+filenames[0][:-3])
-                pList.append(__import__(filenames[0][:-3]))
-                log("Loading n module = "+filenames[1][:-3])
-                nList.append(__import__(filenames[1][:-3]))
-                if pList[-1].name == None:
-                    pList[-1].name = filenames[0][:-3]
 elif len(args) == 2: #p and n modules provided
-    so=default_so
+    so=proteus.defaults.System_base()
     s = default_s
     so.pnList=[(args[0][:-3],args[1][:-3])]
     log("Using default so module")
     log("Loading p module = "+args[0][:-3])
-    pList.append(__import__(args[0][:-3]))
+    #pList.append(__import__(args[0][:-3]))
+    pList.append(proteus.defaults.load_physics(args[0][:-3]))
     if pList[-1].name == None:
         pList[-1].name = args[0][:-5]
     so.name = pList[-1].name
     log("Loading n module = "+args[1][:-3])
-    nList.append(__import__(args[1][:-3]))
+    #nList.append(__import__(args[1][:-3]))
+    nList.append(proteus.defaults.load_numerics(args[1][:-3]))
     sList.append(s)
     try:
         so.systemStepControllerType = nList[0].systemStepControllerType
