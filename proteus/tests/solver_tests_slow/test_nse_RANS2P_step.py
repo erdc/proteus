@@ -22,75 +22,102 @@ from import_modules import step2d
 from import_modules import twp_navier_stokes_step2d_p
 from import_modules import twp_navier_stokes_step2d_n
 
-@pytest.mark.LinearSolvers
-@pytest.mark.modelTest
-@pytest.mark.navierstokesTest
-class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
 
-    def setup_method(self):
-        reload(step2d_so)
-        reload(step2d)
-        reload(twp_navier_stokes_step2d_p)
-        reload(twp_navier_stokes_step2d_n)
-        self.pList = [twp_navier_stokes_step2d_p]
-        self.nList = [twp_navier_stokes_step2d_n]
-        self.pList[0].name = 'test_1'        
-        self.so = step2d_so
-        self.so.name = self.pList[0].name
-        self.so.sList = self.pList[0].name
-        self.so.sList = [default_s]
-        self._scriptdir = os.path.dirname(__file__)
-        Profiling.openLog("proteus.log",10)
-        Profiling.logAllProcesses = True
+def load_simulation(context_options_str=None):
+    """
+    Loads a two-phase step problem with settings
 
-    def teardown_method(self):
-        Profiling.closeLog()
+    Parameters
+    ----------
+    settings:
 
-    def _runTest(self):
-        assert 1 == 1
-        self.ns = NumericalSolution.NS_base(self.so,
-                                            self.pList,
-                                            self.nList,
-                                            self.so.sList,
-                                            opts)
-        self.ns.calculateSolution('stokes')
+    Returns:
+    --------
 
-        # relpath = 'comparison_files/drivenCavityNSE_LSC_expected.h5'
-        # expected = tables.open_file(os.path.join(self._scriptdir,relpath))
-        # actual = tables.open_file('drivenCavityNSETrial.h5','r')
-        # assert numpy.allclose(expected.root.velocity_t7,
-        #                       actual.root.velocity_t7,
-        #                       atol=1e-2)
-        # expected.close()
-        # actual.close()
-        # relpath = 'comparison_files/drivenCavityNSE_LSC_expected.log'
-        actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
-        # expected_log = TestTools.NumericResults.build_from_proteus_log(os.path.join(self._scriptdir,
-        #                                                                             relpath))
-        L1 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,0)])
-        L2 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,1)])
-        L3 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,2)])
-        L4 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,3)])
-        L5 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,4)])
-        L6 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,5)])        
+    """
+    from proteus import Context
+    Context.contextOptionsString=context_options_str
 
-        assert L1[0][1]==25
-        assert L2[0][1]==28
-        assert L3[0][1]==41
-        assert L4[0][1]==37
-        assert L5[0][1]==38
-        assert L6[0][1]==38
-        # plot_lst = [(3.7,0,3),(3.2,0,2),(2.7,0,2),(2.2,0,1),(1.7,0,1)]
-        # L1 = expected_log.get_ksp_resid_it_info(plot_lst)
-        # L2 = actual_log.get_ksp_resid_it_info(plot_lst)
-        # assert L1 == L2
+    reload(step2d_so)
+    reload(step2d)
+    reload(twp_navier_stokes_step2d_p)
+    reload(twp_navier_stokes_step2d_n)
 
-    @pytest.mark.slowTest
-    def test_01_FullRun(self):
-        """Runs with nsedriven cavity with the following settings.
-        """
-        self._setPETSc(petsc_file = os.path.join(self._scriptdir,'import_modules/petsc.options.schur'))
-        self._runTest()
+    pList = [twp_navier_stokes_step2d_p]
+    nList = [twp_navier_stokes_step2d_n]
+    pList[0].name = 'test_1'        
+    so = step2d_so
+    so.name = pList[0].name
+    so.sList = pList[0].name
+    so.sList = [default_s]
+    _scriptdir = os.path.dirname(__file__)
+    Profiling.openLog("proteus.log",10)
+    Profiling.logAllProcesses = True
+    ns = NumericalSolution.NS_base(so,
+                                   pList,
+                                   nList,
+                                   so.sList,
+                                   opts)
+    return ns
+
+def runTest(ns, name):
+    ns.calculateSolution(name)
+    actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
+    return actual_log
+
+def test_01_FullRun():
+    """ Runs two-dimensional step problem with the settings:
+        * Strongly enforced Free-slip BC.
+        * Pressure Projection Stablization.
+        * he = 0.05
+    """
+    TestTools.SimulationTest._setPETSc(petsc_file = os.path.join(os.path.dirname(__file__),
+                                                                 'import_modules/petsc.options.schur'))
+    context_options_str='he=0.05'
+    ns = load_simulation(context_options_str)
+    actual_log = runTest(ns,'test_1')
+
+    L1 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,0)])
+    L2 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,1)])
+    L3 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,2)])
+    L4 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,3)])
+    L5 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,4)])
+    L6 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,5)])        
+
+    assert L1[0][1]==25
+    assert L2[0][1]==28
+    assert L3[0][1]==41
+    assert L4[0][1]==37
+    assert L5[0][1]==38
+    assert L6[0][1]==38
+
+def test_02_FullRun():
+    """ Runs two-dimensional step problem with the settings:
+        * Strongly enforced no-slip BC.
+        * Pressure Projection Stablization.
+        * he = 0.05
+    """
+    TestTools.SimulationTest._setPETSc(petsc_file = os.path.join(os.path.dirname(__file__),
+                                                                 'import_modules/petsc.options.schur'))
+    context_options_str="boundary_condition_type='ns'"
+    ns = load_simulation(context_options_str)
+    actual_log = runTest(ns,'test_1')
+
+    L1 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,0)])
+    L2 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,1)])
+    L3 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,2)])
+    L4 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,3)])
+    L5 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,4)])
+    L6 = actual_log.get_ksp_resid_it_info([(' test_1 ',1e+18,0,5)])
+
+    import pdb ; pdb.set_trace()
+
+    assert L1[0][1]==33
+    assert L2[0][1]==35
+    assert L3[0][1]==46
+    assert L4[0][1]==44
+    assert L5[0][1]==44
+    assert L6[0][1]==44
 
 if __name__ == '__main__':
     pass

@@ -4,8 +4,13 @@ Incompressible Navier-Stokes flow around a cylinder in 2D.
 from proteus import *
 from proteus.default_p import *
 import sys
+import step2d
+reload(step2d)
 from step2d import *
 from proteus.mprans import RANS2P
+
+from proteus import Context
+ct = Context.get()
 
 bcsTimeDependent = True
 LevelModelType = RANS2P.LevelModel
@@ -38,7 +43,6 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    PRESSURE_PROJECTION_STABILIZATION=1.0,
                                    phaseFunction=phase_func)
 
-
 class uTrue:
     def __init__(self):
         pass
@@ -55,7 +59,7 @@ class vTrue:
     def uOfXT(self,x,t):
         return self.vOfX(x)
 
-boundary_condition_type = 'fs' #'ns' (no-slip) 'fs' (free-slip)
+boundary_condition_type = ct.opts.boundary_condition_type # 'ns' or 'fs'
 
 def getDBC_p(x,flag):
     if flag in [boundaryTags['right']]:

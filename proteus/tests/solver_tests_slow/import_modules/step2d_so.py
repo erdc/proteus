@@ -1,6 +1,7 @@
 from proteus.default_so import *
 import proteus
 import step2d
+reload(step2d)
 from proteus import Context
 import os
 

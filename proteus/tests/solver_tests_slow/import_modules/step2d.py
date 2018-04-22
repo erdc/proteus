@@ -8,6 +8,8 @@ from proteus import Context
 opts=Context.Options([
     ("he",0.05,"max element diameter"),
     ("schur_solver", 'two_phase_PCD', "preconditioner type"),
+    ("ns_forceStrongDirichlet",True,"boundary condition type"),
+    ("boundary_condition_type",'fs',"Free or no slip boundary"),
     ])
 
 nd = 2
@@ -26,7 +28,6 @@ timeDiscretization = 'be'
 
 structured = False
 L= (-1.0, 1.0)
-#he = 0.1
 he = opts.he
 
 # Input checks
@@ -167,7 +168,7 @@ g = [0.0,0.0]
 # domain.writePLY('step2D')
 # domain.writePoly('step2D')
 
-ns_forceStrongDirichlet = True #True
+ns_forceStrongDirichlet = opts.ns_forceStrongDirichlet #True
 if useMetrics:
     ns_shockCapturingFactor = 0.0
     ns_lag_shockCapturing = False

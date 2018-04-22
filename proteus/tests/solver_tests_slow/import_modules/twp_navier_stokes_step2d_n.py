@@ -1,10 +1,15 @@
 from proteus import *
+import step2d
+reload(step2d)
 from step2d import *
 from proteus.default_n import *
+import twp_navier_stokes_step2d_p
+reload(twp_navier_stokes_step2d_p)
 from twp_navier_stokes_step2d_p import *
 
 from proteus import Context
 ct = Context.get()
+
 class Fixed_dt_controller(proteus.StepControl.Min_dt_controller):
     ''' Class for setting a fixed timestep, dt, from nOptions for the model
     to allow substepping between time intervals in tnlist '''
@@ -90,8 +95,8 @@ if usePETSc:
     multilevelLinearSolver = KSP_petsc4py
     levelLinearSolver = KSP_petsc4py
     linear_solver_options_prefix = 'rans2p_'
-    #schur_solver = 'two_phase_PCD' #'two_phase_PCD' #'selfp_petsc'
-    schur_solver = ct.opts.schur_solver
+    schur_solver = 'two_phase_PCD' #'two_phase_PCD' #'selfp_petsc'
+#    schur_solver = ct.opts.schur_solver
     if schur_solver == 'Qp':
         linearSmoother=NavierStokes3D_Qp
     elif schur_solver == 'petsc_ASM':
