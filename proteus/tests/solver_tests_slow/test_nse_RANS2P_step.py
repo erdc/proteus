@@ -22,7 +22,6 @@ from import_modules import step2d
 from import_modules import twp_navier_stokes_step2d_p
 from import_modules import twp_navier_stokes_step2d_n
 
-
 def load_simulation(context_options_str=None):
     """
     Loads a two-phase step problem with settings
