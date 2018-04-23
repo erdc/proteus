@@ -450,7 +450,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             temp_2 = np.zeros(self.model.q[('u', 0)].shape, 'd')
             temp_3 = np.zeros(self.model.q[('u', 0)].shape, 'd')
             for i in range(self.nParticles):
-                print ("Attaching particle i=", i)
+                logEvent("Attaching particle i={0}".format(i))
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
                         self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i,
@@ -627,7 +627,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.phi_s = numpy.ones(mesh.nodeArray.shape[0], 'd')*1e10
 
         if self.granular_sdf_Calc is not None:
-            print ("updating", self.nParticles, " particles...")
+            logEvent("updating {0} particles...".format(self.nParticles))
             for i in range(self.nParticles):
                 for j in range(mesh.nodeArray.shape[0]):
                     sdf, sdNormals = self.granular_sdf_Calc(mesh.nodeArray[j, :], i)
@@ -1022,7 +1022,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
         self.phi_s[:] = 1e10
         self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
-        print ("updating", self.nParticles, " particles...")
+        logEvent("updating {0} particles...".format(self.nParticles))
         for i in range(self.nParticles):
             if self.granular_sdf_Calc is not None:
                 vel = lambda x: self.granular_vel_Calc(x, i)
