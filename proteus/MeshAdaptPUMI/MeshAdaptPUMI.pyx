@@ -52,7 +52,7 @@ cdef class MeshAdaptPUMI:
     cdef int isReconstructed
     def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="ERM",maType="test",logType="off",targetError=0,targetElementCount=0,reconstructedFlag=0,maxAspectRatio=100.0):
         logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
-        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType,targetError,targetElementCount,reconstructedFlag)
+        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType,targetError,targetElementCount,reconstructedFlag,maxAspectRatio)
     def __dealloc__(self):
         del self.thisptr
     def size_field_config(self):
