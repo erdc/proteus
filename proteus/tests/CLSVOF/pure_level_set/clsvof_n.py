@@ -13,7 +13,12 @@ fullNewtonFlag = True
 updateJacobian = True
 timeIntegration = BackwardEuler_cfl
 
-nl_atol_res=1E-12
+if eps_tolerance_clsvof:
+    nl_atol_res = 1E-12
+else:
+    nl_atol_res=clsvof_nl_atol_res
+#
+l_atol_res = nl_atol_res
 tolFac=0.
 maxNonlinearIts = 100000
 stepController = Min_dt_controller

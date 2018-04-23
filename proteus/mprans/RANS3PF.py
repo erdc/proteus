@@ -135,6 +135,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import calculateWaveFunction3d_ref
 
     def __init__(self,
+                 MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=0,
                  CORRECT_VELOCITY=True,
                  USE_SUPG=1,
                  ARTIFICIAL_VISCOSITY=1, #0: no art viscosity, 1: shock capturing, 2: entropy viscosity
@@ -150,6 +151,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  PRESSURE_model=7,
                  VOS_model=0,
                  SED_model=5,
+                 CLSVOF_model=None,
                  LS_model=None,
                  VOF_model=None,
                  KN_model=None,
@@ -217,6 +219,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  granular_vel_Calc=None,
                  use_sbm=0
                  ):
+        self.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY
         self.CORRECT_VELOCITY = CORRECT_VELOCITY
         self.nParticles = nParticles
         self.particle_nitsche = particle_nitsche
@@ -268,6 +271,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.PRESSURE_model = PRESSURE_model
         self.VOS_model = VOS_model
         self.SED_model = SED_model
+        self.CLSVOF_model = CLSVOF_model
         self.LS_model = LS_model
         self.VOF_model = VOF_model
         self.KN_model = KN_model
@@ -518,47 +522,62 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.q_velocity_solid[:] = 0.0
             self.ebqe_velocity_solid = self.model.ebqe[('velocity', 0)].copy()
             self.ebqe_velocity_solid[:] = 0.0
-        if self.LS_model is not None:
-            self.q_phi = modelList[self.LS_model].q[('u', 0)]
-            if modelList[self.LS_model].ebq.has_key(('u', 0)):
-                self.ebq_phi = modelList[self.LS_model].ebq[('u', 0)]
+        if self.CLSVOF_model is not None: # use CLSVOF
+            # LS part #
+            self.q_phi = modelList[self.CLSVOF_model].q[('u', 0)]
+            self.ebq_phi = None # Not used. What is this for?
+            self.ebqe_phi = modelList[self.CLSVOF_model].ebqe[('u', 0)]
+            self.bc_ebqe_phi = modelList[self.CLSVOF_model].ebqe[('u', 0)] #Dirichlet BCs for level set. I don't have it since I impose 1 or -1. Therefore I attach the soln at boundary
+            self.q_n = modelList[self.CLSVOF_model].q[('grad(u)', 0)]
+            self.ebq_n = None # Not used. What is this for?
+            self.ebqe_n = modelList[self.CLSVOF_model].ebqe[('grad(u)', 0)]
+            # VOF part #
+            self.q_vf = modelList[self.CLSVOF_model].q[('H(u)', 0)]
+            self.ebq_vf = None# Not used. What is this for? 
+            self.ebqe_vf = modelList[self.CLSVOF_model].ebqe[('H(u)', 0)]
+            self.bc_ebqe_vf = 0.5*(1.0+modelList[self.CLSVOF_model].numericalFlux.ebqe[('u',0)]) # Dirichlet BCs for VOF. What I have is BCs for Signed function
+        else: # use NCLS-RDLS-VOF-MCORR instead
+            if self.LS_model is not None: #LEVEL SET MODEL
+                self.q_phi = modelList[self.LS_model].q[('u', 0)]
+                if modelList[self.LS_model].ebq.has_key(('u', 0)):
+                    self.ebq_phi = modelList[self.LS_model].ebq[('u', 0)]
+                else:
+                    self.ebq_phi = None
+                self.ebqe_phi = modelList[self.LS_model].ebqe[('u', 0)]
+                self.bc_ebqe_phi = modelList[
+                    self.LS_model].numericalFlux.ebqe[
+                        ('u', 0)]
+                # normal
+                self.q_n = modelList[self.LS_model].q[('grad(u)', 0)]
+                if modelList[self.LS_model].ebq.has_key(('grad(u)', 0)):
+                    self.ebq_n = modelList[self.LS_model].ebq[('grad(u)', 0)]
+                else:
+                    self.ebq_n = None
+                self.ebqe_n = modelList[self.LS_model].ebqe[('grad(u)', 0)]
             else:
-                self.ebq_phi = None
-            self.ebqe_phi = modelList[self.LS_model].ebqe[('u', 0)]
-            self.bc_ebqe_phi = modelList[
-                self.LS_model].numericalFlux.ebqe[
-                ('u', 0)]
-            # normal
-            self.q_n = modelList[self.LS_model].q[('grad(u)', 0)]
-            if modelList[self.LS_model].ebq.has_key(('grad(u)', 0)):
-                self.ebq_n = modelList[self.LS_model].ebq[('grad(u)', 0)]
+                self.q_phi = 10.0 * numpy.ones(self.model.q[('u', 0)].shape, 'd')
+                self.ebqe_phi = 10.0 * \
+                                numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
+                self.bc_ebqe_phi = 10.0 * \
+                                   numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
+                self.q_n = numpy.ones(self.model.q[('velocity', 0)].shape, 'd')
+                self.ebqe_n = numpy.ones(
+                    self.model.ebqe[
+                        ('velocity', 0)].shape, 'd')
+            if self.VOF_model is not None: #VOF MODEL
+                self.q_vf = modelList[self.VOF_model].q[('u', 0)]
+                if modelList[self.VOF_model].ebq.has_key(('u', 0)):
+                    self.ebq_vf = modelList[self.VOF_model].ebq[('u', 0)]
+                else:
+                    self.ebq_vf = None
+                self.ebqe_vf = modelList[self.VOF_model].ebqe[('u', 0)]
+                self.bc_ebqe_vf = modelList[
+                    self.VOF_model].numericalFlux.ebqe[
+                        ('u', 0)]
             else:
-                self.ebq_n = None
-            self.ebqe_n = modelList[self.LS_model].ebqe[('grad(u)', 0)]
-        else:
-            self.q_phi = 10.0 * numpy.ones(self.model.q[('u', 0)].shape, 'd')
-            self.ebqe_phi = 10.0 * \
-                numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
-            self.bc_ebqe_phi = 10.0 * \
-                numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
-            self.q_n = numpy.ones(self.model.q[('velocity', 0)].shape, 'd')
-            self.ebqe_n = numpy.ones(
-                self.model.ebqe[
-                    ('velocity', 0)].shape, 'd')
-        if self.VOF_model is not None:
-            self.q_vf = modelList[self.VOF_model].q[('u', 0)]
-            if modelList[self.VOF_model].ebq.has_key(('u', 0)):
-                self.ebq_vf = modelList[self.VOF_model].ebq[('u', 0)]
-            else:
-                self.ebq_vf = None
-            self.ebqe_vf = modelList[self.VOF_model].ebqe[('u', 0)]
-            self.bc_ebqe_vf = modelList[
-                self.VOF_model].numericalFlux.ebqe[
-                ('u', 0)]
-        else:
-            self.q_vf = numpy.zeros(self.model.q[('u', 0)].shape, 'd')
-            self.ebqe_vf = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd')
-            self.bc_ebqe_vf = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd')
+                self.q_vf = numpy.zeros(self.model.q[('u', 0)].shape, 'd')
+                self.ebqe_vf = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd')
+                self.bc_ebqe_vf = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd')
         # curvature
         if self.KN_model is not None:
             self.q_kappa = modelList[self.KN_model].q[('u', 0)]
@@ -2342,6 +2361,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ARTIFICIAL_VISCOSITY,
             self.coefficients.cMax,
             self.coefficients.cE,
+            self.coefficients.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
             self.q[('force', 0)],
             self.q[('force', 1)],
             self.q[('force', 2)],
@@ -2474,6 +2494,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stabilization.hFactor,
             self.mesh.nElements_global,
             self.mesh.nElements_owned,
+            self.mesh.nElementBoundaries_owned,
             self.coefficients.useRBLES,
             self.coefficients.useMetrics,
             self.timeIntegration.alpha_bdf,
