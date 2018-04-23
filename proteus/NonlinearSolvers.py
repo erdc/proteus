@@ -1226,21 +1226,184 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
         # L2 projection of corrected VOF solution at quad points 
 
 class CLSVOFNewton(Newton):
+    def spinUpStep(self,u,r=None,b=None,par_u=None,par_r=None):
+        # Assemble residual and Jacobian for spin up step
+        self.F.assembleSpinUpSystem(r,self.J)
+        # For parallelization
+        if par_u is not None:
+            #allow linear solver to know what type of assembly to use
+            self.linearSolver.par_fullOverlap = self.par_fullOverlap
+            #no overlap
+            if not self.par_fullOverlap:
+                par_r.scatter_reverse_add()
+            else:
+                #no overlap or overlap (until we compute norms over only owned dof)
+                par_r.scatter_forward_insert()
+        #
+        self.linearSolver.prepare(b=r)
+        self.du[:]=0.0
+        if not self.directSolver:
+            if self.EWtol:
+                self.setLinearSolverTolerance(r)
+        if not self.linearSolverFailed:
+            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+            self.linearSolverFailed = self.linearSolver.failed()
+        u[:] = self.du
+        # For parallelization
+        if par_u is not None:
+            par_u.scatter_forward_insert()
+        #
+        # Pass the solution to the corresponding vectors in the model
+        self.F.u[0].dof[:] = u
+        self.F.u_dof_old[:] = u
+        self.F.u0_dof[:] = u #To compute metrics
+
+    def getNormalReconstruction(self,u,r=None,b=None,par_u=None,par_r=None):
+        # Assemble weighted matrix and rhs for consistent projection
+        self.F.getNormalReconstruction(self.J)
+        if self.F.consistentNormalReconstruction==False or True: # For the moment we make sure this is the only route
+            logEvent("  ... Normal reconstruction via weighted lumped L2-projection ...",level=2)
+            if self.F.timeStage==1:
+                self.F.projected_qx_tn[:] = self.F.rhs_qx/self.F.weighted_lumped_mass_matrix
+                self.F.projected_qy_tn[:] = self.F.rhs_qy/self.F.weighted_lumped_mass_matrix
+                self.F.projected_qz_tn[:] = self.F.rhs_qz/self.F.weighted_lumped_mass_matrix
+                # Update parallel vectors
+                self.F.par_projected_qx_tn.scatter_forward_insert()
+                self.F.par_projected_qy_tn.scatter_forward_insert()
+                self.F.par_projected_qz_tn.scatter_forward_insert()
+            else:
+                self.F.projected_qx_tStar[:] = self.F.rhs_qx/self.F.weighted_lumped_mass_matrix
+                self.F.projected_qy_tStar[:] = self.F.rhs_qy/self.F.weighted_lumped_mass_matrix
+                self.F.projected_qz_tStar[:] = self.F.rhs_qz/self.F.weighted_lumped_mass_matrix
+                # Update parallel vectors
+                self.F.par_projected_qx_tStar.scatter_forward_insert()
+                self.F.par_projected_qy_tStar.scatter_forward_insert()
+                self.F.par_projected_qz_tStar.scatter_forward_insert()
+        else:
+            # If the L2-projection is consistent we need to solve the linear systems
+            logEvent("  ... Normal reconstruction via weighted consistent L2-projection ...",level=2)
+            # allocate auxiliary vectors for FCT
+            low_order_solution = numpy.zeros(r.size,'d')
+            high_order_solution = numpy.zeros(r.size,'d')
+            # solve for qx
+            r[:] = self.F.rhs_qx[:]
+            self.linearSolver.prepare(b=r)
+            self.du[:]=0
+            if not self.directSolver:
+                if self.EWtol:
+                    self.setLinearSolverTolerance(r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed()
+            high_order_solution[:] = self.du
+            low_order_solution[:] = self.F.rhs_qx/self.F.weighted_lumped_mass_matrix
+            # FCT STEP #
+            if self.F.timeStage==1:
+                self.F.FCTStep(self.F.projected_qx_tn,
+                               self.F.u_dof_old,
+                               low_order_solution,
+                               high_order_solution,
+                               self.J)
+            else:
+                self.F.FCTStep(self.F.projected_qx_tStar,
+                               self.F.u_dof_old,
+                               low_order_solution,
+                               high_order_solution,
+                               self.J)
+            # solve for qy
+            r[:] = self.F.rhs_qy[:]
+            self.linearSolver.prepare(b=r)
+            self.du[:]=0
+            if not self.directSolver:
+                if self.EWtol:
+                    self.setLinearSolverTolerance(r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed()
+            high_order_solution[:] = self.du
+            low_order_solution[:] = self.F.rhs_qy/self.F.weighted_lumped_mass_matrix
+            # FCT STEP #
+            if self.F.timeStage==1:
+                self.F.FCTStep(self.F.projected_qy_tn,
+                               self.F.u_dof_old,
+                               low_order_solution,
+                               high_order_solution,
+                               self.J)
+            else:
+                self.F.FCTStep(self.F.projected_qy_tStar,
+                               self.F.u_dof_old,
+                               low_order_solution,
+                               high_order_solution,
+                               self.J)
+            if self.F.nSpace_global==3:
+                # solve for qz
+                r[:] = self.F.rhs_qz[:]
+                self.linearSolver.prepare(b=r)
+                self.du[:]=0
+                if not self.directSolver:
+                    if self.EWtol:
+                        self.setLinearSolverTolerance(r)
+                if not self.linearSolverFailed:
+                    self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                    self.linearSolverFailed = self.linearSolver.failed()
+                high_order_solution[:] = self.du
+                low_order_solution[:] = self.F.rhs_qz/self.F.weighted_lumped_mass_matrix
+                # FCT STEP #
+                if self.F.timeStage==1:
+                    self.F.FCTStep(self.F.projected_qz_tn,
+                                   low_order_solution,
+                                   high_order_solution,
+                                   self.J)
+                else:
+                    self.F.FCTStep(self.F.projected_qz_tStar,
+                                   low_order_solution,
+                                   high_order_solution,
+                                   self.J)
+            else:
+                if self.F.timeStage==1:
+                    self.F.projected_qz_tn[:]=0
+                else:
+                    self.F.projected_qz_tStar[:]=0
+
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        # ******************************************** #
+        # *************** SPIN UP STEP *************** #
+        # ******************************************** #
+        if self.F.coefficients.doSpinUpStep==True and self.F.spinUpStepTaken==False:
+            logEvent("***** Spin up step for CLSVOF model *****",level=2)
+            self.F.spinUpStepTaken=True
+            self.spinUpStep(u,r,b,par_u,par_r)
+
+        # ******************************************* #
+        # *************** FIRST STAGE *************** #
+        # ******************************************* #
         logEvent("+++++ First stage of nonlinear solver +++++",level=2)
+        # GET NORMAL RECONSTRUCTION #
+        self.getNormalReconstruction(u,r,b,par_u,par_r)
+        # SOLVE NON-LINEAR SYSTEM FOR FIRST STAGE #
         Newton.solve(self,u,r,b,par_u,par_r)
-        # Try to save number of newton iterations
-        if hasattr(self.F,'newton_iterations_stage1'):
-            self.F.newton_iterations_stage1 = self.its
+        # save number of newton iterations
+        self.F.newton_iterations_stage1 = self.its
+
+        # ******************************************** #
+        # *************** SECOND STAGE *************** #
+        # ******************************************** #
         if self.F.coefficients.timeOrder==2:
             logEvent("+++++ Second stage of nonlinear solver +++++",level=2)
             self.F.timeStage=2
-            self.F.getNormalReconstruction()
+            # GET NORMAL RECONSTRUCTION #
+            self.getNormalReconstruction(u,r,b,par_u,par_r)
+            # SOLVE NON-LINEAR SYSTEM FOR SECOND STAGE #
             Newton.solve(self,u,r,b,par_u,par_r)
             self.F.timeStage=1
-            # Try to save number of newton iterations
-            if hasattr(self.F,'newton_iterations_stage2'):
-                self.F.newton_iterations_stage2 = self.its
+            # save number of newton iterations
+            self.F.newton_iterations_stage2 = self.its
+
+        # ******************************************** #
+        # ***** UPDATE VECTORS FOR VISUALIZATION ***** #
+        # ******************************************** #
+        self.F.par_H_dof.scatter_forward_insert()
+        self.F.quantDOFs[:] = self.F.H_dof
 
 import deim_utils
 class POD_Newton(Newton):
