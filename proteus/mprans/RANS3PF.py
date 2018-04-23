@@ -1044,7 +1044,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
             for ebN in range(self.model.ebq_global['x'].shape[0]):
                 for kb in range(self.model.ebq_global['x'].shape[1]):
-                    sdf_at_quad_pt,sdNormals = sdf(self.model.ebq_global['x'][ebN,kb],i)
+                    sdf_at_quad_pt,sdNormals = sdf(self.model.ebq_global['x'][ebN,kb])
                     if ( abs(sdf_at_quad_pt) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                         self.ebq_global_phi_s[ebN,kb]=sdf_at_quad_pt
                         self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
