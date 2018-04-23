@@ -1032,10 +1032,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 sdf = self.particle_sdfList[i]
                 
             for j in range(self.mesh.nodeArray.shape[0]):
-                vel = vel(self.mesh.nodeArray[j, :])
-                sdf, sdNormals = sdf(self.mesh.nodeArray[j, :])
-                if (abs(sdf) < abs(self.phi_s[j])):
-                    self.phi_s[j] = sdf
+                vel_at_node = vel(self.mesh.nodeArray[j, :])
+                sdf_at_node, sdNormals = sdf(self.mesh.nodeArray[j, :])
+                if (abs(sdf_at_node) < abs(self.phi_s[j])):
+                    self.phi_s[j] = sdf_at_node
             for eN in range(self.model.q['x'].shape[0]):
                 for k in range(self.model.q['x'].shape[1]):
                     self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(self.model.q['x'][eN, k])
@@ -1044,15 +1044,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
             for ebN in range(self.model.ebq_global['x'].shape[0]):
                 for kb in range(self.model.ebq_global['x'].shape[1]):
-                    sdf,sdNormals = sdf(self.model.ebq_global['x'][ebN,kb],i)
-                    if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ):
-                        self.ebq_global_phi_s[ebN,kb]=sdf
+                    sdf_at_quad_pt,sdNormals = sdf(self.model.ebq_global['x'][ebN,kb],i)
+                    if ( abs(sdf_at_quad_pt) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                        self.ebq_global_phi_s[ebN,kb]=sdf_at_quad_pt
                         self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
         self.model.q[('phis')] = self.phisField
 
         #Update velocity inside the particle
-#         import pdb
-#         pdb.set_trace()
         for ci_g_dof,ci_fg_dof in self.model.dirichletConditions[0].global2freeGlobal.iteritems():
             if isinstance(self.model.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
                 xyz = self.model.mesh.nodeArray[ci_g_dof,:]
