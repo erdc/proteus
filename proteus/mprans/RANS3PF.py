@@ -1067,9 +1067,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     vel = self.particle_velocityList[i]
                     sdf = self.particle_sdfList[i]
                     
-                distance_to_i_particle,_ = sdf(t,xyz)
+                distance_to_i_particle,_ = sdf(xyz)
                 if distance_to_solid > distance_to_i_particle:
-                    vel_at_xyz = vel(t,xyz) 
+                    vel_at_xyz = vel(xyz) 
                     distance_to_solid = distance_to_i_particle
             for ci in range(self.nc):#since nc=nd
                 dof = self.model.offset[ci] + self.model.stride[ci]*ci_fg_dof 
