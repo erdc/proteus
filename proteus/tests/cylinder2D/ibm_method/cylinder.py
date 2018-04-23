@@ -335,13 +335,13 @@ def velRamp(t):
 def signedDistance(x):
     return x[1]-L[1]/2
 
-def particle_sdf(t, x):
+def particle_sdf(x):
     cx = 0.2
     cy = 0.2
     r = math.sqrt( (x[0]-cx)**2 + (x[1]-cy)**2)
     n = ((x[0]-cx)/r,(x[1]-cy)/r)
     return  r - 0.05,n
 
-def particle_vel(t, x):
+def particle_vel(x):
     return (0.0,0.0)
 
