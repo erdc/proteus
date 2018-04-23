@@ -3115,7 +3115,7 @@ namespace proteus
                     double Csb=10;
                     double C_adim = Csb*visco/h_penalty;
                     //std::cout << "C_adim "<< C_adim << std::endl;
-                    double beta = 0.0;
+                    double beta = 1.0;
                     double beta_adim = beta*h_penalty*visco;
 
                     const double grad_u_d[2] = {get_dot_product(distance,grad_u_ext),
@@ -5288,7 +5288,7 @@ namespace proteus
                     double visco = nu_0*rho_0;
                     double Csb=10;
                     double C_adim = Csb*visco/h_penalty;
-                    double beta = 0.0;
+                    double beta = 1.0;
                     double beta_adim = beta*h_penalty*visco;
 
                     for (int i=0;i<nDOF_test_element;i++)
