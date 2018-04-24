@@ -58,6 +58,9 @@ cdef extern from "ChRigidBody.h":
         double L0
         double length
         int nb_elems
+        bool applyDrag
+        bool applyAddedMass
+        bool applyBuoyancy
         vector[ch.ChVector] mvecs
         vector[ch.ChVector] mvecs_tangents
         void buildNodes()
@@ -150,8 +153,8 @@ cdef extern from "ChRigidBody.h":
         ch.ChMatrix33 rotm_last
         ch.ChQuaternion rotq
         ch.ChQuaternion rotq_last
-        # double* free_x
-        # double* free_r
+        ch.ChVector free_x
+        ch.ChVector free_r
         ch.ChVector F
         ch.ChVector F_last
         ch.ChVector M
@@ -228,6 +231,10 @@ cdef class ProtChBody:
       np.ndarray M_applied  # moment applied and passed to Chrono
       np.ndarray F_applied_last
       np.ndarray M_applied_last
+      np.ndarray F_Aij
+      np.ndarray M_Aij
+      np.ndarray F_Aij_last
+      np.ndarray M_Aij_last
       np.ndarray acceleration
       np.ndarray acceleration_last
       np.ndarray velocity
@@ -274,6 +281,8 @@ cdef class ProtChBody:
         self.M_prot = np.zeros(3)  # initialise empty Proteus moment
         self.F_applied = np.zeros(3)  # initialise empty Applied force
         self.M_applied = np.zeros(3)  # initialise empty Applied moment
+        self.F_Aij = np.zeros(3)  # initialise empty added mass force
+        self.M_Aij = np.zeros(3)  # initialise empty added mass moment
         self.prescribed_motion_function = None
         self.acceleration = np.zeros(3)
         self.acceleration_last = np.zeros(3)
@@ -770,19 +779,38 @@ cdef class ProtChBody:
                 am = self.ProtChSystem.model_addedmass.levelModelList[-1]
                 for i in range(self.i_start, self.i_end):
                     self.Aij += am.Aij[i]
+                if self.width_2D:
+                    self.Aij *= self.width_2D
         # setting added mass
         if self.applyAddedMass is True:
-            FF = self.Aij*self.acceleration[1]
+            Aij = np.zeros((6,6))
+            Aij[:] = self.Aij[:]
+            Aij[0, 1:] *= self.thisptr.free_x.x()
+            Aij[1, 0] *= self.thisptr.free_x.y()
+            Aij[1, 2:] *= self.thisptr.free_x.y()
+            Aij[2, :2] *= self.thisptr.free_x.z()
+            Aij[2, 3:] *= self.thisptr.free_x.z()
+            Aij[3, :3] *= self.thisptr.free_r.x()
+            Aij[3, 4:] *= self.thisptr.free_r.x()
+            Aij[4, :4] *= self.thisptr.free_r.y()
+            Aij[4, 5] *= self.thisptr.free_r.y()
+            Aij[5, :5] *= self.thisptr.free_r.z()
+            self.setAddedMass(Aij)
             aa = np.zeros(6)
             aa[:3] = self.acceleration
-            Aija = np.dot(self.Aij, aa)
-            self.setAddedMass(self.Aij)
+            aa[3:] = self.ang_acceleration
+            Aija = np.dot(Aij, aa)
         if self.ProtChSystem.model is not None:
             self.F_prot = self.getPressureForces()+self.getShearForces()
             self.M_prot = self.getMoments()
+            if self.width_2D:
+                self.F_prot *= self.width_2D
+                self.M_prot *= self.width_2D
             if self.applyAddedMass is True:
-                self.F_prot += Aija[:3]
-                self.M_prot += Aija[3:]
+                self.F_Aij = Aija[:3]
+                self.M_Aij = Aija[3:]
+                self.F_prot += self.F_Aij
+                self.M_prot += self.M_Aij
             if self.ProtChSystem.first_step is True:
                 # just apply initial conditions for 1st time step
                 F_bar = self.F_prot
@@ -830,11 +858,8 @@ cdef class ProtChBody:
         """
         self.F_applied = forces
         self.M_applied = moments
-        if self.width_2D:
-            self.F_applied *= self.width_2D
-            self.M_applied *= self.width_2D
-        self.thisptr.prestep(<double*> forces.data,
-                             <double*> moments.data)
+        self.thisptr.prestep(<double*> self.F_applied.data,
+                             <double*> self.M_applied.data)
 
     def poststep(self):
         """Called after Chrono system step.
@@ -1088,6 +1113,8 @@ cdef class ProtChBody:
         self.M_prot_last = np.array(self.M_prot)
         self.F_applied_last = np.array(self.F_applied)
         self.M_applied_last = np.array(self.M_applied)
+        self.F_Aij_last = np.array(self.F_Aij)
+        self.M_Aij_last = np.array(self.M_Aij)
         if self.ProtChSystem.parallel_mode is True:
             comm = Comm.get().comm.tompi4py()
             self.position_last = comm.bcast(self.position_last,
@@ -1114,6 +1141,8 @@ cdef class ProtChBody:
                                              self.ProtChSystem.chrono_processor)
             self.M_applied_last = comm.bcast(self.M_applied_last,
                                              self.ProtChSystem.chrono_processor)
+            self.F_Aij_last = comm.bcast(self.F_Aij_last,
+                                         self.ProtChSystem.chrono_processor)
 
     def getValues(self):
         """Get values (pos, vel, acc, etc.) from C++ to python
@@ -1218,6 +1247,9 @@ cdef class ProtChBody:
             self.record_dict['Fx_applied'] = ['F_applied', 0]
             self.record_dict['Fy_applied'] = ['F_applied', 1]
             self.record_dict['Fz_applied'] = ['F_applied', 2]
+            self.record_dict['Fx_Aij'] = ['F_Aij', 0]
+            self.record_dict['Fy_Aij'] = ['F_Aij', 1]
+            self.record_dict['Fz_Aij'] = ['F_Aij', 2]
             Fx = Fy = Fz = True
         if M is True:
             self.record_dict['Mx'] = ['M', 0]
@@ -1256,9 +1288,9 @@ cdef class ProtChBody:
         """Records values of body attributes in a csv file.
         """
         if self.Shape is not None:
-            self.record_file = os.path.join(Profiling.logDir, 'record_' + self.Shape.name + '.csv')
+            record_file = os.path.join(Profiling.logDir, 'record_' + self.Shape.name)
         else:
-            self.record_file = os.path.join(Profiling.logDir, 'record_' + 'body' + '.csv')
+            record_file = os.path.join(Profiling.logDir, 'record_body')
         t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
@@ -1275,7 +1307,7 @@ cdef class ProtChBody:
             headers = ['t', 't_ch', 't_sim']
             for key in self.record_dict:
                 headers += [key]
-            with open(self.record_file, 'w') as csvfile:
+            with open(record_file+'.csv', 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
         for key, val in self.record_dict.iteritems():
@@ -1283,7 +1315,7 @@ cdef class ProtChBody:
                 values_towrite += [getattr(self, val[0])[val[1]]]
             else:
                 values_towrite += [getattr(self, val[0])]
-        with open(self.record_file, 'a') as csvfile:
+        with open(record_file+'.csv', 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(values_towrite)
         ## added mass
@@ -1293,14 +1325,14 @@ cdef class ProtChBody:
                 for i in range(6):
                     for j in range(6):
                         headers += ['A'+str(i)+str(j)]
-                with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'w') as csvfile:
+                with open(record_file+'_Aij.csv', 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(headers)
             values_towrite = [t, t_chrono, t_sim]
             for i in range(6):
                 for j in range(6):
                     values_towrite += [self.Aij[i, j]]
-            with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'a') as csvfile:
+            with open(record_file+'_Aij.csv', 'a') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(values_towrite)
 
@@ -1739,21 +1771,20 @@ cdef class ProtChSystem:
                     local_element = getLocalElement(self.femSpace_velocity,
                                                     coords,
                                                     nearest_node)
+                    if local_element is not None:
+                        xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
             # ownership might have changed here
             comm.barrier()
             _, rank_owning = comm.allreduce((owning_rank, rank_owning),
                                             op=MPI.MAXLOC)
+            nearest_node = comm.bcast(nearest_node, rank_owning)
             comm.barrier()
             # if ownership is the same after 1 loop and local_element not found
             # => coords must be outside domain
             if rank_owning == rank_owning_previous and local_element is None:
                 coords_outside = True
                 break
-        if local_element is not None and comm.rank == rank_owning:
-            xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
         comm.barrier()
-        global_have_element, rank_owning = comm.allreduce((local_element, comm.rank),
-                                                          op=MPI.MAXLOC)
         xi = comm.bcast(xi, rank_owning)
         eN = comm.bcast(local_element, rank_owning)
         rank = rank_owning
@@ -2327,6 +2358,18 @@ cdef class ProtChMoorings:
             self._recordValues()
             self._recordH5()
             self._recordXML()
+
+    def setApplyDrag(self, bool boolval):
+        for i in range(self.thisptr.cables.size()):
+            deref(self.thisptr.cables[i]).applyDrag = True
+
+    def setApplyAddedMass(self, bool boolval):
+        for i in range(self.thisptr.cables.size()):
+            deref(self.thisptr.cables[i]).applyAddedMass = True
+
+    def setApplyBuoyancy(self, bool boolval):
+        for i in range(self.thisptr.cables.size()):
+            deref(self.thisptr.cables[i]).applyBuoyancy = True
 
     def setNodesPositionFunction(self, function_position, function_tangent=None):
         """Function to build nodes
