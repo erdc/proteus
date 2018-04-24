@@ -308,12 +308,12 @@ def velRamp(t,x):
 #===============================================================================
 # Particles
 #===============================================================================
-def particle_sdf(x):
+def particle_sdf(t, x):
     cx = 0.2
     cy = 0.2
     r = math.sqrt( (x[0]-cx)**2 + (x[1]-cy)**2)
     n = ((x[0]-cx)/(r+1e-10),(x[1]-cy)/(r+1e-10), 0.0)
     return  r - 0.05,n
 
-def particle_vel(x):
+def particle_vel(t, x):
     return (0.0,0.0,0.0)
