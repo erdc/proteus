@@ -141,7 +141,8 @@ void Output(void)
 {
 int 		i, I;
 double 	X, eta, y;
-double	Surface(double), Point(double, double);
+ double	Surface(double);
+ void Point(double, double);
 
 fprintf(monitor,"\n\n# Solution summary:\n\n");
 Title_block(monitor);
