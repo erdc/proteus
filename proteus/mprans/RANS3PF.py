@@ -450,7 +450,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             temp_2 = np.zeros(self.model.q[('u', 0)].shape, 'd')
             temp_3 = np.zeros(self.model.q[('u', 0)].shape, 'd')
             for i in range(self.nParticles):
-                print ("Attaching particle i=", i)
+                logEvent("Attaching particle i={0}".format(i))
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
                         self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i,
@@ -473,13 +473,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                    self.particle_sdfList, self.particle_velocityList):
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
-                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(0, self.model.q['x'][eN, k])
-                        self.particle_velocities[i, eN, k] = vel(0, self.model.q['x'][eN, k])
+                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(0.0, self.model.q['x'][eN, k])
+                        self.particle_velocities[i, eN, k] = vel(0.0, self.model.q['x'][eN, k])
                 self.model.q[('phis', i)] = self.particle_signed_distances[i]
                 self.model.q[('phis_vel', i)] = self.particle_velocities[i]
                 for ebN in range(self.model.ebq_global['x'].shape[0]):
                     for kb in range(self.model.ebq_global['x'].shape[1]):
-                        sdf_ebN_kb,sdNormals = sdf(0,self.model.ebq_global['x'][ebN,kb],)
+                        sdf_ebN_kb,sdNormals = sdf(0.0, self.model.ebq_global['x'][ebN,kb],)
                         if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                             self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
@@ -626,21 +626,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def initializeMesh(self, mesh):
         self.phi_s = numpy.ones(mesh.nodeArray.shape[0], 'd')*1e10
 
-        if self.granular_sdf_Calc is not None:
-            print ("updating", self.nParticles, " particles...")
-            for i in range(self.nParticles):
-                for j in range(mesh.nodeArray.shape[0]):
-                    sdf, sdNormals = self.granular_sdf_Calc(mesh.nodeArray[j, :], i)
-                    if (abs(sdf) < abs(self.phi_s[j])):
-                        self.phi_s[j] = sdf
-        else:
-            for i, sdf in zip(range(self.nParticles),
-                              self.particle_sdfList):
-                for j in range(mesh.nodeArray.shape[0]):
-                    #self.phi_s[j], sdNormals = sdf(0, mesh.nodeArray[j, :])
-                    sdf_j,sdNormals=sdf(0,mesh.nodeArray[j,:])
-                    if (abs(sdf_j) < abs(self.phi_s[j])):
-                        self.phi_s[j] = sdf_j
+        logEvent("updating {0} particles...".format(self.nParticles))
+        for i in range(self.nParticles):
+            if self.granular_sdf_Calc is not None:
+                sdf = lambda x: self.granular_sdf_Calc(x,i)
+            else:
+                sdf = lambda x: self.particle_sdfList[i](0.0, x)
+
+            for j in range(mesh.nodeArray.shape[0]):
+                sdf_at_node, _ = sdf(mesh.nodeArray[j, :])
+                if (abs(sdf_at_node) < abs(self.phi_s[j])):
+                        self.phi_s[j] = sdf_at_node
 
         # cek we eventually need to use the local element diameter
         self.eps_density = self.epsFact_density * mesh.h
@@ -1022,48 +1018,59 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
         self.phi_s[:] = 1e10
         self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
-        if self.granular_sdf_Calc is not None:
-            print ("updating", self.nParticles, " particles...")
-            for i in range(self.nParticles):
-                for j in range(self.mesh.nodeArray.shape[0]):
-                    vel = self.granular_vel_Calc(self.mesh.nodeArray[j, :], i)
-                    sdf, sdNormals = self.granular_sdf_Calc(self.mesh.nodeArray[j, :], i)
-                    sdf += vel * self.model.dt_last
-                    if (abs(sdf) < abs(self.phi_s[j])):
-                        self.phi_s[j] = sdf
-                for eN in range(self.model.q['x'].shape[0]):
-                    for k in range(self.model.q['x'].shape[1]):
-                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = self.granular_sdf_Calc(self.model.q['x'][eN, k], i)
-                        self.particle_velocities[i, eN, k] = self.granular_vel_Calc(self.model.q['x'][eN, k], i)
-                        if (abs(self.particle_signed_distances[i, eN, k]) < abs(self.phisField[eN, k])):
-                            self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
-                for ebN in range(self.model.ebq_global['x'].shape[0]):
-                    for kb in range(self.model.ebq_global['x'].shape[1]):
-                        sdf,sdNormals = self.granular_sdf_Calc(self.model.ebq_global['x'][ebN,kb],i)
-                        if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ):
-                            self.ebq_global_phi_s[ebN,kb]=sdf
-                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
-            self.model.q[('phis')] = self.phisField
+        logEvent("updating {0} particles...".format(self.nParticles))
+        for i in range(self.nParticles):
+            if self.granular_sdf_Calc is not None:
+                vel = lambda x: self.granular_vel_Calc(x, i)
+                sdf = lambda x: self.granular_sdf_Calc(x, i)
+            else:
+                vel = lambda x: self.particle_velocityList[i](t, x)
+                sdf = lambda x: self.particle_sdfList[i](t, x)
+                
+            for j in range(self.mesh.nodeArray.shape[0]):
+                vel_at_node = vel(self.mesh.nodeArray[j, :])
+                sdf_at_node, sdNormals = sdf(self.mesh.nodeArray[j, :])
+                if (abs(sdf_at_node) < abs(self.phi_s[j])):
+                    self.phi_s[j] = sdf_at_node
+            for eN in range(self.model.q['x'].shape[0]):
+                for k in range(self.model.q['x'].shape[1]):
+                    self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(self.model.q['x'][eN, k])
+                    self.particle_velocities[i, eN, k] = vel(self.model.q['x'][eN, k])
+                    if (abs(self.particle_signed_distances[i, eN, k]) < abs(self.phisField[eN, k])):
+                        self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
+            for ebN in range(self.model.ebq_global['x'].shape[0]):
+                for kb in range(self.model.ebq_global['x'].shape[1]):
+                    sdf_at_quad_pt,sdNormals = sdf(self.model.ebq_global['x'][ebN,kb])
+                    if ( abs(sdf_at_quad_pt) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                        self.ebq_global_phi_s[ebN,kb]=sdf_at_quad_pt
+                        self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
+        self.model.q[('phis')] = self.phisField
 
-        else:
-            for i, sdf, vel in zip(range(self.nParticles),
-                                   self.particle_sdfList, self.particle_velocityList
-                                   ):
-                for j in range(self.mesh.nodeArray.shape[0]):
-                    myvel = vel(t, self.mesh.nodeArray[j, :])
-                    mysdf, sdNormals = sdf(t, self.mesh.nodeArray[j, :])
-                    if (abs(mysdf) < abs(self.phi_s[j])):
-                        self.phi_s[j] = mysdf
-                for eN in range(self.model.q['x'].shape[0]):
-                    for k in range(self.model.q['x'].shape[1]):
-                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(t, self.model.q['x'][eN, k])
-                        self.particle_velocities[i, eN, k] = vel(t, self.model.q['x'][eN, k])
-                for ebN in range(self.model.ebq_global['x'].shape[0]):
-                    for kb in range(self.model.ebq_global['x'].shape[1]):
-                        sdf_ebN_kb,sdNormals = sdf(t, self.model.ebq_global['x'][ebN,kb])
-                        if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
-                            self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
-                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
+        #Update velocity inside the particle
+        for ci_g_dof,ci_fg_dof in self.model.dirichletConditions[0].global2freeGlobal.iteritems():
+            if isinstance(self.model.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
+                xyz = self.model.mesh.nodeArray[ci_g_dof,:]
+            elif isinstance(self.model.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
+                xyz = self.model.u[0].femSpace.dofMap.lagrangeNodesArray[ci_g_dof,:]
+            else:
+                assert False,"Use P1 or P2 for velocity"
+            distance_to_solid = 1e10
+            for i in range(self.nParticles):
+                if self.granular_sdf_Calc is not None:
+                    vel = lambda x: self.granular_vel_Calc(x, i)
+                    sdf = lambda x: self.granular_sdf_Calc(x, i)
+                else:
+                    vel = lambda x: self.particle_velocityList[i](t, x)
+                    sdf = lambda x: self.particle_sdfList[i](t, x)
+                    
+                distance_to_i_particle,_ = sdf(xyz)
+                if distance_to_solid > distance_to_i_particle:
+                    vel_at_xyz = vel(xyz) 
+                    distance_to_solid = distance_to_i_particle
+            for ci in range(self.nc):#since nc=nd
+                dof = self.model.offset[ci] + self.model.stride[ci]*ci_fg_dof 
+                if self.model.isActiveDOF[dof] < 0.5:
+                    self.model.u[ci].dof[ci_g_dof] = vel_at_xyz[ci]
 
         if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
