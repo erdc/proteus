@@ -473,13 +473,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                    self.particle_sdfList, self.particle_velocityList):
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
-                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(0, self.model.q['x'][eN, k])
-                        self.particle_velocities[i, eN, k] = vel(0, self.model.q['x'][eN, k])
+                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(self.model.q['x'][eN, k])
+                        self.particle_velocities[i, eN, k] = vel(self.model.q['x'][eN, k])
                 self.model.q[('phis', i)] = self.particle_signed_distances[i]
                 self.model.q[('phis_vel', i)] = self.particle_velocities[i]
                 for ebN in range(self.model.ebq_global['x'].shape[0]):
                     for kb in range(self.model.ebq_global['x'].shape[1]):
-                        sdf_ebN_kb,sdNormals = sdf(0,self.model.ebq_global['x'][ebN,kb],)
+                        sdf_ebN_kb,sdNormals = sdf(self.model.ebq_global['x'][ebN,kb],)
                         if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                             self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
