@@ -18,6 +18,7 @@ cdef extern from "cmeshToolsModule.h":
 cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
         MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*,double,double,int,double)
+        MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*,double,double,int)
         int numIter, numAdaptSteps
         string size_field_config, adapt_type_config
         int isReconstructed

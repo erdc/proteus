@@ -841,7 +841,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       clamp(tempScale, hmin, hmax);
       apf::setScalar(size_iso,v,0,tempScale);
     }
-
     it = m->begin(0);
     while( (v = m->iterate(it)) ){
       double phi;// = apf::getScalar(phif, v, 0);
@@ -871,7 +870,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       double lambda[3] = {ssa[2].wm, ssa[1].wm, ssa[0].wm};
 
       scaleFormulaERM(phi, hmin, hmax, apf::getScalar(size_iso, v, 0), curve, lambda, eps_u, scale,nsd,maxAspect);
-
       apf::setVector(size_scale, v, 0, scale);
       //get frames
 
@@ -902,29 +900,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     std::cout<<"Finished grading size 2\n";
 
     apf::synchronize(size_scale);
-    
-    //Test if grading has achieved the intended result 
-/*
-    it = m->begin(0);
-    apf::MeshEntity* ent;
-    while( (ent = m->iterate(it)) ){
-      apf::Adjacent testVertAdj;
-      m->getAdjacent(ent, 0, testVertAdj);
-      apf::Vector3 baseScale;
-      apf::Vector3 adjScale;
-      double gradingFactor=1.3;
-      double marginVal = 1.01;
-      apf::getVector(size_scale,ent,0,baseScale);
-      for(int i = 0; i<testVertAdj.getSize(); i++){
-        apf::getVector(size_scale,testVertAdj[i],0,adjScale);
-        assert(baseScale[0] < gradingFactor*adjScale[0]*marginVal ||           adjScale[0] < gradingFactor*baseScale[0]*marginVal);
-        assert(baseScale[1]/baseScale[0] < gradingFactor*adjScale[1]/adjScale[0]*marginVal || adjScale[1]/adjScale[0] < gradingFactor*baseScale[1]/baseScale[0]*marginVal);
-        assert(baseScale[2]/baseScale[0] < gradingFactor*adjScale[2]/adjScale[0]*marginVal || adjScale[2]/adjScale[0] < gradingFactor*baseScale[2]/baseScale[0]*marginVal);
-      }
-    }
-    m->end(it);
-    std::cout<<"passed assertion tests\n";
-*/
+
     //apf::destroyField(gradphi);
     //apf::destroyField(grad2phi);
     //apf::destroyField(curves);

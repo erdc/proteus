@@ -369,6 +369,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     apf::writeVtkFiles(namebuffer, m);
     sprintf(namebuffer,"beforeAnisotropicAdapt_%i.smb",nAdapt);
     m->writeNative(namebuffer);
+
 /* Code to output size scale and frame
     apf::MeshIterator* it = m->begin(0);
     apf::MeshEntity* test;
@@ -401,6 +402,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   }
 
   std::cout<<"Flag 2\n";
+
   // These are relics from an attempt to pass BCs from proteus into the error estimator.
   // They maybe useful in the future.
   //m->destroyTag(fluxtag[1]); m->destroyTag(fluxtag[2]); m->destroyTag(fluxtag[3]);
