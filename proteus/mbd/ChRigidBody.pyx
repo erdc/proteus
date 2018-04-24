@@ -55,6 +55,9 @@ cdef extern from "ChRigidBody.h":
         double L0
         double length
         int nb_elems
+        bool applyDrag
+        bool applyAddedMass
+        bool applyBuoyancy
         vector[ch.ChVector] mvecs
         vector[ch.ChVector] mvecs_tangents
         void buildNodes()
@@ -1282,9 +1285,9 @@ cdef class ProtChBody:
         """Records values of body attributes in a csv file.
         """
         if self.Shape is not None:
-            self.record_file = os.path.join(Profiling.logDir, 'record_' + self.Shape.name + '.csv')
+            record_file = os.path.join(Profiling.logDir, 'record_' + self.Shape.name)
         else:
-            self.record_file = os.path.join(Profiling.logDir, 'record_' + 'body' + '.csv')
+            record_file = os.path.join(Profiling.logDir, 'record_body')
         t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
@@ -1301,7 +1304,7 @@ cdef class ProtChBody:
             headers = ['t', 't_ch', 't_sim']
             for key in self.record_dict:
                 headers += [key]
-            with open(self.record_file, 'w') as csvfile:
+            with open(record_file+'.csv', 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
         for key, val in self.record_dict.iteritems():
@@ -1309,7 +1312,7 @@ cdef class ProtChBody:
                 values_towrite += [getattr(self, val[0])[val[1]]]
             else:
                 values_towrite += [getattr(self, val[0])]
-        with open(self.record_file, 'a') as csvfile:
+        with open(record_file+'.csv', 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(values_towrite)
         ## added mass
@@ -1319,14 +1322,14 @@ cdef class ProtChBody:
                 for i in range(6):
                     for j in range(6):
                         headers += ['A'+str(i)+str(j)]
-                with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'w') as csvfile:
+                with open(record_file+'_Aij.csv', 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(headers)
             values_towrite = [t, t_chrono, t_sim]
             for i in range(6):
                 for j in range(6):
                     values_towrite += [self.Aij[i, j]]
-            with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'a') as csvfile:
+            with open(record_file+'_Aij.csv', 'a') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(values_towrite)
 
@@ -1762,21 +1765,20 @@ cdef class ProtChSystem:
                     local_element = getLocalElement(self.femSpace_velocity,
                                                     coords,
                                                     nearest_node)
+                    if local_element is not None:
+                        xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
             # ownership might have changed here
             comm.barrier()
             _, rank_owning = comm.allreduce((owning_rank, rank_owning),
                                             op=MPI.MAXLOC)
+            nearest_node = comm.bcast(nearest_node, rank_owning)
             comm.barrier()
             # if ownership is the same after 1 loop and local_element not found
             # => coords must be outside domain
             if rank_owning == rank_owning_previous and local_element is None:
                 coords_outside = True
                 break
-        if local_element is not None and comm.rank == rank_owning:
-            xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
         comm.barrier()
-        global_have_element, rank_owning = comm.allreduce((local_element, comm.rank),
-                                                          op=MPI.MAXLOC)
         xi = comm.bcast(xi, rank_owning)
         eN = comm.bcast(local_element, rank_owning)
         rank = rank_owning
@@ -2202,6 +2204,18 @@ cdef class ProtChMoorings:
         comm = Comm.get().comm.tompi4py()
         if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
             self._recordValues()
+
+    def setApplyDrag(self, bool boolval):
+        for i in range(self.thisptr.cables.size()):
+            deref(self.thisptr.cables[i]).applyDrag = True
+
+    def setApplyAddedMass(self, bool boolval):
+        for i in range(self.thisptr.cables.size()):
+            deref(self.thisptr.cables[i]).applyAddedMass = True
+
+    def setApplyBuoyancy(self, bool boolval):
+        for i in range(self.thisptr.cables.size()):
+            deref(self.thisptr.cables[i]).applyBuoyancy = True
 
     def setNodesPositionFunction(self, function_position, function_tangent=None):
         """Function to build nodes
