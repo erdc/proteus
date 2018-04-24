@@ -473,13 +473,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                    self.particle_sdfList, self.particle_velocityList):
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
-                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(self.model.q['x'][eN, k])
-                        self.particle_velocities[i, eN, k] = vel(self.model.q['x'][eN, k])
+                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(0.0, self.model.q['x'][eN, k])
+                        self.particle_velocities[i, eN, k] = vel(0.0, self.model.q['x'][eN, k])
                 self.model.q[('phis', i)] = self.particle_signed_distances[i]
                 self.model.q[('phis_vel', i)] = self.particle_velocities[i]
                 for ebN in range(self.model.ebq_global['x'].shape[0]):
                     for kb in range(self.model.ebq_global['x'].shape[1]):
-                        sdf_ebN_kb,sdNormals = sdf(self.model.ebq_global['x'][ebN,kb],)
+                        sdf_ebN_kb,sdNormals = sdf(0.0, self.model.ebq_global['x'][ebN,kb],)
                         if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                             self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
@@ -631,7 +631,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             if self.granular_sdf_Calc is not None:
                 sdf = lambda x: self.granular_sdf_Calc(x,i)
             else:
-                sdf = self.particle_sdfList[i]
+                sdf = lambda x: self.particle_sdfList[i](0.0, x)
 
             for j in range(mesh.nodeArray.shape[0]):
                 sdf_at_node, _ = sdf(mesh.nodeArray[j, :])
@@ -1024,8 +1024,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 vel = lambda x: self.granular_vel_Calc(x, i)
                 sdf = lambda x: self.granular_sdf_Calc(x, i)
             else:
-                vel = self.particle_velocityList[i]
-                sdf = self.particle_sdfList[i]
+                vel = lambda x: self.particle_velocityList[i](t, x)
+                sdf = lambda x: self.particle_sdfList[i](t, x)
                 
             for j in range(self.mesh.nodeArray.shape[0]):
                 vel_at_node = vel(self.mesh.nodeArray[j, :])
@@ -1060,8 +1060,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     vel = lambda x: self.granular_vel_Calc(x, i)
                     sdf = lambda x: self.granular_sdf_Calc(x, i)
                 else:
-                    vel = self.particle_velocityList[i]
-                    sdf = self.particle_sdfList[i]
+                    vel = lambda x: self.particle_velocityList[i](t, x)
+                    sdf = lambda x: self.particle_sdfList[i](t, x)
                     
                 distance_to_i_particle,_ = sdf(xyz)
                 if distance_to_solid > distance_to_i_particle:
