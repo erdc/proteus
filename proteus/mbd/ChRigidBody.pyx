@@ -60,8 +60,8 @@ cdef extern from "ChRigidBody.h":
         ch.ChMesh& mesh
         vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
         vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
-        vector[ch.ChVector] forces_drag
-        vector[ch.ChVector] forces_addedmass
+        vector[shared_ptr[ch.ChVector]] forces_drag
+        vector[shared_ptr[ch.ChVector]] forces_addedmass
         double L0
         double length
         int nb_elems
@@ -87,8 +87,8 @@ cdef extern from "ChRigidBody.h":
         vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
         shared_ptr[ch.ChLinkPointFrame] constraint_back
         shared_ptr[ch.ChLinkPointFrame] constraint_front
-        vector[ch.ChVector] forces_drag
-        vector[ch.ChVector] forces_addedmass
+        vector[shared_ptr[ch.ChVector]] forces_drag
+        vector[shared_ptr[ch.ChVector]] forces_addedmass
         void buildNodes()
         void buildCable()
         # void setVelocityAtNodes(double* fluid_velocity)
@@ -2670,7 +2670,7 @@ cdef class ProtChMoorings:
         cdef ch.ChVector Fd
         drag = np.zeros((self.nodes_nb,3 ))
         for i in range(self.thisptr.forces_drag.size()):
-            Fd = self.thisptr.forces_drag[i]
+            Fd = deref(self.thisptr.forces_drag[i])
             drag[i] = [Fd.x(), Fd.y(), Fd.z()]
         return drag
 
@@ -2678,7 +2678,7 @@ cdef class ProtChMoorings:
         cdef ch.ChVector Fd
         drag = np.zeros((self.nodes_nb,3 ))
         for i in range(self.thisptr.forces_addedmass.size()):
-            Fd = self.thisptr.forces_addedmass[i]
+            Fd = deref(self.thisptr.forces_addedmass[i])
             drag[i] = [Fd.x(), Fd.y(), Fd.z()]
         return drag
 
