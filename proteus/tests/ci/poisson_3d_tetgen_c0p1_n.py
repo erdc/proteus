@@ -1,7 +1,6 @@
 from proteus import *
 from proteus.default_n import *
 from poisson_3d_tetgen_p import *
-reload(default_n)
 
 #steady-state so no time integration
 timeIntegration = NoIntegration
