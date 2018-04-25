@@ -125,14 +125,14 @@ cdef extern from "ChMoorings.h":
     cdef cppclass ChBody(ChPhysicsItem, ChBodyFrame):
         ChBody() except +
         # void SetRot(ChQuaternion &rot) except +
-        void SetInertiaXX(ChVector &iner)
-        void SetInertiaXY(ChVector &iner)
-        const ChMatrix33& GetInertia()
+        # void SetInertiaXX(ChVector &iner)
+        # void SetInertiaXY(ChVector &iner)
+        # const ChMatrix33& GetInertia()
         void SetBodyFixed(bool state) except +
         void SetMaterialSurface(const shared_ptr[ChMaterialSurface] &mnewsurf) except +
-        void SetMass(double newmass)
         shared_ptr[ChCollisionModel] GetCollisionModel()
-        double GetMass()
+        # void SetMass(double newmass)
+        # double GetMass()
 
     cdef cppclass ChBodyEasyBox(ChBody):
         ChBodyEasyBox(double Xsize, double Ysize, double Zsize, double mdensity, bool collide=False, bool visual_asset=True)
@@ -302,12 +302,14 @@ cdef extern from "ChMoorings.h":
 cdef extern from "ChBodyAddedMass.h":
     cdef cppclass ChBodyAddedMass(ChBody):
         ChBodyAddedMass() except +
-        # void SetMass(double newmass)
-        # void SetInertia(ChMatrix33& newXInertia)
-        # void SetInertiaXX(ChVector& newXInertia)
-        # void SetInertiaXY(ChVector& newXInertia)
-        # ChVector GetInertiaXX()
-        # ChVector GetInertiaXY()
+        void SetMass(double newmass)
+        void SetInertia(ChMatrix33& newXInertia)
+        void SetInertiaXX(ChVector& newXInertia)
+        void SetInertiaXY(ChVector& newXInertia)
+        double GetMass()
+        const ChMatrix33& GetInertia()
+        ChVector GetInertiaXX()
+        ChVector GetInertiaXY()
         void SetMfullmass(ChMatrixDynamic Mfullmass_in)
         void SetInvMfullmass(ChMatrixDynamic inv_Mfullmass_in)
 
