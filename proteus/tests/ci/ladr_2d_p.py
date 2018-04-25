@@ -1,7 +1,6 @@
 from proteus import *
 from proteus.default_p import *
 from adr import *
-reload(default_p)
 
 name = "ladr_2d"
 nd = 2; #Two dimensions

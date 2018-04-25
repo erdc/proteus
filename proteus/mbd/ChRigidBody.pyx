@@ -40,11 +40,14 @@ from libcpp.memory cimport (shared_ptr,
                             make_shared)
 from collections import OrderedDict
 from cython.operator cimport dereference as deref
+import xml.etree.ElementTree as ET
+import h5py
 # chrono C++ headers
 cimport ChronoHeaders as ch
 # chrono Python headers
 from proteus.mbd cimport pyChronoCore as pych
 from proteus.mprans import BodyDynamics as bd
+from proteus.Archiver import indentXML
 
 
 cdef extern from "ChRigidBody.h":
@@ -62,6 +65,9 @@ cdef extern from "ChRigidBody.h":
         double L0
         double length
         int nb_elems
+        bool applyDrag
+        bool applyAddedMass
+        bool applyBuoyancy
         vector[ch.ChVector] mvecs
         vector[ch.ChVector] mvecs_tangents
         void buildNodes()
@@ -154,8 +160,8 @@ cdef extern from "ChRigidBody.h":
         ch.ChMatrix33 rotm_last
         ch.ChQuaternion rotq
         ch.ChQuaternion rotq_last
-        # double* free_x
-        # double* free_r
+        ch.ChVector free_x
+        ch.ChVector free_r
         ch.ChVector F
         ch.ChVector F_last
         ch.ChVector M
@@ -235,6 +241,10 @@ cdef class ProtChBody:
       np.ndarray M_applied  # moment applied and passed to Chrono
       np.ndarray F_applied_last
       np.ndarray M_applied_last
+      np.ndarray F_Aij
+      np.ndarray M_Aij
+      np.ndarray F_Aij_last
+      np.ndarray M_Aij_last
       np.ndarray acceleration
       np.ndarray acceleration_last
       np.ndarray velocity
@@ -284,6 +294,11 @@ cdef class ProtChBody:
         self.M_prot = np.zeros(3)  # initialise empty Proteus moment
         self.F_applied = np.zeros(3)  # initialise empty Applied force
         self.M_applied = np.zeros(3)  # initialise empty Applied moment
+        self.F_Aij = np.zeros(3)  # initialise empty added mass force
+        self.M_Aij = np.zeros(3)  # initialise empty added mass moment
+        self.prescribed_motion_function = None
+        self.acceleration = np.zeros(3)
+        self.acceleration_last = np.zeros(3)
         self.velocity = np.zeros(3)
         self.velocity_fluid = np.zeros(3)
         self.velocity_last = np.zeros(3)
@@ -814,19 +829,38 @@ cdef class ProtChBody:
                 am = self.ProtChSystem.model_addedmass.levelModelList[-1]
                 for i in range(self.i_start, self.i_end):
                     self.Aij += am.Aij[i]
+                if self.width_2D:
+                    self.Aij *= self.width_2D
         # setting added mass
         if self.applyAddedMass is True:
-            FF = self.Aij*self.acceleration[1]
+            Aij = np.zeros((6,6))
+            Aij[:] = self.Aij[:]
+            Aij[0, 1:] *= self.thisptr.free_x.x()
+            Aij[1, 0] *= self.thisptr.free_x.y()
+            Aij[1, 2:] *= self.thisptr.free_x.y()
+            Aij[2, :2] *= self.thisptr.free_x.z()
+            Aij[2, 3:] *= self.thisptr.free_x.z()
+            Aij[3, :3] *= self.thisptr.free_r.x()
+            Aij[3, 4:] *= self.thisptr.free_r.x()
+            Aij[4, :4] *= self.thisptr.free_r.y()
+            Aij[4, 5] *= self.thisptr.free_r.y()
+            Aij[5, :5] *= self.thisptr.free_r.z()
+            self.setAddedMass(Aij)
             aa = np.zeros(6)
             aa[:3] = self.acceleration
-            Aija = np.dot(self.Aij, aa)
-            self.setAddedMass(self.Aij)
+            aa[3:] = self.ang_acceleration
+            Aija = np.dot(Aij, aa)
         if self.ProtChSystem.model is not None:
             self.F_prot = self.getPressureForces()+self.getShearForces()
             self.M_prot = self.getMoments()
+            if self.width_2D:
+                self.F_prot *= self.width_2D
+                self.M_prot *= self.width_2D
             if self.applyAddedMass is True:
-                self.F_prot += Aija[:3]
-                self.M_prot += Aija[3:]
+                self.F_Aij = Aija[:3]
+                self.M_Aij = Aija[3:]
+                self.F_prot += self.F_Aij
+                self.M_prot += self.M_Aij
             if self.ProtChSystem.first_step is True:
                 # just apply initial conditions for 1st time step
                 F_bar = self.F_prot
@@ -874,11 +908,8 @@ cdef class ProtChBody:
         """
         self.F_applied = forces
         self.M_applied = moments
-        if self.width_2D:
-            self.F_applied *= self.width_2D
-            self.M_applied *= self.width_2D
-        self.thisptr.prestep(<double*> forces.data,
-                             <double*> moments.data)
+        self.thisptr.prestep(<double*> self.F_applied.data,
+                             <double*> self.M_applied.data)
 
     def poststep(self):
         """Called after Chrono system step.
@@ -1134,6 +1165,8 @@ cdef class ProtChBody:
         self.M_prot_last = np.array(self.M_prot)
         self.F_applied_last = np.array(self.F_applied)
         self.M_applied_last = np.array(self.M_applied)
+        self.F_Aij_last = np.array(self.F_Aij)
+        self.M_Aij_last = np.array(self.M_Aij)
         if self.ProtChSystem.parallel_mode is True:
             comm = Comm.get().comm.tompi4py()
             self.position_last = comm.bcast(self.position_last,
@@ -1160,6 +1193,8 @@ cdef class ProtChBody:
                                              self.ProtChSystem.chrono_processor)
             self.M_applied_last = comm.bcast(self.M_applied_last,
                                              self.ProtChSystem.chrono_processor)
+            self.F_Aij_last = comm.bcast(self.F_Aij_last,
+                                         self.ProtChSystem.chrono_processor)
 
     def getValues(self):
         """Get values (pos, vel, acc, etc.) from C++ to python
@@ -1264,6 +1299,9 @@ cdef class ProtChBody:
             self.record_dict['Fx_applied'] = ['F_applied', 0]
             self.record_dict['Fy_applied'] = ['F_applied', 1]
             self.record_dict['Fz_applied'] = ['F_applied', 2]
+            self.record_dict['Fx_Aij'] = ['F_Aij', 0]
+            self.record_dict['Fy_Aij'] = ['F_Aij', 1]
+            self.record_dict['Fz_Aij'] = ['F_Aij', 2]
             Fx = Fy = Fz = True
         if M is True:
             self.record_dict['Mx'] = ['M', 0]
@@ -1302,9 +1340,9 @@ cdef class ProtChBody:
         """Records values of body attributes in a csv file.
         """
         if self.Shape is not None:
-            self.record_file = os.path.join(Profiling.logDir, 'record_' + self.Shape.name + '.csv')
+            record_file = os.path.join(Profiling.logDir, 'record_' + self.Shape.name)
         else:
-            self.record_file = os.path.join(Profiling.logDir, 'record_' + 'body' + '.csv')
+            record_file = os.path.join(Profiling.logDir, 'record_body')
         t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
@@ -1321,7 +1359,7 @@ cdef class ProtChBody:
             headers = ['t', 't_ch', 't_sim']
             for key in self.record_dict:
                 headers += [key]
-            with open(self.record_file, 'w') as csvfile:
+            with open(record_file+'.csv', 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
         for key, val in self.record_dict.iteritems():
@@ -1329,7 +1367,7 @@ cdef class ProtChBody:
                 values_towrite += [getattr(self, val[0])[val[1]]]
             else:
                 values_towrite += [getattr(self, val[0])]
-        with open(self.record_file, 'a') as csvfile:
+        with open(record_file+'.csv', 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(values_towrite)
         ## added mass
@@ -1339,14 +1377,14 @@ cdef class ProtChBody:
                 for i in range(6):
                     for j in range(6):
                         headers += ['A'+str(i)+str(j)]
-                with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'w') as csvfile:
+                with open(record_file+'_Aij.csv', 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(headers)
             values_towrite = [t, t_chrono, t_sim]
             for i in range(6):
                 for j in range(6):
                     values_towrite += [self.Aij[i, j]]
-            with open(os.path.join(Profiling.logDir, 'record_'+self.Shape.name+'_Aij.csv'), 'a') as csvfile:
+            with open(record_file+'_Aij.csv', 'a') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(values_towrite)
 
@@ -1422,6 +1460,7 @@ cdef class ProtChSystem:
         object model_mesh
         object model_addedmass
         ProtChAddedMass ProtChAddedMass
+        int tCount
 
     def __cinit__(self, np.ndarray gravity=None, int nd=3, dt_init=0., sampleRate=0):
         if gravity is not None:
@@ -1457,6 +1496,7 @@ cdef class ProtChSystem:
         self.t = 0.
         self.chrono_dt = 1.
         self.ProtChAddedMass = ProtChAddedMass(self)
+        self.tCount = 0
 
     def addProtChBody(self, ProtChBody body):
         self.thisptr.system.AddBody(body.ChBody.sharedptr_chbody)
@@ -1586,6 +1626,7 @@ cdef class ProtChSystem:
             s.poststep()
         self.record_values = False
         self.first_step = False  # first step passed
+        self.tCount += 1
 
     def addBodyEasyBox(self, pych.ChBodyEasyBox body):
         """Hack to add BodyEasyBox
@@ -1795,21 +1836,20 @@ cdef class ProtChSystem:
                     local_element = getLocalElement(self.femSpace_velocity,
                                                     coords,
                                                     nearest_node)
+                    if local_element is not None:
+                        xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
             # ownership might have changed here
             comm.barrier()
             _, rank_owning = comm.allreduce((owning_rank, rank_owning),
                                             op=MPI.MAXLOC)
+            nearest_node = comm.bcast(nearest_node, rank_owning)
             comm.barrier()
             # if ownership is the same after 1 loop and local_element not found
             # => coords must be outside domain
             if rank_owning == rank_owning_previous and local_element is None:
                 coords_outside = True
                 break
-        if local_element is not None and comm.rank == rank_owning:
-            xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
         comm.barrier()
-        global_have_element, rank_owning = comm.allreduce((local_element, comm.rank),
-                                                          op=MPI.MAXLOC)
         xi = comm.bcast(xi, rank_owning)
         eN = comm.bcast(local_element, rank_owning)
         rank = rank_owning
@@ -2021,6 +2061,7 @@ cdef class ProtChMoorings:
       int[:] nearest_node_array
       int[:] containing_element_array
       int[:] owning_rank
+      string hdfFileName
     def __cinit__(self,
                   ProtChSystem system,
                   Mesh mesh,
@@ -2077,6 +2118,151 @@ cdef class ProtChMoorings:
 
     def recordStrainEta(self, double[:] eta):
         self._record_etas = eta
+
+    def _recordH5(self):
+        tCount = self.ProtChSystem.tCount
+        self.hdfFileName = self.name
+        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
+        if tCount == 0:
+            f = h5py.File(hdfFileName, 'w')
+        else:
+            f = h5py.File(hdfFileName, 'a')
+        pos = self.getNodesPosition()
+        element_connection = np.array([[i, i+1] for i in range(len(pos)-1)])
+        dset = f.create_dataset('nodes_t'+str(tCount), pos.shape)
+        dset[...] = pos
+        dset = f.create_dataset('elements_t'+str(tCount), element_connection.shape, dtype='i8')
+        dset[...] = element_connection
+        # strain
+        datav = np.append(self.getNodesTension(eta=-1), [self.getNodesTension(eta=1)[-1]], axis=0)
+        dset = f.create_dataset('tensions_t'+str(tCount), datav.shape)
+        dset[...] = datav
+        dset = f.create_dataset('sx_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,0]
+        dset = f.create_dataset('sy_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,1]
+        dset = f.create_dataset('sz_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,2]
+        # velocity
+        datav = self.getNodesVelocity()
+        dset = f.create_dataset('velocity_t'+str(tCount), datav.shape)
+        dset[...] = datav
+        dset = f.create_dataset('ux_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,0]
+        dset = f.create_dataset('uy_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,1]
+        dset = f.create_dataset('uz_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,2]
+        # acceleration
+        datav = self.getNodesAcceleration()
+        dset = f.create_dataset('acceleration_t'+str(tCount), datav.shape)
+        dset[...] = datav
+        dset = f.create_dataset('ax_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,0]
+        dset = f.create_dataset('ay_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,1]
+        dset = f.create_dataset('az_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,2]
+        # drag
+        datav = self.getDragForces()
+        dset = f.create_dataset('drag_t'+str(tCount),datav.shape)
+        dset[...] = datav
+        dset = f.create_dataset('dragx_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,0]
+        dset = f.create_dataset('dragy_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,1]
+        dset = f.create_dataset('dragz_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,2]
+        # addedmass
+        datav = self.getAddedMassForces()
+        dset = f.create_dataset('am_t'+str(tCount), datav.shape)
+        dset[...] = datav
+        dset = f.create_dataset('amx_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,0]
+        dset = f.create_dataset('amy_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,1]
+        dset = f.create_dataset('amz_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,2]
+
+    def _recordXML(self):
+        tCount = self.ProtChSystem.tCount
+        t = self.ProtChSystem.t
+        xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
+        if tCount == 0:
+            root = ET.Element("Xdmf",
+                              {"Version": "2.0",
+                               "xmlns:xi": "http://www.w3.org/2001/XInclude"})
+            domain = ET.SubElement(root, "Domain")
+            arGridCollection = ET.SubElement(domain,
+                                            "Grid",
+                                            {"Name": "Mesh"+" Spatial_Domain",
+                                             "GridType": "Collection",
+                                             "CollectionType": "Temporal"})
+        else:
+            tree = ET.parse(xmlFile)
+            root = tree.getroot()
+            domain = root[0]
+            arGridCollection = domain[0]
+        Xdmf_ElementTopology = "Polyline"
+        pos = self.getNodesPosition()
+        Xdmf_NumberOfElements= len(pos)-1
+        Xdmf_NodesPerElement = 2
+        dataItemFormat = "HDF"
+
+        arGrid = ET.SubElement(arGridCollection,
+                               "Grid",
+                               {"GridType": "Uniform"})
+        arTime = ET.SubElement(arGrid,
+                               "Time",
+                               {"Value": str(t),
+                                "Name": str(tCount)})
+        topology = ET.SubElement(arGrid,
+                                "Topology",
+                                {"Type": Xdmf_ElementTopology,
+                                "NumberOfElements": str(Xdmf_NumberOfElements)})
+
+        elements = ET.SubElement(topology,
+                                "DataItem",
+                                {"Format": dataItemFormat,
+                                "DataType": "Int",
+                                "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
+                                                         Xdmf_NodesPerElement)})
+        elements.text = self.hdfFileName+".h5:/elements_t"+str(tCount)
+        geometry = ET.SubElement(arGrid,"Geometry",{"Type":"XYZ"})
+        nodes = ET.SubElement(geometry,
+                              "DataItem",
+                              {"Format": dataItemFormat,
+                               "DataType": "Float",
+                               "Precision": "8",
+                               "Dimensions": "%i %i" % (pos.shape[0],
+                                                        pos.shape[1])})
+        nodes.text = self.hdfFileName+".h5:/nodes_t"+str(tCount)
+        attrs = ['ux', 'uy', 'uz',
+                 'ax', 'ay', 'az',
+                 'dragx', 'dragy', 'dragz',
+                 'amx', 'amy', 'amz',
+                 'sx', 'sy', 'sz']
+        for name in attrs:
+            attr = ET.SubElement(arGrid,
+                                 "Attribute",
+                                 {"Name": name,
+                                  "AttributeType": "Scalar",
+                                  "Center": "Node"})
+            data = ET.SubElement(attr,
+                                 "DataItem",
+                                 {"Format": dataItemFormat,
+                                  "DataType": "Float",
+                                  "Precision": "8",
+                                  "Dimensions": "%i" % (pos.shape[0])})
+            data.text = self.hdfFileName+".h5:/"+name+"_t"+str(tCount)
+
+        tree = ET.ElementTree(root)
+
+        with open(xmlFile, "w") as f:
+            xmlHeader = "<?xml version=\"1.0\" ?>\n<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>\n"
+            f.write(xmlHeader)
+            indentXML(tree.getroot())
+            tree.write(f)
 
     def _recordValues(self):
         """Records values in csv files
@@ -2235,6 +2421,20 @@ cdef class ProtChMoorings:
         comm = Comm.get().comm.tompi4py()
         if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
             self._recordValues()
+            self._recordH5()
+            self._recordXML()
+
+    def setApplyDrag(self, bool boolval):
+        for i in range(self.thisptr.cables.size()):
+            deref(self.thisptr.cables[i]).applyDrag = True
+
+    def setApplyAddedMass(self, bool boolval):
+        for i in range(self.thisptr.cables.size()):
+            deref(self.thisptr.cables[i]).applyAddedMass = True
+
+    def setApplyBuoyancy(self, bool boolval):
+        for i in range(self.thisptr.cables.size()):
+            deref(self.thisptr.cables[i]).applyBuoyancy = True
 
     def setNodesPositionFunction(self, function_position, function_tangent=None):
         """Function to build nodes

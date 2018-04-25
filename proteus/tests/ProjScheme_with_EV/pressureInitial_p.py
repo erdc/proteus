@@ -16,19 +16,13 @@ coefficients=PresInit.Coefficients(nd=nd,
 #pressure increment should be zero on any pressure dirichlet boundaries
 def getDBC_pInit(x,flag):
     None
-    #if flag == boundaryTags['top']:
-    #    return lambda x,t: 0.0
 
 #the advectiveFlux should be zero on any no-flow  boundaries
 def getAdvectiveFlux_pInit(x,flag):
     None
-    #if flag != boundaryTags['top']:
-    #    return lambda x,t: 0.0
 
 def getDiffusiveFlux_pInit(x,flag):
     None
-    #if flag != boundaryTags['top']:
-    #    return lambda x,t: 0.0
 
 class getIBC_pInit:
     def __init__(self):
