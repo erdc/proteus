@@ -17,9 +17,10 @@ cdef extern from "cmeshToolsModule.h":
 
 cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
-        MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*,double,double,int,double)
+        MeshAdaptPUMIDrvr(double, double, double, int, int, int, char*, char*,char*,double,double,int,double)
         int numIter, numAdaptSteps
         string size_field_config, adapt_type_config
+        int adaptMesh
         int isReconstructed
         int loadModelAndMesh(char *, char*)
         int getSimmetrixBC()
@@ -47,12 +48,13 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
-    cdef double hmax, hmin
+    cdef double hmax, hmin, hPhi
     cdef int numIter, numAdaptSteps
     cdef int isReconstructed
-    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="ERM",maType="test",logType="off",targetError=0,targetElementCount=0,reconstructedFlag=0,maxAspectRatio=100.0):
+    cdef int adaptMesh 
+    def __cinit__(self, hmax=100.0, hmin=1e-8, hPhi=1e-2, adaptMesh=0, numIter=10, numAdaptSteps=10 ,sfConfig="ERM",maType="test",logType="off",targetError=0,targetElementCount=0,reconstructedFlag=0,maxAspectRatio=100.0):
         logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
-        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType,targetError,targetElementCount,reconstructedFlag,maxAspectRatio)
+        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, hPhi, adaptMesh, numIter, numAdaptSteps, sfConfig,maType,logType,targetError,targetElementCount,reconstructedFlag,maxAspectRatio)
     def __dealloc__(self):
         del self.thisptr
     def size_field_config(self):
@@ -61,6 +63,10 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.adapt_type_config
     def numIter(self):
         return self.thisptr.numIter
+    def adaptMesh(self):
+        return self.thisptr.adaptMesh
+    def numAdaptSteps(self):
+        return self.thisptr.numAdaptSteps
     def isReconstructed(self):
         return self.thisptr.isReconstructed
     def loadModelAndMesh(self, geomName, meshName):

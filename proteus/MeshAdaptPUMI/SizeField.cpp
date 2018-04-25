@@ -26,7 +26,7 @@ static double isotropicFormula(double phi, double dphi, double verr, double hmin
   //This is just a hack for now. This disable the refinement over phi and does it over phi_s
   // if (phi_s != 0.0)
   // {
-  if (fabs(phi_s) < 5.0 * hmin)
+  if (fabs(phi_s) < 3.0 * hmin)
     return hmin;
   else
     return hmax;
@@ -56,20 +56,20 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   apf::Field *phif = m->findField("phi");
   assert(phif);
   ////////////////////////////////////////
-  apf::Field *phisError = m->findField("phi_s");
-  assert(phisError);
+  //apf::Field *phisError = m->findField("phi_s");
+  //assert(phisError);
   /////////////////////////////////////////
-  apf::Field *phiCorr = m->findField("phiCorr");
-  assert(phiCorr);
-  apf::Field *velocityError = m->findField("velocityError");
-  assert(phiCorr);
+  //apf::Field *phiCorr = m->findField("phiCorr");
+  //assert(phiCorr);
+  //apf::Field *velocityError = m->findField("velocityError");
+  //assert(phiCorr);
   while ((v = m->iterate(it)))
   {
     double phi = apf::getScalar(phif, v, 0);
-    double phi_s = apf::getScalar(phisError, v, 0);
+    //double phi_s = apf::getScalar(phisError, v, 0);
     // double dphi = apf::getScalar(phiCorr, v, 0);
     // double verr = apf::getScalar(velocityError, v, 0);
-    double size = isotropicFormula(0.0, 0.0, 0.0, hmin, hmax, phi_s);
+    double size = isotropicFormula(0.0, 0.0, 0.0, hPhi, hmax, phi);
     apf::setScalar(size_iso, v, 0, size);
   }
   m->end(it);
@@ -1069,7 +1069,7 @@ int MeshAdaptPUMIDrvr::gradeMesh()
   apf::MeshEntity* edge;
   apf::Adjacent edgAdjVert;
   apf::Adjacent vertAdjEdg;
-  double gradingFactor = 1.5;
+  double gradingFactor = 1.2;
   double size[2];
   std::queue<apf::MeshEntity*> markedEdges;
   apf::MeshTag* isMarked = m->createIntTag("isMarked",1);

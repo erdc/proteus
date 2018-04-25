@@ -28,8 +28,7 @@
  * \ingroup MeshAdaptPUMI 
  @{ 
 */
-MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
-    const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount,int reconstructedFlag,double maxAspectRatio)
+MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int AdaptMesh, int NumIter, int NumAdaptSteps,const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount,int reconstructedFlag,double maxAspectRatio)
 /**
  * MeshAdaptPUMIDrvr is the highest level class that handles the interface between Proteus and the PUMI libraries
  * See MeshAdaptPUMI.h for the list of class variables/functions/objects
@@ -45,9 +44,11 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   SimModel_start();
   gmi_register_sim();
 #endif
-  hmin=Hmin; hmax=Hmax;
+  hmin=Hmin; hmax=Hmax; hPhi=HPhi;
   numIter=NumIter;
+  adaptMesh = AdaptMesh;
   nAdapt=0;
+  numAdaptSteps = NumAdaptSteps;
   nEstimate=0;
   if(PCU_Comm_Self()==0)
      printf("MeshAdapt: Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",
@@ -364,7 +365,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     abort();
   }
   if(logging_config=="on"){
-    char namebuffer[20];
+    char namebuffer[50];
     sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
     sprintf(namebuffer,"beforeAnisotropicAdapt_%i.smb",nAdapt);
@@ -400,7 +401,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       freeField(errRel_reg); 
   }
 
-  std::cout<<"Flag 2\n";
+  std::cerr<<"Flag 2\n";
   // These are relics from an attempt to pass BCs from proteus into the error estimator.
   // They maybe useful in the future.
   //m->destroyTag(fluxtag[1]); m->destroyTag(fluxtag[2]); m->destroyTag(fluxtag[3]);
@@ -474,7 +475,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       getSimmetrixBC();
   }
   if(logging_config=="on"){
-    char namebuffer[20];
+    char namebuffer[50];
     sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
     sprintf(namebuffer,"afterAnisotropicAdapt_%i.smb",nAdapt);

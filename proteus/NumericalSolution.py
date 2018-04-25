@@ -956,7 +956,7 @@ class NS_base:  # (HasTraits):
         adaptMeshNow = False
         #will need to move this to earlier when the mesh is created
         #from proteus.MeshAdaptPUMI import MeshAdaptPUMI
-        if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
+        if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and p0.domain.PUMIMesh.adaptMesh():
             import sys
             if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
                 sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
@@ -1029,9 +1029,9 @@ class NS_base:  # (HasTraits):
             #p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
             #p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
         if (hasattr(p0.domain, 'PUMIMesh') and
-            n0.adaptMesh and
+            p0.domain.PUMIMesh.adaptMesh() and
             self.so.useOneMesh and
-            self.nSolveSteps%n0.adaptMesh_nSteps==0):
+            self.nSolveSteps%p0.domain.PUMIMesh.numAdaptSteps()==0):
             logEvent("Copying coordinates to PUMI")
             p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
                 self.modelList[0].levelModelList[0].mesh.nodeArray)
@@ -1080,11 +1080,11 @@ class NS_base:  # (HasTraits):
             del scalar
             #Get Physical Parameters
             #Can we do this in a problem-independent  way?
-            rho = numpy.array([self.pList[0].rho_0,
-                               self.pList[0].rho_1])
-            nu = numpy.array([self.pList[0].nu_0,
-                              self.pList[0].nu_1])
-            g = numpy.asarray(self.pList[0].g)
+            rho = numpy.array([self.pList[0].ct.rho_0,
+                               self.pList[0].ct.rho_1])
+            nu = numpy.array([self.pList[0].ct.nu_0,
+                              self.pList[0].ct.nu_1])
+            g = numpy.asarray(self.pList[0].ct.g)
             deltaT = self.tn-self.tn_last
             p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
             del rho, nu, g
