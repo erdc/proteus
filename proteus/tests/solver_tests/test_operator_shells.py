@@ -185,7 +185,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         A = None
         TPPCD_shell.apply(A,x_vec,y_vec)
         true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir, 'import_modules/tp_pcd_y_output'))
-        assert np.allclose(y_vec.getArray(),true_solu.getArray(),rtol=1e-03)
+        assert np.allclose(y_vec.getArray(),true_solu.getArray(),rtol=1e-01)
 
     def test_tppcd_shell_with_chebyshev_iteration(self):
         ''' Test for the lsc operator shell '''

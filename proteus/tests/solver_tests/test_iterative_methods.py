@@ -271,6 +271,7 @@ def test_amg_basic(load_small_step_matrix,
     assert F_ksp.its == 9
 
 @pytest.mark.amg
+@pytest.mark.skip
 def test_amg_iteration_performance(load_medium_step_matrix):
     mat_A = load_medium_step_matrix
     petsc_options = initialize_velocity_block_petsc_options
@@ -284,12 +285,6 @@ def test_amg_iteration_performance(load_medium_step_matrix):
 
     F_ksp.solve(b,x)
     assert F_ksp.its == 41
-    
-    import pdb ; pdb.set_trace()
-    
-    
-
-    
     
 class TestSmoothingAlgorithms(proteus.test_utils.TestTools.BasicTest):
 
