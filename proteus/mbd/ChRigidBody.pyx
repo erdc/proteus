@@ -384,16 +384,6 @@ cdef class ProtChBody:
         else:
             self.i_end = i_end
 
-    def SetBodyFixed(self, bool state):
-        """Fix body in space
-
-        Parameters
-        ----------
-        state: bool
-            body fixed if True, body free if False
-        """
-        deref(self.thisptr.body).SetBodyFixed(state)
-
     def setWidth2D(self, width):
         """Sets width of 2D body (for forces and moments calculation)
 
@@ -654,16 +644,6 @@ cdef class ProtChBody:
             Rotational constraints.
         """
         self.thisptr.setConstraints(<double*> free_x.data, <double*> free_r.data)
-
-    def SetMass(self, double mass):
-        """Sets mass of body.
-
-        Parameters
-        ----------
-        mass: double
-            mass of the body
-        """
-        deref(self.thisptr.body).SetMass(mass)
 
     def setAddedMass(self, double[:,:] added_mass):
         """

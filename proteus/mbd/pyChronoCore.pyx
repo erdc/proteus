@@ -194,21 +194,6 @@ cdef class ChBody(ChBodyFrame):
     cpdef void SetMaterialSurface(self, ChMaterialSurfaceSMC mat):
         deref(self.sharedptr_chbody).SetMaterialSurface(<shared_ptr[ch.ChMaterialSurface]> mat.sharedptr)
 
-    cpdef np.ndarray GetInertia(self):
-        return ConstChMatrix33_to_npArray(deref(self.sharedptr_chbody).GetInertia())
-
-    cpdef void SetInertiaXX(self, ChVector iner):
-        deref(self.sharedptr_chbody).SetInertiaXX(iner.cppobj)
-
-    cpdef void SetInertiaXY(self, ChVector iner):
-        deref(self.sharedptr_chbody).SetInertiaXY(iner.cppobj)
-
-    cpdef void SetMass(self, double newmass):
-        deref(self.sharedptr_chbody).SetMass(newmass)
-
-    cpdef double GetMass(self):
-        return deref(self.sharedptr_chbody).GetMass()
-
 
 cdef class ChBodyEasyBox(ChBody):
     """Cython class for ChBodyEasyBox
@@ -347,3 +332,18 @@ cdef class ChBodyAddedMass(ChBody):
 
     cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
         deref(self.sharedptr_chbodyaddedmass).SetInvMfullmass(inv_Mfullmass_in)
+
+    cpdef np.ndarray GetInertia(self):
+        return ConstChMatrix33_to_npArray(deref(self.sharedptr_chbodyaddedmass).GetInertia())
+
+    cpdef void SetInertiaXX(self, ChVector iner):
+        deref(self.sharedptr_chbodyaddedmass).SetInertiaXX(iner.cppobj)
+
+    cpdef void SetInertiaXY(self, ChVector iner):
+        deref(self.sharedptr_chbodyaddedmass).SetInertiaXY(iner.cppobj)
+
+    cpdef void SetMass(self, double newmass):
+        deref(self.sharedptr_chbodyaddedmass).SetMass(newmass)
+
+    cpdef double GetMass(self):
+        return deref(self.sharedptr_chbodyaddedmass).GetMass()
