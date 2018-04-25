@@ -62,6 +62,12 @@ namespace chrono {
 		/* /// Set the mass associated with translation of body */
 		/* void SetBodyMass(const double mmass); */
 
+    /* /// Get the mass associated with translation of body */
+    /* virtual double GetBodyMass() const override { return ChVariablesBodyOwnMass::mmass; } */
+
+    /* /// Access the 3x3 inertia matrix */
+    /* virtual ChMatrix33<>& GetBodyInertia() override { return ChVariablesBodyOwnInertia::inertia; } */
+
 		/* /// Set the mass associated with translation of body */
 		/* void SetBodyAddedMass(ChMatrixDynamic<>& Maddedmass_in); */
     
