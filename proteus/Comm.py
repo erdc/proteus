@@ -39,6 +39,7 @@ def init():
                     OptDB.setValue(name,value)
         if not OptDB.hasName("options_left"):
             OptDB.setValue("options_left",False)
+    petsc4py.PETSc.Log.Stage('proteus').push()
     new_comm = Comm()
     if not comm:
         comm = new_comm

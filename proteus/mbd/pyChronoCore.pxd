@@ -51,11 +51,6 @@ cdef class ChBody(ChBodyFrame):
     cdef shared_ptr[ch.ChBody] sharedptr_chbody
     cpdef void SetBodyFixed(self, bool state)
     cpdef void SetMaterialSurface(self, ChMaterialSurfaceSMC mat)
-    cpdef void SetInertiaXX(self, ChVector iner)
-    cpdef void SetInertiaXY(self, ChVector iner)
-    cpdef void SetMass(self, double newmass)
-    cpdef np.ndarray GetInertia(self)
-    cpdef double GetMass(self)
 
 cdef class ChBodyEasyBox(ChBody):
     cdef shared_ptr[ch.ChBodyEasyBox] sharedptr_chbodyeasybox
@@ -110,3 +105,8 @@ cdef class ChBodyAddedMass(ChBody):
     cdef shared_ptr[ch.ChBodyAddedMass] sharedptr_chbodyaddedmass
     cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in)
     cdef void SetInvMfullmass(self, ch.ChMatrixDynamic Mfullmass_in)
+    cpdef void SetInertiaXX(self, ChVector iner)
+    cpdef void SetInertiaXY(self, ChVector iner)
+    cpdef void SetMass(self, double newmass)
+    cpdef np.ndarray GetInertia(self)
+    cpdef double GetMass(self)
