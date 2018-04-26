@@ -677,7 +677,8 @@ static void SmoothField(apf::Field *f)
 void getTargetError(apf::Mesh* m, double &target_error){
   //Implemented for 3D and for serial case only so far
   assert(m->getDimension()==3);
-  std::cout<<"Enter target Error\n";
+  if(PCU_Comm_Self()==0)
+    std::cout<<"Enter target Error\n";
   apf::Field* errField = m->findField("ErrorRegion");
   apf::Field* interfaceField = m->findField("vof");
   apf::MeshEntity* ent;
@@ -695,7 +696,8 @@ void getTargetError(apf::Mesh* m, double &target_error){
     }
   }
   m->end(it);
-  std::cout<<"Past creation of vector\n";
+  if(PCU_Comm_Self()==0)
+    std::cout<<"Past creation of vector\n";
   std::ofstream myfile;
   myfile.open("interfaceErrors.txt", std::ios::app );
   for(int i=0;i<errVect.size();i++){
@@ -710,7 +712,8 @@ void getTargetError(apf::Mesh* m, double &target_error){
   }
   else
     target_error = errVect[(vectorSize-1)/2];
-  std::cout<<"The estimated target error is "<<target_error<<std::endl;
+  if(PCU_Comm_Self()==0)
+    std::cout<<"The estimated target error is "<<target_error<<std::endl;
   //std::abort();
 }
 
