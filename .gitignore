@@ -29,7 +29,6 @@ darwin/
 linux2/
 garnet.gnu/
 Cygwin
-mesh*
 proteus.egg-info/
 proteus/ADR.cpp
 proteus/subsurfaceTransportFunctions.c

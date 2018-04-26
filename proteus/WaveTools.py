@@ -11,12 +11,13 @@ import cython
 import numpy as np
 import cmath as cmat
 from Profiling import logEvent
+from proteus import Comm
 import time as tt
 import sys as sys
 
 __all__ = ['SteadyCurrent',
            'SolitaryWave',
-	   'MonochromaticWaves',
+           'MonochromaticWaves',
            'RandomWaves',
            'MultiSpectraRandomWaves',
            'DirectionalWaves',
@@ -711,6 +712,15 @@ class  SteadyCurrent:
                  rampTime = 0.):
         self.mwl = mwl
         self.U = U
+        try:
+            if len(self.U)!=3:
+                logEvent("ERROR! Wavetools.py: SteadyCurrent velocity argument needs to be a vector with length = 3")
+                sys.exit(1)
+
+        except:
+            logEvent("ERROR! Wavetools.py: SteadyCurrent velocity argument needs to be a vector with length = 3")
+            sys.exit(1)
+
         self.ramp = rampTime
     def eta(self,x,t):
         """Calculates free surface elevation (SolitaryWave class)
@@ -727,7 +737,7 @@ class  SteadyCurrent:
             Free-surface elevation as a float
 
         """
-        return  self.mwl
+        return 0.
     def u(self,x,t):
         """Calculates wave velocity vector (SolitaryWave class).
         Parameters
@@ -875,7 +885,23 @@ class  MonochromaticWaves:
     wavelength : float
              Regular wave lenght, calculated from linear dispersion if set to None
     waveType : string
-             Defines regular wave theory ("Linear" or "Fenton")
+             Defines regular wave theory ("Linear", "Fenton", or "Fenton2")
+             Fenton: uses BCoeffs/YCoeffs provided by user
+    autoFenton: bool
+             autoFenton=True: uses waveheight, period, depth, and g to
+                              calculate coeffs
+             autoFenton=False: uses BCoeffs/YCoeffs provided by user
+    autoFentonOpts: dict
+             options for autoFenton. The dictionary must contain the following
+             entries (here the default values if autoFentonOpts is None):
+             autoFentonOpts = {'mode': 'Period',
+                               'current_criterion': 1,
+                               'height_steps': 1,
+                               'niter': 40,
+                               'conv_crit': 1e-05,
+                               'points_freesurface': 50,
+                               'points_velocity': 16,
+                               'points_vertical': 20}
     Ycoeff : numpy.ndarray
              Fenton Fourier coefficients for free-surface elevation             
     Bcoeff : numpy.ndarray
@@ -899,6 +925,8 @@ class  MonochromaticWaves:
                  waveDir,
                  wavelength=None,
                  waveType="Linear",
+                 autoFenton=True,
+                 autoFentonOpts=None,
                  Ycoeff = np.zeros(1000,),
                  Bcoeff =np.zeros(1000,), 
                  Nf = 1000,
@@ -907,7 +935,7 @@ class  MonochromaticWaves:
                  fast = True):
         
         self.fast = fast
-        knownWaveTypes = ["Linear","Fenton"]
+        knownWaveTypes = ["Linear","Fenton", "Fenton2"]
         self.waveType = waveType
         if waveType not in knownWaveTypes:
             logEvent("Wrong wavetype given: Valid wavetypes are %s" %(knownWaveTypes), level=0)
@@ -932,17 +960,54 @@ class  MonochromaticWaves:
         if  waveType== "Linear":
             self.k = dispersion(w=self.omega,d=self.depth,g=self.gAbs)
             self.wavelength = 2.0*M_PI/self.k
-        else:
-            try:
-                self.k = 2.0*M_PI/wavelength
-                self.wavelength=wavelength
-            except:
-                logEvent("ERROR! Wavetools.py: Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
-                sys.exit(1)
-            if ( (len(self.Ycoeff)!=self.Nf) or (len(self.Bcoeff)!=self.Nf) or (Ycoeff[0]==0.) or (Bcoeff[0]==0.) ):
-                logEvent("ERROR! Wavetools.py: Ycoeff and Bcoeff must have the same length and equal to Nf and the 1st order harmonic must not be zero",level=0)
-                sys.exit(1)
-            else:
+        elif waveType == "Fenton":
+            if autoFenton is False:
+                try:
+                    self.k = 2.0*M_PI/wavelength
+                    self.wavelength=wavelength
+                except:
+                    logEvent("ERROR! Wavetools.py: Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
+                    sys.exit(1)
+                if ( (len(self.Ycoeff)!=self.Nf) or (len(self.Bcoeff)!=self.Nf) or (Ycoeff[0]==0.) or (Bcoeff[0]==0.) ):
+                    logEvent("ERROR! Wavetools.py: Ycoeff and Bcoeff must have the same length and equal to Nf and the 1st order harmonic must not be zero",level=0)
+                    sys.exit(1)
+                else:
+                    for ii in range(len(self.tanhF)):
+                        kk = (ii+1)*self.k
+                        self.tanhF[ii] = float(np.tanh(kk*self.depth) )
+            elif autoFenton is True:
+                from proteus.fenton import Fenton
+                comm = Comm.get()
+                if comm.isMaster():
+                    if autoFentonOpts is None:
+                        autoFentonOpts = {'mode': 'Period',
+                                          'current_criterion': 1,
+                                          'height_steps': 1,
+                                          'niter': 40,
+                                          'conv_crit': 1e-05,
+                                          'points_freesurface': 50,
+                                          'points_velocity': 16,
+                                          'points_vertical': 20}
+                    Fenton.writeInput(waveheight=waveHeight,
+                                      depth=depth,
+                                      period=period,
+                                      mode=autoFentonOpts['mode'],
+                                      current_criterion=autoFentonOpts['current_criterion'],
+                                      current_magnitude=0,
+                                      ncoeffs=Nf,
+                                      height_steps=autoFentonOpts['height_steps'],
+                                      g=np.linalg.norm(g),
+                                      niter=autoFentonOpts['niter'],
+                                      conv_crit=autoFentonOpts['conv_crit'],
+                                      points_freesurface=autoFentonOpts['points_freesurface'],
+                                      points_velocity=autoFentonOpts['points_velocity'],
+                                      points_vertical=autoFentonOpts['points_vertical'])
+                    Fenton.runFourier()
+                    Fenton.copyFiles()
+                comm.barrier()
+                self.Bcoeff, self.Ycoeff = Fenton.getBYCoeffs()
+                self.wavelength = Fenton.getWavelength()*depth
+                self.k = 2.0*M_PI/self.wavelength
                 for ii in range(len(self.tanhF)):
                     kk = (ii+1)*self.k
                     self.tanhF[ii] = float(np.tanh(kk*self.depth) )
@@ -976,7 +1041,7 @@ class  MonochromaticWaves:
         
 
 
-        if self.waveType == "Fenton":
+        if "Fenton" in self.waveType:
             for ij in range(Nf):
                 self.Ycoeff_c[ij] = self.Ycoeff[ij]
                 self.Bcoeff_c[ij] = self.Bcoeff[ij]
@@ -984,7 +1049,6 @@ class  MonochromaticWaves:
             self.Ycoeff_ =  self.Ycoeff_c
             self.Bcoeff_ =  self.Bcoeff_c
             self.tanhF_ = self.tanh_c
-        
 
 
 

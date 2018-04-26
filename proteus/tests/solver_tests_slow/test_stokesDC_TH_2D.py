@@ -38,6 +38,7 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
 
     def teardown_method(self):
         """Tear down function. """
+        Profiling.closeLog()
         FileList = ['proteus_default.log',
                     'proteus.log',
                     'rdomain.ele',
