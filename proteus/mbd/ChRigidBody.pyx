@@ -212,8 +212,8 @@ cdef class ProtChBody:
     cdef cppRigidBody * thisptr
     cdef ch.ChQuaternion rotation
     cdef ch.ChQuaternion rotation_last
+    cdef vector[ch.ChVector] trimesh_nodes
     cdef vector[ch.ChTriangle] trimesh_triangles
-    cdef vector[ch.ChVector] trimesh_vectors
     cdef public:
       str record_file
       object model
@@ -274,8 +274,7 @@ cdef class ProtChBody:
       np.ndarray h_ang_vel_predict_last  # predicted angular velocity
       np.ndarray Aij  # added mass array
       bool applyAddedMass  # will apply added mass if True (default)
-      int[:,:] trimesh_triangles_array
-      double[:,:] trimesh_vectors_array
+      string hdfFileName
 
     def __cinit__(self,
                   ProtChSystem system=None):
@@ -317,8 +316,11 @@ cdef class ProtChBody:
         self.adams_vel = np.zeros((5, 3))
         self.Aij = np.zeros((6, 6))  # added mass array
         self.applyAddedMass = True  # will apply added mass in Chrono calculations if True
+        self.setName('rigidbody')
 
-    def attachShape(self, shape):
+    def attachShape(self,
+                    shape,
+                    take_shape_name=True):
         """Attach proteus.SpatialTools shape to body.
         Used for automatic calculation of external forces from Proteus.
         Called automatically when creating a body and passing a shape
@@ -334,36 +336,133 @@ cdef class ProtChBody:
         self.Shape = shape
         if 'ChRigidBody' not in shape.auxiliaryVariables:
             shape.auxiliaryVariables['ChRigidBody'] = self
-            self.setName(shape.name)
+            if take_shape_name is True:
+                self.setName(shape.name)
         self.nd = shape.Domain.nd
         self.SetPosition(shape.barycenter)
 
-    def addTriangleMesh(self, shape=None, sphereswept_thickness=0.005):
+    def addTriangleMeshFromShape(self,
+                                 object shape=None,
+                                 double[:] pos=None,
+                                 double[:,:] rot=None,
+                                 bool is_static=False,
+                                 bool is_convex=False,
+                                 double sphereswept_thickness=0.005):
         """Adds triangle mesh to collision model and for IBM calculations
         """
-        if shape is not None:
-            self.Shape = shape
-        assert self.Shape is not None, 'no Shape was defined for making a triangle mesh'
-        for v in self.Shape.vertices:
-            self.trimesh_vectors.push_back(ch.ChVector(v[0], v[1], v[2]))
-            self.trimesh_vectors_array = np.append(self.trimesh_vectors_array, [v])
-        for facet in self.Shape.facets:
+        if shape is None:
+            shape = self.Shape
+        assert shape is not None, 'no Shape was defined for making a triangle mesh'
+        vertices = shape.vertices
+        for f_i, facet in enumerate(shape.facets):
             f = facet[0]
-            assert len(f) == 3, 'Facets must be triangles for triangle mesh'
-            self.trimesh_triangles.push_back(ch.ChTriangle(self.trimesh_vectors[f[0]],
-                                                           self.trimesh_vectors[f[1]],
-                                                           self.trimesh_vectors[f[2]]))
-            self.trimesh_triangles_array = np.append(self.trimesh_triangles_array, [f])
-            self.thisptr.trimesh.addTriangle(self.trimesh_triangles[-1])
+            assert len(f) == 3, 'Facets must be triangles for triangle mesh but facet '+str(f_i)+' is not of length 3'
+        facets = np.array(shape.facets, dtype=np.int32)
+        self.addTriangleMeshFromVerticesFaces(vertices=vertices,
+                                              facets=facets,
+                                              pos=pos,
+                                              rot=rot,
+                                              is_static=is_static,
+                                              is_convex=is_convex,
+                                              sphereswept_thickness=sphereswept_thickness)
+
+    def addTriangleMeshFromVerticesFaces(self,
+                                         double[:,:] vertices,
+                                         int[:,:,:] facets,
+                                         double[:] pos=None,
+                                         double[:,:] rot=None,
+                                         bool is_static=False,
+                                         bool is_convex=False,
+                                         double sphereswept_thickness=0.005):
+        """Adds triangle mesh to collision model and for IBM calculations
+        """
+        self.trimesh_nodes.clear()
+        self.trimesh_triangles.clear()
+        for v in vertices:
+            self.trimesh_nodes.push_back(ch.ChVector(v[0], v[1], v[2]))
+        for f_i, facet in enumerate(facets):
+            f = facet[0]
+            assert len(f) == 3, 'Facets must be triangles for triangle mesh but facet '+str(f_i)+' is not of length 3'
+            self.trimesh_triangles.push_back(ch.ChTriangle(self.trimesh_nodes.at(f[0]),
+                                                           self.trimesh_nodes.at(f[1]),
+                                                           self.trimesh_nodes.at(f[2])))
+            self.thisptr.trimesh.addTriangle(self.trimesh_triangles.at(f_i))
+        if pos is None:
+            pos = np.zeros(3)
+        cdef ch.ChMatrix33 rotmat
+        if rot is None:
+            rot = np.eye(3)
+        for i in range(rot.shape[0]):
+            for j in range(rot.shape[1]):
+                rotmat.SetElement(i, j, rot[i, j])
+        # deref(deref(self.thisptr.body).GetCollisionModel()).ClearModel()
         deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(self.thisptr.trimesh,
-                                                                            False,
-                                                                            False,
-                                                                            ch.ChVector(self.position[0],
-                                                                                        self.position[1],
-                                                                                        self.position[2]),
-                                                                            deref(self.thisptr.body).GetA(),
+                                                                            is_static,
+                                                                            is_convex,
+                                                                            ch.ChVector(pos[0],
+                                                                                        pos[1],
+                                                                                        pos[2]),
+                                                                            rotmat,
                                                                             sphereswept_thickness)
 
+    # # (!) # cannot use right now because of cython error when C++ function has default
+    # # (!) # arguments (known bug in cython community, silent error)
+    # # (!) # logic left here for when cython bug is solved
+    # def addTriangleMeshFromWavefront(self,
+    #                                  string filename,
+    #                                  bool load_normals=True,
+    #                                  bool load_uv=False,
+    #                                  double[:] pos=None,
+    #                                  double[:,:] rot=None,
+    #                                  bool is_static=False,
+    #                                  bool is_convex=False,
+    #                                  double sphereswept_thickness=0.005):
+    #     """Adds triangle mesh to collision model and for IBM calculations
+    #     """
+    #     self.thisptr.trimesh.LoadWavefrontMesh(filename,
+    #                                            load_normals,
+    #                                            load_uv)
+    #     if pos is None:
+    #         pos = np.zeros(3)
+    #     cdef ch.ChMatrix33 rotmat
+    #     if rot is None:
+    #         rot = np.eye(3)
+    #     for i in range(rot.shape[0]):
+    #         for j in range(rot.shape[1]):
+    #             rotmat.SetElement(i, j, rot[i, j])
+    #     deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(self.thisptr.trimesh,
+    #                                                                         is_static,
+    #                                                                         is_convex,
+    #                                                                         ch.ChVector(pos[0],
+    #                                                                                     pos[1],
+    #                                                                                     pos[2]),
+    #                                                                         rotmat,
+    #                                                                         sphereswept_thickness)
+
+    def getTriangleMeshInfo(self):
+        # vertices
+        cdef vector[ch.ChVector]* chpos = &self.thisptr.trimesh.getCoordsVertices()
+        cdef double[:,:] pos = np.zeros((chpos.size(),3 ))
+        for i in range(chpos.size()):
+            pos[i, 0] = chpos.at(i).x()
+            pos[i, 1] = chpos.at(i).y()
+            pos[i, 2] = chpos.at(i).z()
+        cdef vector[ch.ChVector[int]]* chel_connect = &self.thisptr.trimesh.getIndicesVertexes()
+            # connection of vertices
+        cdef int[:,:] el_connect = np.zeros((chel_connect.size(), 3), dtype=np.int32)
+        for i in range(chel_connect.size()):
+            el_connect[i, 0] = int(chel_connect.at(i).x())
+            el_connect[i, 1] = int(chel_connect.at(i).y())
+            el_connect[i, 2] = int(chel_connect.at(i).z())
+        return pos, el_connect
+
+    def setCollisionOptions(self,
+                            double envelope=0.001,
+                            double margin=0.0005,
+                            bool collide=True):
+        deref(self.thisptr.body).SetCollide(collide)
+        deref(deref(self.thisptr.body).GetCollisionModel()).SetEnvelope(envelope)
+        deref(deref(self.thisptr.body).GetCollisionModel()).SetSafeMargin(margin)
 
     def setIndexBoundary(self, i_start, i_end=None):
         """Sets the flags of the boundaries of the body
@@ -413,7 +512,7 @@ cdef class ProtChBody:
     def hxyz(self, np.ndarray x, double t, debug=False):
         cdef np.ndarray h
         cdef np.ndarray xx
-        cdef double ang, and_last
+        cdef double ang, ang_last
         cdef np.ndarray d_tra, d_tra_last # translational displacements
         cdef np.ndarray d_rot, d_rot_last # rotational displacements
         cdef np.ndarray h_body  # displacement from body
@@ -921,6 +1020,8 @@ cdef class ProtChBody:
                                             self.ProtChSystem.chrono_processor)
         if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
             self._recordValues()
+            self._recordH5()
+            self._recordXML()
         # need to pass position and rotation values to C++ side
         # needed for transformations when calling hx, hy, hz, hxyz
         e0, e1, e2, e3 = self.rotq
@@ -1009,6 +1110,10 @@ cdef class ProtChBody:
         # get the initial values for F and M
         cdef np.ndarray zeros = np.zeros(3)
         self.setExternalForces(zeros, zeros)
+        # build collision model
+        if deref(self.thisptr.body).GetCollide() is True:
+            deref(deref(self.thisptr.body).GetCollisionModel()).BuildModel()
+        # poststep (record values, etc)
         self.thisptr.poststep()
         # get first, store then on initial time step
         self.getValues()
@@ -1319,10 +1424,7 @@ cdef class ProtChBody:
     def _recordValues(self):
         """Records values of body attributes in a csv file.
         """
-        if self.Shape is not None:
-            record_file = os.path.join(Profiling.logDir, 'record_' + self.Shape.name)
-        else:
-            record_file = os.path.join(Profiling.logDir, 'record_body')
+        record_file = os.path.join(Profiling.logDir, 'record_' + self.name)
         t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
@@ -1367,6 +1469,83 @@ cdef class ProtChBody:
             with open(record_file+'_Aij.csv', 'a') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(values_towrite)
+
+    def _recordH5(self):
+        tCount = self.ProtChSystem.tCount
+        self.hdfFileName = self.name
+        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
+        if tCount == 0:
+            f = h5py.File(hdfFileName, 'w')
+        else:
+            f = h5py.File(hdfFileName, 'a')
+        pos, element_connection = self.getTriangleMeshInfo()
+        dset = f.create_dataset('nodes_t'+str(tCount), pos.shape)
+        dset[...] = pos
+        dset = f.create_dataset('elements_t'+str(tCount), element_connection.shape, dtype='i8')
+        dset[...] = element_connection
+
+    def _recordXML(self):
+        tCount = self.ProtChSystem.tCount
+        t = self.ProtChSystem.t
+        xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
+        if tCount == 0:
+            root = ET.Element("Xdmf",
+                              {"Version": "2.0",
+                               "xmlns:xi": "http://www.w3.org/2001/XInclude"})
+            domain = ET.SubElement(root, "Domain")
+            arGridCollection = ET.SubElement(domain,
+                                            "Grid",
+                                            {"Name": "Mesh"+" Spatial_Domain",
+                                             "GridType": "Collection",
+                                             "CollectionType": "Temporal"})
+        else:
+            tree = ET.parse(xmlFile)
+            root = tree.getroot()
+            domain = root[0]
+            arGridCollection = domain[0]
+        Xdmf_ElementTopology = "Triangle"
+        pos, el = self.getTriangleMeshInfo()
+        Xdmf_NumberOfElements= len(el)
+        Xdmf_NodesPerElement = 3
+        dataItemFormat = "HDF"
+
+        arGrid = ET.SubElement(arGridCollection,
+                               "Grid",
+                               {"GridType": "Uniform"})
+        arTime = ET.SubElement(arGrid,
+                               "Time",
+                               {"Value": str(t),
+                                "Name": str(tCount)})
+        topology = ET.SubElement(arGrid,
+                                "Topology",
+                                {"Type": Xdmf_ElementTopology,
+                                "NumberOfElements": str(Xdmf_NumberOfElements)})
+
+        elements = ET.SubElement(topology,
+                                "DataItem",
+                                {"Format": dataItemFormat,
+                                "DataType": "Int",
+                                "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
+                                                         Xdmf_NodesPerElement)})
+        elements.text = self.hdfFileName+".h5:/elements_t"+str(tCount)
+        geometry = ET.SubElement(arGrid,"Geometry",{"Type":"XYZ"})
+        nodes = ET.SubElement(geometry,
+                              "DataItem",
+                              {"Format": dataItemFormat,
+                               "DataType": "Float",
+                               "Precision": "8",
+                               "Dimensions": "%i %i" % (pos.shape[0],
+                                                        pos.shape[1])})
+        nodes.text = self.hdfFileName+".h5:/nodes_t"+str(tCount)
+
+        tree = ET.ElementTree(root)
+
+        with open(xmlFile, "w") as f:
+            xmlHeader = "<?xml version=\"1.0\" ?>\n<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>\n"
+            f.write(xmlHeader)
+            indentXML(tree.getroot())
+            tree.write(f)
+
 
     def addPrismaticLinksWithSpring(self, np.ndarray pris1,
                                     np.ndarray pris2, double stiffness, double damping,
@@ -2081,7 +2260,7 @@ cdef class ProtChMoorings:
                                    )
         self.nodes_function = lambda s: (s, s, s)
         self.nodes_built = False
-        self.name = 'record_moorings'
+        self.setName('mooring')
         self.external_forces_from_ns = True
         self.external_forces_manual = False
         self._record_etas=np.array([0.])
@@ -2397,7 +2576,6 @@ cdef class ProtChMoorings:
         """
         if self.initialized is False:
             self.initialized = True
-        
         comm = Comm.get().comm.tompi4py()
         if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
             self._recordValues()
