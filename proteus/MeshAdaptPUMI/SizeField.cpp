@@ -1225,7 +1225,8 @@ void gradeAspectRatio(apf::Mesh* m,int idx)
 //Function to grade anisotropic mesh through comparison of edge vertex aspect ratios and minimum sizes
 //For simplicity, we do not bother with accounting for entities across partitions
 {
-  std::cout<<"Entered function\n"; 
+  if(PCU_Comm_Self()==0)
+    std::cout<<"Entered function\n"; 
   apf::MeshIterator* it = m->begin(1);
   apf::MeshEntity* edge;
   apf::Adjacent edgAdjVert;
@@ -1259,7 +1260,8 @@ void gradeAspectRatio(apf::Mesh* m,int idx)
   }
   m->end(it); 
 
-  std::cout<<"Got queue of size "<<markedEdges.size()<<std::endl; 
+  if(PCU_Comm_Self()==0)
+    std::cout<<"Got queue of size "<<markedEdges.size()<<std::endl; 
   while(!markedEdges.empty()){
     edge = markedEdges.front();
     m->getAdjacent(edge, 0, edgAdjVert);
