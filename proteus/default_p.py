@@ -1,9 +1,5 @@
 """
 The default values for problem definition modules
-
-.. todo::
-
-  Clean up default_p.py
 """
 from MeshTools import *
 from FemTools import *
