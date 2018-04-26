@@ -35,7 +35,12 @@ class cppRigidBody {
   ChVector<> free_r;
   ChVector<> pos;
   ChVector<> pos_last;
+  ChVector<> pos0;
+  std::vector<ChVector<>> trimesh_pos;
   std::vector<ChVector<>> trimesh_pos_last;
+  std::vector<ChVector<>> trimesh_pos0;
+  ChVector<> trimesh_pos0_pos;
+  ChQuaternion<> trimesh_pos0_rot;
   ChVector<> vel;
   ChVector<> vel_last;
   ChVector<> acc;
@@ -48,6 +53,7 @@ class cppRigidBody {
   ChMatrix33<double> rotm_last;
   ChQuaternion<double> rotq;
   ChQuaternion<double> rotq_last;
+  ChQuaternion<double> rotq0;
   ChVector<> F;
   ChVector<> F_last;
   ChVector<> M;
@@ -67,6 +73,7 @@ class cppRigidBody {
   double hx(double* x, double t);
   double hy(double* x, double t);
   double hz(double* x, double t);
+  void calculate_init();
   void prestep(double* force, double* torque);
   void poststep();
   void setRotation(double* quat);
@@ -96,6 +103,7 @@ class cppRigidBody {
   void getTriangleMeshVel(double *x,
                           double dt,
                           double *vel);
+  void updateTriangleMeshVisualisationPos();
 };
 
 cppSystem::cppSystem(double* gravity):
@@ -183,6 +191,19 @@ void cppSystem::setDirectory(std::string dir) {
     directory = dir;
 }
 
+void cppRigidBody::updateTriangleMeshVisualisationPos() {
+  /* rotm = body->GetA(); */
+  for (int i = 0; i < trimesh_pos.size(); i++) {
+    ChVector<double> local = ChTransform<double>::TransformParentToLocal(trimesh_pos0[i],
+                                                                         pos0,
+                                                                         rotq0);
+    ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local,
+                                                                         pos,
+                                                                         rotq);
+    trimesh_pos[i].Set(xNew.x(), xNew.y(), xNew.z());
+  }
+}
+
 ChVector<double> cppRigidBody::hxyz(double* x, double t)
 {
   /* rotm = body->GetA(); */
@@ -220,6 +241,22 @@ double cppRigidBody::hz(double* x, double t)
   ChVector<double> local = ChTransform<double>::TransformParentToLocal(ChVector<double>(x[0],x[1],x[2]), pos_last, rotq_last);
   ChVector<double> xNew = ChTransform<double>::TransformLocalToParent(local, pos, rotq);
   return xNew.z() - x[2];
+}
+
+void cppRigidBody::calculate_init() {
+  pos0 = body->GetPos();
+  rotq0 = body->GetRot();
+  trimesh_pos.clear();
+  trimesh_pos0.clear();
+  auto trimesh_coords = trimesh.getCoordsVertices();
+  for (int i = 0; i < trimesh_coords.size(); i++) {
+  trimesh_pos0.push_back(ChVector<double>(trimesh_coords[i].x(),
+                                          trimesh_coords[i].y(),
+                                          trimesh_coords[i].z()));
+  trimesh_pos.push_back(ChVector<double>(trimesh_coords[i].x(),
+                                         trimesh_coords[i].y(),
+                                         trimesh_coords[i].z()));
+  }
 }
 
 void cppRigidBody::prestep(double* force, double* torque)

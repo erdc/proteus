@@ -167,7 +167,10 @@ cdef extern from "ChRigidBody.h":
         ch.ChVector M
         ch.ChVector M_last
         ch.ChTriangleMeshConnected trimesh
+        vector[ch.ChVector] trimesh_pos
+        vector[ch.ChVector] trimesh_pos0
         cppRigidBody(cppSystem* system)
+        void calculate_init()
         void prestep(double* force, double* torque)
         void poststep()
         ch.ChVector hxyz(double* x, double dt)
@@ -196,6 +199,7 @@ cdef extern from "ChRigidBody.h":
                                        vector[double] ang3, double t_max)
         void setPrescribedMotionPoly(double coeff1)
         void setPrescribedMotionSine(double a, double f)
+        void updateTriangleMeshVisualisationPos()
     cppRigidBody * newRigidBody(cppSystem* system)
     void ChLinkLockBodies(shared_ptr[ch.ChBody] body1,
                           shared_ptr[ch.ChBody] body2,
@@ -1121,6 +1125,7 @@ cdef class ProtChBody:
         # set mass matrix with no added mass
         self.setAddedMass(np.zeros((6,6)))
         # self.thisptr.setRotation(<double*> self.rotation_init.data)
+        self.thisptr.calculate_init()
         #
 
     def calculate(self):
@@ -1478,7 +1483,13 @@ cdef class ProtChBody:
             f = h5py.File(hdfFileName, 'w')
         else:
             f = h5py.File(hdfFileName, 'a')
-        pos, element_connection = self.getTriangleMeshInfo()
+        poss, element_connection = self.getTriangleMeshInfo()
+        pos = np.zeros_like(poss)
+        self.thisptr.updateTriangleMeshVisualisationPos()
+        for i in range(self.thisptr.trimesh_pos.size()):
+            pos[i, 0] = self.thisptr.trimesh_pos[i].x()
+            pos[i, 1] = self.thisptr.trimesh_pos[i].y()
+            pos[i, 2] = self.thisptr.trimesh_pos[i].z()
         dset = f.create_dataset('nodes_t'+str(tCount), pos.shape)
         dset[...] = pos
         dset = f.create_dataset('elements_t'+str(tCount), element_connection.shape, dtype='i8')

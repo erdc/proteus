@@ -38,9 +38,13 @@ cdef class ChFrame:
 cdef class ChFrameMoving(ChFrame):
     cdef shared_ptr[ch.ChFrameMoving] sharedptr_chframemoving
     cpdef np.ndarray GetPos_dt(self)
+    cpdef void SetPos_dt(self, ChVector mpos)
     cpdef np.ndarray GetPos_dtdt(self)
+    cpdef void SetPos_dtdt(self, ChVector mpos)
     cpdef np.ndarray GetRot_dt(self)
+    cpdef void SetRot_dt(self, ChQuaternion mrot)
     cpdef np.ndarray GetRot_dtdt(self)
+    cpdef void SetRot_dtdt(self, ChQuaternion mrot)
     cpdef np.ndarray GetWvel_loc(self)
     cpdef np.ndarray GetWacc_loc(self)
 
