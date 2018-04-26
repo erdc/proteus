@@ -134,9 +134,13 @@ cdef extern from "ChMoorings.h":
 
     cdef cppclass ChFrameMoving[double](ChFrame):
         ChVector& GetPos_dt()
+        void SetPos_dt(ChVector &pos_dt)
         ChQuaternion& GetRot_dt()
+        void SetRot_dt(ChQuaternion &mrot_dt)
         ChVector& GetPos_dtdt()
+        void SetPos_dtdt(ChVector &mpos_dtdt)
         ChQuaternion& GetRot_dtdt()
+        void SetRot_dtdt(ChQuaternion &mrot_dtdt)
         ChMatrix33 GetA_dt()
         ChMatrix33 GetA_dtdt()
         ChVector GetWvel_loc()

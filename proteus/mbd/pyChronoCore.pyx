@@ -142,14 +142,26 @@ cdef class ChFrameMoving(ChFrame):
     cpdef np.ndarray GetPos_dt(self):
         return ChVector_to_npArray(deref(self.sharedptr_chframemoving).GetPos_dt())
 
+    cpdef void SetPos_dt(self, ChVector mpos):
+        deref(self.sharedptr_chframemoving).SetPos_dt(mpos.cppobj)
+
     cpdef np.ndarray GetPos_dtdt(self):
         return ChVector_to_npArray(deref(self.sharedptr_chframemoving).GetPos_dtdt())
+
+    cpdef void SetPos_dtdt(self, ChVector mpos):
+        deref(self.sharedptr_chframemoving).SetPos_dtdt(mpos.cppobj)
 
     cpdef np.ndarray GetRot_dt(self):
         return ChQuaternion_to_npArray(deref(self.sharedptr_chframemoving).GetRot_dt())
 
+    cpdef void SetRot_dt(self, ChQuaternion mrot):
+        deref(self.sharedptr_chframemoving).SetRot_dt(mrot.cppobj)
+
     cpdef np.ndarray GetRot_dtdt(self):
         return ChQuaternion_to_npArray(deref(self.sharedptr_chframemoving).GetRot_dtdt())
+
+    cpdef void SetRot_dtdt(self, ChQuaternion mrot):
+        deref(self.sharedptr_chframemoving).SetRot_dtdt(mrot.cppobj)
 
     cpdef np.ndarray GetWvel_loc(self):
         cdef ch.ChVector vec
