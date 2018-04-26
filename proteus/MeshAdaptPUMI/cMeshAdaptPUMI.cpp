@@ -393,7 +393,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 */
   }
 
-  std::cout<<"Flag 1\n";
   if(size_field_config=="ERM"){
       //MeshAdapt error will be thrown if region fields are not freed
       freeField(err_reg); 
@@ -401,22 +400,17 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       freeField(errRel_reg); 
   }
 
-  std::cout<<"Flag 2\n";
-
   // These are relics from an attempt to pass BCs from proteus into the error estimator.
   // They maybe useful in the future.
   //m->destroyTag(fluxtag[1]); m->destroyTag(fluxtag[2]); m->destroyTag(fluxtag[3]);
   delete [] exteriorGlobaltoLocalElementBoundariesArray;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
 
-  std::cout<<"Flag 3\n";
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
 
   apf::Field* adaptSize;
   apf::Field* adaptFrame;
-
-  std::cout<<"Flag 4\n";
 
   /// Adapt the mesh
   assert(size_iso || (size_scale && size_frame));

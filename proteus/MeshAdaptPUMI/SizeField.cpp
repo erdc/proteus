@@ -896,11 +896,14 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
     //Do simple size and aspect ratio grading
     gradeAnisoMesh(m);
-    std::cout<<"Finished grading size 0\n";
+    if(comm_rank==0)
+      std::cout<<"Finished grading size 0\n";
     gradeAspectRatio(m,1);
-    std::cout<<"Finished grading size 1\n";
+    if(comm_rank==0)
+      std::cout<<"Finished grading size 1\n";
     gradeAspectRatio(m,2);
-    std::cout<<"Finished grading size 2\n";
+    if(comm_rank==0)
+      std::cout<<"Finished grading size 2\n";
 
     apf::synchronize(size_scale);
 
@@ -953,7 +956,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   //Destroy locally required fields
   apf::destroyField(size_iso_reg);
   apf::destroyField(clipped_vtx);
-  std::cout<<"Finished Size Field\n";
+  if(comm_rank==0)
+    std::cout<<"Finished Size Field\n";
   return 0;
 }
 
