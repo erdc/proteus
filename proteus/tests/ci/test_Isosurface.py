@@ -1,4 +1,5 @@
 import os
+import pytest
 
 class TestIsosurface():
 
@@ -22,7 +23,7 @@ class TestIsosurface():
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
-        
+
     def test_povgen(self):
         import difflib
         import urllib

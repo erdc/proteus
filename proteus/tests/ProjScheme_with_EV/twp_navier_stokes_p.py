@@ -38,13 +38,14 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     PSTAB=1.0, 
                                     cE=cE,
                                     cMax=cMax, 
-                                    CORRECT_VELOCITY=CORRECT_VELOCITY)
+                                    CORRECT_VELOCITY=CORRECT_VELOCITY,
+                                    USE_SUPG=ct.USE_SUPG_NS,
+                                    ARTIFICIAL_VISCOSITY=ct.ARTIFICIAL_VISCOSITY_NS)
 
-#######################
-# BOUNDARY CONDITIONS #
-#######################
+#################################
+# DIRICHLET BOUNDARY CONDITIONS #
+#################################
 def getDBC_u(x,flag):
-    #None
     pi = np.pi
     if (flag==1 or flag==2 or flag==3 or flag==4):
         if manufactured_solution == 1:
@@ -53,7 +54,6 @@ def getDBC_u(x,flag):
             return lambda x,t: np.sin(pi*x[0])*np.cos(pi*x[1])*np.sin(t)
 
 def getDBC_v(x,flag):
-    #None
     pi = np.pi
     if (flag==1 or flag==2 or flag==3 or flag==4):
         if manufactured_solution == 1:
@@ -61,45 +61,73 @@ def getDBC_v(x,flag):
         else:
             return lambda x,t: -np.cos(pi*x[0])*np.sin(pi*x[1])*np.sin(t)
 
+######################################
+# ADVECTIVE FLUX BOUNDARY CONDITIONS #
+######################################
+# Not used but leave them for debbuging
 def getAFBC_u(x,flag):
-    return lambda x,t: 0.
-
+    None
+    #if manufactured_solution==1: #u.n!=0
+    #    if (flag==1): #left boundary
+    #        return lambda x,t: -np.sin(x[0])*np.sin(x[1]+t)
+    #    elif (flag==2): # right boundary
+    #        return lambda x,t: np.sin(x[0])*np.sin(x[1]+t)
+    #    else: #bottom or top
+    #        return lambda x,t: 0
+    #else: #u.n=0
+    #    return lambda x,t: 0
+        
 def getAFBC_v(x,flag):
-    return lambda x,t: 0.
+    None
+    #if manufactured_solution==1: #u.n=0
+    #    if (flag==3): #Bottom boundary
+    #        return lambda x,t: -np.cos(x[0])*np.cos(x[1]+t)
+    #    elif (flag==4): #Top boundary 
+    #        return lambda x,t: np.cos(x[0])*np.cos(x[1]+t)
+    #    else: #left or right
+    #        return lambda x,t: 0.
+    #else:
+    #    return lambda x,t: 0.
 
+######################################
+# DIFFUSIVE FLUX BOUNDARY CONDITIONS #
+######################################
+# Not used but leave them for debbuging 
 def getDFBC_u(x,flag):
+    None
     # Set grad(u).n    
-    pi = np.pi
-    if (flag==1): # left boundary 
-        if manufactured_solution == 1:
-            return lambda x,t: -2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
-        else:
-            return lambda x,t: -2*dynamic_viscosity(x,t)*pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)*(-1.)
-    elif (flag==2): # right boundary 
-        if manufactured_solution == 1:
-            return lambda x,t: -2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(1.)
-        else: 
-            return lambda x,t: -2*dynamic_viscosity(x,t)*pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)*(1.)
-    elif (flag==3): # bottom boundary 
-        return lambda x,t: 0. 
-    else: # top boundary 
-        return lambda x,t: 0. 
+    #pi = np.pi
+    #if (flag==1): # left boundary 
+    #    if manufactured_solution == 1:
+    #        return lambda x,t: -2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
+    #    else:
+    #        return lambda x,t: -2*dynamic_viscosity(x,t)*pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)*(-1.)
+    #elif (flag==2): # right boundary 
+    #    if manufactured_solution == 1:
+    #        return lambda x,t: -2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(1.)
+    #    else: 
+    #        return lambda x,t: -2*dynamic_viscosity(x,t)*pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)*(1.)
+    #elif (flag==3): # bottom boundary 
+    #    return lambda x,t: 0. 
+    #else: # top boundary 
+    #    return lambda x,t: 0. 
 
 def getDFBC_v(x,flag):
-    if (flag==1): # left boundary 
-        return lambda x,t: 0.
-    elif (flag==2): # right boundary 
-        return lambda x,t: 0.
-    elif (flag==3): # bottom boundary 
-        if manufactured_solution == 1:
-            return lambda x,t: 2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
-        else: 
-            return lambda x,t: 2*dynamic_viscosity(x,t)*pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)*(-1.)
-    else: # top boundary 
-        if manufactured_solution == 1:
-            return lambda x,t: 2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(1.)
-        else: 
-            return lambda x,t: 2*dynamic_viscosity(x,t)*pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)*(1.)
+    None
+    #if (flag==1): # left boundary 
+    #    return lambda x,t: 0.
+    #elif (flag==2): # right boundary 
+    #    return lambda x,t: 0.
+    #elif (flag==3): # bottom boundary 
+    #    if manufactured_solution == 1:
+    #        return lambda x,t: 2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
+    #    else: 
+    #        return lambda x,t: 2*dynamic_viscosity(x,t)*pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)*(-1.)
+    #else: # top boundary 
+    #    if manufactured_solution == 1:
+    #        return lambda x,t: 2*dynamic_viscosity(x,t)*np.cos(x[0])*np.sin(x[1]+t)*(1.)
+    #    else: 
+    #        return lambda x,t: 2*dynamic_viscosity(x,t)*pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t)*(1.)
 
 dirichletConditions = {0:getDBC_u,
                        1:getDBC_v}
@@ -146,11 +174,18 @@ def density(X,t):
     y = X[1]
     return np.sin(x+y+t)**2+1
 
-mu_constant=False
+mu_constant=True
+if manufactured_solution==1:
+    mu_constant=False
+    
 def dynamic_viscosity(X,t):
     x = X[0]
     y = X[1]
-    return mu*(np.cos(x+y+t)**2+1)
+    if manufactured_solution==1:
+        return mu*(np.cos(x+y+t)**2+1)
+    else:
+        return mu
+
     
 materialParameters = {'density':density, 
                       'dynamic_viscosity':dynamic_viscosity}

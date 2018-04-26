@@ -39,6 +39,9 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         Profiling.openLog("proteus.log",10)
         Profiling.logAllProcesses = True
 
+    def teardown_method(self):
+        Profiling.closeLog()
+
     def _runTest(self):
         self.ns = NumericalSolution.NS_base(self.so,
                                             self.pList,
@@ -46,7 +49,7 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
                                             self.so.sList,
                                             opts)
         self.ns.calculateSolution('stokes')
-        
+
         relpath = 'comparison_files/drivenCavityNSE_LSC_expected.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,relpath))
         actual = tables.open_file('drivenCavityNSETrial.h5','r')
@@ -62,7 +65,7 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         plot_lst = [(3.7,0,3),(3.2,0,2),(2.7,0,2),(2.2,0,1),(1.7,0,1)]
         L1 = expected_log.get_ksp_resid_it_info(plot_lst)
         L2 = actual_log.get_ksp_resid_it_info(plot_lst)
-        assert L1 == L2        
+        assert L1 == L2
 
     @pytest.mark.slowTest
     def test_01_FullRun(self):

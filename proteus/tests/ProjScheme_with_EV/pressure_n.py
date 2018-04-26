@@ -8,11 +8,6 @@ triangleOptions = triangleOptions
 
 femSpaces = {0:pbasis}
 
-
-# stepController  = StepControl.Min_dt_cfl_controller
-# runCFL= 0.99
-# runCFL= 0.5
-
 stepController=FixedStep
 
 #matrix type
