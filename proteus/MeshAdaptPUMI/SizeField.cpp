@@ -13,6 +13,8 @@
 #include <queue>
 
 static void SmoothField(apf::Field *f);
+void gradeAnisoMesh(apf::Mesh* m);
+void gradeAspectRatio(apf::Mesh* m, int idx);
 
 /* Based on the distance from the interface epsilon can be controlled to determine
    thickness of refinement near the interface */
@@ -341,13 +343,13 @@ static void scaleFormula(double phi, double hmin, double hmax,
     scale = apf::Vector3(1, 1, 1) * hmax;
   }
 
-  for (int i = 0; i < 3; ++i)
-    clamp(scale[i], hmin, hmax);
+  //for (int i = 0; i < 3; ++i)
+  //  clamp(scale[i], hmin, hmax);
 }
 
 static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
                             apf::Vector3 const &curves,
-                            double lambda[3], double eps_u, apf::Vector3 &scale,int nsd)
+                            double lambda[3], double eps_u, apf::Vector3 &scale,int nsd,double maxAspect)
 //Function used to set the size scale vector for the anisotropic ERM size field configuration
 //Inputs:
 // phi is is the distance to the interface
@@ -406,9 +408,21 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
     scale[2] = 1.0;
   }
   else{
+/*
     scale[0] = h_dest * pow((lambda[1] * lambda[2]) / (lambda[0] * lambda[0]), 1.0 / 6.0);
     scale[1] = sqrt(lambda[0] / lambda[1]) * scale[0];
     scale[2] = sqrt(lambda[0] / lambda[2]) * scale[0];
+*/
+    scale[0] = h_dest;
+    scale[1] = sqrt(lambda[0] / lambda[1]) * scale[0];
+    scale[2] = sqrt(lambda[0] / lambda[2]) * scale[0];
+    if(scale[1]/scale[0] > maxAspect)
+      scale[1] = maxAspect*scale[0];
+    if(scale[2]/scale[0] > maxAspect)
+      scale[2] = maxAspect*scale[0];
+    if(scale[1]/scale[0] > maxAspect || scale[2]/scale[0] > maxAspect){
+      std::cout<<"Scales reached maximum aspect ratio\n";
+    }
   }
   //*/
   /*
@@ -660,6 +674,49 @@ static void SmoothField(apf::Field *f)
   op.applyToDimension(0);
 }
 
+void getTargetError(apf::Mesh* m, double &target_error){
+  //Implemented for 3D and for serial case only so far
+  assert(m->getDimension()==3);
+  if(PCU_Comm_Self()==0)
+    std::cout<<"Enter target Error\n";
+  apf::Field* errField = m->findField("ErrorRegion");
+  apf::Field* interfaceField = m->findField("vof");
+  apf::MeshEntity* ent;
+  apf::MeshIterator* it = m->begin(m->getDimension());
+  apf::MeshElement* element;
+  apf::Element* vofElem;
+  std::vector <double> errVect;
+  while( (ent = m->iterate(it))){
+    element = apf::createMeshElement(m, ent);
+    vofElem = apf::createElement(interfaceField,element);
+    double vofVal = apf::getScalar(vofElem,apf::Vector3(1./3.,1./3.,1./3.));
+    if(vofVal < 0.6 && vofVal > 0.4){ //at the interface
+      double errorValue = apf::getScalar(errField,ent,0);
+      errVect.push_back(errorValue);    
+    }
+  }
+  m->end(it);
+  if(PCU_Comm_Self()==0)
+    std::cout<<"Past creation of vector\n";
+  std::ofstream myfile;
+  myfile.open("interfaceErrors.txt", std::ios::app );
+  for(int i=0;i<errVect.size();i++){
+    myfile << errVect[i]<<std::endl;
+  }
+  myfile.close();
+  std::sort(errVect.begin(),errVect.end());
+  int vectorSize = errVect.size();
+  if(vectorSize %2 ==0){
+    int idx1 = vectorSize/2-1;
+    target_error = (errVect[idx1]+errVect[idx1+1])/2; //get average
+  }
+  else
+    target_error = errVect[(vectorSize-1)/2];
+  if(PCU_Comm_Self()==0)
+    std::cout<<"The estimated target error is "<<target_error<<std::endl;
+  //std::abort();
+}
+
 int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 //High level function that obtains the size scales and the size frames for ERM-based adapt and uses the computed total error
 {
@@ -688,6 +745,10 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   numel = m->count(nsd);
   PCU_Add_Ints(&numel, 1);
 
+  //if target error is not specified, choose one based on interface
+  if(target_error==0)
+    getTargetError(m,target_error);
+  
   // Get domain volume
   // should only need to be computed once unless geometry is complex
   if (domainVolume == 0)
@@ -717,7 +778,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     if (m->getDimension() == 2)
       h_old = sqrt(apf::measure(element) * 4 / sqrt(3));
     else
-      h_old = pow(apf::measure(element) * 6 * sqrt(2), 1.0 / 3.0); //edge of a regular tet
+      //h_old = pow(apf::measure(element) * 6 * sqrt(2), 1.0 / 3.0); //edge of a regular tet
+      h_old = apf::computeShortestHeightInTet(m,reg);
     apf::getVector(err_reg, reg, 0, err_vect);
     err_curr = err_vect[0];
     errRho_curr = apf::getScalar(errRho_reg, reg, 0);
@@ -725,7 +787,14 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     //h_new = h_old*sqrt(apf::measure(element))/sqrt(domainVolume)*target_error/err_curr;
     if (target_error == 0)
       target_error = err_total / sqrt(numel);
-    h_new = h_old * (target_error / err_curr);
+
+    //error-to-size relationship should be different between anisotropic and isotropic cases
+    //consider moving this to where size frames are computed to get aspect ratio info
+    if (adapt_type_config == "anisotropic")
+      h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+    else
+      h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+
     apf::setScalar(size_iso_reg, reg, 0, h_new);
     apf::destroyMeshElement(element);
   }
@@ -742,6 +811,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   //Get the anisotropic size frame
   if (adapt_type_config == "anisotropic")
   {
+    if(comm_rank==0)
+      std::cout<<"Entering anisotropic loop to compute size scales and frames\n";
     double eps_u = 0.002; //distance from the interface
 /*
     apf::Field *phif = m->findField("phi");
@@ -773,7 +844,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       clamp(tempScale, hmin, hmax);
       apf::setScalar(size_iso,v,0,tempScale);
     }
-    //gradeMesh();
     it = m->begin(0);
     while( (v = m->iterate(it)) ){
       double phi;// = apf::getScalar(phif, v, 0);
@@ -802,8 +872,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
       double lambda[3] = {ssa[2].wm, ssa[1].wm, ssa[0].wm};
 
-
-      scaleFormulaERM(phi, hmin, hmax, apf::getScalar(size_iso, v, 0), curve, lambda, eps_u, scale,nsd);
+      scaleFormulaERM(phi, hmin, hmax, apf::getScalar(size_iso, v, 0), curve, lambda, eps_u, scale,nsd,maxAspect);
       apf::setVector(size_scale, v, 0, scale);
       //get frames
 
@@ -824,6 +893,18 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
     }
     m->end(it);
+
+    //Do simple size and aspect ratio grading
+    gradeAnisoMesh(m);
+    if(comm_rank==0)
+      std::cout<<"Finished grading size 0\n";
+    gradeAspectRatio(m,1);
+    if(comm_rank==0)
+      std::cout<<"Finished grading size 1\n";
+    gradeAspectRatio(m,2);
+    if(comm_rank==0)
+      std::cout<<"Finished grading size 2\n";
+
     apf::synchronize(size_scale);
 
     //apf::destroyField(gradphi);
@@ -860,20 +941,23 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       clamp(tempScale, hmin, hmax);
       apf::setScalar(size_iso, v, 0, tempScale);
     }
+    gradeMesh();
     apf::synchronize(size_iso);
     m->end(it);
     if (target_element_count != 0)
     {
       sam::scaleIsoSizeField(size_iso, target_element_count);
       clampField(size_iso, hmin, hmax);
-      SmoothField(size_iso);
+      gradeMesh();
+      //SmoothField(size_iso);
     }
-  }
+  } 
 
   //Destroy locally required fields
   apf::destroyField(size_iso_reg);
   apf::destroyField(clipped_vtx);
-
+  if(comm_rank==0)
+    std::cout<<"Finished Size Field\n";
   return 0;
 }
 
@@ -888,6 +972,72 @@ int MeshAdaptPUMIDrvr::testIsotropicSizeField()
       double phi = hmin;
       clamp(phi,hmin,hmax);
       apf::setScalar(size_iso,v,0,phi);
+    }
+    return 0;
+}
+
+void gradeSizeModify(apf::Mesh* m, double gradingFactor, 
+    double size[2], apf::Adjacent edgAdjVert, 
+    apf::Adjacent vertAdjEdg,
+    std::queue<apf::MeshEntity*> &markedEdges,
+    apf::MeshTag* isMarked,
+    int fieldType,
+    int vecPos, //which idx of sizeVec to modify
+    int idxFlag)
+{
+    //Determine a switching scheme depending on which vertex needs a modification
+    int idx1,idx2;
+    if(idxFlag == 0){
+      idx1=0;
+      idx2=1;
+    } 
+    else{
+      idx1=1;
+      idx2 = 0;
+    } 
+    
+    int marker[3] = {0,1,0}; 
+    double marginVal = 0.01;
+
+    if(fieldType == apf::SCALAR){
+      apf::Field* size_iso = m->findField("proteus_size");
+      if(size[idx1]>gradingFactor*size[idx2]){
+        size[idx1] = gradingFactor*size[idx2];
+        apf::setScalar(size_iso,edgAdjVert[idx1],0,size[idx1]);
+        m->getAdjacent(edgAdjVert[idx1], 1, vertAdjEdg);
+        for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
+          m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+          //if edge is not already marked
+          if(!marker[2]){
+            m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
+            markedEdges.push(vertAdjEdg[i]);
+          }
+        }
+      }
+    }//end if apf::SCALAR
+    else{
+      apf::Field* size_scale = m->findField("proteus_size_scale");
+      apf::Vector3 sizeVec;
+      if(size[idx1]>(gradingFactor*size[idx2])*(1+marginVal)){
+        size[idx1] = gradingFactor*size[idx2];
+        apf::getVector(size_scale,edgAdjVert[idx1],0,sizeVec);
+        if(vecPos > 0){
+          sizeVec[vecPos] = size[idx1]*sizeVec[0]; //realize the new aspect ratio
+        }
+        else{
+          sizeVec[0] = size[idx1];
+        }
+        apf::setVector(size_scale,edgAdjVert[idx1],0,sizeVec);
+        m->getAdjacent(edgAdjVert[idx1], 1, vertAdjEdg);
+        for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
+          m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+          //if edge is not already marked
+          if(!marker[2]){
+            m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
+            markedEdges.push(vertAdjEdg[i]);
+          }
+        }
+      }
     }
 }
 
@@ -932,6 +1082,7 @@ int MeshAdaptPUMIDrvr::gradeMesh()
     for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
       size[i] = apf::getScalar(size_iso,edgAdjVert[i],0);
     }
+    //This can be simplified with one function call
     if(size[0]>gradingFactor*size[1]){
       size[0] = gradingFactor*size[1];
       apf::setScalar(size_iso,edgAdjVert[0],0,size[0]);
@@ -971,4 +1122,166 @@ int MeshAdaptPUMIDrvr::gradeMesh()
   apf::synchronize(size_iso);
   if(comm_rank==0)
     std::cout<<"Completed grading\n";
+}
+
+void gradeAnisoMesh(apf::Mesh* m)
+//Function to grade anisotropic mesh through comparison of edge vertex aspect ratios and minimum sizes
+//For simplicity, we do not bother with accounting for entities across partitions
+{
+  //
+  //if(comm_rank==0)
+  //  std::cout<<"Starting anisotropic grading\n";
+  apf::MeshIterator* it = m->begin(1);
+  apf::MeshEntity* edge;
+  apf::Adjacent edgAdjVert;
+  apf::Adjacent vertAdjEdg;
+  double gradingFactor = 1.3;
+  double size[2];
+  apf::Vector3 sizeVec;
+  std::queue<apf::MeshEntity*> markedEdges;
+  apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
+  apf::Field* size_scale = m->findField("proteus_size_scale");
+
+  //marker structure for 0) not marked 1) marked 2)storage
+  int marker[3] = {0,1,0}; 
+
+  while((edge=m->iterate(it))){
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      apf::getVector(size_scale,edgAdjVert[i],0,sizeVec);
+      size[i]=sizeVec[0];
+    }
+    if( (size[0] > gradingFactor*size[1]) || (size[1] > gradingFactor*size[0]) ){
+      //add edge to a queue 
+      markedEdges.push(edge);
+      //tag edge to indicate that it is part of queue 
+      m->setIntTag(edge,isMarked,&marker[1]); 
+
+    }
+    else{
+      m->setIntTag(edge,isMarked,&marker[0]); 
+    }
+  }
+  m->end(it); 
+  while(!markedEdges.empty()){
+    edge = markedEdges.front();
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      apf::getVector(size_scale,edgAdjVert[i],0,sizeVec);
+      size[i]=sizeVec[0];
+    }
+    gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::VECTOR,0, 0);
+    gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::VECTOR,0, 1);
+
+/*
+    if(size[0]>gradingFactor*size[1]){
+      size[0] = gradingFactor*size[1];
+      apf::getVector(size_scale,edgAdjVert[0],0,sizeVec);
+      sizeVec[0] = size[0];
+      apf::setVector(size_scale,edgAdjVert[0],0,sizeVec);
+      m->getAdjacent(edgAdjVert[0], 1, vertAdjEdg);
+      for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
+        m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+        //if edge is not already marked
+        if(!marker[2]){
+          m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
+          markedEdges.push(vertAdjEdg[i]);
+        }
+      }
+    }
+    if(size[1]>gradingFactor*size[0]){
+      size[1] = gradingFactor*size[0];
+      apf::getVector(size_scale,edgAdjVert[1],0,sizeVec);
+      sizeVec[0] = size[1];
+      apf::setVector(size_scale,edgAdjVert[1],0,sizeVec);
+      m->getAdjacent(edgAdjVert[1], 1, vertAdjEdg);
+      for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
+        m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+        //if edge is not already marked
+        if(!marker[2]){
+          m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
+          markedEdges.push(vertAdjEdg[i]);
+        }
+      }
+    }
+*/
+    m->setIntTag(edge,isMarked,&marker[0]);
+    markedEdges.pop();
+  }
+  it = m->begin(1);
+  while((edge=m->iterate(it))){
+    m->removeTag(edge,isMarked);
+  }
+  m->end(it); 
+  m->destroyTag(isMarked);
+  apf::synchronize(size_scale);
+  //if(comm_rank==0)
+  //  std::cout<<"Completed minimum size grading\n";
+}
+
+void gradeAspectRatio(apf::Mesh* m,int idx)
+//Function to grade anisotropic mesh through comparison of edge vertex aspect ratios and minimum sizes
+//For simplicity, we do not bother with accounting for entities across partitions
+{
+  if(PCU_Comm_Self()==0)
+    std::cout<<"Entered function\n"; 
+  apf::MeshIterator* it = m->begin(1);
+  apf::MeshEntity* edge;
+  apf::Adjacent edgAdjVert;
+  apf::Adjacent vertAdjEdg;
+  double gradingFactor = 1.3;
+  double size[2];
+  apf::Vector3 sizeVec;
+  std::queue<apf::MeshEntity*> markedEdges;
+  apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
+  apf::Field* size_scale = m->findField("proteus_size_scale");
+
+  //marker structure for 0) not marked 1) marked 2)storage
+  int marker[3] = {0,1,0}; 
+
+  while((edge=m->iterate(it))){
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      apf::getVector(size_scale,edgAdjVert[i],0,sizeVec);
+      size[i]=sizeVec[idx]/sizeVec[0];
+    }
+    if( (size[0] > gradingFactor*size[1]) || (size[1] > gradingFactor*size[0]) ){
+      //add edge to a queue 
+      markedEdges.push(edge);
+      //tag edge to indicate that it is part of queue 
+      m->setIntTag(edge,isMarked,&marker[1]); 
+
+    }
+    else{
+      m->setIntTag(edge,isMarked,&marker[0]); 
+    }
+  }
+  m->end(it); 
+
+  if(PCU_Comm_Self()==0)
+    std::cout<<"Got queue of size "<<markedEdges.size()<<std::endl; 
+  while(!markedEdges.empty()){
+    edge = markedEdges.front();
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      apf::getVector(size_scale,edgAdjVert[i],0,sizeVec);
+      size[i]=sizeVec[idx]/sizeVec[0];
+    }
+    gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::VECTOR, idx, 0);
+    gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::VECTOR, idx, 1);
+
+    m->setIntTag(edge,isMarked,&marker[0]);
+    markedEdges.pop();
+  }
+  it = m->begin(1);
+  while((edge=m->iterate(it))){
+    m->removeTag(edge,isMarked);
+  }
+  m->end(it); 
+  m->destroyTag(isMarked);
+  apf::synchronize(size_scale);
 }
