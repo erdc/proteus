@@ -1500,6 +1500,7 @@ class NS_base:  # (HasTraits):
                                                                                                                          model.stepController.t_model,
                                                                                                                          model.stepController.dt_model,
                                                                                                                          model.name),level=3)
+ 
                         #end model step
                         if stepFailed:
                             logEvent("Sequence step failed")
