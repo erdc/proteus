@@ -1086,8 +1086,9 @@ class NS_base:  # (HasTraits):
                               self.pList[0].ct.nu_1])
             g = numpy.asarray(self.pList[0].ct.g)
             deltaT = self.tn-self.tn_last
-            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
-            del rho, nu, g
+            epsFact = p0.ct.epsFact_density 
+            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,epsFact)
+            del rho, nu, g, epsFact
 
             logEvent("Estimate Error")
             sfConfig = p0.domain.PUMIMesh.size_field_config()

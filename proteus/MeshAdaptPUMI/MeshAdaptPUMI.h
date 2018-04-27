@@ -46,7 +46,7 @@ class MeshAdaptPUMIDrvr{
   //Functions used to transfer information between PUMI and proteus
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
-  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p);
+  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double interfaceBandSize);
   //int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   //int transferBCsToProteus();
 
@@ -77,6 +77,7 @@ class MeshAdaptPUMIDrvr{
   int maxAspect; //maximum aspect ratio
   int adaptMesh; //is adaptivity turned on?
   int numAdaptSteps; //Number adaptivity
+  double N_interface_band; //number of elements in half-band around interface
 
   //User Inputs
   std::string size_field_config; //What type of size field: interface, ERM, isotropic

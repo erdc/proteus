@@ -18,7 +18,7 @@ void gradeAspectRatio(apf::Mesh* m, int idx);
 
 /* Based on the distance from the interface epsilon can be controlled to determine
    thickness of refinement near the interface */
-static double isotropicFormula(double phi, double dphi, double verr, double hmin, double hmax, double phi_s = 0)
+static double isotropicFormula(double phi, double dphi, double verr, double hmin, double hmax, double phi_s = 0, double epsFact = 0)
 {
   double size;
   double dphi_size_factor;
@@ -26,7 +26,8 @@ static double isotropicFormula(double phi, double dphi, double verr, double hmin
   //This is just a hack for now. This disable the refinement over phi and does it over phi_s
   // if (phi_s != 0.0)
   // {
-  if (fabs(phi_s) < 3.0 * hmin)
+  //epsFact*hmin
+  if (fabs(phi_s) < (epsFact*2) * hmin)
     return hmin;
   else
     return hmax;
@@ -69,7 +70,7 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
     //double phi_s = apf::getScalar(phisError, v, 0);
     // double dphi = apf::getScalar(phiCorr, v, 0);
     // double verr = apf::getScalar(velocityError, v, 0);
-    double size = isotropicFormula(0.0, 0.0, 0.0, hPhi, hmax, phi);
+    double size = isotropicFormula(0.0, 0.0, 0.0, hPhi, hmax, phi,N_interface_band);
     apf::setScalar(size_iso, v, 0, size);
   }
   m->end(it);
