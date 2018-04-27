@@ -39,8 +39,8 @@ class cppRigidBody {
   std::vector<ChVector<>> trimesh_pos;
   std::vector<ChVector<>> trimesh_pos_last;
   std::vector<ChVector<>> trimesh_pos0;
-  ChVector<> trimesh_pos0_pos;
-  ChQuaternion<> trimesh_pos0_rot;
+  ChVector<> pos0_trimesh;
+  ChQuaternion<> rotq0_trimesh;
   ChVector<> vel;
   ChVector<> vel_last;
   ChVector<> acc;
@@ -186,7 +186,6 @@ cppRigidBody::cppRigidBody(cppSystem* system):
   lock_motion_t_max = 0.;
 }
 
-
 void cppSystem::setDirectory(std::string dir) {
     directory = dir;
 }
@@ -195,8 +194,8 @@ void cppRigidBody::updateTriangleMeshVisualisationPos() {
   /* rotm = body->GetA(); */
   for (int i = 0; i < trimesh_pos.size(); i++) {
     ChVector<double> local = ChTransform<double>::TransformParentToLocal(trimesh_pos0[i],
-                                                                         pos0,
-                                                                         rotq0);
+                                                                         pos0_trimesh,
+                                                                         rotq0_trimesh);
     ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local,
                                                                          pos,
                                                                          rotq);
