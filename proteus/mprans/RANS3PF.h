@@ -47,7 +47,10 @@ namespace proteus
                                double fContact,
                                double mContact,
                                double nContact,
-                               double angFriction) {}
+                               double angFriction,
+                               double vos_limiter,
+                               double mu_fr_limiter
+                                ) {}
     virtual void calculateResidual(double *mesh_trial_ref,
                                    double *mesh_grad_trial_ref,
                                    double *mesh_dof,
@@ -112,7 +115,7 @@ namespace proteus
                                    const double* phi_solid_nodes,
                                    const double* phi_solid,
                                    const double* q_velocity_solid,
-                                   const double* q_vos,
+                                   const double* q_vos,//sed fraction - gco check
                                    const double* q_dvos_dt,
                                    const double* q_dragAlpha,
                                    const double* q_dragBeta,
@@ -195,7 +198,7 @@ namespace proteus
                                    double* bc_ebqe_phi_ext,
                                    double* ebqe_normal_phi_ext,
                                    double* ebqe_kappa_phi_ext,
-                                   const double* ebqe_vos_ext,
+                                   const double* ebqe_vos_ext,//sed fraction - gco check
                                    const double* ebqe_turb_var_0,
                                    const double* ebqe_turb_var_1,
                                    int* isDOFBoundary_p,
@@ -346,7 +349,7 @@ namespace proteus
                                    const double *phi_solid_nodes,
                                    const double *phi_solid,
                                    const double *q_velocity_solid,
-                                   const double *q_vos,
+                                   const double *q_vos,//sed fraction - gco check
                                    const double *q_dvos_dt,
                                    const double *q_dragAlpha,
                                    const double *q_dragBeta,
@@ -408,7 +411,7 @@ namespace proteus
                                    double *ebqe_normal_phi_ext,
                                    double *ebqe_kappa_phi_ext,
                                    //VRANS
-                                   const double *ebqe_vos_ext,
+                                   const double *ebqe_vos_ext,//sed fraction - gco check
                                    const double *ebqe_turb_var_0,
                                    const double *ebqe_turb_var_1,
                                    //VRANS end
@@ -493,6 +496,7 @@ namespace proteus
                                           double *vel_trial_trace_ref,
                                           double *ebqe_velocity,
                                           double *velocityAverage) = 0;
+
   };
 
   template<class CompKernelType,
@@ -524,7 +528,9 @@ namespace proteus
               0.02,
               2.0,
               5.0,
-              M_PI/6.),
+              M_PI/6.,
+              0.05,
+              1.00),
         nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
           {/*        std::cout<<"Constructing cppRANS3PF<CompKernelTemplate<"
@@ -555,7 +561,9 @@ namespace proteus
                          double fContact,
                          double mContact,
                          double nContact,
-                         double angFriction)
+                         double angFriction,
+                       double vos_limiter,
+                       double mu_fr_limiter)
       {
         closure = cppHsuSedStress<3>(aDarcy,
                                      betaForch,
@@ -571,7 +579,9 @@ namespace proteus
                                      fContact,
                                      mContact,
                                      nContact,
-                                     angFriction);
+                                     angFriction,
+                                   vos_limiter,
+                                   mu_fr_limiter);
       }
 
       inline double Dot(const double vec1[nSpace],
@@ -801,15 +811,15 @@ namespace proteus
           phi_s_effect = 1.0;
         //u momentum accumulation
         mom_u_acc=phi_s_effect*u;//trick for non-conservative form
-        dmom_u_acc_u=phi_s_effect*rho*porosity;
-
+        dmom_u_acc_u=rho*phi_s_effect*porosity;
+  
         //v momentum accumulation
         mom_v_acc=phi_s_effect*v;
-        dmom_v_acc_v=phi_s_effect*rho*porosity;
-
+        dmom_v_acc_v=rho*phi_s_effect*porosity;
+  
         //w momentum accumulation
         mom_w_acc=phi_s_effect*w;
-        dmom_w_acc_w=phi_s_effect*rho*porosity;
+        dmom_w_acc_w=rho*phi_s_effect*porosity;
 
         //mass advective flux
         mass_adv[0]=phi_s_effect*porosity*u; // mql. CHECK. Why is this not multiply by rho?
@@ -909,6 +919,7 @@ namespace proteus
 
         //momentum sources
         norm_n = sqrt(n[0]*n[0]+n[1]*n[1]+n[2]*n[2]);
+
         mom_u_source = -phi_s_effect*porosity*rho*g[0];// - d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
         mom_v_source = -phi_s_effect*porosity*rho*g[1];// - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
         mom_w_source = -phi_s_effect*porosity*rho*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
@@ -937,22 +948,22 @@ namespace proteus
         dmom_w_ham_grad_p[2]=phi_s_effect*porosity*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
 
         //u momentum Hamiltonian (advection)
-        mom_u_ham += phi_s_effect*porosity*rho*(uStar*grad_u[0]+vStar*grad_u[1]+wStar*grad_u[2]);
-        dmom_u_ham_grad_u[0]=phi_s_effect*porosity*rho*uStar;
-        dmom_u_ham_grad_u[1]=phi_s_effect*porosity*rho*vStar;
-        dmom_u_ham_grad_u[2]=phi_s_effect*porosity*rho*wStar;
-
+        mom_u_ham += phi_s_effect*rho*porosity*(uStar*grad_u[0]+vStar*grad_u[1]+wStar*grad_u[2]);
+        dmom_u_ham_grad_u[0]=phi_s_effect*rho*porosity*uStar;
+        dmom_u_ham_grad_u[1]=phi_s_effect*rho*porosity*vStar;
+        dmom_u_ham_grad_u[2]=phi_s_effect*rho*porosity*wStar;
+  
         //v momentum Hamiltonian (advection)
-        mom_v_ham += phi_s_effect*porosity*rho*(uStar*grad_v[0]+vStar*grad_v[1]+wStar*grad_v[2]);
-        dmom_v_ham_grad_v[0]=phi_s_effect*porosity*rho*uStar;
-        dmom_v_ham_grad_v[1]=phi_s_effect*porosity*rho*vStar;
-        dmom_v_ham_grad_v[2]=phi_s_effect*porosity*rho*wStar;
-
+        mom_v_ham += phi_s_effect*rho*porosity*(uStar*grad_v[0]+vStar*grad_v[1]+wStar*grad_v[2]);
+        dmom_v_ham_grad_v[0]=phi_s_effect*rho*porosity*uStar;
+        dmom_v_ham_grad_v[1]=phi_s_effect*rho*porosity*vStar;
+        dmom_v_ham_grad_v[2]=phi_s_effect*rho*porosity*wStar;
+  
         //w momentum Hamiltonian (advection)
-        mom_w_ham += phi_s_effect*porosity*rho*(uStar*grad_w[0]+vStar*grad_w[1]+wStar*grad_w[2]);
-        dmom_w_ham_grad_w[0]=phi_s_effect*porosity*rho*uStar;
-        dmom_w_ham_grad_w[1]=phi_s_effect*porosity*rho*vStar;
-        dmom_w_ham_grad_w[2]=phi_s_effect*porosity*rho*wStar;
+        mom_w_ham += phi_s_effect*rho*porosity*(uStar*grad_w[0]+vStar*grad_w[1]+wStar*grad_w[2]);
+        dmom_w_ham_grad_w[0]=phi_s_effect*rho*porosity*uStar;
+        dmom_w_ham_grad_w[1]=phi_s_effect*rho*porosity*vStar;
+        dmom_w_ham_grad_w[2]=phi_s_effect*rho*porosity*wStar;
       }
 
       //VRANS specific
@@ -995,33 +1006,34 @@ namespace proteus
         nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-        viscosity = mu; // mql. CHECK.
-        uc = sqrt(u*u+v*v*+w*w);
+        viscosity = nu;//mu; gco check
+        // phi_s is porosity in this case - gco check
+        uc = sqrt(u*u+v*v*+w*w); 
         duc_du = u/(uc+1.0e-12);
         duc_dv = v/(uc+1.0e-12);
         duc_dw = w/(uc+1.0e-12);
         double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
-        double new_beta = closure.betaCoeff(1.0-phi_s,
-                                            rho,
-                                            fluid_velocity,
-                                            solid_velocity,
+        double new_beta =   closure.betaCoeff(1.0-phi_s,
+                                          rho,
+                                         fluid_velocity,
+                                           solid_velocity,
                                             viscosity);
-        new_beta/=rho;
-        mom_u_source += (1.0 - phi_s)*new_beta*(u-u_s);
-        mom_v_source += (1.0 - phi_s)*new_beta*(v-v_s);
-        mom_w_source += (1.0 - phi_s)*new_beta*(w-w_s);
+        //new_beta/=rho;
+        mom_u_source +=  (1.0 - phi_s)*new_beta*(u-u_s);
+        mom_v_source +=  (1.0 - phi_s)*new_beta*(v-v_s);
+        mom_w_source +=  (1.0 - phi_s)*new_beta*(w-w_s);
 
-        dmom_u_source[0] = (1.0 - phi_s)*new_beta;
+        dmom_u_source[0] =  (1.0 - phi_s)*new_beta;
         dmom_u_source[1] = 0.0;
         dmom_u_source[2] = 0.0;
 
         dmom_v_source[0] = 0.0;
-        dmom_v_source[1] = (1.0 - phi_s)*new_beta;
+        dmom_v_source[1] =  (1.0 - phi_s)*new_beta;
         dmom_v_source[2] = 0.0;
 
         dmom_w_source[0] = 0.0;
         dmom_w_source[1] = 0.0;
-        dmom_w_source[2] = (1.0 - phi_s)*new_beta;
+        dmom_w_source[2] =  (1.0 - phi_s)*new_beta;
       }
 
       inline
@@ -1892,7 +1904,7 @@ namespace proteus
                              const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
-                             const double* q_vos,
+                             const double* q_vos,//sed fraction - gco check 
                              const double* q_dvos_dt,
                              const double* q_dragAlpha,
                              const double* q_dragBeta,
@@ -1975,7 +1987,8 @@ namespace proteus
                              double* bc_ebqe_phi_ext,
                              double* ebqe_normal_phi_ext,
                              double* ebqe_kappa_phi_ext,
-                             const double* ebqe_vos_ext,
+                             //VRANS
+                             const double* ebqe_vos_ext,//sed fraction - gco check
                              const double* ebqe_turb_var_0,
                              const double* ebqe_turb_var_1,
                              int* isDOFBoundary_p,
@@ -2350,8 +2363,8 @@ namespace proteus
                 mesh_volume_conservation_element += (alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity)*dV;
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
                 //VRANS
-                porosity      = 1.0 - q_vos[eN_k];
-                //meanGrainSize = q_meanGrain[eN_k];
+                porosity      = 1.0 - q_vos[eN_k]; // porosity - gco check
+                //meanGrainSize = q_meanGrain[eN_k]; 
                 //
                 q_x[eN_k_3d+0]=x;
                 q_x[eN_k_3d+1]=y;
@@ -3500,7 +3513,7 @@ namespace proteus
                 bc_v_ext = isDOFBoundary_v[ebNE_kb]*(ebqe_bc_v_ext[ebNE_kb] + MOVING_DOMAIN*yt_ext) + (1-isDOFBoundary_v[ebNE_kb])*v_ext;
                 bc_w_ext = isDOFBoundary_w[ebNE_kb]*(ebqe_bc_w_ext[ebNE_kb] + MOVING_DOMAIN*zt_ext) + (1-isDOFBoundary_w[ebNE_kb])*w_ext;
                 //VRANS
-                porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb];
+                porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb];//porosity - gco check
                 //
                 //calculate the pde coefficients using the solution and the boundary values for the solution
                 //
@@ -4292,50 +4305,50 @@ namespace proteus
                              double *ebqe_normal_phi_ext,
                              double *ebqe_kappa_phi_ext,
                              //VRANS
-                             const double *ebqe_vos_ext,
-                             const double *ebqe_turb_var_0,
-                             const double *ebqe_turb_var_1,
+                             const double* ebqe_vos_ext,//sed fraction - gco check
+                             const double* ebqe_turb_var_0,
+                             const double* ebqe_turb_var_1,
                              //VRANS end
-                             int *isDOFBoundary_p,
-                             int *isDOFBoundary_u,
-                             int *isDOFBoundary_v,
-                             int *isDOFBoundary_w,
-                             int *isAdvectiveFluxBoundary_p,
-                             int *isAdvectiveFluxBoundary_u,
-                             int *isAdvectiveFluxBoundary_v,
-                             int *isAdvectiveFluxBoundary_w,
-                             int *isDiffusiveFluxBoundary_u,
-                             int *isDiffusiveFluxBoundary_v,
-                             int *isDiffusiveFluxBoundary_w,
-                             double *ebqe_bc_p_ext,
-                             double *ebqe_bc_flux_mass_ext,
-                             double *ebqe_bc_flux_mom_u_adv_ext,
-                             double *ebqe_bc_flux_mom_v_adv_ext,
-                             double *ebqe_bc_flux_mom_w_adv_ext,
-                             double *ebqe_bc_u_ext,
-                             double *ebqe_bc_flux_u_diff_ext,
-                             double *ebqe_penalty_ext,
-                             double *ebqe_bc_v_ext,
-                             double *ebqe_bc_flux_v_diff_ext,
-                             double *ebqe_bc_w_ext,
-                             double *ebqe_bc_flux_w_diff_ext,
-                             int *csrColumnOffsets_eb_p_p,
-                             int *csrColumnOffsets_eb_p_u,
-                             int *csrColumnOffsets_eb_p_v,
-                             int *csrColumnOffsets_eb_p_w,
-                             int *csrColumnOffsets_eb_u_p,
-                             int *csrColumnOffsets_eb_u_u,
-                             int *csrColumnOffsets_eb_u_v,
-                             int *csrColumnOffsets_eb_u_w,
-                             int *csrColumnOffsets_eb_v_p,
-                             int *csrColumnOffsets_eb_v_u,
-                             int *csrColumnOffsets_eb_v_v,
-                             int *csrColumnOffsets_eb_v_w,
-                             int *csrColumnOffsets_eb_w_p,
-                             int *csrColumnOffsets_eb_w_u,
-                             int *csrColumnOffsets_eb_w_v,
-                             int *csrColumnOffsets_eb_w_w,
-                             int *elementFlags,
+                             int* isDOFBoundary_p,
+                             int* isDOFBoundary_u,
+                             int* isDOFBoundary_v,
+                             int* isDOFBoundary_w,
+                             int* isAdvectiveFluxBoundary_p,
+                             int* isAdvectiveFluxBoundary_u,
+                             int* isAdvectiveFluxBoundary_v,
+                             int* isAdvectiveFluxBoundary_w,
+                             int* isDiffusiveFluxBoundary_u,
+                             int* isDiffusiveFluxBoundary_v,
+                             int* isDiffusiveFluxBoundary_w,
+                             double* ebqe_bc_p_ext,
+                             double* ebqe_bc_flux_mass_ext,
+                             double* ebqe_bc_flux_mom_u_adv_ext,
+                             double* ebqe_bc_flux_mom_v_adv_ext,
+                             double* ebqe_bc_flux_mom_w_adv_ext,
+                             double* ebqe_bc_u_ext,
+                             double* ebqe_bc_flux_u_diff_ext,
+                             double* ebqe_penalty_ext,
+                             double* ebqe_bc_v_ext,
+                             double* ebqe_bc_flux_v_diff_ext,
+                             double* ebqe_bc_w_ext,
+                             double* ebqe_bc_flux_w_diff_ext,
+                             int* csrColumnOffsets_eb_p_p,
+                             int* csrColumnOffsets_eb_p_u,
+                             int* csrColumnOffsets_eb_p_v,
+                             int* csrColumnOffsets_eb_p_w,
+                             int* csrColumnOffsets_eb_u_p,
+                             int* csrColumnOffsets_eb_u_u,
+                             int* csrColumnOffsets_eb_u_v,
+                             int* csrColumnOffsets_eb_u_w,
+                             int* csrColumnOffsets_eb_v_p,
+                             int* csrColumnOffsets_eb_v_u,
+                             int* csrColumnOffsets_eb_v_v,
+                             int* csrColumnOffsets_eb_v_w,
+                             int* csrColumnOffsets_eb_w_p,
+                             int* csrColumnOffsets_eb_w_u,
+                             int* csrColumnOffsets_eb_w_v,
+                             int* csrColumnOffsets_eb_w_w,
+                             int* elementFlags,
                              int nParticles,
                              double particle_epsFact,
                              double particle_alpha,
@@ -4632,7 +4645,7 @@ namespace proteus
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
                 //
                 //VRANS
-                porosity = 1.0 - q_vos[eN_k];
+                porosity = 1.0 - q_vos[eN_k]; // porosity - gco check 
                 //
                 //
                 //calculate pde coefficients and derivatives at quadrature points
@@ -5734,10 +5747,10 @@ namespace proteus
                 bc_v_ext = isDOFBoundary_v[ebNE_kb]*(ebqe_bc_v_ext[ebNE_kb] + MOVING_DOMAIN*yt_ext) + (1-isDOFBoundary_v[ebNE_kb])*v_ext;
                 bc_w_ext = isDOFBoundary_w[ebNE_kb]*(ebqe_bc_w_ext[ebNE_kb] + MOVING_DOMAIN*zt_ext) + (1-isDOFBoundary_w[ebNE_kb])*w_ext;
                 //VRANS
-                porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb];
-                //
-                //calculate the internal and external trace of the pde coefficients
-                //
+                porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb];//porosity - gco check
+                // 
+                //calculate the internal and external trace of the pde coefficients 
+                // 
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.),rhoSave, nuSave;//not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
@@ -6498,6 +6511,7 @@ namespace proteus
               }//ebNI
           }
       }
+
     };//RANS3PF
 
   inline cppRANS3PF_base* newRANS3PF(int nSpaceIn,
@@ -6521,7 +6535,10 @@ namespace proteus
                                      double fContact,
                                      double mContact,
                                      double nContact,
-                                     double angFriction)
+                                     double angFriction,
+                                     double vos_limiter,
+                                     double mu_fr_limiter
+                                      )
   {
     cppRANS3PF_base *rvalue = proteus::chooseAndAllocateDiscretization<cppRANS3PF_base, cppRANS3PF, CompKernel>(nSpaceIn,
                                                                                                                 nQuadraturePoints_elementIn,
@@ -6544,7 +6561,10 @@ namespace proteus
                           fContact,
                           mContact,
                           nContact,
-                          angFriction);
+                          angFriction,
+                          vos_limiter,
+                          mu_fr_limiter
+                           );
     return rvalue;
   }
 } //proteus
