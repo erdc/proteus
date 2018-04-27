@@ -16,6 +16,7 @@ from proteus.Transport import OneLevelTransport
 from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
+import cPresInit
 
 
 class Coefficients(TC_base):
@@ -30,6 +31,10 @@ class Coefficients(TC_base):
     """
 
     def __init__(self,
+                 useMetrics=1.0,
+                 epsFactHeaviside=3.0,
+                 epsFactDirac=3.0,
+                 epsFactDiffusion=1.0,
                  nd=2,
                  modelIndex=None,
                  fluidModelIndex=None,
@@ -53,8 +58,12 @@ class Coefficients(TC_base):
                          potential={0: {0: 'u'}},
                          diffusion={0: {0: {0: 'linear'}}},
                          sparseDiffusionTensors=sdInfo,
-                         useSparseDiffusion=True)
+                         useSparseDiffusion = True)
+        self.useMetrics = useMetrics
         self.modelIndex = modelIndex
+        self.epsFactHeaviside = epsFactHeaviside
+        self.epsFactDirac = epsFactDirac
+        self.epsFactDiffusion = epsFactDiffusion
         self.fluidModelIndex = fluidModelIndex
         self.pressureModelIndex = pressureModelIndex
         self.useRotationalForm = useRotationalForm
@@ -188,8 +197,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False):  # ,
-        self.useConstantH = coefficients.useConstantH
+                 movingDomain=False,
+                 bdyNullSpace=False): 
+        self.bdyNullSpace=bdyNullSpace
+        self.useConstantH = False#coefficients.useConstantH
         from proteus import Comm
         #
         # set the objects describing the method and boundary conditions
@@ -406,7 +417,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe = {}
         self.phi_ip = {}
         # mesh
-        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.ebqe['x'] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             3),
+            'd')
         self.q[('u', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[
@@ -543,12 +559,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.globalResidualDummy = None
         compKernelFlag = 0
-        if self.coefficients.useConstantH:
-            self.elementDiameter = self.mesh.elementDiametersArray.copy()
-            self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
-        else:
-            self.elementDiameter = self.mesh.elementDiametersArray
-        self.presinit = PresInit(
+#        if self.coefficients.useConstantH:
+#            self.elementDiameter = self.mesh.elementDiametersArray.copy()
+#            self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
+#        else:
+#            self.elementDiameter = self.mesh.elementDiametersArray
+        self.elementDiameter = self.mesh.elementDiametersArray
+        self.presinit = cPresInit.PresInit(
             self.nSpace_global,
             self.nQuadraturePoints_element,
             self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
