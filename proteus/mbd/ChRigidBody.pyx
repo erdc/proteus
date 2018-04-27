@@ -169,6 +169,8 @@ cdef extern from "ChRigidBody.h":
         ch.ChTriangleMeshConnected trimesh
         vector[ch.ChVector] trimesh_pos
         vector[ch.ChVector] trimesh_pos0
+        ch.ChVector pos0_trimesh
+        ch.ChQuaternion rotq0_trimesh
         cppRigidBody(cppSystem* system)
         void calculate_init()
         void prestep(double* force, double* torque)
@@ -408,6 +410,10 @@ cdef class ProtChBody:
                                                                                         pos[2]),
                                                                             rotmat,
                                                                             sphereswept_thickness)
+        cdef ch.ChVector pos0 = deref(self.thisptr.body).GetPos()
+        self.thisptr.pos0_trimesh = pos0
+        cdef ch.ChQuaternion rot0 = deref(self.thisptr.body).GetRot()
+        self.thisptr.rotq0_trimesh = rot0
 
     # # (!) # cannot use right now because of cython error when C++ function has default
     # # (!) # arguments (known bug in cython community, silent error)
