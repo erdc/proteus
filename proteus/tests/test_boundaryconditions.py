@@ -88,7 +88,7 @@ class TestBC(unittest.TestCase):
     def test_mprans_no_slip(self):
         BC = create_BC(folder='mprans')
         BC.setNoSlip()
-        u_dir, v_dir, w_dir, p_adv, k_dir, d_diff, vof_adv = [], [], [], [], [], [], []
+        u_dir, v_dir, w_dir, p_adv, k_dir, d_diff, vof_adv,k_diff = [], [], [], [], [], [], [], []
         t_list = get_time_array()
         for t in t_list:
             x = get_random_x()
@@ -99,6 +99,7 @@ class TestBC(unittest.TestCase):
             k_dir += [BC.k_dirichlet.uOfXT(x, t)]
             d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
             vof_adv += [BC.vof_advective.uOfXT(x, t)]
+            k_diff += [BC.k_diffusive.uOfXT(x, t)]
         zeros = np.zeros(len(t_list))
         npt.assert_equal(BC.p_dirichlet.uOfXT, None)
         npt.assert_equal(u_dir, zeros)
@@ -117,7 +118,7 @@ class TestBC(unittest.TestCase):
         npt.assert_equal(BC.u_diffusive.uOfXT, None)
         npt.assert_equal(BC.v_diffusive.uOfXT, None)
         npt.assert_equal(BC.w_diffusive.uOfXT, None)
-        npt.assert_equal(BC.k_diffusive.uOfXT, None)
+        npt.assert_equal(k_diff, zeros)
         npt.assert_equal(d_diff, zeros)
 
     def test_mprans_free_slip(self):
