@@ -114,7 +114,6 @@ class RKEV(proteus.TimeIntegration.SSP):
         for ci in range(self.nc):
             self.u_dof_last[ci] = transport.u[ci].dof.copy()
             self.u_dof_lstage[ci] = transport.u[ci].dof.copy()
-
     def choose_dt(self):
         maxCFL = 1.0e-6
         # COMPUTE edge_based_cfl
@@ -146,7 +145,6 @@ class RKEV(proteus.TimeIntegration.SSP):
 
         maxCFL = max(maxCFL, max(adjusted_maxCFL, globalMax(self.edge_based_cfl.max())))
         self.dt = self.runCFL / maxCFL
-
         if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt / self.dtLast > self.dtRatioMax:
@@ -163,11 +161,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.t = t0 + self.dt
 
     def setCoefficients(self):
-        """
-        beta are all 1's here
-        mwf not used right now
-        """
-        # Not needed for an implementation when alpha and beta are not used
+        pass
 
     def updateStage(self):
         """
@@ -968,7 +962,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-
         if self.h_dof_old is None:
             self.h_dof_old = numpy.copy(self.u[0].dof)
             self.hu_dof_old = numpy.copy(self.u[1].dof)

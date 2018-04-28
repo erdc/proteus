@@ -1,6 +1,6 @@
 from proteus import *
 from proteus.default_p import *
-from vortex2D import *
+from rotation2D import *
 name=soname+"_phicor"
 from proteus.mprans import MCorr
 
@@ -16,9 +16,7 @@ coefficients = MCorr.Coefficients(applyCorrection=applyCorrection,
                                   VOFModel_index=2,
                                   checkMass=checkMass,
                                   nd=nd,
-                                  useMetrics=useMetrics,
-                                  mass_correction_reference=mass_correction_reference,
-                                  theta_time_discretization_mcorr = theta_time_discretization_mcorr)
+                                  useMetrics=useMetrics)
 
 class zero_phi:
     def __init__(self):

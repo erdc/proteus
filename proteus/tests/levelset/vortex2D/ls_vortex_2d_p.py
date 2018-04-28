@@ -86,7 +86,7 @@ class UnitSquareVortex(NCLS.Coefficients):
 	self.sc_beta=1.0
     def attachModels(self,modelList):
         self.model = modelList[0]
-	self.u_old_dof = numpy.copy(self.model.u[0].dof)
+        self.u_old_dof = numpy.copy(self.model.u[0].dof)
         self.q_v = numpy.zeros(self.model.q[('dH',0,0)].shape,'d')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH',0,0)].shape,'d')
         self.unitSquareVortexLevelSetEvaluate(self.model.timeIntegration.tLast,

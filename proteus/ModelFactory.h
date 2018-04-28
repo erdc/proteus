@@ -709,7 +709,7 @@ namespace proteus
           abort();
         }
       return NULL;
-    }
-}
+    }//end of function
+}//end of namespace
 #endif
 #endif

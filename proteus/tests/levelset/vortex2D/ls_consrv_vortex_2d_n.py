@@ -4,9 +4,19 @@ from ls_consrv_vortex_2d_p import *
 from vortex2D import *
 
 
-timeIntegrator = ForwardIntegrator
+# timeIntegrator = ForwardIntegrator
+# timeIntegration = NoIntegration
+#stepController = MCorr.Newton_controller#need a tricked up controller that can fix the VOF model's initial conditions
+
 timeIntegration = NoIntegration
-stepController = MCorr.Newton_controller#need a tricked up controller that can fix the VOF model's initial conditions
+
+if ct.massCorrectionReference==5:
+    timeIntegration = BackwardEuler
+# timeIntegration = VBDF
+# timeOrder = 1
+
+stepController = Min_dt_controller
+
 
 if cDegree_ls==0:
     if useHex:
@@ -58,8 +68,8 @@ elif correctionType == 'global':
 elif correctionType == 'none':
     levelNonlinearSolver = MCorr.DummyNewton
 else:
-    levelNonlinearSolver = Newton
-    nonlinearSolverNorm = MCorr.conservationNorm
+    levelNonlinearSolver = MCorrNewton
+    nonlinearSolverNorm = LinearAlgebraTools.l2Norm#MCorr.conservationNorm
 nonlinearSmoother = NLGaussSeidel
 
 fullNewtonFlag = True
@@ -70,6 +80,7 @@ nl_atol_res = atolConservation
 useEisenstatWalker = True
 
 maxNonlinearIts = 100
+maxLineSearches=0
 
 matrix = SparseMatrix
 

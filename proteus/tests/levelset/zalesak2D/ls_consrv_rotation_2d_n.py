@@ -4,17 +4,9 @@ from ls_consrv_rotation_2d_p import *
 from rotation2D import *
 
 
-# timeIntegrator = ForwardIntegrator
-# timeIntegration = NoIntegration
-#stepController = MCorr.Newton_controller#need a tricked up controller that can fix the VOF model's initial conditions
-
+timeIntegrator = ForwardIntegrator
 timeIntegration = NoIntegration
-
-if ct.massCorrectionReference==5:
-    timeIntegration = BackwardEuler
-# timeIntegration = VBDF
-# timeOrder = 1
-stepController = Min_dt_controller
+stepController = MCorr.Newton_controller#need a tricked up controller that can fix the VOF model's initial conditions
 
 if cDegree_ls==0:
     if useHex:
@@ -28,10 +20,8 @@ if cDegree_ls==0:
         if pDegree_ls==1:
             femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
         elif pDegree_ls==2:
-            femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
-        base_quad_rule = SimplexGaussQuadrature(nd,rotation_quad_order)
-        elementQuadrature = CompositeTriangle(base_quad_rule,hk)
-        #elementQuadrature = SimplexGaussQuadrature(nd,rotation_quad_order)
+            femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}        
+        elementQuadrature = SimplexGaussQuadrature(nd,rotation_quad_order)
         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,rotation_quad_order)
     if parallel or LevelModelType in [MCorr.LevelModel]:#,MCorrElement.LevelModel]:
         numericalFluxType = DoNothing#Diffusion_IIPG_exterior
@@ -43,11 +33,6 @@ elif cDegree_ls==-1:
     elif pDegree_ls==2:
         femSpaces = {0:DG_AffineP2_OnSimplexWithMonomialBasis}
     numericalFluxType = Advection_DiagonalUpwind_Diffusion_SIPG
-
-
-# elementQuadrature = SimplexLobattoQuadrature(nd,1)
-
-# elementBoundaryQuadrature = SimplexLobattoQuadrature(nd-1,1)
 
 subgridError = None
 
@@ -67,7 +52,7 @@ elif correctionType == 'none':
     levelNonlinearSolver = MCorr.DummyNewton
 else:
     levelNonlinearSolver = Newton
-    nonlinearSolverNorm = LinearAlgebraTools.l2Norm#MCorr.conservationNorm
+    nonlinearSolverNorm = LinearAlgebraTools.l2Norm
 nonlinearSmoother = NLGaussSeidel
 
 fullNewtonFlag = True
@@ -78,7 +63,6 @@ nl_atol_res = atolConservation
 useEisenstatWalker = True
 
 maxNonlinearIts = 100
-maxLineSearches=0
 
 matrix = SparseMatrix
 
