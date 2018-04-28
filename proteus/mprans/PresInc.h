@@ -59,14 +59,16 @@ namespace proteus
                                    double* ebqe_diff_flux,
                                    double* bc_adv_flux,
                                    double* bc_diff_flux,
-                                   int offset_u,
-                                   int stride_u,
-                                   double* globalResidual,
-                                   int nExteriorElementBoundaries_global,
-                                   int* exteriorElementBoundariesArray,
-                                   int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray,
-                                   int INTEGRATE_BY_PARTS_DIV_U)=0;
+				   int offset_u,
+                                   int stride_u, 
+				   double* globalResidual,			   
+				   int nExteriorElementBoundaries_global,
+				   int* exteriorElementBoundariesArray,
+				   int* elementBoundaryElementsArray,
+				   int* elementBoundaryLocalElementBoundariesArray, 
+				   int INTEGRATE_BY_PARTS_DIV_U,
+				   double* q_a,
+				   double* ebqe_a)=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -143,7 +145,11 @@ namespace proteus
     {
       for (int I=0;I<nSpace;I++)
         f[I] = (1.0-vos)*vf[I] + vos*vs[I];
-      a = (1.0-vos)/(rhof_min*alphaBDF) + vos/(rhos_min*alphaBDF);
+      //a = 1.0/( vos*rhos_min*alphaBDF) + 1.0/( (1.0-vos)*rhof_min*alphaBDF );
+      a = 1.0/( vos*rhos_min*alphaBDF + (1.0-vos)*rhof_min*alphaBDF );
+      //a = (1.0-vos)/(rhof_min*alphaBDF) + vos*(rhos_min/alphaBDF); 
+      //a = (1.0)/(rhof_min*alphaBDF) ; 
+      //a = (1.0-vos)/(rhof_min*alphaBDF) + (vos)/(rhos_min*alphaBDF); 
     }
 
     inline
@@ -253,17 +259,18 @@ namespace proteus
                                          double* q_grad_u,
                                          double* ebqe_u,
                                          double* ebqe_grad_u,
-                                         int offset_u,
-                                         int stride_u,
-                                         double* elementResidual_u,
-                                         int nExteriorElementBoundaries_global,
-                                         int* exteriorElementBoundariesArray,
-                                         int* elementBoundaryElementsArray,
-                                         int* elementBoundaryLocalElementBoundariesArray,
-                                         double* element_u,
-                                         int eN,
-                                         double compatibility_condition,
-                                         int INTEGRATE_BY_PARTS_DIV_U)
+					 int offset_u,
+                                         int stride_u, 
+					 double* elementResidual_u,			   
+					 int nExteriorElementBoundaries_global,
+					 int* exteriorElementBoundariesArray,
+					 int* elementBoundaryElementsArray,
+					 int* elementBoundaryLocalElementBoundariesArray,
+					 double* element_u,
+					 int eN, 
+					 double compatibility_condition, 
+					 int INTEGRATE_BY_PARTS_DIV_U,
+					 double* q_a)
     {
       for (int i=0;i<nDOF_test_element;i++)
         {
@@ -323,31 +330,32 @@ namespace proteus
           //
           evaluateCoefficients(alphaBDF,
                                &q_vf[eN_k_nSpace],
-                               &q_vs[eN_k_nSpace],
-                               q_vos[eN_k],
-                               rho_s_min,
-                               rho_f_min,
-                               f,
-                               a);
-          //
-          //update element residual
-          //
-          for(int i=0;i<nDOF_test_element;i++)
-            {
+			       &q_vs[eN_k_nSpace],
+			       q_vos[eN_k],
+			       rho_s_min,
+			       rho_f_min,
+			       f,
+			       a);
+	  // 
+	  //update element residual 
+	  // 
+          for(int i=0;i<nDOF_test_element;i++) 
+            { 
               //register int eN_k_i=eN_k*nDOF_test_element+i;
               //register int eN_k_i_nSpace = eN_k_i*nSpace;
               register int  i_nSpace=i*nSpace;
-              elementResidual_u[i] +=
-                (INTEGRATE_BY_PARTS_DIV_U == 1 ? ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]) : q_divU[eN_k]*u_test_dV[i])
-                //                + compatibility_condition*u_test_dV[i] // mql: to make the system solvable if int(div(u))!=0
-                + ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]);
+              elementResidual_u[i] += 
+            (INTEGRATE_BY_PARTS_DIV_U == 1 ? ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]) : q_divU[eN_k]*u_test_dV[i]) 
+            //+ compatibility_condition*u_test_dV[i] // mql: to make the system solvable if int(div(u))!=0
+            + ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]);
             }//i
           //
           //save momentum for time history and velocity for subgrid error
-          //save solution for other models
+          //save solution for other models 	     	      
           //
-
+          q_a[eN_k] = a;
           q_u[eN_k] = u;
+
           for (int I=0;I<nSpace;I++)
             q_grad_u[eN_k_nSpace+I] = grad_u[I];
         }
@@ -401,44 +409,46 @@ namespace proteus
                            double* ebqe_diff_flux,
                            double* bc_adv_flux,
                            double* bc_diff_flux,
-                           int offset_u,
-                           int stride_u,
-                           double* globalResidual,
-                           int nExteriorElementBoundaries_global,
-                           int* exteriorElementBoundariesArray,
-                           int* elementBoundaryElementsArray,
-                           int* elementBoundaryLocalElementBoundariesArray,
-                           int INTEGRATE_BY_PARTS_DIV_U)
+			   int offset_u,
+                           int stride_u, 
+			   double* globalResidual,			   
+			   int nExteriorElementBoundaries_global,
+			   int* exteriorElementBoundariesArray,
+			   int* elementBoundaryElementsArray,
+			   int* elementBoundaryLocalElementBoundariesArray,
+			   int INTEGRATE_BY_PARTS_DIV_U,
+			   double* q_a,
+			   double* ebqe_a)
     {
       double compatibility_condition=0.;
-      // COMPUTE COMPATIBILITY CONSTANT
-      // mql: Modify the rhs (by adding a constant) so that the Poission system is solvable (assume diffusive flux = 0).
-      // Note that this is equivalent to consider a (not known) diffusive flux != 0 s.t. the system is solvable.
-      for(int eN=0;eN<nElements_global;eN++)
-        {
-          for  (int k=0;k<nQuadraturePoints_element;k++)
-            {
-              register int eN_k = eN*nQuadraturePoints_element+k;
-              register double
-                jac[nSpace*nSpace],
-                jacDet,
-                jacInv[nSpace*nSpace],
-                dV,x,y,z;
-              ck.calculateMapping_element(eN,
-                                          k,
-                                          mesh_dof,
-                                          mesh_l2g,
-                                          mesh_trial_ref,
-                                          mesh_grad_trial_ref,
-                                          jac,
-                                          jacDet,
-                                          jacInv,
-                                          x,y,z);
-              //get the physical integration weight
-              dV = fabs(jacDet)*dV_ref[k];
-              compatibility_condition -= q_divU[eN_k]*dV;
-            }
-        }
+      /* // COMPUTE COMPATIBILITY CONSTANT  */
+      /* // mql: Modify the rhs (by adding a constant) so that the Poission system is solvable (assume diffusive flux = 0). */
+      /* // Note that this is equivalent to consider a (not known) diffusive flux != 0 s.t. the system is solvable. */
+      /* for(int eN=0;eN<nElements_global;eN++) */
+      /* 	{ */
+      /* 	  for  (int k=0;k<nQuadraturePoints_element;k++) */
+      /* 	    { */
+      /* 	      register int eN_k = eN*nQuadraturePoints_element+k; */
+      /* 	      register double  */
+      /* 		jac[nSpace*nSpace], */
+      /* 		jacDet, */
+      /* 		jacInv[nSpace*nSpace], */
+      /* 		dV,x,y,z; */
+      /* 	      ck.calculateMapping_element(eN, */
+      /* 					  k, */
+      /* 					  mesh_dof, */
+      /* 					  mesh_l2g, */
+      /* 					  mesh_trial_ref, */
+      /* 					  mesh_grad_trial_ref, */
+      /* 					  jac, */
+      /* 					  jacDet, */
+      /* 					  jacInv, */
+      /* 					  x,y,z); */
+      /* 	      //get the physical integration weight */
+      /* 	      dV = fabs(jacDet)*dV_ref[k]; */
+      /* 	      compatibility_condition -= q_divU[eN_k]*dV; */
+      /* 	    } */
+      /* 	} */
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -496,26 +506,27 @@ namespace proteus
                                    q_grad_u,
                                    ebqe_u,
                                    ebqe_grad_u,
-                                   offset_u,
-                                   stride_u,
-                                   elementResidual_u,
-                                   nExteriorElementBoundaries_global,
-                                   exteriorElementBoundariesArray,
-                                   elementBoundaryElementsArray,
-                                   elementBoundaryLocalElementBoundariesArray,
-                                   element_u,
-                                   eN,
-                                   compatibility_condition,
-                                   INTEGRATE_BY_PARTS_DIV_U);
-          //
-          //load element into global residual and save element residual
-          //
-          for(int i=0;i<nDOF_test_element;i++)
-            {
-              register int eN_i=eN*nDOF_test_element+i;
-              globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
-            }//i
-        }//elements
+				   offset_u,
+                                   stride_u, 
+				   elementResidual_u,			   
+				   nExteriorElementBoundaries_global,
+				   exteriorElementBoundariesArray,
+				   elementBoundaryElementsArray,
+				   elementBoundaryLocalElementBoundariesArray,
+				   element_u,
+				   eN, 
+				   compatibility_condition, 
+				   INTEGRATE_BY_PARTS_DIV_U,
+				   q_a);
+	  //
+	  //load element into global residual and save element residual
+	  //
+	  for(int i=0;i<nDOF_test_element;i++) 
+	    { 
+	      register int eN_i=eN*nDOF_test_element+i;          
+	      globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
+	    }//i
+	}//elements
       //
       //loop over exterior element boundaries to calculate levelset gradient
       //
@@ -523,17 +534,17 @@ namespace proteus
       //ebN is the element boundary INdex
       //eN is the element index
       for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
-        {
-          register int ebN = exteriorElementBoundariesArray[ebNE],
-            eN  = elementBoundaryElementsArray[ebN*2+0],
-            ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0];
-            //eN_nDOF_trial_element = eN*nDOF_trial_element;
-          register double elementResidual_u[nDOF_test_element];
-          double element_u[nDOF_trial_element];
-          for (int i=0;i<nDOF_test_element;i++)
-            {
-              register int eN_i=eN*nDOF_test_element+i;
-              element_u[i] = u_dof[u_l2g[eN_i]];
+      	{
+      	  register int ebN = exteriorElementBoundariesArray[ebNE],
+      	    eN  = elementBoundaryElementsArray[ebN*2+0],
+      	    ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0];
+      	    //eN_nDOF_trial_element = eN*nDOF_trial_element;
+      	  register double elementResidual_u[nDOF_test_element];
+      	  double element_u[nDOF_trial_element];
+      	  for (int i=0;i<nDOF_test_element;i++)
+      	    {
+      	      register int eN_i=eN*nDOF_test_element+i;
+      	      element_u[i] = u_dof[u_l2g[eN_i]];
               elementResidual_u[i] = 0.0;
             }//i
           for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
@@ -548,7 +559,7 @@ namespace proteus
                 bc_u_ext=0.0,
                 adv_flux_ext=0.0,
                 diff_flux_ext=0.0,
-                a_ext,
+                a_ext=0.0,
                 f_ext[nSpace],
                 grad_u_ext[nSpace],
                 jac_ext[nSpace*nSpace],
@@ -610,6 +621,7 @@ namespace proteus
               //
               //calculate the pde coefficients using the solution and the boundary values for the solution
               //
+
               evaluateCoefficients(alphaBDF,
                                    &ebqe_vf[ebNE_kb_nSpace],
                                    &ebqe_vs[ebNE_kb_nSpace],
@@ -646,6 +658,7 @@ namespace proteus
               //  adv_flux_ext = 0.0;
               //  diff_flux_ext = 0.0;
               //}
+	          ebqe_a[ebNE_kb] = a_ext;
               ebqe_adv_flux[ebNE_kb] = adv_flux_ext;
               ebqe_diff_flux[ebNE_kb] = diff_flux_ext;
               //
@@ -905,18 +918,17 @@ namespace proteus
       //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
       //
       for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
-        {
-          register int ebN = exteriorElementBoundariesArray[ebNE];
-          register int eN  = elementBoundaryElementsArray[ebN*2+0],
+      	{
+      	  register int ebN = exteriorElementBoundariesArray[ebNE];
+      	  register int eN  = elementBoundaryElementsArray[ebN*2+0],
             ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
             eN_nDOF_trial_element = eN*nDOF_trial_element;
-          for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
-            {
-              register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
-                ebNE_kb_nSpace = ebNE_kb*nSpace,
-                ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
-                ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-
+      	  for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+      	    {
+      	      register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+      		    ebNE_kb_nSpace = ebNE_kb*nSpace,
+      		    ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+      		    ebN_local_kb_nSpace = ebN_local_kb*nSpace;
               register double h_b=0.0,
                 u_ext=0.0,
                 grad_u_ext[nSpace],
@@ -943,7 +955,7 @@ namespace proteus
                 u_grad_trial_trace[nDOF_trial_element*nSpace],
                 u_grad_test_dS[nDOF_test_element*nSpace],
                 normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
-                penalty=0.0,
+                    penalty=0.0,
                 //
                 G[nSpace*nSpace],G_dd_G,tr_G;
               //
@@ -1000,41 +1012,40 @@ namespace proteus
                                    rho_f_min,
                                    f_ext,
                                    a_ext);
-              //
-              //update the global Jacobian from the flux Jacobian
-              //
-              for (int i=0;i<nDOF_test_element;i++)
-                {
-                  register int eN_i = eN*nDOF_test_element+i;
-                  //register int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
-                  for (int j=0;j<nDOF_trial_element;j++)
-                    {
-                      register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j,
+      	      //
+      	      //update the global Jacobian from the flux Jacobian
+      	      //
+      	      for (int i=0;i<nDOF_test_element;i++)
+      		{
+      		  register int eN_i = eN*nDOF_test_element+i;
+      		  //register int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
+      		  for (int j=0;j<nDOF_trial_element;j++)
+      		    {
+      		      register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j,
                         ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j,
                         j_nSpace = j*nSpace;
 
-                      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
-                        ExteriorNumericalDiffusiveFluxJacobian(isDOFBoundary[ebNE_kb],
-                                                               isFluxBoundary[ebNE_kb],
-                                                               normal,
-                                                               a_ext,
-                                                               u_trial_trace_ref[ebN_local_kb_j],
-                                                               &u_grad_trial_trace[j_nSpace],
-                                                               penalty)*u_test_dS[i]
+      		      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+      			ExteriorNumericalDiffusiveFluxJacobian(isDOFBoundary[ebNE_kb],
+      							       isFluxBoundary[ebNE_kb],
+      							       normal,
+      							       a_ext,
+      							       u_trial_trace_ref[ebN_local_kb_j],
+      							       &u_grad_trial_trace[j_nSpace],
+      							       penalty)*u_test_dS[i]
                         +
-                        ck.ExteriorElementBoundaryScalarDiffusionAdjointJacobian
-                        (isDOFBoundary[ebNE_kb],
-                         //isFluxBoundary[ebNE_kb],
-                         0, // mql: if Dirichlet BCs, then the flux BCs don't matte
-                         1.0,
-                         u_trial_trace_ref[ebN_local_kb_j],
-                         normal,
-                         a_ext,
-                         &u_grad_test_dS[i*nSpace]);
-                    }//j
-                }//i
-            }//kb
-        }//ebNE
+      		        ck.ExteriorElementBoundaryScalarDiffusionAdjointJacobian
+      			(isDOFBoundary[ebNE_kb],
+      			 isFluxBoundary[ebNE_kb],
+      			 1.0,
+      			 u_trial_trace_ref[ebN_local_kb_j],
+      			 normal,
+      			 a_ext,
+      			 &u_grad_test_dS[i*nSpace]);
+      		    }//j
+      		}//i
+      	    }//kb
+      	}//ebNE
     }//computeJacobian
   };//cppPresInc
 
