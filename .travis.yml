@@ -5,7 +5,7 @@ language: python
 
 env:
   - TEST_PROFILE="proteus"
-#  - TEST_PROFILE="air-water-vv"
+  - TEST_PROFILE="air-water-vv"
 
 python:
 - 2.7
@@ -51,7 +51,7 @@ install:
 - ../hashdist/bin/hit build -j 2 -v default.yaml
 - cd ..
 - git submodule init
-- git submodule update --recursive --remote  
+- git submodule update --recursive --remote --force 
 - make profile
 - make distclean
 - PROTEUS_OPT="-O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=2
@@ -68,7 +68,7 @@ cache:
 
 script:
   - if [[ "${TEST_PROFILE}" == "proteus" ]]; then py.test --forked -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus; fi
-  - if [[ "${TEST_PROFILE}" == "air-water-vv" ]]; then py.test --forked -v air-water-vv/Tests/; fi
+  - if [[ "${TEST_PROFILE}" == "air-water-vv" ]]; then py.test --forked -v air-water-vv/Tests; fi
 
 notifications:
   email:

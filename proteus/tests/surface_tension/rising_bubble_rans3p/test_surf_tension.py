@@ -110,7 +110,7 @@ class TestSurfaceTension():
         actual = tables.open_file('risingBubble_2D_supg.h5','r')
         assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
         assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-10)        
+        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-7)        
         expected.close()
         actual.close()
 
@@ -155,7 +155,7 @@ class TestSurfaceTension():
         actual = tables.open_file('risingBubble_2D_ev.h5','r')
         assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
         assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-10)        
+        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-7)        
         expected.close()
         actual.close()
 

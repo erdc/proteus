@@ -2067,7 +2067,9 @@ def assembleAuxiliaryVariables(domain):
         'moveMesh': [],
         'redist': [],
         'twp': [],
-        'vof': []
+        'vof': [],
+        'thp': [],
+        'vos': []
     }
 
     zones_global = {}

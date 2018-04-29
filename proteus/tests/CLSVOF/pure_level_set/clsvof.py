@@ -17,9 +17,12 @@ AUTOMATED_TEST=True
 # see parameters.py
 
 # ----- PARAMETERS FOR CLSVOF ----- #
+doSpinUpStep=False
 timeOrder=2
 lambdaFact=1.0
 computeMetrics=0 #0: don't compute metrics, 1: compute at EOS, 2: compute at ETS
+eps_tolerance_clsvof=True #Set tol on nonlinear solver to machine zero?
+#clsvof_nl_atol_res # see below
 
 # ----- REFINEMENT ----- #
 triangleFlag=1
@@ -83,6 +86,7 @@ else:
         L=[1.0,1.0,1.0]
 # definition of he
 he=1.0/(nnx-1.0)
+clsvof_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
 
 unstructured=unstructured #True for tetgen, false for tet or hex from rectangular grid
 box=Domain.RectangularDomain(L)
