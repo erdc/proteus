@@ -304,9 +304,6 @@ class Quadrilateral(Polygon):
             elif node.p[var1]==var1_max and node.p[var2]==var2_min:
                 newList[3] = node
 
-#        import pdb
-#        pdb.set_trace()
-
         for i,item in enumerate(newList):
             if not newList[i]:
                 assert 0,'Quadrialteral Mesh Generation Error '+`newList`+" i = "+`i`
@@ -1550,9 +1547,12 @@ class Mesh:
           self.subdomainMesh.cmesh = cmeshTools.CMesh()
           PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
               self.subdomainMesh.cmesh)
-          if(PUMIMesh.isReconstructed()):
+          if(PUMIMesh.isReconstructed()==1):
             logEvent("Material arrays updating based on reconstructed model.\n")
             PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh);
+          elif(PUMIMesh.isReconstructed()==2):
+            logEvent("Material arrays updating based on better reconstructed model.\n")
+            PUMIMesh.updateMaterialArrays2(self.subdomainMesh.cmesh);
           else:
               logEvent("Material arrays updating based on geometric model.\n")
               for i in range(len(faceList)):
@@ -1606,8 +1606,12 @@ class Mesh:
           comm.barrier()
         else:
           PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
-          if(PUMIMesh.isReconstructed()):
+          if(PUMIMesh.isReconstructed()==1):
+            logEvent("Material arrays updating based on reconstructed model.\n")
             PUMIMesh.updateMaterialArrays(self.cmesh);
+          elif(PUMIMesh.isReconstructed()==2):
+            logEvent("Material arrays updating based on better reconstructed model.\n")
+            PUMIMesh.updateMaterialArrays2(self.cmesh);
           else:
               for i in range(len(faceList)):
                 for j in range(len(faceList[i])):
@@ -4654,8 +4658,6 @@ Number of nodes : %d\n""" % (self.nElements_global,
 
     def refine(self,oldMesh):
         logEvent("Refining Using Standard Quadrilateral Refinement")
-        import pdb
-#        pdb.set_trace()
         childrenDict={}
         for q in oldMesh.quadDict.values():
             qNodes = [Node(nN,n.p[X],n.p[Y],n.p[Z]) for nN,n in enumerate(q.nodes)]

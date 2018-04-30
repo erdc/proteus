@@ -103,6 +103,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             V_model=0,
             RD_model=None,
             ME_model=1,
+            VOF_model=2,
+            SED_model=4,
             EikonalSolverFlag=0,
             checkMass=True,
             epsFact=0.0,
@@ -110,7 +112,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             sc_uref=1.0,
             sc_beta=1.0,
             setParamsFunc=None,
-            movingDomain=False):
+            movingDomain=False,
+            vos_function=None):
+        self.vos_function=vos_function
         self.useMetrics = useMetrics
         self.variableNames = ['vos']
         nc = 1
@@ -133,6 +137,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.epsFact = epsFact
         self.flowModelIndex = V_model
         self.modelIndex = ME_model
+        self.VOF_model = VOF_model
+        self.SED_model = SED_model
         self.RD_modelIndex = RD_model
         self.LS_modelIndex = LS_model
         self.sc_uref = sc_uref
@@ -174,22 +180,40 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_phi = numpy.zeros(
                 self.model.ebqe[
                     ('u', 0)].shape, 'd')  # cek hack, we don't need this
+        if self.modelIndex is not None:
+            self.vos_dof = modelList[self.VOF_model].u[0].dof.copy()
+            self.q_vos = modelList[self.VOF_model].q[('u',0)].copy()
+            self.q_dvos_dt = modelList[self.VOF_model].q[('mt',0)].copy()
+            self.q_dvos_dt[:] = 0.0
+            self.ebqe_vos = modelList[self.VOF_model].ebqe[('u',0)].copy()
+            self.qebqe_vos = modelList[self.VOF_model].ebqe[('u',0)].copy()
+            if self.vos_function is not None:
+                self.vos_dof[:] = 0.0
+                for eN in range(self.model.q['x'].shape[0]):
+                    for k in range(self.model.q['x'].shape[1]):
+                        self.q_vos[eN,k] = self.vos_function(self.model.q['x'][eN,k])
+                        self.q_dvos_dt[eN,k] = self.vos_function(self.model.q['x'][eN,k])
+                for eN in range(self.model.ebqe['x'].shape[0]):
+                    for k in range(self.model.ebqe['x'].shape[1]):
+                        self.ebqe_vos[eN,k] = self.vos_function(self.model.ebqe['x'][eN,k])
+
         # flow model
         # print "flow model
         # index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))
         if self.flowModelIndex is not None:
-            if modelList[self.flowModelIndex].q.has_key(('velocity', 0)):
-                self.q_v = modelList[self.flowModelIndex].q[('velocity', 0)]
-                self.ebqe_v = modelList[
-                    self.flowModelIndex].ebqe[
-                    ('velocity', 0)]
+            #if modelList[self.SED_model].q.has_key(('velocity', 0)):
+            #    self.q_v = modelList[self.SED_model].q[('velocity', 0)]
+            #    self.ebqe_v = modelList[
+            #        self.flowModelIndex].ebqe[
+            #        ('velocity', 0)]
+            if modelList[self.SED_model].q.has_key(('velocity', 0)):
+                self.q_v = modelList[self.SED_model].q[('velocity', 0)]
+                self.ebqe_v = modelList[self.SED_model].ebqe[('velocity', 0)]
             else:
                 self.q_v = modelList[self.flowModelIndex].q[('f', 0)]
                 self.ebqe_v = modelList[self.flowModelIndex].ebqe[('f', 0)]
-            if modelList[self.flowModelIndex].ebq.has_key(('velocity', 0)):
-                self.ebq_v = modelList[
-                    self.flowModelIndex].ebq[
-                    ('velocity', 0)]
+            if modelList[self.SED_model].ebq.has_key(('velocity', 0)):
+                self.ebq_v = modelList[self.SED_model].ebq[('velocity', 0)]
             else:
                 if modelList[self.flowModelIndex].ebq.has_key(('f', 0)):
                     self.ebq_v = modelList[self.flowModelIndex].ebq[('f', 0)]
@@ -321,6 +345,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #                                                        self.model.ebqe['n'],
             #                                                        self.model.mesh)
             #log("Divergence = %12.5e" % (divergence,),level=2)
+        self.model.q_grad_vos = self.model.q[('grad(u)',0)]
+        self.q_grad_vos = self.model.q_grad_vos
         copyInstructions = {}
         return copyInstructions
 
@@ -620,7 +646,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe = {}
         self.phi_ip = {}
         # mesh
-        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
         self.ebqe['x'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
@@ -681,6 +707,48 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              0)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
+            'd')
+        self.ebq[
+            ('u',
+             0)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.ebq[
+            ('u',
+             1)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.ebq[
+            ('u',
+             2)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.ebq[
+            ('grad(u)',
+             0)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.ebq[
+            ('grad(u)',
+             1)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.ebq[
+            ('grad(u)',
+             2)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
             'd')
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set(
@@ -923,6 +991,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u', 0)],
+            self.q[('grad(u)', 0)],
             self.timeIntegration.beta_bdf[0],
             self.q['dV'],
             self.q['dV_last'],
