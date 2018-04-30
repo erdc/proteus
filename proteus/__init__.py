@@ -73,7 +73,8 @@ __all__ = ["Archiver",
            "WaveTools",
            "Context",
            "BoundaryConditions",
-           "SpatialTools"]
+           "SpatialTools",
+           "defaults"]
 
 def test(verbose=False, cleanup=True):
     """Run all proteus tests

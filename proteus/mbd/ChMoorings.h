@@ -30,6 +30,48 @@ using namespace chrono;
 using namespace chrono::fea;
 
 
+// override some functions of ChElement
+
+class ChElementCableANCFmod : public ChElementCableANCF {
+  virtual void SetupInitial(ChSystem* system) override {
+    assert(section);
+
+    // Compute rest length, mass:
+    double length2 = (nodes[1]->GetX0() - nodes[0]->GetX0()).Length();
+    this->mass = this->length * this->section->Area * this->section->density;
+
+    // Here we calculate the internal forces in the initial configuration
+    // Contribution of initial configuration in elastic forces is automatically subtracted
+    ChMatrixDynamic<> FVector0(12, 1);
+    FVector0.FillElem(0.0);
+    this->m_GenForceVec0.FillElem(0.0);
+    ComputeInternalForces(FVector0);
+    this->m_GenForceVec0 = FVector0;
+
+    // Compute mass matrix
+    ComputeMassMatrix();
+  };
+};
+
+class ChElementBeamEulermod : public ChElementBeamEuler {
+  virtual void SetupInitial(ChSystem* system) override {
+    assert(section);
+
+    //this->length = (nodes[1]->GetX0().GetPos() - nodes[0]->GetX0().GetPos()).Length();
+    this->mass = this->length * this->section->Area * this->section->density;
+
+    // Compute initial rotation
+    ChMatrix33<> A0;
+    ChVector<> mXele = nodes[1]->GetX0().GetPos() - nodes[0]->GetX0().GetPos();
+    ChVector<> myele = nodes[0]->GetX0().GetA().Get_A_Yaxis();
+    A0.Set_A_Xdir(mXele, myele);
+    q_element_ref_rot = A0.Get_A_quaternion();
+
+    // Compute local stiffness matrix:
+    ComputeStiffnessMatrix();
+  };
+};
+
 
 class MyLoaderTriangular : public ChLoaderUdistributed {
  public:
@@ -86,6 +128,9 @@ class cppCable {
   double L0 = 0;  // initial length along cable
   double Iyy;
   int nb_nodes;
+  bool applyDrag;
+  bool applyAddedMass;
+  bool applyBuoyancy;
   std::string beam_type;
   std::vector<std::shared_ptr<ChNodeFEAxyzD>> nodes;  // array nodes coordinates and direction
   std::vector<std::shared_ptr<ChNodeFEAxyzDD>> nodesDD;  // array nodes coordinates and direction
@@ -550,6 +595,9 @@ cppCable::cppCable(ChSystemSMC& system, // system in which the cable belong
   Cm_normal = 1.;  // studless chain
   A0 = d*d/4*M_PI;
   Iyy = 1e-12;
+  applyDrag = true;
+  applyAddedMass = true;
+  applyBuoyancy = true;
 }
 
 void cppCable::buildMaterials() {
@@ -665,11 +713,12 @@ void cppCable::buildElementsCableANCF(bool set_lastnodes) {
   elems_loads_triangular.clear();
   elems_loads.clear();
   for (int i = 0; i < nb_elems; ++i) {
-    auto element = std::make_shared<ChElementCableANCF>();
+    auto element = std::make_shared<ChElementCableANCFmod>();
     auto load_distributed = std::make_shared<ChLoadBeamWrenchDistributed>(element);
     auto load = std::make_shared<ChLoadBeamWrench>(element);
     std::shared_ptr<ChLoad<MyLoaderTriangular>> loadtri(new ChLoad<MyLoaderTriangular>(element));
     auto load_volumetric = std::make_shared<ChLoad<ChLoaderGravity>>(element);
+    load_volumetric->loader.Set_G_acc(ChVector<>(0.,0.,0.));
     loadcontainer->Add(load_distributed);
     loadcontainer->Add(load);
     loadcontainer->Add(loadtri);  // do not forget to add the load to the load container.
@@ -680,6 +729,7 @@ void cppCable::buildElementsCableANCF(bool set_lastnodes) {
     elems_loads_triangular.push_back(loadtri);
     elems_loads_volumetric.push_back(load_volumetric);
     element->SetSection(msection_cable);
+    element->SetRestLength(length/nb_elems);
     if (i < nb_elems-1) {
       element->SetNodes(nodes[i], nodes[i + 1]);
     }
@@ -700,11 +750,12 @@ void cppCable::buildElementsBeamEuler(bool set_lastnodes) {
   elems_loads_triangular.clear();
   elems_loads.clear();
   for (int i = 0; i < nodesRot.size() - 1; ++i) {
-    auto element = std::make_shared<ChElementBeamEuler>();
+    auto element = std::make_shared<ChElementBeamEulermod>();
     auto load_distributed = std::make_shared<ChLoadBeamWrenchDistributed>(element);
     auto load = std::make_shared<ChLoadBeamWrench>(element);
     std::shared_ptr<ChLoad<MyLoaderTriangular>> loadtri(new ChLoad<MyLoaderTriangular>(element));
     auto load_volumetric = std::make_shared<ChLoad<ChLoaderGravity>>(element);
+    load_volumetric->loader.Set_G_acc(ChVector<>(0.,0.,0.));
     loadcontainer->Add(load_distributed);
     loadcontainer->Add(load);
     loadcontainer->Add(loadtri);  // do not forget to add the load to the load container.
@@ -715,6 +766,7 @@ void cppCable::buildElementsBeamEuler(bool set_lastnodes) {
     elems_loads_triangular.push_back(loadtri);
     elems_loads_volumetric.push_back(load_volumetric);
     element->SetSection(msection_advanced);
+    element->SetRestLength(length/nb_elems);
     if (i < nb_elems-1) {
       element->SetNodes(nodesRot[i], nodesRot[i + 1]);
     }
@@ -880,18 +932,22 @@ void cppCable::setAddedMassForce() {
 }
 
 void cppCable::applyForces() {
-  ChVector<> F_drag;  // drag force per unit length
-  ChVector<> F_buoyancy; // buoyancy force per unit length
-  ChVector<> F_total;  // total force per unit length
-  ChVector<> F_addedmass; // buoyancy force per unit length
-  double rho_f;  // density of fluid around cable element
-  double lengths = 0;
   for (int i = 0; i < nb_nodes-1; ++i) {
-    ChVector<> Fa = forces_drag[i]+forces_addedmass[i];
-    ChVector<> Fb = forces_drag[i+1]+forces_addedmass[i+1];
+    ChVector<> Fa = ChVector<>(0.,0.,0.);
+    ChVector<> Fb = ChVector<>(0.,0.,0.);
+    if (applyDrag == true) {
+      Fa = Fa+forces_drag[i];
+      Fb = Fb+forces_drag[i+1];
+    }
+    if (applyAddedMass == true) {
+      Fa = Fa+forces_addedmass[i];
+      Fb = Fb+forces_addedmass[i+1];
+    }
     elems_loads_triangular[i]->loader.SetF(Fa, Fb);
     // buoyancy
-    elems_loads_volumetric[i]->loader.Set_G_acc(-fluid_density[i]/rho*system.Get_G_acc()); // remove gravity because it is there on top of it
+    if (applyBuoyancy == true) {
+      elems_loads_volumetric[i]->loader.Set_G_acc(-fluid_density[i]/rho*system.Get_G_acc());
+    }
   }
 };
 

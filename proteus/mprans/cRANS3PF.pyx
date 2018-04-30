@@ -204,6 +204,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                int ARTIFICIAL_VISCOSITY,
                                double cMax,
                                double cE,
+                               int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                double * forcex,
                                double * forcey,
                                double * forcez,
@@ -258,6 +259,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double hFactor,
                                int nElements_global,
                                int nElements_owned,
+                               int nElementBoundaries_owned,
                                double useRBLES,
                                double useMetrics,
                                double alphaBDF,
@@ -453,7 +455,10 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                  double fContact,
                                  double mContact,
                                  double nContact,
-                                 double angFriction)
+                                 double angFriction,
+                                 double vos_limiter,
+                                 double mu_fr_limiter,
+                             )
 
 
 cdef class RANS3PF:
@@ -481,7 +486,10 @@ cdef class RANS3PF:
                   double fContact,
                   double mContact,
                   double nContact,
-                  double angFriction):
+                  double angFriction,
+                  double vos_limiter,
+                  double mu_fr_limiter,
+                  ):
         self.thisptr = newRANS3PF(nSpaceIn,
                                   nQuadraturePoints_elementIn,
                                   nDOF_mesh_trial_elementIn,
@@ -503,7 +511,10 @@ cdef class RANS3PF:
                                   fContact,
                                   mContact,
                                   nContact,
-                                  angFriction)
+                                  angFriction,
+                                  vos_limiter,
+                                  mu_fr_limiter,
+                                  )
 
     def __dealloc__(self):
         del self.thisptr
@@ -707,6 +718,7 @@ cdef class RANS3PF:
                           int ARTIFICIAL_VISCOSITY,
                           double cMax,
                           double cE,
+                          int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                           numpy.ndarray forcex,
                           numpy.ndarray forcey,
                           numpy.ndarray forcez,
@@ -915,6 +927,7 @@ cdef class RANS3PF:
                                        ARTIFICIAL_VISCOSITY,
                                        cMax,
                                        cE,
+                                       MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                        < double * > forcex.data,
                                        < double * > forcey.data,
                                        < double * > forcez.data,
@@ -970,6 +983,7 @@ cdef class RANS3PF:
                           double hFactor,
                           int nElements_global,
                           int nElements_owned,
+                          int nElementBoundaries_owned,
                           double useRBLES,
                           double useMetrics,
                           double alphaBDF,
@@ -1161,6 +1175,7 @@ cdef class RANS3PF:
                                         hFactor,
                                         nElements_global,
                                         nElements_owned,
+                                        nElementBoundaries_owned,
                                         useRBLES,
                                         useMetrics,
                                         alphaBDF,
@@ -1557,6 +1572,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                int ARTIFICIAL_VISCOSITY,
                                double cMax,
                                double cE,
+                               int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                double * forcex,
                                double * forcey,
                                double * forcez,
@@ -1611,6 +1627,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double hFactor,
                                int nElements_global,
                                int nElements_owned,
+                               int nElementBoundaries_owned,
                                double useRBLES,
                                double useMetrics,
                                double alphaBDF,
@@ -1806,7 +1823,10 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                      double fContact,
                                      double mContact,
                                      double nContact,
-                                     double angFriction)
+                                     double angFriction,
+                                     double vos_limiter,
+                                     double mu_fr_limiter,
+                                      )
 
 cdef class RANS3PF2D:
     cdef cppRANS3PF2D_base * thisptr
@@ -1833,7 +1853,10 @@ cdef class RANS3PF2D:
                   double fContact,
                   double mContact,
                   double nContact,
-                  double angFriction):
+                  double angFriction,
+                  double vos_limiter,
+                  double mu_fr_limiter,
+                  ):
         self.thisptr = newRANS3PF2D(nSpaceIn,
                                     nQuadraturePoints_elementIn,
                                     nDOF_mesh_trial_elementIn,
@@ -1855,7 +1878,10 @@ cdef class RANS3PF2D:
                                     fContact,
                                     mContact,
                                     nContact,
-                                    angFriction)
+                                    angFriction,
+                                    vos_limiter,
+                                    mu_fr_limiter,
+                                    )
 
     def __dealloc__(self):
         del self.thisptr
@@ -2059,6 +2085,7 @@ cdef class RANS3PF2D:
                           int ARTIFICIAL_VISCOSITY,
                           double cMax,
                           double cE,
+                          int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                           numpy.ndarray forcex,
                           numpy.ndarray forcey,
                           numpy.ndarray forcez,
@@ -2267,6 +2294,7 @@ cdef class RANS3PF2D:
                                        ARTIFICIAL_VISCOSITY,
                                        cMax,
                                        cE,
+                                       MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                        < double * > forcex.data,
                                        < double * > forcey.data,
                                        < double * > forcez.data,
@@ -2322,6 +2350,7 @@ cdef class RANS3PF2D:
                           double hFactor,
                           int nElements_global,
                           int nElements_owned,
+                          int nElementBoundaries_owned,
                           double useRBLES,
                           double useMetrics,
                           double alphaBDF,
@@ -2513,6 +2542,7 @@ cdef class RANS3PF2D:
                                         hFactor,
                                         nElements_global,
                                         nElements_owned,
+                                        nElementBoundaries_owned,
                                         useRBLES,
                                         useMetrics,
                                         alphaBDF,
@@ -2704,3 +2734,4 @@ cdef class RANS3PF2D:
                                               < double * > vel_trial_trace_ref.data,
                                               < double * > ebqe_velocity.data,
                                               < double * > velocityAverage.data)
+
