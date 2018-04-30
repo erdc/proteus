@@ -30,7 +30,7 @@
  @{ 
 */
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
-    const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount)
+    const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount,int reconstructedFlag,double maxAspectRatio)
 /**
  * MeshAdaptPUMIDrvr is the highest level class that handles the interface between Proteus and the PUMI libraries
  * See MeshAdaptPUMI.h for the list of class variables/functions/objects
@@ -79,8 +79,9 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   target_element_count = targetElementCount;
   domainVolume = 0.0;
   THRESHOLD = 0.0;
-  isReconstructed=0;
+  isReconstructed = reconstructedFlag;
   initialReconstructed = 0;
+  maxAspect = maxAspectRatio;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -337,10 +338,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       removeBCData();
       double t1 = PCU_Time();
       getERMSizeField(total_error);
-      //MeshAdapt error will be thrown if region fields are not freed
-      freeField(err_reg); 
-      freeField(errRho_reg); 
-      freeField(errRel_reg); 
       double t2 = PCU_Time();
     if(comm_rank==0 && logging_config == "on"){
       std::ofstream myfile;
@@ -381,6 +378,37 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     char namebuffer[20];
     sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
+    sprintf(namebuffer,"beforeAnisotropicAdapt_%i.smb",nAdapt);
+    m->writeNative(namebuffer);
+
+/* Code to output size scale and frame
+    apf::MeshIterator* it = m->begin(0);
+    apf::MeshEntity* test;
+    std::ofstream myfile;
+    myfile.open("meshSizeScale.txt");
+    while(test = m->iterate(it)){ 
+      apf::Vector3 tempScale;
+      apf::getVector(size_scale, test, 0,tempScale);
+      myfile << tempScale[0] <<","<<tempScale[1]<<","<<tempScale[2]<<std::endl;
+    }
+    myfile.close();
+    it = m->begin(0);
+    myfile.open("meshSizeFrame.txt");
+    while(test = m->iterate(it)){
+      apf::Matrix3x3 tempFrame;
+      apf::getMatrix(size_frame, test, 0,tempFrame);
+      myfile << tempFrame[0][0]<<","<<tempFrame[0][1]<<","<<tempFrame[0][2]<<","<<tempFrame[1][0]<<","<<tempFrame[1][1]<<","<<tempFrame[1][2]<<","<<tempFrame[2][0]<<","<<tempFrame[2][1]<<","<<tempFrame[2][2]<<std::endl;
+    }
+    m->end(it);
+    m->writeNative("beforeAnisotropicAdapt.smb");
+*/
+  }
+
+  if(size_field_config=="ERM"){
+      //MeshAdapt error will be thrown if region fields are not freed
+      freeField(err_reg); 
+      freeField(errRho_reg); 
+      freeField(errRel_reg); 
   }
   if(size_field_config=="VMS"){
     freeField(vmsErrH1);
@@ -396,6 +424,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
 
+  apf::Field* adaptSize;
+  apf::Field* adaptFrame;
+
   /// Adapt the mesh
 
   ma::Input* in;
@@ -405,12 +436,20 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   }
   else{
     assert(size_iso || (size_scale && size_frame));
-    if(adapt_type_config=="anisotropic" || size_field_config== "interface")
-      in = ma::configure(m, size_scale, size_frame);
-    else
-      in = ma::configure(m, size_iso);
+    if(adapt_type_config=="anisotropic" || size_field_config== "interface"){
+     //in = ma::configure(m, size_scale, size_frame);
+      adaptSize  = apf::createFieldOn(m, "adapt_size", apf::VECTOR);
+      adaptFrame = apf::createFieldOn(m, "adapt_frame", apf::MATRIX);
+      apf::copyData(adaptSize, size_scale);
+      apf::copyData(adaptFrame, size_frame);
+      in = ma::configure(m, adaptSize, adaptFrame);
+    }
+    else{
+      adaptSize  = apf::createFieldOn(m, "adapt_size", apf::SCALAR);
+      apf::copyData(adaptSize, size_iso);
+      in = ma::configure(m, adaptSize);
+    }
   }
-
   ma::validateInput(in);
   in->shouldRunPreZoltan = true;
   in->shouldRunMidParma = true;
@@ -418,11 +457,13 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
   in->shouldSnap = false;
-  //in->shouldFixShape = true;
-  double mass_before = getTotalMass();
+  in->goodQuality = 0.008;
 
+  double mass_before = getTotalMass();
+  
   double t1 = PCU_Time();
-  ma::adapt(in);
+  //ma::adapt(in);
+  ma::adaptVerbose(in);
   double t2 = PCU_Time();
 
   m->verify();
@@ -453,9 +494,13 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     char namebuffer[20];
     sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
+    sprintf(namebuffer,"afterAnisotropicAdapt_%i.smb",nAdapt);
+    m->writeNative(namebuffer);
   }
-
   //isReconstructed = 0; //this is needed to maintain consistency with the post-adapt conversion back to Proteus
+  apf::destroyField(adaptSize);
+  if(adapt_type_config=="anisotropic")
+    apf::destroyField(adaptFrame);
   nAdapt++; //counter for number of adapt steps
   return 0;
 }
