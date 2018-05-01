@@ -6,7 +6,7 @@ from multiphase import *
 from proteus.mprans import CLSVOF
 
 LevelModelType = CLSVOF.LevelModel
-coefficients = CLSVOF.Coefficients(V_model=V_model,
+coefficients = CLSVOF.Coefficients(V_model=0,
                                    ME_model=CLSVOF_model,
                                    useMetrics=useMetrics,
                                    timeOrder=timeOrder_clsvof,
@@ -29,14 +29,8 @@ initialConditions  = {0:init_cond()}
 #######################
 # BOUNDARY CONDITIONS #
 #######################
-def getDBC_vof(x,flag):
-    if flag == boundaryTags['top'] and openTop:
-        return lambda x,t: 1.0
-#
-def getAFBC_vof(x,flag):
-    if flag != boundaryTags['top'] or not openTop:
-        return lambda x,t: 0.0
-
-dirichletConditions = {0:getDBC_vof}
-advectiveFluxBoundaryConditions = {0:getAFBC_vof}
+dirichletConditions = {0: lambda x, flag: domain.bc[flag].vof_dirichlet.init_cython()}
+advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].vof_advective.init_cython()}
 diffusiveFluxBoundaryConditions = {0:{}}
+
+
