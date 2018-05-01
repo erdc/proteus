@@ -1545,6 +1545,8 @@ def _generateMesh(domain):
             domain.writeAsymptote(mesh.outputFiles_name)
         if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
             domain.writeGeo(mesh.outputFiles_name)
+    else:
+        domain.polyfile=mesh.outputFiles_name
     mesh.setTriangleOptions()
 
 
