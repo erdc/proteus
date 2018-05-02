@@ -696,11 +696,9 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
   freeField(errRho_reg);
   freeField(errRel_reg);
   //err_reg = apf::createField(m,"ErrorRegion",apf::VECTOR,apf::getConstant(nsd));
-  std::cout<<"FLAG1\n";
   err_reg = apf::createField(m,"ErrorRegion",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   errRho_reg = apf::createField(m,"ErrorDensity",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   errRel_reg = apf::createField(m,"RelativeError",apf::SCALAR,apf::getVoronoiShape(nsd,1));
-  std::cout<<"FLAG2\n";
 
   //Start computing element quantities
   int numqpt; //number of quadrature points

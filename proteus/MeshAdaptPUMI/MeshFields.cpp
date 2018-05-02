@@ -136,7 +136,6 @@ int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, dou
     g[0] = g_p[0]; g[1] = g_p[1]; g[2] = g_p[2];
   } 
   delta_T = deltaT;
-  std::cout<<"delta T "<<deltaT<<std::endl;
   return 0;
 }
 

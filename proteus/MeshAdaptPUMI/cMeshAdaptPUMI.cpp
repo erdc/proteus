@@ -413,7 +413,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   }
   if(size_field_config=="VMS"){
     freeField(vmsErrH1);
-    std::cout<<"cleared VMS field\n";
+    if(PCU_Comm_Self()==0) std::cout<<"cleared VMS field\n";
   }
 
   // These are relics from an attempt to pass BCs from proteus into the error estimator.
