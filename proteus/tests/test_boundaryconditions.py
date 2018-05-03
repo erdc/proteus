@@ -88,7 +88,7 @@ class TestBC(unittest.TestCase):
     def test_mprans_no_slip(self):
         BC = create_BC(folder='mprans')
         BC.setNoSlip()
-        u_dir, v_dir, w_dir, p_adv, k_dir, d_diff, vof_adv = [], [], [], [], [], [], []
+        u_dir, v_dir, w_dir, p_adv, pInit_adv, k_dir, d_diff, pInc_diff, k_diff, vof_adv = [], [], [], [], [], [], [], [], [], []
         t_list = get_time_array()
         for t in t_list:
             x = get_random_x()
@@ -96,9 +96,12 @@ class TestBC(unittest.TestCase):
             v_dir += [BC.v_dirichlet.uOfXT(x, t)]
             w_dir += [BC.w_dirichlet.uOfXT(x, t)]
             p_adv += [BC.p_advective.uOfXT(x, t)]
+            pInit_adv += [BC.pInit_advective.uOfXT(x, t)]
             k_dir += [BC.k_dirichlet.uOfXT(x, t)]
             d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
             vof_adv += [BC.vof_advective.uOfXT(x, t)]
+            k_diff += [BC.k_diffusive.uOfXT(x, t)]
+            pInc_diff += [BC.pInc_diffusive.uOfXT(x, t)]
         zeros = np.zeros(len(t_list))
         npt.assert_equal(BC.p_dirichlet.uOfXT, None)
         npt.assert_equal(u_dir, zeros)
@@ -107,23 +110,30 @@ class TestBC(unittest.TestCase):
         npt.assert_equal(BC.vof_dirichlet.uOfXT, None)
         npt.assert_equal(k_dir, zeros)
         npt.assert_equal(BC.dissipation_dirichlet.uOfXT, None)
+        npt.assert_equal(BC.pInit_dirichlet.uOfXT, None)
+        npt.assert_equal(BC.pInc_dirichlet.uOfXT, None)
         npt.assert_equal(p_adv, zeros)
         npt.assert_equal(BC.u_advective.uOfXT, None)
         npt.assert_equal(BC.v_advective.uOfXT, None)
         npt.assert_equal(BC.w_advective.uOfXT, None)
+        npt.assert_equal(pInit_adv, zeros)
+        npt.assert_equal(BC.pInc_advective.uOfXT, None)
+        npt.assert_equal(p_adv, zeros)
         npt.assert_equal(vof_adv, zeros)
         npt.assert_equal(BC.k_advective.uOfXT, None)
         npt.assert_equal(BC.dissipation_advective.uOfXT, None)
         npt.assert_equal(BC.u_diffusive.uOfXT, None)
         npt.assert_equal(BC.v_diffusive.uOfXT, None)
         npt.assert_equal(BC.w_diffusive.uOfXT, None)
-        npt.assert_equal(BC.k_diffusive.uOfXT, None)
+        npt.assert_equal(k_diff, zeros)
         npt.assert_equal(d_diff, zeros)
+        npt.assert_equal(BC.pInit_diffusive.uOfXT, None)
+        npt.assert_equal(pInc_diff, zeros)
 
     def test_mprans_free_slip(self):
         BC = create_BC(folder='mprans')
         BC.setFreeSlip()
-        u_adv, v_adv, w_adv,p_adv, u_diff, v_diff, w_diff, k_dir, d_diff, vof_adv = [], [], [], [], [], [], [], [], [], []
+        u_adv, v_adv, w_adv, p_adv, pInit_adv, u_diff, v_diff, w_diff, k_dir, d_diff, pInc_diff, vof_adv = [], [], [], [], [], [], [], [], [], [], [], []
         t_list = get_time_array()
         for t in t_list:
             x = get_random_x()
@@ -131,11 +141,13 @@ class TestBC(unittest.TestCase):
             v_adv += [BC.v_advective.uOfXT(x, t)]
             w_adv += [BC.w_advective.uOfXT(x, t)]
             p_adv += [BC.p_advective.uOfXT(x, t)]
+            pInit_adv += [BC.pInit_advective.uOfXT(x, t)]
             u_diff += [BC.u_diffusive.uOfXT(x, t)]
             v_diff += [BC.v_diffusive.uOfXT(x, t)]
             w_diff += [BC.w_diffusive.uOfXT(x, t)]
             k_dir += [BC.k_dirichlet.uOfXT(x, t)]
             d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
+            pInc_diff += [BC.pInc_diffusive.uOfXT(x, t)]
             vof_adv += [BC.vof_advective.uOfXT(x, t)]
         zeros = np.zeros(len(t_list))
         npt.assert_equal(BC.p_dirichlet.uOfXT, None)
@@ -143,6 +155,8 @@ class TestBC(unittest.TestCase):
         npt.assert_equal(BC.v_dirichlet.uOfXT, None)
         npt.assert_equal(BC.w_dirichlet.uOfXT, None)
         npt.assert_equal(BC.vof_dirichlet.uOfXT, None)
+        npt.assert_equal(BC.pInit_dirichlet.uOfXT, None)
+        npt.assert_equal(BC.pInc_dirichlet.uOfXT, None)
         npt.assert_equal(k_dir, zeros)
         npt.assert_equal(BC.dissipation_dirichlet.uOfXT, None)
         npt.assert_equal(p_adv, zeros)
@@ -152,6 +166,8 @@ class TestBC(unittest.TestCase):
         npt.assert_equal(vof_adv, zeros)
         npt.assert_equal(BC.k_advective.uOfXT, None)
         npt.assert_equal(BC.dissipation_advective.uOfXT, None)
+        npt.assert_equal(pInit_adv, zeros)
+        npt.assert_equal(BC.pInc_advective.uOfXT, None)
         npt.assert_equal(u_diff, zeros)
         npt.assert_equal(v_diff, zeros)
         npt.assert_equal(w_diff, zeros)

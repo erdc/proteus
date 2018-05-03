@@ -2018,7 +2018,8 @@ cdef class ProtChSystem:
             comm.barrier()
             _, rank_owning = comm.allreduce((owning_rank, rank_owning),
                                             op=MPI.MAXLOC)
-            nearest_node = comm.bcast(nearest_node, rank_owning)
+            _, nearest_node = comm.allreduce((owning_rank, nearest_node),
+                                             op=MPI.MAXLOC)
             comm.barrier()
             # if ownership is the same after 1 loop and local_element not found
             # => coords must be outside domain
