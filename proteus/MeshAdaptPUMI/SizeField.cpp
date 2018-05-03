@@ -13,8 +13,8 @@
 #include <queue>
 
 static void SmoothField(apf::Field *f);
-void gradeAnisoMesh(apf::Mesh* m);
-void gradeAspectRatio(apf::Mesh* m, int idx);
+void gradeAnisoMesh(apf::Mesh* m,double gradingFactor);
+void gradeAspectRatio(apf::Mesh* m, int idx, double gradingFactor);
 
 /* Based on the distance from the interface epsilon can be controlled to determine
    thickness of refinement near the interface */
@@ -129,7 +129,6 @@ void MeshAdaptPUMIDrvr::averageToEntity(apf::Field *ef, apf::Field *vf,
   return;
 }
 
-/*
 void minToEntity(apf::Field* ef, apf::Field* vf,
     apf::MeshEntity* ent)
 {
@@ -146,7 +145,6 @@ void minToEntity(apf::Field* ef, apf::Field* vf,
   apf::setScalar(vf, ent, 0, s);
   return;
 }
-*/
 
 void MeshAdaptPUMIDrvr::volumeAverageToEntity(apf::Field *ef, apf::Field *vf,
                                               apf::MeshEntity *ent)
@@ -157,19 +155,19 @@ void MeshAdaptPUMIDrvr::volumeAverageToEntity(apf::Field *ef, apf::Field *vf,
   apf::MeshElement *testElement;
   m->getAdjacent(ent, m->getDimension(), elements);
   double s = 0;
-  double invVolumeTotal = 0;
+  double VolumeTotal = 0;
   for (std::size_t i = 0; i < elements.getSize(); ++i)
   {
     testElement = apf::createMeshElement(m, elements[i]);
-    s += apf::getScalar(ef, elements[i], 0) / apf::measure(testElement);
-    invVolumeTotal += 1.0 / apf::measure(testElement);
+    s += apf::getScalar(ef, elements[i], 0)*apf::measure(testElement);
+    VolumeTotal += apf::measure(testElement);
     if (comm_rank == 0)
     {
       std::cout << "What is s " << s << " Volume? " << apf::measure(testElement) << " scale? " << apf::getScalar(ef, elements[i], 0) << std::endl;
     }
     apf::destroyMeshElement(testElement);
   }
-  s /= invVolumeTotal;
+  s /= VolumeTotal;
   if (comm_rank == 0)
   {
     std::cout << "What is s final? " << s << std::endl;
@@ -177,6 +175,31 @@ void MeshAdaptPUMIDrvr::volumeAverageToEntity(apf::Field *ef, apf::Field *vf,
   apf::setScalar(vf, ent, 0, s);
   return;
 }
+
+void errorAverageToEntity(apf::Field *ef, apf::Field *vf, apf::Field* err, apf::MeshEntity *ent)
+//Serves the same purpose as averageToEntity but considers a error-weighted average
+{
+  apf::Mesh *m = apf::getMesh(ef);
+  apf::Adjacent elements;
+  m->getAdjacent(ent, m->getDimension(), elements);
+  double s = 0;
+  double errorTotal = 0;
+  for (std::size_t i = 0; i < elements.getSize(); ++i)
+  {
+    s += apf::getScalar(ef, elements[i], 0)*apf::getScalar(err,elements[i],0);
+    errorTotal += apf::getScalar(err,elements[i],0);
+  }
+  s /= errorTotal;
+/*
+  if (comm_rank == 0)
+  {
+    std::cout << "What is s final? " << s << std::endl;
+  }
+*/
+  apf::setScalar(vf, ent, 0, s);
+  return;
+}
+
 
 static apf::Field *extractSpeed(apf::Field *velocity)
 //Function used to convert the velocity field into a speed field
@@ -674,13 +697,19 @@ static void SmoothField(apf::Field *f)
   op.applyToDimension(0);
 }
 
-void getTargetError(apf::Mesh* m, double &target_error){
+void getTargetError(apf::Mesh* m, apf::Field* errField, double &target_error,double totalError){
   //Implemented for 3D and for serial case only so far
-  assert(m->getDimension()==3);
-  if(PCU_Comm_Self()==0)
-    std::cout<<"Enter target Error\n";
-  apf::Field* errField = m->findField("ErrorRegion");
+  //Need to communicate target error in parallel
+  if(PCU_Comm_Self()>0) 
+    std::cout<<"WARNING/ERROR:Parallel implementation is not completed yet\n";
+  if(m->getDimension()==2){
+    target_error = totalError/sqrt(m->count(m->getDimension()));
+    if(PCU_Comm_Self()==0)
+      std::cout<<"The estimated target error is "<<target_error<<std::endl;
+    return;
+  }
   apf::Field* interfaceField = m->findField("vof");
+  apf::Field* targetField = apf::createField(m,"targetError",apf::SCALAR,apf::getVoronoiShape(m->getDimension(),1));
   apf::MeshEntity* ent;
   apf::MeshIterator* it = m->begin(m->getDimension());
   apf::MeshElement* element;
@@ -690,28 +719,37 @@ void getTargetError(apf::Mesh* m, double &target_error){
     element = apf::createMeshElement(m, ent);
     vofElem = apf::createElement(interfaceField,element);
     double vofVal = apf::getScalar(vofElem,apf::Vector3(1./3.,1./3.,1./3.));
-    if(vofVal < 0.6 && vofVal > 0.4){ //at the interface
+    if(vofVal < 0.9 && vofVal > 0.1){ //at the interface
       double errorValue = apf::getScalar(errField,ent,0);
       errVect.push_back(errorValue);    
+      apf::setScalar(targetField,ent,0,errorValue);
+    }
+    else{
+      apf::setScalar(targetField,ent,0,0.0);
     }
   }
   m->end(it);
   if(PCU_Comm_Self()==0)
     std::cout<<"Past creation of vector\n";
-  std::ofstream myfile;
-  myfile.open("interfaceErrors.txt", std::ios::app );
-  for(int i=0;i<errVect.size();i++){
-    myfile << errVect[i]<<std::endl;
+  if(errVect.size()==0){
+    target_error = totalError/sqrt(m->count(m->getDimension()));
   }
-  myfile.close();
-  std::sort(errVect.begin(),errVect.end());
-  int vectorSize = errVect.size();
-  if(vectorSize %2 ==0){
-    int idx1 = vectorSize/2-1;
-    target_error = (errVect[idx1]+errVect[idx1+1])/2; //get average
+  else{
+    std::ofstream myfile;
+    myfile.open("interfaceErrors.txt", std::ios::app );
+    for(int i=0;i<errVect.size();i++){
+      myfile << errVect[i]<<std::endl;
+    }
+    myfile.close();
+    std::sort(errVect.begin(),errVect.end());
+    int vectorSize = errVect.size();
+    if(vectorSize %2 ==0){
+      int idx1 = vectorSize/2-1;
+      target_error = (errVect[idx1]+errVect[idx1+1])/2; //get average
+    }
+    else
+      target_error = errVect[(vectorSize-1)/2];
   }
-  else
-    target_error = errVect[(vectorSize-1)/2];
   if(PCU_Comm_Self()==0)
     std::cout<<"The estimated target error is "<<target_error<<std::endl;
   //std::abort();
@@ -726,7 +764,15 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   freeField(size_iso);
 
   //Initialize fields and needed types/variables
-  apf::Mesh *m = apf::getMesh(err_reg);
+  apf::Field* errField;
+  //apf::Mesh* m;
+  if(size_field_config=="ERM")
+    errField = m->findField("ErrorRegion");
+  else if(size_field_config=="VMS")
+    errField = m->findField("VMSH1");
+  assert(errField); 
+  //apf::Mesh *m = apf::getMesh(vmsErrH1);
+  //apf::getMesh(errField);
   apf::MeshIterator *it;
   apf::MeshEntity *v;
   apf::MeshElement *element;
@@ -738,16 +784,21 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   }
   apf::Field *size_iso_reg = apf::createField(m, "iso_size", apf::SCALAR, apf::getConstant(nsd));
   apf::Field *clipped_vtx = apf::createLagrangeField(m, "iso_clipped", apf::SCALAR, 1);
-
+  
   //Get total number of elements
   int numel = 0;
   int nsd = m->getDimension();
   numel = m->count(nsd);
   PCU_Add_Ints(&numel, 1);
 
-  //if target error is not specified, choose one based on interface
-  if(target_error==0)
-    getTargetError(m,target_error);
+  //if target error is not specified, choose one based on interface or based on equidistribution assumption
+  if(target_error==0){
+    if(m->findField("vof")!=NULL)
+      getTargetError(m,errField,target_error,err_total);
+    else
+      target_error = err_total/sqrt(m->count(nsd));
+  }
+   
   
   // Get domain volume
   // should only need to be computed once unless geometry is complex
@@ -780,19 +831,21 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     else
       //h_old = pow(apf::measure(element) * 6 * sqrt(2), 1.0 / 3.0); //edge of a regular tet
       h_old = apf::computeShortestHeightInTet(m,reg);
-    apf::getVector(err_reg, reg, 0, err_vect);
-    err_curr = err_vect[0];
-    errRho_curr = apf::getScalar(errRho_reg, reg, 0);
+    //err_curr = apf::getScalar(vmsErrH1, reg, 0);
+    err_curr = apf::getScalar(errField, reg, 0);
+    //err_curr = err_vect[0];
+    //errRho_curr = apf::getScalar(errRho_reg, reg, 0);
     //h_new = h_old*errRho_target/errRho_curr;
     //h_new = h_old*sqrt(apf::measure(element))/sqrt(domainVolume)*target_error/err_curr;
-    if (target_error == 0)
-      target_error = err_total / sqrt(numel);
-
+    //
     //error-to-size relationship should be different between anisotropic and isotropic cases
     //consider moving this to where size frames are computed to get aspect ratio info
     if (adapt_type_config == "anisotropic")
-      h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
-    else
+      if(target_error/err_curr <= 1)
+        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+1.0)); //refinement
+      else
+        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+3.0)); //coarsening
+    else //isotropic
       h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
 
     apf::setScalar(size_iso_reg, reg, 0, h_new);
@@ -804,9 +857,13 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   it = m->begin(0);
   while ((v = m->iterate(it)))
   {
-    averageToEntity(size_iso_reg, size_iso, v);
+    //averageToEntity(size_iso_reg, size_iso, v);
+    //volumeAverageToEntity(size_iso_reg, size_iso, v);
+    errorAverageToEntity(size_iso_reg, size_iso,errField, v);
+    //minToEntity(size_iso_reg, size_iso, v);
   }
   m->end(it);
+
 
   //Get the anisotropic size frame
   if (adapt_type_config == "anisotropic")
@@ -895,13 +952,13 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     m->end(it);
 
     //Do simple size and aspect ratio grading
-    gradeAnisoMesh(m);
+    gradeAnisoMesh(m,gradingFactor);
     if(comm_rank==0)
       std::cout<<"Finished grading size 0\n";
-    gradeAspectRatio(m,1);
+    gradeAspectRatio(m,1,gradingFactor);
     if(comm_rank==0)
       std::cout<<"Finished grading size 1\n";
-    gradeAspectRatio(m,2);
+    gradeAspectRatio(m,2,gradingFactor);
     if(comm_rank==0)
       std::cout<<"Finished grading size 2\n";
 
@@ -1052,7 +1109,7 @@ int MeshAdaptPUMIDrvr::gradeMesh()
   apf::MeshEntity* edge;
   apf::Adjacent edgAdjVert;
   apf::Adjacent vertAdjEdg;
-  double gradingFactor = 1.5;
+  //double gradingFactor = 1.5;
   double size[2];
   std::queue<apf::MeshEntity*> markedEdges;
   apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
@@ -1124,7 +1181,7 @@ int MeshAdaptPUMIDrvr::gradeMesh()
     std::cout<<"Completed grading\n";
 }
 
-void gradeAnisoMesh(apf::Mesh* m)
+void gradeAnisoMesh(apf::Mesh* m,double gradingFactor)
 //Function to grade anisotropic mesh through comparison of edge vertex aspect ratios and minimum sizes
 //For simplicity, we do not bother with accounting for entities across partitions
 {
@@ -1135,7 +1192,7 @@ void gradeAnisoMesh(apf::Mesh* m)
   apf::MeshEntity* edge;
   apf::Adjacent edgAdjVert;
   apf::Adjacent vertAdjEdg;
-  double gradingFactor = 1.3;
+  //double gradingFactor = 1.3;
   double size[2];
   apf::Vector3 sizeVec;
   std::queue<apf::MeshEntity*> markedEdges;
@@ -1221,7 +1278,7 @@ void gradeAnisoMesh(apf::Mesh* m)
   //  std::cout<<"Completed minimum size grading\n";
 }
 
-void gradeAspectRatio(apf::Mesh* m,int idx)
+void gradeAspectRatio(apf::Mesh* m,int idx,double gradingFactor)
 //Function to grade anisotropic mesh through comparison of edge vertex aspect ratios and minimum sizes
 //For simplicity, we do not bother with accounting for entities across partitions
 {
@@ -1231,7 +1288,7 @@ void gradeAspectRatio(apf::Mesh* m,int idx)
   apf::MeshEntity* edge;
   apf::Adjacent edgAdjVert;
   apf::Adjacent vertAdjEdg;
-  double gradingFactor = 1.3;
+  //double gradingFactor = 1.3;
   double size[2];
   apf::Vector3 sizeVec;
   std::queue<apf::MeshEntity*> markedEdges;
