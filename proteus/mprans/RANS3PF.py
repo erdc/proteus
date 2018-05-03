@@ -220,7 +220,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  granular_vel_Calc=None,
                  vos_limiter = 0.05,
                  mu_fr_limiter = 1.00,
-                 use_sbm=0
+                 use_sbm=0,
+                 use_ball_as_particle=0,
+                 ball_center=None,
+                 ball_radius=None,
+                 ball_velocity=None,
+                 ball_angular_velocity=None,
                  ):
         self.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY
         self.CORRECT_VELOCITY = CORRECT_VELOCITY
@@ -325,6 +330,27 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.nonlinearDragFactor = 0.0
         #
         self.use_sbm = use_sbm
+
+        self.use_ball_as_particle = use_ball_as_particle
+        if ball_center is None:
+            self.ball_center = 1e10*numpy.ones((self.nParticles,3),'d')
+        else:
+            self.ball_center = ball_center
+        
+        if ball_radius is None:
+            self.ball_radius = 1e10*numpy.ones((self.nParticles,1),'d')
+        else:
+            self.ball_radius = ball_radius
+
+        if ball_velocity is None:
+            self.ball_velocity = numpy.zeros((self.nParticles,3),'d')
+        else:
+            self.ball_velocity = ball_velocity
+
+        if ball_angular_velocity is None:
+            self.ball_angular_velocity = numpy.zeros((self.nParticles,3),'d')
+        else:
+            self.ball_angular_velocity = ball_angular_velocity
         #
         mass = {}
         advection = {}
@@ -450,7 +476,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
         # otherwise the sdf are calculated based on the input sdf list for each body
-        if self.granular_sdf_Calc is not None:
+        if self.use_ball_as_particle:
+            pass
+        elif self.granular_sdf_Calc is not None:
             temp_1 = np.zeros(self.model.q[('u', 0)].shape, 'd')
             temp_2 = np.zeros(self.model.q[('u', 0)].shape, 'd')
             temp_3 = np.zeros(self.model.q[('u', 0)].shape, 'd')
@@ -1022,35 +1050,36 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.q[('uncorrectedVelocity',0)][:] = self.model.q[('velocity',0)]
         self.model.ebqe[('uncorrectedVelocity',0)][:] = self.model.ebqe[('velocity',0)]
 
-        self.phi_s[:] = 1e10
-        self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
         logEvent("updating {0} particles...".format(self.nParticles))
-        for i in range(self.nParticles):
-            if self.granular_sdf_Calc is not None:
-                vel = lambda x: self.granular_vel_Calc(x, i)
-                sdf = lambda x: self.granular_sdf_Calc(x, i)
-            else:
-                vel = lambda x: self.particle_velocityList[i](t, x)
-                sdf = lambda x: self.particle_sdfList[i](t, x)
-                
-            for j in range(self.mesh.nodeArray.shape[0]):
-                vel_at_node = vel(self.mesh.nodeArray[j, :])
-                sdf_at_node, sdNormals = sdf(self.mesh.nodeArray[j, :])
-                if (abs(sdf_at_node) < abs(self.phi_s[j])):
-                    self.phi_s[j] = sdf_at_node
-            for eN in range(self.model.q['x'].shape[0]):
-                for k in range(self.model.q['x'].shape[1]):
-                    self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(self.model.q['x'][eN, k])
-                    self.particle_velocities[i, eN, k] = vel(self.model.q['x'][eN, k])
-                    if (abs(self.particle_signed_distances[i, eN, k]) < abs(self.phisField[eN, k])):
-                        self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
-            for ebN in range(self.model.ebq_global['x'].shape[0]):
-                for kb in range(self.model.ebq_global['x'].shape[1]):
-                    sdf_at_quad_pt,sdNormals = sdf(self.model.ebq_global['x'][ebN,kb])
-                    if ( abs(sdf_at_quad_pt) < abs(self.ebq_global_phi_s[ebN,kb]) ):
-                        self.ebq_global_phi_s[ebN,kb]=sdf_at_quad_pt
-                        self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
-        self.model.q[('phis')] = self.phisField
+        if not self.use_ball_as_particle:
+            self.phi_s[:] = 1e10
+            self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
+            for i in range(self.nParticles):
+                if self.granular_sdf_Calc is not None:
+                    vel = lambda x: self.granular_vel_Calc(x, i)
+                    sdf = lambda x: self.granular_sdf_Calc(x, i)
+                else:
+                    vel = lambda x: self.particle_velocityList[i](t, x)
+                    sdf = lambda x: self.particle_sdfList[i](t, x)
+                    
+                for j in range(self.mesh.nodeArray.shape[0]):
+                    vel_at_node = vel(self.mesh.nodeArray[j, :])
+                    sdf_at_node, sdNormals = sdf(self.mesh.nodeArray[j, :])
+                    if (abs(sdf_at_node) < abs(self.phi_s[j])):
+                        self.phi_s[j] = sdf_at_node
+                for eN in range(self.model.q['x'].shape[0]):
+                    for k in range(self.model.q['x'].shape[1]):
+                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(self.model.q['x'][eN, k])
+                        self.particle_velocities[i, eN, k] = vel(self.model.q['x'][eN, k])
+                        if (abs(self.particle_signed_distances[i, eN, k]) < abs(self.phisField[eN, k])):
+                            self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
+                for ebN in range(self.model.ebq_global['x'].shape[0]):
+                    for kb in range(self.model.ebq_global['x'].shape[1]):
+                        sdf_at_quad_pt,sdNormals = sdf(self.model.ebq_global['x'][ebN,kb])
+                        if ( abs(sdf_at_quad_pt) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                            self.ebq_global_phi_s[ebN,kb]=sdf_at_quad_pt
+                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
+            self.model.q[('phis')] = self.phisField
 
         #Update velocity inside the particle
         for ci_g_dof,ci_fg_dof in self.model.dirichletConditions[0].global2freeGlobal.iteritems():
@@ -2413,6 +2442,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_netMoments,
             self.coefficients.particle_surfaceArea,
             self.coefficients.particle_nitsche,
+            self.coefficients.use_ball_as_particle,
+            self.coefficients.ball_center,
+            self.coefficients.ball_radius,
+            self.coefficients.ball_velocity,
+            self.coefficients.ball_angular_velocity,
             self.q['phisError'],
             self.phisErrorNodal,
             self.coefficients.USE_SUPG,
@@ -2718,6 +2752,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_velocities,
             self.coefficients.particle_centroids,
             self.coefficients.particle_nitsche,
+            self.coefficients.use_ball_as_particle,
+            self.coefficients.ball_center,
+            self.coefficients.ball_radius,
+            self.coefficients.ball_velocity,
+            self.coefficients.ball_angular_velocity,
             self.coefficients.USE_SUPG,
             self.KILL_PRESSURE_TERM,
             self.timeIntegration.dt,
