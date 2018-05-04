@@ -1108,7 +1108,7 @@ namespace proteus
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
         double phi_s_normal[2]={0.0};
         double fluid_outward_normal[2];
-        double *vel;
+        double vel[2];
         H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
         nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
         rho = rho_0 * (1.0 - H_mu) + rho_1 * H_mu;
@@ -1120,18 +1120,23 @@ namespace proteus
             {
                 get_distance_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s);
                 get_normal_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s_normal[0],phi_s_normal[1]);
+                get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,
+                                         ball_velocity,ball_angular_velocity,
+                                         i,x,y,z,
+                                         vel[0],vel[1]);
             }
             else
             {
                 phi_s = particle_signed_distances[i * sd_offset];
                 phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * nSpace + 0];
                 phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * nSpace + 1];
+                vel[0] = particle_velocities[i * sd_offset * nSpace + 0];
+                vel[1] = particle_velocities[i * sd_offset * nSpace + 1];
             }
             fluid_outward_normal[0] = -phi_s_normal[0];
             fluid_outward_normal[1] = -phi_s_normal[1];
-            vel = &particle_velocities[i * sd_offset * nSpace];
-            u_s = vel[0]; //particle_velocities[i*3+0];
-            v_s = vel[1]; //particle_velocities[i*3+1];
+            u_s = vel[0];
+            v_s = vel[1];
             w_s = 0;
             H_s = smoothedHeaviside(eps_s, phi_s);
             D_s = smoothedDirac(eps_s, phi_s);
@@ -1235,7 +1240,7 @@ namespace proteus
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
         double *phi_s_normal;
         double fluid_outward_normal[2];
-        double *vel;
+        double vel[2];
         H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
         nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
         rho = rho_0 * (1.0 - H_mu) + rho_1 * H_mu;
@@ -1247,15 +1252,21 @@ namespace proteus
             {
                 get_distance_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s);
                 get_normal_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s_normal[0],phi_s_normal[1]);
+                get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,
+                                         ball_velocity,ball_angular_velocity,
+                                         i,x,y,z,
+                                         vel[0],vel[1]);
             }
             else
             {
                 phi_s = particle_signed_distances[i * sd_offset];
                 phi_s_normal = &particle_signed_distance_normals[i * sd_offset * nSpace];
+                vel[0] = particle_velocities[i * sd_offset * nSpace + 0];
+                vel[1] = particle_velocities[i * sd_offset * nSpace + 1];
+
             }
             fluid_outward_normal[0] = -phi_s_normal[0];
             fluid_outward_normal[1] = -phi_s_normal[1];
-            vel = &particle_velocities[i * sd_offset * nSpace];
             u_s = vel[0];
             v_s = vel[1];
             w_s = 0;
@@ -1953,6 +1964,15 @@ namespace proteus
               nx = -nx;
               ny = -ny;
           }
+      }
+      void get_velocity_to_ith_ball(int n_balls,double* ball_center, double* ball_radius,
+                                    double* ball_velocity, double* ball_angular_velocity,
+                                    int I,
+                                    double x, double y, double z,
+                                    double& vx, double& vy)
+      {
+          vx = ball_velocity[3*I + 0] - ball_angular_velocity[3*I + 2]*(y-ball_center[3*I + 1]);
+          vy = ball_velocity[3*I + 1] + ball_angular_velocity[3*I + 2]*(x-ball_center[3*I + 0]);
       }
       void calculateResidual(//element
                              double* mesh_trial_ref,
@@ -3250,8 +3270,11 @@ namespace proteus
                                                surrogate_boundary_particle[ebN_s],
                                                x_ext,y_ext,z_ext,
                                                P_normal[0],P_normal[1]);
-                        bc_u_ext = ball_velocity[3*surrogate_boundary_particle[ebN_s]+0];
-                        bc_v_ext = ball_velocity[3*surrogate_boundary_particle[ebN_s]+1];
+                        get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,
+                                                 ball_velocity,ball_angular_velocity,
+                                                 surrogate_boundary_particle[ebN_s],
+                                                 x_ext,y_ext,z_ext,
+                                                 bc_u_ext,bc_v_ext);
                     }
                     else
                     {
@@ -5548,8 +5571,11 @@ namespace proteus
                                                surrogate_boundary_particle[ebN_s],
                                                x_ext,y_ext,z_ext,
                                                P_normal[0],P_normal[1]);
-                        bc_u_ext = ball_velocity[3*surrogate_boundary_particle[ebN_s]+0];
-                        bc_v_ext = ball_velocity[3*surrogate_boundary_particle[ebN_s]+1];
+                        get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,
+                                                 ball_velocity, ball_angular_velocity,
+                                                 surrogate_boundary_particle[ebN_s],
+                                                 x_ext,y_ext,z_ext,
+                                                 bc_u_ext,bc_v_ext);
                     }
                     else
                     {
