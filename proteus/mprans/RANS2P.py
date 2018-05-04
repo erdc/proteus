@@ -441,8 +441,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.phaseFunction != None:
             from proteus.ctransportCoefficients import smoothedHeaviside
             if self.useConstant_he:
+                diameter = max(self.mesh.elementDiametersArray.max(),self.mesh.nodeDiametersArray.max())
                 self.elementDiameter = self.mesh.elementDiametersArray.copy()
-                self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
+                self.elementDiameter[:] = diameter
+                #self.mesh.elementDiametersArray[:] = diameter
+                self.mesh.nodeDiametersArray[:] = diameter
             else:
                 self.elementDiameter = self.mesh.elementDiametersArray
             for i, quad_pts in enumerate(self.model.q['x']):
@@ -1333,8 +1336,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("final allocations")
         compKernelFlag = 0
         if self.coefficients.useConstant_he:
+            diameter = max(self.mesh.elementDiametersArray.max(),self.mesh.nodeDiametersArray.max())
             self.elementDiameter = self.mesh.elementDiametersArray.copy()
-            self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
+            self.elementDiameter[:] = diameter
+            #self.mesh.elementDiametersArray[:] = diameter
+            self.mesh.nodeDiametersArray[:] = diameter
         else:
             self.elementDiameter = self.mesh.elementDiametersArray
         if self.nSpace_global == 2:
