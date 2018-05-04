@@ -476,7 +476,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
         # otherwise the sdf are calculated based on the input sdf list for each body
-        if self.use_ball_as_particle:
+        if self.use_ball_as_particle==1:
             pass
         elif self.granular_sdf_Calc is not None:
             temp_1 = np.zeros(self.model.q[('u', 0)].shape, 'd')
@@ -1051,7 +1051,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.ebqe[('uncorrectedVelocity',0)][:] = self.model.ebqe[('velocity',0)]
 
         logEvent("updating {0} particles...".format(self.nParticles))
-        if not self.use_ball_as_particle:
+        if self.use_ball_as_particle == 0:
             self.phi_s[:] = 1e10
             self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
             for i in range(self.nParticles):
@@ -1081,31 +1081,30 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
             self.model.q[('phis')] = self.phisField
 
-        #Update velocity inside the particle
-        for ci_g_dof,ci_fg_dof in self.model.dirichletConditions[0].global2freeGlobal.iteritems():
-            if isinstance(self.model.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
-                xyz = self.model.mesh.nodeArray[ci_g_dof,:]
-            elif isinstance(self.model.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
-                xyz = self.model.u[0].femSpace.dofMap.lagrangeNodesArray[ci_g_dof,:]
-            else:
-                assert False,"Use P1 or P2 for velocity"
-            distance_to_solid = 1e10
-            for i in range(self.nParticles):
-                if self.granular_sdf_Calc is not None:
-                    vel = lambda x: self.granular_vel_Calc(x, i)
-                    sdf = lambda x: self.granular_sdf_Calc(x, i)
+            #Update velocity inside the particle
+            for ci_g_dof,ci_fg_dof in self.model.dirichletConditions[0].global2freeGlobal.iteritems():
+                if isinstance(self.model.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
+                    xyz = self.model.mesh.nodeArray[ci_g_dof,:]
+                elif isinstance(self.model.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
+                    xyz = self.model.u[0].femSpace.dofMap.lagrangeNodesArray[ci_g_dof,:]
                 else:
-                    vel = lambda x: self.particle_velocityList[i](t, x)
-                    sdf = lambda x: self.particle_sdfList[i](t, x)
-                    
-                distance_to_i_particle,_ = sdf(xyz)
-                if distance_to_solid > distance_to_i_particle:
-                    vel_at_xyz = vel(xyz) 
-                    distance_to_solid = distance_to_i_particle
-            for ci in range(self.nc):#since nc=nd
-                dof = self.model.offset[ci] + self.model.stride[ci]*ci_fg_dof 
-                if self.model.isActiveDOF[dof] < 0.5:
-                    self.model.u[ci].dof[ci_g_dof] = vel_at_xyz[ci]
+                    assert False,"Use P1 or P2 for velocity"
+                distance_to_solid = 1e10
+                for i in range(self.nParticles):
+                    if self.granular_sdf_Calc is not None:
+                        vel = lambda x: self.granular_vel_Calc(x, i)
+                        sdf = lambda x: self.granular_sdf_Calc(x, i)
+                    else:
+                        vel = lambda x: self.particle_velocityList[i](t, x)
+                        sdf = lambda x: self.particle_sdfList[i](t, x)
+                    distance_to_i_particle,_ = sdf(xyz)
+                    if distance_to_solid > distance_to_i_particle:
+                        vel_at_xyz = vel(xyz)
+                        distance_to_solid = distance_to_i_particle
+                for ci in range(self.nc):#since nc=nd
+                    dof = self.model.offset[ci] + self.model.stride[ci]*ci_fg_dof
+                    if self.model.isActiveDOF[dof] < 0.5:
+                        self.model.u[ci].dof[ci_g_dof] = vel_at_xyz[ci]
 
         if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))

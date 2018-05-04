@@ -1106,7 +1106,7 @@ namespace proteus
                                            double *particle_surfaceArea)
       {
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
-        double *phi_s_normal;
+        double phi_s_normal[2]={0.0};
         double fluid_outward_normal[2];
         double *vel;
         H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
@@ -1124,7 +1124,8 @@ namespace proteus
             else
             {
                 phi_s = particle_signed_distances[i * sd_offset];
-                phi_s_normal = &particle_signed_distance_normals[i * sd_offset * nSpace];
+                phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * nSpace + 0];
+                phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * nSpace + 1];
             }
             fluid_outward_normal[0] = -phi_s_normal[0];
             fluid_outward_normal[1] = -phi_s_normal[1];
