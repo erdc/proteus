@@ -1111,6 +1111,7 @@ namespace proteus
         double phi_s_normal[2]={0.0};
         double fluid_outward_normal[2];
         double vel[2];
+        double center[2];
         H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
         nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
         rho = rho_0 * (1.0 - H_mu) + rho_1 * H_mu;
@@ -1126,6 +1127,8 @@ namespace proteus
                                          ball_velocity,ball_angular_velocity,
                                          i,x,y,z,
                                          vel[0],vel[1]);
+                center[0] = ball_center[3*i+0];
+                center[1] = ball_center[3*i+1];
             }
             else
             {
@@ -1134,6 +1137,9 @@ namespace proteus
                 phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * nSpace + 1];
                 vel[0] = particle_velocities[i * sd_offset * nSpace + 0];
                 vel[1] = particle_velocities[i * sd_offset * nSpace + 1];
+                center[0] = particle_centroids[3*i+0];
+                center[1] = particle_centroids[3*i+1];
+
             }
             fluid_outward_normal[0] = -phi_s_normal[0];
             fluid_outward_normal[1] = -phi_s_normal[1];
@@ -1159,8 +1165,8 @@ namespace proteus
 
 
             //always 3D for particle centroids
-            r_x = x - particle_centroids[i * 3 + 0];
-            r_y = y - particle_centroids[i * 3 + 1];
+            r_x = x - center[0];
+            r_y = y - center[1];
 
             if (element_owned)
               {
@@ -1243,6 +1249,7 @@ namespace proteus
         double phi_s_normal[2];
         double fluid_outward_normal[2];
         double vel[2];
+        double center[2];
         H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
         nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
         rho = rho_0 * (1.0 - H_mu) + rho_1 * H_mu;
@@ -1258,6 +1265,8 @@ namespace proteus
                                          ball_velocity,ball_angular_velocity,
                                          i,x,y,z,
                                          vel[0],vel[1]);
+                center[0] = ball_center[3*i+0];
+                center[1] = ball_center[3*i+1];
             }
             else
             {
@@ -1266,6 +1275,8 @@ namespace proteus
                 phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * nSpace + 1];
                 vel[0] = particle_velocities[i * sd_offset * nSpace + 0];
                 vel[1] = particle_velocities[i * sd_offset * nSpace + 1];
+                center[0] = particle_centroids[3*i+0];
+                center[1] = particle_centroids[3*i+1];
 
             }
             fluid_outward_normal[0] = -phi_s_normal[0];
@@ -1292,8 +1303,8 @@ namespace proteus
             //+dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
 
             //always 3D for particle centroids
-            r_x = x - particle_centroids[i * 3 + 0];
-            r_y = y - particle_centroids[i * 3 + 1];
+            r_x = x - center[0];
+            r_y = y - center[1];
 
             if (element_owned)
               {
