@@ -3389,8 +3389,16 @@ namespace proteus
                     //                  Fy += dS*(C_adim*(v_ext - bc_v_ext)
                     //                          - visco * (normal[0]*(grad_u_ext[1]+grad_v_ext[0]) + normal[1]*2*grad_v_ext[1])
                     //                          + C_adim*dd2);
-                    r_x = x_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 0];
-                    r_y = y_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 1];
+                    if(use_ball_as_particle==1)
+                    {
+                        r_x = x_ext - ball_center[surrogate_boundary_particle[ebN_s] * 3 + 0];
+                        r_y = y_ext - ball_center[surrogate_boundary_particle[ebN_s] * 3 + 1];
+                    }
+                    else
+                    {
+                        r_x = x_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 0];
+                        r_y = y_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 1];
+                    }
                     Mz  += r_x*Fy-r_y*Fx;
                   }//kb
 
