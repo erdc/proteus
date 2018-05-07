@@ -519,8 +519,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                             self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
-                            corresponding_point_on_boundary[0] = self.model.ebq_global['x'][ebN,kb][0] - sdf_ebN_kb*sdNormals[0]
-                            corresponding_point_on_boundary[1] = self.model.ebq_global['x'][ebN,kb][1] - sdf_ebN_kb*sdNormals[1]
+                            for j in range(len(sdNormals)):
+                                corresponding_point_on_boundary[j] = self.model.ebq_global['x'][ebN,kb][j] - sdf_ebN_kb*sdNormals[j]
                             self.ebq_particle_velocity_s[ebN,kb,:]=vel(0.0,corresponding_point_on_boundary)
 
         if self.PRESSURE_model is not None:
@@ -1086,9 +1086,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         if ( abs(sdf_at_quad_pt) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                             self.ebq_global_phi_s[ebN,kb]=sdf_at_quad_pt
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
-                            corresponding_point_on_boundary[0] = self.model.ebq_global['x'][ebN,kb][0] - sdf_at_quad_pt*sdNormals[0]
-                            corresponding_point_on_boundary[1] = self.model.ebq_global['x'][ebN,kb][1] - sdf_at_quad_pt*sdNormals[1]
-                            sel.febq_particle_velocity_s[ebN,kb,:]=vel(0.0,corresponding_point_on_boundary)
+                            for j in range(len(sdNormals)):
+                                corresponding_point_on_boundary[j] = self.model.ebq_global['x'][ebN,kb][j] - sdf_at_quad_pt*sdNormals[j]
+                            self.ebq_particle_velocity_s[ebN,kb,:]=vel(0.0,corresponding_point_on_boundary)
             self.model.q[('phis')] = self.phisField
 
             #Update velocity inside the particle
