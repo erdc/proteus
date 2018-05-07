@@ -1957,14 +1957,9 @@ namespace proteus
           double distance = std::sqrt((ball_center[I*3+0]-x)*(ball_center[I*3+0]-x)
                                     + (ball_center[I*3+1]-y)*(ball_center[I*3+1]-y)
 //                                  + (ball_center[I*3+2]-z)*(ball_center[I*3+2]-z)
-                            ) - ball_radius[I];
+                            );
           nx = (x - ball_center[I*3+0])/(distance+1e-10);
           ny = (y - ball_center[I*3+1])/(distance+1e-10);
-          if(distance < 0.0)
-          {
-              nx = -nx;
-              ny = -ny;
-          }
       }
       void get_velocity_to_ith_ball(int n_balls,double* ball_center, double* ball_radius,
                                     double* ball_velocity, double* ball_angular_velocity,
@@ -2281,7 +2276,7 @@ namespace proteus
                     else
                         surrogate_boundary_elements.push_back(0);
 
-                    //check which particle is this surrogate edge related to.
+                    //check which particle this surrogate edge is related to.
                     int j=-1;
                     if(use_ball_as_particle==1)
                     {
@@ -3282,6 +3277,7 @@ namespace proteus
                         dist = ebq_global_phi_solid[ebN_kb];
                         P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
                         P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
+                        //todo: bug: kb is on edge
                         bc_u_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*2
                                                        +eN*nQuadraturePoints_element*2
                                                        +kb*2
