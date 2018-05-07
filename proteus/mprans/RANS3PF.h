@@ -3310,10 +3310,6 @@ namespace proteus
                         bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
                         bc_w_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+2];
                     }
-
-                    P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
-                    P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
-                    P_normal[2] = ebq_global_grad_phi_solid[ebN_kb*nSpace+2];
                     distance[0] = -P_normal[0]*dist;
                     distance[1] = -P_normal[1]*dist;
                     distance[2] = -P_normal[2]*dist;
