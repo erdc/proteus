@@ -1238,7 +1238,7 @@ namespace proteus
                                              double* particle_netMoments)
       {
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
-        double *phi_s_normal;
+        double phi_s_normal[2];
         double fluid_outward_normal[2];
         double vel[2];
         H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
@@ -1260,7 +1260,8 @@ namespace proteus
             else
             {
                 phi_s = particle_signed_distances[i * sd_offset];
-                phi_s_normal = &particle_signed_distance_normals[i * sd_offset * nSpace];
+                phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * nSpace + 0];
+                phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * nSpace + 1];
                 vel[0] = particle_velocities[i * sd_offset * nSpace + 0];
                 vel[1] = particle_velocities[i * sd_offset * nSpace + 1];
 
@@ -2626,6 +2627,7 @@ namespace proteus
                                      ball_radius,
                                      ball_velocity,
                                      ball_angular_velocity);
+
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not?
@@ -2767,7 +2769,6 @@ namespace proteus
                                            grad_w,
                                            particle_netForces,
                                            particle_netMoments);
-                //Turbulence closure model
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
