@@ -108,6 +108,7 @@ namespace proteus
                                    const double* eps_solid,
                                    const double* ebq_global_phi_solid,
                                    const double* ebq_global_grad_phi_solid,
+                                   const double* ebq_particle_velocity_solid,
                                    const double* phi_solid_nodes,
                                    const double* phi_solid,
                                    const double* q_velocity_solid,
@@ -347,6 +348,7 @@ namespace proteus
                                    const double *eps_solid,
                                    const double *ebq_global_phi_solid,
                                    const double *ebq_global_grad_phi_solid,
+                                   const double* ebq_particle_velocity_solid,
                                    const double *phi_solid_nodes,
                                    const double *phi_solid,
                                    const double *q_velocity_solid,
@@ -2035,6 +2037,7 @@ namespace proteus
                              const double* eps_solid,
                              const double* ebq_global_phi_solid,
                              const double* ebq_global_grad_phi_solid,
+                             const double* ebq_particle_velocity_solid,
                              const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
@@ -3269,7 +3272,9 @@ namespace proteus
                         get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,
                                                  ball_velocity,ball_angular_velocity,
                                                  surrogate_boundary_particle[ebN_s],
-                                                 x_ext,y_ext,z_ext,
+                                                 x_ext-dist*P_normal[0],//corresponding point on the boundary of the particle
+                                                 y_ext-dist*P_normal[1],
+                                                 0.0,//z_ext,
                                                  bc_u_ext,bc_v_ext);
                     }
                     else
@@ -3277,15 +3282,9 @@ namespace proteus
                         dist = ebq_global_phi_solid[ebN_kb];
                         P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
                         P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
-                        //todo: bug: kb is on edge
-                        bc_u_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*2
-                                                       +eN*nQuadraturePoints_element*2
-                                                       +kb*2
-                                                       +0];
-                        bc_v_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*2
-                                                       +eN*nQuadraturePoints_element*2
-                                                       +kb*2
-                                                       +1];
+                        bc_u_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+0];
+                        bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
+
                     }
 
                     ck.calculateGScale(G,normal,h_penalty);
@@ -4379,6 +4378,7 @@ namespace proteus
                              const double* eps_solid,
                              const double* ebq_global_phi_solid,
                              const double* ebq_global_grad_phi_solid,
+                             const double* ebq_particle_velocity_solid,
                              const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
@@ -5571,7 +5571,9 @@ namespace proteus
                         get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,
                                                  ball_velocity, ball_angular_velocity,
                                                  surrogate_boundary_particle[ebN_s],
-                                                 x_ext,y_ext,z_ext,
+                                                 x_ext-dist*P_normal[0],
+                                                 y_ext-dist*P_normal[1],
+                                                 0.0,//z_ext,
                                                  bc_u_ext,bc_v_ext);
                     }
                     else
@@ -5579,14 +5581,8 @@ namespace proteus
                         dist = ebq_global_phi_solid[ebN_kb];
                         P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
                         P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
-                        bc_u_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*2
-                                                       +eN*nQuadraturePoints_element*2
-                                                       +kb*2
-                                                       +0];
-                        bc_v_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*2
-                                                       +eN*nQuadraturePoints_element*2
-                                                       +kb*2
-                                                       +1];
+                        bc_u_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+0];
+                        bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
                     }
                     distance[0] = -P_normal[0]*dist;
                     distance[1] = -P_normal[1]*dist;
