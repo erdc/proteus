@@ -63,7 +63,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.flowModelIndex=V_model
         self.modelIndex=ME_model
         self.RD_modelIndex=RD_model
-        self.LS_modelIndex=LS_model
         self.checkMass = checkMass
         #VRANS
         self.q_porosity = None; self.ebq_porosity = None; self.ebqe_porosity = None
@@ -118,10 +117,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if hasattr(self.flowCoefficients,'ebqe_porosity'):
             self.ebqe_porosity = self.flowCoefficients.ebqe_porosity
         else:
-            self.ebqe_porosity = numpy.ones(modelList[self.LS_modelIndex].ebqe[('u',0)].shape,
+            self.ebqe_porosity = numpy.ones(modelList[self.flowModelIndex].ebqe[('u',0)].shape,
                                             'd')
             if self.setParamsFunc != None:
-                self.setParamsFunc(modelList[self.LS_modelIndex].ebqe['x'],self.ebqe_porosity)
+                self.setParamsFunc(modelList[self.flowModelIndex].ebqe['x'],self.ebqe_porosity)
             #
         #
 

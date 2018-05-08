@@ -455,7 +455,10 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                  double fContact,
                                  double mContact,
                                  double nContact,
-                                 double angFriction)
+                                 double angFriction,
+                                 double vos_limiter,
+                                 double mu_fr_limiter,
+                             )
 
 
 cdef class RANS3PF:
@@ -483,7 +486,10 @@ cdef class RANS3PF:
                   double fContact,
                   double mContact,
                   double nContact,
-                  double angFriction):
+                  double angFriction,
+                  double vos_limiter,
+                  double mu_fr_limiter,
+                  ):
         self.thisptr = newRANS3PF(nSpaceIn,
                                   nQuadraturePoints_elementIn,
                                   nDOF_mesh_trial_elementIn,
@@ -505,7 +511,10 @@ cdef class RANS3PF:
                                   fContact,
                                   mContact,
                                   nContact,
-                                  angFriction)
+                                  angFriction,
+                                  vos_limiter,
+                                  mu_fr_limiter,
+                                  )
 
     def __dealloc__(self):
         del self.thisptr
@@ -1814,7 +1823,10 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                      double fContact,
                                      double mContact,
                                      double nContact,
-                                     double angFriction)
+                                     double angFriction,
+                                     double vos_limiter,
+                                     double mu_fr_limiter,
+                                      )
 
 cdef class RANS3PF2D:
     cdef cppRANS3PF2D_base * thisptr
@@ -1841,7 +1853,10 @@ cdef class RANS3PF2D:
                   double fContact,
                   double mContact,
                   double nContact,
-                  double angFriction):
+                  double angFriction,
+                  double vos_limiter,
+                  double mu_fr_limiter,
+                  ):
         self.thisptr = newRANS3PF2D(nSpaceIn,
                                     nQuadraturePoints_elementIn,
                                     nDOF_mesh_trial_elementIn,
@@ -1863,7 +1878,10 @@ cdef class RANS3PF2D:
                                     fContact,
                                     mContact,
                                     nContact,
-                                    angFriction)
+                                    angFriction,
+                                    vos_limiter,
+                                    mu_fr_limiter,
+                                    )
 
     def __dealloc__(self):
         del self.thisptr
@@ -2716,3 +2734,4 @@ cdef class RANS3PF2D:
                                               < double * > vel_trial_trace_ref.data,
                                               < double * > ebqe_velocity.data,
                                               < double * > velocityAverage.data)
+
