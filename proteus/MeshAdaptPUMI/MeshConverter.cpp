@@ -513,6 +513,31 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
   apf::MeshIterator* it;
   apf::MeshEntity* f;
 
+  //first associate all nodes with a material tag and synchronize fields to avoid mismatches 
+  apf::Field* nodeMaterials = apf::createLagrangeField(m, "nodeMaterials", apf::SCALAR, 1);
+  it = m->begin(0);
+  while(f = m->iterate(it))
+  {
+    apf::Adjacent vert_adjFace;
+    m->getAdjacent(f,m->getDimension()-1,vert_adjFace);
+    apf::MeshEntity* face;
+    apf::setScalar(nodeMaterials,f,0,0); //interior node
+    for(int i =0; i<vert_adjFace.getSize();i++)
+    {
+      face=vert_adjFace[i];
+      geomEnt = m->toModel(face);
+      if(m->getModelType(geomEnt) == m->getDimension()-1)
+      {
+        geomTag = m->getModelTag(geomEnt);
+        apf::setScalar(nodeMaterials,f,0,geomTag);
+        continue;
+      }
+    }
+  }
+  //apf::writeVtkFiles("nodeMaterials",m);
+  apf::synchronize(nodeMaterials);
+  //std::abort();
+
   //First iterate over all faces in 3D, get the model tag and apply to all downward adjacencies
   int dim = m->getDimension()-1;
   it = m->begin(dim);
@@ -526,12 +551,14 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
       m->getAdjacent(f,0,face_adjVert);
       for(int j=0;j<face_adjVert.getSize();j++){
           int vID = localNumber(face_adjVert[j]);
-          mesh.nodeMaterialTypes[vID] = geomTag;
+          //mesh.nodeMaterialTypes[vID] = geomTag;
+          mesh.nodeMaterialTypes[vID] = apf::getScalar(nodeMaterials,face_adjVert[j],0);
       }
     }
   }
   m->end(it);
 
+  apf::destroyField(nodeMaterials);
   std::cout<<"Finished faces and verts\n";
   //Loop over regions
   dim = m->getDimension();
