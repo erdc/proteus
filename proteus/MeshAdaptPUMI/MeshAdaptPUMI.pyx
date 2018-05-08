@@ -33,7 +33,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int updateMaterialArrays2(Mesh&)
         int transferFieldToPUMI(char*, double*, int, int)
         int transferFieldToProteus(char*, double*, int, int)
-        int transferPropertiesToPUMI(double*, double*,double*,double)
+        int transferPropertiesToPUMI(double*, double*,double*,double,double)
         int transferModelInfo(int*,int*,int*,int*,int*,int*,int)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
         int transferBCsToProteus()
