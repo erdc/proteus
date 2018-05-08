@@ -18,10 +18,15 @@
 class MeshAdaptPUMIDrvr{
  
   public:
+<<<<<<< HEAD
   MeshAdaptPUMIDrvr(double, double, double, int, int, int, const char*, const char*,const char*,double,double,int,double); 
+=======
+  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double,int,double,double); 
+>>>>>>> origin/master
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
+  void writeMesh(const char* meshFile);
 
   //Functions to construct proteus mesh data structures
   int reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int hasModel);
@@ -46,7 +51,11 @@ class MeshAdaptPUMIDrvr{
   //Functions used to transfer information between PUMI and proteus
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
+<<<<<<< HEAD
   int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double interfaceBandSize);
+=======
+  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT);
+>>>>>>> origin/master
   //int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   //int transferBCsToProteus();
 
@@ -75,9 +84,13 @@ class MeshAdaptPUMIDrvr{
   int nEstimate; //counter for number of error estimator calls
   int nsd; //number of spatial dimensions
   int maxAspect; //maximum aspect ratio
+<<<<<<< HEAD
   int adaptMesh; //is adaptivity turned on?
   int numAdaptSteps; //Number adaptivity
   double N_interface_band; //number of elements in half-band around interface
+=======
+  double gradingFactor;
+>>>>>>> origin/master
 
   //User Inputs
   std::string size_field_config; //What type of size field: interface, ERM, isotropic
@@ -91,6 +104,9 @@ class MeshAdaptPUMIDrvr{
   int getSimmetrixBC();
   void removeBCData();
   char* modelFileName; 
+  
+  //VMS
+  void get_VMS_error(double& total_error);
   
   //tags used to identify types of BC
   apf::MeshTag* BCtag;
@@ -123,11 +139,12 @@ class MeshAdaptPUMIDrvr{
 
   double rho[2], nu[2];
   double g[3];
-  double delta_t;
+  double delta_T;
   apf::MeshTag* diffFlux;
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* err_reg; //error field from ERM
+  apf::Field* vmsErrH1; //error field for VMS
   apf::Field* errRho_reg; //error-density field from ERM
   apf::Field* errRel_reg; //relative error field from ERM
   /* this field stores isotropic size */
