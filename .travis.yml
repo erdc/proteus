@@ -5,8 +5,8 @@ language: python
 
 env:
   - TEST_PROFILE="proteus"
-  - TEST_PROFILE="Crump/Colagrossi/Ubbink/Floating2D_BD/Linear_waves/Non_linear_waves"
-  - TEST_PROFILE="Cylinder/Quiescent/Random_waves/Sliding_CB/Sluice_gate/Standing_waves/Wavesloshing"  
+  - TEST_PROFILE="1st_set"
+  - TEST_PROFILE="2nd_set"  
     #- TEST_PROFILE="air-water-vv"
 
 python:
@@ -69,21 +69,11 @@ cache:
 
 script:
   - if [[ "${TEST_PROFILE}" == "proteus" ]]; then py.test --forked -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus; fi
-  - if [[ "${TEST_PROFILE}" == "Crump/Colagrossi/Ubbink/Floating2D_BD/Linear_waves/Non_linear_waves" ]]; then py.test --forked -v air-water-vv/Tests/test_crump_weir.py; fi
-  - if [[ "${TEST_PROFILE}" == "Crump/Colagrossi/Ubbink/Floating2D_BD/Linear_waves/Non_linear_waves" ]]; then py.test --forked -v air-water-vv/Tests/test_dambreak_Colagrossi.py; fi
-  - if [[ "${TEST_PROFILE}" == "Crump/Colagrossi/Ubbink/Floating2D_BD/Linear_waves/Non_linear_waves" ]]; then py.test --forked -v air-water-vv/Tests/test_dambreak_Ubbink.py; fi
-  - if [[ "${TEST_PROFILE}" == "Crump/Colagrossi/Ubbink/Floating2D_BD/Linear_waves/Non_linear_waves" ]]; then py.test --forked -v air-water-vv/Tests/test_floating2D_BD.py; fi
-  - if [[ "${TEST_PROFILE}" == "Crump/Colagrossi/Ubbink/Floating2D_BD/Linear_waves/Non_linear_waves" ]]; then py.test --forked -v air-water-vv/Tests/test_linearWaves.py; fi
-  - if [[ "${TEST_PROFILE}" == "Crump/Colagrossi/Ubbink/Floating2D_BD/Linear_waves/Non_linear_waves" ]]; then py.test --forked -v air-water-vv/Tests/test_nonlinearWaves.py; fi
-
-    
-  - if [[ "${TEST_PROFILE}" == "Cylinder/Quiescent/Random_waves/Sliding_CB/Sluice_gate/Standing_waves/Wavesloshing" ]]; then py.test --forked -v air-water-vv/Tests/test_oscillating_cylinder.py; fi
-  - if [[ "${TEST_PROFILE}" == "Cylinder/Quiescent/Random_waves/Sliding_CB/Sluice_gate/Standing_waves/Wavesloshing" ]]; then py.test --forked -v air-water-vv/Tests/test_quiescent_water.py; fi
-  - if [[ "${TEST_PROFILE}" == "Cylinder/Quiescent/Random_waves/Sliding_CB/Sluice_gate/Standing_waves/Wavesloshing" ]]; then py.test --forked -v air-water-vv/Tests/test_randomWaves.py; fi
-  - if [[ "${TEST_PROFILE}" == "Cylinder/Quiescent/Random_waves/Sliding_CB/Sluice_gate/Standing_waves/Wavesloshing" ]]; then py.test --forked -v air-water-vv/Tests/test_sliding_CB.py; fi
-  - if [[ "${TEST_PROFILE}" == "Cylinder/Quiescent/Random_waves/Sliding_CB/Sluice_gate/Standing_waves/Wavesloshing" ]]; then py.test --forked -v air-water-vv/Tests/test_sluice_gate.py; fi
-  - if [[ "${TEST_PROFILE}" == "Cylinder/Quiescent/Random_waves/Sliding_CB/Sluice_gate/Standing_waves/Wavesloshing" ]]; then py.test --forked -v air-water-vv/Tests/test_standingWaves.py; fi
-  - if [[ "${TEST_PROFILE}" == "Cylinder/Quiescent/Random_waves/Sliding_CB/Sluice_gate/Standing_waves/Wavesloshing" ]]; then py.test --forked -v air-water-vv/Tests/test_wavesloshing.py; fi
+  
+  - if [[ "${TEST_PROFILE}" == "1st_set" ]]; then py.test --forked -v air-water-vv/Tests/1st_set/; fi
+  
+  - if [[ "${TEST_PROFILE}" == "2nd_set" ]]; then py.test --forked -v air-water-vv/Tests/2nd_set/; fi
+  
 
   #- if [[ "${TEST_PROFILE}" == "air-water-vv" ]]; then py.test --forked -v air-water-vv/Tests; fi
 
