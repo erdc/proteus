@@ -876,6 +876,31 @@ namespace proteus
       dmom_w_source[2] = (vos)*new_beta;*/
     }
 
+
+    inline
+      void updatePenatlyForPacking(const double vos,
+			     const double u,
+			     const double v,
+			     const double w,
+			     double& mom_u_source,
+			     double& mom_v_source,
+			     double& mom_w_source)
+    {
+      double meanPack = (closure.maxFraction + closure.FrFraction)/2.;
+      double epsPack = (closure.maxFraction - closure.FrFraction)/2.;
+      double dVos = vos - meanPack;
+      double sigma = smoothedHeaviside( epsPack, dVos);
+      double packPenalty = 1e6
+      mom_u_source[0] += sigma * packPenalty*u;
+      mom_v_source += sigma * packPenalty*v;
+      dmom_u_source += sigma * packPenalty*u;
+      dmom_v_source += sigma * packPenalty*v;
+      //mom_w_source += coeff * grad_vos[2];
+
+    }  
+
+
+    
     inline
       void updateFrictionalPressure(const double vos,
                                     const double grad_vos[nSpace],
@@ -1973,10 +1998,10 @@ namespace proteus
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not?
 
-                updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
-                                                  /* nonlinearDragFactor, */
-                                                  /* vos, */
-                                                  /* meanGrainSize, */
+                updateDarcyForchheimerTerms_Ergun(// linearDragFactor,
+                                                  // nonlinearDragFactor,
+                                                  // vos,
+                                                  // meanGrainSize,
                                                   q_dragAlpha[eN_k],
                                                   q_dragBeta[eN_k],
                                                   eps_rho,
@@ -2005,7 +2030,8 @@ namespace proteus
                                                   dmom_u_source,
                                                   dmom_v_source,
                                                   dmom_w_source);
-                updateFrictionalPressure(vos,
+		updatePenaltyForPacking(vos,u,v,w,
+		/*		               updateFrictionalPressure(vos,
                         grad_vos,
 						mom_u_source,
 						mom_v_source,
@@ -2032,7 +2058,7 @@ namespace proteus
                                   mom_vw_diff_ten,
                                   mom_ww_diff_ten,
                                   mom_wu_diff_ten,
-                                  mom_wv_diff_ten);
+                                  mom_wv_diff_ten);*/
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -3677,10 +3703,10 @@ namespace proteus
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not
 
-                updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
-                                                  /* nonlinearDragFactor, */
-                                                  /* vos, */
-                                                  /* meanGrainSize, */
+                updateDarcyForchheimerTerms_Ergun(// linearDragFactor,
+                                                  // nonlinearDragFactor,
+                                                  // vos,
+                                                  // meanGrainSize,
                                                   q_dragAlpha[eN_k],
                                                   q_dragBeta[eN_k],
                                                   eps_rho,
@@ -3709,7 +3735,7 @@ namespace proteus
                                                   dmom_u_source,
                                                   dmom_v_source,
                                                   dmom_w_source);
-                updateFrictionalPressure(vos,
+		/*		                updateFrictionalPressure(vos,
                         grad_vos,
 						mom_u_source,
 						mom_v_source,
@@ -3736,7 +3762,7 @@ namespace proteus
                                   mom_vw_diff_ten,
                                   mom_ww_diff_ten,
                                   mom_wu_diff_ten,
-                                  mom_wv_diff_ten);
+                                  mom_wv_diff_ten);*/
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {

@@ -725,7 +725,14 @@ public:
 	return p_friction(sedF) + psc(sedF, rhoSolid, theta) + pcorr ;
     }
 
- 
+       inline double frFraction()
+       {
+	 return frFraction_;
+       }
+       inline double maxFraction()
+       {
+	 return maxFraction_;
+       }
 
     
     

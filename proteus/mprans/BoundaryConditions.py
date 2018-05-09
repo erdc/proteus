@@ -240,13 +240,19 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
+        self.us_dirichlet.setConstantBC(0.)
+        self.vs_dirichlet.setConstantBC(0.)
+        self.ws_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.setConstantBC(vof_air)  # air
         if self._b_or[0] == 1. or self._b_or[0] == -1.:
             self.u_diffusive.setConstantBC(0.)
+            self.us_diffusive.setConstantBC(0.)
         if self._b_or[1] == 1. or self._b_or[1] == -1.:
             self.v_diffusive.setConstantBC(0.)
+            self.vs_diffusive.setConstantBC(0.)
         if self._b_or[2] == 1. or self._b_or[2] == -1.:
             self.w_diffusive.setConstantBC(0.)
+            self.ws_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
 
