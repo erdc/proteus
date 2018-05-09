@@ -83,7 +83,11 @@ namespace proteus
                                    const double* q_turb_var_0,
                                    const double* q_turb_var_1,
                                    const double* q_turb_var_grad_0,
+                                   const double LAG_LES,
                                    double * q_eddy_viscosity,
+                                   double * q_eddy_viscosity_last,
+                                   double * ebqe_eddy_viscosity,
+                                   double * ebqe_eddy_viscosity_last,
                                    int* p_l2g,
                                    int* vel_l2g,
                                    double* p_dof,
@@ -240,6 +244,9 @@ namespace proteus
                                    const double* q_turb_var_0,
                                    const double* q_turb_var_1,
                                    const double* q_turb_var_grad_0,
+                                   const double LAG_LES,
+                                   double * q_eddy_viscosity_last,
+                                   double * ebqe_eddy_viscosity_last,
                                    int* p_l2g,
                                    int* vel_l2g,
                                    double* p_dof, double* u_dof, double* v_dof, double* w_dof,
@@ -562,7 +569,9 @@ namespace proteus
                                   const double& u,
                                   const double& v,
                                   const double& w,
+                                  const double LAG_LES,
                                   double& eddy_viscosity,
+                                  double& eddy_viscosity_last,
                                   double& mom_u_acc,
                                   double& dmom_u_acc_u,
                                   double& mom_v_acc,
@@ -656,15 +665,13 @@ namespace proteus
 
         rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
         nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
+        eddy_viscosity = nu_t;
         nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
-        nu += nu_t;
+        nu += (1.0-LAG_LES)*nu_t + LAG_LES*eddy_viscosity_last;
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
 
-        eddy_viscosity = nu_t;
         if (NONCONSERVATIVE_FORM > 0.0)
           {
-            eddy_viscosity = nu_t*rho;
-
             //u momentum accumulation
             mom_u_acc=u;//trick for non-conservative form
             dmom_u_acc_u=rho*porosity;
@@ -1104,7 +1111,8 @@ namespace proteus
         */
         assert (turbulenceClosureModel >=3);
         double rho,nu,H_mu,nu_t=0.0,nu_t_keps =0.0, nu_t_komega=0.0;
-        double isKEpsilon = 1.0;
+        double isKEpsilon = 1.0, dynamic_eddy_viscosity = 0.0;
+;
         if (turbulenceClosureModel == 4)
           isKEpsilon = 0.0;
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
@@ -1127,39 +1135,39 @@ namespace proteus
         nu_t = fmax(nu_t,1.0e-4*nu); //limit according to Lew, Buscaglia etal 01
         //mwf hack
         nu_t     = fmin(nu_t,1.0e6*nu);
+        eddy_viscosity = nu_t;
         if (NONCONSERVATIVE_FORM > 0.0)
           {
-            eddy_viscosity = nu_t*rho;
+            dynamic_eddy_viscosity = nu_t*rho;
             //u momentum diffusion tensor
-            mom_uu_diff_ten[0] += 2.0*porosity*eddy_viscosity;
-            mom_uu_diff_ten[1] += porosity*eddy_viscosity;
-            mom_uu_diff_ten[2] += porosity*eddy_viscosity;
+            mom_uu_diff_ten[0] += 2.0*porosity*dynamic_eddy_viscosity;
+            mom_uu_diff_ten[1] += porosity*dynamic_eddy_viscosity;
+            mom_uu_diff_ten[2] += porosity*dynamic_eddy_viscosity;
 
-            mom_uv_diff_ten[0] +=porosity*eddy_viscosity;
+            mom_uv_diff_ten[0] +=porosity*dynamic_eddy_viscosity;
 
-            mom_uw_diff_ten[0] +=porosity*eddy_viscosity;
+            mom_uw_diff_ten[0] +=porosity*dynamic_eddy_viscosity;
 
             //v momentum diffusion tensor
-            mom_vv_diff_ten[0] += porosity*eddy_viscosity;
-            mom_vv_diff_ten[1] += 2.0*porosity*eddy_viscosity;
-            mom_vv_diff_ten[2] += porosity*eddy_viscosity;
+            mom_vv_diff_ten[0] += porosity*dynamic_eddy_viscosity;
+            mom_vv_diff_ten[1] += 2.0*porosity*dynamic_eddy_viscosity;
+            mom_vv_diff_ten[2] += porosity*dynamic_eddy_viscosity;
 
-            mom_vu_diff_ten[0] += porosity*eddy_viscosity;
+            mom_vu_diff_ten[0] += porosity*dynamic_eddy_viscosity;
 
-            mom_vw_diff_ten[0] += porosity*eddy_viscosity;
+            mom_vw_diff_ten[0] += porosity*dynamic_eddy_viscosity;
 
             //w momentum diffusion tensor
-            mom_ww_diff_ten[0] += porosity*eddy_viscosity;
-            mom_ww_diff_ten[1] += porosity*eddy_viscosity;
-            mom_ww_diff_ten[2] += 2.0*porosity*eddy_viscosity;
+            mom_ww_diff_ten[0] += porosity*dynamic_eddy_viscosity;
+            mom_ww_diff_ten[1] += porosity*dynamic_eddy_viscosity;
+            mom_ww_diff_ten[2] += 2.0*porosity*dynamic_eddy_viscosity;
 
-            mom_wu_diff_ten[0] += porosity*eddy_viscosity;
+            mom_wu_diff_ten[0] += porosity*dynamic_eddy_viscosity;
 
-            mom_wv_diff_ten[0] += porosity*eddy_viscosity;
+            mom_wv_diff_ten[0] += porosity*dynamic_eddy_viscosity;
           }
         else
           {
-            eddy_viscosity = nu_t;
             //u momentum diffusion tensor
             mom_uu_diff_ten[0] += 2.0*porosity*eddy_viscosity;
             mom_uu_diff_ten[1] += porosity*eddy_viscosity;
@@ -1998,7 +2006,11 @@ namespace proteus
                              const double* q_turb_var_0,
                              const double* q_turb_var_1,
                              const double* q_turb_var_grad_0,
+                             const double LAG_LES,
                              double * q_eddy_viscosity,
+                             double * q_eddy_viscosity_last,
+                             double * ebqe_eddy_viscosity,
+                             double * ebqe_eddy_viscosity_last,
                              //
                              int* p_l2g,
                              int* vel_l2g,
@@ -2335,7 +2347,9 @@ namespace proteus
                                      u,
                                      v,
                                      w,
+                                     LAG_LES,
                                      q_eddy_viscosity[eN_k],
+                                     q_eddy_viscosity_last[eN_k],
                                      mom_u_acc,
                                      dmom_u_acc_u,
                                      mom_v_acc,
@@ -3030,7 +3044,7 @@ namespace proteus
                 //
                 //calculate the pde coefficients using the solution and the boundary values for the solution
                 //
-                double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
+                double bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
 		double rho;
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
@@ -3060,7 +3074,9 @@ namespace proteus
                                      u_ext,
                                      v_ext,
                                      w_ext,
-                                     eddy_viscosity_ext,
+                                     LAG_LES,
+                                     ebqe_eddy_viscosity[ebNE_kb],
+                                     ebqe_eddy_viscosity_last[ebNE_kb],
                                      mom_u_acc_ext,
                                      dmom_u_acc_u_ext,
                                      mom_v_acc_ext,
@@ -3142,7 +3158,9 @@ namespace proteus
                                      bc_u_ext,
                                      bc_v_ext,
                                      bc_w_ext,
+                                     LAG_LES,
                                      bc_eddy_viscosity_ext,
+                                     ebqe_eddy_viscosity_last[ebNE_kb],
                                      bc_mom_u_acc_ext,
                                      bc_dmom_u_acc_u_ext,
                                      bc_mom_v_acc_ext,
@@ -3218,7 +3236,7 @@ namespace proteus
                                             ebqe_turb_var_0[ebNE_kb],
                                             ebqe_turb_var_1[ebNE_kb],
                                             turb_var_grad_0_dummy, //not needed
-                                            eddy_viscosity_ext,
+                                            ebqe_eddy_viscosity[ebNE_kb],
                                             mom_uu_diff_ten_ext,
                                             mom_vv_diff_ten_ext,
                                             mom_ww_diff_ten_ext,
@@ -3777,6 +3795,9 @@ namespace proteus
                              const double* q_turb_var_1,
                              const double* q_turb_var_grad_0,
                              //
+                             const double LAG_LES,
+                             double * q_eddy_viscosity_last,
+                             double * ebqe_eddy_viscosity_last,
                              int* p_l2g,
                              int* vel_l2g,
                              double* p_dof, double* u_dof, double* v_dof, double* w_dof,
@@ -4140,7 +4161,9 @@ namespace proteus
                                      u,
                                      v,
                                      w,
+                                     LAG_LES,
                                      eddy_viscosity,
+                                     q_eddy_viscosity_last[eN_k],
                                      mom_u_acc,
                                      dmom_u_acc_u,
                                      mom_v_acc,
@@ -4957,7 +4980,9 @@ namespace proteus
                                      u_ext,
                                      v_ext,
                                      w_ext,
+                                     LAG_LES,
                                      eddy_viscosity_ext,
+                                     ebqe_eddy_viscosity_last[ebNE_kb],
                                      mom_u_acc_ext,
                                      dmom_u_acc_u_ext,
                                      mom_v_acc_ext,
@@ -5039,7 +5064,9 @@ namespace proteus
                                      bc_u_ext,
                                      bc_v_ext,
                                      bc_w_ext,
+                                     LAG_LES,
                                      bc_eddy_viscosity_ext,
+                                     ebqe_eddy_viscosity_last[ebNE_kb],
                                      bc_mom_u_acc_ext,
                                      bc_dmom_u_acc_u_ext,
                                      bc_mom_v_acc_ext,
