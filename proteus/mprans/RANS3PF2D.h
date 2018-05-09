@@ -516,6 +516,10 @@ namespace proteus
     class cppRANS3PF2D : public cppRANS3PF2D_base
     {
     public:
+      std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
+      static const double C_sbm=1000;//penalty constant for sbm
+      static const double beta_sbm=0.0;//tangent penalty constant for sbm
+
       cppHsuSedStress<2> closure;
       const int nDOF_test_X_trial_element,
         nSpace2;
@@ -2215,7 +2219,11 @@ namespace proteus
           mesh_volume_conservation_err_max_weak=0.0;
         double globalConservationError=0.0;
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-        std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
+//        std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
+        surrogate_boundaries.clear();
+        surrogate_boundary_elements.clear();
+        surrogate_boundary_particle.clear();
+
         //std::set<int> active_velocity_dof;
         for(int eN=0;eN<nElements_global;eN++)
           {
@@ -3308,11 +3316,10 @@ namespace proteus
                     P_tangent[0] = -P_normal[1];
                     P_tangent[1] = P_normal[0];
                     double visco = nu_0*rho_0;
-                    double Csb=10;
-                    double C_adim = Csb*visco/h_penalty;
+                    double C_adim = C_sbm*visco/h_penalty;
                     //std::cout << "C_adim "<< C_adim << std::endl;
                     double beta = 0.0;
-                    double beta_adim = beta*h_penalty*visco;
+                    double beta_adim = beta*visco/h_penalty;
 
                     const double grad_u_d[2] = {get_dot_product(distance,grad_u_ext),
                                                 get_dot_product(distance,grad_v_ext)};
@@ -4538,7 +4545,7 @@ namespace proteus
         //
         std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3), particle_netMoments(nParticles*3);
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-        std::vector<int> surrogate_boundaries,surrogate_boundary_elements,surrogate_boundary_particle;
+//        std::vector<int> surrogate_boundaries,surrogate_boundary_elements,surrogate_boundary_particle;
         //std::set<int> active_velocity_dof;
 
         for(int eN=0;eN<nElements_global;eN++)
@@ -4585,6 +4592,7 @@ namespace proteus
             //
             //detect cut cells
             //
+            if(0)
             if(USE_SBM>0)
               {
                 //
@@ -5608,10 +5616,8 @@ namespace proteus
                     P_tangent[0]= -P_normal[1];
                     P_tangent[1]= P_normal[0];
                     double visco = nu_0*rho_0;
-                    double Csb=10;
-                    double C_adim = Csb*visco/h_penalty;
-                    double beta = 0.0;
-                    double beta_adim = beta*h_penalty*visco;
+                    double C_adim = C_sbm*visco/h_penalty;
+                    double beta_adim = beta_sbm*visco/h_penalty;
 
                     for (int i=0;i<nDOF_test_element;i++)
                       {
