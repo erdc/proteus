@@ -1,3 +1,4 @@
+
 #ifndef RANS3PSed2D_H
 #define RANS3PSed2D_H
 #include <cmath>
@@ -877,24 +878,27 @@ namespace proteus
     }
 
 
-    inline
-      void updatePenatlyForPacking(const double vos,
-			     const double u,
-			     const double v,
-			     const double w,
-			     double& mom_u_source,
-			     double& mom_v_source,
-			     double& mom_w_source)
+    inline void updatePenaltyForPacking(const double vos,
+				   const double u,
+				   const double v,
+				   const double w,
+				   double& mom_u_source,
+				   double& mom_v_source,
+				   double& mom_w_source,
+				   double dmom_u_source[nSpace],
+				   double dmom_v_source[nSpace],
+				   double dmom_w_source[nSpace])
+				   
     {
-      double meanPack = (closure.maxFraction + closure.FrFraction)/2.;
-      double epsPack = (closure.maxFraction - closure.FrFraction)/2.;
+      double meanPack = (closure.maxFraction_ + closure.frFraction_)/2.;
+      double epsPack = (closure.maxFraction_ - closure.frFraction_)/2.;
       double dVos = vos - meanPack;
       double sigma = smoothedHeaviside( epsPack, dVos);
-      double packPenalty = 1e6
-      mom_u_source[0] += sigma * packPenalty*u;
+      double packPenalty = 1e6;
+      mom_u_source += sigma * packPenalty*u;
       mom_v_source += sigma * packPenalty*v;
-      dmom_u_source += sigma * packPenalty*u;
-      dmom_v_source += sigma * packPenalty*v;
+      dmom_u_source[0] += sigma * packPenalty;
+      dmom_v_source[1] += sigma * packPenalty;
       //mom_w_source += coeff * grad_vos[2];
 
     }  
@@ -2030,7 +2034,17 @@ namespace proteus
                                                   dmom_u_source,
                                                   dmom_v_source,
                                                   dmom_w_source);
-		updatePenaltyForPacking(vos,u,v,w,
+		updatePenaltyForPacking(vos,
+					u,
+					v,
+					w,
+					mom_u_source,
+					mom_v_source,
+					mom_w_source,
+					dmom_u_source,
+					dmom_v_source,
+					dmom_w_source);
+
 		/*		               updateFrictionalPressure(vos,
                         grad_vos,
 						mom_u_source,
@@ -3735,6 +3749,17 @@ namespace proteus
                                                   dmom_u_source,
                                                   dmom_v_source,
                                                   dmom_w_source);
+		updatePenaltyForPacking(vos,
+					u,
+					v,
+					w,
+					mom_u_source,
+					mom_v_source,
+					mom_w_source,
+					dmom_u_source,
+					dmom_v_source,
+					dmom_w_source);
+
 		/*		                updateFrictionalPressure(vos,
                         grad_vos,
 						mom_u_source,
