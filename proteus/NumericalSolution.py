@@ -756,8 +756,11 @@ class NS_base:  # (HasTraits):
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
 
     def PUMI2Proteus(self,mesh):
-        p0 = self.pList[0] #This can probably be cleaned up somehow
-        n0 = self.nList[0]
+        #p0 = self.pList[0] #This can probably be cleaned up somehow
+        #n0 = self.nList[0]
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
+
         logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
         if p0.domain.nd == 3:
           mlMesh = MeshTools.MultilevelTetrahedralMesh(
@@ -953,16 +956,19 @@ class NS_base:  # (HasTraits):
         Ainsworth and Oden and generates a corresponding error field.
         """
 
-        p0 = self.pList[0]
-        n0 = self.nList[0]
+        #p0 = self.pList[0]
+        #n0 = self.nList[0]
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
+
         adaptMeshNow = False
         #will need to move this to earlier when the mesh is created
         #from proteus.MeshAdaptPUMI import MeshAdaptPUMI
-        if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and p0.domain.PUMIMesh.adaptMesh():
-            import sys
-            if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
-                sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
-            p0.domain.PUMIMesh=n0.MeshAdaptMesh
+        #if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and p0.domain.PUMIMesh.adaptMesh():
+        #    import sys
+        #    if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
+        #        sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
+        #    p0.domain.PUMIMesh=n0.MeshAdaptMesh
             #p0.domain.hasModel = n0.useModel
             #numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
             ##force initialization of arrays to enable passage through to C++ code
@@ -1093,8 +1099,8 @@ class NS_base:  # (HasTraits):
                               self.pList[0].ct.nu_1])
             g = numpy.asarray(self.pList[0].ct.g)
             deltaT = self.tn-self.tn_last
-            epsFact = p0.ct.epsFact_density 
-            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,epsFact)
+            epsFact = p0.epsFact_density 
+            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
             del rho, nu, g, epsFact
 
             logEvent("Estimate Error")
@@ -1432,7 +1438,7 @@ class NS_base:  # (HasTraits):
 
         self.nSequenceSteps = 0
         nSequenceStepsLast=self.nSequenceSteps # prevent archiving the same solution twice
-        self.nSolveSteps=self.nList[0].adaptMesh_nSteps-1
+        self.nSolveSteps=-1#self.nList[0].adaptMesh_nSteps-1
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
