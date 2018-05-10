@@ -670,16 +670,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.phi_s = numpy.ones(mesh.nodeArray.shape[0], 'd')*1e10
 
         logEvent("updating {0} particles...".format(self.nParticles))
-        for i in range(self.nParticles):
-            if self.granular_sdf_Calc is not None:
-                sdf = lambda x: self.granular_sdf_Calc(x,i)
-            else:
-                sdf = lambda x: self.particle_sdfList[i](0.0, x)
-
-            for j in range(mesh.nodeArray.shape[0]):
-                sdf_at_node, _ = sdf(mesh.nodeArray[j, :])
-                if (abs(sdf_at_node) < abs(self.phi_s[j])):
-                        self.phi_s[j] = sdf_at_node
+        if self.use_ball_as_particle == 0:
+            for i in range(self.nParticles):
+                if self.granular_sdf_Calc is not None:
+                    sdf = lambda x: self.granular_sdf_Calc(x,i)
+                else:
+                    sdf = lambda x: self.particle_sdfList[i](0.0, x)
+    
+                for j in range(mesh.nodeArray.shape[0]):
+                    sdf_at_node, _ = sdf(mesh.nodeArray[j, :])
+                    if (abs(sdf_at_node) < abs(self.phi_s[j])):
+                            self.phi_s[j] = sdf_at_node
 
         # cek we eventually need to use the local element diameter
         self.eps_density = self.epsFact_density * mesh.h
