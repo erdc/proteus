@@ -46,7 +46,7 @@ namespace proteus
                                double fContact,
                                double mContact,
                                double nContact,
-                               double angFriction) {}
+                               double angFriction,double vos_limiter,double mu_fr_limiter ){}
     virtual void calculateResidual(double *mesh_trial_ref,
                                    double *mesh_grad_trial_ref,
                                    double *mesh_dof,
@@ -108,6 +108,7 @@ namespace proteus
                                    const double* eps_solid,
                                    const double* ebq_global_phi_solid,
                                    const double* ebq_global_grad_phi_solid,
+                                   const double* ebq_particle_velocity_solid,
                                    const double* phi_solid_nodes,
                                    const double* phi_solid,
                                    const double* q_velocity_solid,
@@ -256,13 +257,18 @@ namespace proteus
                                    double* particle_netMoments,
                                    double* particle_surfaceArea,
                                    double particle_nitsche,
+                                   int use_ball_as_particle,
+                                   double* ball_center,
+                                   double* ball_radius,
+                                   double* ball_velocity,
+                                   double* ball_angular_velocity,
                                    double* phisError,
                                    double* phisErrorNodal,
                                    int USE_SUPG,
-				   int ARTIFICIAL_VISCOSITY,
+                                   int ARTIFICIAL_VISCOSITY,
                                    double cMax,
                                    double cE,
-				   int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
+                                   int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                    double* forcex,
                                    double* forcey,
                                    double* forcez,
@@ -342,6 +348,7 @@ namespace proteus
                                    const double *eps_solid,
                                    const double *ebq_global_phi_solid,
                                    const double *ebq_global_grad_phi_solid,
+                                   const double* ebq_particle_velocity_solid,
                                    const double *phi_solid_nodes,
                                    const double *phi_solid,
                                    const double *q_velocity_solid,
@@ -461,7 +468,12 @@ namespace proteus
                                    double* particle_velocities,
                                    double* particle_centroids,
                                    double particle_nitsche,
-				   int USE_SUPG,
+                                   int use_ball_as_particle,
+                                   double* ball_center,
+                                   double* ball_radius,
+                                   double* ball_velocity,
+                                   double* ball_angular_velocity,
+                                   int USE_SUPG,
                                    int KILL_PRESSURE_TERM,
                                    double dt,
                                    int MATERIAL_PARAMETERS_AS_FUNCTION,
@@ -524,7 +536,7 @@ namespace proteus
                 0.02,
                 2.0,
                 5.0,
-                M_PI/6.),
+                M_PI/6., 0.05, 1.00),
         nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
           {/*        std::cout<<"Constructing cppRANS3PF2D<CompKernelTemplate<"
@@ -555,7 +567,7 @@ namespace proteus
                          double fContact,
                          double mContact,
                          double nContact,
-                         double angFriction)
+                         double angFriction,double vos_limiter, double mu_fr_limiter)
       {
         closure = cppHsuSedStress<2>(aDarcy,
                                      betaForch,
@@ -571,7 +583,7 @@ namespace proteus
                                      fContact,
                                      mContact,
                                      nContact,
-                                     angFriction);
+                                     angFriction, vos_limiter,mu_fr_limiter );
       }
 
       inline double Dot(const double vec1[nSpace],
@@ -718,14 +730,20 @@ namespace proteus
                                   double& rhoSave,
                                   double& nuSave,
                                   int KILL_PRESSURE_TERM,
-				  int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
+                                  int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                   double forcex,
                                   double forcey,
                                   double forcez,
                                   int MATERIAL_PARAMETERS_AS_FUNCTION,
                                   double density_as_function,
                                   double dynamic_viscosity_as_function,
-                                  int USE_SBM)
+                                  int USE_SBM,
+                                  double x, double y, double z,
+                                  int use_ball_as_particle,
+                                  double* ball_center,
+                                  double* ball_radius,
+                                  double* ball_velocity,
+                                  double* ball_angular_velocity)
       {
         double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -740,19 +758,16 @@ namespace proteus
           case 1:
             {
               norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] + //grad_w[2]*grad_w[2] +
-                                 0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));/* +
-                                                                                      0.5*(grad_u[2]+grad_w[0])*(grad_u[2]+grad_w[0]) +
-                                                                                      0.5*(grad_v[2]+grad_w[1])*(grad_v[2]+grad_w[1])));*/
+                                 0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));
+
               nu_t0 = smagorinskyConstant*smagorinskyConstant*h_e*h_e*norm_S;
               nu_t1 = smagorinskyConstant*smagorinskyConstant*h_e*h_e*norm_S;
             }
-          case 2:
+          case 2: 
             {
               double re_0,cs_0=0.0,re_1,cs_1=0.0;
-              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] + //grad_w[2]*grad_w[2] +
-                                 0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));/* +
-                                                                                      0.5*(grad_u[2]+grad_w[0])*(grad_u[2]+grad_w[0]) +
-                                                                                      0.5*(grad_v[2]+grad_w[1])*(grad_v[2]+grad_w[1])));*/
+              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +//grad_w[2]*grad_w[2] + 
+                                 0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));
               re_0 = h_e*h_e*norm_S/nu_0;
               if (re_0 > 1.0)
                 cs_0=0.027*pow(10.0,-3.23*pow(re_0,-0.92));
@@ -787,15 +802,20 @@ namespace proteus
 
         // mass (volume accumulation)
         //..hardwired
-
         double phi_s = 1.0;
-        for (int i = 0; i < nParticles; i++)
-          {
-            double temp_phi_s = particle_signed_distances[i * sd_offset];
-            if (temp_phi_s < phi_s)
-              phi_s = temp_phi_s;
-          }
-
+        if(use_ball_as_particle==1)
+        {
+            get_distance_to_ball(nParticles,ball_center,ball_radius,x,y,z,phi_s);
+        }
+        else
+        {
+            for (int i = 0; i < nParticles; i++)
+            {
+                double temp_phi_s = particle_signed_distances[i * sd_offset];
+                if (temp_phi_s < phi_s)
+                    phi_s = temp_phi_s;
+            }
+        }
         double phi_s_effect = (phi_s > 0.0) ? 1.0 : 0.0;
         if(USE_SBM>0)
           phi_s_effect = 1.0;
@@ -995,19 +1015,18 @@ namespace proteus
         nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-        viscosity = mu; // mql. CHECK.
-        uc = sqrt(u*u+v*v*+w*w);
+        viscosity = nu;
+        uc = sqrt(u*u+v*v*+w*w); 
         duc_du = u/(uc+1.0e-12);
         duc_dv = v/(uc+1.0e-12);
         duc_dw = w/(uc+1.0e-12);
         double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
         double new_beta = closure.betaCoeff(1.0-phi_s,
-                                            rho,
-                                            fluid_velocity,
-                                            solid_velocity,
-                                            viscosity);
+					    rho,
+					    fluid_velocity,
+					    solid_velocity,
+					    viscosity);
 
-        new_beta /= rho;
         mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s);
         mom_v_source += (1.0 - phi_s) * new_beta * (v - v_s);
         /* mom_w_source += phi_s*new_beta*(w-w_s); */
@@ -1018,11 +1037,11 @@ namespace proteus
 
         dmom_v_source[0] = 0.0;
         dmom_v_source[1] = (1.0 - phi_s) * new_beta;
-        dmom_v_source[2] = 0.0;
+        /*dmom_v_source[2] = 0.0; */
 
         dmom_w_source[0] = 0.0;
         dmom_w_source[1] = 0.0;
-        dmom_w_source[2] = (1.0 - phi_s) * new_beta;
+        /*dmom_w_source[2] =  (1.0 - phi_s) * new_beta; */
       }
 
       inline void updateSolidParticleTerms(bool element_owned,
@@ -1034,6 +1053,11 @@ namespace proteus
                                            double *particle_signed_distance_normals,
                                            double *particle_velocities,
                                            double *particle_centroids,
+                                           int use_ball_as_particle,
+                                           double* ball_center,
+                                           double* ball_radius,
+                                           double* ball_velocity,
+                                           double* ball_angular_velocity,
                                            const double porosity, //VRANS specific
                                            const double penalty,
                                            const double alpha,
@@ -1084,9 +1108,10 @@ namespace proteus
                                            double *particle_surfaceArea)
       {
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
-        double *phi_s_normal;
+        double phi_s_normal[2]={0.0};
         double fluid_outward_normal[2];
-        double *vel;
+        double vel[2];
+        double center[2];
         H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
         nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
         rho = rho_0 * (1.0 - H_mu) + rho_1 * H_mu;
@@ -1094,13 +1119,32 @@ namespace proteus
         C = 0.0;
         for (int i = 0; i < nParticles; i++)
           {
-            phi_s = particle_signed_distances[i * sd_offset];
-            phi_s_normal = &particle_signed_distance_normals[i * sd_offset * nSpace];
+            if(use_ball_as_particle==1)
+            {
+                get_distance_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s);
+                get_normal_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s_normal[0],phi_s_normal[1]);
+                get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,
+                                         ball_velocity,ball_angular_velocity,
+                                         i,x,y,z,
+                                         vel[0],vel[1]);
+                center[0] = ball_center[3*i+0];
+                center[1] = ball_center[3*i+1];
+            }
+            else
+            {
+                phi_s = particle_signed_distances[i * sd_offset];
+                phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * nSpace + 0];
+                phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * nSpace + 1];
+                vel[0] = particle_velocities[i * sd_offset * nSpace + 0];
+                vel[1] = particle_velocities[i * sd_offset * nSpace + 1];
+                center[0] = particle_centroids[3*i+0];
+                center[1] = particle_centroids[3*i+1];
+
+            }
             fluid_outward_normal[0] = -phi_s_normal[0];
             fluid_outward_normal[1] = -phi_s_normal[1];
-            vel = &particle_velocities[i * sd_offset * nSpace];
-            u_s = vel[0]; //particle_velocities[i*3+0];
-            v_s = vel[1]; //particle_velocities[i*3+1];
+            u_s = vel[0];
+            v_s = vel[1];
             w_s = 0;
             H_s = smoothedHeaviside(eps_s, phi_s);
             D_s = smoothedDirac(eps_s, phi_s);
@@ -1128,8 +1172,8 @@ namespace proteus
                                   );
 
             //always 3D for particle centroids
-            r_x = x - particle_centroids[i * 3 + 0];
-            r_y = y - particle_centroids[i * 3 + 1];
+            r_x = x - center[0];
+            r_y = y - center[1];
 
             if (element_owned)
               {
@@ -1174,6 +1218,11 @@ namespace proteus
                                              double *particle_signed_distance_normals,
                                              double *particle_velocities,
                                              double *particle_centroids,
+                                             int use_ball_as_particle,
+                                             double* ball_center,
+                                             double* ball_radius,
+                                             double* ball_velocity,
+                                             double* ball_angular_velocity,
                                              const double penalty,
                                              const double alpha,
                                              const double beta,
@@ -1204,9 +1253,10 @@ namespace proteus
                                              double* particle_netMoments)
       {
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
-        double *phi_s_normal;
+        double phi_s_normal[2];
         double fluid_outward_normal[2];
-        double *vel;
+        double vel[2];
+        double center[2];
         H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
         nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
         rho = rho_0 * (1.0 - H_mu) + rho_1 * H_mu;
@@ -1214,11 +1264,30 @@ namespace proteus
         C = 0.0;
         for (int i = 0; i < nParticles; i++)
         {
-            phi_s = particle_signed_distances[i * sd_offset];
-            phi_s_normal = &particle_signed_distance_normals[i * sd_offset * nSpace];
+            if(use_ball_as_particle==1)
+            {
+                get_distance_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s);
+                get_normal_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s_normal[0],phi_s_normal[1]);
+                get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,
+                                         ball_velocity,ball_angular_velocity,
+                                         i,x,y,z,
+                                         vel[0],vel[1]);
+                center[0] = ball_center[3*i+0];
+                center[1] = ball_center[3*i+1];
+            }
+            else
+            {
+                phi_s = particle_signed_distances[i * sd_offset];
+                phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * nSpace + 0];
+                phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * nSpace + 1];
+                vel[0] = particle_velocities[i * sd_offset * nSpace + 0];
+                vel[1] = particle_velocities[i * sd_offset * nSpace + 1];
+                center[0] = particle_centroids[3*i+0];
+                center[1] = particle_centroids[3*i+1];
+
+            }
             fluid_outward_normal[0] = -phi_s_normal[0];
             fluid_outward_normal[1] = -phi_s_normal[1];
-            vel = &particle_velocities[i * sd_offset * nSpace];
             u_s = vel[0];
             v_s = vel[1];
             w_s = 0;
@@ -1241,8 +1310,8 @@ namespace proteus
             //+dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
 
             //always 3D for particle centroids
-            r_x = x - particle_centroids[i * 3 + 0];
-            r_y = y - particle_centroids[i * 3 + 1];
+            r_x = x - center[0];
+            r_y = y - center[1];
 
             if (element_owned)
               {
@@ -1596,27 +1665,15 @@ namespace proteus
         /*     if (flowSpeedNormal < 0.0) */
         /*       flux_wmom+=bc_speed*(bc_w - w); */
         /*   } */
-        /* if (isDOFBoundary_p == 1) */
-        /*   { */
-        /*     flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho); */
-        /*     flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho); */
-        /*     /\* flux_wmom+= n[2]*(bc_p*bc_oneByRho-p*oneByRho); *\/ */
-        /*   } */
-        /* if (isFluxBoundary_p == 1) */
-        /*   { */
-        /*     //correct velocity field to match mass flux BC */
-        /*     velocity[0] += (bc_flux_mass - flux_mass)*n[0]; */
-        /*     velocity[1] += (bc_flux_mass - flux_mass)*n[1]; */
-        /*     /\* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; *\/ */
-        /*     flux_mass = bc_flux_mass; */
-        /*   } */
         if (isFluxBoundary_u == 1)
           {
             flux_umom = bc_flux_umom;
+	    velocity[0] = bc_flux_umom/porosity;
           }
         if (isFluxBoundary_v == 1)
           {
             flux_vmom = bc_flux_vmom;
+	    velocity[1] = bc_flux_umom/porosity;
           }
         /* if (isFluxBoundary_w == 1) */
         /*   { */
@@ -1883,7 +1940,56 @@ namespace proteus
       {
           return u[0]*v[0]+u[1]*v[1];
       }
-
+      int get_distance_to_ball(int n_balls,double* ball_center, double* ball_radius, double x, double y, double z, double& distance)
+      {
+          distance = 1e10;
+          int index = -1;
+          double d_ball_i;
+          for (int i=0; i<n_balls; ++i)
+          {
+              d_ball_i = std::sqrt((ball_center[i*3+0]-x)*(ball_center[i*3+0]-x)
+                                  +(ball_center[i*3+1]-y)*(ball_center[i*3+1]-y)
+//                                  +(ball_center[i*3+2]-z)*(ball_center[i*3+2]-z)
+                                  ) - ball_radius[i];
+              if(d_ball_i<distance)
+              {
+                  distance = d_ball_i;
+                  index = i;
+              }
+          }
+          return index;
+      }
+      void get_distance_to_ith_ball(int n_balls,double* ball_center, double* ball_radius,
+                                  int I,
+                                  double x, double y, double z,
+                                  double& distance)
+      {
+          distance = std::sqrt((ball_center[I*3+0]-x)*(ball_center[I*3+0]-x)
+                                    + (ball_center[I*3+1]-y)*(ball_center[I*3+1]-y)
+//                                  + (ball_center[I*3+2]-z)*(ball_center[I*3+2]-z)
+                            ) - ball_radius[I];
+      }
+      void get_normal_to_ith_ball(int n_balls,double* ball_center, double* ball_radius,
+                                  int I,
+                                  double x, double y, double z,
+                                  double& nx, double& ny)
+      {
+          double distance = std::sqrt((ball_center[I*3+0]-x)*(ball_center[I*3+0]-x)
+                                    + (ball_center[I*3+1]-y)*(ball_center[I*3+1]-y)
+//                                  + (ball_center[I*3+2]-z)*(ball_center[I*3+2]-z)
+                            );
+          nx = (x - ball_center[I*3+0])/(distance+1e-10);
+          ny = (y - ball_center[I*3+1])/(distance+1e-10);
+      }
+      void get_velocity_to_ith_ball(int n_balls,double* ball_center, double* ball_radius,
+                                    double* ball_velocity, double* ball_angular_velocity,
+                                    int I,
+                                    double x, double y, double z,
+                                    double& vx, double& vy)
+      {
+          vx = ball_velocity[3*I + 0] - ball_angular_velocity[3*I + 2]*(y-ball_center[3*I + 1]);
+          vy = ball_velocity[3*I + 1] + ball_angular_velocity[3*I + 2]*(x-ball_center[3*I + 0]);
+      }
       void calculateResidual(//element
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
@@ -1949,6 +2055,7 @@ namespace proteus
                              const double* eps_solid,
                              const double* ebq_global_phi_solid,
                              const double* ebq_global_grad_phi_solid,
+                             const double* ebq_particle_velocity_solid,
                              const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
@@ -2079,13 +2186,18 @@ namespace proteus
                              double* particle_netMoments,
                              double* particle_surfaceArea,
                              double particle_nitsche,
+                             int use_ball_as_particle,
+                             double* ball_center,
+                             double* ball_radius,
+                             double* ball_velocity,
+                             double* ball_angular_velocity,
                              double* phisError,
                              double* phisErrorNodal,
-			     int USE_SUPG,
-			     int ARTIFICIAL_VISCOSITY,
+                             int USE_SUPG,
+                             int ARTIFICIAL_VISCOSITY,
                              double cMax,
                              double cE,
-			     int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
+                             int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                              double* forcex,
                              double* forcey,
                              double* forcez,
@@ -2137,75 +2249,116 @@ namespace proteus
                 /* elementResidual_w[i]=0.0; */
               }//i
             if(USE_SBM>0)
-              {
+            {
                 //since by default it has value 1 and it is ibm.
                 for (int i=0;i<nDOF_test_element;i++)
-                  {
+                {
                     isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + i]]=0.0;
                     isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + i]]=0.0;
-                  }
+                }
                 //
                 //detect cut cells
                 //
+                double _distance[nDOF_mesh_trial_element]={0.0};
                 int pos_counter=0;
                 for (int I=0;I<nDOF_mesh_trial_element;I++)
-                  {
-                    if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] >= 0)
-                      pos_counter++;
-                  }
+                {
+                    if(use_ball_as_particle==1)
+                    {
+                        get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+0],
+                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
+                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
+                                _distance[I]);
+                    }
+                    else
+                    {
+                        _distance[I] = phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]];
+                    }
+                    if ( _distance[I] >= 0)
+                        pos_counter++;
+                }
                 if (pos_counter == 2)
-                  {
+                {
                     element_active=0.0;
                     int opp_node=-1;
                     for (int I=0;I<nDOF_mesh_trial_element;I++)
-                      {
-                        if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] < 0)
-                          opp_node = I;
-                      }
+                    {
+                        if (_distance[I] < 0)
+                            opp_node = I;
+                    }
                     assert(opp_node >=0);
                     assert(opp_node <nDOF_mesh_trial_element);
                     int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
                     surrogate_boundaries.push_back(ebN);
                     //now find which element neighbor this element is
                     if (eN == elementBoundaryElementsArray[eN*2+0])
-                      surrogate_boundary_elements.push_back(1);
+                        surrogate_boundary_elements.push_back(1);
                     else
-                      surrogate_boundary_elements.push_back(0);
-                    //check which particle is this surrogate edge related to.
-                    //The method is to check one quadrature point inside of this element.
-                    //It works based on the assumption that the distance between any two particles
-                    //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
-                    //or one edge belongs to two particles .
-                    //But in any case, phi_s is well defined as the minimum.
+                        surrogate_boundary_elements.push_back(0);
+
+                    //check which particle this surrogate edge is related to.
                     int j=-1;
-                    double distance=1e10, distance_to_ith_particle;
-                    for (int i=0;i<nParticles;++i)
+                    if(use_ball_as_particle==1)
                     {
-                        distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
-                                                                           +eN*nQuadraturePoints_element
-                                                                           +0];//0-th quadrature point
-                        if (distance_to_ith_particle<distance)
+                        double middle_point_coord[3]={0.0};
+                        double middle_point_distance;
+                        if(opp_node == 0)
                         {
-                            distance = distance_to_ith_particle;
-                            j = i;
+                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]);
+                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]);
+                        }
+                        else if(opp_node == 1)
+                        {
+                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]);
+                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]);
+                        }
+                        else if(opp_node == 2)
+                        {
+                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]);
+                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]);
+                        }
+                        j = get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
+                                middle_point_distance);
+
+                    }
+                    else
+                    {
+                        //The method is to check one quadrature point inside of this element.
+                        //It works based on the assumption that the distance between any two particles
+                        //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
+                        //or one edge belongs to two particles .
+                        //But in any case, phi_s is well defined as the minimum.
+                        double distance=1e10, distance_to_ith_particle;
+                        for (int i=0;i<nParticles;++i)
+                        {
+                            distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
+                                                                               +eN*nQuadraturePoints_element
+                                                                               +0];//0-th quadrature point
+                            if (distance_to_ith_particle<distance)
+                            {
+                                distance = distance_to_ith_particle;
+                                j = i;
+                            }
                         }
                     }
                     surrogate_boundary_particle.push_back(j);
-                  }
+                }
                 else if (pos_counter == 3)
-                  {
+                {
                     element_active=1.0;
                     for (int i=0;i<nDOF_test_element;i++)
-                      {
+                    {
                         isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + i]]=1.0;
                         isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + i]]=1.0;
-                      }
-                  }
+                    }
+                }
                 else
-                  {
+                {
                     element_active=0.0;
-                  }
-              }
+                }
+            }
             //
             //loop over quadrature points and compute integrands
             //
@@ -2345,12 +2498,12 @@ namespace proteus
                 //get the solution
                 /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p); */
                 p = q_p[eN_k];
-		// get solution at quad points
+                // get solution at quad points
                 ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
                 ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
                 /* ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],w); */
-		// get old solution at quad points
-		ck.valFromDOF(u_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],un);
+                // get old solution at quad points
+                ck.valFromDOF(u_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],un);
                 ck.valFromDOF(v_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],vn);
                 /* ck.valFromDOF(w_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],wn); */
                 //get the solution gradients
@@ -2476,14 +2629,21 @@ namespace proteus
                                      q_rho[eN_k],
                                      q_nu[eN_k],
                                      KILL_PRESSURE_TERM,
-				     MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
+                                     MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
                                      forcex[eN_k],
                                      forcey[eN_k],
                                      forcez[eN_k],
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      density_as_function[eN_k],
                                      dynamic_viscosity_as_function[eN_k],
-                                     USE_SBM);
+                                     USE_SBM,
+                                     x,y,z,
+                                     use_ball_as_particle,
+                                     ball_center,
+                                     ball_radius,
+                                     ball_velocity,
+                                     ball_angular_velocity);
+
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not?
@@ -2530,6 +2690,11 @@ namespace proteus
                                            &particle_signed_distance_normals[eN_k_nSpace],
                                            particle_velocities,
                                            particle_centroids,
+                                           use_ball_as_particle,
+                                           ball_center,
+                                           ball_radius,
+                                           ball_velocity,
+                                           ball_angular_velocity,
                                            porosity,
                                            particle_penalty_constant/h_phi,//penalty,
                                            particle_alpha,
@@ -2587,6 +2752,11 @@ namespace proteus
                                            &particle_signed_distance_normals[eN_k_nSpace],
                                            particle_velocities,
                                            particle_centroids,
+                                           use_ball_as_particle,
+                                           ball_center,
+                                           ball_radius,
+                                           ball_velocity,
+                                           ball_angular_velocity,
                                            particle_penalty_constant/h_phi,//penalty,
                                            particle_alpha,
                                            particle_beta,
@@ -2615,7 +2785,6 @@ namespace proteus
                                            grad_w,
                                            particle_netForces,
                                            particle_netMoments);
-                //Turbulence closure model
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -2720,86 +2889,86 @@ namespace proteus
 		  ck.Mass_strong(-q_dvos_dt[eN_k]) + // mql. CHECK.
 		  ck.Advection_strong(dmass_adv_u,grad_u) +
 		  ck.Advection_strong(dmass_adv_v,grad_v) +
-		  /* ck.Advection_strong(dmass_adv_w,grad_w) + */
+      		  /* ck.Advection_strong(dmass_adv_w,grad_w) + */
 		  DM2*MOVING_DOMAIN*ck.Reaction_strong(alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity) +
 		  //VRANS
-		  ck.Reaction_strong(mass_source);
-		//
-		
-		dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
-		dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
-		/* dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt); */
-		
-		pdeResidual_u =
-		  ck.Mass_strong(mom_u_acc_t) + // mql. CHECK.
-		  ck.Advection_strong(dmom_adv_sge,grad_u) + //note here and below: same in cons. and non-cons.
-		  ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
-		  ck.Reaction_strong(mom_u_source) -
-		  ck.Reaction_strong(u*div_mesh_velocity);
-		
-		pdeResidual_v =
-		  ck.Mass_strong(mom_v_acc_t) +
-		  ck.Advection_strong(dmom_adv_sge,grad_v) +
-		  ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) +
-		  ck.Reaction_strong(mom_v_source) -
-		  ck.Reaction_strong(v*div_mesh_velocity);
-		
-		/* pdeResidual_w = ck.Mass_strong(dmom_w_acc_w*mom_w_acc_t) + */
-		/*      ck.Advection_strong(dmom_adv_sge,grad_w) + */
-		/*      ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) + */
-		/*      ck.Reaction_strong(mom_w_source) - */
-		/*   ck.Reaction_strong(w*div_mesh_velocity); */
-		
-		//calculate tau and tau*Res
-		//cek debug
-		double tmpR=dmom_u_acc_u_t + dmom_u_source[0];
-		calculateSubgridError_tau(hFactor,
-					  elementDiameter[eN],
-					  tmpR,//dmom_u_acc_u_t,
-					  dmom_u_acc_u,
-					  dmom_adv_sge,
-					  mom_uu_diff_ten[1],
-					  dmom_u_ham_grad_p[0],
-					  tau_v0,
-					  tau_p0,
-					  q_cfl[eN_k]);
-		
-		calculateSubgridError_tau(Ct_sge,Cd_sge,
-					  G,G_dd_G,tr_G,
-					  tmpR,//dmom_u_acc_u_t,
-					  dmom_adv_sge,
-					  mom_uu_diff_ten[1],
-					  dmom_u_ham_grad_p[0],
-					  tau_v1,
-					  tau_p1,
-					  q_cfl[eN_k]);
-		
-		tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
-		tau_p = KILL_PRESSURE_TERM == 1 ? 0. : PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);
-		
-		calculateSubgridError_tauRes(tau_p,
-					     tau_v,
-					     pdeResidual_p,
-					     pdeResidual_u,
-					     pdeResidual_v,
-					     pdeResidual_w,
-					     subgridError_p,
-					     subgridError_u,
-					     subgridError_v,
-					     subgridError_w);
-		// velocity used in adjoint (VMS or RBLES, with or without lagging the grid scale velocity)
-		dmom_adv_star[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt + useRBLES*subgridError_u);
-		dmom_adv_star[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt + useRBLES*subgridError_v);
-		/* dmom_adv_star[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt + useRBLES*subgridError_w); */
-		
-		mom_u_adv[0] += dmom_u_acc_u*(useRBLES*subgridError_u*q_velocity_sge[eN_k_nSpace+0]);
-		mom_u_adv[1] += dmom_u_acc_u*(useRBLES*subgridError_v*q_velocity_sge[eN_k_nSpace+0]);
-		/* mom_u_adv[2] += dmom_u_acc_u*(useRBLES*subgridError_w*q_velocity_sge[eN_k_nSpace+0]);  */
-		
-		// adjoint times the test functions
-		for (int i=0;i<nDOF_test_element;i++)
-		  {
-		    register int i_nSpace = i*nSpace;
+       		  ck.Reaction_strong(mass_source);
+       		//
+       		
+       		dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
+       		dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
+       		/* dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt); */
+       		
+       		pdeResidual_u =
+       		  ck.Mass_strong(mom_u_acc_t) + // mql. CHECK.
+       		  ck.Advection_strong(dmom_adv_sge,grad_u) + //note here and below: same in cons. and non-cons.
+       		  ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
+       		  ck.Reaction_strong(mom_u_source) -
+       		  ck.Reaction_strong(u*div_mesh_velocity);
+       		
+       		pdeResidual_v =
+       		  ck.Mass_strong(mom_v_acc_t) +
+       		  ck.Advection_strong(dmom_adv_sge,grad_v) +
+       		  ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) +
+       		  ck.Reaction_strong(mom_v_source) -
+       		  ck.Reaction_strong(v*div_mesh_velocity);
+       		
+       		/* pdeResidual_w = ck.Mass_strong(dmom_w_acc_w*mom_w_acc_t) + */
+       		/*      ck.Advection_strong(dmom_adv_sge,grad_w) + */
+       		/*      ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) + */
+       		/*      ck.Reaction_strong(mom_w_source) - */
+       		/*   ck.Reaction_strong(w*div_mesh_velocity); */
+       		
+       		//calculate tau and tau*Res
+       		//cek debug
+       		double tmpR=dmom_u_acc_u_t + dmom_u_source[0];
+       		calculateSubgridError_tau(hFactor,
+       					  elementDiameter[eN],
+       					  tmpR,//dmom_u_acc_u_t,
+       					  dmom_u_acc_u,
+       					  dmom_adv_sge,
+       					  mom_uu_diff_ten[1],
+       					  dmom_u_ham_grad_p[0],
+       					  tau_v0,
+       					  tau_p0,
+       					  q_cfl[eN_k]);
+       		
+       		calculateSubgridError_tau(Ct_sge,Cd_sge,
+       					  G,G_dd_G,tr_G,
+       					  tmpR,//dmom_u_acc_u_t,
+       					  dmom_adv_sge,
+       					  mom_uu_diff_ten[1],
+       					  dmom_u_ham_grad_p[0],
+       					  tau_v1,
+       					  tau_p1,
+       					  q_cfl[eN_k]);
+       		
+       		tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
+       		tau_p = KILL_PRESSURE_TERM == 1 ? 0. : PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);
+       		
+       		calculateSubgridError_tauRes(tau_p,
+       					     tau_v,
+       					     pdeResidual_p,
+       					     pdeResidual_u,
+       					     pdeResidual_v,
+       					     pdeResidual_w,
+       					     subgridError_p,
+       					     subgridError_u,
+       					     subgridError_v,
+       					     subgridError_w);
+       		// velocity used in adjoint (VMS or RBLES, with or without lagging the grid scale velocity)
+       		dmom_adv_star[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt + useRBLES*subgridError_u);
+       		dmom_adv_star[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt + useRBLES*subgridError_v);
+       		/* dmom_adv_star[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt + useRBLES*subgridError_w); */
+       		
+       		mom_u_adv[0] += dmom_u_acc_u*(useRBLES*subgridError_u*q_velocity_sge[eN_k_nSpace+0]);
+       		mom_u_adv[1] += dmom_u_acc_u*(useRBLES*subgridError_v*q_velocity_sge[eN_k_nSpace+0]);
+       		/* mom_u_adv[2] += dmom_u_acc_u*(useRBLES*subgridError_w*q_velocity_sge[eN_k_nSpace+0]);  */
+       		
+       		// adjoint times the test functions
+       		for (int i=0;i<nDOF_test_element;i++)
+       		  {
+       		    register int i_nSpace = i*nSpace;
 		    /* Lstar_u_p[i]=ck.Advection_adjoint(dmass_adv_u,&p_grad_test_dV[i_nSpace]); */
 		    /* Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]); */
 		    /* Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]); */
@@ -3103,23 +3272,44 @@ namespace proteus
                         for (int I=0;I<nSpace;I++)
                           vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
                       }
-                    bc_u_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*2
-                                                   +eN*nQuadraturePoints_element*2
-                                                   +kb*2
-                                                   +0];
-                    bc_v_ext = particle_velocities[surrogate_boundary_particle[ebN_s]*nElements_global*nQuadraturePoints_element*2
-                                                   +eN*nQuadraturePoints_element*2
-                                                   +kb*2
-                                                   +1];
+
+                    double dist = 0.0;
+                    double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
+
+
+
+                    if(use_ball_as_particle==1)
+                    {
+                        get_distance_to_ball(nParticles,ball_center,ball_radius,
+                                             x_ext,y_ext,z_ext,
+                                             dist);
+                        get_normal_to_ith_ball(nParticles,ball_center,ball_radius,
+                                               surrogate_boundary_particle[ebN_s],
+                                               x_ext,y_ext,z_ext,
+                                               P_normal[0],P_normal[1]);
+                        get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,
+                                                 ball_velocity,ball_angular_velocity,
+                                                 surrogate_boundary_particle[ebN_s],
+                                                 x_ext-dist*P_normal[0],//corresponding point on the boundary of the particle
+                                                 y_ext-dist*P_normal[1],
+                                                 0.0,//z_ext,
+                                                 bc_u_ext,bc_v_ext);
+                    }
+                    else
+                    {
+                        dist = ebq_global_phi_solid[ebN_kb];
+                        P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
+                        P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
+                        bc_u_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+0];
+                        bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
+
+                    }
+
                     ck.calculateGScale(G,normal,h_penalty);
                     //
                     //update the element and global residual storage
                     //
 
-                    double dist = ebq_global_phi_solid[ebN_kb];
-                    double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
-                    P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
-                    P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
                     distance[0] = -P_normal[0]*dist;
                     distance[1] = -P_normal[1]*dist;
                     P_tangent[0] = -P_normal[1];
@@ -3217,8 +3407,16 @@ namespace proteus
                     //                  Fy += dS*(C_adim*(v_ext - bc_v_ext)
                     //                          - visco * (normal[0]*(grad_u_ext[1]+grad_v_ext[0]) + normal[1]*2*grad_v_ext[1])
                     //                          + C_adim*dd2);
-                    r_x = x_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 0];
-                    r_y = y_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 1];
+                    if(use_ball_as_particle==1)
+                    {
+                        r_x = x_ext - ball_center[surrogate_boundary_particle[ebN_s] * 3 + 0];
+                        r_y = y_ext - ball_center[surrogate_boundary_particle[ebN_s] * 3 + 1];
+                    }
+                    else
+                    {
+                        r_x = x_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 0];
+                        r_y = y_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 1];
+                    }
                     Mz  += r_x*Fy-r_y*Fx;
                   }//kb
 
@@ -3556,14 +3754,20 @@ namespace proteus
                                      ebqe_rho[ebNE_kb],
                                      ebqe_nu[ebNE_kb],
                                      KILL_PRESSURE_TERM,
-				     0,
+                                     0,
                                      0., // mql: zero force term at boundary
                                      0.,
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      ebqe_density_as_function[ebNE_kb],
                                      ebqe_dynamic_viscosity_as_function[ebNE_kb],
-                                     USE_SBM);
+                                     USE_SBM,
+                                     x_ext,y_ext,z_ext,
+                                     use_ball_as_particle,
+                                     ball_center,
+                                     ball_radius,
+                                     ball_velocity,
+                                     ball_angular_velocity);
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
@@ -3645,14 +3849,20 @@ namespace proteus
                                      ebqe_rho[ebNE_kb],
                                      ebqe_nu[ebNE_kb],
                                      KILL_PRESSURE_TERM,
-				     0,
+                                     0,
                                      0., // mql: zero force term at boundary
                                      0.,
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      ebqe_density_as_function[ebNE_kb],
                                      ebqe_dynamic_viscosity_as_function[ebNE_kb],
-                                     USE_SBM);
+                                     USE_SBM,
+                                     x_ext,y_ext,z_ext,
+                                     use_ball_as_particle,
+                                     ball_center,
+                                     ball_radius,
+                                     ball_velocity,
+                                     ball_angular_velocity);
 
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
@@ -3745,20 +3955,20 @@ namespace proteus
 
                 //bc's
                 // mql. CHECK.
-                bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext; // times rho*porosity
-                bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
-                /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
+                bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext;
+                bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
+                /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
 
-                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext;
-                bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
-                /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
+                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext; 
+                bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
+                /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
 
-                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */
-                /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
-                /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
-                //
-                //calculate the numerical fluxes
-                //
+                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */
+                /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
+                /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
+                // 
+                //calculate the numerical fluxes 
+                // 
                 ck.calculateGScale(G,normal,h_penalty);
                 penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 exteriorNumericalAdvectiveFlux(isDOFBoundary_p[ebNE_kb],
@@ -3772,7 +3982,7 @@ namespace proteus
                                                dmom_u_ham_grad_p_ext[0],//=1/rho,
                                                bc_dmom_u_ham_grad_p_ext[0],//=1/bc_rho,
                                                normal,
-                                               porosity_ext*ebqe_rho[ebNE_kb], // multiply by rho. mql. CHECK.
+                                               dmom_u_acc_u_ext,
                                                bc_p_ext,
                                                bc_u_ext,
                                                bc_v_ext,
@@ -4009,7 +4219,6 @@ namespace proteus
                       ck.ExteriorElementBoundaryFlux(flux_mom_u_adv_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_uu_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_uv_diff_ext,vel_test_dS[i])+
-                      /* ck.ExteriorElementBoundaryFlux(flux_mom_uw_diff_ext,vel_test_dS[i])+ */
                       ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
                                                                  isDiffusiveFluxBoundary_u[ebNE_kb],
                                                                  eb_adjoint_sigma,
@@ -4043,7 +4252,6 @@ namespace proteus
                     elementResidual_v[i] += ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) +
                       ck.ExteriorElementBoundaryFlux(flux_mom_vu_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_vv_diff_ext,vel_test_dS[i])+
-                      /* ck.ExteriorElementBoundaryFlux(flux_mom_vw_diff_ext,vel_test_dS[i])+ */
                       ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
                                                                  isDiffusiveFluxBoundary_v[ebNE_kb],
                                                                  eb_adjoint_sigma,
@@ -4196,6 +4404,7 @@ namespace proteus
                              const double* eps_solid,
                              const double* ebq_global_phi_solid,
                              const double* ebq_global_grad_phi_solid,
+                             const double* ebq_particle_velocity_solid,
                              const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
@@ -4316,7 +4525,12 @@ namespace proteus
                              double* particle_velocities,
                              double* particle_centroids,
                              double particle_nitsche,
-			     int USE_SUPG,
+                             int use_ball_as_particle,
+                             double* ball_center,
+                             double* ball_radius,
+                             double* ball_velocity,
+                             double* ball_angular_velocity,
+                             int USE_SUPG,
                              int KILL_PRESSURE_TERM,
                              double dt,
                              int MATERIAL_PARAMETERS_AS_FUNCTION,
@@ -4331,7 +4545,7 @@ namespace proteus
         //
         std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3), particle_netMoments(nParticles*3);
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-        std::vector<int> surrogate_boundaries, surrogate_boundary_elements;
+        std::vector<int> surrogate_boundaries,surrogate_boundary_elements,surrogate_boundary_particle;
         //std::set<int> active_velocity_dof;
 
         for(int eN=0;eN<nElements_global;eN++)
@@ -4380,13 +4594,28 @@ namespace proteus
             //
             if(USE_SBM>0)
               {
+                //
+                //detect cut cells
+                //
+                double _distance[nDOF_mesh_trial_element]={0.0};
                 int pos_counter=0;
                 for (int I=0;I<nDOF_mesh_trial_element;I++)
-                  {
-                    //std::cout<<"eN,I,nN "<<eN<<','<<I<<','<<mesh_l2g[eN*nDOF_mesh_trial_element+I]<<" phi = "<<phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]<<std::endl;
-                    if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] >= 0)
-                      pos_counter++;
-                  }
+                {
+                    if(use_ball_as_particle==1)
+                    {
+                        get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+0],
+                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
+                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
+                                _distance[I]);
+                    }
+                    else
+                    {
+                        _distance[I] = phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]];
+                    }
+                    if ( _distance[I] >= 0)
+                        pos_counter++;
+                }
                 if (pos_counter == 2)
                   {
                     element_active=0.0;
@@ -4394,7 +4623,7 @@ namespace proteus
                     int opp_node=-1;
                     for (int I=0;I<nDOF_mesh_trial_element;I++)
                       {
-                        if (phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]] < 0)
+                        if (_distance[I] < 0)
                           opp_node = I;
                       }
                     assert(opp_node >=0);
@@ -4406,6 +4635,54 @@ namespace proteus
                       surrogate_boundary_elements.push_back(1);
                     else
                       surrogate_boundary_elements.push_back(0);
+
+                    //check which particle is this surrogate edge related to.
+                    int j=-1;
+                    if(use_ball_as_particle==1)
+                    {
+                        double middle_point_coord[3]={0.0};
+                        double middle_point_distance;
+                        if(opp_node == 0)
+                        {
+                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]);
+                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]);
+                        }
+                        else if(opp_node == 1)
+                        {
+                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]);
+                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]);
+                        }
+                        else if(opp_node == 2)
+                        {
+                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]);
+                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]);
+                        }
+                        j = get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
+                                middle_point_distance);
+
+                    }
+                    else
+                    {
+                        //The method is to check one quadrature point inside of this element.
+                        //It works based on the assumption that the distance between any two particles
+                        //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
+                        //or one edge belongs to two particles .
+                        //But in any case, phi_s is well defined as the minimum.
+                        double distance=1e10, distance_to_ith_particle;
+                        for (int i=0;i<nParticles;++i)
+                        {
+                            distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
+                                                                               +eN*nQuadraturePoints_element
+                                                                               +0];//0-th quadrature point
+                            if (distance_to_ith_particle<distance)
+                            {
+                                distance = distance_to_ith_particle;
+                                j = i;
+                            }
+                        }
+                    }
+                    surrogate_boundary_particle.push_back(j);
                   }
                 else if (pos_counter == 3)
                   {
@@ -4689,14 +4966,20 @@ namespace proteus
                                      rhoSave,
                                      nuSave,
                                      KILL_PRESSURE_TERM,
-				     0,
+                                     0,
                                      0., // mql: the force term doesn't play a role in the Jacobian
                                      0.,
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      density_as_function[eN_k],
                                      dynamic_viscosity_as_function[eN_k],
-                                     USE_SBM);
+                                     USE_SBM,
+                                     x,y,z,
+                                     use_ball_as_particle,
+                                     ball_center,
+                                     ball_radius,
+                                     ball_velocity,
+                                     ball_angular_velocity);
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not
@@ -4743,6 +5026,11 @@ namespace proteus
                                            &particle_signed_distance_normals[eN_k_nSpace],
                                            particle_velocities,
                                            particle_centroids,
+                                           use_ball_as_particle,
+                                           ball_center,
+                                           ball_radius,
+                                           ball_velocity,
+                                           ball_angular_velocity,
                                            porosity,
                                            particle_penalty_constant/h_phi,//penalty,
                                            particle_alpha,
@@ -4874,7 +5162,7 @@ namespace proteus
                 //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
 
                 mom_u_acc_t *= dmom_u_acc_u; //multiply by porosity*rho. mql. CHECK.
-                mom_v_acc_t *= dmom_v_acc_v;
+                mom_v_acc_t *= dmom_v_acc_v; 
 
                 //
                 dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
@@ -5293,10 +5581,35 @@ namespace proteus
                     //
                     //update the global Jacobian from the flux Jacobian
                     //
-                    double dist = ebq_global_phi_solid[ebN_kb];
+
+                    double dist = 0.0;
                     double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
-                    P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
-                    P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
+
+                    if(use_ball_as_particle==1)
+                    {
+                        get_distance_to_ball(nParticles,ball_center,ball_radius,
+                                             x_ext,y_ext,z_ext,
+                                             dist);
+                        get_normal_to_ith_ball(nParticles,ball_center,ball_radius,
+                                               surrogate_boundary_particle[ebN_s],
+                                               x_ext,y_ext,z_ext,
+                                               P_normal[0],P_normal[1]);
+                        get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,
+                                                 ball_velocity, ball_angular_velocity,
+                                                 surrogate_boundary_particle[ebN_s],
+                                                 x_ext-dist*P_normal[0],
+                                                 y_ext-dist*P_normal[1],
+                                                 0.0,//z_ext,
+                                                 bc_u_ext,bc_v_ext);
+                    }
+                    else
+                    {
+                        dist = ebq_global_phi_solid[ebN_kb];
+                        P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
+                        P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
+                        bc_u_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+0];
+                        bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
+                    }
                     distance[0] = -P_normal[0]*dist;
                     distance[1] = -P_normal[1]*dist;
                     P_tangent[0]= -P_normal[1];
@@ -5729,14 +6042,20 @@ namespace proteus
                                      rhoSave,
                                      nuSave,
                                      KILL_PRESSURE_TERM,
-				     0,
+                                     0,
                                      0., // mql: zero force term at boundary
                                      0.,
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      ebqe_density_as_function[ebNE_kb],
                                      ebqe_dynamic_viscosity_as_function[ebNE_kb],
-                                     USE_SBM);
+                                     USE_SBM,
+                                     x_ext,y_ext,z_ext,
+                                     use_ball_as_particle,
+                                     ball_center,
+                                     ball_radius,
+                                     ball_velocity,
+                                     ball_angular_velocity);
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
@@ -5818,14 +6137,20 @@ namespace proteus
                                      rhoSave,
                                      nuSave,
                                      KILL_PRESSURE_TERM,
-				     0,
+                                     0,
                                      0., // mql: zero force term at boundary
                                      0.,
                                      0.,
                                      MATERIAL_PARAMETERS_AS_FUNCTION,
                                      ebqe_density_as_function[ebNE_kb],
                                      ebqe_dynamic_viscosity_as_function[ebNE_kb],
-                                     USE_SBM);
+                                     USE_SBM,
+                                     x_ext,y_ext,z_ext,
+                                     use_ball_as_particle,
+                                     ball_center,
+                                     ball_radius,
+                                     ball_velocity,
+                                     ball_angular_velocity);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -5915,17 +6240,17 @@ namespace proteus
 
                 //moving domain bc's
                 // mql. CHECK.
-                bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext; //times rho*porosity
-                bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
-                /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
+                bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*xt_ext; //times rho*porosity
+                bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
+                /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
 
-                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext;
-                bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
-                /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
+                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext;
+                bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
+                /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
 
-                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */
-                /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
-                /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*bc_dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
+                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */ 
+                /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
+                /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
                 //
                 //calculate the numerical fluxes
                 //
@@ -5939,7 +6264,7 @@ namespace proteus
                                                           isAdvectiveFluxBoundary_w[ebNE_kb],
                                                           dmom_u_ham_grad_p_ext[0],//=1/rho
                                                           normal,
-                                                          porosity_ext*rhoSave, //multiply by rho. mql. CHECK.
+                                                          porosity_ext*dmom_u_acc_u_ext, //multiply by rho. mql. CHECK.
                                                           bc_p_ext,
                                                           bc_u_ext,
                                                           bc_v_ext,
@@ -6435,7 +6760,7 @@ namespace proteus
                                          double fContact,
                                          double mContact,
                                          double nContact,
-                                         double angFriction)
+                                         double angFriction, double vos_limiter, double mu_fr_limiter )
   {
     cppRANS3PF2D_base *rvalue = proteus::chooseAndAllocateDiscretization2D<cppRANS3PF2D_base, cppRANS3PF2D, CompKernel>(nSpaceIn,
                                                                                                                         nQuadraturePoints_elementIn,
@@ -6458,7 +6783,7 @@ namespace proteus
                           fContact,
                           mContact,
                           nContact,
-                          angFriction);
+                          angFriction, vos_limiter, mu_fr_limiter );
     return rvalue;
   }
 } //proteus

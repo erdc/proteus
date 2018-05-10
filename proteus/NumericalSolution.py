@@ -1065,6 +1065,11 @@ class NS_base:  # (HasTraits):
                     vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
                   p0.domain.PUMIMesh.transferFieldToPUMI(
                          coef.vectorName, vector)
+                  #Transfer dof_last
+                  for vci in range(len(coef.vectorComponents)):
+                    vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
+                  p0.domain.PUMIMesh.transferFieldToPUMI(
+                         "velocity_old", vector)
                   del vector
                 for ci in range(coef.nc):
                   if coef.vectorComponents is None or \
@@ -1085,15 +1090,22 @@ class NS_base:  # (HasTraits):
             nu = numpy.array([self.pList[0].nu_0,
                               self.pList[0].nu_1])
             g = numpy.asarray(self.pList[0].g)
-            deltaT = self.tn-self.tn_last
-            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
-            del rho, nu, g
+            
+            deltaT_test = self.systemStepController.dt_system
+            deltaT = self.systemStepController.t_system-self.systemStepController.t_system_last
+            print("deltaT %f",deltaT," dt_system ", deltaT_test)
+            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT)
+            del rho, nu, g, deltaT
 
             logEvent("Estimate Error")
             sfConfig = p0.domain.PUMIMesh.size_field_config()
             if(sfConfig=="ERM"):
               errorTotal= p0.domain.PUMIMesh.get_local_error()
-
+              if(p0.domain.PUMIMesh.willAdapt()):
+                adaptMeshNow=True
+                logEvent("Need to Adapt")
+            elif(sfConfig=="VMS"):
+              errorTotal = p0.domain.PUMIMesh.get_VMS_error()
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
@@ -1426,6 +1438,8 @@ class NS_base:  # (HasTraits):
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
 #            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
+
+            self.opts.save_dof = True
             if self.opts.save_dof:
                 for m in self.modelList:
                     for lm in m.levelModelList:
@@ -1439,6 +1453,15 @@ class NS_base:  # (HasTraits):
 
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
+
+                    self.opts.save_dof = True
+                    if self.opts.save_dof:
+                        for m in self.modelList:
+                            for lm in m.levelModelList:
+                                for ci in range(lm.coefficients.nc):
+                                    lm.u[ci].dof_last[:] = lm.u[ci].dof
+                        logEvent("saving previous velocity dofs %s" % self.nSolveSteps)
+
                     logEvent("Split operator iteration %i" % (self.systemStepController.its,),level=3)
                     self.nSequenceSteps += 1
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
@@ -1500,6 +1523,7 @@ class NS_base:  # (HasTraits):
                                                                                                                          model.stepController.t_model,
                                                                                                                          model.stepController.dt_model,
                                                                                                                          model.name),level=3)
+ 
                         #end model step
                         if stepFailed:
                             logEvent("Sequence step failed")
@@ -1563,9 +1587,11 @@ class NS_base:  # (HasTraits):
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
                 #can only handle PUMIDomain's for now
-                #self.nSolveSteps += 1
-                #if(self.PUMI_estimateError()):
-                #    self.PUMI_adaptMesh()
+                #if(self.tn < 0.05):
+                #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
+                self.nSolveSteps += 1
+                if(self.PUMI_estimateError()):
+                    self.PUMI_adaptMesh()
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
                 nSequenceStepsLast = self.nSequenceSteps
@@ -1580,14 +1606,36 @@ class NS_base:  # (HasTraits):
             #assuming same for all physics and numerics  for now
 
             #can only handle PUMIDomain's for now
-            self.nSolveSteps += 1
-            if(self.PUMI_estimateError()):
-              self.PUMI_adaptMesh()
+            #self.nSolveSteps += 1
+            #if(self.PUMI_estimateError()):
+            #  self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
         # compute auxiliary quantities at last time step
         for index,model in enumerate(self.modelList):
             if hasattr(model.levelModelList[-1],'runAtEOS'):
                 model.levelModelList[-1].runAtEOS()
+
+        if(hasattr(self.pList[0].domain,"PUMIMesh")):
+        #Transfer solution to PUMI mesh for output
+          for m in self.modelList:
+            for lm in m.levelModelList:
+              coef = lm.coefficients
+              if coef.vectorComponents is not None:
+                vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+                for vci in range(len(coef.vectorComponents)):
+                  vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
+                self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                   coef.vectorName, vector)
+                del vector
+              for ci in range(coef.nc):
+                if coef.vectorComponents is None or \
+                  ci not in coef.vectorComponents:
+                  scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+                  scalar[:,0] = lm.u[ci].dof[:]
+                  self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                      coef.variableNames[ci], scalar)
+                  del scalar
+          self.pList[0].domain.PUMIMesh.writeMesh("finalMesh.smb")
 
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)

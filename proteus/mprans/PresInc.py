@@ -47,8 +47,11 @@ class Coefficients(TC_base):
                  rho_f_min=998.0,
                  rho_s_min=998.0,
                  nd=2,
-                 modelIndex=None,
-                 fluidModelIndex=None,
+                 VOS_model=0,
+                 VOF_model=1,
+                 modelIndex = None,
+                 fluidModelIndex = None, 
+                 sedModelIndex = None, 
                  fixNullSpace=False,
                  INTEGRATE_BY_PARTS_DIV_U=True):
         """Construct a coefficients object
@@ -56,9 +59,11 @@ class Coefficients(TC_base):
         :param modelIndex: This model's index into the model list
         :param fluidModelIndex: The fluid momentum model's index
         """
-        self.fixNullSpace = fixNullSpace
-        self.INTEGRATE_BY_PARTS_DIV_U = INTEGRATE_BY_PARTS_DIV_U
-        assert(nd in [2, 3])
+        self.fixNullSpace=fixNullSpace
+        self.INTEGRATE_BY_PARTS_DIV_U=INTEGRATE_BY_PARTS_DIV_U
+        self.VOS_model=VOS_model
+        self.VOF_model=VOF_model
+        assert(nd in [2,3])        
         self.nd = nd
         if self.nd == 2:
             sdInfo = {(0, 0): (np.array([0, 1, 2], dtype='i'),
@@ -78,6 +83,7 @@ class Coefficients(TC_base):
         self.rho_s_min = rho_s_min
         self.modelIndex = modelIndex
         self.fluidModelIndex = fluidModelIndex
+        self.sedModelIndex = sedModelIndex
 
     def attachModels(self, modelList):
         """
@@ -85,6 +91,14 @@ class Coefficients(TC_base):
         """
         self.model = modelList[self.modelIndex]
         self.fluidModel = modelList[self.fluidModelIndex]
+        if self.sedModelIndex is not None:
+            self.sedModel = modelList[self.sedModelIndex]
+        if self.VOS_model is not None:
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
+        else:
+            self.model.q_vos = np.zeros_like(self.model.q[('u',0)])
+            self.model.ebqe_vos = np.zeros_like(self.model.ebqe[('u',0)])
 
     def initializeMesh(self, mesh):
         """
@@ -130,16 +144,54 @@ class Coefficients(TC_base):
         if self.fluidModel.KILL_PRESSURE_TERM is False and self.fluidModel.coefficients.CORRECT_VELOCITY is True:
             assert self.INTEGRATE_BY_PARTS_DIV_U, "INTEGRATE_BY_PARTS the div(U) must be set to true to correct the velocity"
             alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
-            for i in range(self.fluidModel.q[('velocity', 0)].shape[-1]):
-                self.fluidModel.q[('velocity', 0)][..., i] -= self.model.q[('grad(u)', 0)][..., i] / (self.rho_f_min * alphaBDF)
-                # cek hack, need to do scale this right for 3p flow
-                self.fluidModel.ebqe[('velocity', 0)][..., i] += (self.model.ebqe[('advectiveFlux', 0)] +
+            q_vos = self.model.q_vos
+            ebqe_vos = self.model.ebqe_vos
+            q_a = 1.0/(q_vos*self.rho_s_min + (1.0-q_vos)*self.rho_f_min)/alphaBDF
+            ebqe_a = 1.0/(ebqe_vos*self.rho_s_min + (1.0-ebqe_vos)*self.rho_f_min)/alphaBDF
+            if self.sedModelIndex is not None:
+            
+                for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
+                    self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * (1.0 - q_vos) * q_a 
+                    self.fluidModel.ebqe[('velocity',0)][...,i] += (1.0-ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)]-self.fluidModel.ebqe[('velocity', 0)][..., i])*self.model.ebqe['n'][...,i]                
+                    self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * (q_vos) * q_a
+                    self.fluidModel.coefficients.ebqe_velocity_solid[...,i] += (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)]-self.sedModel.ebqe[('velocity', 0)][..., i])*self.model.ebqe['n'][...,i]   
+# end of loop
+                self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
+                self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
+                self.sedModel.q[('velocity',0)] = self.fluidModel.coefficients.q_velocity_solid
+                self.sedModel.ebqe[('velocity',0)] = self.fluidModel.coefficients.ebqe_velocity_solid
+                self.sedModel.stabilization.v_last[:] = self.sedModel.q[('velocity',0)]
+                self.sedModel.coefficients.ebqe_velocity_last[:] = self.sedModel.ebqe[('velocity',0)]
+                assert(self.fluidModel.coefficients.q_velocity_solid is self.sedModel.q[('velocity',0)])
+                assert(self.fluidModel.coefficients.ebqe_velocity_solid is self.sedModel.ebqe[('velocity',0)])
+                # This is for disabling the motion of sediment when it's needed
+                if self.sedModel.coefficients.staticSediment:
+                    for i in range(self.sedModel.q[('velocity',0)].shape[-1]):
+                        self.sedModel.q[('velocity',0)][...,i] = 0.0
+                        self.sedModel.ebqe[('velocity',0)][...,i] = 0.0  
+                        self.fluidModel.coefficients.q_velocity_solid[...,i] = 0.0
+                        self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = 0.0 
+                #for eN in range(self.model.q_vos.shape[0]):
+                #    for k in range(self.model.q_vos.shape[1]):
+                #        if self.model.q_vos[eN,k] >= self.sedModel.coefficients.maxFraction:
+                #            self.sedModel.q[('velocity',0)][eN,k] = 0.0
+                #for eN in range(self.model.ebqe_vos.shape[0]):
+                #    for k in range(self.model.ebqe_vos.shape[1]):
+                #        if self.model.ebqe_vos[eN,k] >= self.sedModel.coefficients.maxFraction:
+                #            self.sedModel.ebqe[('velocity',0)][eN,k] = 0.0 
+            else:
+                for i in range(self.fluidModel.q[('velocity', 0)].shape[-1]):
+                    self.fluidModel.q[('velocity', 0)][..., i] -= self.model.q[('grad(u)', 0)][..., i] / (self.rho_f_min * alphaBDF)
+                    # cek hack, need to do scale this right for 3p flow
+                    self.fluidModel.ebqe[('velocity', 0)][..., i] += (self.model.ebqe[('advectiveFlux', 0)] +
                                                                   self.model.ebqe[('diffusiveFlux', 0, 0)] -
                                                                   self.fluidModel.ebqe[('velocity', 0)][..., i]) * self.model.ebqe['n'][..., i]
-                self.fluidModel.coefficients.q_velocity_solid[..., i] -= self.model.q[('grad(u)', 0)][..., i] / (self.rho_s_min * alphaBDF)
-                self.fluidModel.coefficients.ebqe_velocity_solid[..., i] -= self.model.ebqe[('grad(u)', 0)][..., i] / (self.rho_s_min * alphaBDF)
-            self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity', 0)]
-            self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity', 0)]
+                    self.fluidModel.coefficients.q_velocity_solid[..., i] -= self.model.q[('grad(u)', 0)][..., i] / (self.rho_s_min * alphaBDF)
+                    self.fluidModel.coefficients.ebqe_velocity_solid[..., i] -= self.model.ebqe[('grad(u)', 0)][..., i] / (self.rho_s_min * alphaBDF)
+                self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity', 0)]
+                self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity', 0)]
+                
+
         copyInstructions = {}
         return copyInstructions
 
@@ -152,32 +204,50 @@ class Coefficients(TC_base):
         """
         u_shape = c[('u', 0)].shape
         alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
-        if u_shape == self.fluidModel.q[('u', 0)].shape:
-            vf = self.fluidModel.q[('velocity', 0)]
-            vs = self.fluidModel.coefficients.q_velocity_solid
-            vos = self.fluidModel.coefficients.q_vos
-            rho_s = self.fluidModel.coefficients.rho_s
-            rho_f = self.fluidModel.coefficients.q_rho
-        if u_shape == self.fluidModel.ebqe[('u', 0)].shape:
-            vf = self.fluidModel.ebqe[('velocity', 0)]
-            vs = self.fluidModel.coefficients.ebqe_velocity_solid
-            vos = self.fluidModel.coefficients.ebqe_vos
-            rho_s = self.fluidModel.coefficients.rho_s
-            rho_f = self.fluidModel.coefficients.ebqe_rho
 
+        vs = None
+        vos = None
+
+        if  u_shape == self.fluidModel.q[('u',0)].shape:
+            vf = self.fluidModel.q[('velocity',0)]
+            rho_f = self.fluidModel.coefficients.q_rho
+            rho_s =  self.rho_s_min
+            if self.sedModelIndex is not None:
+                vs = self.sedModel.q[('velocity',0)]
+                vos = self.sedModel.coefficients.q_vos
+                rho_s = self.sedModel.coefficients.rho_s
+        if  u_shape == self.fluidModel.ebqe[('u',0)].shape:
+            vf = self.fluidModel.ebqe[('velocity',0)]
+            rho_f = self.fluidModel.coefficients.ebqe_rho
+            rho_s =  self.rho_s_min
+            if self.sedModelIndex is not None:
+                vs = self.sedModel.ebqe[('velocity',0)]
+                vos = self.sedModel.coefficients.ebqe_vos
+                rho_s = self.sedModel.coefficients.rho_s
+        
         assert rho_s >= self.rho_s_min, "solid density out of bounds"
         assert (rho_f >= self.rho_f_min).all(), "fluid density out of bounds"
-        for i in range(vs.shape[-1]):
-            c[('f', 0)][..., i] = (1.0 - vos) * vf[..., i] + vos * vs[..., i]
-        # a is really a scalar diffusion but defining it as diagonal tensor
-        # if we push phase momentum interchange (drag) to correction
-        # then a may become a full  tensor
-        c['a_f'] = 1.0 / (self.rho_f_min * alphaBDF)
-        c['a_s'] = 1.0 / (self.rho_s_min * alphaBDF)
-        c[('a', 0, 0)][..., 0] = (1.0 - vos) * c['a_f'] + vos * c['a_s']
-        for i in range(1, c[('a', 0, 0)].shape[-1]):
-            c[('a', 0, 0)][..., i] = c[('a', 0, 0)][..., 0]
 
+        if self.sedModelIndex is not None:        
+            for i in range(vs.shape[-1]):
+                c[('f',0)][...,i] = (1.0-vos)*vf[...,i] + vos*vs[...,i]
+        else:
+            for i in range(vf.shape[-1]):
+                c[('f',0)][...,i] = vf[...,i] 
+
+                #a is really a scalar diffusion but defining it as diagonal tensor
+        #if we push phase momentum interchange (drag) to correction
+        #then a may become a full  tensor
+        if self.sedModelIndex is not None:
+            a_penalty = (1.0-vos)*self.rho_f_min*alphaBDF + vos*self.rho_s_min*alphaBDF
+            c['a_f'] = (1.0-vos)/a_penalty
+            c['a_s'] = (vos)/a_penalty
+            c[('a',0,0)][...,0] = c['a_f'] + c['a_s']
+        else:
+            c['a_f'] = 1.0 / (self.rho_f_min * alphaBDF)
+            c[('a', 0, 0)][..., 0] =  c['a_f'] 
+        for i in range(1,c[('a',0,0)].shape[-1]):
+            c[('a',0,0)][...,i] = c[('a',0,0)][...,0]
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
@@ -433,6 +503,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             'd')
         self.q[('u', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['a'] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[
             ('grad(u)',
              0)] = numpy.zeros(
@@ -443,6 +515,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[
             ('u',
              0)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary),
+            'd')
+        self.ebqe['a'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
@@ -732,10 +808,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag', 0)][t[0], t[1]] = 1
         for t, g in self.fluxBoundaryConditionsObjectsDict[
                 0].diffusiveFluxBoundaryConditionsDictDict[0].iteritems():
-            self.ebqe[('diffusiveFlux_bc', 0, 0)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
-            self.ebqe[('diffusiveFlux_bc_flag', 0, 0)][t[0], t[1]] = 1
-
-        if self.coefficients.fixNullSpace:
+            self.ebqe[('diffusiveFlux_bc',0,0)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
+            self.ebqe[('diffusiveFlux_bc_flag',0,0)][t[0],t[1]] = 1 
+        if self.coefficients.fixNullSpace:        
             self.u[0].dof[0] = 0
         self.presinc.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
@@ -790,8 +865,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.coefficients.INTEGRATE_BY_PARTS_DIV_U)
+            self.mesh.elementBoundaryLocalElementBoundariesArray, 
+            self.coefficients.INTEGRATE_BY_PARTS_DIV_U,
+            self.q['a'],
+            self.ebqe['a'])
 
         if self.coefficients.fixNullSpace:
             r[0] = 0.
