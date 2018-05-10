@@ -659,7 +659,7 @@ namespace proteus
                                   const int sd_offset,
                                   const double* particle_signed_distances,
                                   const double& kappa,
-                                  const double porosity,//VRANS specific
+                                  const double porosity,
                                   const double& p,
                                   const double grad_p[nSpace],
                                   const double grad_u[nSpace],
@@ -739,7 +739,7 @@ namespace proteus
             double norm_S;
           case 1:
             {
-              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] + //grad_w[2]*grad_w[2] +
+              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +
                                  0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));
 
               nu_t0 = smagorinskyConstant*smagorinskyConstant*h_e*h_e*norm_S;
@@ -748,7 +748,7 @@ namespace proteus
           case 2: 
             {
               double re_0,cs_0=0.0,re_1,cs_1=0.0;
-              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +//grad_w[2]*grad_w[2] + 
+              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +
                                  0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));
               re_0 = h_e*h_e*norm_S/nu_0;
               if (re_0 > 1.0)
@@ -976,7 +976,7 @@ namespace proteus
                                                const double vStar,
                                                const double wStar,
                                                const double eps_s,
-                                               const double phi_s,
+                                               const double vos,
                                                const double u_s,
                                                const double v_s,
                                                const double w_s,
@@ -998,22 +998,21 @@ namespace proteus
         duc_dv = v/(uc+1.0e-12);
         duc_dw = w/(uc+1.0e-12);
         double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
-        double new_beta = closure.betaCoeff(1.0-phi_s,
+        double new_beta = closure.betaCoeff(1.0-vos,
 					    rho,
 					    fluid_velocity,
 					    solid_velocity,
 					    viscosity);
-
-        mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s);
-        mom_v_source += (1.0 - phi_s) * new_beta * (v - v_s);
+        mom_u_source += (1.0 - vos) * new_beta * (u - u_s);
+        mom_v_source += (1.0 - vos) * new_beta * (v - v_s);
         /* mom_w_source += phi_s*new_beta*(w-w_s); */
 
-        dmom_u_source[0] = (1.0 - phi_s) * new_beta;
+        dmom_u_source[0] = (1.0 - vos) * new_beta;
         dmom_u_source[1] = 0.0;
         /* dmom_u_source[2] = 0.0; */
 
         dmom_v_source[0] = 0.0;
-        dmom_v_source[1] = (1.0 - phi_s) * new_beta;
+        dmom_v_source[1] = (1.0 - vos) * new_beta;
         /*dmom_v_source[2] = 0.0; */
 
         dmom_w_source[0] = 0.0;
@@ -2464,10 +2463,10 @@ namespace proteus
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not?
-                updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
-                                                  /* nonlinearDragFactor, */
-                                                  /* porosity, */
-                                                  /* meanGrainSize, */
+                updateDarcyForchheimerTerms_Ergun(// linearDragFactor,
+                                                  // nonlinearDragFactor,
+                                                  // porosity,
+                                                  // meanGrainSize,
                                                   q_dragAlpha[eN_k],
                                                   q_dragBeta[eN_k],
                                                   eps_rho,
@@ -4582,7 +4581,7 @@ namespace proteus
                 //
                 //calculate pde coefficients and derivatives at quadrature points
                 //
-                double eddy_viscosity(0.),rhoSave,nuSave;//not really interested in saving eddy_viscosity in jacobian
+                double eddy_viscosity(0.),rhoSave,nuSave;//not really interesed in saving eddy_viscosity in jacobian
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
@@ -4675,10 +4674,10 @@ namespace proteus
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not
-                updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
-                                                  /* nonlinearDragFactor, */
-                                                  /* porosity, */
-                                                  /* meanGrainSize, */
+                updateDarcyForchheimerTerms_Ergun(// linearDragFactor,
+                                                  // nonlinearDragFactor,
+                                                  // porosity,
+                                                  // meanGrainSize,
                                                   q_dragAlpha[eN_k],
                                                   q_dragBeta[eN_k],
                                                   eps_rho,
