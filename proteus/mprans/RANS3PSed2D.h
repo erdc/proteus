@@ -1,18 +1,37 @@
-
 #ifndef RANS3PSed2D_H
 #define RANS3PSed2D_H
 #include <cmath>
+#include <valarray>
 #include <iostream>
+#include <vector>
+#include <set>
+#include <cstring>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
+
+//////////////////////
+// ***** TODO ***** //
+//////////////////////
+// *fix the following w.r.t. not dividing momentum eqn by rho
+//      * updateSolidParticleTerms
+// *Double check the following w.r.t. not dividing momentum eqn by rho
+//      * updateDarcyForchheimerTerms_Ergun
+//      * updateTurbulenceClosure
+//      * check pdeResidual_p. In particular check the term with q_dvos_dt
+//      * double check exteriorNumericalAdvectiveFlux. I multiply from outside porosity*rho
+//      * MOVING MESH. Double check.
+//      * Turbulence: double check eddy_viscosity within evaluateCoefficients
+// ***** END OF TODO *****
 
 namespace proteus
 {
   class cppRANS3PSed2D_base
   {
+
   public:
     virtual ~cppRANS3PSed2D_base(){}
+
     virtual void setSedClosure(double aDarcy,
                                double betaForch,
                                double grain,
@@ -38,6 +57,7 @@ namespace proteus
                                    double PSTAB,
                                    int* mesh_l2g,
                                    double* dV_ref,
+                                   int nDOF_per_element_pressure,
                                    double* p_trial_ref,
                                    double* p_grad_trial_ref,
                                    double* p_test_ref,
@@ -48,6 +68,7 @@ namespace proteus
                                    double* ebqe_grad_p,
                                    double* vel_trial_ref,
                                    double* vel_grad_trial_ref,
+                                   double *vel_hess_trial_ref,
                                    double* vel_test_ref,
                                    double* vel_grad_test_ref,
                                    double* mesh_trial_trace_ref,
@@ -68,6 +89,7 @@ namespace proteus
                                    double* nodeDiametersArray,
                                    double hFactor,
                                    int nElements_global,
+                                   int nElements_owned,
                                    int nElementBoundaries_owned,
                                    double useRBLES,
                                    double useMetrics,
@@ -88,8 +110,12 @@ namespace proteus
                                    double C_dc,
                                    double C_b,
                                    const double* eps_solid,
+                                   const double* ebq_global_phi_solid,
+                                   const double* ebq_global_grad_phi_solid,
+                                   const double* phi_solid_nodes,
+                                   const double* phi_solid,
                                    const double* q_velocity_fluid,
-                                   const double* q_vos,//sed fraction - gco check
+                                   const double* q_vos,
                                    const double* q_dvos_dt,
                                    const double* q_grad_vos,
                                    const double* q_dragAlpha,
@@ -105,6 +131,12 @@ namespace proteus
                                    double* u_dof, 
                                    double* v_dof, 
                                    double* w_dof,
+                                   double* u_dof_old,
+                                   double* v_dof_old,
+                                   double* w_dof_old,
+                                   double* u_dof_old_old,
+                                   double* v_dof_old_old,
+                                   double* w_dof_old_old,
                                    double* g,
                                    const double useVF,
                                    double *vf,
@@ -158,6 +190,7 @@ namespace proteus
                                    double* globalResidual,
                                    int nExteriorElementBoundaries_global,
                                    int* exteriorElementBoundariesArray,
+                                   int* elementBoundariesArray,
                                    int* elementBoundaryElementsArray,
                                    int* elementBoundaryLocalElementBoundariesArray,
                                    double* ebqe_vf_ext,
@@ -166,7 +199,7 @@ namespace proteus
                                    double* bc_ebqe_phi_ext,
                                    double* ebqe_normal_phi_ext,
                                    double* ebqe_kappa_phi_ext,
-                                   const double* ebqe_vos_ext,//sed fraction - gco check
+                                   const double* ebqe_vos_ext,
                                    const double* ebqe_turb_var_0,
                                    const double* ebqe_turb_var_1,
                                    int* isDOFBoundary_p,
@@ -195,6 +228,13 @@ namespace proteus
                                    double* q_x,
                                    double* q_velocity,
                                    double* ebqe_velocity,
+                                   double* q_grad_u,
+                                   double* q_grad_v,
+                                   double* q_grad_w,
+                                   double* q_divU,
+                                   double* ebqe_grad_u,
+                                   double* ebqe_grad_v,
+                                   double* ebqe_grad_w,
                                    double* flux,
                                    double* elementResidual_p,
                                    int* elementFlags,
@@ -203,7 +243,46 @@ namespace proteus
                                    double* wettedAreas,
                                    double* netForces_p,
                                    double* netForces_v,
-                                   double* netMoments)=0;
+                                   double* netMoments,
+                                   double* q_rho,
+                                   double* ebqe_rho,
+                                   double* q_nu,
+                                   double* ebqe_nu,
+                                   int nParticles,
+                                   double particle_epsFact,
+                                   double particle_alpha,
+                                   double particle_beta,
+                                   double particle_penalty_constant,
+                                   double* particle_signed_distances,
+                                   double* particle_signed_distance_normals,
+                                   double* particle_velocities,
+                                   double* particle_centroids,
+                                   double* particle_netForces,
+                                   double* particle_netMoments,
+                                   double* particle_surfaceArea,
+                                   double particle_nitsche,
+                                   double* phisError,
+                                   double* phisErrorNodal,
+                                   int USE_SUPG,
+				   int ARTIFICIAL_VISCOSITY,
+                                   double cMax,
+                                   double cE,
+				   int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
+                                   double* forcex,
+                                   double* forcey,
+                                   double* forcez,
+                                   int KILL_PRESSURE_TERM,
+                                   double dt,
+                                   double* quantDOFs,
+                                   int MATERIAL_PARAMETERS_AS_FUNCTION,
+                                   double* density_as_function,
+                                   double* dynamic_viscosity_as_function,
+                                   double* ebqe_density_as_function,
+                                   double* ebqe_dynamic_viscosity_as_function,
+                                   double order_polynomial,
+                                   double* isActiveDOF,
+                                   int USE_SBM
+                                   )=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -223,6 +302,7 @@ namespace proteus
                                    double* ebqe_grad_p,
                                    double* vel_trial_ref,
                                    double* vel_grad_trial_ref,
+                                   double *vel_hess_trial_ref,
                                    double* vel_test_ref,
                                    double* vel_grad_test_ref,
                                    //element boundary
@@ -245,6 +325,8 @@ namespace proteus
                                    double *nodeDiametersArray,
                                    double hFactor,
                                    int nElements_global,
+                                   int nElements_owned,
+                                   int nElementBoundaries_owned,
                                    double useRBLES,
                                    double useMetrics,
                                    double alphaBDF,
@@ -265,8 +347,12 @@ namespace proteus
                                    double C_b,
                                    //VRANS
                                    const double* eps_solid,
-                                   const double* q_velocity_fluid,
-                                   const double* q_vos,//sed fraction - gco check
+                                   const double *ebq_global_phi_solid,
+                                   const double *ebq_global_grad_phi_solid,
+                                   const double *phi_solid_nodes,
+                                   const double *phi_solid,
+                           const double* q_velocity_fluid,
+                                   const double* q_vos,
                                    const double* q_dvos_dt,
                                    const double* q_grad_vos,
                                    const double* q_dragAlpha,
@@ -319,6 +405,7 @@ namespace proteus
                                    double *globalJacobian,
                                    int nExteriorElementBoundaries_global,
                                    int *exteriorElementBoundariesArray,
+                                   int *elementBoundariesArray,
                                    int *elementBoundaryElementsArray,
                                    int *elementBoundaryLocalElementBoundariesArray,
                                    double *ebqe_vf_ext,
@@ -328,7 +415,7 @@ namespace proteus
                                    double *ebqe_normal_phi_ext,
                                    double *ebqe_kappa_phi_ext,
                                    //VRANS
-                                   const double* ebqe_vos_ext,//sed fraction - gco check
+                                   const double* ebqe_vos_ext,
                                    const double* ebqe_turb_var_0,
                                    const double* ebqe_turb_var_1,
                                    //VRANS end                                     
@@ -371,7 +458,26 @@ namespace proteus
                                    int* csrColumnOffsets_eb_w_u,
                                    int* csrColumnOffsets_eb_w_v,
                                    int* csrColumnOffsets_eb_w_w,                                   
-                                   int* elementFlags)=0;
+                                   int *elementFlags,
+                                   int nParticles,
+                                   double particle_epsFact,
+                                   double particle_alpha,
+                                   double particle_beta,
+                                   double particle_penalty_constant,
+                                   double* particle_signed_distances,
+                                   double* particle_signed_distance_normals,
+                                   double* particle_velocities,
+                                   double* particle_centroids,
+                                   double particle_nitsche,
+				   int USE_SUPG,
+                                   int KILL_PRESSURE_TERM,
+                                   double dt,
+                                   int MATERIAL_PARAMETERS_AS_FUNCTION,
+                                   double* density_as_function,
+                                   double* dynamic_viscosity_as_function,
+                                   double* ebqe_density_as_function,
+                                   double* ebqe_dynamic_viscosity_as_function,
+                                   int USE_SBM)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           int *exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -408,8 +514,10 @@ namespace proteus
     public:
       cppHsuSedStress<2> closure;
       const int nDOF_test_X_trial_element;
+        nSpace2;
       CompKernelType ck;
     cppRANS3PSed2D():
+      nSpace2(4),
       closure(150.0,
               0.0,
               0.0102,
@@ -475,9 +583,25 @@ namespace proteus
                                      fContact,
                                      mContact,
                                      nContact,
-                                     angFriction,
-                                   vos_limiter,
-                                   mu_fr_limiter);
+                                     angFriction, vos_limiter,mu_fr_limiter );
+      }
+
+      inline double Dot(const double vec1[nSpace],
+                        const double vec2[nSpace])
+      {
+        double dot = 0;
+        for (int I=0; I<nSpace; I++)
+          dot += vec1[I]*vec2[I];
+        return dot;
+      }
+
+      inline void calculateTangentialGradient(const double normal[nSpace],
+                                              const double vel_grad[nSpace],
+                                              double vel_tgrad[nSpace])
+      {
+        double normal_dot_vel_grad = Dot(normal,vel_grad);
+        for (int I=0; I<nSpace; I++)
+          vel_tgrad[I] = vel_grad[I] - normal_dot_vel_grad*normal[I];
       }
 
       inline double smoothedHeaviside(double eps, double phi)
@@ -530,6 +654,7 @@ namespace proteus
       inline
         void evaluateCoefficients(const double eps_rho,
                                   const double eps_mu,
+                                  const double eps_s,
                                   const double sigma,
                                   const double rho_0,
                                   double nu_0,
@@ -545,8 +670,11 @@ namespace proteus
                                   const double& vf,
                                   const double& phi,
                                   const double n[nSpace],
+                                  const int nParticles,
+                                  const int sd_offset,
+                                  const double* particle_signed_distances,
                                   const double& kappa,
-                                  const double vos,//VRANS specific
+                                  const double vos,
                                   const double& p,
                                   const double grad_p[nSpace],
                                   const double grad_u[nSpace],
@@ -601,7 +729,18 @@ namespace proteus
                                   double dmom_v_ham_grad_v[nSpace],
                                   double& mom_w_ham,
                                   double dmom_w_ham_grad_p[nSpace],
-                                  double dmom_w_ham_grad_w[nSpace])
+                                  double dmom_w_ham_grad_w[nSpace],
+                                  double& rhoSave,
+                                  double& nuSave,
+                                  int KILL_PRESSURE_TERM,
+				  int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
+                                  double forcex,
+                                  double forcey,
+                                  double forcez,
+                                  int MATERIAL_PARAMETERS_AS_FUNCTION,
+                                  double density_as_function,
+                                  double dynamic_viscosity_as_function,
+                                  int USE_SBM)
       {
         double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
