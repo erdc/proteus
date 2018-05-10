@@ -659,7 +659,7 @@ namespace proteus
                                   const int sd_offset,
                                   const double* particle_signed_distances,
                                   const double& kappa,
-                                  const double porosity,//VRANS specific
+                                  const double porosity,
                                   const double& p,
                                   const double grad_p[nSpace],
                                   const double grad_u[nSpace],
@@ -739,7 +739,7 @@ namespace proteus
             double norm_S;
           case 1:
             {
-              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] + //grad_w[2]*grad_w[2] +
+              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +
                                  0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));
 
               nu_t0 = smagorinskyConstant*smagorinskyConstant*h_e*h_e*norm_S;
@@ -748,7 +748,7 @@ namespace proteus
           case 2: 
             {
               double re_0,cs_0=0.0,re_1,cs_1=0.0;
-              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +//grad_w[2]*grad_w[2] + 
+              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +
                                  0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));
               re_0 = h_e*h_e*norm_S/nu_0;
               if (re_0 > 1.0)
