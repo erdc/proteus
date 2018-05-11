@@ -17,7 +17,7 @@ def test_gmshLoadAndAdapt(verbose=0):
     Mesh=testDir + '/Couette.msh'
 
     domain = Domain.PUMIDomain() #initialize the domain
-    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='ERM',maType='isotropic')
+    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='ERM',maType='isotropic',targetError=1)
     domain.PUMIMesh.loadModelAndMesh(Model, Mesh)
     domain.faceList=[[80],[76],[42],[24],[82],[78]]
 
@@ -33,7 +33,8 @@ def test_gmshLoadAndAdapt(verbose=0):
     rho = numpy.array([998.2,998.2])
     nu = numpy.array([1.004e-6, 1.004e-6])
     g = numpy.asarray([0.0,0.0,0.0])
-    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
+    deltaT = 1.0 #dummy number
+    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT)
 
     #Couette Flow
     Lz = 0.05
@@ -81,7 +82,7 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     Model=testDir + '/Couette2D.null'
     Mesh=testDir + '/Couette2D.msh'
     domain = Domain.PUMIDomain(dim=2) #initialize the domain
-    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='ERM',maType='isotropic')
+    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='ERM',maType='isotropic',targetError=1)
     domain.PUMIMesh.loadModelAndMesh(Model, Mesh)
     domain.faceList=[[14],[12],[11],[13]]
 
@@ -97,7 +98,8 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     rho = numpy.array([998.2,998.2])
     nu = numpy.array([1.004e-6, 1.004e-6])
     g = numpy.asarray([0.0,0.0])
-    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
+    deltaT = 1.0 #dummy number
+    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT)
 
     #Couette Flow
     Lz = 0.05
