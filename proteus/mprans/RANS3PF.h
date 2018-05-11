@@ -3431,64 +3431,6 @@ namespace proteus
                 }//kb
             }//ebN_s
         }
-        //
-                    //for debug
-                    double x1 = mesh_dof[3*mesh_l2g[eN*4+0]+0], y1 = mesh_dof[3*mesh_l2g[eN*4+0]+1], z1 = mesh_dof[3*mesh_l2g[eN*4+0]+2];
-                    double x2 = mesh_dof[3*mesh_l2g[eN*4+1]+0], y2 = mesh_dof[3*mesh_l2g[eN*4+1]+1], z2 = mesh_dof[3*mesh_l2g[eN*4+1]+2];
-                    double x3 = mesh_dof[3*mesh_l2g[eN*4+2]+0], y3 = mesh_dof[3*mesh_l2g[eN*4+2]+1], z3 = mesh_dof[3*mesh_l2g[eN*4+2]+2];
-                    double x4 = mesh_dof[3*mesh_l2g[eN*4+3]+0], y4 = mesh_dof[3*mesh_l2g[eN*4+3]+1], z4 = mesh_dof[3*mesh_l2g[eN*4+3]+2];
-
-                    std::cout<<"yyPDB-Surrogate bc: ";
-                    if(ebN_local==0)
-                    {
-                        std::cout<<x2<<"\t"
-                                <<y2<<"\t"
-                                <<z2<<"\t"
-                                <<x3<<"\t"
-                                <<y3<<"\t"
-                                <<z3<<"\t"
-                                <<x4<<"\t"
-                                <<y4<<"\t"
-                                <<z4<<"\t";
-                    }else if(ebN_local==1){
-
-                        std::cout<<x3<<"\t"
-                                <<y3<<"\t"
-                                <<z3<<"\t"
-                                <<x4<<"\t"
-                                <<y4<<"\t"
-                                <<z4<<"\t"
-                                <<x1<<"\t"
-                                <<y1<<"\t"
-                                <<z1<<"\t";
-                    }else if(ebN_local==2){
-
-                        std::cout<<x4<<"\t"
-                                <<y4<<"\t"
-                                <<z4<<"\t"
-                                <<x1<<"\t"
-                                <<y1<<"\t"
-                                <<z1<<"\t"
-                                <<x2<<"\t"
-                                <<y2<<"\t"
-                                <<z2<<"\t";
-                    }else if(ebN_local==3){
-
-                        std::cout<<x1<<"\t"
-                                <<y1<<"\t"
-                                <<z1<<"\t"
-                                <<x2<<"\t"
-                                <<y2<<"\t"
-                                <<z2<<"\t"
-                                <<x3<<"\t"
-                                <<y3<<"\t"
-                                <<z3<<"\t";
-                    }
-                    std::cout<<"\n";
-                }
-            }//ebN_s
-        }
-        //
         //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
         //
         //ebNE is the Exterior element boundary INdex
@@ -5868,37 +5810,6 @@ namespace proteus
                     }//for-i
 
                 }//for kb
-            }//for ebN_s
-        }//if USE_SBM
-        //
-                                <<x1<<"\t"
-                                <<y1<<"\t"
-                                <<z1<<"\t";
-                    }else if(ebN_local==2){
-
-                        std::cout<<x4<<"\t"
-                                <<y4<<"\t"
-                                <<z4<<"\t"
-                                <<x1<<"\t"
-                                <<y1<<"\t"
-                                <<z1<<"\t"
-                                <<x2<<"\t"
-                                <<y2<<"\t"
-                                <<z2<<"\t";
-                    }else if(ebN_local==3){
-
-                        std::cout<<x1<<"\t"
-                                <<y1<<"\t"
-                                <<z1<<"\t"
-                                <<x2<<"\t"
-                                <<y2<<"\t"
-                                <<z2<<"\t"
-                                <<x3<<"\t"
-                                <<y3<<"\t"
-                                <<z3<<"\t";
-                    }
-                    std::cout<<"\n";
-                }
             }//for ebN_s
         }//if USE_SBM
         //
