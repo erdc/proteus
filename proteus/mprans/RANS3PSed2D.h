@@ -603,7 +603,7 @@ namespace proteus
                                   double dmom_w_ham_grad_p[nSpace],
                                   double dmom_w_ham_grad_w[nSpace])
       {
-        double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
+        double rho,rho_f,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
         d_rho = (1.0-useVF)*smoothedDirac(eps_rho,phi);
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -640,15 +640,15 @@ namespace proteus
         // we need fluid rho and nu for turbulence
         // we need fluid rho and nu for momentum interface
         rho = rho_s;
-        //rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
+        rho_f = rho_0*(1.0-H_rho)+rho_1*H_rho;
         nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
-        nu = nu_s;
+        nu = nu_0*(1.0-H_mu)+nu_1*H_mu;
         //nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         nu += nu_t;
         //mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-        mu = rho_s*nu_s;
+        mu = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
 
-        eddy_viscosity = nu_t*rho;
+        eddy_viscosity = rho_0*nu_t0*(1.0-H_mu)+rho_1*nu_t1*H_mu;
 
         // mass (volume accumulation)
         //..hardwired
@@ -1093,9 +1093,16 @@ namespace proteus
         viscosity = a;
         nrm_df = 0.0;
         for (int I = 0; I < nSpace; I++)
-          nrm_df += df[I] * df[I];
-        nrm_df = sqrt(nrm_df);
-        cfl = nrm_df / (fabs(h * density)+1e-10); //this is really cfl/dt, but that's what we want to know, the step controller expect this
+          {nrm_df += df[I] * df[I];}
+	nrm_df = sqrt(nrm_df);
+	if(density > 1e-8)
+	  {
+	    cfl = nrm_df / (fabs(h * density)); 
+	  }
+	else
+	  {
+	    cfl = nrm_df / fabs(h ); 
+	  }
         oneByAbsdt = fabs(dmt);
         tau_v = 1.0 / (4.0 * viscosity / (h * h) + 2.0 * nrm_df / h + oneByAbsdt);
         tau_p = (4.0 * viscosity + 2.0 * nrm_df * h + oneByAbsdt * h * h) / pfac;
@@ -1294,15 +1301,31 @@ namespace proteus
         /*     if (flowSpeedNormal < 0.0) */
         /*       flux_wmom+=bc_speed*(bc_w - w); */
         /*   } */
+	
         if (isFluxBoundary_u == 1)
           {
             flux_umom = bc_flux_umom;
-	    velocity[0] = bc_flux_umom/vos;
+	    if(vos > 1e-8)
+	      {
+		velocity[0] = bc_flux_umom/fabs(vos);
+	      }
+	    else
+	      {
+		velocity[0] = bc_flux_umom;
+	      }
           }
         if (isFluxBoundary_v == 1)
           {
             flux_vmom = bc_flux_vmom;
-	    velocity[1] = bc_flux_vmom/vos;
+	    if(vos > 1e-8)
+	      {
+		velocity[1] = bc_flux_umom/fabs(vos);
+	      }
+	    else
+	      {
+		velocity[1] = bc_flux_vmom;
+	      }
+
           }
         /* if (isFluxBoundary_w == 1) */
         /*   { */
@@ -2870,7 +2893,7 @@ namespace proteus
                 //calculate the numerical fluxes 
                 // 
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 exteriorNumericalAdvectiveFlux(isDOFBoundary_p[ebNE_kb],
                                                isDOFBoundary_u[ebNE_kb],
                                                isDOFBoundary_v[ebNE_kb],
@@ -4732,7 +4755,7 @@ namespace proteus
                 //calculate the flux jacobian
                 //
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
                     register int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
