@@ -110,7 +110,7 @@ namespace proteus
                                    const double* ebq_global_grad_phi_solid,
                                    const double* ebq_particle_velocity_solid,
                                          double* phi_solid_nodes,
-                                   const double* phi_solid,
+                                         double* phi_solid,
                                    const double* q_velocity_solid,
                                    const double* q_vos,
                                    const double* q_dvos_dt,
@@ -2061,7 +2061,7 @@ namespace proteus
                              const double* ebq_global_grad_phi_solid,
                              const double* ebq_particle_velocity_solid,
                                    double* phi_solid_nodes,
-                             const double* phi_solid,
+                                   double* phi_solid,
                              const double* q_velocity_solid,
                              const double* q_vos,
                              const double* q_dvos_dt,
@@ -2564,6 +2564,13 @@ namespace proteus
                 q_x[eN_k_3d+0]=x;
                 q_x[eN_k_3d+1]=y;
                 /* q_x[eN_k_3d+2]=z; */
+                if(use_ball_as_particle==1)
+                {
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                         x,y,z,
+                                         phi_solid[eN_k]);
+
+                }
                 /* // */
                 //calculate pde coefficients at quadrature points
                 //
