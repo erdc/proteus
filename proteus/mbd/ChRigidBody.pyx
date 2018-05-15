@@ -1637,6 +1637,7 @@ cdef class ProtChSystem:
         object model_addedmass
         ProtChAddedMass ProtChAddedMass
         int tCount
+        bool initialised
 
     def __cinit__(self, np.ndarray gravity=None, int nd=3, dt_init=0., sampleRate=0):
         if gravity is not None:
@@ -1673,6 +1674,7 @@ cdef class ProtChSystem:
         self.chrono_dt = 1.
         self.ProtChAddedMass = ProtChAddedMass(self)
         self.tCount = 0
+        self.initialised = False
 
     def addProtChBody(self, ProtChBody body):
         self.thisptr.system.AddBody(body.ChBody.sharedptr_chbody)
@@ -1815,25 +1817,29 @@ cdef class ProtChSystem:
         Calls calculate_init and poststep on all subcomponents
         (bodies, moorings, etc) attached to the system.
         """
-        Profiling.logEvent("Starting init"+str(self.next_sample))
-        self.directory = str(Profiling.logDir)+'/'
-        self.thisptr.setDirectory(self.directory)
-        if self.model is not None:
-            self.model_mesh = self.model.levelModelList[-1].mesh
-            if self.build_kdtree is True:
-                Profiling.logEvent("Building k-d tree for mooring nodes lookup on first time step")
-                self.u = self.model.levelModelList[-1].u
-                # finite element space (! linear for p, quadratic for velocity)
-                self.femSpace_velocity = self.u[1].femSpace
-                self.femSpace_pressure = self.u[0].femSpace
-                self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
-        for s in self.subcomponents:
-            s.calculate_init()
-        Profiling.logEvent("Setup initial"+str(self.next_sample))
-        self.thisptr.system.SetupInitial()
-        Profiling.logEvent("Finished init"+str(self.next_sample))
-        for s in self.subcomponents:
-            s.poststep()
+        if not self.initialised:
+            Profiling.logEvent("Starting init"+str(self.next_sample))
+            self.directory = str(Profiling.logDir)+'/'
+            self.thisptr.setDirectory(self.directory)
+            if self.model is not None:
+                self.model_mesh = self.model.levelModelList[-1].mesh
+                if self.build_kdtree is True:
+                    Profiling.logEvent("Building k-d tree for mooring nodes lookup on first time step")
+                    self.u = self.model.levelModelList[-1].u
+                    # finite element space (! linear for p, quadratic for velocity)
+                    self.femSpace_velocity = self.u[1].femSpace
+                    self.femSpace_pressure = self.u[0].femSpace
+                    self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
+            for s in self.subcomponents:
+                s.calculate_init()
+            Profiling.logEvent("Setup initial"+str(self.next_sample))
+            self.thisptr.system.SetupInitial()
+            Profiling.logEvent("Finished init"+str(self.next_sample))
+            for s in self.subcomponents:
+                s.poststep()
+            self.initialised = True
+        else:
+            Profiling.logEvent("Warning: Chrono system was already initialised")
 
     def setTimestepperType(self, string tstype, bool verbose=False):
         """Change timestepper (default: Euler)
@@ -1915,7 +1921,7 @@ cdef class ProtChSystem:
         # make sure that processor owns nearest node
         if nearest_node < self.model_mesh.nNodes_owned:
             local_element = getLocalElement(self.femSpace_velocity, coords, nearest_node)
-            
+
         else:
             nearest_node_distance = 0
         _, owning_proc = comm.allreduce((-nearest_node_distance, comm.rank),
@@ -1980,7 +1986,7 @@ cdef class ProtChSystem:
                 else:
                     xi = None
         local_element = comm.bcast(local_element, rank_owning)
-        # if not, find new nearest node, element, and owning processor 
+        # if not, find new nearest node, element, and owning processor
         coords_outside = False
         while local_element is None and coords_outside is False:
             rank_owning_previous = rank_owning
