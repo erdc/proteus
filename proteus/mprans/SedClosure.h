@@ -545,9 +545,9 @@ public:
     {
       double divU = du_dx + dv_dy + dw_dz;
       double pf = p_friction(sedF);
-      double s11 = du_dx - (1./3.)*divU;
-      double s22 = dv_dy - (1./3.)*divU;
-      double s33 = dw_dz - (1./3.)*divU;
+      double s11 = du_dx - (1./nSpace)*divU;
+      double s22 = dv_dy - (1./nSpace)*divU;
+      double s33 = dw_dz - (1./nSpace)*divU;
       double s12 = 0.5*(du_dy + dv_dx);
       double s13 = 0.5*(du_dz + dw_dx);
       double s23 = 0.5*(dv_dz + dw_dy);
@@ -556,8 +556,8 @@ public:
       double mu_fr = 0.0;
       if (sedF > frFraction_) 
 	{
-     mu_sf = pf * sqrt(2.) * sin(angFriction_) / (2 * sqrt(sumS) + small_);
-     mu_fr = std::min(mu_sf,mu_fr_limiter_); 
+	  mu_sf = pf * sqrt(2.) * sin(angFriction_) / (2 * sqrt(sumS) + small_);
+	  mu_fr = std::min(mu_sf,mu_fr_limiter_); 
 	} 
 //      if (sedF  > 0.0 )
 //	{

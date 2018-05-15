@@ -921,7 +921,7 @@ namespace proteus
     }  
 
     inline
-      void updateFrictionalStress(const double vos,
+            void updateFrictionalStress(const double vos,
                                   const double eps_rho,
                                   const double eps_mu,
                                   const double rho_0,
@@ -949,10 +949,11 @@ namespace proteus
       double H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
       double rho_fluid = rho_0*(1.0-H_rho)+rho_1*H_rho;
       double nu_fluid  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+
       double mu_fr = closure.mu_fr(vos,
-                                   grad_u[0], grad_u[1], grad_u[2], 
-                                   grad_v[0], grad_v[1], grad_v[2], 
-                                   grad_w[0], grad_w[1], grad_w[2]);
+                                   grad_u[0], grad_u[1], 0., 
+                                   grad_v[0], grad_v[1], 0., 
+                                   0., 0. , 0.);
       double rho_solid = rho_s;
 
       mom_uu_diff_ten[0] += 2. * mu_fr * (2./3.); 
@@ -2068,12 +2069,12 @@ namespace proteus
 					dmom_v_source,
 					dmom_w_source);
 
-		/*		               updateFrictionalPressure(vos,
+				               updateFrictionalPressure(vos,
                         grad_vos,
 						mom_u_source,
 						mom_v_source,
 						mom_w_source);      
-                updateFrictionalStress(vos,
+		     updateFrictionalStress(vos,
                                  eps_rho,
                                  eps_mu,
                                  rho_0,
@@ -2095,7 +2096,7 @@ namespace proteus
                                   mom_vw_diff_ten,
                                   mom_ww_diff_ten,
                                   mom_wu_diff_ten,
-                                  mom_wv_diff_ten);*/
+                                  mom_wv_diff_ten);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -3783,12 +3784,12 @@ namespace proteus
 					dmom_v_source,
 					dmom_w_source);
 
-		/*		                updateFrictionalPressure(vos,
+		updateFrictionalPressure(vos,
                         grad_vos,
 						mom_u_source,
 						mom_v_source,
 						mom_w_source);      
-                updateFrictionalStress(vos,
+		           updateFrictionalStress(vos,
                                  eps_rho,
                                  eps_mu,
                                  rho_0,
@@ -3810,7 +3811,7 @@ namespace proteus
                                   mom_vw_diff_ten,
                                   mom_ww_diff_ten,
                                   mom_wu_diff_ten,
-                                  mom_wv_diff_ten);*/
+                                  mom_wv_diff_ten);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
