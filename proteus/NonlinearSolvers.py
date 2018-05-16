@@ -725,8 +725,8 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
         ############################
         # FCT STEP ON WATER HEIGHT #
         ############################
-        logEvent("   FCT Step", level=1)
-        self.F.FCTStep()
+        #logEvent("   FCT Step", level=1)
+        #self.F.FCTStep()
 
         #############################################
         # UPDATE SOLUTION THROUGH calculateResidual #
