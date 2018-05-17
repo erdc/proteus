@@ -516,7 +516,7 @@ namespace proteus
     class cppRANS3PF2D : public cppRANS3PF2D_base
     {
     public:
-      std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
+//      std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
       static const double C_sbm=1000;//penalty constant for sbm
       static const double beta_sbm=0.0;//tangent penalty constant for sbm
 
@@ -2226,7 +2226,7 @@ namespace proteus
           mesh_volume_conservation_err_max_weak=0.0;
         double globalConservationError=0.0;
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-//        std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
+        std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
         surrogate_boundaries.clear();
         surrogate_boundary_elements.clear();
         surrogate_boundary_particle.clear();
@@ -4570,7 +4570,7 @@ namespace proteus
         //
         std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3), particle_netMoments(nParticles*3);
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-//        std::vector<int> surrogate_boundaries,surrogate_boundary_elements,surrogate_boundary_particle;
+        std::vector<int> surrogate_boundaries,surrogate_boundary_elements,surrogate_boundary_particle;
         //std::set<int> active_velocity_dof;
 
         for(int eN=0;eN<nElements_global;eN++)
@@ -4617,7 +4617,7 @@ namespace proteus
             //
             //detect cut cells
             //
-            if(0)
+            //if(0)
             if(USE_SBM>0)
               {
                 //
