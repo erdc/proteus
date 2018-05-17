@@ -3010,7 +3010,7 @@ namespace proteus
                 //
                 //update residuals
                 //
-                if(boundaryFlags[ebN] > 0)
+                if(true)//boundaryFlags[ebN] > 0)
                   { //if boundary flag positive, then include flux contributions on interpart boundaries
                     for (int i=0;i<nDOF_test_element;i++)
                       {
@@ -4536,7 +4536,7 @@ namespace proteus
                 //
                 ck.calculateGScale(G,normal,h_penalty);
                 penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
-                if(boundaryFlags[ebN] > 0)
+                if(true)//boundaryFlags[ebN] > 0)
                   { //if boundary flag positive, then include flux contributions on interpart boundaries
                     for (int j=0;j<nDOF_trial_element;j++)
                       {

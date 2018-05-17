@@ -28,6 +28,8 @@
 //using namespace std;
 using namespace chrono;
 using namespace chrono::fea;
+using namespace chrono::collision;
+using namespace chrono::geometry;
 
 
 // override some functions of ChElement
@@ -151,8 +153,8 @@ class cppCable {
   void setFluidAccelerationAtNodes(std::vector<ChVector<>> acc);
   void setFluidDensityAtNodes(std::vector<double> vof);
   std::vector<std::shared_ptr<ChVector<double>>> getNodalPositions();
-  std::vector<ChVector<>> forces_drag;
-  std::vector<ChVector<>> forces_addedmass;
+  std::vector<std::shared_ptr<ChVector<double>>> forces_drag;
+  std::vector<std::shared_ptr<ChVector<double>>> forces_addedmass;
   std::vector<std::shared_ptr<ChLoadBeamWrenchDistributed>> elems_loads_distributed;
   std::vector<std::shared_ptr<ChLoad<MyLoaderTriangular>>> elems_loads_triangular;
   std::vector<std::shared_ptr<ChLoad<ChLoaderGravity>>> elems_loads_volumetric;
@@ -206,8 +208,8 @@ class cppMultiSegmentedCable {
   std::vector<std::shared_ptr<ChElementBeamEuler>> elemsBeamEuler;  // array of elements */
   std::shared_ptr<ChLinkBase> constraint_front;
   std::shared_ptr<ChLinkBase> constraint_back;
-  std::vector<ChVector<>> forces_drag;
-  std::vector<ChVector<>> forces_addedmass;
+  std::vector<std::shared_ptr<ChVector<double>>> forces_drag;
+  std::vector<std::shared_ptr<ChVector<double>>> forces_addedmass;
   std::shared_ptr<ChBody> body_back;
   std::shared_ptr<ChBody> body_front;
   int nb_nodes_tot;
@@ -637,6 +639,8 @@ void cppCable::buildNodes(bool last_node=true) {
 
 void cppCable::buildNodesBeamEuler(bool last_node) {
   nodesRot.clear();
+  forces_drag.clear();
+  forces_addedmass.clear();
   std::shared_ptr<ChNodeFEAxyzrot> node;
   ChVector<> dir;  // direction of node
   ChVector<> ref = ChVector<>(1.,0.,0.);
@@ -650,6 +654,10 @@ void cppCable::buildNodesBeamEuler(bool last_node) {
     node = std::make_shared<ChNodeFEAxyzrot>(ChFrame<>(mvecs[i],
                                                        frame_quat));
     nodesRot.push_back(node);
+    std::shared_ptr<ChVector<>> drag0 = std::make_shared<ChVector<>>(0.,0.,0.);
+    std::shared_ptr<ChVector<>> am0 = std::make_shared<ChVector<>>(0.,0.,0.);
+    forces_drag.push_back(drag0);
+    forces_addedmass.push_back(am0);
   }  // last node
   if (last_node == true) {
     dir = mvecs_tangents[mvecs.size()-1];
@@ -662,6 +670,10 @@ void cppCable::buildNodesBeamEuler(bool last_node) {
     nodesRot.push_back(node);
     nb_nodes = nodesRot.size();
     nb_elems = nb_nodes-1;
+    std::shared_ptr<ChVector<>> drag0 = std::make_shared<ChVector<>>(0.,0.,0.);
+    std::shared_ptr<ChVector<>> am0 = std::make_shared<ChVector<>>(0.,0.,0.);
+    forces_drag.push_back(drag0);
+    forces_addedmass.push_back(am0);
   }
   else {
     nb_nodes = nodesRot.size();
@@ -671,6 +683,8 @@ void cppCable::buildNodesBeamEuler(bool last_node) {
 
 void cppCable::buildNodesCableANCF(bool last_node) {
   nodes.clear();
+  forces_drag.clear();
+  forces_addedmass.clear();
   std::shared_ptr<ChNodeFEAxyzD> node;
   ChVector<> dir;  // direction of node
   ChCoordsys<> coordsys;  // coordinate system of node
@@ -679,6 +693,10 @@ void cppCable::buildNodesCableANCF(bool last_node) {
     dir.Normalize();
     node = std::make_shared<ChNodeFEAxyzD>(mvecs[i], dir);
     nodes.push_back(node);
+    std::shared_ptr<ChVector<>> drag0 = std::make_shared<ChVector<>>(0.,0.,0.);
+    std::shared_ptr<ChVector<>> am0 = std::make_shared<ChVector<>>(0.,0.,0.);
+    forces_drag.push_back(drag0);
+    forces_addedmass.push_back(am0);
   }  // last node
   if (last_node == true) {
     dir = mvecs_tangents[mvecs_tangents.size()-1];
@@ -687,6 +705,10 @@ void cppCable::buildNodesCableANCF(bool last_node) {
     nodes.push_back(node);
     nb_nodes = nodes.size();
     nb_elems = nb_nodes-1;
+    std::shared_ptr<ChVector<>> drag0 = std::make_shared<ChVector<>>(0.,0.,0.);
+    std::shared_ptr<ChVector<>> am0 = std::make_shared<ChVector<>>(0.,0.,0.);
+    forces_drag.push_back(drag0);
+    forces_addedmass.push_back(am0);
   }
   else {
     nb_nodes = nodes.size();
@@ -857,7 +879,6 @@ void cppCable::setDragForce() {
   ChVector<> Vn;
   double rho_f;
   // clear current drag forces
-  forces_drag.clear();
   double length_elem = length / (nb_nodes - 1);
   for (int i = 0; i < nb_nodes; ++i) {
     if (beam_type == "CableANCF") {
@@ -881,7 +902,7 @@ void cppCable::setDragForce() {
     Fd_a = 0.5*rho_f*Cd_axial*d*Va.Length()*Va;//(force per unit length)
     Fd_n = 0.5*rho_f*Cd_normal*M_PI*d*Vn.Length()*Vn;//(force per unit length)
     Fd = Fd_a + Fd_n;
-    forces_drag.push_back(Fd);
+    forces_drag[i]->Set(Fd);
   }
 }
 
@@ -903,7 +924,6 @@ void cppCable::setAddedMassForce() {
   ChVector<> Vn;
   double rho_f;
   // clear current drag forces
-  forces_addedmass.clear();
   double length_elem = length / (nb_nodes - 1);
   for (int i = 0; i < nb_nodes; ++i) {
     if (beam_type == "CableANCF") {
@@ -927,7 +947,7 @@ void cppCable::setAddedMassForce() {
     Fm_n = rho_f*Cm_normal*M_PI*d*d/4.*Vn;//(force per unit length)
     Fm_f = rho_f*M_PI*d*d/4.*a_prot;
     Fm = Fm_a + Fm_n + Fm_f;
-    forces_addedmass.push_back(Fm);
+    forces_addedmass[i]->Set(Fm);
   }
 }
 
@@ -936,12 +956,12 @@ void cppCable::applyForces() {
     ChVector<> Fa = ChVector<>(0.,0.,0.);
     ChVector<> Fb = ChVector<>(0.,0.,0.);
     if (applyDrag == true) {
-      Fa = Fa+forces_drag[i];
-      Fb = Fb+forces_drag[i+1];
+      Fa = Fa+*forces_drag[i].get();
+      Fb = Fb+*forces_drag[i+1].get();
     }
     if (applyAddedMass == true) {
-      Fa = Fa+forces_addedmass[i];
-      Fb = Fb+forces_addedmass[i+1];
+      Fa = Fa+*forces_addedmass[i].get();
+      Fb = Fb+*forces_addedmass[i+1].get();
     }
     elems_loads_triangular[i]->loader.SetF(Fa, Fb);
     // buoyancy
