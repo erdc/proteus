@@ -41,7 +41,10 @@ from libcpp.memory cimport (shared_ptr,
 from collections import OrderedDict
 from cython.operator cimport dereference as deref
 import xml.etree.ElementTree as ET
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 import h5py
+warnings.resetwarnings()
 # chrono C++ headers
 cimport ChronoHeaders as ch
 # chrono Python headers

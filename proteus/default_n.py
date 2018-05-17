@@ -228,7 +228,7 @@ parallelPartitioningType = MeshParallelPartitioningTypes.node
 #default number of layers to use > 1 with element partition means
 #C0P1 methods don't need to do communication in global element assembly
 #nodal partitioning does not need communication for C0P1 (has overlap 1) regardless
-nLayersOfOverlapForParallel = 1
+nLayersOfOverlapForParallel = 0
 
 parallelPeriodic=False#set this to true and use element,0 overlap to use periodic BC's in parallel
 

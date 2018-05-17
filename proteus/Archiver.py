@@ -59,7 +59,10 @@ class AR_base:
         #filename += datetime.datetime.now().isoformat()
         self.global_sync = global_sync
         try:
+            import warnings
+            warnings.simplefilter(action='ignore', category=FutureWarning)
             import h5py
+            warnings.resetwarnings()
             self.has_h5py=True
             comm_world = self.comm.comm.tompi4py()
         except:

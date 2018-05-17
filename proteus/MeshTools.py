@@ -1067,7 +1067,7 @@ class Mesh:
             for n in range(self.nNodes_global):
                 self.nodeStarList.append(set())
             for i_ele in range(self.nElements_global): #: is this OK for parallel mesh?
-                for n1,n2 in itertools.permutations(self.elementNodesArray[i_ele],2):#: works for combination of triangle and quadrilateral 
+                for n1,n2 in itertools.permutations(self.elementNodesArray[i_ele],2):#: works for combination of triangle and quadrilateral
                     #: if n1<self.nNodes_global: #: Saving only locally owned node is not enough; should include ghost node
                     self.nodeStarList[n1].add(n2) #: does not contain itself; use set() instead of list since each pair is visited 1 or 2 times for 2D mesh
             self.nodeStarOffsets = np.zeros((self.nNodes_global+1,),'i')
@@ -1600,7 +1600,7 @@ class Mesh:
                               N=self.nNodes_global,
                               nghosts = self.subdomainMesh.nNodes_global -
                                         self.subdomainMesh.nNodes_owned,
-                              subdomain2global = 
+                              subdomain2global =
                                   self.nodeNumbering_subdomain2global))
           par_nodeDiametersArray.scatter_forward_insert()
           comm.barrier()
@@ -2198,7 +2198,7 @@ class TetrahedralMesh(Mesh):
     Attributes
     ----------
     elementNodesArray : array_like
-        A list of lists storing the node values associated with each element 
+        A list of lists storing the node values associated with each element
         in the triangulation.  The first index refers to the element number,
         while the second index refers to the global node value.
     nodeArray : array_like
@@ -3842,7 +3842,7 @@ class MultilevelHexahedralMesh(MultilevelMesh):
 
 def buildReferenceSimplex(nd=2):
     """
-    Create and return a Proteus mesh object for the reference 
+    Create and return a Proteus mesh object for the reference
     element.
 
     Parameters
@@ -3862,7 +3862,7 @@ def buildReferenceSimplex(nd=2):
 
     if nd==1:
         pass # Note sure what needs to go here?!
-    
+
     unit_simplex_domain = Domain.unitSimplex(nd)
     polyfile = "reference_element"
     unit_simplex_domain.writePoly(polyfile)
@@ -4583,7 +4583,7 @@ class QuadrilateralMesh(Mesh):
                 self.newQuadrilateral([e0,e1,e2,e3])
         self.finalize()
 
-        
+
     def generateFromQuadFileIFISS(self,meshfile):
         ''' WIP - read a matlab.mat file containing IFISS vertices
         and elements
@@ -4843,7 +4843,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
         self.meshList.append(TriangularMesh())
         childrenDict = self.meshList[-1].refine(self.meshList[-2])
         self.elementChildren.append(childrenDict)
-        
+
     def computeGeometricInfo(self):
         for m in self.meshList:
             m.computeGeometricInfo()
@@ -5705,7 +5705,7 @@ def readUniformElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topolog
     nElements_global  -- the number of elements in the mesh
     nNodes_element    -- number of nodes per element
     elementNodesArray -- element --> node connectivity stored as flattened array accessed using elementNodes_offset
-    elementNodes_offset -- offsets into the elementNodesArray storage for element connectivity, 
+    elementNodes_offset -- offsets into the elementNodesArray storage for element connectivity,
     element eN nodes are in elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
 
     """
@@ -5732,12 +5732,12 @@ def readMixedElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topologyi
     returns
 
     nElements_global  -- the number of elements in the mesh
-    elementNodesArray -- element --> node connectivity stored as flattened 
+    elementNodesArray -- element --> node connectivity stored as flattened
     array accessed using elementNodes_offset
-    elementNodes_offset -- offsets into the elementNodesArray storage for element 
-    connectivity, element eN nodes are 
+    elementNodes_offset -- offsets into the elementNodesArray storage for element
+    connectivity, element eN nodes are
     inelementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
- 
+
     """
     assert elementTopologyName == 'Mixed'
 
@@ -5774,8 +5774,8 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     """Read in a mesh from XDMF, assuming heavy data is in hdf5
 
     :return: a BasicMeshInfo object with the minimal information read
-    
-    """    
+
+    """
     # start trying to read an xdmf archive with name xmf_archive_base.xmf
     # assumes heavy_file_base.h5 has heavy data
     # root Element is Xdmf
@@ -6228,14 +6228,14 @@ def runTetgen(polyfile,
     baseFlags : str
         Standard Tetgen options for generation
     name : str
-        
+
 
     """
     from subprocess import check_call
     tetcmd = "tetgen - %s %s.poly" % (baseFlags, polyfile)
-    
+
     check_call(tetcmd,shell=True)
-    
+
     logEvent("Done running tetgen")
     elefile = "%s.1.ele" % polyfile
     nodefile = "%s.1.node" % polyfile
@@ -6300,13 +6300,13 @@ class MeshOptions:
         self.use_gmsh = False
         self.genMesh = True
         self.outputFiles_name = 'mesh'
-        self.outputFiles = {'poly': True,     
-                            'ply': False,        
+        self.outputFiles = {'poly': True,
+                            'ply': False,
                             'asymptote': False,
                             'geo': False}
         self.restrictFineSolutionToAllMeshes = False
         self.parallelPartitioningType = MeshParallelPartitioningTypes.node
-        self.nLayersOfOverlapForParallel = 1
+        self.nLayersOfOverlapForParallel = 0
         self.triangleOptions = "q30DenA" # defined when setTriangleOptions called
         self.nLevels = 1
         if domain is not None:
@@ -6378,7 +6378,7 @@ class MeshOptions:
         generator: str
             options: 'gmsh', 'triangle', 'tetgen'
 
-        (!) Only has an effect when setting to 'gmsh' in current 
+        (!) Only has an effect when setting to 'gmsh' in current
         implementation (triangle is default for 2D, tetgen for 3D)
         """
         generators = ['gmsh', 'triangle', 'tetgen']
@@ -6390,7 +6390,7 @@ class MeshOptions:
 
     def setOutputFiles(self, name='mesh', poly=True, ply=False, asymptote=False, geo=False):
         """
-        Output files to be created 
+        Output files to be created
 
         Parameters
         ----------
@@ -6477,7 +6477,7 @@ def msh2simplex(fileprefix, nd):
                         for i in range(3):
                             if nodes[int(words[s+i])-1][4] == 0:
                                 nodes[int(words[s+i])-1][4] = flag
-                elif el_type == 4: # tetrahedron 
+                elif el_type == 4: # tetrahedron
                     tetrahedron_nb += 1
                     tetrahedra += [[tetrahedron_nb, int(words[s]), int(words[s+1]), int(words[s+2]), int(words[s+3]), flag]]
                 elif el_type == 15: # node

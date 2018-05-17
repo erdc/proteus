@@ -71,7 +71,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.pore_pressure_head_save = self.seepageModel.u.dof[0]
             self.pre_pressure_head[:]=self.pore_pressure_head_save
         elif self.pore_pressure_file_base != None:
+            import warnings
+            warnings.simplefilter(action='ignore', category=FutureWarning)
             import h5py
+            warnings.resetwarnings()
             archive = h5py.File(self.pore_pressure_file_base+".h5","r")
             permute = np.argsort(self.mesh.globalMesh.nodeNumbering_subdomain2global)
             self.pore_pressure_head[permute] = archive[self.pore_pressure_field_path][self.mesh.globalMesh.nodeNumbering_subdomain2global[permute].tolist()]
@@ -202,7 +205,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.lowmem=True
         self.timeTerm=True#allow turning off  the  time derivative
         self.testIsTrial=True
-        self.phiTrialIsTrial=True            
+        self.phiTrialIsTrial=True
         self.u = uDict
         self.Hess=False
         if isinstance(self.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
@@ -262,8 +265,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                 (numericalFluxType != None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
+                                                 (numericalFluxType != None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -277,7 +280,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -332,7 +335,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys: 
+            for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -441,7 +444,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #    self.q[('v',1)] = self.q[('v',0)]
         #    self.q[('grad(v)',1)] = self.q[('grad(v)',0)]
         #    self.q[('w*dV_r',1)] =  self.q[('w*dV_r',0)]
-        #    self.q[('grad(w)*dV_f',1)] = self.q[('grad(w)*dV_f',0)] 
+        #    self.q[('grad(w)*dV_f',1)] = self.q[('grad(w)*dV_f',0)]
         #    self.ebqe[('v',1)] = self.ebqe[('v',0)]
         #    self.ebqe[('grad(v)',1)] = self.ebqe[('grad(v)',0)]
         #    self.ebqe[('w*dS_f',1)] = self.ebqe[('w*dS_f',0)]
@@ -462,14 +465,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.q[('v',2)] = self.q[('v',1)]
         #self.q[('grad(v)',2)] = self.q[('grad(v)',1)]
         #self.q[('w*dV_r',2)] =  self.q[('w*dV_r',1)]
-        #self.q[('grad(w)*dV_f',2)] = self.q[('grad(w)*dV_f',1)] 
+        #self.q[('grad(w)*dV_f',2)] = self.q[('grad(w)*dV_f',1)]
         #self.ebqe[('v',2)] = self.ebqe[('v',1)]
         #self.ebqe[('grad(v)',2)] = self.ebqe[('grad(v)',1)]
         #self.ebqe[('w*dS_f',2)] = self.ebqe[('w*dS_f',1)]
         #self.q[('v',3)] = self.q[('v',1)]
         #self.q[('grad(v)',3)] = self.q[('grad(v)',1)]
         #self.q[('w*dV_r',3)] =  self.q[('w*dV_r',1)]
-        #self.q[('grad(w)*dV_f',3)] = self.q[('grad(w)*dV_f',1)] 
+        #self.q[('grad(w)*dV_f',3)] = self.q[('grad(w)*dV_f',1)]
         #self.ebqe[('v',3)] = self.ebqe[('v',1)]
         #self.ebqe[('grad(v)',3)] = self.ebqe[('grad(v)',1)]
         #self.ebqe[('w*dS_f',3)] = self.ebqe[('w*dS_f',1)]
@@ -504,7 +507,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Dumping quadrature shapes for model %s" % self.name,level=9)
         logEvent("Element quadrature array (q)", level=9)
         for (k,v) in self.q.iteritems(): logEvent(str((k,v.shape)),level=9)
-        logEvent("Element boundary quadrature (ebq)",level=9) 
+        logEvent("Element boundary quadrature (ebq)",level=9)
         for (k,v) in self.ebq.iteritems(): logEvent(str((k,v.shape)),level=9)
         logEvent("Global element boundary quadrature (ebq_global)",level=9)
         for (k,v) in self.ebq_global.iteritems(): logEvent(str((k,v.shape)),level=9)
@@ -557,7 +560,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
              self.timeIntegration = TimeIntegrationClass(self)
-           
+
         if options != None:
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
@@ -653,8 +656,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.ebqe[('stressFlux_bc_flag',ci)][t[0],t[1]] = 1
         r.fill(0.0)
         self.elementResidual[0].fill(0.0)
-        self.elementResidual[1].fill(0.0) 
-        self.elementResidual[2].fill(0.0) 
+        self.elementResidual[1].fill(0.0)
+        self.elementResidual[2].fill(0.0)
         #import pdb
         #print self.mesh.elementMaterialTypes,
         #print self.coefficients.nMaterialProperties,
@@ -722,7 +725,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('stressFlux_bc_flag',2)],
             self.numericalFlux.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',1)],
-            self.numericalFlux.ebqe[('u',2)],            
+            self.numericalFlux.ebqe[('u',2)],
             self.ebqe[('stressFlux_bc',0)],
             self.ebqe[('stressFlux_bc',1)],
             self.ebqe[('stressFlux_bc',2)])
@@ -811,7 +814,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2,2)])
         logEvent("Jacobian ",level=10,data=jacobian)
         if self.forceStrongConditions:
-            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
+            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
                     global_dofN = self.offset[cj]+self.stride[cj]*dofN
@@ -828,7 +831,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
-        
+
         This function should be called only when the mesh changes.
         """
         self.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
@@ -841,7 +844,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         # self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
         #                                           self.q['x'])
-        # if self.movingDomain: 
+        # if self.movingDomain:
         #     if self.tLast_mesh != None:
         #         self.q['xt'][:]=self.q['x']
         #         self.q['xt']-=self.q['x_last']
@@ -950,7 +953,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #have to use an array of reference boundary points on all element boundaries
         #first copy the left reference element boundary quadrature points from the reference element boundary
         #
-        #get the shape information at the reference element boundary quadrature points 
+        #get the shape information at the reference element boundary quadrature points
 	#
         # self.testSpace[0].getBasisValuesTrace(self.u[0].femSpace.elementMaps.permutations,
         #                                        self.ebq['hat(x)'],
