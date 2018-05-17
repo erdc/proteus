@@ -481,6 +481,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.use_ball_as_particle==1:
             pass
         elif self.granular_sdf_Calc is not None:
+            corresponding_point_on_boundary = np.zeros((3,),'d')
             temp_1 = np.zeros(self.model.q[('u', 0)].shape, 'd')
             temp_2 = np.zeros(self.model.q[('u', 0)].shape, 'd')
             temp_3 = np.zeros(self.model.q[('u', 0)].shape, 'd')
@@ -499,10 +500,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.model.q[('phis')] = temp_3
                 for ebN in range(self.model.ebq_global['x'].shape[0]):
                     for kb in range(self.model.ebq_global['x'].shape[1]):
-                        sdf,sdNormals = self.granular_sdf_Calc(self.model.ebq_global['x'][ebN,kb],i)
-                        if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ):
-                            self.ebq_global_phi_s[ebN,kb]=sdf
+                        sdf_ebN_kb,sdNormals = self.granular_sdf_Calc(self.model.ebq_global['x'][ebN,kb],i)
+                        if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                            self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
+                            for j in range(len(sdNormals)):
+                                corresponding_point_on_boundary[j] = self.model.ebq_global['x'][ebN,kb][j] - sdf_ebN_kb*sdNormals[j]
+                            self.ebq_particle_velocity_s[ebN,kb,:] = self.granular_vel_Calc(corresponding_point_on_boundary,i)
         else:
             corresponding_point_on_boundary = np.zeros((3,),'d')
             for i, sdf, vel in zip(range(self.nParticles),
@@ -521,7 +525,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
                             for j in range(len(sdNormals)):
                                 corresponding_point_on_boundary[j] = self.model.ebq_global['x'][ebN,kb][j] - sdf_ebN_kb*sdNormals[j]
-                            self.ebq_particle_velocity_s[ebN,kb,:]=vel(0.0,corresponding_point_on_boundary)
+                            self.ebq_particle_velocity_s[ebN,kb,:] = vel(corresponding_point_on_boundary)
 
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
@@ -2483,8 +2487,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.use_sbm)
         r*=self.isActiveDOF
 #         print "***********",np.amin(r),np.amax(r),np.amin(self.isActiveDOF),np.amax(self.isActiveDOF)
-#         import pdb
-#         pdb.set_trace()
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):
             self.q[('u', dim)][:] = self.q[('velocity', 0)][:, :, dim]
