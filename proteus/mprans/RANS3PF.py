@@ -481,6 +481,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.use_ball_as_particle==1:
             pass
         elif self.granular_sdf_Calc is not None:
+            corresponding_point_on_boundary = np.zeros((3,),'d')
             temp_1 = np.zeros(self.model.q[('u', 0)].shape, 'd')
             temp_2 = np.zeros(self.model.q[('u', 0)].shape, 'd')
             temp_3 = np.zeros(self.model.q[('u', 0)].shape, 'd')
@@ -499,10 +500,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.model.q[('phis')] = temp_3
                 for ebN in range(self.model.ebq_global['x'].shape[0]):
                     for kb in range(self.model.ebq_global['x'].shape[1]):
-                        sdf,sdNormals = self.granular_sdf_Calc(self.model.ebq_global['x'][ebN,kb],i)
-                        if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ):
-                            self.ebq_global_phi_s[ebN,kb]=sdf
+                        sdf_ebN_kb,sdNormals = self.granular_sdf_Calc(self.model.ebq_global['x'][ebN,kb],i)
+                        if ( abs(sdf_ebN_kb) < abs(self.ebq_global_phi_s[ebN,kb]) ):
+                            self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
+                            for j in range(len(sdNormals)):
+                                corresponding_point_on_boundary[j] = self.model.ebq_global['x'][ebN,kb][j] - sdf_ebN_kb*sdNormals[j]
+                            self.ebq_particle_velocity_s[ebN,kb,:] = self.granular_vel_Calc(corresponding_point_on_boundary,i)
         else:
             corresponding_point_on_boundary = np.zeros((3,),'d')
             for i, sdf, vel in zip(range(self.nParticles),
@@ -521,7 +525,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
                             for j in range(len(sdNormals)):
                                 corresponding_point_on_boundary[j] = self.model.ebq_global['x'][ebN,kb][j] - sdf_ebN_kb*sdNormals[j]
-                            self.ebq_particle_velocity_s[ebN,kb,:]=vel(0.0,corresponding_point_on_boundary)
+                            self.ebq_particle_velocity_s[ebN,kb,:] = vel(t=0.0, corresponding_point_on_boundary, self.particle_centroids[i])#YY:But self.particle_centroids[i] has not been updated?
 
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
@@ -670,16 +674,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.phi_s = numpy.ones(mesh.nodeArray.shape[0], 'd')*1e10
 
         logEvent("updating {0} particles...".format(self.nParticles))
-        for i in range(self.nParticles):
-            if self.granular_sdf_Calc is not None:
-                sdf = lambda x: self.granular_sdf_Calc(x,i)
-            else:
-                sdf = lambda x: self.particle_sdfList[i](0.0, x)
-
-            for j in range(mesh.nodeArray.shape[0]):
-                sdf_at_node, _ = sdf(mesh.nodeArray[j, :])
-                if (abs(sdf_at_node) < abs(self.phi_s[j])):
-                        self.phi_s[j] = sdf_at_node
+        if self.use_ball_as_particle == 0:
+            for i in range(self.nParticles):
+                if self.granular_sdf_Calc is not None:
+                    sdf = lambda x: self.granular_sdf_Calc(x,i)
+                else:
+                    sdf = lambda x: self.particle_sdfList[i](0.0, x)
+    
+                for j in range(mesh.nodeArray.shape[0]):
+                    sdf_at_node, _ = sdf(mesh.nodeArray[j, :])
+                    if (abs(sdf_at_node) < abs(self.phi_s[j])):
+                            self.phi_s[j] = sdf_at_node
 
         # cek we eventually need to use the local element diameter
         self.eps_density = self.epsFact_density * mesh.h
@@ -1060,13 +1065,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.use_ball_as_particle == 0:
             self.phi_s[:] = 1e10
             self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
+            self.ebq_global_phi_s[:] = 1e10
             for i in range(self.nParticles):
                 if self.granular_sdf_Calc is not None:
                     vel = lambda x: self.granular_vel_Calc(x, i)
                     sdf = lambda x: self.granular_sdf_Calc(x, i)
                 else:
-                    vel = lambda x: self.particle_velocityList[i](t, x)
-                    sdf = lambda x: self.particle_sdfList[i](t, x)
+                    vel = lambda x: self.particle_velocityList[i](t, x, self.particle_centroids[i])
+                    sdf = lambda x: self.particle_sdfList[i](t, x, self.particle_centroids[i])
                     
                 for j in range(self.mesh.nodeArray.shape[0]):
                     vel_at_node = vel(self.mesh.nodeArray[j, :])
@@ -1088,33 +1094,34 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
                             for j in range(len(sdNormals)):
                                 corresponding_point_on_boundary[j] = self.model.ebq_global['x'][ebN,kb][j] - sdf_at_quad_pt*sdNormals[j]
-                            self.ebq_particle_velocity_s[ebN,kb,:]=vel(0.0,corresponding_point_on_boundary)
+                            self.ebq_particle_velocity_s[ebN,kb,:]=vel(corresponding_point_on_boundary)
             self.model.q[('phis')] = self.phisField
 
             #Update velocity inside the particle
-            for ci_g_dof,ci_fg_dof in self.model.dirichletConditions[0].global2freeGlobal.iteritems():
-                if isinstance(self.model.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
-                    xyz = self.model.mesh.nodeArray[ci_g_dof,:]
-                elif isinstance(self.model.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
-                    xyz = self.model.u[0].femSpace.dofMap.lagrangeNodesArray[ci_g_dof,:]
-                else:
-                    assert False,"Use P1 or P2 for velocity"
-                distance_to_solid = 1e10
-                for i in range(self.nParticles):
-                    if self.granular_sdf_Calc is not None:
-                        vel = lambda x: self.granular_vel_Calc(x, i)
-                        sdf = lambda x: self.granular_sdf_Calc(x, i)
+            if self.use_sbm:
+                for ci_g_dof,ci_fg_dof in self.model.dirichletConditions[0].global2freeGlobal.iteritems():
+                    if isinstance(self.model.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
+                        xyz = self.model.mesh.nodeArray[ci_g_dof,:]
+                    elif isinstance(self.model.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
+                        xyz = self.model.u[0].femSpace.dofMap.lagrangeNodesArray[ci_g_dof,:]
                     else:
-                        vel = lambda x: self.particle_velocityList[i](t, x)
-                        sdf = lambda x: self.particle_sdfList[i](t, x)
-                    distance_to_i_particle,_ = sdf(xyz)
-                    if distance_to_solid > distance_to_i_particle:
-                        vel_at_xyz = vel(xyz)
-                        distance_to_solid = distance_to_i_particle
-                for ci in range(self.nc):#since nc=nd
-                    dof = self.model.offset[ci] + self.model.stride[ci]*ci_fg_dof
-                    if self.model.isActiveDOF[dof] < 0.5:
-                        self.model.u[ci].dof[ci_g_dof] = vel_at_xyz[ci]
+                        assert False,"Use P1 or P2 for velocity"
+                    distance_to_solid = 1e10
+                    for i in range(self.nParticles):
+                        if self.granular_sdf_Calc is not None:
+                            vel = lambda x: self.granular_vel_Calc(x, i)
+                            sdf = lambda x: self.granular_sdf_Calc(x, i)
+                        else:
+                            vel = lambda x: self.particle_velocityList[i](t, x)
+                            sdf = lambda x: self.particle_sdfList[i](t, x)
+                        distance_to_i_particle,_ = sdf(xyz)
+                        if distance_to_solid > distance_to_i_particle:
+                            vel_at_xyz = vel(xyz)
+                            distance_to_solid = distance_to_i_particle
+                    for ci in range(self.nc):#since nc=nd
+                        dof = self.model.offset[ci] + self.model.stride[ci]*ci_fg_dof
+                        if self.model.isActiveDOF[dof] < 0.5:
+                            self.model.u[ci].dof[ci_g_dof] = vel_at_xyz[ci]
 
         if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
@@ -2480,8 +2487,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.use_sbm)
         r*=self.isActiveDOF
 #         print "***********",np.amin(r),np.amax(r),np.amin(self.isActiveDOF),np.amax(self.isActiveDOF)
-#         import pdb
-#         pdb.set_trace()
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):
             self.q[('u', dim)][:] = self.q[('velocity', 0)][:, :, dim]
