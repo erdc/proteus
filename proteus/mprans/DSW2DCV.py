@@ -1,7 +1,6 @@
 import proteus
 from proteus.mprans.cDSW2DCV import *
 
-
 class SubgridError(proteus.SubgridError.SGE_base):
     def __init__(self, coefficients, nd, lag=False, nStepsToDelay=0, hFactor=1.0):
         proteus.SubgridError.SGE_base.__init__(self, coefficients, nd, lag)
@@ -420,6 +419,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.h_dof_old[:] = self.model.u[0].dof
         self.model.hu_dof_old[:] = self.model.u[1].dof
         self.model.hv_dof_old[:] = self.model.u[2].dof
+        self.model.heta_dof_old[:] = self.model.u[3].dof
+        self.model.hw_dof_old[:] = self.model.u[4].dof
 
     def postStep(self, t, firstStep=False):
         pass
@@ -666,6 +667,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.h_dof_old = None
         self.hu_dof_old = None
         self.hv_dof_old = None
+        self.heta_dof_old = None
+        self.hw_dof_old = None
         self.heta_dof_old = None
         self.hw_dof_old = None
 
@@ -1020,6 +1023,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.h_dof_old = numpy.copy(self.u[0].dof)
             self.hu_dof_old = numpy.copy(self.u[1].dof)
             self.hv_dof_old = numpy.copy(self.u[2].dof)
+            self.heta_dof_old = numpy.copy(self.u[3].dof)
+            self.hw_dof_old = numpy.copy(self.u[4].dof)
+            
         # COMPUTE hEps
         if self.hEps is None:
             eps = 1E-14
@@ -1321,6 +1327,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.h_dof_old,
             self.hu_dof_old,
             self.hv_dof_old,
+            self.heta_dof_old,
+            self.hw_dof_old,
             self.coefficients.b.dof,
             self.u[0].dof,
             self.u[1].dof,
@@ -1354,9 +1362,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.offset[0],
             self.offset[1],
             self.offset[2],
+            self.offset[3],
+            self.offset[4],
             self.stride[0],
             self.stride[1],
             self.stride[2],
+            self.stride[3],
+            self.stride[4],
             r,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
