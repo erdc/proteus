@@ -12,6 +12,8 @@
 //4. Add Riemann solvers for internal flux and DG terms
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
+#define lambda 1.
+
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
@@ -137,6 +139,8 @@ namespace proteus
                                    double* h_dof_old,
                                    double* hu_dof_old,
                                    double* hv_dof_old,
+				   double* heta_dof_old,
+				   double* hw_dof_old,				   
                                    double* b_dof,
                                    double* h_dof,
                                    double* hu_dof,
@@ -169,10 +173,14 @@ namespace proteus
                                    int* sdInfo_hv_hu_colind,
                                    int offset_h,
                                    int offset_hu,
-                                   int offset_hv,				   
+                                   int offset_hv,
+				   int offset_heta,
+				   int offset_hw,
                                    int stride_h,
                                    int stride_hu,
                                    int stride_hv,
+				   int stride_heta,
+				   int stride_hw,				   
                                    double* globalResidual,
                                    int nExteriorElementBoundaries_global,
                                    int* exteriorElementBoundariesArray,
@@ -2018,6 +2026,8 @@ namespace proteus
                            double* h_dof_old,
                            double* hu_dof_old,
                            double* hv_dof_old,
+			   double* heta_dof_old,
+			   double* hw_dof_old,				   
                            double* b_dof,
                            double* h_dof,
                            double* hu_dof,
@@ -2051,9 +2061,13 @@ namespace proteus
                            int offset_h,
                            int offset_hu,
                            int offset_hv,
+			   int offset_heta,
+			   int offset_hw,
                            int stride_h,
                            int stride_hu,
                            int stride_hv,
+			   int stride_heta,
+			   int stride_hw,
                            double* globalResidual,
                            int nExteriorElementBoundaries_global,
                            int* exteriorElementBoundariesArray,
@@ -2353,36 +2367,41 @@ namespace proteus
               double hi = h_dof_old[i];
               double hui = hu_dof_old[i];
               double hvi = hv_dof_old[i];
+	      double hetai = heta_dof_old[i];
+	      double hwi = hw_dof_old[i];
+	      
               double Zi = b_dof[i];
               double mi = lumped_mass_matrix[i];
               double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); // hEps
               double ui = hui*one_over_hiReg;
               double vi = hvi*one_over_hiReg;
-
-              //max_ui = fmax(max_ui,fabs(ui));
-              //max_vi = fmax(max_vi,fabs(vi));
-              //max_hui = fmax(max_hui,fabs(hui));
-              //max_hvi = fmax(max_hvi,fabs(hvi));
-              //max_hxui = fmax(max_hxui,fabs(hi*ui));
-              //max_hxvi = fmax(max_hxvi,fabs(hi*vi));
-
-              double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
+	      
+              double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0., ith_flux_term4=0., ith_flux_term5=0.;
               // LOW ORDER DISSIPATIVE TERMS
               double
                 ith_dLij_minus_muLij_times_hStarStates=0.,
                 ith_dLij_minus_muLij_times_huStarStates=0.,
                 ith_dLij_minus_muLij_times_hvStarStates=0.,
+		ith_dLij_minus_muLij_times_hetaStarStates=0.,
+		ith_dLij_minus_muLij_times_hwStarStates=0.,		
                 ith_muLij_times_hStates=0.,
                 ith_muLij_times_huStates=0.,
-                ith_muLij_times_hvStates=0.;
+                ith_muLij_times_hvStates=0.,
+		ith_muLij_times_hetaStates=0.,
+		ith_muLij_times_hwStates=0.;
+	      
               // HIGH ORDER DISSIPATIVE TERMS
               double
                 ith_dHij_minus_muHij_times_hStarStates=0.,
                 ith_dHij_minus_muHij_times_huStarStates=0.,
                 ith_dHij_minus_muHij_times_hvStarStates=0.,
+		ith_dHij_minus_muHij_times_hetaStarStates=0.,
+		ith_dHij_minus_muHij_times_hwStarStates=0.,		
                 ith_muHij_times_hStates=0.,
                 ith_muHij_times_huStates=0.,
-                ith_muHij_times_hvStates=0.;
+                ith_muHij_times_hvStates=0.,
+		ith_muHij_times_hetaStates=0.,
+		ith_muHij_times_hwStates=0.;
 
               ///////////////////
               // FRICTION TERM //
@@ -2394,13 +2413,21 @@ namespace proteus
                                        (hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm)));
               double ith_friction_term2 = friction_aux*hui;
               double ith_friction_term3 = friction_aux*hvi;
-
+	    
               if (LINEAR_FRICTION==1)
                 {
                   ith_friction_term2 = mannings*hui*mi;
                   ith_friction_term3 = mannings*hvi*mi;
                 }
 
+	      /////////////////
+	      // FORCE TERMS //
+	      /////////////////
+	      double etai = hetai*one_over_hiReg;
+	      double force_term_hetai = hwi*mi;
+	      double force_term_hwi = -lambda*(etai*one_over_hiReg-1.)*mi;
+	      //double force_term_hwi = -lambda*(hetai/std::pow(hi,2.)-1.)*mi;
+	      
               // loop over the sparsity pattern of the i-th DOF
               for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
                 {
@@ -2408,25 +2435,38 @@ namespace proteus
                   double hj = h_dof_old[j];
                   double huj = hu_dof_old[j];
                   double hvj = hv_dof_old[j];
+		  double hetaj = heta_dof_old[j];
+		  double hwj = hw_dof_old[j];
+		  
                   double Zj = b_dof[j];
                   double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
                   double uj = huj*one_over_hjReg;
                   double vj = hvj*one_over_hjReg;
 
+		  double etaj = hetaj*one_over_hjReg;		
+		  double pTildej = -lambda/3.*(etaj*one_over_hjReg-1.0)*etaj;
+		  //double pTildej = -lambda/3.*(hetaj/std::pow(hj,2.)-1.0)*etaj;
+		  
                   // Nodal projection of fluxes
                   ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
                   //ith_flux_term1 += hj*(uj*Cx[ij] + vj*Cy[ij]); // f1*C
-                  ith_flux_term2 += uj*huj*Cx[ij] + uj*hvj*Cy[ij] + g*hi*(hj+Zj)*Cx[ij];
-                  ith_flux_term3 += vj*huj*Cx[ij] + vj*hvj*Cy[ij] + g*hi*(hj+Zj)*Cy[ij];
+		  ith_flux_term2 += uj*huj*Cx[ij] + uj*hvj*Cy[ij] + (g*hi*(hj+Zj) + pTildej )*Cx[ij];
+                  ith_flux_term3 += vj*huj*Cx[ij] + vj*hvj*Cy[ij] + (g*hi*(hj+Zj) + pTildej )*Cy[ij];		  
+		  ith_flux_term4 += hetaj*uj*Cx[ij] + hetaj*vj*Cy[ij];
+		  ith_flux_term5 += hwj*uj*Cx[ij] + hwj*vj*Cy[ij];
 
                   // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
                   double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
                   double huStarij = hui*hStarij*one_over_hiReg;
                   double hvStarij = hvi*hStarij*one_over_hiReg;
+		  double hetaStarij = hetai*hStarij*one_over_hiReg;
+		  double hwStarij = hwi*hStarij*one_over_hiReg;
 
                   double hStarji  = fmax(0., hj + Zj - fmax(Zi,Zj));
                   double huStarji = huj*hStarji*one_over_hjReg;
                   double hvStarji = hvj*hStarji*one_over_hjReg;
+		  double hetaStarji = hetaj*hStarji*one_over_hjReg;
+		  double hwStarji = hwj*hStarji*one_over_hjReg;
 
                   // Dissipative well balancing term
                   double muLowij = 0., muLij = 0., muHij = 0.;
@@ -2481,19 +2521,27 @@ namespace proteus
                       ith_dHij_minus_muHij_times_hStarStates  += (dHij - muHij)*(hStarji-hStarij);
                       ith_dHij_minus_muHij_times_huStarStates += (dHij - muHij)*(huStarji-huStarij);
                       ith_dHij_minus_muHij_times_hvStarStates += (dHij - muHij)*(hvStarji-hvStarij);
-
+		      ith_dHij_minus_muHij_times_hetaStarStates += (dHij - muHij)*(hetaStarji-hetaStarij);
+		      ith_dHij_minus_muHij_times_hwStarStates += (dHij - muHij)*(hwStarji-hwStarij);
+		      
                       ith_dLij_minus_muLij_times_hStarStates  += (dLij - muLij)*(hStarji-hStarij);
                       ith_dLij_minus_muLij_times_huStarStates += (dLij - muLij)*(huStarji-huStarij);
-                      ith_dLij_minus_muLij_times_hvStarStates += (dLij - muLij)*(hvStarji-hvStarij);
+                      ith_dLij_minus_muLij_times_hvStarStates += (dLij - muLij)*(hvStarji-hvStarij);		      
+		      ith_dLij_minus_muLij_times_hetaStarStates += (dLij - muLij)*(hetaStarji-hetaStarij);
+		      ith_dLij_minus_muLij_times_hwStarStates += (dLij - muLij)*(hwStarji-hwStarij);
 
                       // compute muij times solution terms
                       ith_muHij_times_hStates  += muHij*(hj-hi);
                       ith_muHij_times_huStates += muHij*(huj-hui);
                       ith_muHij_times_hvStates += muHij*(hvj-hvi);
+		      ith_muHij_times_hetaStates += muHij*(hetaj-hetai);
+		      ith_muHij_times_hwStates += muHij*(hwj-hwi);
 
                       ith_muLij_times_hStates  += muLij*(hj-hi);
                       ith_muLij_times_huStates += muLij*(huj-hui);
                       ith_muLij_times_hvStates += muLij*(hvj-hvi);
+		      ith_muLij_times_hetaStates += muLij*(hetaj-hetai);
+		      ith_muLij_times_hwStates += muLij*(hwj-hwi);
 
                       // compute dH_minus_dL
                       dH_minus_dL[ij] = dHij - dLij;
@@ -2510,18 +2558,33 @@ namespace proteus
               ////////////////////////
               // LOW ORDER SOLUTION //: lumped mass matrix and low order dissipative matrix
               ////////////////////////
-              low_order_hnp1[i]  = hi  - dt/mi*(ith_flux_term1
-                                                - ith_dLij_minus_muLij_times_hStarStates
-                                                - ith_muLij_times_hStates);
+              //low_order_hnp1[i]  = hi  - dt/mi*(ith_flux_term1
+	      //                                - ith_dLij_minus_muLij_times_hStarStates
+	      //                                - ith_muLij_times_hStates);
+              //low_order_hunp1[i] = hui - dt/mi*(ith_flux_term2
+	      //                                - ith_dLij_minus_muLij_times_huStarStates
+	      //                                - ith_muLij_times_huStates
+	      //				+ ith_friction_term2);
+              //low_order_hvnp1[i] = hvi - dt/mi*(ith_flux_term3
+	      //                                - ith_dLij_minus_muLij_times_hvStarStates
+	      //                                - ith_muLij_times_hvStates
+	      //				+ ith_friction_term3);
+
+	      low_order_hnp1[i]  = hi  - dt/mi*(ith_flux_term1 
+						- ith_dLij_minus_muLij_times_hStarStates 
+						- ith_muLij_times_hStates);
               low_order_hunp1[i] = hui - dt/mi*(ith_flux_term2
-                                                - ith_dLij_minus_muLij_times_huStarStates
-                                                - ith_muLij_times_huStates
-                                                + ith_friction_term2);
+						- ith_dLij_minus_muLij_times_huStarStates
+						- ith_muLij_times_huStates);
               low_order_hvnp1[i] = hvi - dt/mi*(ith_flux_term3
-                                                - ith_dLij_minus_muLij_times_hvStarStates
-                                                - ith_muLij_times_hvStates
-                                                + ith_friction_term3);
-	      
+						- ith_dLij_minus_muLij_times_hvStarStates
+						- ith_muLij_times_hvStates);
+	      low_order_hetanp1[i] = hetai - dt/mi*(ith_flux_term4
+						    - ith_dLij_minus_muLij_times_hetaStarStates
+						    - ith_muLij_times_hetaStates) + dt/mi*force_term_hetai;
+              low_order_hwnp1[i] = hwi - dt/mi*(ith_flux_term5
+						- ith_dLij_minus_muLij_times_hwStarStates
+						- ith_muLij_times_hwStates) + dt/mi*force_term_hwi;
               // FIX LOW ORDER SOLUTION //
               if (low_order_hnp1[i] < -1E-14 && dt < 1.0)
                 {
@@ -2541,41 +2604,33 @@ namespace proteus
                   low_order_hunp1[i] *= 2*std::pow(low_order_hnp1[i],VEL_FIX_POWER)/(std::pow(low_order_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
                   low_order_hvnp1[i] *= 2*std::pow(low_order_hnp1[i],VEL_FIX_POWER)/(std::pow(low_order_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
                 }
-              int LOW_ORDER_SOLUTION=0; // FOR DEBUGGING
+              int LOW_ORDER_SOLUTION=1; // FOR DEBUGGING
               if (LOW_ORDER_SOLUTION==1)
                 {
                   globalResidual[offset_h+stride_h*i]   = low_order_hnp1[i];
                   globalResidual[offset_hu+stride_hu*i] = low_order_hunp1[i];
                   globalResidual[offset_hv+stride_hv*i] = low_order_hvnp1[i];
+		  globalResidual[offset_heta+stride_heta*i] = low_order_hetanp1[i];
+		  globalResidual[offset_hw+stride_hw*i] = low_order_hwnp1[i];
                 }
               else
                 {
                   if (LUMPED_MASS_MATRIX==1)
                     {
-                      //globalResidual[offset_h+stride_h*i]
-		      //= hi - dt/mi*(ith_flux_term1
-		      //              - ith_dHij_minus_muHij_times_hStarStates
-		      //              - ith_muHij_times_hStates);
-                      //globalResidual[offset_hu+stride_hu*i]
-		      //= hui - dt/mi*(ith_flux_term2
-		      //               - ith_dHij_minus_muHij_times_huStarStates
-		      //               - ith_muHij_times_huStates
-		      //               + ith_friction_term2);
-                      //globalResidual[offset_hv+stride_hv*i]
-		      //= hvi - dt/mi*(ith_flux_term3
-		      //               - ith_dHij_minus_muHij_times_hvStarStates
-		      //               - ith_muHij_times_hvStates
-		      //               + ith_friction_term3);
-
-
-		      // temporal hack //
-		      globalResidual[offset_h+stride_h*i] = low_order_hnp1[i];
-		      globalResidual[offset_hu+stride_hu*i] = low_order_hunp1[i];
-		      globalResidual[offset_hv+stride_hv*i] = low_order_hvnp1[i];
-		      //globalResidual[offset_heta+stride_heta*i] = low_order_hetanp1[i];
-		      //globalResidual[offset_hw+stride_hw*i] = low_order_hwnp1[i];
-		      
-		      
+                      globalResidual[offset_h+stride_h*i]
+			= hi - dt/mi*(ith_flux_term1
+				      - ith_dHij_minus_muHij_times_hStarStates
+				      - ith_muHij_times_hStates);
+                      globalResidual[offset_hu+stride_hu*i]
+			= hui - dt/mi*(ith_flux_term2
+				       - ith_dHij_minus_muHij_times_huStarStates
+				       - ith_muHij_times_huStates
+				       + ith_friction_term2);
+                      globalResidual[offset_hv+stride_hv*i]
+			= hvi - dt/mi*(ith_flux_term3
+				       - ith_dHij_minus_muHij_times_hvStarStates
+				       - ith_muHij_times_hvStates
+				       + ith_friction_term3);		     
                       // clean up potential negative water height due to machine precision
                       if (globalResidual[offset_h+stride_h*i] >= -1E-14)
                         globalResidual[offset_h+stride_h*i] = fmax(globalResidual[offset_h+stride_h*i],0.);
