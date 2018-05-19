@@ -2752,7 +2752,7 @@ cdef class ProtChMoorings:
         assert len(length_array) == deref(self.thisptr.cables[segment_nb]).nb_elems, 'array of length of elements not matching number of elements'
         cdef vector[double] vec
         for length in length_array:
-            vec.push_pack(length)
+            vec.push_back(length)
         deref(self.thisptr.cables[segment_nb]).setRestLengthPerElement(vec)
 
     def setNodesPosition(self, double[:,:,:] positions=None, tangents=None):
