@@ -117,6 +117,7 @@ class cppCable {
   ChSystemSMC& system;  // global system
   std::shared_ptr<ChMesh> mesh;  // mesh
   int nb_elems;   // number of nodes along cable
+  std::vector<double> length_per_elem;  // length of each element on the cable
   double Cd_axial;  // drag coeff in axial direction
   double Cd_normal;  // drag coeff in normal direction
   double Cm_axial;  // added mass coeff in axial direction
@@ -178,6 +179,7 @@ class cppCable {
   void addNodestoContactCloud(std::shared_ptr<ChContactSurfaceNodeCloud> cloud);
   void setDragCoefficients(double axial, double normal);
   void setAddedMassCoefficients(double axial, double normal);
+  void setRestLengthPerElement(std::vector<double> length_array);
   void setIyy(double Iyy_in);
 };
 
@@ -600,6 +602,9 @@ cppCable::cppCable(ChSystemSMC& system, // system in which the cable belong
   applyDrag = true;
   applyAddedMass = true;
   applyBuoyancy = true;
+  for (int i = 0; i < nb_elems; i++) {
+    length_per_elem.push_back(length/nb_elems);
+  }
 }
 
 void cppCable::buildMaterials() {
@@ -751,7 +756,7 @@ void cppCable::buildElementsCableANCF(bool set_lastnodes) {
     elems_loads_triangular.push_back(loadtri);
     elems_loads_volumetric.push_back(load_volumetric);
     element->SetSection(msection_cable);
-    element->SetRestLength(length/nb_elems);
+    element->SetRestLength(length_per_elem[i]);
     if (i < nb_elems-1) {
       element->SetNodes(nodes[i], nodes[i + 1]);
     }
@@ -861,6 +866,10 @@ void cppCable::setDragCoefficients(double axial, double normal) {
 void cppCable::setAddedMassCoefficients(double axial, double normal) {
   Cm_axial = axial;
   Cm_normal = normal;
+}
+
+void cppCable::setRestLengthPerElement(std::vector<double> length_array) {
+  length_per_elem = length_array;
 }
 
 void cppCable::setDragForce() {
