@@ -81,6 +81,7 @@ cdef extern from "ChRigidBody.h":
         void updateBuoyancyForces()
         void setDragCoefficients(double Cd_axial, double Cd_normal)
         void setAddedMassCoefficients(double Cd_axial, double Cd_normal)
+        void setRestLengthPerElement(vector[double] length_array);
         void setIyy(double Iyy_in)
     cdef cppclass cppMultiSegmentedCable:
         ch.ChSystemSMC& system
@@ -2740,6 +2741,22 @@ cdef class ProtChMoorings:
             Segment number to which these coefficients apply.
         """
         deref(self.thisptr.cables[segment_nb]).setAddedMassCoefficients(tangential, normal)
+
+    def setRestLengthPerElement(self, double[:] length_array, int segment_nb):
+        """Sets rest length per element of cable
+
+        Parameters
+        ----------
+        length_array: array_like[double]
+            Rest length of each element of cable.
+        segment_nb: int
+            Segment number to which these rest lengths apply.
+        """
+        assert len(length_array) == deref(self.thisptr.cables[segment_nb]).nb_elems, 'array of length of elements not matching number of elements'
+        cdef vector[double] vec
+        for length in length_array:
+            vec.push_back(length)
+        deref(self.thisptr.cables[segment_nb]).setRestLengthPerElement(vec)
 
     def setNodesPosition(self, double[:,:,:] positions=None, tangents=None):
         """Builds the nodes of the cable.
