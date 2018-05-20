@@ -307,7 +307,7 @@ class NS_base:  # (HasTraits):
                                                            os.path.exists(fileprefix+".face"))):
                     if p.domain.use_gmsh is True:
                         logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
-                        gmsh_cmd = "mpiexec -n 1 gmsh {0:s} -v 10 -3 -o {1:s} -format msh".format(fileprefix+'.geo', p.domain.geofile+'.msh')
+                        gmsh_cmd = "aprun -n 1 gmsh {0:s} -v 10 -3 -o {1:s} -format msh".format(fileprefix+'.geo', p.domain.geofile+'.msh')
                         logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
                         check_call(gmsh_cmd, shell=True)
                         logEvent("Done running gmsh; converting to tetgen")
@@ -509,12 +509,12 @@ class NS_base:  # (HasTraits):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
-            
+
             if hasattr(p.domain,"PUMIMesh") and not isinstance(p.domain,Domain.PUMIDomain) :
               logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
               p = self.pList[0]
               n = self.nList[0]
-           
+
               from scipy import spatial
               meshVertexTree = spatial.cKDTree(mesh.nodeArray)
               meshVertex2Model= [0]*mesh.nNodes_owned
@@ -525,7 +525,7 @@ class NS_base:  # (HasTraits):
                 meshVertex2Model[closestVertex[1]] = 1
 
               isModelVert = numpy.asarray(meshVertex2Model).astype("i")
-              
+
               meshBoundaryConnectivity = numpy.zeros((mesh.nExteriorElementBoundaries_global,2+pList[0].nd),dtype=numpy.int32)
               for elementBdyIdx in range(len(mesh.exteriorElementBoundariesArray)):
                 exteriorIdx = mesh.exteriorElementBoundariesArray[elementBdyIdx]
@@ -535,9 +535,9 @@ class NS_base:  # (HasTraits):
                 meshBoundaryConnectivity[elementBdyIdx][3] = mesh.elementBoundaryNodesArray[exteriorIdx][1]
                 if(self.pList[0].nd==3):
                   meshBoundaryConnectivity[elementBdyIdx][4] = mesh.elementBoundaryNodesArray[exteriorIdx][2]
-              
+
               p.domain.PUMIMesh.reconstructFromProteus2(mesh.cmesh,isModelVert,meshBoundaryConnectivity)
-  
+
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 logEvent("Attempting to visualize mesh")
@@ -1090,7 +1090,7 @@ class NS_base:  # (HasTraits):
             nu = numpy.array([self.pList[0].nu_0,
                               self.pList[0].nu_1])
             g = numpy.asarray(self.pList[0].g)
-            
+
             deltaT_test = self.systemStepController.dt_system
             deltaT = self.systemStepController.t_system-self.systemStepController.t_system_last
             print("deltaT %f",deltaT," dt_system ", deltaT_test)
@@ -1197,32 +1197,32 @@ class NS_base:  # (HasTraits):
         #from scipy import spatial
         #meshVertexTree = spatial.cKDTree(theMesh.nodeArray)
         #meshVertex2Model= [0]*theMesh.nNodes_owned
-        #file0 = open('modelNodeArray.csv','w') 
+        #file0 = open('modelNodeArray.csv','w')
         #file0.write('%i\n' % len(self.pList[0].domain.vertices))
         #for idx,vertex in enumerate(self.pList[0].domain.vertices):
         #  #if(self.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
         #  #  vertex.append(0.0) #need to make a 3D coordinate
         #  closestVertex = meshVertexTree.query(vertex)
-        #  #file0.write('%i, %i\n' % (closestVertex[1],theMesh.nodeMaterialTypes[closestVertex[1]])) 
-        #  file0.write('%i, %i\n' % (closestVertex[1],idx)) 
-        #file0.close()      
+        #  #file0.write('%i, %i\n' % (closestVertex[1],theMesh.nodeMaterialTypes[closestVertex[1]]))
+        #  file0.write('%i, %i\n' % (closestVertex[1],idx))
+        #file0.close()
 
-        #file1 = open('meshNodeArray.csv','w') 
+        #file1 = open('meshNodeArray.csv','w')
         #file1.write('%i\n' % theMesh.nNodes_owned)
         #for nodeIdx in range(len(theMesh.nodeArray)):
-        #  file1.write('%i, %.15f, %.15f, %.15f\n' % (nodeIdx, 
+        #  file1.write('%i, %.15f, %.15f, %.15f\n' % (nodeIdx,
         #     theMesh.nodeArray[nodeIdx][0],
-        #     theMesh.nodeArray[nodeIdx][1], 
+        #     theMesh.nodeArray[nodeIdx][1],
         #     theMesh.nodeArray[nodeIdx][2]))
-        #file1.close() 
-        #file2 = open('meshConnectivity.csv','w') 
+        #file1.close()
+        #file2 = open('meshConnectivity.csv','w')
         #file2.write('%i\n' % theMesh.nElements_owned)
         #for elementIdx in range(len(theMesh.elementNodesArray)):
         #  file2.write('%i, %i, %i, %i, %i\n' % (elementIdx, theMesh.elementNodesArray[elementIdx][0],
         #     theMesh.elementNodesArray[elementIdx][1], theMesh.elementNodesArray[elementIdx][2],
         #     theMesh.elementNodesArray[elementIdx][3]))
-        #file2.close() 
-        #file3 = open('meshBoundaryConnectivity.csv','w') 
+        #file2.close()
+        #file3 = open('meshBoundaryConnectivity.csv','w')
         #file3.write('%i\n' % theMesh.nExteriorElementBoundaries_global)
         #for elementBdyIdx in range(len(theMesh.exteriorElementBoundariesArray)):
         #  exteriorIdx = theMesh.exteriorElementBoundariesArray[elementBdyIdx]
@@ -1233,7 +1233,7 @@ class NS_base:  # (HasTraits):
         #     theMesh.elementBoundaryNodesArray[exteriorIdx][1],
         #     theMesh.elementBoundaryNodesArray[exteriorIdx][2],
         #      ))
-        #file3.close() 
+        #file3.close()
         #exit()
 
         logEvent("Setting initial conditions",level=0)
@@ -1523,7 +1523,7 @@ class NS_base:  # (HasTraits):
                                                                                                                          model.stepController.t_model,
                                                                                                                          model.stepController.dt_model,
                                                                                                                          model.name),level=3)
- 
+
                         #end model step
                         if stepFailed:
                             logEvent("Sequence step failed")
