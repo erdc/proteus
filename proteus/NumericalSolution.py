@@ -534,6 +534,38 @@ class NS_base:  # (HasTraits):
                                                     viewBoundaryMaterialTypes=True)
                     except:
                         logEvent("NumericalSolution ViewMesh failed for mesh level %s" % l)
+
+        theMesh = mlMesh.meshList[0].subdomainMesh
+        pCT = self.pList[0].ct
+        nCT = self.nList[0].ct
+        theDomain = pCT.domain
+
+        if hasattr(theDomain,"PUMIMesh") and not isinstance(theDomain,Domain.PUMIDomain) :
+          logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
+   
+          from scipy import spatial
+          meshVertexTree = spatial.cKDTree(theMesh.nodeArray)
+          meshVertex2Model= [0]*theMesh.nNodes_owned
+          for idx,vertex in enumerate(theDomain.vertices):
+            if(pCT.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
+              vertex.append(0.0) #need to make a 3D coordinate
+            closestVertex = meshVertexTree.query(vertex)
+            meshVertex2Model[closestVertex[1]] = 1
+
+          isModelVert = numpy.asarray(meshVertex2Model).astype("i")
+      
+          meshBoundaryConnectivity = numpy.zeros((theMesh.nExteriorElementBoundaries_global,2+pCT.nd),dtype=numpy.int32)
+          for elementBdyIdx in range(len(theMesh.exteriorElementBoundariesArray)):
+            exteriorIdx = theMesh.exteriorElementBoundariesArray[elementBdyIdx]
+            meshBoundaryConnectivity[elementBdyIdx][0] =  theMesh.elementBoundaryMaterialTypes[exteriorIdx]
+            meshBoundaryConnectivity[elementBdyIdx][1] = theMesh.elementBoundaryElementsArray[exteriorIdx][0]
+            meshBoundaryConnectivity[elementBdyIdx][2] = theMesh.elementBoundaryNodesArray[exteriorIdx][0]
+            meshBoundaryConnectivity[elementBdyIdx][3] = theMesh.elementBoundaryNodesArray[exteriorIdx][1]
+            if(pCT.nd==3):
+              meshBoundaryConnectivity[elementBdyIdx][4] = theMesh.elementBoundaryNodesArray[exteriorIdx][2]
+      
+          pCT.domain.PUMIMesh.reconstructFromProteus2(theMesh.cmesh,isModelVert,meshBoundaryConnectivity)
+
         if so.useOneMesh:
             for p in pList[1:]: mlMesh_nList.append(mlMesh)
             try:
@@ -602,36 +634,6 @@ class NS_base:  # (HasTraits):
         self.systemStepController = so.systemStepControllerType(self.modelList,stepExact=so.systemStepExact)
         self.systemStepController.setFromOptions(so)
         logEvent("Finished NumericalSolution initialization")
-        theMesh = self.modelList[0].levelModelList[0].mesh
-        pCT = self.pList[0].ct
-        nCT = self.nList[0].ct
-        theDomain = pCT.domain
-
-        if hasattr(theDomain,"PUMIMesh") and not isinstance(theDomain,Domain.PUMIDomain) :
-          logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
-   
-          from scipy import spatial
-          meshVertexTree = spatial.cKDTree(theMesh.nodeArray)
-          meshVertex2Model= [0]*theMesh.nNodes_owned
-          for idx,vertex in enumerate(theDomain.vertices):
-            if(pCT.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
-              vertex.append(0.0) #need to make a 3D coordinate
-            closestVertex = meshVertexTree.query(vertex)
-            meshVertex2Model[closestVertex[1]] = 1
-
-          isModelVert = numpy.asarray(meshVertex2Model).astype("i")
-      
-          meshBoundaryConnectivity = numpy.zeros((theMesh.nExteriorElementBoundaries_global,2+pCT.nd),dtype=numpy.int32)
-          for elementBdyIdx in range(len(theMesh.exteriorElementBoundariesArray)):
-            exteriorIdx = theMesh.exteriorElementBoundariesArray[elementBdyIdx]
-            meshBoundaryConnectivity[elementBdyIdx][0] =  theMesh.elementBoundaryMaterialTypes[exteriorIdx]
-            meshBoundaryConnectivity[elementBdyIdx][1] = theMesh.elementBoundaryElementsArray[exteriorIdx][0]
-            meshBoundaryConnectivity[elementBdyIdx][2] = theMesh.elementBoundaryNodesArray[exteriorIdx][0]
-            meshBoundaryConnectivity[elementBdyIdx][3] = theMesh.elementBoundaryNodesArray[exteriorIdx][1]
-            if(pCT.nd==3):
-              meshBoundaryConnectivity[elementBdyIdx][4] = theMesh.elementBoundaryNodesArray[exteriorIdx][2]
-      
-          pCT.domain.PUMIMesh.reconstructFromProteus2(theMesh.cmesh,isModelVert,meshBoundaryConnectivity)
 
     def allocateModels(self):
         self.modelList=[]
