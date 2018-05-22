@@ -111,13 +111,13 @@ cdef extern from "ChMoorings.h":
     cdef cppclass ChSystem:
         void Add(shared_ptr[ChPhysicsItem] newitem)
         void AddBody(shared_ptr[ChBody] newbody)
+        double GetChTime()
+        void SetupInitial()
 
     cdef cppclass ChSystemSMC:
         void Add(shared_ptr[ChPhysicsItem] newitem)
         void AddBody(shared_ptr[ChBody] newbody)
         double GetStep()
-        double GetChTime()
-        void SetupInitial()
 
     cdef cppclass ChPhysicsItem:
         ChPhysicsItem()

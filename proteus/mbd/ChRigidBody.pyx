@@ -54,9 +54,9 @@ cdef extern from "ChRigidBody.h":
     cdef cppclass cppMesh:
         shared_ptr[ch.ChMesh] mesh
         void SetAutomaticGravity(bool val)
-    cppMesh * newMesh(ch.ChSystemSMC&, shared_ptr[ch.ChMesh])
+    cppMesh * newMesh(ch.ChSystem*, shared_ptr[ch.ChMesh])
     cdef cppclass cppCable:
-        ch.ChSystemSMC& system
+        ch.ChSystem& system
         ch.ChMesh& mesh
         vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
         vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
@@ -81,7 +81,7 @@ cdef extern from "ChRigidBody.h":
         void setRestLengthPerElement(vector[double] length_array);
         void setIyy(double Iyy_in)
     cdef cppclass cppMultiSegmentedCable:
-        ch.ChSystemSMC& system
+        ch.ChSystem& system
         ch.ChMesh& mesh
         vector[shared_ptr[cppCable]] cables
         vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
@@ -104,7 +104,7 @@ cdef extern from "ChRigidBody.h":
         void setFluidDensityAtNodes(vector[double] dens)
         void setContactMaterial(shared_ptr[ch.ChMaterialSurfaceSMC] material)
         ch.ChVector getTensionElement(int i, double eta)
-    cppMultiSegmentedCable * newMoorings(ch.ChSystemSMC& system,
+    cppMultiSegmentedCable * newMoorings(ch.ChSystem* system,
                                          shared_ptr[ch.ChMesh] mesh,
                                          vector[double] length,
                                          vector[int] nb_elems,
@@ -114,15 +114,15 @@ cdef extern from "ChRigidBody.h":
                                          string beam_type
         )
     cdef cppclass cppSurfaceBoxNodesCloud:
-        ch.ChSystemSMC& system
+        ch.ChSystem& system
         ch.ChVector position
         ch.ChVector dimensions
         shared_ptr[ch.ChBodyEasyBox] body;
         void setNodesSize(double size)
-    cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ch.ChSystemSMC& system,
-                                                shared_ptr[ch.ChMesh] mesh,
-                                                ch.ChVector position,
-                                                ch.ChVector dimensions)
+    cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ch.ChSystem* system,
+                                                      shared_ptr[ch.ChMesh] mesh,
+                                                      ch.ChVector position,
+                                                      ch.ChVector dimensions)
     void cppAttachNodeToNodeFEAxyzD(cppMultiSegmentedCable* cable1,
                                     int node1,
                                     cppMultiSegmentedCable* cable2,
@@ -134,7 +134,7 @@ cdef extern from "ChRigidBody.h":
 
 cdef extern from "ChRigidBody.h":
     cdef cppclass cppSystem:
-        ch.ChSystemSMC system
+        ch.ChSystem* system
         void DoStepDynamics(dt)
         void step(double proteus_dt, int n_substeps)
         void setChTimeStep(double dt)
@@ -206,7 +206,7 @@ cdef extern from "ChRigidBody.h":
     cppRigidBody * newRigidBody(cppSystem* system)
     void ChLinkLockBodies(shared_ptr[ch.ChBody] body1,
                           shared_ptr[ch.ChBody] body2,
-                          ch.ChSystemSMC& system,
+                          ch.ChSystem* system,
                           ch.ChCoordsys coordsys,
                           double limit_X,
                           double limit_Y,

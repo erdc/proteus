@@ -114,7 +114,7 @@ class MyLoaderTriangular : public ChLoaderUdistributed {
 
 class cppCable {
  public:
-  ChSystemSMC& system;  // global system
+  ChSystem* system;  // global system
   std::shared_ptr<ChMesh> mesh;  // mesh
   int nb_elems;   // number of nodes along cable
   std::vector<double> length_per_elem;  // length of each element on the cable
@@ -148,7 +148,7 @@ class cppCable {
   std::vector<ChVector<>> fluid_acceleration;
   std::vector<double> fluid_density;
   std::vector<double> nodes_density; // density of (cable-fluid) at nodes
-  cppCable(ChSystemSMC& system, std::shared_ptr<ChMesh> mesh, double length,
+  cppCable(ChSystem* system, std::shared_ptr<ChMesh> mesh, double length,
            int nb_elems, double d, double rho, double E, double L0, std::string beam_type);  // constructor
   void setFluidVelocityAtNodes(std::vector<ChVector<>> vel);
   void setFluidAccelerationAtNodes(std::vector<ChVector<>> acc);
@@ -185,7 +185,7 @@ class cppCable {
 
 class cppMultiSegmentedCable {
  public:
-  ChSystemSMC& system;  // global system
+  ChSystem* system;  // global system
   std::string beam_type;
   std::shared_ptr<ChMaterialSurfaceSMC> mysurfmaterial;
   std::shared_ptr<ChMesh> mesh;  // mesh
@@ -217,7 +217,7 @@ class cppMultiSegmentedCable {
   int nb_nodes_tot;
   bool nodes_built;
   bool nodes_chlink;
-  cppMultiSegmentedCable(ChSystemSMC& system,
+  cppMultiSegmentedCable(ChSystem* system,
                          std::shared_ptr<ChMesh> mesh,
                          std::vector<double> length,
                          std::vector<int> nb_nodes,
@@ -245,17 +245,17 @@ class cppMultiSegmentedCable {
 
 class cppMesh {
  public:
-  ChSystemSMC& system;
+  ChSystem* system;
   std::shared_ptr<ChMesh> mesh;
-  cppMesh(ChSystemSMC& system, std::shared_ptr<ChMesh> mesh);
+  cppMesh(ChSystem* system, std::shared_ptr<ChMesh> mesh);
   void SetAutomaticGravity(bool val);
 };
 
-cppMesh::cppMesh(ChSystemSMC& system, std::shared_ptr<ChMesh> mesh) :
+cppMesh::cppMesh(ChSystem* system, std::shared_ptr<ChMesh> mesh) :
 system(system),
   mesh(mesh)
 {
-  system.Add(mesh);
+  system->Add(mesh);
 };
 
 void cppMesh::SetAutomaticGravity(bool val) {
@@ -264,7 +264,7 @@ void cppMesh::SetAutomaticGravity(bool val) {
 
 
 
-cppMultiSegmentedCable::cppMultiSegmentedCable(ChSystemSMC& system,
+cppMultiSegmentedCable::cppMultiSegmentedCable(ChSystem* system,
                                                std::shared_ptr<ChMesh> mesh,
                                                std::vector<double> length,
                                                std::vector<int> nb_elems,
@@ -369,14 +369,14 @@ void cppMultiSegmentedCable::buildCable() {
           auto nodeA = cables[i]->nodesRot.front();
           auto nodeB = cables[i-1]->nodesRot.back();
           con1->Initialize(nodeA, nodeB, false, nodeA->GetPos(), nodeA->GetPos());
-          system.Add(con1);
+          system->Add(con1);
         }
         else if (beam_type == "CableANCF") {
           auto con1 = std::make_shared<ChLinkPointPoint>();
           auto nodeA = cables[i]->nodes.front();
           auto nodeB = cables[i-1]->nodes.back();
           con1->Initialize(nodeA, nodeB);
-          system.Add(con1);
+          system->Add(con1);
         }
       }
     }
@@ -525,14 +525,14 @@ void cppMultiSegmentedCable::attachBackNodeToBody(std::shared_ptr<ChBody> body) 
   if (beam_type == "BeamEuler") {
     auto constraint = std::make_shared<ChLinkMateSpherical>();
     constraint->Initialize(nodesRot.back(), body, false, nodesRot.back()->GetPos(), nodesRot.back()->GetPos());
-    system.Add(constraint);
+    system->Add(constraint);
     body_back = body;
     constraint_back = constraint;
   }
   else {
     auto constraint = std::make_shared<ChLinkPointFrame>();
     constraint->Initialize(nodes.back(), body);
-    system.Add(constraint);
+    system->Add(constraint);
     body_back = body;
     constraint_back = constraint;
   }
@@ -542,14 +542,14 @@ void cppMultiSegmentedCable::attachFrontNodeToBody(std::shared_ptr<ChBody> body)
   if (beam_type == "BeamEuler") {
     auto constraint = std::make_shared<ChLinkMateSpherical>();
     constraint->Initialize(nodesRot.front(), body, false, nodesRot.front()->GetPos(), nodesRot.front()->GetPos());
-    system.Add(constraint);
+    system->Add(constraint);
     body_front = body;
     constraint_front = constraint;
   }
   else if (beam_type == "CableANCF") {
     auto constraint = std::make_shared<ChLinkPointFrame>();
     constraint->Initialize(nodes.front(), body);
-    system.Add(constraint);
+    system->Add(constraint);
     body_front = body;
     constraint_front = constraint;
   }
@@ -573,7 +573,7 @@ void cppMultiSegmentedCable::buildNodesCloud() {
 };
 
 
-cppCable::cppCable(ChSystemSMC& system, // system in which the cable belong
+cppCable::cppCable(ChSystem* system, // system in which the cable belong
                    std::shared_ptr<ChMesh> mesh, // mesh of the cable
                    double length, // length of cable
                    int nb_elems,  // number of nodes along cable
@@ -732,7 +732,7 @@ void cppCable::buildElements(bool set_lastnodes=true) {
 
 void cppCable::buildElementsCableANCF(bool set_lastnodes) {
   auto loadcontainer = std::make_shared<ChLoadContainer>();
-  system.Add(loadcontainer);
+  system->Add(loadcontainer);
   // build elements
   elemsCableANCF.clear();
   elems_loads_distributed.clear();
@@ -770,7 +770,7 @@ void cppCable::buildElementsCableANCF(bool set_lastnodes) {
 
 void cppCable::buildElementsBeamEuler(bool set_lastnodes) {
   auto loadcontainer = std::make_shared<ChLoadContainer>();
-  system.Add(loadcontainer);
+  system->Add(loadcontainer);
   // build elements
   elemsBeamEuler.clear();
   elems_loads_distributed.clear();
@@ -975,7 +975,7 @@ void cppCable::applyForces() {
     elems_loads_triangular[i]->loader.SetF(Fa, Fb);
     // buoyancy
     if (applyBuoyancy == true) {
-      elems_loads_volumetric[i]->loader.Set_G_acc(-fluid_density[i]/rho*system.Get_G_acc());
+      elems_loads_volumetric[i]->loader.Set_G_acc(-fluid_density[i]/rho*system->Get_G_acc());
     }
   }
 };
@@ -991,7 +991,7 @@ void cppCable::addNodestoContactCloud(std::shared_ptr<ChContactSurfaceNodeCloud>
   }
 };
 
-cppMultiSegmentedCable * newMoorings(ChSystemSMC& system,
+cppMultiSegmentedCable * newMoorings(ChSystem* system,
                                      std::shared_ptr<ChMesh> mesh,
                                      std::vector<double> length,
                                      std::vector<int> nb_elems,
@@ -1010,7 +1010,7 @@ cppMultiSegmentedCable * newMoorings(ChSystemSMC& system,
                                     beam_type);
 }
 
-cppMesh * newMesh(ChSystemSMC& system, std::shared_ptr<ChMesh> mesh) {
+cppMesh * newMesh(ChSystem* system, std::shared_ptr<ChMesh> mesh) {
   return new cppMesh(system, mesh);
 }
 
@@ -1022,21 +1022,21 @@ cppMesh * newMesh(ChSystemSMC& system, std::shared_ptr<ChMesh> mesh) {
 
 class cppSurfaceBoxNodesCloud {
  public:
-  ChSystemSMC& system;
+  ChSystem* system;
   std::shared_ptr<ChMesh> mesh;
   ChVector<> position;
   ChVector<> dimensions;
   std::shared_ptr<ChBodyEasyBox> box;
   std::shared_ptr<ChMaterialSurfaceSMC> material;
   std::shared_ptr<ChContactSurfaceNodeCloud> contact_cloud;
-  cppSurfaceBoxNodesCloud(ChSystemSMC& system,
+  cppSurfaceBoxNodesCloud(ChSystem* system,
                           std::shared_ptr<ChMesh> mesh,
                           ChVector<> position,
                           ChVector<> dimensions);
   void setNodesSize(double size);
 };
 
-cppSurfaceBoxNodesCloud::cppSurfaceBoxNodesCloud(ChSystemSMC& system,
+cppSurfaceBoxNodesCloud::cppSurfaceBoxNodesCloud(ChSystem* system,
                                                  std::shared_ptr<ChMesh> mesh,
                                                  ChVector<> position,
                                                  ChVector<> dimensions) :
@@ -1067,7 +1067,7 @@ system(system),
                                         true       // collide
                                         );
 
-  system.Add(box);
+  system->Add(box);
 
   box->SetBodyFixed(true);
   box->SetPos(position);
@@ -1080,7 +1080,7 @@ void cppSurfaceBoxNodesCloud::setNodesSize(double size) {
   contact_cloud->AddAllNodes(size);
 }
 
-cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ChSystemSMC& system,
+cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ChSystem* system,
                                                   std::shared_ptr<ChMesh> mesh,
                                                   ChVector<> position,
                                                   ChVector<> dimensions) {
@@ -1098,7 +1098,7 @@ void cppAttachNodeToNodeFEAxyzD(cppMultiSegmentedCable* cable1,
   auto nodeA = cable1->nodes[node1];
   auto nodeB = cable2->nodes[node2];
   con1->Initialize(nodeA, nodeB);
-  cable1->system.Add(con1);
+  cable1->system->Add(con1);
 }
 
 void cppAttachNodeToNodeFEAxyzrot(cppMultiSegmentedCable* cable1,
@@ -1109,5 +1109,5 @@ void cppAttachNodeToNodeFEAxyzrot(cppMultiSegmentedCable* cable1,
   auto nodeA = cable1->nodesRot[node1];
   auto nodeB = cable2->nodesRot[node2];
   con1->Initialize(nodeA, nodeB, false, nodeA->GetPos(), nodeA->GetPos());
-  cable1->system.Add(con1);
+  cable1->system->Add(con1);
 }
