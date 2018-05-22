@@ -515,22 +515,18 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
   apf::MeshEntity* f;
 
   //first associate all nodes with a material tag and synchronize fields to avoid mismatches 
+  //The procedure is to have each vertex look for its classification.
+  //If it is classified in the region, then it is interior.
+  //Else, loop over adjacent faces and stop at first instance of mesh face classified on model boundary and take tag.
+    //If there are no such adjacent mesh faces, then set the value to be -1. This should only happen if the vertex is a shared entity.
+  //If the vertex is shared, communicate value to remote copies.
+  //When receiving values, if the current value is -1, write to field the received value. Otherwise, do nothing. 
+
   apf::Field* nodeMaterials = apf::createLagrangeField(m, "nodeMaterials", apf::SCALAR, 1);
   it = m->begin(0);
   PCU_Comm_Begin();
   while(f = m->iterate(it))
   {
-    //apf::setScalar(nodeMaterials,f,0,0); //interior node
-/*
-    if(localNumber(f)==2034 && PCU_Comm_Self()==1){
-      std::cout<<"Number of adjacent ents "<< vert_adjFace.getSize()<<std::endl;
-      std::cout<<"Classification on "<<m->getModelType(m->toModel(f))<<" "<<m->getModelTag(m->toModel(f))<<std::endl;
-      std::cout<<"is shared? "<<m->isShared(f)<<std::endl;
-      apf::Vector3 pt;
-      m->getPoint(f,0,pt);
-      std::cout<<"Point is "<<pt<<std::endl;
-    }
-*/
     geomEnt = m->toModel(f);
     //if classified in a region
     if(m->getModelType(geomEnt) == m->getDimension())
@@ -546,19 +542,12 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
       {
         face=vert_adjFace[i];
         geomEnt = m->toModel(face);
-/*
-      if(localNumber(f)==2034 && PCU_Comm_Self()==1){
-        std::cout<<"adjacent face "<<localNumber(face)<<" "<<m->getModelType(geomEnt)<<" "<<m->getDimension()-1<<std::endl;
-      }
-*/
+
+        //IF mesh face is classified on boundary
         if(m->getModelType(geomEnt) == m->getDimension()-1)
-        { 
+        {
           geomTag = m->getModelTag(geomEnt);
           apf::setScalar(nodeMaterials,f,0,geomTag);
-/*
-        if(localNumber(f)==2034 && PCU_Comm_Self()==1)
-          std::cout<<"in "<<geomTag<<" "<<m->isOwned(f)<<" "<<m->getOwner(f)<<std::endl;
-*/
           if(m->isShared(f))
           {
             apf::Copies remotes;
@@ -575,18 +564,6 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
           apf::setScalar(nodeMaterials,f,0,-1);
       }
     }
-/*
-    if(localNumber(f)==2034 && PCU_Comm_Self()==1){
-      std::cout<<"out\n";
-      apf::Adjacent vert_adjRegs;
-      //m->getAdjacent(f,m->getDimension()-3,vert_adjRegs);
-      m->getAdjacent(f,0,vert_adjRegs);
-      std::cout<<"Adjacent regions amount to "<<vert_adjRegs.getSize()<<std::endl;
-      for(int i=0;i<vert_adjRegs.getSize();i++){
-        std::cout<<localNumber(vert_adjRegs[i])<<" owned "<<m->isOwned(vert_adjRegs[i])<<std::endl;  
-      }
-    }
-*/
   }
   PCU_Comm_Send();
   while(PCU_Comm_Receive())
@@ -594,43 +571,37 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
     PCU_COMM_UNPACK(f);
     PCU_COMM_UNPACK(geomTag);
     int currentTag = apf::getScalar(nodeMaterials,f,0);
+    //if vertex is not interior and had no adjacent faces, take received value
     if(currentTag == -1)
       apf::setScalar(nodeMaterials,f,0,geomTag);
   }
+  //Ensure there are no mismatches across parts and then assign node materials
   apf::synchronize(nodeMaterials);
-  apf::writeVtkFiles("nodeMaterials3",m);
-/*
-  apf::writeVtkFiles("nodeMaterials2_before",m);
-  PCU_Barrier();
-  apf::synchronize(nodeMaterials);
-  apf::writeVtkFiles("nodeMaterials2",m);
-  PCU_Barrier();
-  std::abort();
-*/
+  it = m->begin(0);
+  while(f=m->iterate(it))
+  {
+    int vID = localNumber(f);
+    mesh.nodeMaterialTypes[vID] = apf::getScalar(nodeMaterials,f,0);
+  }
 
   //First iterate over all faces in 3D, get the model tag and apply to all downward adjacencies
   int dim = m->getDimension()-1;
   it = m->begin(dim);
-  while(f = m->iterate(it)){
+  while(f = m->iterate(it))
+  {
     int i = localNumber(f);
     geomEnt = m->toModel(f);
     geomTag = m->getModelTag(geomEnt);
-    if(m->getModelType(geomEnt) == dim){
+    if(m->getModelType(geomEnt) == dim)
+    {
       mesh.elementBoundaryMaterialTypes[i] = geomTag;
-      apf::Adjacent face_adjVert;
-      m->getAdjacent(f,0,face_adjVert);
-      for(int j=0;j<face_adjVert.getSize();j++){
-          int vID = localNumber(face_adjVert[j]);
-          //mesh.nodeMaterialTypes[vID] = geomTag;
-          if(geomTag==0) std::abort();
-          mesh.nodeMaterialTypes[vID] = apf::getScalar(nodeMaterials,face_adjVert[j],0);
-      }
     }
   }
   m->end(it);
 
   apf::destroyField(nodeMaterials);
   std::cout<<"Finished faces and verts\n";
+
   //Loop over regions
   dim = m->getDimension();
   it = m->begin(dim);
