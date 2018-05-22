@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include "MeshAdaptPUMI.h"
+#include <PCU.h>
 #include "mesh.h"
 #include <apfShape.h>
 
@@ -516,27 +517,96 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
   //first associate all nodes with a material tag and synchronize fields to avoid mismatches 
   apf::Field* nodeMaterials = apf::createLagrangeField(m, "nodeMaterials", apf::SCALAR, 1);
   it = m->begin(0);
+  PCU_Comm_Begin();
   while(f = m->iterate(it))
   {
-    apf::Adjacent vert_adjFace;
-    m->getAdjacent(f,m->getDimension()-1,vert_adjFace);
-    apf::MeshEntity* face;
-    apf::setScalar(nodeMaterials,f,0,0); //interior node
-    for(int i =0; i<vert_adjFace.getSize();i++)
+    //apf::setScalar(nodeMaterials,f,0,0); //interior node
+/*
+    if(localNumber(f)==2034 && PCU_Comm_Self()==1){
+      std::cout<<"Number of adjacent ents "<< vert_adjFace.getSize()<<std::endl;
+      std::cout<<"Classification on "<<m->getModelType(m->toModel(f))<<" "<<m->getModelTag(m->toModel(f))<<std::endl;
+      std::cout<<"is shared? "<<m->isShared(f)<<std::endl;
+      apf::Vector3 pt;
+      m->getPoint(f,0,pt);
+      std::cout<<"Point is "<<pt<<std::endl;
+    }
+*/
+    geomEnt = m->toModel(f);
+    //if classified in a region
+    if(m->getModelType(geomEnt) == m->getDimension())
     {
-      face=vert_adjFace[i];
-      geomEnt = m->toModel(face);
-      if(m->getModelType(geomEnt) == m->getDimension()-1)
+      apf::setScalar(nodeMaterials,f,0,0); 
+    }
+    else
+    {
+      apf::Adjacent vert_adjFace;
+      m->getAdjacent(f,m->getDimension()-1,vert_adjFace);
+      apf::MeshEntity* face;
+      for(int i =0; i<vert_adjFace.getSize();i++)
       {
-        geomTag = m->getModelTag(geomEnt);
-        apf::setScalar(nodeMaterials,f,0,geomTag);
-        continue;
+        face=vert_adjFace[i];
+        geomEnt = m->toModel(face);
+/*
+      if(localNumber(f)==2034 && PCU_Comm_Self()==1){
+        std::cout<<"adjacent face "<<localNumber(face)<<" "<<m->getModelType(geomEnt)<<" "<<m->getDimension()-1<<std::endl;
+      }
+*/
+        if(m->getModelType(geomEnt) == m->getDimension()-1)
+        { 
+          geomTag = m->getModelTag(geomEnt);
+          apf::setScalar(nodeMaterials,f,0,geomTag);
+/*
+        if(localNumber(f)==2034 && PCU_Comm_Self()==1)
+          std::cout<<"in "<<geomTag<<" "<<m->isOwned(f)<<" "<<m->getOwner(f)<<std::endl;
+*/
+          if(m->isShared(f))
+          {
+            apf::Copies remotes;
+            m->getRemotes(f,remotes);
+            for(apf::Copies::iterator iter = remotes.begin(); iter != remotes.end(); ++iter)
+            {
+              PCU_COMM_PACK(iter->first,iter->second);
+              PCU_COMM_PACK(iter->first,geomTag);
+            }
+          }  
+          break;
+        }
+        if(i == vert_adjFace.getSize()-1 )
+          apf::setScalar(nodeMaterials,f,0,-1);
       }
     }
+/*
+    if(localNumber(f)==2034 && PCU_Comm_Self()==1){
+      std::cout<<"out\n";
+      apf::Adjacent vert_adjRegs;
+      //m->getAdjacent(f,m->getDimension()-3,vert_adjRegs);
+      m->getAdjacent(f,0,vert_adjRegs);
+      std::cout<<"Adjacent regions amount to "<<vert_adjRegs.getSize()<<std::endl;
+      for(int i=0;i<vert_adjRegs.getSize();i++){
+        std::cout<<localNumber(vert_adjRegs[i])<<" owned "<<m->isOwned(vert_adjRegs[i])<<std::endl;  
+      }
+    }
+*/
   }
-  //apf::writeVtkFiles("nodeMaterials",m);
+  PCU_Comm_Send();
+  while(PCU_Comm_Receive())
+  {
+    PCU_COMM_UNPACK(f);
+    PCU_COMM_UNPACK(geomTag);
+    int currentTag = apf::getScalar(nodeMaterials,f,0);
+    if(currentTag == -1)
+      apf::setScalar(nodeMaterials,f,0,geomTag);
+  }
   apf::synchronize(nodeMaterials);
-  //std::abort();
+  apf::writeVtkFiles("nodeMaterials3",m);
+/*
+  apf::writeVtkFiles("nodeMaterials2_before",m);
+  PCU_Barrier();
+  apf::synchronize(nodeMaterials);
+  apf::writeVtkFiles("nodeMaterials2",m);
+  PCU_Barrier();
+  std::abort();
+*/
 
   //First iterate over all faces in 3D, get the model tag and apply to all downward adjacencies
   int dim = m->getDimension()-1;
@@ -552,6 +622,7 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
       for(int j=0;j<face_adjVert.getSize();j++){
           int vID = localNumber(face_adjVert[j]);
           //mesh.nodeMaterialTypes[vID] = geomTag;
+          if(geomTag==0) std::abort();
           mesh.nodeMaterialTypes[vID] = apf::getScalar(nodeMaterials,face_adjVert[j],0);
       }
     }
@@ -582,7 +653,7 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
  * scorec/core. This may be added into scorec/core eventually and removed.
  */
 
-#include <PCU.h>
+//#include <PCU.h>
 #include "apfConvert.h"
 #include "apfMesh2.h"
 #include "apf.h"
