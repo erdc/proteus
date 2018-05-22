@@ -510,34 +510,6 @@ class NS_base:  # (HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
             
-            if hasattr(p.domain,"PUMIMesh") and not isinstance(p.domain,Domain.PUMIDomain) :
-              logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
-              p = self.pList[0]
-              n = self.nList[0]
-           
-              from scipy import spatial
-              meshVertexTree = spatial.cKDTree(mesh.nodeArray)
-              meshVertex2Model= [0]*mesh.nNodes_owned
-              for idx,vertex in enumerate(self.pList[0].domain.vertices):
-                if(self.pList[0].nd==2 and len(vertex) == 2): #there might be a smarter way to do this
-                  vertex.append(0.0) #need to make a 3D coordinate
-                closestVertex = meshVertexTree.query(vertex)
-                meshVertex2Model[closestVertex[1]] = 1
-
-              isModelVert = numpy.asarray(meshVertex2Model).astype("i")
-              
-              meshBoundaryConnectivity = numpy.zeros((mesh.nExteriorElementBoundaries_global,2+pList[0].nd),dtype=numpy.int32)
-              for elementBdyIdx in range(len(mesh.exteriorElementBoundariesArray)):
-                exteriorIdx = mesh.exteriorElementBoundariesArray[elementBdyIdx]
-                meshBoundaryConnectivity[elementBdyIdx][0] =  mesh.elementBoundaryMaterialTypes[exteriorIdx]
-                meshBoundaryConnectivity[elementBdyIdx][1] = mesh.elementBoundaryElementsArray[exteriorIdx][0]
-                meshBoundaryConnectivity[elementBdyIdx][2] = mesh.elementBoundaryNodesArray[exteriorIdx][0]
-                meshBoundaryConnectivity[elementBdyIdx][3] = mesh.elementBoundaryNodesArray[exteriorIdx][1]
-                if(self.pList[0].nd==3):
-                  meshBoundaryConnectivity[elementBdyIdx][4] = mesh.elementBoundaryNodesArray[exteriorIdx][2]
-              
-              p.domain.PUMIMesh.reconstructFromProteus2(mesh.cmesh,isModelVert,meshBoundaryConnectivity)
-  
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 logEvent("Attempting to visualize mesh")
@@ -630,6 +602,36 @@ class NS_base:  # (HasTraits):
         self.systemStepController = so.systemStepControllerType(self.modelList,stepExact=so.systemStepExact)
         self.systemStepController.setFromOptions(so)
         logEvent("Finished NumericalSolution initialization")
+        theMesh = self.modelList[0].levelModelList[0].mesh
+        pCT = self.pList[0].ct
+        nCT = self.nList[0].ct
+        theDomain = pCT.domain
+
+        if hasattr(theDomain,"PUMIMesh") and not isinstance(theDomain,Domain.PUMIDomain) :
+          logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
+   
+          from scipy import spatial
+          meshVertexTree = spatial.cKDTree(theMesh.nodeArray)
+          meshVertex2Model= [0]*theMesh.nNodes_owned
+          for idx,vertex in enumerate(theDomain.vertices):
+            if(pCT.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
+              vertex.append(0.0) #need to make a 3D coordinate
+            closestVertex = meshVertexTree.query(vertex)
+            meshVertex2Model[closestVertex[1]] = 1
+
+          isModelVert = numpy.asarray(meshVertex2Model).astype("i")
+      
+          meshBoundaryConnectivity = numpy.zeros((theMesh.nExteriorElementBoundaries_global,2+pCT.nd),dtype=numpy.int32)
+          for elementBdyIdx in range(len(theMesh.exteriorElementBoundariesArray)):
+            exteriorIdx = theMesh.exteriorElementBoundariesArray[elementBdyIdx]
+            meshBoundaryConnectivity[elementBdyIdx][0] =  theMesh.elementBoundaryMaterialTypes[exteriorIdx]
+            meshBoundaryConnectivity[elementBdyIdx][1] = theMesh.elementBoundaryElementsArray[exteriorIdx][0]
+            meshBoundaryConnectivity[elementBdyIdx][2] = theMesh.elementBoundaryNodesArray[exteriorIdx][0]
+            meshBoundaryConnectivity[elementBdyIdx][3] = theMesh.elementBoundaryNodesArray[exteriorIdx][1]
+            if(pCT.nd==3):
+              meshBoundaryConnectivity[elementBdyIdx][4] = theMesh.elementBoundaryNodesArray[exteriorIdx][2]
+      
+          pCT.domain.PUMIMesh.reconstructFromProteus2(theMesh.cmesh,isModelVert,meshBoundaryConnectivity)
 
     def allocateModels(self):
         self.modelList=[]
@@ -754,8 +756,11 @@ class NS_base:  # (HasTraits):
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
 
     def PUMI2Proteus(self,mesh):
-        p0 = self.pList[0] #This can probably be cleaned up somehow
-        n0 = self.nList[0]
+        #p0 = self.pList[0] #This can probably be cleaned up somehow
+        #n0 = self.nList[0]
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
+
         logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
         if p0.domain.nd == 3:
           mlMesh = MeshTools.MultilevelTetrahedralMesh(
@@ -951,16 +956,19 @@ class NS_base:  # (HasTraits):
         Ainsworth and Oden and generates a corresponding error field.
         """
 
-        p0 = self.pList[0]
-        n0 = self.nList[0]
+        #p0 = self.pList[0]
+        #n0 = self.nList[0]
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
+
         adaptMeshNow = False
         #will need to move this to earlier when the mesh is created
         #from proteus.MeshAdaptPUMI import MeshAdaptPUMI
-        if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
-            import sys
-            if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
-                sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
-            p0.domain.PUMIMesh=n0.MeshAdaptMesh
+        #if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and p0.domain.PUMIMesh.adaptMesh():
+        #    import sys
+        #    if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
+        #        sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
+        #    p0.domain.PUMIMesh=n0.MeshAdaptMesh
             #p0.domain.hasModel = n0.useModel
             #numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
             ##force initialization of arrays to enable passage through to C++ code
@@ -1029,9 +1037,9 @@ class NS_base:  # (HasTraits):
             #p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
             #p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
         if (hasattr(p0.domain, 'PUMIMesh') and
-            n0.adaptMesh and
+            p0.domain.PUMIMesh.adaptMesh() and
             self.so.useOneMesh and
-            self.nSolveSteps%n0.adaptMesh_nSteps==0):
+            self.nSolveSteps%p0.domain.PUMIMesh.numAdaptSteps()==0):
             logEvent("Copying coordinates to PUMI")
             p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
                 self.modelList[0].levelModelList[0].mesh.nodeArray)
@@ -1065,6 +1073,11 @@ class NS_base:  # (HasTraits):
                     vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
                   p0.domain.PUMIMesh.transferFieldToPUMI(
                          coef.vectorName, vector)
+                  #Transfer dof_last
+                  for vci in range(len(coef.vectorComponents)):
+                    vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
+                  p0.domain.PUMIMesh.transferFieldToPUMI(
+                         "velocity_old", vector)
                   del vector
                 for ci in range(coef.nc):
                   if coef.vectorComponents is None or \
@@ -1080,20 +1093,25 @@ class NS_base:  # (HasTraits):
             del scalar
             #Get Physical Parameters
             #Can we do this in a problem-independent  way?
-            rho = numpy.array([self.pList[0].rho_0,
-                               self.pList[0].rho_1])
-            nu = numpy.array([self.pList[0].nu_0,
-                              self.pList[0].nu_1])
-            g = numpy.asarray(self.pList[0].g)
+            rho = numpy.array([self.pList[0].ct.rho_0,
+                               self.pList[0].ct.rho_1])
+            nu = numpy.array([self.pList[0].ct.nu_0,
+                              self.pList[0].ct.nu_1])
+            g = numpy.asarray(self.pList[0].ct.g)
             deltaT = self.tn-self.tn_last
-            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
-            del rho, nu, g
+            epsFact = p0.epsFact_density 
+            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+            del rho, nu, g, epsFact
 
             logEvent("Estimate Error")
             sfConfig = p0.domain.PUMIMesh.size_field_config()
             if(sfConfig=="ERM"):
               errorTotal= p0.domain.PUMIMesh.get_local_error()
-
+              if(p0.domain.PUMIMesh.willAdapt()):
+                adaptMeshNow=True
+                logEvent("Need to Adapt")
+            elif(sfConfig=="VMS"):
+              errorTotal = p0.domain.PUMIMesh.get_VMS_error()
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
@@ -1420,12 +1438,14 @@ class NS_base:  # (HasTraits):
 
         self.nSequenceSteps = 0
         nSequenceStepsLast=self.nSequenceSteps # prevent archiving the same solution twice
-        self.nSolveSteps=self.nList[0].adaptMesh_nSteps-1
+        self.nSolveSteps=-1#self.nList[0].adaptMesh_nSteps-1
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
 #            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
+
+            self.opts.save_dof = True
             if self.opts.save_dof:
                 for m in self.modelList:
                     for lm in m.levelModelList:
@@ -1439,6 +1459,15 @@ class NS_base:  # (HasTraits):
 
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
+
+                    self.opts.save_dof = True
+                    if self.opts.save_dof:
+                        for m in self.modelList:
+                            for lm in m.levelModelList:
+                                for ci in range(lm.coefficients.nc):
+                                    lm.u[ci].dof_last[:] = lm.u[ci].dof
+                        logEvent("saving previous velocity dofs %s" % self.nSolveSteps)
+
                     logEvent("Split operator iteration %i" % (self.systemStepController.its,),level=3)
                     self.nSequenceSteps += 1
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
@@ -1564,9 +1593,11 @@ class NS_base:  # (HasTraits):
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
                 #can only handle PUMIDomain's for now
-                #self.nSolveSteps += 1
-                #if(self.PUMI_estimateError()):
-                #    self.PUMI_adaptMesh()
+                #if(self.tn < 0.05):
+                #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
+                self.nSolveSteps += 1
+                if(self.PUMI_estimateError()):
+                    self.PUMI_adaptMesh()
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
                 nSequenceStepsLast = self.nSequenceSteps
@@ -1581,14 +1612,36 @@ class NS_base:  # (HasTraits):
             #assuming same for all physics and numerics  for now
 
             #can only handle PUMIDomain's for now
-            self.nSolveSteps += 1
-            if(self.PUMI_estimateError()):
-              self.PUMI_adaptMesh()
+            #self.nSolveSteps += 1
+            #if(self.PUMI_estimateError()):
+            #  self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
         # compute auxiliary quantities at last time step
         for index,model in enumerate(self.modelList):
             if hasattr(model.levelModelList[-1],'runAtEOS'):
                 model.levelModelList[-1].runAtEOS()
+
+        if(hasattr(self.pList[0].domain,"PUMIMesh")):
+        #Transfer solution to PUMI mesh for output
+          for m in self.modelList:
+            for lm in m.levelModelList:
+              coef = lm.coefficients
+              if coef.vectorComponents is not None:
+                vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+                for vci in range(len(coef.vectorComponents)):
+                  vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
+                self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                   coef.vectorName, vector)
+                del vector
+              for ci in range(coef.nc):
+                if coef.vectorComponents is None or \
+                  ci not in coef.vectorComponents:
+                  scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+                  scalar[:,0] = lm.u[ci].dof[:]
+                  self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                      coef.variableNames[ci], scalar)
+                  del scalar
+          self.pList[0].domain.PUMIMesh.writeMesh("finalMesh.smb")
 
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
