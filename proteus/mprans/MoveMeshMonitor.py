@@ -19,8 +19,18 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
     nSmooth: int
         number of smoothing steps after solving
     """
-    def __init__(self, func, nd=2, boundaryNormals=None, nSmooth=0):
-        self.myfunc=func
+    def __init__(self,
+                 func,
+                 he_min,
+                 he_max,
+                 nd=2,
+                 boundaryNormals=None,
+                 nSmooth=0,
+                 LS_MODEL=None):
+        self.myfunc = func
+        self.LS_MODEL = LS_MODEL
+        self.he_min = he_min
+        self.he_max = he_max
         self.C = 1.  # scaling coefficient for f (computed in preStep)
         self.integral_area = 1.
         self.nd = nd
@@ -50,6 +60,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.nearest_nodes0 = np.array([i for i in range(len(self.mesh.nodeArray))])
         self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape,'d')
         self.uOfXTatNodes = np.zeros(len(self.mesh.nodeArray))
+        self.uOfXTatQuadrature = np.zeros((self.model.q['x'].shape[0], self.model.q['x'].shape[1]))
+        if self.LS_MODEL is not None:
+            self.model_ls = modelList[self.LS_model]
+            self.u_phi = self.model_ls.u
+            self.q_phi = self.model_ls.q[('u', 0)]
 
     def preStep(self, t, firstStep=False):
         logEvent("Updating area function scaling coefficient",
@@ -61,11 +76,12 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         N_k = self.model.q['x'].shape[1]
         q_weights = self.model.elementQuadratureWeights[('u', 0)]
         nE = 0
+        self.evaluateFunAtQuadraturePoints()
         for e in xrange(self.mesh.elementNodesArray.shape[0]):
             area = 0
             for k in xrange(N_k):
                 area += JJ[e, k]*q_weights[k]
-                integral_1_over_f += JJ[e, k]*q_weights[k]/self.myfunc(xx[e,k], self.t)
+                integral_1_over_f += JJ[e, k]*q_weights[k]/self.uOfXTatQuadrature[e, k]
             self.areas[e] = area
             nE += 1
         self.C = integral_1_over_f/(nE)  # update scaling coefficient
@@ -78,7 +94,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             cq[('f',ci)].flat[:] = 0.0
             for eN in range(len(cq[('r',ci)])):
                 for k in range(len(cq[('r', ci)][eN])):
-                    cq[('r',ci)][eN,k] = -self.uOfX(x=cq['x'][eN,k], eN=eN)
+                    cq[('r',ci)][eN,k] = 1./(self.uOfXTatQuadrature[eN, k]*self.C)-1./self.areas[eN]
         logEvent("Finished updating area function",
                  level=3)
 
@@ -128,7 +144,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             area = 1.
         else:
             area = self.areas[eN]
-        f = 1./(self.myfunc(x, self.t)*self.C)-1./area
+        f = 1./(self.evaluateFunAtX(x)*self.C)-1./area
         return f
 
     def dist_search(self, x, node, eN=None):
@@ -214,9 +230,51 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             #                        element = eN
         return element, nearest_node, xi
 
+    def evaluateFunAtX(self, x, ls_phi=None):
+        """
+        reaction term
+        """
+        # f_scaled = (self.myfunc(x)*self.C)
+        # f_scaled_reciprocal = 1./f_scaled
+        if ls_phi is not None:
+            f = min(self.he_max, max(self.myfunc(x, self.t), ls_phi, self.he_min))
+        else:
+            f = min(self.he_max, max(self.myfunc(x, self.t), self.he_min))
+        return f
+
     def evaluateFunAtNodes(self):
         for i in range(len(self.mesh.nodeArray)):
-            self.uOfXTatNodes[i] = self.myfunc(self.mesh.nodeArray[i], self.t)
+            if self.LS_MODEL is not None:
+                self.uOfXTatNodes[i] = min(self.he_max,
+                                           max(self.u_phi[i],
+                                               self.he_min),
+                                           self.myfunc(self.mesh.nodeArray[i],
+                                                       self.t))
+            else:
+                self.uOfXTatNodes[i] = min(self.he_max, max(self.he_min,
+                                                            self.myfunc(self.mesh.nodeArray[i],
+                                                                        self.t)))
+
+    def evaluateFunAtQuadraturePoints(self):
+        xx = self.model.q['x']
+        N_k = self.model.q['x'].shape[1]
+        for e in xrange(self.mesh.elementNodesArray.shape[0]):
+            for k in xrange(N_k):
+                if self.LS_MODEL is not None:
+                    self.uOfXTatQuadrature[e, k] = min(self.he_max,
+                                                       max(self.q_phi[e, k],
+                                                           self.he_min,
+                                                           self.myfunc(xx[e, k],
+                                                                       self.t)))
+                else:
+                    self.uOfXTatQuadrature[e, k] = min(self.he_max,
+                                                       max(self.he_min,
+                                                           self.myfunc(xx[e, k],
+                                                                       self.t)))
+
+    def getLevelSetValue(self, eN, xi):
+        value = self.model_ls.u[1].getValue(element, xi)
+        return value
 
     def getGradientValue(self, eN, xi):
         femSpace = self.model.u[0].femSpace
@@ -251,7 +309,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.model.grads = self.grads
 
     def areaRecoveryAtNodes(self):
-        logEvent("Gradient recovery at mesh nodes",
+        logEvent("Area recovery at mesh nodes",
                  level=3)
         grad_v = self.model.q[('grad(u)',0)]
         # n_quad = self.mesh.nodeArray.shape[1]
@@ -308,7 +366,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                         v_grad = self.grads[i]
                         area = self.areas_nodes[i]
                         eN = 0
-                    dphi = v_grad/(t*1./(self.myfunc(phi, self.t)*self.C)+(1-t)*1./area)
+                    if self.LS_MODEL is not None:
+                        ls_phi = self.getLevelSetValue(eN, phi)
+                    else:
+                        ls_phi = None
+                    dphi = v_grad/(t*1./(self.evaluateFunAtX(x=phi, ls_phi=ls_phi)*self.C)+(1-t)*1./area)
                     # # -----
                     # Euler
                     # # -----
