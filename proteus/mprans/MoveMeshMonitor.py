@@ -11,8 +11,15 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
     ----------
     func: function
         function of x defining element area
+    nd: int
+        number of dimensions
+    boundaryNormals: dict
+        dictionary of boundaryNormals for domain flags (used for sliding nodes
+        along the physical boundaries)
+    nSmooth: int
+        number of smoothing steps after solving
     """
-    def __init__(self, func, nd=2):
+    def __init__(self, func, nd=2, boundaryNormals=None, nSmooth=0):
         self.myfunc=func
         self.C = 1.  # scaling coefficient for f (computed in preStep)
         self.integral_area = 1.
@@ -20,19 +27,21 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         aOfX = [lambda x: np.array([[1., 0.], [0., 1.]])]
         fOfX = [self.uOfX]  # scaled function reciprocal
         self.t = 0
+        self.boundaryNormals = boundaryNormals
+        self.nSmooth = nSmooth
         #super(MyCoeff, self).__init__(aOfX, fOfX)
         TransportCoefficients.PoissonEquationCoefficients.__init__(self, aOfX, fOfX)
-            
+
     def initializeMesh(self, mesh):
         self.mesh = mesh
         self.areas_nodes = np.zeros(self.mesh.elementNodesArray.shape[0])
         self.areas = np.zeros(self.mesh.elementNodesArray.shape[0])
-        
+
     def attachModels(self,modelList):
         self.model = modelList[-1]
         self.q = self.model.q
         self.model.mesh_array0 = copy.deepcopy(self.mesh.nodeArray)
-        self.PHI = np.zeros_like(self.model.mesh.nodeArray) 
+        self.PHI = np.zeros_like(self.model.mesh.nodeArray)
         self.grads = np.zeros((len(self.model.u[0].dof),2))
         self.areas_nodes = np.zeros(len(self.mesh.nodeArray))
         self.areas = np.zeros(self.mesh.elementNodesArray.shape[0])
@@ -94,6 +103,16 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         # move nodes
         self.model.mesh.nodeVelocityArray[:] = (self.PHI-self.model.mesh.nodeArray)/self.model.timeIntegration.dt
         self.model.mesh.nodeArray[:] = self.PHI
+        logEvent('Smoothing Mesh with Laplace Smoothing - '+str(self.nSmooth))
+        from proteus.mprans import MeshSmoothing
+        if self.nSmooth > 0:
+            MeshSmoothing.smoothLaplace(self.mesh.nodeArray,
+                                        self.mesh.nodeStarOffsets,
+                                        self.mesh.nodeStarArray,
+                                        self.mesh.nodeMaterialTypes,
+                                        self.mesh.nNodes_owned,
+                                        self.nSmooth)
+        # smoothLaplace(self.model.mesh)
         # re-initialise nearest nodes
         self.nearest_nodes[:] = self.nearest_nodes0[:]
         # re-initialise containing element
@@ -111,7 +130,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             area = self.areas[eN]
         f = 1./(self.myfunc(x, self.t)*self.C)-1./area
         return f
-    
+
     def dist_search(self, x, node, eN=None):
         """
         search element containing containing coords x starting with a guessed
@@ -127,7 +146,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         femSpace = self.model.u[0].femSpace
         checkedElements=[]
         patchBoundaryNodes=set()
-        
+
         nearest_node = node
         min_dist = np.sqrt(np.sum((x-self.mesh.nodeArray[node])**2))
         found_node = False
@@ -194,11 +213,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             #                    if femSpace.elementMaps.referenceElement.onElement(xi):
             #                        element = eN
         return element, nearest_node, xi
-    
+
     def evaluateFunAtNodes(self):
         for i in range(len(self.mesh.nodeArray)):
             self.uOfXTatNodes[i] = self.myfunc(self.mesh.nodeArray[i], self.t)
-            
+
     def getGradientValue(self, eN, xi):
         femSpace = self.model.u[0].femSpace
         value = 0.0
@@ -267,7 +286,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                 phi = xx[i]
                 dt = t-t_last
                 flag = self.mesh.nodeMaterialTypes[i]
-                if flag == 0:
+                bN = None
+                if flag != 0 and self.boundaryNormals is not None:
+                    if self.boundaryNormals.has_key(flag):
+                        bN = self.boundaryNormals[flag]
+                if flag == 0 or bN is not None:
                     if j > 0:
                         eN, nearest_node, xi = self.dist_search(phi, self.nearest_nodes[i], self.eN_phi[i])
                         self.eN_phi[i] = eN
@@ -289,7 +312,10 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                     # # -----
                     # Euler
                     # # -----
-                    phi[:self.nd] += dphi[:self.nd]*dt
+                    if flag == 0:
+                        phi[:self.nd] += dphi[:self.nd]*dt
+                    elif bN is not None and i > 3:
+                        phi[:self.nd] += dphi[:self.nd]*(1-np.abs(bN))*dt
                     # # -----
                     xx[i] = phi  # not necessary but left for cythonising
             t_last = t
@@ -335,3 +361,4 @@ def recoveryAtNodes(variable, grad_v, nodeElementOffsets):
         grad_av /= nb_el
         recovered_variable[node] = grad_av
     return recovered_variable
+
