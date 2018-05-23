@@ -10,6 +10,7 @@ opts=Context.Options([
     ("schur_solver", 'two_phase_PCD', "preconditioner type"),
     ("ns_forceStrongDirichlet",True,"boundary condition type"),
     ("boundary_condition_type",'fs',"Free or no slip boundary"),
+    ("reynolds_number",100,"Simulation's Reynolds number"),
     ])
 
 nd = 2
@@ -154,10 +155,17 @@ dissipation_nl_atol_res = max(1.0e-10, 0.001 * he ** 2)
 # nu_1 = (1.0 / 5.) * ( 1.500e-5 / 1.004e-6)
 
 #Two-phase example with Re=100
-rho_0 = 1.0 #1.205 / 998.2
-nu_0 = 1.0 / 50.
-rho_1 =  1.205 / 998.2
-nu_1 = (1.0/50) * ( 1.500e-5 / 1.004e-6)
+if opts.reynolds_number == 100:
+    rho_0 = 1.0 #1.205 / 998.2
+    nu_0 = 1.0 / 50.
+    rho_1 =  1.205 / 998.2
+    nu_1 = (1.0/50) * ( 1.500e-5 / 1.004e-6)
+
+elif opts.reynolds_number == 10:
+    rho_0 = 1.0
+    nu_0 = 1.0 / 5.
+    rho_1 = 1.205/998.2
+    nu_1 = (1.0 / 5.) * ( 1.500e-5 / 1.004e-6)
 
 # Gravity
 g = [0.0,0.0]

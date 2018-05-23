@@ -164,6 +164,13 @@ def initialize_velocity_block_petsc_options(request):
     petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
     petsc_options.setValue('pc_type','hypre')
     petsc_options.setValue('pc_type_hypre_type','boomeramg')
+
+def load_matrix(mat_file_name):
+    """Load a matrix """
+    A = LAT.petsc_load_matrix(os.path.join
+                              (os.path.dirname(__file__),
+                               'import_modules/'+mat_file_name))
+    return A
     
 @pytest.fixture()
 def load_nse_cavity_matrix(request):
@@ -271,8 +278,8 @@ def test_amg_basic(load_small_step_matrix,
     assert F_ksp.its == 9
 
 @pytest.mark.amg
-@pytest.mark.skip
-def test_amg_iteration_performance(load_medium_step_matrix):
+def test_amg_iteration_performance(load_medium_step_matrix,
+                                   initialize_velocity_block_petsc_options):
     mat_A = load_medium_step_matrix
     petsc_options = initialize_velocity_block_petsc_options
     L_sizes = mat_A.getSizes()
@@ -285,6 +292,34 @@ def test_amg_iteration_performance(load_medium_step_matrix):
 
     F_ksp.solve(b,x)
     assert F_ksp.its == 41
+
+def test_amg_step_problem_01(initialize_velocity_block_petsc_options):
+    """ """
+    mat_A = load_matrix('rans2p_step_newton_1')
+    petsc_options = initialize_velocity_block_petsc_options
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+                                                index_sets[0]))
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 59
+
+def test_amg_step_problem_02(initialize_velocity_block_petsc_options):
+    """ """
+    mat_A = load_matrix('rans2p_step_newton_5')
+    petsc_options = initialize_velocity_block_petsc_options
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+                                                index_sets[0]))
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 60
     
 class TestSmoothingAlgorithms(proteus.test_utils.TestTools.BasicTest):
 

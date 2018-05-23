@@ -179,7 +179,8 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
                                                 Np_rho,
                                                 alpha,
                                                 delta_t,
-                                                0)
+                                                0,
+                                                laplace_null_space=True)
         y_vec = x_vec.copy()
         y_vec.zeroEntries()
         A = None
@@ -207,7 +208,8 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
                                                 Np_rho,
                                                 alpha,
                                                 delta_t,
-                                                5)
+                                                5,
+                                                laplace_null_space=True)
         y_vec = x_vec.copy()
         y_vec.zeroEntries()
         A = None
