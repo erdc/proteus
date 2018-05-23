@@ -186,19 +186,21 @@ class Coefficients(TC_base):
         if self.pressureIncrementModelIndex is None:
             # mql. This is to allow the pressure model to exist without increment.
             # This is handy for studying convergence of only momentum equation.
-            # NOTE: We assume the useRotationalForm = False. This is to avoid solving a system
+            # NOTE: We assume the useRotationalForm = False.
             phi = numpy.zeros(c[('r', 0)][:].shape, 'd')
         else:
             if u_shape == self.pressureIncrementModel.q[('u', 0)].shape:
                 phi = self.pressureIncrementModel.q[('u', 0)]
                 rho = self.fluidModel.coefficients.q_rho
                 nu = self.fluidModel.coefficients.q_nu
-                velocity = self.fluidModel.q[('velocity', 0)]
+                #velocity = self.fluidModel.q[('velocity', 0)]
+                velocity = self.fluidModel.q[('uncorrectedVelocity', 0)]
             elif u_shape == self.pressureIncrementModel.ebqe[('u', 0)].shape:
                 phi = self.pressureIncrementModel.ebqe[('u', 0)]
                 rho = self.fluidModel.coefficients.ebqe_rho
                 nu = self.fluidModel.coefficients.ebqe_nu
-                velocity = self.fluidModel.ebqe[('velocity', 0)]
+                #velocity = self.fluidModel.ebqe[('velocity', 0)]
+                velocity = self.fluidModel.ebqe[('uncorrectedVelocity', 0)]
         # current and previous pressure values
         p = c[('u', 0)]
         p_last = c[('u_last', 0)]
@@ -207,7 +209,8 @@ class Coefficients(TC_base):
         # G&S11,p941,remark 5.5
         if self.useRotationalForm:
             for i in range(c[('f', 0)].shape[-1]):
-                c[('f', 0)][..., i] = rho * nu * velocity[..., i]
+                #c[('f', 0)][..., i] = rho * nu * velocity[..., i]
+                c[('f', 0)][..., i] = np.min(rho * nu) * velocity[..., i]
         # G&S11,p92, eq 3.10
         c[('r', 0)][:] = p - p_last - phi
         c[('dr', 0, 0)][:] = 1.0

@@ -2241,7 +2241,7 @@ class DOFMap:
     """
     def __init__(self,nDOF=0):
         self.nDOF = nDOF
-        self.range_nDOF = range(nDOF)
+        self.range_nDOF = xrange(nDOF)
         self.l2g=None
         ###for parallel subdomain local dof to global dof mappings
         #array of 'offsets' where owned dof numbers start on each subdomain
@@ -5398,6 +5398,16 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                   u.name+' '+filename+u.name+'.scl****\n')
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
         self.XdmfWriter.writeFunctionXdmf_C0P2Lagrange(ar,u,tCount=tCount,init=init)
+    def readFunctionXdmf(self,ar,u,tCount=0):
+        if ar.has_h5py:
+            if ar.global_sync:
+                permute = np.argsort(u.femSpace.dofMap.subdomain2global)
+                u.dof[permute] = ar.hdfFile["/"+u.name+"_t"+str(tCount)][u.femSpace.dofMap.subdomain2global[permute].tolist()]
+            else:
+                u.dof[:]=ar.hdfFile["/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)].value
+        else:
+            assert False,"to read data on P2-FE use h5 file"
+
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"c0p2_Lagrange",tCount=tCount,init=init)
 
@@ -6494,8 +6504,11 @@ class FiniteElementFunction:
         self.range_dim_dof = range(self.dim_dof)
         if dof is not None:
             self.dof=dof
+            self.dof_last=dof_last
         else:
             self.dof = numpy.zeros((self.femSpace.dim*dim_dof),
+                                     'd')
+            self.dof_last = numpy.zeros((self.femSpace.dim*dim_dof),
                                      'd')
         self.useC=True
         #we need to be able to get references to existing values for values at nodes for some calculations

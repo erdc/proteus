@@ -18,17 +18,20 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double); 
+  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double,int,double,double); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
+  void writeMesh(const char* meshFile);
 
   //Functions to construct proteus mesh data structures
   int reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int hasModel);
+  int reconstructFromProteus2(Mesh& mesh, int* isModelVert, int* bFaces);
   int constructFromSerialPUMIMesh(Mesh& mesh);
   int constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh);
   int updateMaterialArrays(Mesh& mesh,int dim, int bdryID, int GeomTag);
   int updateMaterialArrays(Mesh& mesh);
+  int updateMaterialArrays2(Mesh& mesh);
   void numberLocally();
   int localNumber(apf::MeshEntity* e);
   int dumpMesh(Mesh& mesh);
@@ -44,7 +47,7 @@ class MeshAdaptPUMIDrvr{
   //Functions used to transfer information between PUMI and proteus
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
-  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p);
+  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT);
   //int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   //int transferBCsToProteus();
 
@@ -72,6 +75,8 @@ class MeshAdaptPUMIDrvr{
   int nAdapt; //counter for number of adapt steps
   int nEstimate; //counter for number of error estimator calls
   int nsd; //number of spatial dimensions
+  int maxAspect; //maximum aspect ratio
+  double gradingFactor;
 
   //User Inputs
   std::string size_field_config; //What type of size field: interface, ERM, isotropic
@@ -85,6 +90,9 @@ class MeshAdaptPUMIDrvr{
   int getSimmetrixBC();
   void removeBCData();
   char* modelFileName; 
+  
+  //VMS
+  void get_VMS_error(double& total_error);
   
   //tags used to identify types of BC
   apf::MeshTag* BCtag;
@@ -117,11 +125,12 @@ class MeshAdaptPUMIDrvr{
 
   double rho[2], nu[2];
   double g[3];
-  double delta_t;
+  double delta_T;
   apf::MeshTag* diffFlux;
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* err_reg; //error field from ERM
+  apf::Field* vmsErrH1; //error field for VMS
   apf::Field* errRho_reg; //error-density field from ERM
   apf::Field* errRel_reg; //relative error field from ERM
   /* this field stores isotropic size */

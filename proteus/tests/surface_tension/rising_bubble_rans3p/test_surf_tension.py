@@ -10,6 +10,8 @@ Profiling.verbose=True
 import os
 import numpy as np
 import tables
+import pytest
+from proteus import default_so
 from . import (parameters,
                risingBubble_so, risingBubble,
                vof_p,
@@ -41,6 +43,7 @@ class TestSurfaceTension():
         pass
     
     def reload_modules(self):
+        reload(default_so)
         reload(risingBubble)
         reload(risingBubble_so)
         reload(vof_p)
@@ -68,7 +71,8 @@ class TestSurfaceTension():
     
     def test_2D_with_supg(self):
         # Set parameters for this test
-        parameters.ct.NS_STABILIZATION_TYPE=0 #SUPG
+        parameters.ct.USE_SUPG_NS=1
+        parameters.ct.ARTIFICIAL_VISCOSITY_NS=1
         parameters.ct.nd=2
         # RELOAD MODULES
         self.reload_modules()
@@ -105,13 +109,14 @@ class TestSurfaceTension():
         actual = tables.open_file('risingBubble_2D_supg.h5','r')
         assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
         assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-10)        
+        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-7)        
         expected.close()
         actual.close()
 
     def test_2D_with_EV(self):
-        # Set parameters for this test        
-        parameters.ct.NS_STABILIZATION_TYPE=1 #EV
+        # Set parameters for this test
+        parameters.ct.USE_SUPG_NS=0
+        parameters.ct.ARTIFICIAL_VISCOSITY_NS=2
         parameters.ct.nd=2 
         # RELOAD MODULES
         self.reload_modules()
@@ -148,13 +153,14 @@ class TestSurfaceTension():
         actual = tables.open_file('risingBubble_2D_ev.h5','r')
         assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
         assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-10)        
+        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-7)        
         expected.close()
         actual.close()
 
     def test_3D_with_SUPG(self):
-        # Set parameters for this test        
-        parameters.ct.NS_STABILIZATION_TYPE=0 #SUPG
+        # Set parameters for this test
+        parameters.ct.USE_SUPG_NS=1
+        parameters.ct.ARTIFICIAL_VISCOSITY_NS=1
         parameters.ct.nd=3
         # RELOAD MODULES
         self.reload_modules()
@@ -196,8 +202,9 @@ class TestSurfaceTension():
         actual.close()
 
     def test_3D_with_EV(self):
-        # Set parameters for this test        
-        parameters.ct.NS_STABILIZATION_TYPE=1 #EV
+        # Set parameters for this test
+        parameters.ct.USE_SUPG_NS=0
+        parameters.ct.ARTIFICIAL_VISCOSITY_NS=2
         parameters.ct.nd=3
         # RELOAD MODULES
         self.reload_modules()

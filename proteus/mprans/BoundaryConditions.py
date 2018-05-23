@@ -9,7 +9,8 @@ Module for creating boundary conditions. Imported in mprans.SpatialTools.py
 """
 import sys
 import numpy as np
-from proteus import AuxiliaryVariables
+from proteus import (AuxiliaryVariables,
+                     BoundaryConditions)
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
 from proteus import WaveTools as wt
@@ -17,7 +18,7 @@ from proteus.Profiling import logEvent
 from math import cos, sin, sqrt, atan2, acos, asin
 
 
-class BC_RANS(BC_Base):
+class BC_RANS(BoundaryConditions.BC_Base):
     """
     Class regrouping boundary conditions for two-phase flows
     """
@@ -56,6 +57,25 @@ class BC_RANS(BC_Base):
         self.u_stress.uOfXT = 0.
         self.v_stress.uOfXT = 0.
         self.w_stress.uOfXT = 0.
+        # sediment solver
+        self.us_dirichlet = BoundaryCondition()  # sediment velocity u
+        self.vs_dirichlet = BoundaryCondition()  # sediment velocity v
+        self.ws_dirichlet = BoundaryCondition()  # sediment velocity w
+        self.vos_dirichlet = BoundaryCondition()  # VOS
+        self.us_advective = BoundaryCondition()  
+        self.vs_advective = BoundaryCondition()  
+        self.ws_advective = BoundaryCondition()  
+        self.vos_advective = BoundaryCondition() 
+        self.us_diffusive = BoundaryCondition()   
+        self.vs_diffusive = BoundaryCondition()  
+        self.ws_diffusive = BoundaryCondition() 
+        # projection scheme
+        self.pInit_dirichlet = BoundaryCondition() # initial pressure
+        self.pInc_dirichlet = BoundaryCondition() # pressure increment
+        self.pInit_advective = BoundaryCondition() 
+        self.pInc_advective = BoundaryCondition() 
+        self.pInit_diffusive = BoundaryCondition() 
+        self.pInc_diffusive = BoundaryCondition() 
 
     def reset(self):
         """
@@ -64,24 +84,41 @@ class BC_RANS(BC_Base):
         """
         # self.BC_type = 'None'
         self.p_dirichlet.resetBC()
+        self.pInit_dirichlet.resetBC()
+        self.pInc_dirichlet.resetBC()
         self.u_dirichlet.resetBC()
         self.v_dirichlet.resetBC()
         self.w_dirichlet.resetBC()
         self.vof_dirichlet.resetBC()
         self.k_dirichlet.resetBC()
         self.dissipation_dirichlet.resetBC()
+        self.us_dirichlet.resetBC()
+        self.vs_dirichlet.resetBC()
+        self.ws_dirichlet.resetBC()
+        self.vos_dirichlet.resetBC()
         self.p_advective.resetBC()
+        self.pInit_advective.resetBC()
+        self.pInc_advective.resetBC()
         self.u_advective.resetBC()
         self.v_advective.resetBC()
         self.w_advective.resetBC()
         self.vof_advective.resetBC()
         self.k_advective.resetBC()
         self.dissipation_advective.resetBC()
+        self.us_advective.resetBC()
+        self.vs_advective.resetBC()
+        self.ws_advective.resetBC()
+        self.vos_advective.resetBC()
+        self.pInit_diffusive.resetBC()
+        self.pInc_diffusive.resetBC()
         self.u_diffusive.resetBC()
         self.v_diffusive.resetBC()
         self.w_diffusive.resetBC()
         self.k_diffusive.resetBC()
         self.dissipation_diffusive.resetBC()
+        self.us_diffusive.resetBC()
+        self.vs_diffusive.resetBC()
+        self.ws_diffusive.resetBC()
 
     def setNonMaterial(self):
         """
@@ -134,13 +171,24 @@ class BC_RANS(BC_Base):
         """
         self.reset()
         self.BC_type = 'NoSlip'
+        # dirichlet
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(0.)
+        self.us_dirichlet.setConstantBC(0.)
+        self.vs_dirichlet.setConstantBC(0.)
+        self.ws_dirichlet.setConstantBC(0.)  
+        self.k_dirichlet.setConstantBC(0.)  
+        # advective
         self.p_advective.setConstantBC(0.)
+        self.pInit_advective.setConstantBC(0.)
+        self.pInc_advective.setConstantBC(0.)  
         self.vof_advective.setConstantBC(0.)
-        self.dissipation_diffusive.setConstantBC(0.)
+        self.vos_advective.setConstantBC(0.)
+        # diffusive
+        self.pInc_diffusive.setConstantBC(0.)
+        self.k_diffusive.setConstantBC(0.)
+        self.dissipation_diffusive.setConstantBC(0.)  
 
     def setFreeSlip(self):
         """
@@ -148,16 +196,29 @@ class BC_RANS(BC_Base):
         """
         self.reset()
         self.BC_type = 'FreeSlip'
-        self.k_dirichlet.setConstantBC(0.)
+        # dirichlet
+        self.k_dirichlet.setConstantBC(0.) 
+        # advective        
         self.p_advective.setConstantBC(0.)
+        self.pInit_advective.setConstantBC(0.)          
         self.u_advective.setConstantBC(0.)
         self.v_advective.setConstantBC(0.)
         self.w_advective.setConstantBC(0.)
+        self.us_advective.setConstantBC(0.)
+        self.vs_advective.setConstantBC(0.)
+        self.ws_advective.setConstantBC(0.)
         self.vof_advective.setConstantBC(0.)
+        self.vos_advective.setConstantBC(0.)
+        # diffusive
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
-        self.dissipation_diffusive.setConstantBC(0.)
+        self.us_diffusive.setConstantBC(0.)
+        self.vs_diffusive.setConstantBC(0.)
+        self.ws_diffusive.setConstantBC(0.)
+        self.pInc_diffusive.setConstantBC(0.)
+        self.k_diffusive.setConstantBC(0.)
+        self.dissipation_diffusive.setConstantBC(0.)  
 
     def setAtmosphere(self, orientation=None, vof_air=1.):
         """
@@ -440,8 +501,8 @@ class BC_RANS(BC_Base):
             water level at global coordinate system.
         smoothing: float.
             range within smoothing function is valid.
-            [3.0 times mesh element size can be a good value].
-        vert_axis: optional.
+           [3.0 times mesh element size can be a good value]
+        vert_axis: optional. 
             index of vertical in position vector, must always be
             aligned with gravity, by default set to 1].
         air: optional.
@@ -655,6 +716,127 @@ class BC_RANS(BC_Base):
             self.dissipation_advective.resetBC()
             self.dissipation_diffusive.resetBC()
 
+
+    def setHydrostaticPressureOutletWithDepth_stressFree(self, seaLevel, rhoUp, rhoDown, nuUp, nuDown, g,
+                                                         refLevel, smoothing, U=None, Uwind=None,
+                                                         pRef=0.0, vert_axis=None,
+                                                         air=1.0, water=0.0,
+                                                         kInflow=None, dissipationInflow=None,
+                                                         kInflowAir=None, dissipationInflowAir=None):
+        """
+        Returns the pressure and vof profile based on the known depth.
+        If the boundary is aligned with one of the main axes, sets the tangential
+        velocity components to zero as well.
+        (!) This condition is best used for boundaries and gravity aligned with
+            one of the main axes.
+
+        Parameters
+        ----------
+        rhoUp: Phase density of the upper part.
+        rhoDown: Phase density of the lower part.
+        nuUp: Phase viscosity of the upper part.
+        nuDown: Phase viscosity of the lower part.
+        g: Gravitational acceleration vector.
+        refLevel: Level at which pressure = pRef.
+        pRef: Reference value for the pressure at x[vert_axis]=refLevel, by default set to 0.
+        vert_axis: index of vertical in position vector, must always be aligned with gravity, by default set to 1.
+        """
+        self.reset()
+
+        if vert_axis is None:
+            vert_axis = self.nd - 1
+
+        def hydrostaticPressureOutletWithDepth_p_dirichlet(x, t):
+            p_top = pRef
+            phi_top = refLevel - seaLevel
+            phi = x[vert_axis] - seaLevel
+            return p_top - g[vert_axis] * (rhoDown * (phi_top - phi) +
+                                           (rhoUp - rhoDown) *
+                                           (smoothedHeaviside_integral(smoothing, phi_top)
+                                            -
+                                            smoothedHeaviside_integral(smoothing, phi)))
+
+        def diffusiveFlux_u(x,t):
+            g = hydrostaticPressureOutletWithDepth_p_dirichlet(x,t)
+            phi = x[vert_axis] - seaLevel
+            if phi >= smoothing:
+                H = 1.
+            elif smoothing > 0 and -smoothing < phi < smoothing:
+                H = smoothedHeaviside(smoothing, phi)
+            elif phi <= -smoothing:
+                H = 0.
+            return H*(nuUp*rhoUp)*g + (1-H)*(nuDown*rhoDown)*g
+
+        def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
+            phi = x[vert_axis] - seaLevel
+            if phi >= smoothing:
+                H = 1.
+            elif smoothing > 0 and -smoothing < phi < smoothing:
+                H = smoothedHeaviside(smoothing, phi)
+            elif phi <= -smoothing:
+                H = 0.
+            return H * air + (1 - H) * water
+
+        def inlet_k_dirichlet(x, t):
+            phi = x[vert_axis] - seaLevel
+            if phi <= 0.:
+                H = 0.0
+            elif 0 < phi <= smoothing:
+                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+            else:
+                H = 1.0
+            return H * kInflowAir + (1 - H) * kInflow
+
+        def inlet_dissipation_dirichlet(x, t):
+            phi = x[vert_axis] - seaLevel
+            if phi <= 0.:
+                H = 0.0
+            elif 0 < phi <= smoothing:
+                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+            else:
+                H = 1.0
+            return H * dissipationInflowAir + (1 - H) * dissipationInflow
+
+        self.u_dirichlet.setConstantBC(0.)
+        self.v_dirichlet.setConstantBC(0.)
+        self.w_dirichlet.setConstantBC(0.)
+        self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
+        self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
+        self.u_diffusive.uOfXT = diffusiveFlux_u
+        self.v_diffusive.setConstantBC(0.)
+        self.k_diffusive.setConstantBC(0.)
+        self.dissipation_diffusive.setConstantBC(0.)
+
+        if U is not None:
+            def get_inlet_ux_dirichlet(i):
+                def ux_dirichlet(x, t):
+                    phi = x[vert_axis] - seaLevel
+                    if phi <= 0.:
+                        H = 0.0
+                    elif 0 < phi <= smoothing:
+                        H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                    else:
+                        H = 1.0
+                    return H * Uwind[i] + (1 - H) * U[i]
+                return ux_dirichlet
+
+            if Uwind is None:
+                Uwind = np.zeros(3)
+            U = np.array(U)
+            Uwind = np.array(Uwind)
+            self.u_dirichlet.uOfXT = get_inlet_ux_dirichlet(0)
+            self.v_dirichlet.uOfXT = get_inlet_ux_dirichlet(1)
+            self.w_dirichlet.uOfXT = get_inlet_ux_dirichlet(2)
+            self.u_diffusive.resetBC()
+
+        if kInflow is not None:
+            self.k_dirichlet.uOfXT = inlet_k_dirichlet
+            self.k_advective.resetBC()
+            self.k_diffusive.resetBC()
+        if dissipationInflow is not None:
+            self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
+            self.dissipation_advective.resetBC()
+            self.dissipation_diffusive.resetBC()
 
 # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
 
@@ -1282,8 +1464,9 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         Up = np.sqrt(np.sum(self.tanU**2))
         # viscous layer
         if self.Ystar < 11.225:
-            logEvent('Prescribed near-wall point outside log-law region!')
-            sys.exit(1)
+            self.Ustar = self.Ystar
+            self.uDir = (self.utStar*self.Ystar) * self.tV
+            self.gradU = ( (self.utStar**2) / self.nu ) * self.tV
         # log-law layer
         else:
             # Wall function theory from S.B. Pope, page 442-443
@@ -1447,6 +1630,4 @@ class kWall(AuxiliaryVariables.AV_base, object):
         else:
             kInit = True
         self.kappaNearWall(xi, element, rank, kInit)
-        #logEvent('kappa --> %s' % self.kappa)
-        #logEvent('t --> %s' % t)
         return abs(self.kappa)

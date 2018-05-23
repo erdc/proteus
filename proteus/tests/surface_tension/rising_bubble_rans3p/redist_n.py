@@ -44,7 +44,7 @@ shockCapturing    = RDLS3P.ShockCapturing(coefficients,nd,shockCapturingFactor=r
 
 fullNewtonFlag = True
 multilevelNonlinearSolver  = Newton
-levelNonlinearSolver       = Newton
+levelNonlinearSolver       = TwoStageNewton
 
 nonlinearSmoother = NLGaussSeidel
 linearSmoother    = None

@@ -89,7 +89,177 @@ class NumericalFlux(
             getAdvectiveFluxBoundaryConditions,
             getDiffusiveFluxBoundaryConditions)
 
+class RKEV(proteus.TimeIntegration.SSP):
+    from proteus import TimeIntegration
+    """
+    Wrapper for SSPRK time integration using EV
 
+    ... more to come ...
+    """
+
+    def __init__(self, transport, timeOrder=1, runCFL=0.1, integrateInterpolationPoints=False):
+        proteus.TimeIntegration.SSP.__init__(self, transport, integrateInterpolationPoints=integrateInterpolationPoints)
+        self.runCFL = runCFL
+        self.dtLast = None
+        self.isAdaptive = True
+        self.cfl = transport.q[('cfl', 0)]
+        # Stuff particular for SSP
+        self.timeOrder = timeOrder  # order of approximation
+        self.nStages = timeOrder  # number of stages total
+        self.lstage = 0  # last stage completed
+        # storage vectors
+        self.u_dof_last = {}
+        self.m_old = {}
+        # per component stage values, list with array at each stage
+        for ci in range(self.nc):
+            self.m_last[ci] = transport.q[('u',ci)].copy()
+            self.m_old[ci] = transport.q[('u',ci)].copy()
+            self.u_dof_last[ci] = transport.u[ci].dof.copy()
+
+    # def set_dt(self, DTSET):
+    #    self.dt = DTSET #  don't update t
+    def choose_dt(self):
+        maxCFL = 1.0e-6
+        maxCFL = max(maxCFL, globalMax(self.cfl.max()))
+        self.dt = self.runCFL / maxCFL
+        if self.dtLast is None:
+            self.dtLast = self.dt
+        self.t = self.tLast + self.dt
+        self.substeps = [self.t for i in range(self.nStages)]  # Manuel is ignoring different time step levels for now
+
+    def initialize_dt(self, t0, tOut, q):
+        """
+        Modify self.dt
+        """
+        self.tLast = t0
+        self.choose_dt()
+        self.t = t0 + self.dt
+
+    def setCoefficients(self):
+        """
+        beta are all 1's here
+        mwf not used right now
+        """
+        self.alpha = numpy.zeros((self.nStages, self.nStages), 'd')
+        self.dcoefs = numpy.zeros((self.nStages), 'd')
+
+    def updateStage(self):
+        """
+        Need to switch to use coefficients
+        """
+        # mwf debug
+        #import pdb
+        # pdb.set_trace()
+        self.lstage += 1
+        assert self.timeOrder in [1, 2, 3]
+        assert self.lstage > 0 and self.lstage <= self.timeOrder
+        if self.timeOrder == 3:
+            if self.lstage == 1:
+                logEvent("First stage of SSP33 method", level=4)
+                for ci in range(self.nc):
+                    # save stage at quad points
+                    self.m_last[ci][:] = self.transport.q[('u',ci)]
+                    # DOFs
+                    self.transport.u_dof_old[:] = self.transport.u[ci].dof
+            elif self.lstage == 2:
+                logEvent("Second stage of SSP33 method", level=4)
+                for ci in range(self.nc):
+                    # Quad points
+                    self.m_last[ci][:] = 1./4*self.transport.q[('u',ci)]
+                    self.m_last[ci][:] += 3./4*self.m_old[ci]
+                    # DOFs
+                    self.transport.u_dof_old[:] = 1./4*self.transport.u[ci].dof
+                    self.transport.u_dof_old[:] += 3./4* self.u_dof_last[ci]                
+            elif self.lstage == 3:
+                logEvent("Third stage of SSP33 method", level=4)
+                for ci in range(self.nc):
+                    # Quad points
+                    self.m_last[ci][:] = 2./3*self.transport.q[('u',ci)]
+                    self.m_last[ci][:] += 1./3*self.m_old[ci]
+                    # DOFs
+                    self.transport.u[0].dof[:] = 2./3*self.transport.u[ci].dof
+                    self.transport.u[0].dof[:] += 1./3* self.u_dof_last[ci]
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_last[ci]                    
+        elif self.timeOrder == 2:
+            if self.lstage == 1:
+                logEvent("First stage of SSP22 method", level=4)
+                for ci in range(self.nc):
+                    # save stage at quad points
+                    self.m_last[ci][:] = self.transport.q[('u',ci)]
+                    # DOFs
+                    self.transport.u_dof_old[:] = self.transport.u[ci].dof
+            elif self.lstage == 2:
+                logEvent("Second stage of SSP22 method", level=4)
+                for ci in range(self.nc):
+                    # Quad points
+                    self.m_last[ci][:] = 1./2*self.transport.q[('u',ci)]
+                    self.m_last[ci][:] += 1./2*self.m_old[ci]
+                    # DOFs
+                    self.transport.u[0].dof[:]  = 1./2*self.transport.u[ci].dof
+                    self.transport.u[0].dof[:] += 1./2*self.u_dof_last[ci]
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_last[ci]                    
+        else:
+            assert self.timeOrder == 1
+            for ci in range(self.nc):
+                self.m_last[ci][:] = self.transport.q[('u',ci)]
+
+    def initializeTimeHistory(self, resetFromDOF=True):
+        """
+        Push necessary information into time history arrays
+        """
+        for ci in range(self.nc):
+            self.m_old[ci][:] = self.transport.q[('u',ci)]
+            self.m_last[ci][:] = self.transport.q[('u',ci)]
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+
+    def updateTimeHistory(self, resetFromDOF=False):
+        """
+        assumes successful step has been taken
+        """
+        self.t = self.tLast + self.dt
+        for ci in range(self.nc):
+            self.m_old[ci][:] = self.m_last[ci][:]
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+        self.lstage = 0
+        self.dtLast = self.dt
+        self.tLast = self.t
+
+    def generateSubsteps(self, tList):
+        """
+        create list of substeps over time values given in tList. These correspond to stages
+        """
+        self.substeps = []
+        tLast = self.tLast
+        for t in tList:
+            dttmp = t - tLast
+            self.substeps.extend([tLast + dttmp for i in range(self.nStages)])
+            tLast = t
+
+    def resetOrder(self, order):
+        """
+        initialize data structures for stage updges
+        """
+        self.timeOrder = order  # order of approximation
+        self.nStages = order  # number of stages total
+        self.lstage = 0  # last stage completed
+        self.substeps = [self.t for i in range(self.nStages)]
+
+    def setFromOptions(self, nOptions):
+        """
+        allow classes to set various numerical parameters
+        """
+        if 'runCFL' in dir(nOptions):
+            self.runCFL = nOptions.runCFL
+        flags = ['timeOrder']
+        for flag in flags:
+            if flag in dir(nOptions):
+                val = getattr(nOptions, flag)
+                setattr(self, flag, val)
+                if flag == 'timeOrder':
+                    self.resetOrder(self.timeOrder)
+                    
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import VOFCoefficientsEvaluate
     from proteus.UnstructuredFMMandFSWsolvers import FMMEikonalSolver, FSWEikonalSolver
@@ -112,7 +282,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             sc_beta=1.0,
             setParamsFunc=None,
             movingDomain=False,
-            set_vos=None):
+            set_vos=None,
+            EXPLICIT_METHOD=False,
+            outputQuantDOFs=False):
+
+        self.outputQuantDOFs=outputQuantDOFs
+        self.EXPLICIT_METHOD=EXPLICIT_METHOD
         self.set_vos = set_vos
         self.useMetrics = useMetrics
         self.variableNames = ['vof']
@@ -159,9 +334,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def attachModels(self, modelList):
         # self
         self.model = modelList[self.modelIndex]
-
-        #self.u_old_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
-        self.u_old_dof = numpy.copy(self.model.u[0].dof)
 
         # redistanced level set
         if self.RD_modelIndex is not None:
@@ -231,8 +403,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # VRANS
         self.flowCoefficients = modelList[self.V_model].coefficients
         if self.VOS_model is not None:
-            self.q_vos = modelList[self.VOS_model].q[('u', 0)]
-            self.ebqe_vos = modelList[self.VOS_model].ebqe[('u', 0)]
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)].copy()
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)].copy()
+            self.q_vos = self.model.q_vos
+            self.ebqe_vos = self.model.ebqe_vos
         else:
             self.q_porosity = numpy.ones(
                 modelList[
@@ -292,6 +466,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebqe_porosity = numpy.ones(cebqe[('u', 0)].shape, 'd')
 
     def preStep(self, t, firstStep=False):
+        # SAVE OLD SOLUTION #
+        self.model.u_dof_old[:] = self.model.u[0].dof
+
+        # Restart flags for stages of taylor galerkin
+        self.model.stage = 1
+        self.model.auxTaylorGalerkinFlag = 1
+        
+        # COMPUTE NEW VELOCITY (if given by user) #
+        if self.model.hasVelocityFieldAsFunction:
+            self.model.updateVelocityFieldAsFunction()
+
         if self.checkMass:
             self.m_pre = Norms.scalarDomainIntegral(
                 self.model.q['dV_last'], self.model.q[
@@ -306,7 +491,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def postStep(self, t, firstStep=False):
-        self.u_old_dof = numpy.copy(self.model.u[0].dof)
+        #input("STOP")
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.checkMass:
             self.m_post = Norms.scalarDomainIntegral(
@@ -432,6 +617,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for ci in range(1, coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[
                     0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
+        self.u_dof_old = None
         # Simplicial Mesh
         # assume the same mesh for  all components for now
         self.mesh = self.u[0].femSpace.mesh
@@ -623,7 +809,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe = {}
         self.phi_ip = {}
         # mesh
-        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
         self.ebqe['x'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
@@ -685,6 +871,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
+        
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set(
             [('u', ci) for ci in range(self.nc)])
@@ -840,8 +1027,45 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(
                 self.mesh.nodeArray.shape, 'd')
-    # mwf these are getting called by redistancing classes,
+        # mwf these are getting called by redistancing classes,
 
+        # mql. Allow the user to provide functions to define the velocity field
+        self.hasVelocityFieldAsFunction = False
+        if ('velocityFieldAsFunction') in dir(options):
+            self.velocityFieldAsFunction = options.velocityFieldAsFunction
+            self.hasVelocityFieldAsFunction = True
+
+        # For Taylor Galerkin methods
+        self.stage = 1
+        self.auxTaylorGalerkinFlag = 1
+        self.uTilde_dof = numpy.zeros(self.u[0].dof.shape,'d')
+        if self.coefficients.EXPLICIT_METHOD==True:
+            self.useTwoStageNewton = True
+        
+        # Some asserts for NCLS with Taylor Galerkin
+        if self.coefficients.EXPLICIT_METHOD==True:
+            assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "If EXPLICIT_METHOD=True, use BackwardEuler_cfl"
+            assert options.levelNonlinearSolver == proteus.NonlinearSolvers.TwoStageNewton, "If EXPLICIT_METHOD=True, use levelNonlinearSolver=TwoStageNewton"
+            
+    def updateVelocityFieldAsFunction(self):
+        X = {0: self.q[('x')][:, :, 0],
+             1: self.q[('x')][:, :, 1],
+             2: self.q[('x')][:, :, 2]}
+        t = self.timeIntegration.t
+        self.coefficients.q_v[..., 0] = self.velocityFieldAsFunction[0](X, t)
+        self.coefficients.q_v[..., 1] = self.velocityFieldAsFunction[1](X, t)
+        if (self.nSpace_global == 3):
+            self.coefficients.q_v[..., 2] = self.velocityFieldAsFunction[2](X, t)
+
+        # BOUNDARY
+        ebqe_X = {0: self.ebqe['x'][:, :, 0],
+                  1: self.ebqe['x'][:, :, 1],
+                  2: self.ebqe['x'][:, :, 2]}
+        self.coefficients.ebqe_v[..., 0] = self.velocityFieldAsFunction[0](ebqe_X, t)
+        self.coefficients.ebqe_v[..., 1] = self.velocityFieldAsFunction[1](ebqe_X, t)
+        if (self.nSpace_global == 3):
+            self.coefficients.ebqe_v[..., 2] = self.velocityFieldAsFunction[2](ebqe_X, t)
+            
     def calculateCoefficients(self):
         pass
 
@@ -856,6 +1080,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
 
+        if self.u_dof_old is None:
+            # Pass initial condition to u_dof_old
+            self.u_dof_old = numpy.copy(self.u[0].dof)
+
         if self.coefficients.set_vos:
             self.coefficients.set_vos(self.q['x'], self.coefficients.q_vos)
         r.fill(0.0)
@@ -869,7 +1097,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # cek can put in logic to skip of BC's don't depend on t or u
         # Dirichlet boundary conditions
         # if hasattr(self.numericalFlux,'setDirichletValues'):
-        self.numericalFlux.setDirichletValues(self.ebqe)
+        if (self.stage!=2):
+            self.numericalFlux.setDirichletValues(self.ebqe)            
         # flux boundary conditions
         for t, g in self.fluxBoundaryConditionsObjectsDict[
                 0].advectiveFluxBoundaryConditionsDict.iteritems():
@@ -887,6 +1116,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],
                     self.timeIntegration.t)
         assert (self.coefficients.q_porosity == 1).all()
+
+        if (self.stage==2 and self.auxTaylorGalerkinFlag==1):
+            self.uTilde_dof[:] = self.u[0].dof
+            self.auxTaylorGalerkinFlag=0
+
         self.vof.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -923,7 +1157,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.u[0].dof,
-            self.coefficients.u_old_dof,
+            self.u_dof_old,
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u', 0)],
@@ -949,12 +1183,27 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc', 0)],
             self.coefficients.ebqe_phi, self.coefficients.epsFact,
             self.ebqe[('u', 0)],
-            self.ebqe[('advectiveFlux', 0)])
+            self.ebqe[('advectiveFlux', 0)],
+            #EXPLICIT METHODS
+            self.coefficients.EXPLICIT_METHOD,
+            self.u[0].femSpace.order,
+            self.stage,
+            self.uTilde_dof,
+            self.timeIntegration.dt)
+
+        #if self.coefficients.EXPLICIT_METHOD:
+        #    self.taylorGalerkinStage = 2
+        
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
+
+        #cell_based_cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
+        #logEvent("...   Current dt = " + str(self.timeIntegration.dt), level=4)
+        #logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax), level=2)
+            
         logEvent("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
@@ -963,6 +1212,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
+
         self.vof.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1014,7 +1264,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
-            self.csrColumnOffsets_eb[(0, 0)])
+            self.csrColumnOffsets_eb[(0, 0)],
+            #EXPLICIT METHODS
+            self.coefficients.EXPLICIT_METHOD)
+        
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
             scaling = 1.0  # probably want to add some scaling to match non-dirichlet diagonals in linear system
@@ -1045,8 +1298,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         This function should be called only when the mesh changes.
         """
-        # self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
-        #                                         self.q['x'])
+        self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
+                                                 self.q['x'])
         self.u[0].femSpace.elementMaps.getBasisValuesRef(
             self.elementQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(

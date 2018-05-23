@@ -1,4 +1,8 @@
 # distutils: language = c++
+"""
+This file defines python object using a syntax as close as possible to the
+Chrono syntax. This creates and gives access to C++ objects.
+"""
 
 cimport numpy as np
 import numpy as np
@@ -18,6 +22,11 @@ cdef np.ndarray ChQuaternion_to_npArray(ch.ChQuaternion &quat):
     return np.array([quat.e0(), quat.e1(), quat.e2(), quat.e3()])
 
 cdef np.ndarray ChMatrix33_to_npArray(ch.ChMatrix33 &mat):
+    return np.array([[mat.Get_A_Xaxis().x(), mat.Get_A_Xaxis().y(), mat.Get_A_Xaxis().z()],
+                     [mat.Get_A_Yaxis().x(), mat.Get_A_Yaxis().y(), mat.Get_A_Yaxis().z()],
+                     [mat.Get_A_Zaxis().x(), mat.Get_A_Zaxis().y(), mat.Get_A_Zaxis().z()]])
+
+cdef np.ndarray ConstChMatrix33_to_npArray(const ch.ChMatrix33 &mat):
     return np.array([[mat.Get_A_Xaxis().x(), mat.Get_A_Xaxis().y(), mat.Get_A_Xaxis().z()],
                      [mat.Get_A_Yaxis().x(), mat.Get_A_Yaxis().y(), mat.Get_A_Yaxis().z()],
                      [mat.Get_A_Zaxis().x(), mat.Get_A_Zaxis().y(), mat.Get_A_Zaxis().z()]])
@@ -70,6 +79,21 @@ cdef class ChQuaternion:
 
     cpdef double e3(self):
         return self.cppobj.e3()
+
+
+cdef class ChCoordsys:
+    """Cython class for ChCoordSys
+    (!) Does not use pointer
+    """
+
+    def __cinit__(self, ChVector mv, ChQuaternion mq):
+        self.cppobj = ch.ChCoordsys(mv.cppobj, mq.cppobj)
+
+    cpdef np.ndarray getPos(self):
+        return ChVector_to_npArray(self.cppobj.pos)
+
+    cpdef np.ndarray getRot(self):
+        return ChQuaternion_to_npArray(self.cppobj.rot)
 
 
 cdef class ChFrame:
@@ -169,6 +193,9 @@ cdef class ChBody(ChBodyFrame):
 
     cpdef void SetMaterialSurface(self, ChMaterialSurfaceSMC mat):
         deref(self.sharedptr_chbody).SetMaterialSurface(<shared_ptr[ch.ChMaterialSurface]> mat.sharedptr)
+
+    cpdef np.ndarray GetInertia(self):
+        return ConstChMatrix33_to_npArray(deref(self.sharedptr_chbody).GetInertia())
 
     cpdef void SetInertiaXX(self, ChVector iner):
         deref(self.sharedptr_chbody).SetInertiaXX(iner.cppobj)
@@ -301,3 +328,22 @@ cdef class ChContactSurfaceNodeCloud:
 
 
 
+
+cdef class ChBodyAddedMass(ChBody):
+    """Cython class for ChBodyAddedMass
+    (!) Uses shared_ptr
+    """
+
+    def __cinit__(self):
+        if type(self) is ChBodyAddedMass:
+            self.sharedptr_chbodyaddedmass = make_shared[ch.ChBodyAddedMass]()
+            self.sharedptr_chbody = <shared_ptr[ch.ChBody]> self.sharedptr_chbodyaddedmass
+            self.sharedptr_chbodyframe = <shared_ptr[ch.ChBodyFrame]> self.sharedptr_chbodyaddedmass
+            self.sharedptr_chframemoving = <shared_ptr[ch.ChFrameMoving]> self.sharedptr_chbodyaddedmass
+            self.sharedptr_chframe = <shared_ptr[ch.ChFrame]> self.sharedptr_chbodyaddedmass
+
+    cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in):
+        deref(self.sharedptr_chbodyaddedmass).SetMfullmass(Mfullmass_in)
+
+    cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
+        deref(self.sharedptr_chbodyaddedmass).SetInvMfullmass(inv_Mfullmass_in)
