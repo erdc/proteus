@@ -94,7 +94,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             cq[('f',ci)].flat[:] = 0.0
             for eN in range(len(cq[('r',ci)])):
                 for k in range(len(cq[('r', ci)][eN])):
-                    cq[('r',ci)][eN,k] = 1./(self.uOfXTatQuadrature[eN, k]*self.C)-1./self.areas[eN]
+                    cq[('r',ci)][eN,k] = -(1./(self.uOfXTatQuadrature[eN, k]*self.C)-1./self.areas[eN])
         logEvent("Finished updating area function",
                  level=3)
 
