@@ -720,7 +720,8 @@ class KSP_petsc4py(LinearSolver):
                                                                    density_scaling=self.preconditionerOptions[0],
                                                                    numerical_viscosity=self.preconditionerOptions[1],
                                                                    lumped=self.preconditionerOptions[2],
-                                                                   num_chebyshev_its=self.preconditionerOptions[3])
+                                                                   num_chebyshev_its=self.preconditionerOptions[3],
+                                                                   laplace_null_space=self.preconditionerOptions[4])
                 except IndexError:
                     logEvent("Preconditioner options not specified, using defaults")
                     self.preconditioner = NavierStokes_TwoPhasePCD(par_L,
@@ -1617,7 +1618,8 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                  density_scaling = True,
                  numerical_viscosity = True,
                  lumped = True,
-                 num_chebyshev_its = 0):
+                 num_chebyshev_its = 0,
+                 laplace_null_space = True):
         """
         Initialize the two-phase PCD preconditioning class.
 
@@ -1644,6 +1646,9 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
             a chebyshev semi-iteration.  0  indicates the semi-
             iteration should not be used, where as a number 1,2,...
             indicates the number of iterations the method should take.
+        laplace_null_space : bool
+            Indicates whether the laplace operator inside the
+            two-phase PCD operator has a constant null space.
         """
         NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
         # Initialize the discrete operators
@@ -1656,6 +1661,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.numerical_viscosity = numerical_viscosity
         self.lumped = lumped
         self.num_chebyshev_its = num_chebyshev_its
+        self.laplace_null_space = laplace_null_space
         # Strong Dirichlet Pressure DOF
         try:
 #            self.strongPressureDOF = self.L.pde.numericalFlux.isDOFBoundary[0][:,0]
@@ -1719,7 +1725,9 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                                                     True,
                                                     dt,
                                                     num_chebyshev_its = self.num_chebyshev_its,
-                                                    strong_dirichlet_DOF = self.strongPressureDOF)
+                                                    strong_dirichlet_DOF = self.strongPressureDOF,
+                                                    laplace_null_space = self.laplace_null_space,
+                                                    par_info = self.L.pde.par_info)
 #        else:
 #            self.matcontext_inv.update(self.Np_rho)
         # ARB Note - I'm trying to reduce work 

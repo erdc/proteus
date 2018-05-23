@@ -600,10 +600,6 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         # ARB - this is largely copied from Transport.py,
         # a refactor should be done to elimate this duplication
         rowptr, colind, nzval = operator.getCSRrepresentation()
-        # if comm.rank()==1:
-        #     print 'subdomain2global = ' + `subdomain2global`
-        #     print 'rowptr = ' + `rowptr`
-        #     print 'comm.rank() = ' + `nzval[95:131]`
 
         rowptr_petsc = rowptr.copy()
         colind_petsc = colind.copy()
@@ -902,6 +898,7 @@ class InvOperatorShell(OperatorShell):
         freedom from the inverse operator.  This function
         creates a PETSc4py index set of unknown degrees of freedom.
         """
+        comm = Comm.get()
         # Assign number of unknowns
         try:
             num_known_dof = len(self.strong_dirichlet_DOF)
@@ -922,13 +919,24 @@ class InvOperatorShell(OperatorShell):
         self.unknown_dof_indices = self.dof_indices[known_dof_mask]
         self.known_dof_indices = self.dof_indices[~known_dof_mask]
 
-        # Create PETSc4py index set of unknown DOF
-        self.known_dof_is = p4pyPETSc.IS()
-        self.known_dof_is.createGeneral(self.known_dof_indices,
-                                        comm=p4pyPETSc.COMM_WORLD)
-        self.unknown_dof_is = p4pyPETSc.IS()
-        self.unknown_dof_is.createGeneral(self.unknown_dof_indices,
-                                          comm=p4pyPETSc.COMM_WORLD)
+        if comm.size() == 1:
+            # Create PETSc4py index set of unknown DOF
+            self.known_dof_is = p4pyPETSc.IS()
+            self.known_dof_is.createGeneral(self.known_dof_indices,
+                                            comm=p4pyPETSc.COMM_WORLD)
+            self.unknown_dof_is = p4pyPETSc.IS()
+            self.unknown_dof_is.createGeneral(self.unknown_dof_indices,
+                                              comm=p4pyPETSc.COMM_WORLD)
+        elif comm.size() > 1:
+            self.global_known_dof_indices = [self.par_info.subdomain2global[i] for i in self.known_dof_indices]
+            self.global_unknown_dof_indices = [self.par_info.subdomain2global[i] for i in self.unknown_dof_indices]
+
+            self.known_dof_is = p4pyPETSc.IS()
+            self.known_dof_is.createGeneral(self.global_known_dof_indices,
+                                            comm=p4pyPETSc.COMM_WORLD)
+            self.unknown_dof_is = p4pyPETSc.IS()
+            self.unknown_dof_is.createGeneral(self.global_unknown_dof_indices,
+                                              comm=p4pyPETSc.COMM_WORLD)
 
     def _converged_trueRes(self,ksp,its,rnorm):
         """ Function handle to feed to ksp's setConvergenceTest  """
@@ -1228,7 +1236,9 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
                  alpha = False,
                  delta_t = 0,
                  num_chebyshev_its = 0,
-                 strong_dirichlet_DOF = []):
+                 strong_dirichlet_DOF = [],
+                 laplace_null_space = False,
+                 par_info=None):
         """ Initialize the two-phase PCD inverse operator.
 
         Parameters
@@ -1253,6 +1263,11 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
                 the chebyshev semi iteration is not used)
         strong_dirichlet_DOF : lst
                 List of DOF with known, strongly enforced values.
+        laplace_null_space : binary
+                Indicates whether the pressure Laplace matrix has a
+                null space or not.
+        par_info : ParInfoClass
+            Provides parallel info.
         """
         import LinearSolvers as LS
 
@@ -1265,6 +1280,8 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         self.delta_t = delta_t
         self.num_chebyshev_its = num_chebyshev_its
         self.strong_dirichlet_DOF = strong_dirichlet_DOF
+        self.laplace_null_space = laplace_null_space
+        self.par_info = par_info
 
         self.options = p4pyPETSc.Options()
         self._create_constant_nullspace()
@@ -1295,12 +1312,11 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         #                                                 self.Qp_dens.getSubMatrix(self.unknown_dof_is,
         #                                                                           self.unknown_dof_is))
 
-        laplace_null_space = not bool(len(self.strong_dirichlet_DOF))
         self.kspAp_rho = self.create_petsc_ksp_obj('innerTPPCDsolver_Ap_rho_',
                                                    self.Ap_rho,
-                                                   laplace_null_space)
-        self.kspAp_rho.getOperators()[0].zeroRows(self.known_dof_is)
+                                                   self.laplace_null_space)
 
+        self.kspAp_rho.getOperators()[0].zeroRows(self.known_dof_is)
 
         if self.num_chebyshev_its:
             self.Qp_visc = LS.ChebyshevSemiIteration(self.Qp_visc,
@@ -1351,6 +1367,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         have Dirichlet boundary conditions.  At the end, the solution
         is then loaded into the original y-vector.
         """
+        comm = Comm.get()
         y.zeroEntries()
         x_tmp = self._create_copy_vec(x)
         y_tmp = self._create_copy_vec(y)
@@ -1359,6 +1376,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         tmp1 = self._create_copy_vec(x_tmp)
         tmp2 = self._create_copy_vec(x_tmp)
         tmp3 = self._create_copy_vec(x_tmp)
+        tmp3.zeroEntries()
 
         if self.num_chebyshev_its:
             self.Qp_visc.apply(x_tmp,
@@ -1375,6 +1393,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
             self.kspQp_dens.solve(x_tmp,tmp1)
 
         self.Np_rho.mult(tmp1,tmp2)
+
 #        self.Np_rho_reduced.mult(tmp1,tmp2)
 
         if self.alpha is True:
@@ -1382,15 +1401,14 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
 
         if self.options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
             self.const_null_space.remove(tmp2)
+
         zero_array = numpy.zeros(len(self.known_dof_is.getIndices()))
 
         tmp2.setValues(self.known_dof_is.getIndices(),zero_array)
+        tmp2.assemblyEnd()
 
         self.kspAp_rho.solve(tmp2, tmp3)
-
         y.axpy(1.,tmp3)
-#        y.setValues(y_tmp)
-
 
 def l2Norm(x):
     """
