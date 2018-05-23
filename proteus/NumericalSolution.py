@@ -1,5 +1,5 @@
 """
-A hierarchy of classes for managing comlete numerical solution implementations
+A hierarchy of classes for managing complete numerical solution implementations
 
 .. inheritance-diagram:: proteus.NumericalSolution
    :parts: 1
@@ -194,12 +194,17 @@ class NS_base:  # (HasTraits):
                                                                        nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                        parallelPartitioningType=n.parallelPartitioningType)
                     else:
+                        if hasattr(n,'triangleFlag')==True:
+                            triangleFlag=n.triangleFlag
+                        else:
+                            triangleFlag=0
                         mlMesh = MeshTools.MultilevelTriangularMesh(nnx,nny,1,
                                                                     p.domain.x[0], p.domain.x[1], 0.0,
                                                                     p.domain.L[0],p.domain.L[1],1,
                                                                     refinementLevels=n.nLevels,
                                                                     nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                    parallelPartitioningType=n.parallelPartitioningType)
+                                                                    parallelPartitioningType=n.parallelPartitioningType,
+                                                                    triangleFlag=triangleFlag)
 
                 elif p.domain.nd == 3:
                     if (n.nnx == n.nny == n.nnz  is None):
@@ -349,6 +354,12 @@ class NS_base:  # (HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.PUMIDomain):
+                import sys
+                if(comm.size()>1 and p.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
+                  sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
+                if comm.size() > 1 and n.conservativeFlux != None:
+                    sys.exit("ERROR: Element based partitions don't have a functioning conservative flux calculation. Set conservativeFlux to None in twp_navier_stokes")
+
                 #ibaned: PUMI conversion #1
                 if p.domain.nd == 3:
                   mesh = MeshTools.TetrahedralMesh()
@@ -498,6 +509,35 @@ class NS_base:  # (HasTraits):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
+            
+            if hasattr(p.domain,"PUMIMesh") and not isinstance(p.domain,Domain.PUMIDomain) :
+              logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
+              p = self.pList[0]
+              n = self.nList[0]
+           
+              from scipy import spatial
+              meshVertexTree = spatial.cKDTree(mesh.nodeArray)
+              meshVertex2Model= [0]*mesh.nNodes_owned
+              for idx,vertex in enumerate(self.pList[0].domain.vertices):
+                if(self.pList[0].nd==2 and len(vertex) == 2): #there might be a smarter way to do this
+                  vertex.append(0.0) #need to make a 3D coordinate
+                closestVertex = meshVertexTree.query(vertex)
+                meshVertex2Model[closestVertex[1]] = 1
+
+              isModelVert = numpy.asarray(meshVertex2Model).astype("i")
+              
+              meshBoundaryConnectivity = numpy.zeros((mesh.nExteriorElementBoundaries_global,2+pList[0].nd),dtype=numpy.int32)
+              for elementBdyIdx in range(len(mesh.exteriorElementBoundariesArray)):
+                exteriorIdx = mesh.exteriorElementBoundariesArray[elementBdyIdx]
+                meshBoundaryConnectivity[elementBdyIdx][0] =  mesh.elementBoundaryMaterialTypes[exteriorIdx]
+                meshBoundaryConnectivity[elementBdyIdx][1] = mesh.elementBoundaryElementsArray[exteriorIdx][0]
+                meshBoundaryConnectivity[elementBdyIdx][2] = mesh.elementBoundaryNodesArray[exteriorIdx][0]
+                meshBoundaryConnectivity[elementBdyIdx][3] = mesh.elementBoundaryNodesArray[exteriorIdx][1]
+                if(self.pList[0].nd==3):
+                  meshBoundaryConnectivity[elementBdyIdx][4] = mesh.elementBoundaryNodesArray[exteriorIdx][2]
+              
+              p.domain.PUMIMesh.reconstructFromProteus2(mesh.cmesh,isModelVert,meshBoundaryConnectivity)
+  
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 logEvent("Attempting to visualize mesh")
@@ -921,73 +961,73 @@ class NS_base:  # (HasTraits):
             if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
                 sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
             p0.domain.PUMIMesh=n0.MeshAdaptMesh
-            p0.domain.hasModel = n0.useModel
-            numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
-            #force initialization of arrays to enable passage through to C++ code
-            mesh2Model_v= numpy.asarray([[0,0]]).astype("i")
-            mesh2Model_e=numpy.asarray([[0,0]]).astype("i")
-            mesh2Model_b=numpy.asarray([[0,0]]).astype("i")
+            #p0.domain.hasModel = n0.useModel
+            #numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
+            ##force initialization of arrays to enable passage through to C++ code
+            #mesh2Model_v= numpy.asarray([[0,0]]).astype("i")
+            #mesh2Model_e=numpy.asarray([[0,0]]).astype("i")
+            #mesh2Model_b=numpy.asarray([[0,0]]).astype("i")
 
-            segmentList = numpy.asarray([[0,0]]).astype("i")
-            newFacetList = numpy.asarray([[0,0]]).astype("i")
-            #only appropriate for 2D use at the moment
-            if p0.domain.vertices and p0.domain.hasModel and p0.domain.nd==2:
-              p0.domain.getMesh2ModelClassification(self.modelList[0].levelModelList[0].mesh)
-              segmentList = numpy.asarray(p0.domain.segments).astype("i")
-              #force initialize the unused arrays for proper cythonization
-              import copy
-              newFacetList = []
-              if(not p0.domain.facets):
-                p0.domain.facets = [(-1,-1)]
-                newFacetList = copy.deepcopy(p0.domain.facets)
-              else:
-                facetList = []
-                maxFacetLength = 0
-                numHoles = len(p0.domain.holes)
-                if(numHoles): #if there are holes, there can be multiple lists of facets
-                  for i in range(numHoles,len(p0.domain.facets)):
-                    for j in range(len(p0.domain.facets[i])):
-                      maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i][j]))
-                  for i in range(numHoles,len(p0.domain.facets)):
-                    facetList.append(list(p0.domain.facets[i][0]))
-                    if(len(p0.domain.facets[i][0])<maxFacetLength):
-                      initLength = len(p0.domain.facets[i][0])
-                      lenDiff = maxFacetLength-initLength
-                      for j in range(lenDiff):
-                        facetList[i-numHoles].append(-1)
-                else:
-                  for i in range(len(p0.domain.facets)):
-                    maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i]))
-                  for i in range(len(p0.domain.facets)):
-                    facetList.append(list(p0.domain.facets[i]))
-                    if(len(p0.domain.facets[i])<maxFacetLength):
-                      initLength = len(p0.domain.facets[i])
-                      lenDiff = maxFacetLength-initLength
-                      for j in range(lenDiff):
-                        facetList[i-numHoles].append(-1)
+            #segmentList = numpy.asarray([[0,0]]).astype("i")
+            #newFacetList = numpy.asarray([[0,0]]).astype("i")
+            ##only appropriate for 2D use at the moment
+            #if p0.domain.vertices and p0.domain.hasModel and p0.domain.nd==2:
+            #  p0.domain.getMesh2ModelClassification(self.modelList[0].levelModelList[0].mesh)
+            #  segmentList = numpy.asarray(p0.domain.segments).astype("i")
+            #  #force initialize the unused arrays for proper cythonization
+            #  import copy
+            #  newFacetList = []
+            #  if(not p0.domain.facets):
+            #    p0.domain.facets = [(-1,-1)]
+            #    newFacetList = copy.deepcopy(p0.domain.facets)
+            #  else:
+            #    facetList = []
+            #    maxFacetLength = 0
+            #    numHoles = len(p0.domain.holes)
+            #    if(numHoles): #if there are holes, there can be multiple lists of facets
+            #      for i in range(numHoles,len(p0.domain.facets)):
+            #        for j in range(len(p0.domain.facets[i])):
+            #          maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i][j]))
+            #      for i in range(numHoles,len(p0.domain.facets)):
+            #        facetList.append(list(p0.domain.facets[i][0]))
+            #        if(len(p0.domain.facets[i][0])<maxFacetLength):
+            #          initLength = len(p0.domain.facets[i][0])
+            #          lenDiff = maxFacetLength-initLength
+            #          for j in range(lenDiff):
+            #            facetList[i-numHoles].append(-1)
+            #    else:
+            #      for i in range(len(p0.domain.facets)):
+            #        maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i]))
+            #      for i in range(len(p0.domain.facets)):
+            #        facetList.append(list(p0.domain.facets[i]))
+            #        if(len(p0.domain.facets[i])<maxFacetLength):
+            #          initLength = len(p0.domain.facets[i])
+            #          lenDiff = maxFacetLength-initLength
+            #          for j in range(lenDiff):
+            #            facetList[i-numHoles].append(-1)
 
-                #substitute the vertex IDs with segment IDs
-                newFacetList = copy.deepcopy(facetList)
-                for i in range(len(facetList)):
-                  for j in range(maxFacetLength):
-                    if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
-                      testSegment = [facetList[i][j],facetList[i][0]]
-                    else:
-                      testSegment = [facetList[i][j],facetList[i][j+1]]
-                    try:
-                      edgIdx = p0.domain.segments.index(testSegment)
-                    except ValueError:
-                      edgIdx = p0.domain.segments.index(list(reversed(testSegment)))
-                    newFacetList[i][j] = edgIdx
-                    if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
-                      break
-              newFacetList = numpy.asarray(newFacetList).astype("i")
-              mesh2Model_v = numpy.asarray(p0.domain.meshVertex2Model).astype("i")
-              mesh2Model_e = numpy.asarray(p0.domain.meshEdge2Model).astype("i")
-              mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
+            #    #substitute the vertex IDs with segment IDs
+            #    newFacetList = copy.deepcopy(facetList)
+            #    for i in range(len(facetList)):
+            #      for j in range(maxFacetLength):
+            #        if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
+            #          testSegment = [facetList[i][j],facetList[i][0]]
+            #        else:
+            #          testSegment = [facetList[i][j],facetList[i][j+1]]
+            #        try:
+            #          edgIdx = p0.domain.segments.index(testSegment)
+            #        except ValueError:
+            #          edgIdx = p0.domain.segments.index(list(reversed(testSegment)))
+            #        newFacetList[i][j] = edgIdx
+            #        if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
+            #          break
+            #  newFacetList = numpy.asarray(newFacetList).astype("i")
+            #  mesh2Model_v = numpy.asarray(p0.domain.meshVertex2Model).astype("i")
+            #  mesh2Model_e = numpy.asarray(p0.domain.meshEdge2Model).astype("i")
+            #  mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
 
-            p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
-            p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
+            #p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
+            #p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
         if (hasattr(p0.domain, 'PUMIMesh') and
             n0.adaptMesh and
             self.so.useOneMesh and
@@ -1025,6 +1065,11 @@ class NS_base:  # (HasTraits):
                     vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
                   p0.domain.PUMIMesh.transferFieldToPUMI(
                          coef.vectorName, vector)
+                  #Transfer dof_last
+                  for vci in range(len(coef.vectorComponents)):
+                    vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
+                  p0.domain.PUMIMesh.transferFieldToPUMI(
+                         "velocity_old", vector)
                   del vector
                 for ci in range(coef.nc):
                   if coef.vectorComponents is None or \
@@ -1045,15 +1090,22 @@ class NS_base:  # (HasTraits):
             nu = numpy.array([self.pList[0].nu_0,
                               self.pList[0].nu_1])
             g = numpy.asarray(self.pList[0].g)
-            deltaT = self.tn-self.tn_last
-            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
-            del rho, nu, g
+            
+            deltaT_test = self.systemStepController.dt_system
+            deltaT = self.systemStepController.t_system-self.systemStepController.t_system_last
+            print("deltaT %f",deltaT," dt_system ", deltaT_test)
+            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT)
+            del rho, nu, g, deltaT
 
             logEvent("Estimate Error")
             sfConfig = p0.domain.PUMIMesh.size_field_config()
             if(sfConfig=="ERM"):
               errorTotal= p0.domain.PUMIMesh.get_local_error()
-
+              if(p0.domain.PUMIMesh.willAdapt()):
+                adaptMeshNow=True
+                logEvent("Need to Adapt")
+            elif(sfConfig=="VMS"):
+              errorTotal = p0.domain.PUMIMesh.get_VMS_error()
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
@@ -1139,6 +1191,51 @@ class NS_base:  # (HasTraits):
         runName : str
             A name for the calculated solution.
         """
+
+        #Get mesh entities for reconstruction
+        #theMesh = self.modelList[0].levelModelList[0].mesh
+        #from scipy import spatial
+        #meshVertexTree = spatial.cKDTree(theMesh.nodeArray)
+        #meshVertex2Model= [0]*theMesh.nNodes_owned
+        #file0 = open('modelNodeArray.csv','w') 
+        #file0.write('%i\n' % len(self.pList[0].domain.vertices))
+        #for idx,vertex in enumerate(self.pList[0].domain.vertices):
+        #  #if(self.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
+        #  #  vertex.append(0.0) #need to make a 3D coordinate
+        #  closestVertex = meshVertexTree.query(vertex)
+        #  #file0.write('%i, %i\n' % (closestVertex[1],theMesh.nodeMaterialTypes[closestVertex[1]])) 
+        #  file0.write('%i, %i\n' % (closestVertex[1],idx)) 
+        #file0.close()      
+
+        #file1 = open('meshNodeArray.csv','w') 
+        #file1.write('%i\n' % theMesh.nNodes_owned)
+        #for nodeIdx in range(len(theMesh.nodeArray)):
+        #  file1.write('%i, %.15f, %.15f, %.15f\n' % (nodeIdx, 
+        #     theMesh.nodeArray[nodeIdx][0],
+        #     theMesh.nodeArray[nodeIdx][1], 
+        #     theMesh.nodeArray[nodeIdx][2]))
+        #file1.close() 
+        #file2 = open('meshConnectivity.csv','w') 
+        #file2.write('%i\n' % theMesh.nElements_owned)
+        #for elementIdx in range(len(theMesh.elementNodesArray)):
+        #  file2.write('%i, %i, %i, %i, %i\n' % (elementIdx, theMesh.elementNodesArray[elementIdx][0],
+        #     theMesh.elementNodesArray[elementIdx][1], theMesh.elementNodesArray[elementIdx][2],
+        #     theMesh.elementNodesArray[elementIdx][3]))
+        #file2.close() 
+        #file3 = open('meshBoundaryConnectivity.csv','w') 
+        #file3.write('%i\n' % theMesh.nExteriorElementBoundaries_global)
+        #for elementBdyIdx in range(len(theMesh.exteriorElementBoundariesArray)):
+        #  exteriorIdx = theMesh.exteriorElementBoundariesArray[elementBdyIdx]
+        #  file3.write('%i, %i, %i, %i, %i, %i\n' % (exteriorIdx,
+        #     theMesh.elementBoundaryMaterialTypes[exteriorIdx],
+        #     theMesh.elementBoundaryElementsArray[exteriorIdx][0], #should be adjacent to only one boundary
+        #     theMesh.elementBoundaryNodesArray[exteriorIdx][0],
+        #     theMesh.elementBoundaryNodesArray[exteriorIdx][1],
+        #     theMesh.elementBoundaryNodesArray[exteriorIdx][2],
+        #      ))
+        #file3.close() 
+        #exit()
+
         logEvent("Setting initial conditions",level=0)
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
@@ -1147,7 +1244,7 @@ class NS_base:  # (HasTraits):
                 offset=0
                 while tCount > 0:
                     time = float(self.ar[index].tree.getroot()[-1][-1][-1-offset][0].attrib['Value'])
-                    if time < self.opts.hotStartTime:
+                    if time <= self.opts.hotStartTime:
                         break
                     else:
                         tCount -=1
@@ -1180,8 +1277,8 @@ class NS_base:  # (HasTraits):
             if time >= self.tnList[-1] - 1.0e-5:
                 logEvent("Modifying time interval to be tnList[-1] + tnList since tnList hasn't been modified already")
                 ndtout = len(self.tnList)
-                dtout = (self.tnList[-1] - self.tnList[0])/float(ndtout-1)
-                self.tnList = [time + i*dtout for i in range(ndtout)]
+                self.tnList = [time + i for i in self.tnList]
+                self.tnList.insert(1, 0.9*self.tnList[0]+0.1*self.tnList[1])
                 logEvent("New tnList"+`self.tnList`)
             else:
                 tnListNew=[time]
@@ -1195,8 +1292,9 @@ class NS_base:  # (HasTraits):
         logEvent("Attaching models and running spin-up step if requested")
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         spinup = []
-        for index,m in self.modelSpinUp.iteritems():
-            spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
+        if (not self.opts.hotStart) or (not self.so.skipSpinupOnHotstart):
+            for index,m in self.modelSpinUp.iteritems():
+                spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
             logEvent("Attaching models to model "+m.name)
             m.attachModels(self.modelList)
@@ -1333,12 +1431,15 @@ class NS_base:  # (HasTraits):
        #     print "Min / Max residual %s / %s" %(lr.min(),lr.max())
 
         self.nSequenceSteps = 0
+        nSequenceStepsLast=self.nSequenceSteps # prevent archiving the same solution twice
         self.nSolveSteps=self.nList[0].adaptMesh_nSteps-1
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
 #            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
+
+            self.opts.save_dof = True
             if self.opts.save_dof:
                 for m in self.modelList:
                     for lm in m.levelModelList:
@@ -1352,6 +1453,15 @@ class NS_base:  # (HasTraits):
 
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
+
+                    self.opts.save_dof = True
+                    if self.opts.save_dof:
+                        for m in self.modelList:
+                            for lm in m.levelModelList:
+                                for ci in range(lm.coefficients.nc):
+                                    lm.u[ci].dof_last[:] = lm.u[ci].dof
+                        logEvent("saving previous velocity dofs %s" % self.nSolveSteps)
+
                     logEvent("Split operator iteration %i" % (self.systemStepController.its,),level=3)
                     self.nSequenceSteps += 1
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
@@ -1413,6 +1523,7 @@ class NS_base:  # (HasTraits):
                                                                                                                          model.stepController.t_model,
                                                                                                                          model.stepController.dt_model,
                                                                                                                          model.name),level=3)
+ 
                         #end model step
                         if stepFailed:
                             logEvent("Sequence step failed")
@@ -1476,11 +1587,14 @@ class NS_base:  # (HasTraits):
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
                 #can only handle PUMIDomain's for now
+                #if(self.tn < 0.05):
+                #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
                 if(self.PUMI_estimateError()):
                     self.PUMI_adaptMesh()
             #end system step iterations
-            if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
+            if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
+                nSequenceStepsLast = self.nSequenceSteps
                 self.tCount+=1
                 for index,model in enumerate(self.modelList):
                     self.archiveSolution(model,index,self.systemStepController.t_system_last)
@@ -1492,13 +1606,36 @@ class NS_base:  # (HasTraits):
             #assuming same for all physics and numerics  for now
 
             #can only handle PUMIDomain's for now
-            self.nSolveSteps += 1
-            if(self.PUMI_estimateError()):
-              self.PUMI_adaptMesh()
+            #self.nSolveSteps += 1
+            #if(self.PUMI_estimateError()):
+            #  self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
         # compute auxiliary quantities at last time step
-        if hasattr(self.modelList[-1].levelModelList[-1],'runAtEOS'):
-            self.modelList[-1].levelModelList[-1].runAtEOS()
+        for index,model in enumerate(self.modelList):
+            if hasattr(model.levelModelList[-1],'runAtEOS'):
+                model.levelModelList[-1].runAtEOS()
+
+        if(hasattr(self.pList[0].domain,"PUMIMesh")):
+        #Transfer solution to PUMI mesh for output
+          for m in self.modelList:
+            for lm in m.levelModelList:
+              coef = lm.coefficients
+              if coef.vectorComponents is not None:
+                vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+                for vci in range(len(coef.vectorComponents)):
+                  vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
+                self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                   coef.vectorName, vector)
+                del vector
+              for ci in range(coef.nc):
+                if coef.vectorComponents is None or \
+                  ci not in coef.vectorComponents:
+                  scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+                  scalar[:,0] = lm.u[ci].dof[:]
+                  self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                      coef.variableNames[ci], scalar)
+                  del scalar
+          self.pList[0].domain.PUMIMesh.writeMesh("finalMesh.smb")
 
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)

@@ -25,9 +25,15 @@ conservativeFlux  = None
 subgridError      = VOF3P.SubgridError(coefficients=coefficients,nd=nd)
 shockCapturing    = VOF3P.ShockCapturing(coefficients,nd,shockCapturingFactor=vof_shockCapturingFactor,lag=vof_lag_shockCapturing)
 
-fullNewtonFlag = True
+if EXPLICIT_VOF==True:
+    fullNewtonFlag = False
+    timeIntegration = BackwardEuler_cfl
+    stepController  = Min_dt_cfl_controller
+else:
+    fullNewtonFlag = True
+
 multilevelNonlinearSolver = Newton
-levelNonlinearSolver      = Newton
+levelNonlinearSolver      = TwoStageNewton
 
 nonlinearSmoother = None
 linearSmoother    = None
