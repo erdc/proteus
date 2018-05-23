@@ -2395,7 +2395,7 @@ namespace proteus
                 ith_muLij_times_huStates=0.,
                 ith_muLij_times_hvStates=0.,
 		ith_muLij_times_hetaStates=0.,
-		ith_muLij_times_hwStates=0.;
+	        ith_muLij_times_hwStates=0.;
 
               // HIGH ORDER DISSIPATIVE TERMS
               double
@@ -2430,22 +2430,23 @@ namespace proteus
 	      /////////////////
 	      // FORCE TERMS //
 	      /////////////////
-	      double etai = hetai*one_over_hiReg;
+	      //double etai = hetai*one_over_hiReg;
 	      double force_term_hetai = hwi*mi;
 	      // EJT. Corrected terms to match our paper
-        // and define both Guermond and Gavrilyuk force terms for hw equation.
+	      // and define both Guermond and Gavrilyuk force terms for hw equation.
+	      double etai = hetai*one_over_hiReg;
 	      double xxi = etai*one_over_hiReg;
 	      //double xxi = hetai/std::pow(hi,2.0);
 	      double meshi = std::sqrt(mi);
 	      double psii = 12.0 * (xxi - 1.0);
-        // This is Guermond's force term
-        double force_term_hwi = -lambda*g*std::pow(etai,2.)/meshi*psii*mi;
-        // if WHICH_DISP_MODEL is 0 then code runs with Gavrilyuk's model.
-        if (WHICH_DISP_MODEL==0)
-          {
-            //force_term_hwi = -lambda*(etai*one_over_hiReg-1.)*mi;
-	    force_term_hwi = -lambda*(xxi - 1.)*mi;
-          }
+	      // This is Guermond's force term
+	      double force_term_hwi = -lambda*g/meshi*etai*etai*psii*mi;
+	      // if WHICH_DISP_MODEL is 0 then code runs with Gavrilyuk's model.
+	      if (WHICH_DISP_MODEL==0)
+		{
+		  //force_term_hwi = -lambda*(etai*one_over_hiReg-1.)*mi;
+		  force_term_hwi = -lambda*(xxi - 1.)*mi;
+		}
 
 
               // loop over the sparsity pattern of the i-th DOF
@@ -2455,48 +2456,53 @@ namespace proteus
                   double hj = h_dof_old[j];
                   double huj = hu_dof_old[j];
                   double hvj = hv_dof_old[j];
-            		  double hetaj = heta_dof_old[j];
-            		  double hwj = hw_dof_old[j];
+            	  double hetaj = heta_dof_old[j];
+            	  double hwj = hw_dof_old[j];
                   double Zj = b_dof[j];
                   double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
                   double uj = huj*one_over_hjReg;
                   double vj = hvj*one_over_hjReg;
-		              double etaj = hetaj*one_over_hjReg;
-		             // EJT. Corrected terms to match our paper.
-          		    double mj = lumped_mass_matrix[j];
-          		    double meshj = std::sqrt(mj); // local mesh size
-          		    // This is used to make definition of pTildej cleaner
-          		    double xxj = etaj*one_over_hjReg;
-			            //double xxj = hetaj/std::pow(hj,2.0);
-          		    double polyj = 2.0 + 4.0*std::pow(xxj,3.) - 6.0*std::pow(xxj,4.);
+		  double etaj = hetaj*one_over_hjReg;
+                  // EJT. Corrected terms to match our paper.
+          	  double mj = lumped_mass_matrix[j];
+                  double meshj = std::sqrt(mj); // local mesh size
+                  // This is used to make definition of pTildej cleaner
+          	  double xxj = etaj*one_over_hjReg;
+                  //double xxj = hetaj/std::pow(hj,2.0);
+          	  double polyj = 2.0 + 4.0*std::pow(xxj,3.) - 6.0*std::pow(xxj,4.);
                   // Define pTildej here. Standard is Guermond's
                   double pTildej =  lambda*g/(3. * meshj)*std::pow(hj,3.)*polyj;
                   // if WHICH_DISP_MODEL is 0 then Gavrilyuk's model is used.
                       if (WHICH_DISP_MODEL==0)
                           {
-          			    //pTildej = -lambda/3.*(etaj*one_over_hjReg-1.0)*etaj;
-          			    pTildej = -lambda/3.*(xxj-1.0)*hetaj/hj;
+          		    //pTildej = -lambda/3.*(etaj*one_over_hjReg-1.0)*etaj;
+			    pTildej = -lambda/3.*(xxj-1.0)*hetaj*one_over_hjReg;
                           }
+
+		      // std::cout << pTildej << "\t" 
+		      //	<< xxj <<  "\t" 
+		      //	<< hetaj <<  "\t"
+		      //	<< one_over_hjReg <<  std::endl; 
 
                   // Nodal projection of fluxes
                   ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
-		              ith_flux_term2 += uj*huj*Cx[ij] + uj*hvj*Cy[ij] + (g*hi*(hj+Zj) + pTildej )*Cx[ij];
+	          ith_flux_term2 += uj*huj*Cx[ij] + uj*hvj*Cy[ij] + (g*hi*(hj+Zj) + pTildej )*Cx[ij];
                   ith_flux_term3 += vj*huj*Cx[ij] + vj*hvj*Cy[ij] + (g*hi*(hj+Zj) + pTildej )*Cy[ij];
-		              ith_flux_term4 += hetaj*uj*Cx[ij] + hetaj*vj*Cy[ij];
-		              ith_flux_term5 += hwj*uj*Cx[ij] + hwj*vj*Cy[ij];
+		  ith_flux_term4 += hetaj*uj*Cx[ij] + hetaj*vj*Cy[ij];
+	          ith_flux_term5 += hwj*uj*Cx[ij] + hwj*vj*Cy[ij];
 
                   // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
                   double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
                   double huStarij = hui*hStarij*one_over_hiReg;
                   double hvStarij = hvi*hStarij*one_over_hiReg;
-            		  double hetaStarij = hetai*hStarij*one_over_hiReg;
-            		  double hwStarij = hwi*hStarij*one_over_hiReg;
+            	  double hetaStarij = hetai*hStarij*one_over_hiReg;
+            	  double hwStarij = hwi*hStarij*one_over_hiReg;
 
                   double hStarji  = fmax(0., hj + Zj - fmax(Zi,Zj));
                   double huStarji = huj*hStarji*one_over_hjReg;
                   double hvStarji = hvj*hStarji*one_over_hjReg;
-            		  double hetaStarji = hetaj*hStarji*one_over_hjReg;
-            		  double hwStarji = hwj*hStarji*one_over_hjReg;
+            	  double hetaStarji = hetaj*hStarji*one_over_hjReg;
+            	  double hwStarji = hwj*hStarji*one_over_hjReg;
 
                   // Dissipative well balancing term
                   double muLowij = 0., muLij = 0., muHij = 0.;
