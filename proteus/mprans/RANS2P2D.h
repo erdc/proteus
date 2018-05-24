@@ -1841,7 +1841,7 @@ namespace proteus
                   p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
                   p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
                   dV,x,y,z,xt,yt,zt,
-                  //p_element_avg,
+                  p_element_avg,
                   //
                   porosity,
                   //meanGrainSize,
@@ -1897,8 +1897,8 @@ namespace proteus
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
 		// calculate the average pressure value
-		//if (PRESSURE_PROJECTION_STABILIZATION)
-		  //ck.DOFaverage(p_dof, &p_l2g[eN_nDOF_trial_element],p_element_avg);
+		if (PRESSURE_PROJECTION_STABILIZATION)
+		  ck.DOFaverage(p_dof, &p_l2g[eN_nDOF_trial_element],p_element_avg);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
