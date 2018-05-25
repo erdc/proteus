@@ -215,6 +215,20 @@ def load_medium_step_matrix(request):
                                'import_modules/saddle_point_matrix'))
     yield A
 
+@pytest.fixture()
+def load_rans2p_step_newton_1(request):
+    A = LAT.petsc_load_matrix(os.path.join
+                              (os.path.dirname(__file__),
+                               'import_modules/rans2p_step_newton_1'))
+    yield A
+
+@pytest.fixture()
+def load_rans2p_step_newton_5(request):
+    A = LAT.petsc_load_matrix(os.path.join
+                              (os.path.dirname(__file__),
+                               'import_modules/rans2p_step_newton_5'))
+    yield A
+
 @pytest.mark.LinearSolvers
 @pytest.mark.skip(reason='this test is completed in a different PR')
 def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
@@ -293,9 +307,9 @@ def test_amg_iteration_performance(load_medium_step_matrix,
     F_ksp.solve(b,x)
     assert F_ksp.its == 41
 
-def test_amg_step_problem_01(initialize_velocity_block_petsc_options):
-    """ """
-    mat_A = load_matrix('rans2p_step_newton_1')
+def test_amg_step_problem_01(load_rans2p_step_newton_1,
+                             initialize_velocity_block_petsc_options):
+    mat_A = load_rans2p_step_newton_1
     petsc_options = initialize_velocity_block_petsc_options
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
@@ -307,9 +321,9 @@ def test_amg_step_problem_01(initialize_velocity_block_petsc_options):
     F_ksp.solve(b,x)
     assert F_ksp.its == 59
 
-def test_amg_step_problem_02(initialize_velocity_block_petsc_options):
-    """ """
-    mat_A = load_matrix('rans2p_step_newton_5')
+def test_amg_step_problem_02(load_rans2p_step_newton_5,
+                             initialize_velocity_block_petsc_options):
+    mat_A = load_rans2p_step_newton_5
     petsc_options = initialize_velocity_block_petsc_options
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
@@ -320,7 +334,7 @@ def test_amg_step_problem_02(initialize_velocity_block_petsc_options):
                                                 index_sets[0]))
     F_ksp.solve(b,x)
     assert F_ksp.its == 60
-    
+
 class TestSmoothingAlgorithms(proteus.test_utils.TestTools.BasicTest):
 
     def setup_method(self,method):
