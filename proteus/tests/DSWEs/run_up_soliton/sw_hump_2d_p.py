@@ -9,18 +9,18 @@ nd=2
 L=(50.0,5.0)
 g = 9.81
 
-h1=0.0 + 1.0
-h2=0.28 + 1.0
-x0 = 10
+h1=1.0 + 0.1
+h2=1.0 + 0.6
+x0 = 15
 D = np.sqrt(g * h2)
 
 T=9
 nDTout=150
 
 domain = RectangularDomain(L=L,x=[0,0,0])
-mannings=0
+mannings=0.06
 
-cE=0
+cE=1.0
 LUMPED_MASS_MATRIX=1
 LINEAR_FRICTION=1
 
@@ -55,12 +55,12 @@ class water_height_at_t0:
 
 class mom_at_t0:
     def uOfXT(self,X,t):
-       # return D*(solitary(X,t) - h1)
-        return 3.0
-class eta_at_t0:
+        return D*(solitary(X,t) - h1)
+       # return 3.0
+class heta_at_t0:
     def uOfXT(self,X,t):
-       return solitary(X,t)**2.
-       # h = max(solitary(X,t) - bathymetry_function(X),0.0)           # return h**2.
+        return solitary(X,t)**2.0
+       
 class Zero:
     def uOfXT(self,x,t):
         return 0.0
@@ -74,23 +74,23 @@ analyticalSolution = {0:water_height_at_t0(),
 initialConditions = {0:water_height_at_t0(),
                      1:mom_at_t0(),
                      2:Zero(),
-                     3:eta_at_t0(),
+                     3:heta_at_t0(),
                      4:Zero()}
 
 ###################################
 ##### FOR BOUNDARY CONDITIONS #####
 ###################################
 def getDBC_h(x,flag):
-    None 
-#    if x[0]==0:
-#        return lambda x,t: h1
+#    None 
+    if x[0]==0: #or x[0]==L[0]:
+        return lambda x,t: h1 - 1.0
 #    elif x[0]==L[0]:
-#        return lambda x,t: 0
-#
+#        return lambda x,t: 0.0
+
 def getDBC_hu(x,flag):
     None
-    #if x[0]==0 or x[0]==L[0]:
-    #    return lambda x,t: 0.
+#    if x[0]==0 or x[0]==L[0]:
+#        return lambda x,t: 0.
 
 def getDBC_hv(x,flag):
     None
@@ -98,8 +98,10 @@ def getDBC_hv(x,flag):
 
 def getDBC_heta(x,flag):
     None
-    #if x[0]==0 or x[0]==L[0]:
-    #    return lambda x,t: h1**2.
+   # if x[0]==0 or x[0]==L[0]:
+   #     return lambda x,t:h1**2.0
+    # elif x[0]==L[0]:
+    #    return lambda x,t: 0.0
 
 def getDBC_hw(x,flag):
     None
