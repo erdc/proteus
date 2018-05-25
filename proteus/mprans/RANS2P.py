@@ -181,7 +181,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  PRESSURE_SGE=1.0,
                  VELOCITY_SGE=1.0,
                  PRESSURE_PROJECTION_STABILIZATION=0.0,
-                 phaseFunction=None):
+                 phaseFunction=None,
+                 LAG_LES=1.0):
+        self.LAG_LES=LAG_LES
         self.phaseFunction=phaseFunction
         self.NONCONSERVATIVE_FORM=NONCONSERVATIVE_FORM
         self.MOMENTUM_SGE=MOMENTUM_SGE
@@ -1015,6 +1017,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('u', 1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('u', 2)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('u', 3)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe['eddy_viscosity'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe['eddy_viscosity_last'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('advectiveFlux_bc_flag', 0)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
         self.ebqe[('advectiveFlux_bc_flag', 1)] = numpy.zeros(
@@ -1051,6 +1055,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # VRANS start, defaults to RANS
         self.q[('r', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['eddy_viscosity'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['eddy_viscosity_last'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         # VRANS end
         # RANS 2eq Models start
         self.q[('grad(u)', 1)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
@@ -1498,7 +1503,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.q_turb_var[0],
                                       self.coefficients.q_turb_var[1],
                                       self.coefficients.q_turb_var_grad[0],
+                                      self.coefficients.LAG_LES,
                                       self.q['eddy_viscosity'],
+                                      self.q['eddy_viscosity_last'],
+                                      self.ebqe['eddy_viscosity'],
+                                      self.ebqe['eddy_viscosity_last'],
                                       # VRANS end
                                       self.u[0].femSpace.dofMap.l2g,
                                       self.u[1].femSpace.dofMap.l2g,
@@ -1723,6 +1732,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.q_turb_var[0],
                                       self.coefficients.q_turb_var[1],
                                       self.coefficients.q_turb_var_grad[0],
+                                      self.coefficients.LAG_LES,
+                                      self.q['eddy_viscosity_last'],
+                                      self.ebqe['eddy_viscosity_last'],
                                       # VRANS end
                                       self.u[0].femSpace.dofMap.l2g,
                                       self.u[1].femSpace.dofMap.l2g,
@@ -2000,6 +2012,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q['velocityError'][:] = self.q[('velocity', 0)]
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
         self.q['velocityError'] -= self.q[('velocity', 0)]
+        self.q['eddy_viscosity_last'][:] = self.q['eddy_viscosity']
+        self.ebqe['eddy_viscosity_last'][:] = self.ebqe['eddy_viscosity']
+        
     def updateAfterMeshMotion(self):
         pass
 
