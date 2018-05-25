@@ -534,7 +534,7 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
       }
     }
   }
-  //apf::writeVtkFiles("nodeMaterials",m);
+  apf::writeVtkFiles("nodeMaterials",m);
   apf::synchronize(nodeMaterials);
   //std::abort();
 
