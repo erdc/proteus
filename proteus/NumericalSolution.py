@@ -603,9 +603,12 @@ class NS_base:  # (HasTraits):
         self.systemStepController.setFromOptions(so)
         logEvent("Finished NumericalSolution initialization")
         theMesh = self.modelList[0].levelModelList[0].mesh
-        pCT = self.pList[0].ct
-        nCT = self.nList[0].ct
-        theDomain = pCT.domain
+#         pCT = self.pList[0].ct
+#         nCT = self.nList[0].ct
+        p0 = self.pList[0] #This can probably be cleaned up somehow
+        n0 = self.nList[0]
+
+        theDomain = p0.domain
 
         if hasattr(theDomain,"PUMIMesh") and not isinstance(theDomain,Domain.PUMIDomain) :
           logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
@@ -614,24 +617,24 @@ class NS_base:  # (HasTraits):
           meshVertexTree = spatial.cKDTree(theMesh.nodeArray)
           meshVertex2Model= [0]*theMesh.nNodes_owned
           for idx,vertex in enumerate(theDomain.vertices):
-            if(pCT.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
+            if(p0.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
               vertex.append(0.0) #need to make a 3D coordinate
             closestVertex = meshVertexTree.query(vertex)
             meshVertex2Model[closestVertex[1]] = 1
 
           isModelVert = numpy.asarray(meshVertex2Model).astype("i")
       
-          meshBoundaryConnectivity = numpy.zeros((theMesh.nExteriorElementBoundaries_global,2+pCT.nd),dtype=numpy.int32)
+          meshBoundaryConnectivity = numpy.zeros((theMesh.nExteriorElementBoundaries_global,2+p0.nd),dtype=numpy.int32)
           for elementBdyIdx in range(len(theMesh.exteriorElementBoundariesArray)):
             exteriorIdx = theMesh.exteriorElementBoundariesArray[elementBdyIdx]
             meshBoundaryConnectivity[elementBdyIdx][0] =  theMesh.elementBoundaryMaterialTypes[exteriorIdx]
             meshBoundaryConnectivity[elementBdyIdx][1] = theMesh.elementBoundaryElementsArray[exteriorIdx][0]
             meshBoundaryConnectivity[elementBdyIdx][2] = theMesh.elementBoundaryNodesArray[exteriorIdx][0]
             meshBoundaryConnectivity[elementBdyIdx][3] = theMesh.elementBoundaryNodesArray[exteriorIdx][1]
-            if(pCT.nd==3):
+            if(p0.nd==3):
               meshBoundaryConnectivity[elementBdyIdx][4] = theMesh.elementBoundaryNodesArray[exteriorIdx][2]
       
-          pCT.domain.PUMIMesh.reconstructFromProteus2(theMesh.cmesh,isModelVert,meshBoundaryConnectivity)
+          p0.domain.PUMIMesh.reconstructFromProteus2(theMesh.cmesh,isModelVert,meshBoundaryConnectivity)
 
     def allocateModels(self):
         self.modelList=[]
@@ -756,10 +759,10 @@ class NS_base:  # (HasTraits):
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
 
     def PUMI2Proteus(self,mesh):
-        #p0 = self.pList[0] #This can probably be cleaned up somehow
-        #n0 = self.nList[0]
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0] #This can probably be cleaned up somehow
+        n0 = self.nList[0]
+#         p0 = self.pList[0].ct
+#         n0 = self.nList[0].ct
 
         logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
         if p0.domain.nd == 3:
@@ -794,11 +797,17 @@ class NS_base:  # (HasTraits):
         modelListOld = self.modelList
         logEvent("Allocating models on new mesh")
         self.allocateModels()
+        
+#         self.modelList[0].levelModelList[0].coefficients.ball_center[:] = self.nList[0].auxiliaryVariables[0].solidPosition#####YY
+        
         logEvent("Attach auxiliary variables to new models")
         #(cut and pasted from init, need to cleanup)
         self.simOutputList = []
+#         import copy
+#         self.auxiliaryVariables_old = copy.deepcopy(self.auxiliaryVariables)##
         self.auxiliaryVariables = {}
         self.newAuxiliaryVariables = {}
+
         if self.simFlagsList is not None:
             for p, n, simFlags, model, index in zip(
                     self.pList,
@@ -844,7 +853,7 @@ class NS_base:  # (HasTraits):
                       av.field_ids=[]
                       av.isGaugeOwner=False
                 ##reinitialize auxiliaryVariables
-                self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
+                self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]######YY update ball center
         else:
             for p,n,s,model,index in zip(
                     self.pList,
@@ -859,6 +868,7 @@ class NS_base:  # (HasTraits):
         for avList in self.auxiliaryVariables.values():
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
+        
         logEvent("Transfering fields from PUMI to Proteus")
         for m in self.modelList:
           for lm in m.levelModelList:
@@ -878,6 +888,7 @@ class NS_base:  # (HasTraits):
                     coef.variableNames[ci], scalar)
                 lm.u[ci].dof[:] = scalar[:,0]
                 del scalar
+        
         logEvent("Attaching models on new mesh to each other")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
@@ -885,10 +896,11 @@ class NS_base:  # (HasTraits):
                 for ci in range(lm.coefficients.nc):
                     save_dof.append( lm.u[ci].dof.copy())
                     lm.u[ci].dof_last = lm.u[ci].dof.copy()
-                lm.setFreeDOF(lu)
+                lm.setFreeDOF(lu)##assign the value at nodes
                 for ci in range(lm.coefficients.nc):
                     assert((save_dof[ci] == lm.u[ci].dof).all())
-                lm.calculateSolutionAtQuadrature()
+#                 import pdb;pdb.set_trace()
+                lm.calculateSolutionAtQuadrature()##########calculare values at quadrature points
                 lm.timeIntegration.tLast = lmOld.timeIntegration.tLast
                 lm.timeIntegration.t = lmOld.timeIntegration.t
                 lm.timeIntegration.dt = lmOld.timeIntegration.dt
@@ -899,10 +911,20 @@ class NS_base:  # (HasTraits):
             m.stepController.t_model = mOld.stepController.t_model
             m.stepController.t_model_last = mOld.stepController.t_model_last
             m.stepController.substeps = mOld.stepController.substeps
-        # logEvent("Evaluating residuals and time integration")
+        logEvent("Evaluating residuals and time integration")
+#         import pdb
+#         pdb.set_trace()
+
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             logEvent("Attaching models to model "+ptmp.name)
-            m.attachModels(self.modelList)
+            m.attachModels(self.modelList)##attrach model
+        #############YY
+        for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
+                lm.transfer_aditional_variables_dof_from_pumi(p0.domain.PUMIMesh)######YY: after attach Model because of PresInc update fluidModel[('velocity',0)]
+        
+#             import pdb
+#             pdb.set_trace()
         logEvent("Evaluating residuals and time integration")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
@@ -923,7 +945,14 @@ class NS_base:  # (HasTraits):
             assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
             logEvent("Initializing time history for model step controller")
             m.stepController.initializeTimeHistory()
-        p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+#         p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+
+        #############YY: some variables need to run getResidual
+        for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
+                lm.transfer_aditional_variables_dof_from_pumi(p0.domain.PUMIMesh)######YY: after attach Model because of PresInc update fluidModel[('velocity',0)]
+        
+
         self.systemStepController.modelList = self.modelList
         self.systemStepController.exitModelStep = {}
         self.systemStepController.controllerList = []
@@ -956,10 +985,10 @@ class NS_base:  # (HasTraits):
         Ainsworth and Oden and generates a corresponding error field.
         """
 
-        #p0 = self.pList[0]
-        #n0 = self.nList[0]
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
+#         p0 = self.pList[0].ct
+#         n0 = self.nList[0].ct
 
         adaptMeshNow = False
         #will need to move this to earlier when the mesh is created
@@ -1067,6 +1096,7 @@ class NS_base:  # (HasTraits):
             for m in self.modelList:
               for lm in m.levelModelList:
                 coef = lm.coefficients
+
                 if coef.vectorComponents is not None:
                   vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
                   for vci in range(len(coef.vectorComponents)):
@@ -1087,7 +1117,8 @@ class NS_base:  # (HasTraits):
                     p0.domain.PUMIMesh.transferFieldToPUMI(
                         coef.variableNames[ci], scalar)
                     del scalar
-
+                print m,lm
+                lm.transfer_aditional_variables_dof_to_pumi(p0.domain.PUMIMesh)######YY
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
 
             del scalar
@@ -1185,6 +1216,7 @@ class NS_base:  # (HasTraits):
                              parallel = self.comm.size() > 1,
                              dim = p0.domain.nd)
         self.PUMI2Proteus(mesh)
+#         import pdb;pdb.set_trace()
       ##chitak end Adapt
 
     ## compute the solution
@@ -1275,8 +1307,8 @@ class NS_base:  # (HasTraits):
                 m.setInitialConditions(p.initialConditions,self.tnList[0])
                 #It's only safe to calculate the solution and solution
                 #gradients because the models aren't attached yet
-                for lm in m.levelModelList:
-                    lm.calculateSolutionAtQuadrature()
+#                 for lm in m.levelModelList:
+#                     lm.calculateSolutionAtQuadrature()
             else:
                 logEvent("No initial conditions provided for model "+p.name)
         if self.opts.hotStart:
@@ -1438,7 +1470,7 @@ class NS_base:  # (HasTraits):
 
         self.nSequenceSteps = 0
         nSequenceStepsLast=self.nSequenceSteps # prevent archiving the same solution twice
-        self.nSolveSteps=-1#self.nList[0].adaptMesh_nSteps-1
+        self.nSolveSteps=-10#self.nList[0].adaptMesh_nSteps-1
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
@@ -1593,8 +1625,8 @@ class NS_base:  # (HasTraits):
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
                 #can only handle PUMIDomain's for now
-                #if(self.tn < 0.05):
-                #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
+#                 if(self.tn < 0.19):
+#                   self.nSolveSteps=-2#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
                 if(self.PUMI_estimateError()):
                     self.PUMI_adaptMesh()
@@ -1623,6 +1655,8 @@ class NS_base:  # (HasTraits):
 
         if(hasattr(self.pList[0].domain,"PUMIMesh")):
         #Transfer solution to PUMI mesh for output
+#           p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
+#                 self.modelList[0].levelModelList[0].mesh.nodeArray)
           for m in self.modelList:
             for lm in m.levelModelList:
               coef = lm.coefficients

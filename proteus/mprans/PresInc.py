@@ -1010,7 +1010,157 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
 
     def calculateSolutionAtQuadrature(self):
-        pass
+        
+        self.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
+        self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
+        self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        if ('w',0) not in self.q.keys():
+            ##### get q w
+            self.q[('w', 0)] = numpy.zeros(
+                    (self.mesh.nElements_global,
+                     self.nQuadraturePoints_element,
+                     self.nDOF_trial_element[0]),
+                    'd')
+            self.u[0].femSpace.getBasisValues(self.elementQuadraturePoints, self.q[('w', 0)])########YY
+        if ('grad(w)',0) not in self.q.keys():
+            ##### get q grad w
+            self.q[('grad(w)',0)] =  numpy.zeros(
+                (self.mesh.nElements_global,
+                 self.nQuadraturePoints_element,
+                 self.nDOF_trial_element[0],
+                 self.nSpace_global),
+                'd')
+            
+            self.q['J'] = numpy.zeros((self.mesh.nElements_global,
+                                       self.nQuadraturePoints_element,
+                                       self.nSpace_global,
+                                       self.nSpace_global),'d')
+            self.q['inverse(J)'] = numpy.zeros((self.mesh.nElements_global,
+                                                self.nQuadraturePoints_element,
+                                                self.nSpace_global,
+                                                self.nSpace_global),'d')
+            self.q[('det(J)')] = np.zeros((self.mesh.nElements_global,
+                                           self.nQuadraturePoints_element),
+                                          'd')
+            self.q['abs(det(J))'] = np.abs(self.q['det(J)'])
+    
+            self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
+                                                             self.q['J'],
+                                                             self.q['inverse(J)'],
+                                                             self.q['det(J)'])
+            self.q['abs(det(J))'] = np.abs(self.q['det(J)'])
+            self.u[0].femSpace.getBasisGradientValues(self.elementQuadraturePoints,
+                                                    self.q['inverse(J)'],
+                                                    self.q[('grad(w)',0)])
+        if ('w',0) not in self.ebqe.keys():
+            ####### get ebqe v
+            self.ebqe[('w',0)] = numpy.zeros(
+                (self.mesh.nExteriorElementBoundaries_global,
+                 self.nElementBoundaryQuadraturePoints_elementBoundary,
+                 self.nDOF_trial_element[0]),
+                'd')
+            self.u[0].femSpace.getBasisValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
+                                                                self.ebqe[('w',0)])
+        if ('grad(w)',0) not in self.ebqe.keys():
+            ####### get ebqe grad(v)
+            self.ebqe[('grad(w)',0)] = numpy.zeros(
+                (self.mesh.nExteriorElementBoundaries_global,
+                 self.nElementBoundaryQuadraturePoints_elementBoundary,
+                 self.nDOF_trial_element[0],
+                 self.nSpace_global),
+                'd')
+    
+            self.ebqe['inverse(J)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+                                                   self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                   self.nSpace_global,
+                                                   self.nSpace_global),'d')
+            self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+                                          self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                          3),'d')
+            self.ebqe['g'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+                                          self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                          max(1,self.nSpace_global-1),
+                                          max(1,self.nSpace_global-1)),
+                                          'd')
+            self.ebqe['inverse(J)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+                                                   self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                   self.nSpace_global,
+                                                   self.nSpace_global),'d')
+            self.ebqe['sqrt(det(g))'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+                                                     self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+            self.ebqe[('n')] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+                                            self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                            self.nSpace_global),'d')
+            self.u[0].femSpace.elementMaps.getJacobianValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
+                                                                                self.ebqe['inverse(J)'],
+                                                                                self.ebqe['g'],
+                                                                                self.ebqe['sqrt(det(g))'],
+                                                                                self.ebqe['n'])
+
+            self.u[0].femSpace.getBasisGradientValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
+                                                                          self.ebqe['inverse(J)'],
+                                                                          self.ebqe[('grad(w)',0)])
 
     def updateAfterMeshMotion(self):
         pass
+
+        
+        
+    def check_variables(self, prename, val_list):
+        print "***"*10
+        for idx, val in enumerate(val_list):
+            print prename, self.name, idx, val.min(),val.max()
+            
+    def transfer_aditional_variables_dof_to_pumi(self, pumi_mesh):
+        val_list = (self.u[0].dof,
+                         self.q[('u',0)],
+                         self.q[('grad(u)',0)],
+                         self.ebqe[('u',0)],
+                         self.ebqe[('grad(u)',0)],
+                         )
+        self.check_variables("to,",val_list)
+        ##################
+        scalar=numpy.zeros((self.mesh.nNodes_global,1),'d')
+        scalar[:,0] = self.u[0].dof
+        pumi_mesh.transferFieldToPUMI('u_dof', scalar)
+        
+        del scalar
+
+    def transfer_aditional_variables_dof_from_pumi(self, pumi_mesh):
+        
+        scalar=numpy.zeros((self.mesh.nNodes_global,1),'d')
+        pumi_mesh.transferFieldToProteus('u_dof', scalar)
+        self.u[0].dof[:] = scalar[:,0]
+        
+        del scalar
+        
+        self.update_variables_qt_after_adaptive()
+        
+        val_list = (self.u[0].dof,
+                         self.q[('u',0)],
+                         self.q[('grad(u)',0)],
+                         self.ebqe[('u',0)],
+                         self.ebqe[('grad(u)',0)],
+                         )
+        self.check_variables("from,",val_list)
+        ##################
+    def update_variables_qt_after_adaptive(self):#similar to postStep;
+        self.u[0].getValues(self.q[('w',0)],self.q[('u',0)])###YY: Used in Pres module
+        self.u[0].getGradientValues(self.q[('grad(w)',0)], self.q[('grad(u)',0)])###YY: Used in Pres module and this module
+        self.u[0].getValuesGlobalExteriorTrace(self.ebqe[('w',0)], self.ebqe[('u',0)])###YY: Used in Pres module
+        self.u[0].getGradientValuesGlobalExteriorTrace(self.ebqe[('grad(w)',0)], self.ebqe[('grad(u)',0)])###YY: Used in Pres module
+        
+        alphaBDF = self.coefficients.fluidModel.timeIntegration.alpha_bdf
+        self.coefficients.fluidModel.q[('velocity', 0)][:,:,0] -= self.q[('grad(u)', 0)][:,:,0] / (self.coefficients.rho_f_min * alphaBDF)
+        self.coefficients.fluidModel.q[('velocity', 0)][:,:,1] -= self.q[('grad(u)', 0)][:,:,1] / (self.coefficients.rho_f_min * alphaBDF)
+            # cek hack, need to do scale this right for 3p flow
+        self.coefficients.fluidModel.ebqe[('velocity', 0)][..., 0] += (self.ebqe[('advectiveFlux', 0)]
+                                                                     +self.ebqe[('diffusiveFlux', 0, 0)]
+                                                                     -self.coefficients.fluidModel.ebqe[('velocity', 0)][..., 0]
+                                                                     )*self.ebqe['n'][..., 0]
+        self.coefficients.fluidModel.ebqe[('velocity', 0)][..., 1] += (self.ebqe[('advectiveFlux', 0)]
+                                                                     +self.ebqe[('diffusiveFlux', 0, 0)]
+                                                                     -self.coefficients.fluidModel.ebqe[('velocity', 0)][..., 1]
+                                                                     )*self.ebqe['n'][..., 1]
+                    

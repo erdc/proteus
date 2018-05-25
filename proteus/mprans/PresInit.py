@@ -745,3 +745,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def updateAfterMeshMotion(self):
         pass
+            
+    def transfer_aditional_variables_dof_to_pumi(self, pumi_mesh):
+        pass
+
+    def transfer_aditional_variables_dof_from_pumi(self, pumi_mesh):
+        pass
