@@ -13,7 +13,7 @@
 //4. Add Riemann solvers for internal flux and DG terms
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
-#define lambda 1. // For Dispersive Model
+#define lambda 1.0 // For Dispersive Model
 #define WHICH_DISP_MODEL 0
 // EJT. If WHICH_DISP_MODEL is 1, then this is
 // Guermond's dispersive  model. If 0,
@@ -2430,24 +2430,27 @@ namespace proteus
 	      /////////////////
 	      // FORCE TERMS //
 	      /////////////////
-	      //double etai = hetai*one_over_hiReg;
-	      double force_term_hetai = hwi*mi;
+	      
+	      double hiSqd = std::pow(hi,2.0);
+	      
+	      double SGN_aux_i = (2/(hiSqd + fmax(hiSqd,mi)));
+	      //double xxi = hetai * SGN_aux_i;
+	      double etai = hetai*one_over_hiReg;
+	       double xxi = etai*one_over_hiReg;
+	      
 	      // EJT. Corrected terms to match our paper
 	      // and define both Guermond and Gavrilyuk force terms for hw equation.
-	      double etai = hetai*one_over_hiReg;
-	      double xxi = etai*one_over_hiReg;
-	      //double xxi = hetai/std::pow(hi,2.0);
+	      double force_term_hetai = hwi*mi;
 	      double meshi = std::sqrt(mi);
 	      double psii = 12.0 * (xxi - 1.0);
 	      // This is Guermond's force term
 	      double force_term_hwi = -lambda*g/meshi*etai*etai*psii*mi;
+
 	      // if WHICH_DISP_MODEL is 0 then code runs with Gavrilyuk's model.
 	      if (WHICH_DISP_MODEL==0)
 		{
-		  //force_term_hwi = -lambda*(etai*one_over_hiReg-1.)*mi;
-		  force_term_hwi = -lambda*(xxi - 1.)*mi;
+		 force_term_hwi = -lambda * (xxi-1.0) * mi; 
 		}
-
 
               // loop over the sparsity pattern of the i-th DOF
               for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
@@ -2465,24 +2468,29 @@ namespace proteus
 		  double etaj = hetaj*one_over_hjReg;
                   // EJT. Corrected terms to match our paper.
           	  double mj = lumped_mass_matrix[j];
-                  double meshj = std::sqrt(mj); // local mesh size
+                  double meshj = std::sqrt(mj); // local mesh size in 2d
+
                   // This is used to make definition of pTildej cleaner
-          	  double xxj = etaj*one_over_hjReg;
-                  //double xxj = hetaj/std::pow(hj,2.0);
+		  double hjSqd = std::pow(hj,2.0);
+		  double SGN_aux_j = (2/(hjSqd + fmax(hjSqd,mj)));
+          	  //double xxj = hetaj*SGN_aux_j;
+		  double xxj = etaj*one_over_hjReg;
           	  double polyj = 2.0 + 4.0*std::pow(xxj,3.) - 6.0*std::pow(xxj,4.);
                   // Define pTildej here. Standard is Guermond's
-                  double pTildej =  lambda*g/(3. * meshj)*std::pow(hj,3.)*polyj;
+                  double pTildej = lambda*g/(3. * meshj)*std::pow(hj,3.)*polyj;
+		  double cut_off = 1E-4;
                   // if WHICH_DISP_MODEL is 0 then Gavrilyuk's model is used.
                       if (WHICH_DISP_MODEL==0)
-                          {
-          		    //pTildej = -lambda/3.*(etaj*one_over_hjReg-1.0)*etaj;
-			    pTildej = -lambda/3.*(xxj-1.0)*hetaj*one_over_hjReg;
+                          {       		   
+			    pTildej = -lambda/3.*(xxj-1.0)*etaj; 
+			    //  if (hetaj - mj < cut_off)
+			    // {
+			    //	pTildej = 0.0;
+			    //std::cout<<"this is kicking in" <<std::endl;
+			    // }
                           }
-
-		      // std::cout << pTildej << "\t" 
-		      //	<< xxj <<  "\t" 
-		      //	<< hetaj <<  "\t"
-		      //	<< one_over_hjReg <<  std::endl; 
+		    
+		    
 
                   // Nodal projection of fluxes
                   ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
@@ -2557,27 +2565,27 @@ namespace proteus
                       ith_dHij_minus_muHij_times_hStarStates  += (dHij - muHij)*(hStarji-hStarij);
                       ith_dHij_minus_muHij_times_huStarStates += (dHij - muHij)*(huStarji-huStarij);
                       ith_dHij_minus_muHij_times_hvStarStates += (dHij - muHij)*(hvStarji-hvStarij);
-            		      ith_dHij_minus_muHij_times_hetaStarStates += (dHij - muHij)*(hetaStarji-hetaStarij);
-            		      ith_dHij_minus_muHij_times_hwStarStates += (dHij - muHij)*(hwStarji-hwStarij);
+            	      ith_dHij_minus_muHij_times_hetaStarStates += (dHij - muHij)*(hetaStarji-hetaStarij);
+            	      ith_dHij_minus_muHij_times_hwStarStates += (dHij - muHij)*(hwStarji-hwStarij);
 
                       ith_dLij_minus_muLij_times_hStarStates  += (dLij - muLij)*(hStarji-hStarij);
                       ith_dLij_minus_muLij_times_huStarStates += (dLij - muLij)*(huStarji-huStarij);
                       ith_dLij_minus_muLij_times_hvStarStates += (dLij - muLij)*(hvStarji-hvStarij);
-            		      ith_dLij_minus_muLij_times_hetaStarStates += (dLij - muLij)*(hetaStarji-hetaStarij);
-            		      ith_dLij_minus_muLij_times_hwStarStates += (dLij - muLij)*(hwStarji-hwStarij);
+            	      ith_dLij_minus_muLij_times_hetaStarStates += (dLij - muLij)*(hetaStarji-hetaStarij);
+            	      ith_dLij_minus_muLij_times_hwStarStates += (dLij - muLij)*(hwStarji-hwStarij);
 
                       // compute muij times solution terms
                       ith_muHij_times_hStates  += muHij*(hj-hi);
                       ith_muHij_times_huStates += muHij*(huj-hui);
                       ith_muHij_times_hvStates += muHij*(hvj-hvi);
-            		      ith_muHij_times_hetaStates += muHij*(hetaj-hetai);
-            		      ith_muHij_times_hwStates += muHij*(hwj-hwi);
+            	      ith_muHij_times_hetaStates += muHij*(hetaj-hetai);
+            	      ith_muHij_times_hwStates += muHij*(hwj-hwi);
 
                       ith_muLij_times_hStates  += muLij*(hj-hi);
                       ith_muLij_times_huStates += muLij*(huj-hui);
                       ith_muLij_times_hvStates += muLij*(hvj-hvi);
-            		      ith_muLij_times_hetaStates += muLij*(hetaj-hetai);
-            		      ith_muLij_times_hwStates += muLij*(hwj-hwi);
+            	      ith_muLij_times_hetaStates += muLij*(hetaj-hetai);
+            	      ith_muLij_times_hwStates += muLij*(hwj-hwi);
 
                       // compute dH_minus_dL
                       dH_minus_dL[ij] = dHij - dLij;
@@ -2609,17 +2617,17 @@ namespace proteus
       	      low_order_hnp1[i]  = hi  - dt/mi*(ith_flux_term1
           						- ith_dLij_minus_muLij_times_hStarStates
           						- ith_muLij_times_hStates);
-                        low_order_hunp1[i] = hui - dt/mi*(ith_flux_term2
+              low_order_hunp1[i] = hui - dt/mi*(ith_flux_term2
           						- ith_dLij_minus_muLij_times_huStarStates
           						- ith_muLij_times_huStates);
-	            // EJT. Set v = 0 for 1d setting.
+	      // EJT. Set v = 0 for 1d setting.
               low_order_hvnp1[i] = 0.0*( hvi - dt/mi*(ith_flux_term3
 						          - ith_dLij_minus_muLij_times_hvStarStates
 						          - ith_muLij_times_hvStates));
 
-	            low_order_hetanp1[i] = hetai - dt/mi*(ith_flux_term4
-      						    - ith_dLij_minus_muLij_times_hetaStarStates
-      						    - ith_muLij_times_hetaStates) + dt/mi*force_term_hetai;
+	      low_order_hetanp1[i] = hetai - dt/mi*(ith_flux_term4
+      		             			          - ith_dLij_minus_muLij_times_hetaStarStates
+      						          - ith_muLij_times_hetaStates) + dt/mi*force_term_hetai;
 
               low_order_hwnp1[i] = hwi - dt/mi*(ith_flux_term5
           						- ith_dLij_minus_muLij_times_hwStarStates
@@ -2642,15 +2650,17 @@ namespace proteus
                   double aux = fmax(low_order_hnp1[i],hReg[i]); //hEps. Using hReg makes the code more robust
                   low_order_hunp1[i] *= 2*std::pow(low_order_hnp1[i],VEL_FIX_POWER)/(std::pow(low_order_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
                   low_order_hvnp1[i] *= 2*std::pow(low_order_hnp1[i],VEL_FIX_POWER)/(std::pow(low_order_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
+		  //low_order_hetanp1[i] = fmax(std::pow(low_order_hnp1[i],2.0),0.);
+		  //  low_order_hwnp1[i] *= 2*std::pow(low_order_hnp1[i],VEL_FIX_POWER)/(std::pow(low_order_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
                 }
-              int LOW_ORDER_SOLUTION=1; // FOR DEBUGGING
+              int LOW_ORDER_SOLUTION=0; // FOR DEBUGGING
               if (LOW_ORDER_SOLUTION==1)
                 {
                   globalResidual[offset_h+stride_h*i]   = low_order_hnp1[i];
                   globalResidual[offset_hu+stride_hu*i] = low_order_hunp1[i];
                   globalResidual[offset_hv+stride_hv*i] = low_order_hvnp1[i];
-            		  globalResidual[offset_heta+stride_heta*i] = low_order_hetanp1[i];
-            		  globalResidual[offset_hw+stride_hw*i] = low_order_hwnp1[i];
+            	  globalResidual[offset_heta+stride_heta*i] = low_order_hetanp1[i];
+            	  globalResidual[offset_hw+stride_hw*i] = low_order_hwnp1[i];
                 }
               else
                 {
@@ -2663,13 +2673,23 @@ namespace proteus
                       globalResidual[offset_hu+stride_hu*i]
 			= hui - dt/mi*(ith_flux_term2
 				       - ith_dHij_minus_muHij_times_huStarStates
-				       - ith_muHij_times_huStates
-				       + ith_friction_term2);
+				       - ith_muHij_times_huStates);
+			           //  + ith_friction_term2);
                       globalResidual[offset_hv+stride_hv*i]
-			= hvi - dt/mi*(ith_flux_term3
+			= 0.0* ( hvi - dt/mi*(ith_flux_term3
 				       - ith_dHij_minus_muHij_times_hvStarStates
-				       - ith_muHij_times_hvStates
-				       + ith_friction_term3);
+					      - ith_muHij_times_hvStates) );
+		                   //  + ith_friction_term3); 
+		      globalResidual[offset_heta+stride_heta*i]
+			= hetai - dt/mi*(ith_flux_term4
+				       - ith_dHij_minus_muHij_times_hetaStarStates
+				       - ith_muHij_times_hetaStates)
+				       + dt/mi * force_term_hetai;
+	              globalResidual[offset_hw+stride_hw*i]
+			= hwi - dt/mi*(ith_flux_term5
+				       - ith_dHij_minus_muHij_times_hwStarStates
+				       - ith_muHij_times_hwStates)
+				       + dt/mi * force_term_hwi;
                       // clean up potential negative water height due to machine precision
                       if (globalResidual[offset_h+stride_h*i] >= -1E-14)
                         globalResidual[offset_h+stride_h*i] = fmax(globalResidual[offset_h+stride_h*i],0.);
@@ -2685,13 +2705,23 @@ namespace proteus
                       globalResidual[offset_hu+stride_hu*i]
                         += dt*(ith_flux_term2
                                - ith_dHij_minus_muHij_times_huStarStates
-                               - ith_muHij_times_huStates
-                               + ith_friction_term2);
+                               - ith_muHij_times_huStates);
+			       // + ith_friction_term2);
                       globalResidual[offset_hv+stride_hv*i]
                         += dt*(ith_flux_term3
                                - ith_dHij_minus_muHij_times_hvStarStates
-                               - ith_muHij_times_hvStates
-                               + ith_friction_term3);
+                               - ith_muHij_times_hvStates);
+		              // + ith_friction_term3);
+		      globalResidual[offset_heta+stride_heta*i]
+			+=dt*(ith_flux_term4
+			      - ith_dHij_minus_muHij_times_hetaStarStates
+			      - ith_muHij_times_hetaStates
+			      + force_term_hetai);
+		      globalResidual[offset_hw+stride_hw*i]
+			+=dt*(ith_flux_term5
+			      - ith_dHij_minus_muHij_times_hwStarStates
+			      - ith_muHij_times_hwStates
+			      + force_term_hwi);
                     }
                 }
             }
