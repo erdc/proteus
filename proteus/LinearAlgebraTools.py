@@ -1244,28 +1244,28 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         Parameters
         ----------
         Qp_visc : petsc4py matrix
-                  The pressure mass matrix with dynamic viscocity
-                  scaling.
+            The pressure mass matrix with dynamic viscocity
+            scaling.
         Qp_dens : petsc4py matrix
-                  The pressure mass matrix with density scaling.
+            The pressure mass matrix with density scaling.
         Ap_rho : petsc4py matrix
-                 The pressure Laplacian scaled with density scaling.
+            The pressure Laplacian scaled with density scaling.
         Np_rho : petsc4py matrix
-                 The pressure advection operator with inverse density
-                 scaling.
+            The pressure advection operator with inverse density
+            scaling.
         alpha : binary
-                True if problem is temporal, False if problem is steady
-                state.
+            True if problem is temporal, False if problem is steady
+            state.
         delta_t : float
-                Time step parameter.
+            Time step parameter.
         num_chebyshev_its : int
-                Number of chebyshev iteration steps to take. (0 indicates
-                the chebyshev semi iteration is not used)
+            Number of chebyshev iteration steps to take. (0 indicates
+            the chebyshev semi iteration is not used)
         strong_dirichlet_DOF : lst
-                List of DOF with known, strongly enforced values.
+            List of DOF with known, strongly enforced values.
         laplace_null_space : binary
-                Indicates whether the pressure Laplace matrix has a
-                null space or not.
+            Indicates whether the pressure Laplace matrix has a
+            null space or not.
         par_info : ParInfoClass
             Provides parallel info.
         """
@@ -1331,14 +1331,6 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
             self.kspQp_dens = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_dens_',
                                                         self.Qp_dens)
 
-
-    # def update(self, Np_rho):
-    #     """ """
-    #     import pdb ; pdb.set_trace()
-    #     self.Np_rho = Np_rho
-    #     self.Np_rho_reduced = self.Np_rho.getSubMatrix(self.unknown_dof_is,
-    #                                                    self.unknown_dof_is)
-
     def getSize(self):
         """ Return the total number of DOF for the shell problem. """
         return self.Ap_rho.getSizes()[0][0]
@@ -1386,7 +1378,6 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
                                tmp1,
                                self.num_chebyshev_its)
         else:
-            # ARB - check for speed            
 #            y_tmp.pointwiseDivide(x_tmp,self.kspQp_visc.getOperators()[0].getDiagonal())
 #            tmp1.pointwiseDivide(x_tmp,self.kspQp_dens.getOperators()[0].getDiagonal())
             self.kspQp_visc.solve(x_tmp,y)
