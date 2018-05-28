@@ -188,7 +188,8 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.heta_dof_old[:] = self.u_dof_lstage[3]
                 self.transport.hw_dof_old[:] = self.u_dof_lstage[4]
             elif self.lstage == 2:
-                logEvent("Second stage of SSP33 method finished", level=4)        
+
+                logEvent("Second stage of SSP33 method finished", level=4)
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
                     self.u_dof_lstage[ci] *= 1. / 4.
@@ -213,8 +214,6 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.hv_dof_old[:] = self.u_dof_last[2]
                 self.transport.heta_dof_old[:] = self.u_dof_last[3]
                 self.transport.hw_dof_old[:] = self.u_dof_last[4]
-                #dummy = np.copy(self.transport.u[ci].dof)
-                #self.transport.getResidual(self.transport.u[ci].dof[:],dummy)
         elif self.timeOrder == 2:
             if self.lstage == 1:
                 logEvent("First stage of SSP22 method finished", level=4)
@@ -235,13 +234,11 @@ class RKEV(proteus.TimeIntegration.SSP):
                     # update solution to u[0].dof
                     self.transport.u[ci].dof[:] = self.u_dof_lstage[ci]
                 # Update u_dof_old
-                self.transport.h_dof_old[:] = self.u_dof_last[0]
+                self.transport.h_dof_old[:] = self.u_dof_last[0]  # HHHEEEEEREEEEE!!!
                 self.transport.hu_dof_old[:] = self.u_dof_last[1]
                 self.transport.hv_dof_old[:] = self.u_dof_last[2]
                 self.transport.heta_dof_old[:] = self.u_dof_last[3]
                 self.transport.hw_dof_old[:] = self.u_dof_last[4]
-                #dummy = np.copy(self.transport.u[ci].dof)
-                #self.transport.getResidual(self.transport.u[ci].dof[:],dummy)
         else:
             assert self.timeOrder == 1
             logEvent("FE method finished", level=4)
