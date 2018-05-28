@@ -3,8 +3,8 @@ from proteus.default_n import *
 from sw_hump_2d_p import *
 
 refinement=5
-runCFL=0.1
-SSPOrder=1
+runCFL=0.4
+SSPOrder=3
 
 multilevelNonlinearSolver  = Newton
 if (LUMPED_MASS_MATRIX==1):
@@ -12,7 +12,7 @@ if (LUMPED_MASS_MATRIX==1):
 else:
     levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
 
-timeIntegration = DSW2DCV.RKEV
+timeIntegration = DSW2DCV.RKEV 
 stepController = Min_dt_controller
 timeOrder = SSPOrder
 nStagesTime = SSPOrder
