@@ -65,16 +65,24 @@ namespace proteus
                             double* h_old, //DOFs of solution at last stage
                             double* hu_old,
                             double* hv_old,
+			    double* heta_old,
+			    double* hw_old,
                             double* b_dof,
                             double* high_order_hnp1, //DOFs of high order solution at tnp1
                             double* high_order_hunp1,
                             double* high_order_hvnp1,
+			    double* high_order_hetanp1,
+			    double* high_order_hwnp1,
                             double* low_order_hnp1, //operators to construct low order solution
                             double* low_order_hunp1,
                             double* low_order_hvnp1,
+			    double* low_order_hetanp1,
+			    double* low_order_hwnp1,
                             double* limited_hnp1,
                             double* limited_hunp1,
                             double* limited_hvnp1,
+			    double* limited_hetanp1,
+			    double* limited_hwnp1,
                             int* csrRowIndeces_DofLoops, //csr row indeces
                             int* csrColumnOffsets_DofLoops, //csr column offsets
                             double* MassMatrix, //mass matrix
@@ -1663,16 +1671,24 @@ namespace proteus
                     double* h_old, //DOFs of solution at last stage
                     double* hu_old,
                     double* hv_old,
+		 double* heta_old,
+		 double* hw_old,
                     double* b_dof,
                     double* high_order_hnp1, //DOFs of high order solution at tnp1
                     double* high_order_hunp1,
                     double* high_order_hvnp1,
+		 double* high_order_hetanp1,
+		 double* high_order_hwnp1,
                     double* low_order_hnp1, //operators to construct low order solution
                     double* low_order_hunp1,
                     double* low_order_hvnp1,
+		 double* low_order_hetanp1,
+		 double* low_order_hwnp1,
                     double* limited_hnp1,
                     double* limited_hunp1,
                     double* limited_hvnp1,
+		 double* limited_hetanp1,
+		 double* limited_hwnp1,
                     int* csrRowIndeces_DofLoops, //csr row indeces
                     int* csrColumnOffsets_DofLoops, //csr column offsets
                     double* MassMatrix, //mass matrix
@@ -1747,9 +1763,13 @@ namespace proteus
           double high_order_hnp1i  = high_order_hnp1[i];
           double high_order_hunp1i = high_order_hunp1[i];
           double high_order_hvnp1i = high_order_hvnp1[i];
+	  double high_order_hetanp1i = high_order_hetanp1[i];
+	  double high_order_hwnp1i = high_order_hwnp1[i];
           double hni = h_old[i];
           double huni = hu_old[i];
           double hvni = hv_old[i];
+	  double hetani = heta_old[i];
+	  double hwni = hw_old[i];
           double Zi = b_dof[i];
           double mi = lumped_mass_matrix[i];
           double one_over_hiReg = 2*hni/(hni*hni+std::pow(fmax(hni,hEps),2)); //hEps
@@ -1757,6 +1777,8 @@ namespace proteus
           double ith_Limiter_times_FluxCorrectionMatrix1 = 0.;
           double ith_Limiter_times_FluxCorrectionMatrix2 = 0.;
           double ith_Limiter_times_FluxCorrectionMatrix3 = 0.;
+	  double ith_Limiter_times_FluxCorrectionMatrix4 = 0.;
+	  double ith_Limiter_times_FluxCorrectionMatrix5 = 0.;
           double Rnegi = Rneg[i];
           // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
           for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
@@ -1766,6 +1788,8 @@ namespace proteus
               double hnj = h_old[j];
               double hunj = hu_old[j];
               double hvnj = hv_old[j];
+	      double hetanj = heta_old[j];
+	      double hwnj = hw_old[j];
               double Zj = b_dof[j];
               double one_over_hjReg = 2*hnj/(hnj*hnj+std::pow(fmax(hnj,hEps),2)); //hEps
 
@@ -1773,10 +1797,14 @@ namespace proteus
               double hStarij  = fmax(0., hni + Zi - fmax(Zi,Zj));
               double huStarij = huni*hStarij*one_over_hiReg;
               double hvStarij = hvni*hStarij*one_over_hiReg;
+	      double hetaStarij = hetani*hStarij*one_over_hiReg;
+	      double hwStarij = hwni*hStarij*one_over_hiReg;
 
               double hStarji  = fmax(0., hnj + Zj - fmax(Zi,Zj));
               double huStarji = hunj*hStarji*one_over_hjReg;
               double hvStarji = hvnj*hStarji*one_over_hjReg;
+	      double hetaStarji = hetanj*hStarji*one_over_hjReg;
+	      double hwStarji = hwnj*hStarji*one_over_hjReg;
 
               // COMPUTE FLUX CORRECTION MATRICES
               double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
@@ -1795,12 +1823,24 @@ namespace proteus
                 + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hvStarji-hvStarij)
                 + dt*muH_minus_muL[ij]*(hvnj-hvni);
 
+	       double FluxCorrectionMatrix4 =
+		 ML_minus_MC*(high_order_hetanp1[j]-hetanj - (high_order_hetanp1i-hetani))
+		 + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hetaStarji-hetaStarij)
+		  + dt*muH_minus_muL[ij]*(hetanj-hetani);
+
+	        double FluxCorrectionMatrix5 =
+		 ML_minus_MC*(high_order_hwnp1[j]-hwnj - (high_order_hwnp1i-hwni))
+		 + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hwStarji-hwStarij)
+		  + dt*muH_minus_muL[ij]*(hwnj-hwni);
+
               // compute limiter based on water height
               double Lij = (FluxCorrectionMatrix1 > 0. ? std::min(1.,Rneg[j]) : std::min(Rnegi,1.));
 
               ith_Limiter_times_FluxCorrectionMatrix1 += Lij*FluxCorrectionMatrix1;
               ith_Limiter_times_FluxCorrectionMatrix2 += Lij*FluxCorrectionMatrix2;
               ith_Limiter_times_FluxCorrectionMatrix3 += Lij*FluxCorrectionMatrix3;
+	      ith_Limiter_times_FluxCorrectionMatrix4 += Lij*FluxCorrectionMatrix4;
+	      ith_Limiter_times_FluxCorrectionMatrix5 += Lij*FluxCorrectionMatrix5;
               //update ij
               ij+=1;
             }
@@ -1809,7 +1849,8 @@ namespace proteus
           limited_hnp1[i]  = low_order_hnp1[i]  + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
           limited_hunp1[i] = low_order_hunp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
           limited_hvnp1[i] = low_order_hvnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
-
+	  limited_hetanp1[i] = low_order_hetanp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix4;
+	  limited_hwnp1[i] = low_order_hwnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix5;
           if (limited_hnp1[i] < -1E-14 && dt < 1.0)
             {
               std::cout << "Limited water height is negative: "

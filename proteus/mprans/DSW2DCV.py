@@ -985,13 +985,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         # Extract hnp1 from global solution u
         index = range(0, len(self.timeIntegration.u))
-        hIndex = index[0::3]
-        huIndex = index[1::3]
-        hvIndex = index[2::3]
+        hIndex = index[0::5]
+        huIndex = index[1::5]
+        hvIndex = index[2::5]
+        hetaIndex = index[3::5]
+        hwIndex = index[4::5]
         # create limited solution
         limited_hnp1 = numpy.zeros(self.h_dof_old.shape)
         limited_hunp1 = numpy.zeros(self.h_dof_old.shape)
         limited_hvnp1 = numpy.zeros(self.h_dof_old.shape)
+        limited_hetanp1 = numpy.zeros(self.h_dof_old.shape)
+        limited_hwnp1 = numpy.zeros(self.h_dof_old.shape)
         # Do some type of limitation
 
         self.sw2d.FCTStep(self.timeIntegration.dt,
@@ -1001,16 +1005,24 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           self.h_dof_old,
                           self.hu_dof_old,
                           self.hv_dof_old,
+                          self.heta_dof_old,
+                          self.hw_dof_old,
                           self.coefficients.b.dof,
                           self.timeIntegration.u[hIndex],  # high order solution
                           self.timeIntegration.u[huIndex],
                           self.timeIntegration.u[hvIndex],
+                          self.timeIntegration.u[hetaIndex],
+                          self.timeIntegration.u[hwIndex],
                           self.low_order_hnp1,  # low order solution
                           self.low_order_hunp1,
                           self.low_order_hvnp1,
+                          self.low_order_hetanp1,
+                          self.low_order_hwnp1,
                           limited_hnp1,
                           limited_hunp1,
                           limited_hvnp1,
+                          limited_hetanp1,
+                          limited_hwnp1,
                           rowptr,  # Row indices for Sparsity Pattern (convenient for DOF loops)
                           colind,  # Column indices for Sparsity Pattern (convenient for DOF loops)
                           MassMatrix,
@@ -1024,7 +1036,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeIntegration.u[hIndex] = limited_hnp1
         self.timeIntegration.u[huIndex] = limited_hunp1
         self.timeIntegration.u[hvIndex] = limited_hvnp1
-
+        self.timeIntegration.u[hetaIndex] = limited_hetanp1
+        self.timeIntegration.u[hwIndex] = limited_hwnp1
     def getResidual(self, u, r):
         """
         Calculate the element residuals and add in to the global residual
