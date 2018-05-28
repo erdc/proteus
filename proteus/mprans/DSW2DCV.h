@@ -2436,7 +2436,7 @@ namespace proteus
 	      double SGN_aux_i = (2/(hiSqd + fmax(hiSqd,mi)));
 	      //double xxi = hetai * SGN_aux_i;
 	      double etai = hetai*one_over_hiReg;
-	       double xxi = etai*one_over_hiReg;
+	      double xxi = etai*one_over_hiReg;
 	      
 	      // EJT. Corrected terms to match our paper
 	      // and define both Guermond and Gavrilyuk force terms for hw equation.
