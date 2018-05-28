@@ -185,8 +185,8 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.h_dof_old[:] = self.u_dof_lstage[0]
                 self.transport.hu_dof_old[:] = self.u_dof_lstage[1]
                 self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
-                self.transport_heta_dof_old[:] = self.u_dof_lstage[3]
-                self.transport_hw_dof_old[:] = self.u_dof_lstage[4]
+                self.transport.heta_dof_old[:] = self.u_dof_lstage[3]
+                self.transport.hw_dof_old[:] = self.u_dof_lstage[4]
             elif self.lstage == 2:
 
                 logEvent("Second stage of SSP33 method finished", level=4)
@@ -198,8 +198,8 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.h_dof_old[:] = self.u_dof_lstage[0]
                 self.transport.hu_dof_old[:] = self.u_dof_lstage[1]
                 self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
-                self.transport_heta_dof_old[:]=self.u_dof_lstage[3]
-                self.transport_hw_dof_old[:] = self.u_dof_lstage[4]
+                self.transport.heta_dof_old[:]=self.u_dof_lstage[3]
+                self.transport.hw_dof_old[:] = self.u_dof_lstage[4]
             else:
                 logEvent("Third stage of SSP33 method finished", level=4)
                 for ci in range(self.nc):
@@ -212,6 +212,8 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.h_dof_old[:] = self.u_dof_last[0]
                 self.transport.hu_dof_old[:] = self.u_dof_last[1]
                 self.transport.hv_dof_old[:] = self.u_dof_last[2]
+                self.transport.heta_dof_old[:] = self.u_dof_last[3]
+                self.transport.hw_dof_old[:] = self.u_dof_last[4]
         elif self.timeOrder == 2:
             if self.lstage == 1:
                 logEvent("First stage of SSP22 method finished", level=4)
@@ -233,6 +235,8 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.h_dof_old[:] = self.u_dof_last[0]  # HHHEEEEEREEEEE!!!
                 self.transport.hu_dof_old[:] = self.u_dof_last[1]
                 self.transport.hv_dof_old[:] = self.u_dof_last[2]
+                self.transport.heta_dof_old[:] = self.u_dof_last[3]
+                self.transport.hw_dof_old[:] = self.u_dof_last[4]
         else:
             assert self.timeOrder == 1
             logEvent("FE method finished", level=4)
