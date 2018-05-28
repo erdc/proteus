@@ -185,7 +185,10 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.h_dof_old[:] = self.u_dof_lstage[0]
                 self.transport.hu_dof_old[:] = self.u_dof_lstage[1]
                 self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
+                self.transport_heta_dof_old[:] = self.u_dof_lstage[3]
+                self.transport_hw_dof_old[:] = self.u_dof_lstage[4]
             elif self.lstage == 2:
+
                 logEvent("Second stage of SSP33 method finished", level=4)
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
@@ -195,6 +198,8 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.h_dof_old[:] = self.u_dof_lstage[0]
                 self.transport.hu_dof_old[:] = self.u_dof_lstage[1]
                 self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
+                self.transport_heta_dof_old[:]=self.u_dof_lstage[3]
+                self.transport_hw_dof_old[:] = self.u_dof_lstage[4]
             else:
                 logEvent("Third stage of SSP33 method finished", level=4)
                 for ci in range(self.nc):
@@ -328,7 +333,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         reaction = {}
         hamiltonian = {}
         if nd == 2:
-            variableNames = ['h', 'u', 'v', 'seta', 'w']
+            variableNames = ['h', 'hu', 'hv', 'heta', 'hw']
             mass = {0: {0: 'linear'},
                     1: {0: 'linear', 1: 'linear'},
                     2: {0: 'linear', 2: 'linear'},
