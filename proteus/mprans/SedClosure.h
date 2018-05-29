@@ -70,10 +70,12 @@ public:
       }
     double du = sqrt(du2);
     double weight = 1.;
+
+
     double gDrag1 = (aDarcy_*sedF*nu/((1. - sedF)*grain_*grain_) + betaForch_*du/grain_); // Darcy forchheimer term     
     double Cd = 0.44;
     double Re = (1-sedF)*du*grain_/nu;
-    double Re_min = 1.0e-3;//cek 5/26/2016, need this to  prevent Cd -> inf
+    double Re_min = 1.0e-3;
     if (Re < 1000) 
       {
         Cd = 24*(1. + 0.15*pow(fmax(Re_min,Re), 0.687))/fmax(Re_min,Re);                       //Particle cloud resistance Wen and Yu 1966
