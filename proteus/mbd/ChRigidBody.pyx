@@ -1,4 +1,5 @@
 # distutils: language = c++
+# cython: profile=True
 """
 Coupling between Chrono and Proteus is done in this file.
 
@@ -1506,21 +1507,21 @@ cdef class ProtChBody:
         tCount = self.ProtChSystem.tCount
         t = self.ProtChSystem.t
         xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
-        if tCount == 0:
-            root = ET.Element("Xdmf",
-                              {"Version": "2.0",
-                               "xmlns:xi": "http://www.w3.org/2001/XInclude"})
-            domain = ET.SubElement(root, "Domain")
-            arGridCollection = ET.SubElement(domain,
-                                            "Grid",
-                                            {"Name": "Mesh"+" Spatial_Domain",
-                                             "GridType": "Collection",
-                                             "CollectionType": "Temporal"})
-        else:
-            tree = ET.parse(xmlFile)
-            root = tree.getroot()
-            domain = root[0]
-            arGridCollection = domain[0]
+        # if tCount == 0:
+        root = ET.Element("Xdmf",
+                        {"Version": "2.0",
+                        "xmlns:xi": "http://www.w3.org/2001/XInclude"})
+        domain = ET.SubElement(root, "Domain")
+        arGridCollection = ET.SubElement(domain,
+                                        "Grid",
+                                        {"Name": "Mesh"+" Spatial_Domain",
+                                        "GridType": "Collection",
+                                        "CollectionType": "Temporal"})
+        # else:
+        #     tree = ET.parse(xmlFile)
+        #     root = tree.getroot()
+        #     domain = root[0]
+        #     arGridCollection = domain[0]
         Xdmf_ElementTopology = "Triangle"
         pos, el = self.getTriangleMeshInfo()
         Xdmf_NumberOfElements= len(el)
@@ -1535,16 +1536,16 @@ cdef class ProtChBody:
                                {"Value": str(t),
                                 "Name": str(tCount)})
         topology = ET.SubElement(arGrid,
-                                "Topology",
-                                {"Type": Xdmf_ElementTopology,
-                                "NumberOfElements": str(Xdmf_NumberOfElements)})
-
+                                 "Topology",
+                                 {"Type": Xdmf_ElementTopology,
+                                  "NumberOfElements": str(Xdmf_NumberOfElements)})
+        
         elements = ET.SubElement(topology,
-                                "DataItem",
-                                {"Format": dataItemFormat,
-                                "DataType": "Int",
-                                "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
-                                                         Xdmf_NodesPerElement)})
+                                 "DataItem",
+                                 {"Format": dataItemFormat,
+                                  "DataType": "Int",
+                                  "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
+                                                           Xdmf_NodesPerElement)})
         elements.text = self.hdfFileName+".h5:/elements_t"+str(tCount)
         geometry = ET.SubElement(arGrid,"Geometry",{"Type":"XYZ"})
         nodes = ET.SubElement(geometry,
@@ -1563,6 +1564,17 @@ cdef class ProtChBody:
             f.write(xmlHeader)
             indentXML(tree.getroot())
             tree.write(f)
+        
+        # dump xml str in h5 file
+        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
+        f = h5py.File(hdfFileName, 'a')
+        datav = ET.tostring(arGrid)
+        dset = f.create_dataset('Mesh_Spatial_Domain_'+str(tCount),
+                                (1,),
+                                dtype=h5py.special_dtype(vlen=str))
+        dset[0] = datav
+        # close file
+        f.close()
 
 
     def addPrismaticLinksWithSpring(self, np.ndarray pris1,
@@ -1639,6 +1651,7 @@ cdef class ProtChSystem:
         ProtChAddedMass ProtChAddedMass
         int tCount
         bool initialised
+        bool update_substeps
 
     def __cinit__(self, np.ndarray gravity=None, int nd=3, dt_init=0., sampleRate=0):
         if gravity is not None:
@@ -1676,6 +1689,7 @@ cdef class ProtChSystem:
         self.ProtChAddedMass = ProtChAddedMass(self)
         self.tCount = 0
         self.initialised = False
+        self.update_substeps = False
 
     def addProtChBody(self, ProtChBody body):
         self.thisptr.system.AddBody(body.ChBody.sharedptr_chbody)
@@ -1749,14 +1763,17 @@ cdef class ProtChSystem:
                         +' with dt='+str(self.dt)
                         +'('+str(nb_steps)+' substeps)')
         if comm.rank == self.chrono_processor and dt > 0:
-            dt_substep = self.dt/nb_steps
-            for i in range(nb_steps):
-                self.thisptr.step(<double> dt_substep, 1)
-                # tri: hack to update forces on cables
-                for s in self.subcomponents:
-                    if type(s) is ProtChMoorings:
-                        # update forces keeping same fluid vel/acc
-                        s.updateForces()
+            if self.update_substeps is False:
+                self.thisptr.step(<double> self.dt, nb_steps)
+            else:
+                dt_substep = self.dt/nb_steps
+                for i in range(nb_steps):
+                    self.thisptr.step(<double> dt_substep, 1)
+                    # tri: hack to update forces on cables
+                    for s in self.subcomponents:
+                        if type(s) is ProtChMoorings:
+                            # update forces keeping same fluid vel/acc
+                            s.updateForces()
         t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
         Profiling.logEvent('Solved Chrono system to t='+str(t))
         if self.scheme == "ISS":
@@ -2241,11 +2258,14 @@ cdef class ProtChMoorings:
       int nodes_nb # number of nodes
       np.ndarray nb_elems
       double[:] _record_etas
+      object _record_names
+      object _record_etas_names
       bool initialized
       int[:] nearest_node_array
       int[:] containing_element_array
       int[:] owning_rank
       string hdfFileName
+      double[:] tCount_value
     def __cinit__(self,
                   ProtChSystem system,
                   Mesh mesh,
@@ -2288,7 +2308,16 @@ cdef class ProtChMoorings:
         self.setName('mooring')
         self.external_forces_from_ns = True
         self.external_forces_manual = False
-        self._record_etas=np.array([0.])
+        self._record_etas = np.array([0.])
+        self._record_names = ['ux', 'uy', 'uz',
+                              'ax', 'ay', 'az',
+                              'fluid_ux', 'fluid_uy', 'fluid_uz',
+                              'fluid_ax', 'fluid_ay', 'fluid_az',
+                              'dragx', 'dragy', 'dragz',
+                              'amx', 'amy', 'amz']
+        self._record_etas_names = []
+        for eta in self._record_etas:
+            self._record_etas_names += ['sx'+str(eta), 'sy'+str(eta), 'sz'+str(eta)]
 
     def setName(self, string name):
         """Sets name of cable, used for csv file
@@ -2300,11 +2329,18 @@ cdef class ProtChMoorings:
         """
         self.name = name
 
-    def recordStrainEta(self, double[:] eta):
-        self._record_etas = eta
+    def recordStrainEta(self, double[:] etas):
+        self._record_etas = etas
+        self._record_etas_names = []
+        for i in range(len(self._record_etas)):
+            eta = self._record_etas[i]
+            self._record_etas_names += ['sx'+str(eta),
+                                        'sy'+str(eta),
+                                        'sz'+str(eta)]
 
     def _recordH5(self):
         tCount = self.ProtChSystem.tCount
+        t = self.ProtChSystem.t
         self.hdfFileName = self.name
         hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
         if tCount == 0:
@@ -2317,16 +2353,22 @@ cdef class ProtChMoorings:
         dset[...] = pos
         dset = f.create_dataset('elements_t'+str(tCount), element_connection.shape, dtype='i8')
         dset[...] = element_connection
+        # time
+        datav = t
+        dset = f.create_dataset('t_t'+str(tCount), (1,))
+        dset[0] = t
         # strain
-        datav = np.append(self.getNodesTension(eta=-1), [self.getNodesTension(eta=1)[-1]], axis=0)
-        dset = f.create_dataset('tensions_t'+str(tCount), datav.shape)
-        dset[...] = datav
-        dset = f.create_dataset('sx_t'+str(tCount), (datav.shape[0],))
-        dset[...] = datav[:,0]
-        dset = f.create_dataset('sy_t'+str(tCount), (datav.shape[0],))
-        dset[...] = datav[:,1]
-        dset = f.create_dataset('sz_t'+str(tCount), (datav.shape[0],))
-        dset[...] = datav[:,2]
+        for i in range(len(self._record_etas)):
+            eta = self._record_etas[i]
+            datav = np.append(self.getNodesTension(eta=eta), np.array([[0.,0.,0.]]), axis=0)
+            dset = f.create_dataset('tensions'+str(eta)+'_t'+str(tCount), datav.shape)
+            dset[...] = datav
+            dset = f.create_dataset('sx'+str(eta)+'_t'+str(tCount), (datav.shape[0],))
+            dset[...] = datav[:,0]
+            dset = f.create_dataset('sy'+str(eta)+'_t'+str(tCount), (datav.shape[0],))
+            dset[...] = datav[:,1]
+            dset = f.create_dataset('sz'+str(eta)+'_t'+str(tCount), (datav.shape[0],))
+            dset[...] = datav[:,2]
         # velocity
         datav = self.getNodesVelocity()
         dset = f.create_dataset('velocity_t'+str(tCount), datav.shape)
@@ -2346,6 +2388,26 @@ cdef class ProtChMoorings:
         dset = f.create_dataset('ay_t'+str(tCount), (datav.shape[0],))
         dset[...] = datav[:,1]
         dset = f.create_dataset('az_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,2]
+        # fluid velocity
+        datav = self.fluid_velocity_array
+        dset = f.create_dataset('fluid_velocity_t'+str(tCount), datav.shape)
+        dset[...] = datav
+        dset = f.create_dataset('fluid_ux_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,0]
+        dset = f.create_dataset('fluid_uy_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,1]
+        dset = f.create_dataset('fluid_uz_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,2]
+        # fluid acceleration
+        datav = self.fluid_acceleration_array
+        dset = f.create_dataset('fluid_acceleration_t'+str(tCount), datav.shape)
+        dset[...] = datav
+        dset = f.create_dataset('fluid_ax_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,0]
+        dset = f.create_dataset('fluid_ay_t'+str(tCount), (datav.shape[0],))
+        dset[...] = datav[:,1]
+        dset = f.create_dataset('fluid_az_t'+str(tCount), (datav.shape[0],))
         dset[...] = datav[:,2]
         # drag
         datav = self.getDragForces()
@@ -2367,26 +2429,28 @@ cdef class ProtChMoorings:
         dset[...] = datav[:,1]
         dset = f.create_dataset('amz_t'+str(tCount), (datav.shape[0],))
         dset[...] = datav[:,2]
+        # close file
+        f.close()
 
     def _recordXML(self):
         tCount = self.ProtChSystem.tCount
         t = self.ProtChSystem.t
         xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
-        if tCount == 0:
-            root = ET.Element("Xdmf",
-                              {"Version": "2.0",
-                               "xmlns:xi": "http://www.w3.org/2001/XInclude"})
-            domain = ET.SubElement(root, "Domain")
-            arGridCollection = ET.SubElement(domain,
-                                            "Grid",
-                                            {"Name": "Mesh"+" Spatial_Domain",
-                                             "GridType": "Collection",
-                                             "CollectionType": "Temporal"})
-        else:
-            tree = ET.parse(xmlFile)
-            root = tree.getroot()
-            domain = root[0]
-            arGridCollection = domain[0]
+        # if tCount == 0:
+        root = ET.Element("Xdmf",
+                            {"Version": "2.0",
+                             "xmlns:xi": "http://www.w3.org/2001/XInclude"})
+        domain = ET.SubElement(root, "Domain")
+        arGridCollection = ET.SubElement(domain,
+                                        "Grid",
+                                        {"Name": "Mesh"+" Spatial_Domain",
+                                         "GridType": "Collection",
+                                         "CollectionType": "Temporal"})
+        # else:
+        #     tree = ET.parse(xmlFile)
+        #     root = tree.getroot()
+        #     domain = root[0]
+        #     arGridCollection = domain[0]
         Xdmf_ElementTopology = "Polyline"
         pos = self.getNodesPosition()
         Xdmf_NumberOfElements= len(pos)-1
@@ -2403,13 +2467,13 @@ cdef class ProtChMoorings:
         topology = ET.SubElement(arGrid,
                                 "Topology",
                                 {"Type": Xdmf_ElementTopology,
-                                "NumberOfElements": str(Xdmf_NumberOfElements)})
+                                 "NumberOfElements": str(Xdmf_NumberOfElements)})
 
         elements = ET.SubElement(topology,
-                                "DataItem",
-                                {"Format": dataItemFormat,
-                                "DataType": "Int",
-                                "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
+                                 "DataItem",
+                                 {"Format": dataItemFormat,
+                                  "DataType": "Int",
+                                  "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
                                                          Xdmf_NodesPerElement)})
         elements.text = self.hdfFileName+".h5:/elements_t"+str(tCount)
         geometry = ET.SubElement(arGrid,"Geometry",{"Type":"XYZ"})
@@ -2421,12 +2485,8 @@ cdef class ProtChMoorings:
                                "Dimensions": "%i %i" % (pos.shape[0],
                                                         pos.shape[1])})
         nodes.text = self.hdfFileName+".h5:/nodes_t"+str(tCount)
-        attrs = ['ux', 'uy', 'uz',
-                 'ax', 'ay', 'az',
-                 'dragx', 'dragy', 'dragz',
-                 'amx', 'amy', 'amz',
-                 'sx', 'sy', 'sz']
-        for name in attrs:
+        all_names = self._record_names+self._record_etas_names
+        for name in all_names:
             attr = ET.SubElement(arGrid,
                                  "Attribute",
                                  {"Name": name,
@@ -2447,6 +2507,17 @@ cdef class ProtChMoorings:
             f.write(xmlHeader)
             indentXML(tree.getroot())
             tree.write(f)
+
+        # dump xml str in h5 file
+        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
+        f = h5py.File(hdfFileName, 'a')
+        datav = ET.tostring(arGrid)
+        dset = f.create_dataset('Mesh_Spatial_Domain_'+str(tCount),
+                                (1,),
+                                dtype=h5py.special_dtype(vlen=str))
+        dset[...] = datav
+        # close file
+        f.close()
 
     def _recordValues(self):
         """Records values in csv files
@@ -2478,27 +2549,27 @@ cdef class ProtChMoorings:
             record(self.record_file+file_name, row, 'w')
         row = [t, t_chrono, t_sim]
         record(self.record_file+file_name, row)
-        # Positions
-        file_name = '_pos.csv'
-        if t == 0:
-            record(self.record_file+file_name, header_x, 'w')
-        positions = self.getNodesPosition()
-        row = (positions.flatten('C')).tolist()
-        record(self.record_file+file_name, row)
-        # Velocity
-        file_name = '_posdt.csv'
-        if t == 0:
-            record(self.record_file+file_name, header_x, 'w')
-        velocities = self.getNodesVelocity()
-        row = (velocities.flatten('C')).tolist()
-        record(self.record_file+file_name, row)
-        # Acceleration
-        file_name = '_posdtdt.csv'
-        if t == 0:
-            record(self.record_file+file_name, header_x, 'w')
-        accelerations = self.getNodesAcceleration()
-        row = (accelerations.flatten('C')).tolist()
-        record(self.record_file+file_name, row)
+        # # Positions
+        # file_name = '_pos.csv'
+        # if t == 0:
+        #     record(self.record_file+file_name, header_x, 'w')
+        # positions = self.getNodesPosition()
+        # row = (positions.flatten('C')).tolist()
+        # record(self.record_file+file_name, row)
+        # # Velocity
+        # file_name = '_posdt.csv'
+        # if t == 0:
+        #     record(self.record_file+file_name, header_x, 'w')
+        # velocities = self.getNodesVelocity()
+        # row = (velocities.flatten('C')).tolist()
+        # record(self.record_file+file_name, row)
+        # # Acceleration
+        # file_name = '_posdtdt.csv'
+        # if t == 0:
+        #     record(self.record_file+file_name, header_x, 'w')
+        # accelerations = self.getNodesAcceleration()
+        # row = (accelerations.flatten('C')).tolist()
+        # record(self.record_file+file_name, row)
         # Fairlead / anchor tensions
         file_name = '_tens.csv'
         if t == 0:
@@ -2509,42 +2580,42 @@ cdef class ProtChMoorings:
         row = [Tb[0], Tb[1], Tb[2], Tf[0], Tf[1], Tf[2]]
         record(self.record_file+file_name, row)
         # Tensions
-        for i in range(len(self._record_etas)):
-            eta = self._record_etas[i]
-            file_name = '_strain'+str(eta)+'.csv'
-            if t == 0:
-                record(self.record_file+file_name, header_x[:-3], 'w')
-            tensions = self.getNodesTension(eta=eta)
-            row = (tensions.flatten('C')).tolist()
-            record(self.record_file+file_name, row)
-        # Drag
-        file_name = '_drag.csv'
-        if t == 0:
-            record(self.record_file+file_name, header_x, 'w')
-        forces = self.getDragForces()
-        row = (forces.flatten('C')).tolist()
-        record(self.record_file+file_name, row)
-        # Added mass
-        file_name = '_AM.csv'
-        if t == 0:
-            record(self.record_file+file_name, header_x, 'w')
-        forces = self.getAddedMassForces()
-        row = (forces.flatten('C')).tolist()
-        record(self.record_file+file_name, row)
-        # Fluid Velocity
-        file_name = '_u.csv'
-        if t == 0:
-            record(self.record_file+file_name, header_x, 'w')
-        velocities = self.fluid_velocity_array
-        row = (velocities.flatten('C')).tolist()
-        record(self.record_file+file_name, row)
-        # Fluid Acceleration
-        file_name = '_udt.csv'
-        if t == 0:
-            record(self.record_file+file_name, header_x, 'w')
-        accelerations = self.fluid_acceleration_array
-        row = (accelerations.flatten('C')).tolist()
-        record(self.record_file+file_name, row)
+        # for i in range(len(self._record_etas)):
+        #     eta = self._record_etas[i]
+        #     file_name = '_strain'+str(eta)+'.csv'
+        #     if t == 0:
+        #         record(self.record_file+file_name, header_x[:-3], 'w')
+        #     tensions = self.getNodesTension(eta=eta)
+        #     row = (tensions.flatten('C')).tolist()
+        #     record(self.record_file+file_name, row)
+        # # Drag
+        # file_name = '_drag.csv'
+        # if t == 0:
+        #     record(self.record_file+file_name, header_x, 'w')
+        # forces = self.getDragForces()
+        # row = (forces.flatten('C')).tolist()
+        # record(self.record_file+file_name, row)
+        # # Added mass
+        # file_name = '_AM.csv'
+        # if t == 0:
+        #     record(self.record_file+file_name, header_x, 'w')
+        # forces = self.getAddedMassForces()
+        # row = (forces.flatten('C')).tolist()
+        # record(self.record_file+file_name, row)
+        # # Fluid Velocity
+        # file_name = '_u.csv'
+        # if t == 0:
+        #     record(self.record_file+file_name, header_x, 'w')
+        # velocities = self.fluid_velocity_array
+        # row = (velocities.flatten('C')).tolist()
+        # record(self.record_file+file_name, row)
+        # # Fluid Acceleration
+        # file_name = '_udt.csv'
+        # if t == 0:
+        #     record(self.record_file+file_name, header_x, 'w')
+        # accelerations = self.fluid_acceleration_array
+        # row = (accelerations.flatten('C')).tolist()
+        # record(self.record_file+file_name, row)
 
     def getTensionBack(self):
         """

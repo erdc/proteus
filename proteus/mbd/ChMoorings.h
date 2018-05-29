@@ -380,6 +380,8 @@ void cppMultiSegmentedCable::buildCable() {
         }
       }
     }
+    forces_drag.insert(forces_drag.end(), cables[i]->forces_drag.begin(), cables[i]->forces_drag.end());
+    forces_addedmass.insert(forces_addedmass.end(), cables[i]->forces_addedmass.begin(), cables[i]->forces_addedmass.end());
   }
   buildNodesCloud();
   fluid_velocity.clear();
@@ -457,22 +459,14 @@ void cppMultiSegmentedCable::setFluidDensityAtNodes(std::vector<double> dens) {
 
 
 void cppMultiSegmentedCable::updateDragForces() {
-  forces_drag.clear();
   for (int i = 0; i < cables.size(); ++i) {
     cables[i]->setDragForce();
-    forces_drag.insert(forces_drag.end(),
-                       cables[i]->forces_drag.begin(),
-                       cables[i]->forces_drag.end());
   };
 }
 
 void cppMultiSegmentedCable::updateAddedMassForces() {
-  forces_addedmass.clear();
   for (int i = 0; i < cables.size(); ++i) {
     cables[i]->setAddedMassForce();
-    forces_addedmass.insert(forces_addedmass.end(),
-                            cables[i]->forces_addedmass.begin(),
-                            cables[i]->forces_addedmass.end());
   };
 }
 
