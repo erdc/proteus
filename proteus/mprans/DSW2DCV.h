@@ -14,7 +14,7 @@
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define lambda 1.0 // For Dispersive Model
-#define WHICH_DISP_MODEL 0
+#define WHICH_DISP_MODEL 1
 // EJT. If WHICH_DISP_MODEL is 1, then this is
 // Guermond's dispersive  model. If 0,
 // then this is Gavrilyuk's dispersive model
@@ -2472,19 +2472,19 @@ namespace proteus
 	      // FORCE TERMS //
 	      /////////////////
 	      
-	      double hiSqd = std::pow(hi,2.0);
-	      
-	      double SGN_aux_i = (2/(hiSqd + fmax(hiSqd,mi)));
-	      //double xxi = hetai * SGN_aux_i;
-	      double etai = hetai*one_over_hiReg;
-	      double xxi = etai*one_over_hiReg;
-	      
 	      // EJT. Corrected terms to match our paper
 	      // and define both Guermond and Gavrilyuk force terms for hw equation.
-	      double force_term_hetai = hwi*mi;
+
+	      double hiSqd = std::pow(hi,2.0);    
+	      double SGN_aux_i = (2/(hiSqd + fmax(hiSqd,mi)));	     
+	      double etai = hetai*one_over_hiReg;
+	      double xxi = etai*one_over_hiReg;
+	      //double xxi = hetai * SGN_aux_i;	            
 	      double meshi = std::sqrt(mi);
 	      double psii = 12.0 * (xxi - 1.0);
-	      // This is Guermond's force term
+
+	      // This is Guermond's force term on hwi
+	      double force_term_hetai = hwi*mi;
 	      double force_term_hwi = -lambda*g/meshi*etai*etai*psii*mi;
 
 	      // if WHICH_DISP_MODEL is 0 then code runs with Gavrilyuk's model.
@@ -2506,30 +2506,29 @@ namespace proteus
                   double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
                   double uj = huj*one_over_hjReg;
                   double vj = hvj*one_over_hjReg;
+		  // EJT. Corrected terms to match our paper.
 		  double etaj = hetaj*one_over_hjReg;
-                  // EJT. Corrected terms to match our paper.
           	  double mj = lumped_mass_matrix[j];
                   double meshj = std::sqrt(mj); // local mesh size in 2d
 
-                  // This is used to make definition of pTildej cleaner
+                  // for water height goes to 0 fix 
 		  double hjSqd = std::pow(hj,2.0);
 		  double SGN_aux_j = (2/(hjSqd + fmax(hjSqd,mj)));
-          	  //double xxj = hetaj*SGN_aux_j;
+          	  double cut_off = 1E-4;
+ 		 
+		  // This is used to make definition of pTildej cleaner
 		  double xxj = etaj*one_over_hjReg;
+		  //double xxj = hetaj*SGN_aux_j;
           	  double polyj = 2.0 + 4.0*std::pow(xxj,3.) - 6.0*std::pow(xxj,4.);
-                  // Define pTildej here. Standard is Guermond's
+
+                  // Define pTildej here. Standard is Guermond's model 
                   double pTildej = lambda*g/(3. * meshj)*std::pow(hj,3.)*polyj;
-		  double cut_off = 1E-4;
+		
                   // if WHICH_DISP_MODEL is 0 then Gavrilyuk's model is used.
                       if (WHICH_DISP_MODEL==0)
                           {       		   
 			    pTildej = -lambda/3.*(xxj-1.0)*etaj; 
-			    //  if (hetaj - mj < cut_off)
-			    // {
-			    //	pTildej = 0.0;
-			    //std::cout<<"this is kicking in" <<std::endl;
-			    // }
-                          }
+	                  }
 		    
 		    
 
@@ -2643,17 +2642,7 @@ namespace proteus
               ////////////////////////
               // LOW ORDER SOLUTION //: lumped mass matrix and low order dissipative matrix
               ////////////////////////
-              //low_order_hnp1[i]  = hi  - dt/mi*(ith_flux_term1
-	      //                                - ith_dLij_minus_muLij_times_hStarStates
-	      //                                - ith_muLij_times_hStates);
-              //low_order_hunp1[i] = hui - dt/mi*(ith_flux_term2
-	      //                                - ith_dLij_minus_muLij_times_huStarStates
-	      //                                - ith_muLij_times_huStates
-	      //				+ ith_friction_term2);
-              //low_order_hvnp1[i] = hvi - dt/mi*(ith_flux_term3
-	      //                                - ith_dLij_minus_muLij_times_hvStarStates
-	      //                                - ith_muLij_times_hvStates
-	      //				+ ith_friction_term3);
+             
 
       	      low_order_hnp1[i]  = hi  - dt/mi*(ith_flux_term1
           						- ith_dLij_minus_muLij_times_hStarStates
