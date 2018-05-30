@@ -2,6 +2,7 @@ import numpy as np
 import copy
 from proteus.Profiling import logEvent
 from proteus import TransportCoefficients
+import cMoveMeshMonitor as cmm
 
 class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
     """
@@ -11,11 +12,26 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
     ----------
     func: function
         function of x defining element area
+    he_min: double
+        minimum characteristic element size
+    he_max: double
+        maximum characteristic element size
+    ME_MODEL: int
+        index of this model
+    LS_MODEL: int
+        index of LS model for retrieving phi values and refine around free
+        surface
     nd: int
         number of dimensions
-    boundaryNormals: dict
-        dictionary of boundaryNormals for domain flags (used for sliding nodes
-        along the physical boundaries)
+    boundaryNormals: double[:,:]
+        array of length of all domain material types, with indexes corresponding
+        to the material type set as boundaryNormals.
+        if e.g., boundaryNormals[2]=[0.,0.,0.], then it will be ignored
+    fixedNodes: int[:]
+        array of length of all domain material types, with indexes corresponding
+        to the material type set as: 0 -> not fixed, 1 -> fixed.
+        e.g. is nodes of material type 3 should be fixed: fixedNodes[3]=1.
+        (!) must be integers
     nSmooth: int
         number of smoothing steps after solving
     """
@@ -24,10 +40,12 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                  he_min,
                  he_max,
                  ME_MODEL,
+                 LS_MODEL=None,
                  nd=2,
                  boundaryNormals=None,
+                 fixedNodes=None,
                  nSmooth=0,
-                 LS_MODEL=None):
+                 epsFact=3):
         self.myfunc = func
         self.LS_MODEL = LS_MODEL
         self.ME_MODEL = ME_MODEL
@@ -40,6 +58,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         fOfX = [self.uOfX]  # scaled function reciprocal
         self.t = 0
         self.boundaryNormals = boundaryNormals
+        self.fixedNodes = fixedNodes
         self.nSmooth = nSmooth
         self.dt_last = None
         #super(MyCoeff, self).__init__(aOfX, fOfX)
@@ -68,41 +87,16 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             self.model_ls = modelList[self.LS_MODEL]
             self.u_phi = self.model_ls.u[0].dof
             self.q_phi = self.model_ls.q[('u', 0)]
+        self.cCoefficients = cmm.cCoefficients()
+        self.cCoefficients.attachPyCoefficients(self)
 
     def preStep(self, t, firstStep=False):
-        logEvent("Updating area function scaling coefficient",
+        logEvent("Updating area function scaling coefficient and quadrature",
                  level=3)
-        integral_1_over_f = 0.
-        self.t = t
-        xx = self.model.q['x']
-        JJ = self.model.q['abs(det(J))']
-        N_k = self.model.q['x'].shape[1]
-        q_weights = self.model.elementQuadratureWeights[('u', 0)]
-        nE = 0
         self.evaluateFunAtQuadraturePoints()
-        for e in xrange(self.mesh.elementNodesArray.shape[0]):
-            area = 0
-            for k in xrange(N_k):
-                area += JJ[e, k]*q_weights[k]
-                integral_1_over_f += JJ[e, k]*q_weights[k]/self.uOfXTatQuadrature[e, k]
-            self.areas[e] = area
-            nE += 1
-        self.C = integral_1_over_f/(nE)  # update scaling coefficient
+        self.cCoefficients.preStep()
+        self.C = self.cCoefficients.C
         self.model.areas = self.areas
-        for i, array in enumerate(self.model.mesh.nodeArray):
-            for j, val in enumerate(array):
-                if val != self.model_ls.mesh.nodeArray[i, j]:
-                    print("not same")
-
-        logEvent("Element Quadrature - updating uOfX",
-                 level=3)
-        ci = 0
-        cq = self.model.q
-        for ci in range(self.nc):
-            cq[('f',ci)].flat[:] = 0.0
-            for eN in range(len(cq[('r',ci)])):
-                for k in range(len(cq[('r', ci)][eN])):
-                    cq[('r',ci)][eN,k] = -(1./(self.uOfXTatQuadrature[eN, k]*self.C)-1./self.areas[eN])
         logEvent("Finished updating area function",
                  level=3)
 
@@ -120,7 +114,6 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.gamma = f_over_g_max/f_over_g_min
         self.gamma0 = 10.  # user defined parameter
         self.na = np.log(self.gamma)/np.log(self.gamma0)
-        print("gamma", f_over_g_max, f_over_g_min, self.gamma)
         # pseudo-time step
         eps = 1.
         self.pseudoTimeStepping(eps)
@@ -131,21 +124,23 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             #     dt = self.dt_last
             # dt = self.model.timeIntegration.dt
             dt = self.dt_last
-            print("dtdtdt", dt)
             logEvent('Smoothing Mesh with Laplace Smoothing - '+str(self.nSmooth))
             from proteus.mprans import MeshSmoothing
             if self.nSmooth > 0:
-                MeshSmoothing.smoothLaplace(self.PHI,
-                                            self.mesh.nodeStarOffsets,
-                                            self.mesh.nodeStarArray,
-                                            self.mesh.nodeMaterialTypes,
-                                            self.mesh.nNodes_owned,
-                                            self.nSmooth)
+                disp = MeshSmoothing.smoothNodesLaplace(nodeArray=self.PHI,
+                                                 nodeStarOffsets=self.mesh.nodeStarOffsets,
+                                                 nodeStarArray=self.mesh.nodeStarArray,
+                                                 nodeMaterialTypes=self.mesh.nodeMaterialTypes,
+                                                 nNodes_owned=self.mesh.nNodes_owned,
+                                                 nSmooth=self.nSmooth,
+                                                 boundaryNormals=self.boundaryNormals,
+                                                 fixedNodes=self.fixedNodes,
+                                                 apply_directly=False)
+                self.PHI += disp
             self.model.mesh.nodeVelocityArray[:] = (self.PHI-self.model.mesh.nodeArray)/dt
-            # import pdb;pdb.set_trace()
+            #self.model.mesh.nodeVelocityArray[:] = disp/dt
             #self.model.mesh.nodeVelocityArray[:] = np.zeros(self.model.mesh.nodeArray.shape)
             self.model.mesh.nodeArray[:] = self.PHI
-            # smoothLaplace(self.model.mesh)
             # re-initialise nearest nodes
             self.nearest_nodes[:] = self.nearest_nodes0[:]
             # re-initialise containing element
@@ -257,31 +252,26 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         # f_scaled = (self.myfunc(x)*self.C)
         # f_scaled_reciprocal = 1./f_scaled
         if ls_phi is not None:
-            f = min(self.he_max,
-                    max(self.he_min,
-                        min(abs(ls_phi),
-                            self.myfunc(x,
-                                        self.t))))
+            f = min(abs(ls_phi), self.myfunc(x, self.t))
+            f = max(self.he_min, f)
+            f = min(self.he_max, f)
         else:
-            f = min(self.he_max, max(self.myfunc(x, self.t), self.he_min))
+            f = max(self.he_min, self.myfunc(x, self.t))
+            f = min(self.he_max, f)
         return f
 
     def evaluateFunAtNodes(self):
         for i in range(len(self.mesh.nodeArray)):
             if self.LS_MODEL is not None:
-                self.uOfXTatNodes[i] = min(self.he_max,
-                                           max(self.he_min,
-                                               min(abs(self.u_phi[i]),
-                                                   self.myfunc(self.mesh.nodeArray[i],
-                                                               self.t))))
-                if self.uOfXTatNodes[i] != 1:
-                    print(self.u_phi[i], self.uOfXTatNodes[i])
-
+                f = min(abs(self.u_phi[i]),
+                        self.myfunc(self.mesh.nodeArray[i], self.t))
+                f = max(self.he_min, f)
+                f = min(self.he_max, f)
             else:
-                self.uOfXTatNodes[i] = min(self.he_max,
-                                           max(self.he_min,
-                                               self.myfunc(self.mesh.nodeArray[i],
-                                                           self.t)))
+                f = max(self.he_min,
+                        self.myfunc(self.mesh.nodeArray[i], self.t))
+                f = min(self.he_max, f)
+            self.uOfXTatNodes[i] = f
 
     def evaluateFunAtQuadraturePoints(self):
         xx = self.model.q['x']
@@ -289,16 +279,15 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         for e in xrange(self.mesh.elementNodesArray.shape[0]):
             for k in xrange(N_k):
                 if self.LS_MODEL is not None:
-                    self.uOfXTatQuadrature[e, k] = min(self.he_max,
-                                                       max(self.he_min,
-                                                           min(abs(self.q_phi[e, k]),
-                                                               self.myfunc(xx[e, k],
-                                                                           self.t))))
+                    f = min(abs(self.q_phi[e, k]),
+                            self.myfunc(xx[e, k], self.t))
+                    f = max(self.he_min, f)
+                    f = min(self.he_max, f)
                 else:
-                    self.uOfXTatQuadrature[e, k] = min(self.he_max,
-                                                       max(self.he_min,
-                                                           self.myfunc(xx[e, k],
-                                                               self.t)))
+                    f = max(self.he_min,
+                            self.myfunc(xx[e, k], self.t))
+                    f = min(self.he_max, f)
+                self.uOfXTatQuadrature[e, k] = f
 
     def getLevelSetValue(self, eN, xi):
         value = self.model_ls.u[0].getValue(eN, xi)
@@ -374,40 +363,46 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                 flag = self.mesh.nodeMaterialTypes[i]
                 bN = None
                 if flag != 0 and self.boundaryNormals is not None:
-                    if self.boundaryNormals.has_key(flag):
-                        bN = self.boundaryNormals[flag]
+                    bN = self.boundaryNormals[flag]
+                    if bN[0] == 0. and bN[1] == 0. and bN[2] == 0:
+                        bN = None
+                fixed = False
+                if self.fixedNodes is not None:
+                    if self.fixedNodes[flag] == 1:
+                        fixed = True
                 if flag == 0 or bN is not None:
-                    if j > 0:
-                        eN, nearest_node, xi = self.dist_search(phi, self.nearest_nodes[i], self.eN_phi[i])
-                        self.eN_phi[i] = eN
-                        self.nearest_nodes[i] = nearest_node
-                        if eN is None:
-                            print("Element not found for:", i)
-                            # print("node", i, self.mesh.nodeArray[i])
-                            # print("new coords", phi)
+                    if fixed is False:
+                        if j > 0:
+                            eN, nearest_node, xi = self.dist_search(phi, self.nearest_nodes[i], self.eN_phi[i])
+                            self.eN_phi[i] = eN
+                            self.nearest_nodes[i] = nearest_node
+                            if eN is None:
+                                print("Element not found for:", i)
+                                # print("node", i, self.mesh.nodeArray[i])
+                                # print("new coords", phi)
+                                v_grad = self.grads[i]
+                                area = self.areas_nodes[i]
+                            else:
+                                v_grad = self.getGradientValue(eN, xi)
+                                area = self.areas[eN]
+                        else:
                             v_grad = self.grads[i]
                             area = self.areas_nodes[i]
+                            eN = 0
+                        if self.LS_MODEL is not None and eN is not None:
+                            ls_phi = self.getLevelSetValue(eN, phi)
                         else:
-                            v_grad = self.getGradientValue(eN, xi)
-                            area = self.areas[eN]
-                    else:
-                        v_grad = self.grads[i]
-                        area = self.areas_nodes[i]
-                        eN = 0
-                    if self.LS_MODEL is not None and eN is not None:
-                        ls_phi = self.getLevelSetValue(eN, phi)
-                    else:
-                        ls_phi = None
-                    dphi = v_grad/(t*1./(self.evaluateFunAtX(x=phi, ls_phi=ls_phi)*self.C)+(1-t)*1./area)
-                    # # -----
-                    # Euler
-                    # # -----
-                    if flag == 0:
-                        phi[:self.nd] += dphi[:self.nd]*dt
-                    elif bN is not None and i > 3:
-                        phi[:self.nd] += dphi[:self.nd]*(1-np.abs(bN))*dt
-                    # # -----
-                    xx[i] = phi  # not necessary but left for cythonising
+                            ls_phi = None
+                        dphi = v_grad/(t*1./(self.evaluateFunAtX(x=phi, ls_phi=ls_phi)*self.C)+(1-t)*1./area)
+                        # # -----
+                        # Euler
+                        # # -----
+                        if flag == 0:
+                            phi[:self.nd] += dphi[:self.nd]*dt
+                        elif bN is not None and i > 3:
+                            phi[:self.nd] += dphi[:self.nd]*(1-np.abs(bN[:self.nd]))*dt
+                        # # -----
+                        xx[i] = phi  # not necessary but left for cythonising
             t_last = t
         self.PHI[:] = xx
 
