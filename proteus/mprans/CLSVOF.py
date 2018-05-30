@@ -634,7 +634,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.par_projected_qx_tStar = None
         self.par_projected_qy_tStar = None
         self.par_projected_qz_tStar = None
-
+        # more parallel vectors for normal reconstruction (needed for partitioning type = element)
+        self.par_rhs_qx = None
+        self.par_rhs_qy = None
+        self.par_rhs_qz = None
+        self.par_weighted_lumped_mass_matrix = None
         ###########################
         # CREATE PARALLEL VECTORS #
         ###########################
@@ -674,6 +678,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                     bs=1,
                                                                     n=n,N=N,nghosts=nghosts,
                                                                     subdomain2global=subdomain2global)
+        #
+        self.par_rhs_qx = proteus.LinearAlgebraTools.ParVec_petsc4py(self.rhs_qx,
+                                                                     bs=1,
+                                                                     n=n,N=N,nghosts=nghosts,
+                                                                     subdomain2global=subdomain2global)
+        self.par_rhs_qy = proteus.LinearAlgebraTools.ParVec_petsc4py(self.rhs_qy,
+                                                                     bs=1,
+                                                                     n=n,N=N,nghosts=nghosts,
+                                                                     subdomain2global=subdomain2global)
+        self.par_rhs_qz = proteus.LinearAlgebraTools.ParVec_petsc4py(self.rhs_qz,
+                                                                     bs=1,
+                                                                     n=n,N=N,nghosts=nghosts,
+                                                                     subdomain2global=subdomain2global)
+        self.par_weighted_lumped_mass_matrix = proteus.LinearAlgebraTools.ParVec_petsc4py(self.weighted_lumped_mass_matrix,
+                                                                                          bs=1,
+                                                                                          n=n,N=N,nghosts=nghosts,
+                                                                                          subdomain2global=subdomain2global)
         ################
         # SPIN UP STEP #
         ################

@@ -1113,6 +1113,12 @@ class CLSVOFNewton(Newton):
     def getNormalReconstruction(self,u,r=None,b=None,par_u=None,par_r=None):
         # Assemble weighted matrix and rhs for consistent projection
         self.F.getNormalReconstruction(self.J)
+        if not self.par_fullOverlap:
+            self.F.par_rhs_qx.scatter_reverse_add()
+            self.F.par_rhs_qy.scatter_reverse_add()
+            self.F.par_rhs_qz.scatter_reverse_add()
+            self.F.par_weighted_lumped_mass_matrix.scatter_reverse_add()
+        #
         if self.F.consistentNormalReconstruction==False or True: # For the moment we make sure this is the only route
             logEvent("  ... Normal reconstruction via weighted lumped L2-projection ...",level=2)
             if self.F.timeStage==1:
