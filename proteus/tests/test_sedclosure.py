@@ -1,3 +1,5 @@
+
+
 from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
@@ -26,7 +28,10 @@ class GlobalVariables():
         self.mContact = 2.
         self.nContact = 5.
         self.angFriction = np.pi/6.
-        self.sedSt = HsuSedStress( self.aDarcy, self.bForch, self.grain, self.packFraction,  self.packMargin,self.maxFraction, self.frFraction, self.sigmaC, self.C3e, self.C4e, self.eR ,self.fContact, self.mContact, self.nContact, self.angFriction)
+        self.vos_limiter = 0.6
+        self.mu_fr_limiter  = 0.1
+        self.sedSt = HsuSedStress( self.aDarcy, self.bForch, self.grain, self.packFraction,  self.packMargin,self.maxFraction, self.frFraction, self.sigmaC, self.C3e, self.C4e, self.eR ,self.fContact, self.mContact, self.nContact, self.angFriction, self.vos_limiter, self.mu_fr_limiter)
+        self.sedSt_nl = HsuSedStress( self.aDarcy, self.bForch, self.grain, self.packFraction,  self.packMargin,self.maxFraction, self.frFraction, self.sigmaC, self.C3e, self.C4e, self.eR ,self.fContact, self.mContact, self.nContact, self.angFriction, self.vos_limiter, 1e100)
     
 
 class TestHsu(unittest.TestCase):
@@ -48,7 +53,7 @@ class TestHsu(unittest.TestCase):
             drag /=drag2
             drag2/=drag2
         npt.assert_almost_equal(drag,drag2)
-    @pytest.mark.skip(reason="in development")
+#    @pytest.mark.skip(reason="in development")
     def testGranularDrag2(self):
         gl=GlobalVariables()
         import random
@@ -69,7 +74,7 @@ class TestHsu(unittest.TestCase):
         #if you use npt.assert_almost_equal you get more info on failure...
         #self.assertTrue(round(drag,10) == round(drag2,10))
         npt.assert_almost_equal(drag,drag2)
-    @pytest.mark.skip(reason="in development")
+#    @pytest.mark.skip(reason="in development")
     def testGranularDrag3(self):
         gl=GlobalVariables()
         import random
@@ -89,7 +94,7 @@ class TestHsu(unittest.TestCase):
             drag2/=drag2
         #self.assertTrue(round(drag,10) == round(drag2,10))
         npt.assert_almost_equal(drag, drag2)
-    @pytest.mark.skip(reason="in development")
+#    @pytest.mark.skip(reason="in development")
     def testGranularDrag4(self):
         gl=GlobalVariables()
         import random
@@ -544,11 +549,78 @@ class TestHsu(unittest.TestCase):
         valid = rhoS * gl.grain * sqrt(theta) * ( 2. *sedF**2 * g0 * (1. + gl.eR) / sqrt(np.pi) + (9./16) *sedF**2 * g0 * (1. + gl.eR) * sqrt(np.pi) +  (15./16.) *sedF * sqrt(np.pi) +  (25./64.) * sqrt(np.pi)/((1+gl.eR)*g0))
         
         self.assertTrue(round(test,f) == round(valid,f))
-    def test_mu_fr(self):
+
+
+    def test_p_fr_limiter(self):
         gl=GlobalVariables()
         import random
         sqrt = np.sqrt
-        f = 10        
+        # No stress
+        sedF = 0.1
+        p_friction = 0. 
+        p_ftest = gl.sedSt.p_friction(sedF)
+        self.assertAlmostEqual(p_friction,p_ftest)
+        
+        # No limiter
+        sedF = 0.58
+        p_friction = gl.fContact*(sedF-gl.frFraction)**gl.mContact/(gl.maxFraction-sedF)**gl.nContact
+        p_ftest = gl.sedSt.p_friction(sedF)
+        self.assertAlmostEqual(p_friction,p_ftest)
+        
+        
+        # Exactly at the limiter
+        sedF = 0.6
+        p_friction = gl.fContact*(sedF-gl.frFraction)**gl.mContact/(gl.maxFraction-sedF)**gl.nContact
+        p_ftest = gl.sedSt.p_friction(sedF)
+        self.assertAlmostEqual(p_friction,p_ftest)
+        # Over the limiter
+        sedF=0.62
+        sedFm = min(gl.vos_limiter, sedF)
+        p_friction2 = gl.fContact*(sedFm-gl.frFraction)**gl.mContact/(gl.maxFraction-sedFm)**gl.nContact
+        p_ftest2 = gl.sedSt.p_friction(sedF)
+        self.assertAlmostEqual(p_friction2,p_ftest2)
+        self.assertAlmostEqual(p_friction2,p_ftest)
+        
+    def test_gradp_fr_limiter(self):
+        gl=GlobalVariables()
+        import random
+        sqrt = np.sqrt
+        # No stress
+        # No stress
+        sedF = 0.1
+        gradp = 0. 
+        gradp_test = gl.sedSt.gradp_friction(sedF)
+        self.assertAlmostEqual(gradp,gradp_test)
+        
+        # No limiter
+        sedF = 0.58
+        p_friction = gl.fContact*(sedF-gl.frFraction)**gl.mContact/(gl.maxFraction-sedF)**gl.nContact
+        gradp = p_friction*(gl.mContact/(sedF-gl.frFraction)+gl.nContact/(gl.maxFraction-sedF))
+        gradp_test = gl.sedSt.gradp_friction(sedF)
+        self.assertAlmostEqual(gradp,gradp_test)
+
+        
+        
+        # Exactly at the limiter
+        sedF = 0.6
+        p_friction = gl.fContact*(sedF-gl.frFraction)**gl.mContact/(gl.maxFraction-sedF)**gl.nContact
+        gradp = p_friction*(gl.mContact/(sedF-gl.frFraction)+gl.nContact/(gl.maxFraction-sedF))
+        gradp_test = gl.sedSt.gradp_friction(sedF)
+        self.assertAlmostEqual(gradp,gradp_test)
+        # Over the limiter
+        sedF = 0.62
+        sedFm = min(gl.vos_limiter,sedF)
+        p_friction = gl.fContact*(sedFm-gl.frFraction)**gl.mContact/(gl.maxFraction-sedFm)**gl.nContact
+        gradp = p_friction*(gl.mContact/(sedFm-gl.frFraction)+gl.nContact/(gl.maxFraction-sedFm))
+        gradp_test = gl.sedSt.gradp_friction(sedF)
+        self.assertAlmostEqual(gradp,gradp_test)
+        
+        
+        
+    def test_mu_fr2D(self):
+        gl=GlobalVariables()
+        import random
+        sqrt = np.sqrt
         # Setting 0 t_c
         sedF = 0.3
         theta = random.random() + 1e-30
@@ -562,20 +634,42 @@ class TestHsu(unittest.TestCase):
         dwdy = random.random() + 1e-30
         dwdz = random.random() + 1e-30
         rhoS = 2000
-        test = gl.sedSt.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
         divU = dudx + dvdy + dwdz
-        s_tensor = 0.5* np.array([ [ 2.*dudx  -(2./3.)*divU ,  dudy+dvdx,               dudz+dwdx],
-                                [ dudy+dvdx,                   2.*dvdy-(2./3.)*divU,    dvdz+dwdy],
-                                [ dudz+dwdx,                   dvdz+dwdy,               2.* (2./3.) * dwdz]])
+        
+        s_tensor = 0.5* np.array([ [ 2.*dudx  -divU ,  dudy+dvdx,               dudz+dwdx],
+                                [ dudy+dvdx,                   2.*dvdy-divU,    dvdz+dwdy],
+                                [ dudz+dwdx,                   dvdz+dwdy,               2.*dwdz-divU]])
 
         product = s_tensor * s_tensor
-        valid = 0.
-        for i in product:
-            for j in i:
-                valid+=j / (3.*rhoS*sedF)
-        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./valid
-        self.assertTrue(round(test,f) == round(valid,f))
+        magn = sum(product)
+        magn = sum(magn)
 
+        test = gl.sedSt.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./sqrt(magn)
+        self.assertAlmostEqual(test,valid)
+
+        
+        sedF = 0.58
+        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./sqrt(magn)
+        test = gl.sedSt_nl.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        self.assertAlmostEqual(test,valid)
+
+
+        sedF = 0.6
+        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./sqrt(magn)
+        test = gl.sedSt_nl.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        self.assertAlmostEqual(test,valid)
+
+        sedF = 0.62
+        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./sqrt(magn)
+        test = gl.sedSt_nl.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        self.assertAlmostEqual(test,valid)
+
+        sedF = 0.62
+        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./sqrt(magn)
+        test = gl.sedSt.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        self.assertAlmostEqual(test,min(valid,0.1))
+      
 
 
     def test_p_s(self):

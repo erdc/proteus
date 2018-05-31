@@ -403,8 +403,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # VRANS
         self.flowCoefficients = modelList[self.V_model].coefficients
         if self.VOS_model is not None:
-            self.q_vos = modelList[self.VOS_model].q[('u', 0)]
-            self.ebqe_vos = modelList[self.VOS_model].ebqe[('u', 0)]
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)].copy()
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)].copy()
+            self.q_vos = self.model.q_vos
+            self.ebqe_vos = self.model.ebqe_vos
         else:
             self.q_porosity = numpy.ones(
                 modelList[

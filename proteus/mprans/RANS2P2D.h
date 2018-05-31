@@ -83,7 +83,11 @@ namespace proteus
                                    const double* q_turb_var_0,
                                    const double* q_turb_var_1,
                                    const double* q_turb_var_grad_0,
+                                   const double LAG_LES,
                                    double * q_eddy_viscosity,
+                                   double * q_eddy_viscosity_last,
+                                   double * ebqe_eddy_viscosity,
+                                   double * ebqe_eddy_viscosity_last,
                                    int* p_l2g,
                                    int* vel_l2g,
                                    double* p_dof,
@@ -240,6 +244,9 @@ namespace proteus
                                    const double* q_turb_var_0,
                                    const double* q_turb_var_1,
                                    const double* q_turb_var_grad_0,
+                                   const double LAG_LES,
+                                   double * q_eddy_viscosity_last,
+                                   double * ebqe_eddy_viscosity_last,
                                    int* p_l2g,
                                    int* vel_l2g,
                                    double* p_dof, double* u_dof, double* v_dof, double* w_dof,
@@ -557,7 +564,9 @@ namespace proteus
                                   const double& u,
                                   const double& v,
                                   const double& w,
+                                  const double LAG_LES,
                                   double& eddy_viscosity,
+                                  double& eddy_viscosity_last,
                                   double& mom_u_acc,
                                   double& dmom_u_acc_u,
                                   double& mom_v_acc,
@@ -647,15 +656,13 @@ namespace proteus
 
         rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
         nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
+        eddy_viscosity = nu_t;
         nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
-        nu += nu_t;
+        nu += (1.0-LAG_LES)*nu_t + LAG_LES*eddy_viscosity_last;
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
 
-        eddy_viscosity = nu_t;
         if (NONCONSERVATIVE_FORM > 0.0)
           {
-            eddy_viscosity = nu_t*rho;
-
             //u momentum accumulation
             mom_u_acc=u;//trick for non-conservative form
             dmom_u_acc_u=rho*porosity;
@@ -931,7 +938,8 @@ namespace proteus
         */
         assert (turbulenceClosureModel >=3);
         double rho,nu,H_mu,nu_t=0.0,nu_t_keps =0.0, nu_t_komega=0.0;
-        double isKEpsilon = 1.0;
+        double isKEpsilon = 1.0, dynamic_eddy_viscosity = 0.0;
+;
         if (turbulenceClosureModel == 4)
           isKEpsilon = 0.0;
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
@@ -949,33 +957,28 @@ namespace proteus
         nu_t_komega = turb_var_0/(fabs(turb_var_1) + div_zero);
         //
         nu_t = isKEpsilon*nu_t_keps + (1.0-isKEpsilon)*nu_t_komega;
-        //mwf debug
-        //if (nu_t > 1.e6*nu)
-        //{
-        //  std::cout<<"RANS2P2D WARNING isKEpsilon = "<<isKEpsilon<<" nu_t = " <<nu_t<<" nu= "<<nu<<" k= "<<turb_var_0<<" turb_var_1= "<<turb_var_1<<std::endl;
-        //}
 
         nu_t = fmax(nu_t,1.0e-4*nu); //limit according to Lew, Buscaglia etal 01
         //mwf hack
         nu_t     = fmin(nu_t,1.0e6*nu);
+        eddy_viscosity = nu_t;
         if (NONCONSERVATIVE_FORM > 0.0)
           {
-            eddy_viscosity = nu_t*rho;
+            dynamic_eddy_viscosity = nu_t*rho;
             //u momentum diffusion tensor
-            mom_uu_diff_ten[0] += 2.0*porosity*eddy_viscosity;
-            mom_uu_diff_ten[1] += porosity*eddy_viscosity;
+            mom_uu_diff_ten[0] += 2.0*porosity*dynamic_eddy_viscosity;
+            mom_uu_diff_ten[1] += porosity*dynamic_eddy_viscosity;
 
-            mom_uv_diff_ten[0] +=porosity*eddy_viscosity;
+            mom_uv_diff_ten[0] +=porosity*dynamic_eddy_viscosity;
 
             //v momentum diffusion tensor
-            mom_vv_diff_ten[0] += porosity*eddy_viscosity;
-            mom_vv_diff_ten[1] += 2.0*porosity*eddy_viscosity;
+            mom_vv_diff_ten[0] += porosity*dynamic_eddy_viscosity;
+            mom_vv_diff_ten[1] += 2.0*porosity*dynamic_eddy_viscosity;
 
-            mom_vu_diff_ten[0] += porosity*eddy_viscosity;
+            mom_vu_diff_ten[0] += porosity*dynamic_eddy_viscosity;
           }
         else
           {
-            eddy_viscosity = nu_t;
             //u momentum diffusion tensor
             mom_uu_diff_ten[0] += 2.0*porosity*eddy_viscosity;
             mom_uu_diff_ten[1] += porosity*eddy_viscosity;
@@ -1625,7 +1628,11 @@ namespace proteus
                              const double* q_turb_var_0,
                              const double* q_turb_var_1,
                              const double* q_turb_var_grad_0,
+                             const double LAG_LES,
                              double * q_eddy_viscosity,
+                             double * q_eddy_viscosity_last,
+                             double * ebqe_eddy_viscosity,
+                             double * ebqe_eddy_viscosity_last,
                              //
                              int* p_l2g,
                              int* vel_l2g,
@@ -1841,7 +1848,7 @@ namespace proteus
                   p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
                   p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
                   dV,x,y,z,xt,yt,zt,
-		  p_element_avg,
+                  //p_element_avg,
                   //
                   porosity,
                   //meanGrainSize,
@@ -1897,8 +1904,8 @@ namespace proteus
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
 		// calculate the average pressure value
-		if (PRESSURE_PROJECTION_STABILIZATION)
-		  ck.DOFaverage(p_dof, &p_l2g[eN_nDOF_trial_element],p_element_avg);
+		//if (PRESSURE_PROJECTION_STABILIZATION)
+		  //ck.DOFaverage(p_dof, &p_l2g[eN_nDOF_trial_element],p_element_avg);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
@@ -1962,7 +1969,9 @@ namespace proteus
                                      u,
                                      v,
                                      w,
+                                     LAG_LES,
                                      q_eddy_viscosity[eN_k],
+                                     q_eddy_viscosity_last[eN_k],
                                      mom_u_acc,
                                      dmom_u_acc_u,
                                      mom_v_acc,
@@ -2283,9 +2292,11 @@ namespace proteus
                       //VRANS
                       ck.Reaction_weak(mass_source,p_test_dV[i])   + //VRANS source term for wave maker
                       //
-		      PRESSURE_PROJECTION_STABILIZATION * ck.pressureProjection_weak(mom_uu_diff_ten[1], p, p_element_avg, p_test_ref[k*nDOF_test_element+i], dV) +
-		      (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_u,Lstar_u_p[i]) + 
-                      (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_v,Lstar_v_p[i]);
+                      ck.SubgridError(subgridError_u,Lstar_u_p[i])+
+                      ck.SubgridError(subgridError_v,Lstar_v_p[i]);
+		      //PRESSURE_PROJECTION_STABILIZATION * ck.pressureProjection_weak(mom_uu_diff_ten[1], p, p_element_avg, p_test_ref[k*nDOF_test_element+i], dV) +
+		      //(1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_u,Lstar_u_p[i]) + 
+                     //(1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_v,Lstar_v_p[i]);
 
                     elementResidual_u[i] += ck.Mass_weak(mom_u_acc_t,vel_test_dV[i]) +
                       ck.Advection_weak(mom_u_adv,&vel_grad_test_dV[i_nSpace]) +
@@ -2612,7 +2623,9 @@ namespace proteus
                                      u_ext,
                                      v_ext,
                                      w_ext,
-                                     eddy_viscosity_ext,
+                                     LAG_LES,
+                                     ebqe_eddy_viscosity[ebNE_kb],
+                                     ebqe_eddy_viscosity_last[ebNE_kb],
                                      mom_u_acc_ext,
                                      dmom_u_acc_u_ext,
                                      mom_v_acc_ext,
@@ -2694,7 +2707,9 @@ namespace proteus
                                      bc_u_ext,
                                      bc_v_ext,
                                      bc_w_ext,
+                                     LAG_LES,
                                      bc_eddy_viscosity_ext,
+                                     ebqe_eddy_viscosity_last[ebNE_kb],
                                      bc_mom_u_acc_ext,
                                      bc_dmom_u_acc_u_ext,
                                      bc_mom_v_acc_ext,
@@ -2770,7 +2785,7 @@ namespace proteus
                                             ebqe_turb_var_0[ebNE_kb],
                                             ebqe_turb_var_1[ebNE_kb],
                                             turb_var_grad_0_dummy, //not needed
-                                            eddy_viscosity_ext,
+                                            ebqe_eddy_viscosity[ebNE_kb],
                                             mom_uu_diff_ten_ext,
                                             mom_vv_diff_ten_ext,
                                             mom_ww_diff_ten_ext,
@@ -3008,7 +3023,7 @@ namespace proteus
                 //
                 //update residuals
                 //
-                if(boundaryFlags[ebN] > 0)
+                if(true)//boundaryFlags[ebN] > 0)
                   { //if boundary flag positive, then include flux contributions on interpart boundaries
                     for (int i=0;i<nDOF_test_element;i++)
                       {
@@ -3156,6 +3171,9 @@ namespace proteus
                              const double* q_turb_var_1,
                              const double* q_turb_var_grad_0,
                              //
+                             const double LAG_LES,
+                             double * q_eddy_viscosity_last,
+                             double * ebqe_eddy_viscosity_last,
                              int* p_l2g,
                              int* vel_l2g,
                              double* p_dof, double* u_dof, double* v_dof, double* w_dof,
@@ -3516,7 +3534,9 @@ namespace proteus
                                      u,
                                      v,
                                      w,
+                                     LAG_LES,
                                      eddy_viscosity,
+                                     q_eddy_viscosity_last[eN_k],
                                      mom_u_acc,
                                      dmom_u_acc_u,
                                      mom_v_acc,
@@ -3851,17 +3871,28 @@ namespace proteus
                     for(int j=0;j<nDOF_trial_element;j++)
                       {
                         register int j_nSpace = j*nSpace;
-                        elementJacobian_p_p[i][j] += (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) + 
-                                                     (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]) +
-			  PRESSURE_PROJECTION_STABILIZATION*ck.pressureProjection_weak(mom_uu_diff_ten[1], p_trial_ref[k*nDOF_trial_element+j], 1./3., p_test_ref[k*nDOF_test_element +i],dV);
+			elementJacobian_p_p[i][j] += ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) +
+                          ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]);
+  
+                        elementJacobian_p_u[i][j] += ck.AdvectionJacobian_weak(dmass_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) +
+                          ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]);
+                        elementJacobian_p_v[i][j] += ck.AdvectionJacobian_weak(dmass_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) +
+                          ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]);
+  
+                        elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) +
+                          MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]);
                         
-                        elementJacobian_p_u[i][j] += ck.AdvectionJacobian_weak(dmass_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) + 
-                          (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]); 
-                        elementJacobian_p_v[i][j] += ck.AdvectionJacobian_weak(dmass_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) + 
-                          (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]); 
+			//elementJacobian_p_p[i][j] += (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) + 
+                                                     //(1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]) +
+			  //PRESSURE_PROJECTION_STABILIZATION*ck.pressureProjection_weak(mom_uu_diff_ten[1], p_trial_ref[k*nDOF_trial_element+j], 1./3., p_test_ref[k*nDOF_test_element +i],dV);
+                        
+                        //elementJacobian_p_u[i][j] += ck.AdvectionJacobian_weak(dmass_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) + 
+                          //(1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]); 
+                        //elementJacobian_p_v[i][j] += ck.AdvectionJacobian_weak(dmass_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) + 
+                          //(1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]); 
 
-                        elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) + 
-                          MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]); 
+                        //elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) + 
+                          //MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]); 
                         elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           ck.MassJacobian_weak(dmom_u_ham_u,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + //cek hack for nonlinear hamiltonian
                           ck.HamiltonianJacobian_weak(dmom_u_ham_grad_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]) +
@@ -4211,7 +4242,9 @@ namespace proteus
                                      u_ext,
                                      v_ext,
                                      w_ext,
+                                     LAG_LES,
                                      eddy_viscosity_ext,
+                                     ebqe_eddy_viscosity_last[ebNE_kb],
                                      mom_u_acc_ext,
                                      dmom_u_acc_u_ext,
                                      mom_v_acc_ext,
@@ -4293,7 +4326,9 @@ namespace proteus
                                      bc_u_ext,
                                      bc_v_ext,
                                      bc_w_ext,
+                                     LAG_LES,
                                      bc_eddy_viscosity_ext,
+                                     ebqe_eddy_viscosity_last[ebNE_kb],
                                      bc_mom_u_acc_ext,
                                      bc_dmom_u_acc_u_ext,
                                      bc_mom_v_acc_ext,
@@ -4523,7 +4558,7 @@ namespace proteus
                 //
                 ck.calculateGScale(G,normal,h_penalty);
                 penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
-                if(boundaryFlags[ebN] > 0)
+                if(true)//boundaryFlags[ebN] > 0)
                   { //if boundary flag positive, then include flux contributions on interpart boundaries
                     for (int j=0;j<nDOF_trial_element;j++)
                       {
