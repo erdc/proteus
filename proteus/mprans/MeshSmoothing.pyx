@@ -66,6 +66,7 @@ cdef double[:,:] cySmoothNodesLaplace(double[:,:] nodeArray,
                                       int[:] fixedNodes,
                                       bool apply_directly=False):
     cdef double[:,:] disp = np.zeros_like(nodeArray)
+    disp[:] = nodeArray
     cdef double[:,:] nodeArrayMod
     if not apply_directly:
         nodeArrayMod = np.zeros_like(nodeArray)
@@ -106,9 +107,9 @@ cdef double[:,:] cySmoothNodesLaplace(double[:,:] nodeArray,
                             nodeArrayMod[node, 1] = sum_star[1]/nNodeInStar*(1-bN[1])
                             nodeArrayMod[node, 2] = sum_star[2]/nNodeInStar*(1-bN[2])
             if i == nSmooth-1:
-                disp[node, 0] = nodeArrayMod[node, 0]-nodeArray[node, 0]
-                disp[node, 1] = nodeArrayMod[node, 1]-nodeArray[node, 1]
-                disp[node, 2] = nodeArrayMod[node, 2]-nodeArray[node, 2]
+                disp[node, 0] = disp[node, 0]-nodeArray[node, 0]
+                disp[node, 1] = disp[node, 1]-nodeArray[node, 1]
+                disp[node, 2] = disp[node, 2]-nodeArray[node, 2]
     return disp
             
 
@@ -181,6 +182,7 @@ cdef double[:,:] cySmoothNodesQuality(double[:] distortion,
                                       int[:] elementNodesArray,
                                       bool apply_directly=False):
     cdef double[:,:] disp = np.zeros_like(nodeArray)
+    disp[:] = nodeArray
     cdef double[:,:] nodeArrayMod
     if not apply_directly:
         nodeArrayMod = np.zeros_like(nodeArray)
@@ -209,9 +211,9 @@ cdef double[:,:] cySmoothNodesQuality(double[:] distortion,
                 nodeArrayMod[node, 0] = weighted_pos[0]/weights
                 nodeArrayMod[node, 1] = weighted_pos[1]/weights
                 nodeArrayMod[node, 2] = weighted_pos[2]/weights
-        disp[node, 0] = nodeArrayMod[node, 0]-nodeArray[node, 0]
-        disp[node, 1] = nodeArrayMod[node, 1]-nodeArray[node, 1]
-        disp[node, 2] = nodeArrayMod[node, 2]-nodeArray[node, 2]
+        disp[node, 0] = disp[node, 0]-nodeArray[node, 0]
+        disp[node, 1] = disp[node, 1]-nodeArray[node, 1]
+        disp[node, 2] = disp[node, 2]-nodeArray[node, 2]
     return disp
 
 def smoothNodesQuality(double[:] distortion,
@@ -232,3 +234,453 @@ def smoothNodesQuality(double[:] distortion,
                                 nodeElementsArray=nodeElementsArray,
                                 elementNodesArray=elementNodesArray,
                                 apply_directly=False)
+
+
+cdef double[:] recoveryAtNodes(double[:] variable,
+                               double[:] nodeElementsArray,
+                               double[:] nodeElementOffsets):
+    """
+    variable:
+         Variable in element
+    """
+    cdef double[:] recovered_variable = np.zeros(len(nodeElementOffsets))
+    cdef int nb_el
+    cdef double var_av
+    for node in range(len(nodeElementOffsets)):
+        nb_el = 0
+        grad_av = 0.
+        for eOffset in range(nodeElementOffsets[node],
+                             nodeElementOffsets[node+1]):
+            nb_el += 1
+            eN = nodeElementsArray[eOffset]
+            var_av += variable[eN]
+        recovered_variable[node] = var_av/nb_el
+    return recovered_variable
+
+
+# cdef gradientRecoveryAtNodes(double[:] nodeElementArray,
+#                              double[:] nodeElementOffsets
+#                              double[:,:,:] grad):
+#     cdef double[:] recovered_grad = np.zeros(nodeElenentArray)
+#     cdef double[:] grad_eN
+#     cdef double grad_av
+#     cdef int nb_el
+#     for node in range(len(self.mesh.nodeArray)):
+#         nb_el = 0
+#         grad_av = 0.
+#         for eOffset in range(self.mesh.nodeElementOffsets[node],
+#                                 self.mesh.nodeElementOffsets[node+1]):
+#             nb_el += 1
+#             grad_eN = grad[nodeElementsArray[eOffset], 0]  # same value at all quad points
+#             grad_av += grad_eN
+#         grad_av /= nb_el
+#         self.grads[node] = grad_av
+#     self.model.grads = self.grads
+
+
+cdef tuple pyxGetLocalNearestNode(double[:] coords,
+                                  double[:,:] nodeArray,
+                                  int[:] nodeStarOffsets,
+                                  int[:] nodeStarArray,
+                                  int node):
+    """Finds nearest node to coordinates (local)
+    Parameters
+    ----------
+    coords: array_like
+        coordinates from which to find nearest node
+    nodeArray: array_like
+        array of fluid mesh node coordinates
+    nodeStarOffsets: array_like
+        array of offsets from nodes (range)
+    nodeStarArray: array_like
+        array of neighbouring nodes
+    node: int
+        first guess for nearest node
+
+    Returns
+    -------
+    node: int
+        nearest node index
+    dist: float
+        distance to nearest node
+    """
+    # determine local nearest node distance
+    cdef int nearest_node = node
+    cdef int nearest_node0 = node
+    cdef int nOffsets
+    cdef double dist
+    cdef double min_dist
+    cdef double[:] node_coords
+    cdef bool found_node = False
+    node_coords = nodeArray[node]
+    min_dist = (node_coords[0]-coords[0])*(node_coords[0]-coords[0])+\
+               (node_coords[1]-coords[1])*(node_coords[1]-coords[1])+\
+               (node_coords[2]-coords[2])*(node_coords[2]-coords[2])
+    cdef int i = 0
+    while found_node is False:
+        nearest_node0 = nearest_node
+        for nOffset in range(nodeStarOffsets[nearest_node0],
+                             nodeStarOffsets[nearest_node0+1]):
+            node = nodeStarArray[nOffset]
+            node_coords = nodeArray[node]
+            dist = (node_coords[0]-coords[0])*(node_coords[0]-coords[0])+\
+                   (node_coords[1]-coords[1])*(node_coords[1]-coords[1])+\
+                   (node_coords[2]-coords[2])*(node_coords[2]-coords[2])
+            if dist < min_dist:
+                min_dist = dist
+                nearest_node = node
+        if nearest_node0 == nearest_node:
+            found_node = True
+        i += 1
+    return nearest_node, dist
+
+def getLocalNearestNode(double[:] coords,
+                        double[:,:] nodeArray,
+                        int[:] nodeStarOffsets,
+                        int[:] nodeStarArray,
+                        int node):
+    return pyxGetLocalNearestNode(coords,
+                                  nodeArray,
+                                  nodeStarOffsets,
+                                  nodeStarArray,
+                                  node)
+
+
+cdef tuple pyxGetLocalNearestElement(double[:] coords,
+                                     double[:,:] elementBarycentersArray,
+                                     int[:,:] elementNeighborsArray,
+                                     int eN):
+    """Finds nearest element to coordinates (local)
+    Parameters
+    ----------
+    coords: array_like
+        coordinates from which to find nearest element
+    elementBarycentersArray: array_like
+        array of mesh cell barycenter coordinates
+    elementNeighborsArray: array_like
+        array of element neighbors
+    eN: int
+        first guess for nearest element
+
+    Returns
+    -------
+    eN: int
+        nearest element index
+    dist: float
+        distance to nearest element
+    """
+    # determine local nearest node distance
+    cdef int nearest_eN = eN
+    cdef int nearest_eN0 = eN
+    cdef int nOffsets
+    cdef double dist
+    cdef double min_dist
+    cdef double[:] eN_coords
+    cdef bool found_eN = False
+    eN_coords = elementBarycentersArray[eN]
+    min_dist = (eN_coords[0]-coords[0])*(eN_coords[0]-coords[0])+\
+               (eN_coords[1]-coords[1])*(eN_coords[1]-coords[1])+\
+               (eN_coords[2]-coords[2])*(eN_coords[2]-coords[2])
+    cdef int i = 0
+    while found_eN is False:
+        nearest_eN0 = nearest_eN
+        for eN in elementNeighborsArray[nearest_eN0]:
+            eN_coords = elementBarycentersArray[eN]
+            dist = (eN_coords[0]-coords[0])*(eN_coords[0]-coords[0])+\
+                   (eN_coords[1]-coords[1])*(eN_coords[1]-coords[1])+\
+                   (eN_coords[2]-coords[2])*(eN_coords[2]-coords[2])
+            if dist < min_dist:
+                min_dist = dist
+                nearest_eN = eN
+        if nearest_eN0 == nearest_eN:
+            found_eN = True
+        i += 1
+    return nearest_eN, dist
+
+def getLocalNearestElement(double[:] coords,
+                           double[:,:] elementBarycentersArray,
+                           int[:,:] elementNeighborsArray,
+                           int eN):
+    return pyxGetLocalNearestElement(coords,
+                                     elementBarycentersArray,
+                                     elementNeighborsArray,
+                                     eN)
+
+cdef tuple pyxGetLocalNearestElementNormal(double[:] coords,
+                                           double[:,:,:] elementNormalsArray,
+                                           int[:,:] elementBoundariesArray,
+                                           double[:,:] elementBoundaryBarycentersArray,
+                                           int[:,:] elementNeighborsArray,
+                                           double[:,:] elementBarycentersArray,
+                                           int[:] exteriorElementBoundariesBoolArray,
+                                           int eN):
+    """Finds nearest node to coordinates (local)
+    """
+    # determine local nearest node distance
+    cdef int nearest_eN = eN
+    cdef int nearest_eN0 = eN
+    cdef int nOffsets
+    cdef double dist
+    cdef double min_dist
+    cdef double[:] eN_coords = np.zeros(3)
+    eN_coords[0] = elementBarycentersArray[eN, 0]
+    eN_coords[1] = elementBarycentersArray[eN, 1]
+    eN_coords[2] = elementBarycentersArray[eN, 2]
+    min_dist = np.sqrt((eN_coords[0]-coords[0])*(eN_coords[0]-coords[0])+\
+                       (eN_coords[1]-coords[1])*(eN_coords[1]-coords[1])+\
+                       (eN_coords[2]-coords[2])*(eN_coords[2]-coords[2]))
+    cdef double[:] direction = np.zeros(3)
+    direction[0] = (coords[0]-eN_coords[0])/min_dist
+    direction[1] = (coords[1]-eN_coords[1])/min_dist
+    direction[2] = (coords[2]-eN_coords[2])/min_dist
+    cdef bool found_eN = False
+    cdef int i = 0
+    cdef double[:] bound_bar  # barycenter of boundary
+    cdef double alpha  # distance
+    cdef int b_i  # boundary index element
+    cdef int b_i_last = -999
+    cdef double[:] normal = np.zeros(3)  # element boundary normal
+    cdef double dot  # dot product result
+    cdef double dot2  # dot product 2 result
+    while found_eN is False:
+        nearest_eN0 = nearest_eN
+        alpha_min = 1e12
+        for j, b_i in enumerate(elementBoundariesArray[nearest_eN0]):
+            if b_i != b_i_last and exteriorElementBoundariesBoolArray[b_i] == 0.:
+                normal[0] = elementNormalsArray[nearest_eN0, j, 0]
+                normal[1] = elementNormalsArray[nearest_eN0, j, 1]
+                normal[2] = elementNormalsArray[nearest_eN0, j, 2]
+                bound_bar = elementBoundaryBarycentersArray[b_i]
+                dot = normal[0]*direction[0]+normal[1]*direction[1]+normal[2]*direction[2]
+                dot2 = (bound_bar[0]-eN_coords[0])*normal[0]+(bound_bar[1]-eN_coords[1])*normal[1]+(bound_bar[2]-eN_coords[2])*normal[2]
+                if dot > 0. and dot2 > -1e-10:
+                    alpha = dot2/dot
+                    if 0. < alpha < alpha_min:
+                        alpha_min = alpha
+                        nearest_eN = elementNeighborsArray[nearest_eN0, j]
+                        b_i_last = b_i
+        if nearest_eN != nearest_eN0:
+            if min_dist-alpha_min > 0.:
+                eN_coords[0] += alpha_min*direction[0]
+                eN_coords[1] += alpha_min*direction[1]
+                eN_coords[2] += alpha_min*direction[2]
+                min_dist -= alpha_min
+            else:
+                nearest_eN = nearest_eN0
+                found_eN = True
+        # if nearest_eN != nearest_eN0:
+        #     # not checking min_dist, wrong result
+        #     eN_coords[0] += alpha_min*direction[0]
+        #     eN_coords[1] += alpha_min*direction[1]
+        #     eN_coords[2] += alpha_min*direction[2]
+        #     min_dist -= alpha_min
+        if nearest_eN0 == nearest_eN:
+            found_eN = True
+        i += 1
+    return nearest_eN, min_dist
+
+def getLocalNearestElementNormal(double[:] coords,
+                                 double[:,:,:] elementNormalsArray,
+                                 int[:,:] elementBoundariesArray,
+                                 double[:,:] elementBoundaryBarycentersArray,
+                                 int[:,:] elementNeighborsArray,
+                                 double[:,:] elementBarycentersArray,
+                                 int[:] exteriorElementBoundariesBoolArray,
+                                 int eN):
+    return pyxGetLocalNearestElementNormal(coords,
+                                           elementNormalsArray,
+                                           elementBoundariesArray,
+                                           elementBoundaryBarycentersArray,
+                                           elementNeighborsArray,
+                                           elementBarycentersArray,
+                                           exteriorElementBoundariesBoolArray,
+                                           eN)
+
+cdef tuple pyxGetLocalNearestElementAroundNode(double[:] coords,
+                                               int[:] nodeElementOffsets,
+                                               int[:] nodeElementsArray,
+                                               double[:,:] elementBarycentersArray,
+                                               int node):
+    """
+    """
+    cdef double dist
+    cdef double min_dist
+    cdef double[:] eN_coords
+    cdef int i = 0
+    for eN in nodeElementsArray[nodeElementOffsets[node]:nodeElementOffsets[node+1]]:
+        eN_coords = elementBarycentersArray[eN]
+        dist = (eN_coords[0]-coords[0])*(eN_coords[0]-coords[0])+\
+               (eN_coords[1]-coords[1])*(eN_coords[1]-coords[1])+\
+               (eN_coords[2]-coords[2])*(eN_coords[2]-coords[2])
+        if i == 0 or dist < min_dist:
+            min_dist = dist
+            nearest_eN = eN
+        i += 1
+    # determine local nearest node distance
+    return nearest_eN, min_dist
+
+def getLocalNearestElementAroundNode(coords,
+                                     nodeElementOffsets,
+                                     nodeElementsArray,
+                                     elementBarycentersArray,
+                                     node):
+    return pyxGetLocalNearestElementAroundNode(coords=coords,
+                                               nodeElementOffsets=nodeElementOffsets,
+                                               nodeElementsArray=nodeElementsArray,
+                                               elementBarycentersArray=elementBarycentersArray,
+                                               node=node)
+
+def getLocalElement(femSpace, coords, node):
+    """Given coordinates and its nearest node, determine if it is on a
+    local element.
+
+    Parameters
+    ----------
+    femSpace: object
+        finite element space
+    coords: array_like
+        coordinates from which to element
+    node: int
+        nearest node index
+
+    Returns
+    -------
+    eN: int or None
+        local index of element (None if not found)
+    """
+    patchBoundaryNodes=set()
+    checkedElements=[]
+    # nodeElementOffsets give the indices to get the elements sharing the node
+    #log Profiling.logEvent("Getting Local Element")
+    if node+1 < len(femSpace.mesh.nodeElementOffsets):
+        for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+            eN = femSpace.mesh.nodeElementsArray[eOffset]
+            checkedElements.append(eN)
+            # union of set
+            patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
+            # evaluate the inverse map for element eN (global to local)
+            xi = femSpace.elementMaps.getInverseValue(eN, coords)
+            #J = femSpace.elementMaps.getJacobianValues(eN, )
+            # query whether xi lies within the reference element
+            if femSpace.elementMaps.referenceElement.onElement(xi):
+                return eN
+    else:
+        for eOffset in range(femSpace.mesh.nodeElementOffsets[node]):
+            eN = femSpace.mesh.nodeElementsArray[eOffset]
+            checkedElements.append(eN)
+            # union of set
+            patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
+            # evaluate the inverse map for element eN (global to local)
+            xi = femSpace.elementMaps.getInverseValue(eN, coords)
+            #J = femSpace.elementMaps.getJacobianValues(eN, )
+            # query whether xi lies within the reference element
+            if femSpace.elementMaps.referenceElement.onElement(xi):
+                return eN
+    # extra loop if case coords is in neighbour element
+    for node in patchBoundaryNodes:
+        for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+            eN = femSpace.mesh.nodeElementsArray[eOffset]
+            if eN not in checkedElements:
+                checkedElements.append(eN)
+                # evaluate the inverse map for element eN
+                xi = femSpace.elementMaps.getInverseValue(eN, coords)
+                # query whether xi lies within the reference element
+                if femSpace.elementMaps.referenceElement.onElement(xi):
+                    return eN
+    # no elements found
+    return None
+
+cdef double[:,:,:] pyxGetElementBoundaryNormalsTetra3D(double[:,:] nodeArray,
+                                                       int[:,:] elementBoundariesArray,
+                                                       int[:,:] elementBoundaryNodesArray,
+                                                       double[:,:] elementBoundaryBarycentersArray,
+                                                       double[:,:] elementBarycentersArray):
+    cdef double[:,:,:] normals = np.zeros((len(elementBoundariesArray), 4, 3))
+    cdef double[:] normal_check = np.zeros(3)
+    cdef double[:] U = np.zeros(3)
+    cdef double[:] V = np.zeros(3)
+    cdef double lengthn
+    cdef int b_i
+    cdef double[:] node0
+    cdef double[:] node1
+    cdef double[:] node2
+    for i in range(len(normals)):
+        for j in range(len(normals[i])):
+            b_i = elementBoundariesArray[i, j]
+            node0 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],0]]
+            node1 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],1]]
+            node2 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],2]]
+            U[0] = node1[0]-node0[0]
+            U[1] = node1[1]-node0[1]
+            U[2] = node1[2]-node0[2]
+            V[0] = node2[0]-node0[0]
+            V[1] = node2[1]-node0[1]
+            V[2] = node2[2]-node0[2]
+            normals[i,j,0] = U[1]*V[2]-U[2]*V[1]
+            normals[i,j,1] = U[2]*V[0]-U[0]*V[2]
+            normals[i,j,2] = U[0]*V[1]-U[1]*V[0]
+            lenghtn = np.sqrt(normals[i,j,0]**2+normals[i,j,1]**2+normals[i,j,2]**2)
+            normals[i,j,0] /= lenghtn
+            normals[i,j,1] /= lenghtn
+            normals[i,j,2] /= lenghtn
+            normal_check[0] = elementBoundaryBarycentersArray[b_i][0]-elementBarycentersArray[i][0]
+            normal_check[1] = elementBoundaryBarycentersArray[b_i][1]-elementBarycentersArray[i][1]
+            normal_check[2] = elementBoundaryBarycentersArray[b_i][2]-elementBarycentersArray[i][2]
+            if np.dot(normals[i,j], normal_check) < 0:
+                normals[i,j,0] = -normals[i,j,0]
+                normals[i,j,1] = -normals[i,j,1]
+                normals[i,j,2] = -normals[i,j,2]
+    return normals
+
+def getElementBoundaryNormalsTetra3D(nodeArray,
+                                     elementBoundariesArray,
+                                     elementBoundaryNodesArray,
+                                     elementBoundaryBarycentersArray,
+                                     elementBarycentersArray):
+    return pyxGetElementBoundaryNormalsTetra3D(nodeArray=nodeArray,
+                                               elementBoundariesArray=elementBoundariesArray,
+                                               elementBoundaryNodesArray=elementBoundaryNodesArray,
+                                               elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                               elementBarycentersArray=elementBarycentersArray)
+
+cdef double[:,:,:] pyxGetElementBoundaryNormalsTriangle2D(double[:,:] nodeArray,
+                                                          int[:,:] elementBoundariesArray,
+                                                          int[:,:] elementBoundaryNodesArray,
+                                                          double[:,:] elementBoundaryBarycentersArray,
+                                                          double[:,:] elementBarycentersArray):
+    cdef double[:,:,:] normals = np.zeros((len(elementBoundariesArray), 3, 3))
+    cdef double[:] normal_check = np.zeros(3)
+    cdef double[:] U = np.zeros(3)
+    cdef double lengthn
+    cdef int b_i
+    cdef double[:] node0
+    cdef double[:] node1
+    for i in range(len(normals)):
+        for j in range(len(normals[i])):
+            b_i = elementBoundariesArray[i, j]
+            node0 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],0]]
+            node1 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],1]]
+            U[0] = node1[0]-node0[0]
+            U[1] = node1[1]-node0[1]
+            normals[i,j,0] = -U[1]
+            normals[i,j,1] = U[0]
+            lenghtn = np.sqrt(normals[i,j,0]**2+normals[i,j,1]**2)
+            normals[i,j,0] /= lenghtn
+            normals[i,j,1] /= lenghtn
+            normal_check[0] = elementBoundaryBarycentersArray[b_i][0]-elementBarycentersArray[i][0]
+            normal_check[1] = elementBoundaryBarycentersArray[b_i][1]-elementBarycentersArray[i][1]
+            if np.dot(normals[i,j], normal_check) < 0:
+                normals[i,j,0] = -normals[i,j,0]
+                normals[i,j,1] = -normals[i,j,1]
+    return normals
+
+def getElementBoundaryNormalsTriangle2D(nodeArray,
+                                        elementBoundariesArray,
+                                        elementBoundaryNodesArray,
+                                        elementBoundaryBarycentersArray,
+                                        elementBarycentersArray):
+    return pyxGetElementBoundaryNormalsTriangle2D(nodeArray=nodeArray,
+                                                  elementBoundariesArray=elementBoundariesArray,
+                                                  elementBoundaryNodesArray=elementBoundaryNodesArray,
+                                                  elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                                  elementBarycentersArray=elementBarycentersArray)

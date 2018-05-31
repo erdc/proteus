@@ -2,7 +2,8 @@ import numpy as np
 import copy
 from proteus.Profiling import logEvent
 from proteus import TransportCoefficients
-import cMoveMeshMonitor as cmm
+from proteus.mprans import MeshSmoothing
+from proteus.mprans import cMoveMeshMonitor as cmm
 
 class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
     """
@@ -61,6 +62,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.fixedNodes = fixedNodes
         self.nSmooth = nSmooth
         self.dt_last = None
+        self.u_phi = None
         #super(MyCoeff, self).__init__(aOfX, fOfX)
         TransportCoefficients.PoissonEquationCoefficients.__init__(self, aOfX, fOfX)
 
@@ -102,9 +104,18 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
 
     def postStep(self, t,firstStep=False):
         # gradient recovery
-        self.gradientRecoveryAtNodes()
+        logEvent("Gradient recovery at mesh nodes", level=3)
+        self.grads[:] = cmm.gradientRecoveryAtNodes(grads=self.model.q[('grad(u)', 0)],
+                                                    nodeElementsArray=self.mesh.nodeElementsArray,
+                                                    nodeElementOffsets=self.mesh.nodeElementOffsets,
+                                                    nd=self.nd)
+        self.model.grads = self.grads
         # area recovery
-        self.areaRecoveryAtNodes()
+        logEvent("Area recovery at mesh nodes", level=3)
+        self.areas_nodes[:] = cmm.recoveryAtNodes(variable=self.areas,
+                                                  nodeElementsArray=self.mesh.nodeElementsArray,
+                                                  nodeElementOffsets=self.mesh.nodeElementOffsets)
+        self.model.areas_nodes = self.areas_nodes
         # evaluate f at nodes
         self.evaluateFunAtNodes()
         # gamma parameter
@@ -115,8 +126,9 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.gamma0 = 10.  # user defined parameter
         self.na = np.log(self.gamma)/np.log(self.gamma0)
         # pseudo-time step
-        eps = 1.
-        self.pseudoTimeStepping(eps)
+        eps = 0.1
+        self.PHI[:] = self.mesh.nodeArray
+        self.cCoefficients.pseudoTimeStepping(eps=eps, xx=self.PHI)
         # move nodes
         if self.dt_last is not None:
             # dt = self.model.timeIntegration.dt
@@ -125,17 +137,16 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             # dt = self.model.timeIntegration.dt
             dt = self.dt_last
             logEvent('Smoothing Mesh with Laplace Smoothing - '+str(self.nSmooth))
-            from proteus.mprans import MeshSmoothing
             if self.nSmooth > 0:
                 disp = MeshSmoothing.smoothNodesLaplace(nodeArray=self.PHI,
-                                                 nodeStarOffsets=self.mesh.nodeStarOffsets,
-                                                 nodeStarArray=self.mesh.nodeStarArray,
-                                                 nodeMaterialTypes=self.mesh.nodeMaterialTypes,
-                                                 nNodes_owned=self.mesh.nNodes_owned,
-                                                 nSmooth=self.nSmooth,
-                                                 boundaryNormals=self.boundaryNormals,
-                                                 fixedNodes=self.fixedNodes,
-                                                 apply_directly=False)
+                                                        nodeStarOffsets=self.mesh.nodeStarOffsets,
+                                                        nodeStarArray=self.mesh.nodeStarArray,
+                                                        nodeMaterialTypes=self.mesh.nodeMaterialTypes,
+                                                        nNodes_owned=self.mesh.nNodes_owned,
+                                                        nSmooth=self.nSmooth,
+                                                        boundaryNormals=self.boundaryNormals,
+                                                        fixedNodes=self.fixedNodes,
+                                                        apply_directly=False)
                 self.PHI += disp
             self.model.mesh.nodeVelocityArray[:] = (self.PHI-self.model.mesh.nodeArray)/dt
             #self.model.mesh.nodeVelocityArray[:] = disp/dt
@@ -162,7 +173,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         f = 1./(self.evaluateFunAtX(x)*self.C)-1./area
         return f
 
-    def dist_search(self, x, node, eN=None):
+    def dist_search(self, x, node, eN=-1):
         """
         search element containing containing coords x starting with a guessed
         nearest node
@@ -182,12 +193,17 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         min_dist = np.sqrt(np.sum((x-self.mesh.nodeArray[node])**2))
         found_node = False
         element = None
-        if eN is not None:
+        xx = np.zeros(3)
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        x = xx
+        if eN >= 0:
             xi = femSpace.elementMaps.getInverseValue(eN, x)
             # query whether xi lies within the reference element
             if femSpace.elementMaps.referenceElement.onElement(xi):
                 element = eN
-        if element is None:
+        if element < 0:
             while found_node is False:
                 nearest_node0 = nearest_node
                 for nOffset in range(femSpace.mesh.nodeStarOffsets[nearest_node0],
@@ -213,7 +229,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                 # query whether xi lies within the reference element
                 if femSpace.elementMaps.referenceElement.onElement(xi):
                     element = eN
-            if element is None:
+            if element < 0:
                 # extra loop if case coords is in neighbour element
                 for node in patchBoundaryNodes:
                     for eOffset in range(self.mesh.nodeElementOffsets[node],
@@ -243,6 +259,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             #                    # query whether xi lies within the reference element
             #                    if femSpace.elementMaps.referenceElement.onElement(xi):
             #                        element = eN
+        if element is None:
+            element = -1
         return element, nearest_node, xi
 
     def evaluateFunAtX(self, x, ls_phi=None):
@@ -302,110 +320,6 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             value+=self.grads[i]*psi(xi)
         return value
 
-    def gradientRecoveryAtNodes(self):
-        logEvent("Gradient recovery at mesh nodes",
-                 level=3)
-        grad_v = self.model.q[('grad(u)',0)]
-        # n_quad = self.mesh.nodeArray.shape[1]
-        for node in range(len(self.mesh.nodeArray)):
-            nb_el = 0
-            grad_av = 0.
-            for eOffset in range(self.mesh.nodeElementOffsets[node],
-                                 self.mesh.nodeElementOffsets[node+1]):
-                nb_el += 1
-                eN = self.mesh.nodeElementsArray[eOffset]
-                grad_eN_av = 0
-                # for k in range(n_quad):
-                #     grad_k = self.model.q[('grad(u)',0)][eN, k]
-                #     grad_eN_av += grad_k
-                # grad_eN_av /= n_quad
-                grad_eN_av = self.model.q[('grad(u)',0)][eN, 0]  # same value at all quad points
-                grad_av += grad_eN_av
-            grad_av /= nb_el
-            self.grads[node] = grad_av
-        self.model.grads = self.grads
-
-    def areaRecoveryAtNodes(self):
-        logEvent("Area recovery at mesh nodes",
-                 level=3)
-        grad_v = self.model.q[('grad(u)',0)]
-        # n_quad = self.mesh.nodeArray.shape[1]
-        for node in range(len(self.mesh.nodeArray)):
-            nb_el = 0
-            grad_av = 0.
-            for eOffset in range(self.mesh.nodeElementOffsets[node],
-                                 self.mesh.nodeElementOffsets[node+1]):
-                nb_el += 1
-                eN = self.mesh.nodeElementsArray[eOffset]
-                grad_eN_av = 0
-                # for k in range(n_quad):
-                #     grad_k = self.model.q[('grad(u)',0)][eN, k]
-                #     grad_eN_av += grad_k
-                # grad_eN_av /= n_quad
-                grad_eN_av = self.areas[eN]  # same value at all quad points
-                grad_av += grad_eN_av
-            grad_av /= nb_el
-            self.areas_nodes[node] = grad_av
-        self.model.areas_nodes = self.areas_nodes
-
-    def pseudoTimeStepping(self, eps=0.01):
-        logEvent("Pseudo-time stepping with dt={eps} (0<t<1)".format(eps=eps),
-                 level=3)
-        t_range = np.linspace(0., 1., int(1./eps+1))[1:]
-        t_last = 0
-        xx = copy.deepcopy(self.mesh.nodeArray)
-        for j, t in enumerate(t_range):
-            logEvent("Pseudo-time stepping t={t}".format(t=t),
-                    level=3)
-            for i in range(len(xx)):
-                phi = xx[i]
-                dt = t-t_last
-                flag = self.mesh.nodeMaterialTypes[i]
-                bN = None
-                if flag != 0 and self.boundaryNormals is not None:
-                    bN = self.boundaryNormals[flag]
-                    if bN[0] == 0. and bN[1] == 0. and bN[2] == 0:
-                        bN = None
-                fixed = False
-                if self.fixedNodes is not None:
-                    if self.fixedNodes[flag] == 1:
-                        fixed = True
-                if flag == 0 or bN is not None:
-                    if fixed is False:
-                        if j > 0:
-                            eN, nearest_node, xi = self.dist_search(phi, self.nearest_nodes[i], self.eN_phi[i])
-                            self.eN_phi[i] = eN
-                            self.nearest_nodes[i] = nearest_node
-                            if eN is None:
-                                print("Element not found for:", i)
-                                # print("node", i, self.mesh.nodeArray[i])
-                                # print("new coords", phi)
-                                v_grad = self.grads[i]
-                                area = self.areas_nodes[i]
-                            else:
-                                v_grad = self.getGradientValue(eN, xi)
-                                area = self.areas[eN]
-                        else:
-                            v_grad = self.grads[i]
-                            area = self.areas_nodes[i]
-                            eN = 0
-                        if self.LS_MODEL is not None and eN is not None:
-                            ls_phi = self.getLevelSetValue(eN, phi)
-                        else:
-                            ls_phi = None
-                        dphi = v_grad/(t*1./(self.evaluateFunAtX(x=phi, ls_phi=ls_phi)*self.C)+(1-t)*1./area)
-                        # # -----
-                        # Euler
-                        # # -----
-                        if flag == 0:
-                            phi[:self.nd] += dphi[:self.nd]*dt
-                        elif bN is not None and i > 3:
-                            phi[:self.nd] += dphi[:self.nd]*(1-np.abs(bN[:self.nd]))*dt
-                        # # -----
-                        xx[i] = phi  # not necessary but left for cythonising
-            t_last = t
-        self.PHI[:] = xx
-
 def calculate_areas(x, detJ, weights):
         N_k = len(weights)
         areas = np.zeros(len(x))
@@ -422,28 +336,3 @@ def calculate_area(x, detJ, weights):
         for k in xrange(N_k):
             area += detJ[k]*weights[k]
         return area
-
-def recoveryAtNodes(variable, grad_v, nodeElementOffsets):
-    """
-    variable:
-         Variable in element
-    """
-    recovered_variable = np.zeros(len(nodeElementOffsets))
-    for node in range(len(nodeElementOffsets)):
-        nb_el = 0
-        grad_av = 0.
-        for eOffset in range(nodeElementOffsets[node],
-                             nodeElementOffsets[node+1]):
-            nb_el += 1
-            eN = self.mesh.nodeElementsArray[eOffset]
-            grad_eN_av = 0
-            # for k in range(n_quad):
-            #     grad_k = self.model.q[('grad(u)',0)][eN, k]
-            #     grad_eN_av += grad_k
-            # grad_eN_av /= n_quad
-            grad_eN_av = self.areas[eN]  # same value at all quad points
-            grad_av += grad_eN_av
-        grad_av /= nb_el
-        recovered_variable[node] = grad_av
-    return recovered_variable
-
