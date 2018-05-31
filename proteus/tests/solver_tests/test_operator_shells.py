@@ -161,13 +161,13 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
 
     def test_tppcd_shell(self):
         ''' Test for the two-phase pcd operator shell '''
-        Qp_visc = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_visc'))
-        Qp_dens = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_dens'))
-        Ap_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Ap_rho'))
-        Np_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Np_rho'))
+        Qp_visc = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_visc.bin'))
+        Qp_dens = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_dens.bin'))
+        Ap_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Ap_rho.bin'))
+        Np_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Np_rho.bin'))
         alpha = True
         delta_t = 0.001
-        x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd'))
+        x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd.bin'))
 
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
@@ -185,18 +185,18 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         y_vec.zeroEntries()
         A = None
         TPPCD_shell.apply(A,x_vec,y_vec)
-        true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir, 'import_modules/tp_pcd_y_output'))
+        true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir, 'import_modules/tp_pcd_y_output.bin'))
         assert np.allclose(y_vec.getArray(),true_solu.getArray(),rtol=1e-01)
 
     def test_tppcd_shell_with_chebyshev_iteration(self):
         ''' Test for the lsc operator shell '''
-        Qp_visc = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_visc'))
-        Qp_dens = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_dens'))
-        Ap_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Ap_rho'))
-        Np_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Np_rho'))
+        Qp_visc = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_visc.bin'))
+        Qp_dens = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_dens.bin'))
+        Ap_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Ap_rho.bin'))
+        Np_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Np_rho.bin'))
         alpha = True
         delta_t = 0.001
-        x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd'))
+        x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd.bin'))
 
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
@@ -214,7 +214,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         y_vec.zeroEntries()
         A = None
         TPPCD_shell.apply(A,x_vec,y_vec)
-        true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir, 'import_modules/tp_pcd_y_output'))
+        true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir, 'import_modules/tp_pcd_y_output.bin'))
         assert np.allclose(y_vec.getArray(),true_solu.getArray())
 
     def test_SpInv_shell(self, create_simple_saddle_point_problem):
@@ -239,13 +239,13 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
 
     def test_tppcd_shell_with_dirichlet_pressure(self):
         ''' Test for the lsc operator shell '''
-        Qp_visc = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_visc'))
-        Qp_dens = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_dens'))
-        Ap_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Ap_rho'))
-        Np_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Np_rho'))
+        Qp_visc = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_visc.bin'))
+        Qp_dens = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_dens.bin'))
+        Ap_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Ap_rho.bin'))
+        Np_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Np_rho.bin'))
         alpha = True
         delta_t = 0.001
-        x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd'))
+        x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd.bin'))
 
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
@@ -274,7 +274,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         TPPCD_shell.apply(A,x_vec,y_vec)
         assert np.array_equal(y_vec[dirichlet_nodes], [0.,0.,0.,0.,0.])
         true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir,
-                                                       'import_modules/tppcd_y_dirichlet_dof'))
+                                                       'import_modules/tppcd_y_dirichlet_dof.bin'))
         assert np.allclose(y_vec.getArray(),true_solu.getArray())
 
 def test_tmp_vec_creation():
