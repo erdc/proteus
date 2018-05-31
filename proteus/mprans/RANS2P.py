@@ -125,6 +125,15 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
+
+    Notes
+    -----
+    The PRESSURE_PROJECTION_STABILIZATION flag allows the user to use
+    the Bochev-Dohrmann-Gunzburger stabilization introduced in
+    Stabilization of Low-Order Mixed Finite Elements for the  Stokes
+    Equation.  This option should be turned off for most problems,
+    but in some instances it may produced better preconditioning
+    results than the full SGE approach.
     """
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate

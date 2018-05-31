@@ -490,11 +490,11 @@ class KSP_petsc4py(LinearSolver):
         #    print "Matrix is symmetric"
         # else:
         #    print "MATRIX IS NONSYMMETRIC"
-        # logEvent("before ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s " % (self.ksp.rtol,
-        #                                                                                            self.ksp.atol,
-        #                                                                                            self.ksp.converged,
-        #                                                                                            self.ksp.its,
-        #                                                                                            self.ksp.norm))
+        logEvent("before ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s " % (self.ksp.rtol,
+                                                                                                   self.ksp.atol,
+                                                                                                   self.ksp.converged,
+                                                                                                   self.ksp.its,
+                                                                                                   self.ksp.norm))
         if self.pccontext is not None:
             self.pccontext.par_b = par_b
             self.pccontext.par_u = par_u
@@ -504,7 +504,6 @@ class KSP_petsc4py(LinearSolver):
         if self.bdyNullSpace is True:
             self._setNullSpace(par_b)
 
-        # ARB - need to check if the following is really necessary
         if self.preconditioner:
             try:
                 if self.preconditioner.hasNullSpace:
@@ -1516,8 +1515,7 @@ class Schur_Sp(SchurPrecon):
                                           self.A11,
                                           self.A01,
                                           self.A10,
-                                          False)
-#                                          constNullSpace = self.constNullSpace)
+                                          constNullSpace = self.constNullSpace)
         self.SpInv_shell.setPythonContext(self.matcontext_inv)
         self.SpInv_shell.setUp()
         # Set PETSc Schur operator
@@ -1664,7 +1662,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.laplace_null_space = laplace_null_space
         # Strong Dirichlet Pressure DOF
         try:
-#            self.strongPressureDOF = self.L.pde.numericalFlux.isDOFBoundary[0][:,0]
             self.strongPressureDOF = L.pde.dirichletConditionsForceDOF[0].DOFBoundaryPointDict.keys()
         except KeyError:
             self.strongPressureDOF = []
@@ -1717,7 +1714,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.TP_PCDInv_shell.setSizes(L_sizes)
         self.TP_PCDInv_shell.setType('python')
         dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
-#        if not hasattr(self,'matcontext_inv'):
         self.matcontext_inv = TwoPhase_PCDInv_shell(self.Qp_invScaledVis,
                                                     self.Qp_rho,
                                                     self.Ap_invScaledRho,
@@ -1728,9 +1724,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                                                     strong_dirichlet_DOF = self.strongPressureDOF,
                                                     laplace_null_space = self.laplace_null_space,
                                                     par_info = self.L.pde.par_info)
-#        else:
-#            self.matcontext_inv.update(self.Np_rho)
-        # ARB Note - I'm trying to reduce work 
         self.TP_PCDInv_shell.setPythonContext(self.matcontext_inv)
         self.TP_PCDInv_shell.setUp()
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
