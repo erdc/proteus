@@ -4748,9 +4748,11 @@ Number of nodes : %d\n""" % (self.nElements_global,
         nNodes = len(self.nodeArray)
         self.nodeDiametersArray = np.zeros(nNodes)
         self.nodeSupportArray = np.zeros(nNodes)
+        self.volume = 0.
 
         for eN in range(self.nElements_global):
             area = self._calc_quad_area(eN)
+            self.volume += area
             hMax = self.elementDiametersArray[eN]
 
             for nN in range(self.nNodes_element):
