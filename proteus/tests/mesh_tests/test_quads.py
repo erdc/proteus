@@ -56,12 +56,13 @@ def test_calc_hmax(simple_mesh):
         assert abs(h-hmax_i) < 1e-12
 
 @pytest.mark.MeshTools
-def test_builNodeDiameterArray_1(simple_mesh):
+def test_buildNodeDiameterArray_1(simple_mesh):
     mlMesh, nnx, nny = simple_mesh
     quad_mesh = mlMesh.meshList[0]
     quad_mesh.buildNodeDiameterArray()
     expected = np.full((16),0.94280904)
     assert np.allclose(quad_mesh.nodeDiametersArray,expected)
+    assert abs(quad_mesh.volume-4.0) < 1e-12
 
 @pytest.mark.modelTest
 @pytest.mark.moderateTest
