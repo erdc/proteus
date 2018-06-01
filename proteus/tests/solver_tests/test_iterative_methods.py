@@ -74,6 +74,71 @@ def initialize_schur_ksp_obj(matrix_A, schur_approx):
     ksp_obj.pc.setUp()
     return ksp_obj
 
+def initialize_asm_ksp_obj(matrix_A):
+    """
+    Creates a right-hand-side and solution PETSc4Py vector for
+    testing ksp solves.
+
+    Parameters
+    ----------
+    matrix_A: :class:`p4pyPETSc.Mat`
+        Global matrix object.
+
+    Returns
+    -------
+    ksp_obj: :class:`p4pyPETSc.KSP`
+    """
+    ksp_obj = p4pyPETSc.KSP().create()
+    ksp_obj.setOperators(matrix_A,matrix_A)
+    ksp_obj.setFromOptions()
+    ksp_obj.setUp()
+    return ksp_obj
+
+
+def build_amg_index_sets(L_sizes):
+    """
+    Create PETSc index sets for the velocity components of a saddle
+    point matrix
+
+    Parameters
+    ----------
+    L_sizes : 
+        Sizes of original saddle-point system
+
+    Returns:
+    --------
+    Index_Sets : lst
+        List of velocity index sets
+    """
+    neqns = L_sizes[0][0]
+    velocityDOF=[]
+    for start in range(1,3):
+        velocityDOF.append(np.arange(start=start,
+                                     stop=1+neqns,
+                                     step=3,
+                                     dtype='i'))
+        velocityDOF_full=np.vstack(velocityDOF).transpose().flatten()
+    velocity_u_DOF = []
+    velocity_u_DOF.append(np.arange(start=1,
+                                    stop=1+neqns,
+                                    step=3,
+                                    dtype='i'))
+    velocity_u_DOF_full = np.vstack(velocity_u_DOF).transpose().flatten()
+    velocity_v_DOF = []
+    velocity_v_DOF.append(np.arange(start=2,
+                                    stop=2+neqns,
+                                    step=3,
+                                    dtype='i'))
+    velocity_v_DOF_full = np.vstack(velocity_v_DOF).transpose().flatten()
+    isvelocity = p4pyPETSc.IS()
+    isvelocity.createGeneral(velocityDOF_full)
+    isu = p4pyPETSc.IS()
+    isu.createGeneral(velocity_u_DOF_full)
+    isv = p4pyPETSc.IS()
+    isv.createGeneral(velocity_v_DOF_full)
+    return [isvelocity, isu, isv]
+
+
 @pytest.fixture()
 def initialize_petsc_options(request):
     """Initializes schur complement petsc options. """
@@ -90,11 +155,29 @@ def initialize_petsc_options(request):
     petsc_options.setValue('fieldsplit_pressure_ksp_type','preonly')
 
 @pytest.fixture()
+def initialize_velocity_block_petsc_options(request):
+    petsc_options = p4pyPETSc.Options()
+    petsc_options.setValue('ksp_type','gmres')
+    petsc_options.setValue('ksp_gmres_restart',100)
+    petsc_options.setValue('ksp_pc_side','right')
+    petsc_options.setValue('ksp_atol',1e-8)
+    petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
+    petsc_options.setValue('pc_type','hypre')
+    petsc_options.setValue('pc_type_hypre_type','boomeramg')
+
+def load_matrix(mat_file_name):
+    """Load a matrix """
+    A = LAT.petsc_load_matrix(os.path.join
+                              (os.path.dirname(__file__),
+                               'import_modules/'+mat_file_name))
+    return A
+    
+@pytest.fixture()
 def load_nse_cavity_matrix(request):
     """Loads a Navier-Stokes matrix drawn from the MPRANS module. """
     A = LAT.petsc_load_matrix(os.path.join
                               (os.path.dirname(__file__),
-                               'import_modules/NSE_cavity_matrix'))
+                               'import_modules/NSE_cavity_matrix.bin'))
     yield A
 
 @pytest.fixture()
@@ -106,7 +189,44 @@ def load_nse_step_matrix(request):
     """
     A = LAT.petsc_load_matrix(os.path.join
                               (os.path.dirname(__file__),
-                               'import_modules/NSE_step_no_slip'))
+                               'import_modules/NSE_step_no_slip.bin'))
+    yield A
+
+@pytest.fixture()
+def load_small_step_matrix(request):
+    """
+    Loads a small example of a backwards facing step matrix for
+    testing purposes. (Note: this matrix does not have advection)
+    """
+    A = LAT.petsc_load_matrix(os.path.join
+                              (os.path.dirname(__file__),
+                               'import_modules/saddle_point_small.bin'))
+    yield A
+
+@pytest.fixture()
+def load_medium_step_matrix(request):
+    """
+    Loads a medium sized backwards facing step matrix for studying
+    different AMG preconditioners. (Note: this matrix does not have
+    advection)
+    """
+    A = LAT.petsc_load_matrix(os.path.join
+                              (os.path.dirname(__file__),
+                               'import_modules/saddle_point_matrix.bin'))
+    yield A
+
+@pytest.fixture()
+def load_rans2p_step_newton_1(request):
+    A = LAT.petsc_load_matrix(os.path.join
+                              (os.path.dirname(__file__),
+                               'import_modules/rans2p_step_newton_1.bin'))
+    yield A
+
+@pytest.fixture()
+def load_rans2p_step_newton_5(request):
+    A = LAT.petsc_load_matrix(os.path.join
+                              (os.path.dirname(__file__),
+                               'import_modules/rans2p_step_newton_5.bin'))
     yield A
 
 @pytest.mark.LinearSolvers
@@ -153,6 +273,89 @@ def test_Schur_Sp_solve(load_nse_step_matrix,
     assert ksp_obj.its == 45
     assert np.allclose(ksp_obj.norm, 394.7036050627)
     assert ksp_obj.reason == 2
+    
+@pytest.mark.amg
+def test_amg_basic(load_small_step_matrix,
+                   initialize_velocity_block_petsc_options):
+    mat_A = load_small_step_matrix
+
+    petsc_options = initialize_velocity_block_petsc_options
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    #Initialize ksp object
+    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+                                                index_sets[0]))   
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 9
+
+@pytest.mark.amg
+def test_amg_iteration_performance(load_medium_step_matrix,
+                                   initialize_velocity_block_petsc_options):
+    mat_A = load_medium_step_matrix
+    petsc_options = initialize_velocity_block_petsc_options
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+                                                index_sets[0]))
+
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 41
+
+def test_amg_step_problem_01(load_rans2p_step_newton_1,
+                             initialize_velocity_block_petsc_options):
+    mat_A = load_rans2p_step_newton_1
+    petsc_options = initialize_velocity_block_petsc_options
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+                                                index_sets[0]))
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 59
+
+def test_amg_step_problem_02(load_rans2p_step_newton_5,
+                             initialize_velocity_block_petsc_options):
+    mat_A = load_rans2p_step_newton_5
+    petsc_options = initialize_velocity_block_petsc_options
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+                                                index_sets[0]))
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 60
+
+class TestSmoothingAlgorithms(proteus.test_utils.TestTools.BasicTest):
+
+    def setup_method(self,method):
+        self._scriptdir = os.path.dirname(__file__)
+        self.saddle_point_matrix=LAT.petsc_load_matrix(os.path.join(self._scriptdir,
+                                                                    'import_modules/saddle_point_small'))
+        # self.saddle_point_matrix = LAT.petsc_load_matrix(os.path.join(self._scriptdir,
+        #                                                               'import_modules/saddle_point_matrix'))
+    def test_matrix_splitting_1(self):
+        vals_F  =    [3.2, 1.1, 5.4, 6.3, 1., -5.1, 1.2]
+        col_idx_F  = [0, 1, 2, 0, 2, 0, 1]
+        row_idx_F  = [0, 3, 5, 7]
+
+        num_v_unkwn = len(row_idx_F) - 1
+
+        petsc_matF = LAT.csr_2_petsc(size = (num_v_unkwn,num_v_unkwn),
+                                     csr = (row_idx_F,col_idx_F,vals_F))
+
+        A = LAT.split_PETSc_Mat(petsc_matF)
+        A[0].axpy(1.0,A[1])
+        assert np.allclose(A[0].getValuesCSR()[2], petsc_matF.getValuesCSR()[2])
 
 class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
 
