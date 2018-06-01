@@ -503,13 +503,16 @@ class KSP_petsc4py(LinearSolver):
 
         if self.bdyNullSpace is True:
             self._setNullSpace(par_b)
+
         if self.preconditioner:
             try:
                 if self.preconditioner.hasNullSpace:
                     self.preconditioner.nsp.remove(par_b)
             except:
                 pass
+
         self.ksp.solve(par_b,par_u)
+
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
                                                                                                              self.ksp.converged,
@@ -716,7 +719,8 @@ class KSP_petsc4py(LinearSolver):
                                                                    density_scaling=self.preconditionerOptions[0],
                                                                    numerical_viscosity=self.preconditionerOptions[1],
                                                                    lumped=self.preconditionerOptions[2],
-                                                                   num_chebyshev_its=self.preconditionerOptions[3])
+                                                                   num_chebyshev_its=self.preconditionerOptions[3],
+                                                                   laplace_null_space=self.preconditionerOptions[4])
                 except IndexError:
                     logEvent("Preconditioner options not specified, using defaults")
                     self.preconditioner = NavierStokes_TwoPhasePCD(par_L,
@@ -1612,7 +1616,8 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                  density_scaling = True,
                  numerical_viscosity = True,
                  lumped = True,
-                 num_chebyshev_its = 0):
+                 num_chebyshev_its = 0,
+                 laplace_null_space = True):
         """
         Initialize the two-phase PCD preconditioning class.
 
@@ -1639,6 +1644,9 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
             a chebyshev semi-iteration.  0  indicates the semi-
             iteration should not be used, where as a number 1,2,...
             indicates the number of iterations the method should take.
+        laplace_null_space : bool
+            Indicates whether the laplace operator inside the
+            two-phase PCD operator has a constant null space.
         """
         NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
         # Initialize the discrete operators
@@ -1651,6 +1659,12 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.numerical_viscosity = numerical_viscosity
         self.lumped = lumped
         self.num_chebyshev_its = num_chebyshev_its
+        self.laplace_null_space = laplace_null_space
+        # Strong Dirichlet Pressure DOF
+        try:
+            self.strongPressureDOF = L.pde.dirichletConditionsForceDOF[0].DOFBoundaryPointDict.keys()
+        except KeyError:
+            self.strongPressureDOF = []
 
     def setUp(self, global_ksp):
         import Comm
@@ -1682,8 +1696,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         # self.Sp.axpy( 1. , self.A11)
 
         # End ******** Sp for Ap ***********
-
-        
         self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
                                               self.operator_constructor.linear_smoother.isp)
 
@@ -1708,7 +1720,10 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                                                     self.Np_rho,
                                                     True,
                                                     dt,
-                                                    num_chebyshev_its = self.num_chebyshev_its)
+                                                    num_chebyshev_its = self.num_chebyshev_its,
+                                                    strong_dirichlet_DOF = self.strongPressureDOF,
+                                                    laplace_null_space = self.laplace_null_space,
+                                                    par_info = self.L.pde.par_info)
         self.TP_PCDInv_shell.setPythonContext(self.matcontext_inv)
         self.TP_PCDInv_shell.setUp()
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
