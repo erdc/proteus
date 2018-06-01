@@ -28,7 +28,7 @@ static double isotropicFormula(double phi, double dphi, double verr, double hmin
   // if (phi_s != 0.0)
   // {
   //epsFact*hmin
-  if (fabs(phi_s) < (epsFact*2) * hmin)
+  if (fabs(phi_s) < (epsFact*4) * hmin)
     return hmin;
   else
     return hmax;
