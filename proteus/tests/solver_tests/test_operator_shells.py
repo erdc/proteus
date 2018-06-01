@@ -110,6 +110,16 @@ def create_simple_saddle_point_problem(request):
 
     yield output_data
 
+@pytest.fixture()
+def create_simple_petsc_matrix(request):
+    vals_F  =    [3.2, 1.1, 6.3, 1., -5.1]
+    col_idx_F  = [0, 1, 0, 1, 2]
+    row_idx_F  = [0, 2, 4, 5]
+    num_v_unkwn = 3
+    petsc_matF = LAT.csr_2_petsc(size = (num_v_unkwn,num_v_unkwn),
+                                 csr = (row_idx_F,col_idx_F,vals_F))
+    yield petsc_matF
+
 @pytest.mark.LinearAlgebraTools
 class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
 
@@ -151,13 +161,13 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
 
     def test_tppcd_shell(self):
         ''' Test for the two-phase pcd operator shell '''
-        Qp_visc = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_visc'))
-        Qp_dens = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_dens'))
-        Ap_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Ap_rho'))
-        Np_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Np_rho'))
+        Qp_visc = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_visc.bin'))
+        Qp_dens = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_dens.bin'))
+        Ap_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Ap_rho.bin'))
+        Np_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Np_rho.bin'))
         alpha = True
         delta_t = 0.001
-        x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd'))
+        x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd.bin'))
 
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
@@ -169,12 +179,42 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
                                                 Np_rho,
                                                 alpha,
                                                 delta_t,
-                                                5)
+                                                0,
+                                                laplace_null_space=True)
         y_vec = x_vec.copy()
         y_vec.zeroEntries()
         A = None
         TPPCD_shell.apply(A,x_vec,y_vec)
-        true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir, 'import_modules/tp_pcd_y_output'))
+        true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir, 'import_modules/tp_pcd_y_output.bin'))
+        assert np.allclose(y_vec.getArray(),true_solu.getArray(),rtol=1e-01)
+
+    def test_tppcd_shell_with_chebyshev_iteration(self):
+        ''' Test for the lsc operator shell '''
+        Qp_visc = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_visc.bin'))
+        Qp_dens = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_dens.bin'))
+        Ap_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Ap_rho.bin'))
+        Np_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Np_rho.bin'))
+        alpha = True
+        delta_t = 0.001
+        x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd.bin'))
+
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type','hypre')
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type','boomeramg')
+        TPPCD_shell = LAT.TwoPhase_PCDInv_shell(Qp_visc,
+                                                Qp_dens,
+                                                Ap_rho,
+                                                Np_rho,
+                                                alpha,
+                                                delta_t,
+                                                5,
+                                                laplace_null_space=True)
+        y_vec = x_vec.copy()
+        y_vec.zeroEntries()
+        A = None
+        TPPCD_shell.apply(A,x_vec,y_vec)
+        true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir, 'import_modules/tp_pcd_y_output.bin'))
         assert np.allclose(y_vec.getArray(),true_solu.getArray())
 
     def test_SpInv_shell(self, create_simple_saddle_point_problem):
@@ -196,6 +236,75 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         true_solu = np.mat('[1.0655362, -0.30354183]')
         assert np.allclose(fixture_data.y_vec.getArray(),
                            true_solu)
+
+    def test_tppcd_shell_with_dirichlet_pressure(self):
+        ''' Test for the lsc operator shell '''
+        Qp_visc = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_visc.bin'))
+        Qp_dens = LAT.petsc_load_matrix(os.path.join(self._scriptdir,'import_modules/Qp_dens.bin'))
+        Ap_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Ap_rho.bin'))
+        Np_rho = LAT.petsc_load_matrix(os.path.join(self._scriptdir, 'import_modules/Np_rho.bin'))
+        alpha = True
+        delta_t = 0.001
+        x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd.bin'))
+
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type','hypre')
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type','boomeramg')
+
+        dirichlet_nodes = [3, 12, 15, 21, 33]
+        TPPCD_shell = LAT.TwoPhase_PCDInv_shell(Qp_visc,
+                                                Qp_dens,
+                                                Ap_rho,
+                                                Np_rho,
+                                                alpha,
+                                                delta_t,
+                                                5,
+                                                dirichlet_nodes)
+        # Test the index set is set correctly
+        unknown_indices = np.arange(TPPCD_shell.getSize())
+        known_indices_mask = np.ones(TPPCD_shell.getSize(),dtype=bool)
+        known_indices_mask[dirichlet_nodes] = False
+        unknown_is = unknown_indices[known_indices_mask]
+        assert np.array_equal(unknown_is, TPPCD_shell.unknown_dof_is.getIndices())
+
+        y_vec = x_vec.copy()
+        y_vec.zeroEntries()
+        A = None
+        TPPCD_shell.apply(A,x_vec,y_vec)
+        assert np.array_equal(y_vec[dirichlet_nodes], [0.,0.,0.,0.,0.])
+        true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir,
+                                                       'import_modules/tppcd_y_dirichlet_dof.bin'))
+        assert np.allclose(y_vec.getArray(),true_solu.getArray())
+
+def test_tmp_vec_creation():
+    A = LAT.InvOperatorShell._create_tmp_vec(4)
+    assert A.norm() == 0.0
+    assert A.getSize() == 4
+
+@pytest.mark.dev
+def test_create_petsc_ksp_obj(create_simple_petsc_matrix):
+    def getSize():
+        return 3
+
+    petsc_options = p4pyPETSc.Options()
+    petsc_options.setValue('test_F_ksp_type','preonly')
+    petsc_options.setValue('test_F_pc_type','lu')
+    petsc_matF = create_simple_petsc_matrix
+
+    InvOpShell = LAT.InvOperatorShell()
+    InvOpShell.const_null_space =False
+    InvOpShell.options = petsc_options
+    InvOpShell.strong_dirichlet_DOF = [1]
+    InvOpShell.getSize = getSize
+    A = InvOpShell.create_petsc_ksp_obj('test_F_',
+                                        petsc_matF)
+    assert A.getClassName()=='KSP'
+    assert A.getOperators()[0].equal(petsc_matF)
+
+    InvOpShell._set_dirichlet_idx_set()
+    assert np.array_equal(InvOpShell.unknown_dof_is.getIndices(),
+                          np.array([0,2]))
 
 if __name__ == '__main__':
     pass
