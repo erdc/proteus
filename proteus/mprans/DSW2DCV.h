@@ -13,8 +13,8 @@
 //4. Add Riemann solvers for internal flux and DG terms
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
-#define lambda 1.0 // For Dispersive Model
-#define WHICH_DISP_MODEL 1
+//#define lambda 1.0 // For Dispersive Model
+#define WHICH_DISP_MODEL 0
 // EJT. If WHICH_DISP_MODEL is 1, then this is
 // Guermond's dispersive  model. If 0,
 // then this is Gavrilyuk's dispersive model
@@ -2474,19 +2474,27 @@ namespace proteus
 	      
 	      // EJT. Corrected terms to match our paper
 	      // and define both Guermond and Gavrilyuk force terms for hw equation.
-
-	      double hiSqd = std::pow(hi,2.0);    
-	      double SGN_aux_i = (2/(hiSqd + fmax(hiSqd,mi)));	     
+	      double lambda = 0.05;	      
 	      double etai = hetai*one_over_hiReg;
-	      double xxi = etai*one_over_hiReg;
-	      //double xxi = hetai * SGN_aux_i;	            
 	      double meshi = std::sqrt(mi);
-	      double psii = 12.0 * (xxi - 1.0);
-
+	     
+	      
+	      // stuff for water height goes to 0 fix
+	      
+	      double alpha = 1.0;
+	      double hiSqd = std::pow(hi,2.0);
+	      double SGN_aux_i2 = fmax(2.0*hetai,mi)/(hiSqd + std::pow(fmax(hi,alpha*meshi),2.0));
+	      
+	      //double xxi = hetai* SGN_aux_i2;
+	      double xxi = etai*one_over_hiReg;
+	      if (hi < 1E-3)
+		    {lambda = 0.0;}
+	      
 	      // This is Guermond's force term on hwi
+	      double psii = 12.0 * (xxi - 1.0);
 	      double force_term_hetai = hwi*mi;
 	      double force_term_hwi = -lambda*g/meshi*etai*etai*psii*mi;
-
+	      
 	      // if WHICH_DISP_MODEL is 0 then code runs with Gavrilyuk's model.
 	      if (WHICH_DISP_MODEL==0)
 		{
@@ -2511,19 +2519,20 @@ namespace proteus
           	  double mj = lumped_mass_matrix[j];
                   double meshj = std::sqrt(mj); // local mesh size in 2d
 
-                  // for water height goes to 0 fix 
+                  // stuff for water height goes to 0 fix 
+		  
 		  double hjSqd = std::pow(hj,2.0);
-		  double SGN_aux_j = (2/(hjSqd + fmax(hjSqd,mj)));
-          	  double cut_off = 1E-4;
- 		 
+		  double SGN_aux_j2 = fmax(2.0*hetaj,mj)/(hjSqd + std::pow(fmax(hj,alpha*meshj),2.0));
+          	  double xxj = etaj*one_over_hjReg;
+		  if (hj < 1E-3)
+		    {lambda = 0.0;}		  
 		  // This is used to make definition of pTildej cleaner
-		  double xxj = etaj*one_over_hjReg;
-		  //double xxj = hetaj*SGN_aux_j;
-          	  double polyj = 2.0 + 4.0*std::pow(xxj,3.) - 6.0*std::pow(xxj,4.);
-
+		  double polyj = 2.0 + 4.0*std::pow(xxj,3.) - 6.0*std::pow(xxj,4.);
                   // Define pTildej here. Standard is Guermond's model 
                   double pTildej = lambda*g/(3. * meshj)*std::pow(hj,3.)*polyj;
-		
+		  
+		  
+		  
                   // if WHICH_DISP_MODEL is 0 then Gavrilyuk's model is used.
                       if (WHICH_DISP_MODEL==0)
                           {       		   
