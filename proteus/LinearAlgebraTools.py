@@ -1061,13 +1061,14 @@ class LSCInv_shell(InvOperatorShell):
         if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
             self.const_null_space.remove(x_tmp)
         self.kspBQinvBt.solve(tmp1,y)
+        assert numpy.isnan(y.norm())==False, "Applying the schur complement \
+resulted in not-a-number."
 
     def _constructBQinvBt(self):
         """ Private method repsonsible for building BQinvBt """
         self.Qv_inv = petsc_create_diagonal_inv_matrix(self.Qv)
         QinvBt = self.Qv_inv.matMult(self.Bt)
         self.BQinvBt = self.B.matMult(QinvBt)
-
 
 class MatrixShell(ProductOperatorShell):
     """ A shell class for a matrix. """
@@ -1203,6 +1204,8 @@ class SpInv_shell(InvOperatorShell):
         if self.constNullSpace:
             self.const_null_space.remove(tmp1)
         self.kspSp.solve(tmp1,y)
+        assert numpy.isnan(y.norm())==False, "Applying the schur complement \
+resulted in not-a-number."
 
     def _create_Sp(self):
         self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
@@ -1400,6 +1403,8 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
 
         self.kspAp_rho.solve(tmp2, tmp3)
         y.axpy(1.,tmp3)
+        assert numpy.isnan(y.norm())==False, "Applying the schur complement \
+resulted in not-a-number."
 
 def l2Norm(x):
     """
