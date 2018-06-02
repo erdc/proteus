@@ -110,6 +110,17 @@ def create_simple_saddle_point_problem(request):
 
     yield output_data
 
+def setup_LSC_shell(petsc_options, fixture_data):
+    petsc_options.setValue('innerLSCsolver_BTinvBt_ksp_type','preonly')
+    petsc_options.setValue('innerLSCsolver_T_ksp_type','preonly')
+    petsc_options.setValue('innerLSCsolver_BTinvBt_pc_type','lu')
+    petsc_options.setValue('innerLSCsolver_T_pc_type','lu')
+
+    return LAT.LSCInv_shell(fixture_data.petsc_matD,
+                            fixture_data.petsc_matB,
+                            fixture_data.petsc_matBt,
+                            fixture_data.petsc_matF)
+
 @pytest.fixture()
 def create_simple_petsc_matrix(request):
     vals_F  =    [3.2, 1.1, 6.3, 1., -5.1]
@@ -142,16 +153,8 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
     def test_lsc_shell(self, create_simple_saddle_point_problem):
         ''' Test for the lsc operator shell '''
         fixture_data = create_simple_saddle_point_problem
-
-        self.petsc_options.setValue('innerLSCsolver_BTinvBt_ksp_type','preonly')
-        self.petsc_options.setValue('innerLSCsolver_T_ksp_type','preonly')
-        self.petsc_options.setValue('innerLSCsolver_BTinvBt_pc_type','lu')
-        self.petsc_options.setValue('innerLSCsolver_T_pc_type','lu')
-
-        LSC_shell = LAT.LSCInv_shell(fixture_data.petsc_matD,
-                                     fixture_data.petsc_matB,
-                                     fixture_data.petsc_matBt,
-                                     fixture_data.petsc_matF)
+        LSC_shell = setup_LSC_shell(self.petsc_options,
+                                    fixture_data)
         LSC_shell.apply(None,
                         fixture_data.x_vec,
                         fixture_data.y_vec)

@@ -230,7 +230,6 @@ def load_rans2p_step_newton_5(request):
     yield A
 
 @pytest.mark.LinearSolvers
-@pytest.mark.skip(reason='this test is completed in a different PR')
 def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
                                           initialize_petsc_options):
     """Tests a KSP solve using the Sp Schur complement approximation.
@@ -254,7 +253,6 @@ def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
     assert ksp_obj.reason == 2
 
 @pytest.mark.LinearSolvers
-@pytest.mark.skip(reason='this test is completed in a different PR')
 def test_Schur_Sp_solve(load_nse_step_matrix,
                         initialize_petsc_options):
     """Tests a KSP solve using the Sp Schur complement approximation.
