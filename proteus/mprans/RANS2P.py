@@ -31,7 +31,7 @@ class SubgridError(proteus.SubgridError.SGE_base):
             turn off pressure stab
     """
 
-    def __init__(self, coefficients, nd, lag=False, nStepsToDelay=0, hFactor=1.0, noPressureStabilization=False):
+    def __init__(self, coefficients, nd, lag=False, nStepsToDelay=None, hFactor=1.0, noPressureStabilization=False):
         self.noPressureStabilization = noPressureStabilization
         proteus.SubgridError.SGE_base.__init__(self, coefficients, nd, lag)
         coefficients.stencil[0].add(0)
@@ -40,7 +40,9 @@ class SubgridError(proteus.SubgridError.SGE_base):
         self.nSteps = 0
         if self.lag:
             logEvent("RANS2P.SubgridError: lagging requested but must lag the first step; switching lagging off and delaying")
-            self.nStepsToDelay = 1
+            #Set a default value for lagging if none specified
+            if(self.nStepsToDelay is None):
+                self.nStepsToDelay = 1
             self.lag = False
 
     def initializeElementQuadrature(self, mesh, t, cq):
@@ -58,15 +60,18 @@ class SubgridError(proteus.SubgridError.SGE_base):
         """
         import copy
         self.cq = cq
+        #default behavior is to set v_last to point to cq[('velocity')]
         self.v_last = self.cq[('velocity', 0)]
 
     def updateSubgridErrorHistory(self, initializationPhase=False):
         self.nSteps += 1
         if self.lag:
+            #update the values of v_last based on cq[('velocity')], v_last still being a different object
             self.v_last[:] = self.cq[('velocity', 0)]
         if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             logEvent("RANS2P.SubgridError: switched to lagged subgrid error")
             self.lag = True
+            #if lagging, then create a separate object identical to cq[('velocity')] 
             self.v_last = self.cq[('velocity', 0)].copy()
 
     def calculateSubgridError(self, q):
