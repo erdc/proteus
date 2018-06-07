@@ -66,7 +66,7 @@ class SubgridError(proteus.SubgridError.SGE_base):
     def updateSubgridErrorHistory(self, initializationPhase=False):
         self.nSteps += 1
         if self.lag:
-            #update the values of v_last based on cq[('velocity')], v_last still being a different object
+            #update the values of v_last based on cq[('velocity')], v_last is a different object
             self.v_last[:] = self.cq[('velocity', 0)]
         if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             logEvent("RANS2P.SubgridError: switched to lagged subgrid error")
@@ -95,19 +95,22 @@ class NumericalFlux(proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_
 
 
 class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
-    def __init__(self, coefficients, nd, shockCapturingFactor=0.25, lag=False, nStepsToDelay=3):
+    def __init__(self, coefficients, nd, shockCapturingFactor=0.25, lag=False, nStepsToDelay=None):
         proteus.ShockCapturing.ShockCapturing_base.__init__(self, coefficients, nd, shockCapturingFactor, lag)
         self.nStepsToDelay = nStepsToDelay
         self.nSteps = 0
         if self.lag:
             logEvent("RANS2P.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
-            self.nStepsToDelay = 1
+            #Set a default value for lagging if none specified
+            if(self.nStepsToDelay is None):
+                self.nStepsToDelay = 1
             self.lag = False
 
     def initializeElementQuadrature(self, mesh, t, cq):
         self.mesh = mesh
         self.numDiff = {}
         self.numDiff_last = {}
+        #default behavior is to set both numDiff_last and numDiff to point to cq[('numDiff')]
         for ci in range(1, 4):
             self.numDiff[ci] = cq[('numDiff', ci, ci)]
             self.numDiff_last[ci] = cq[('numDiff', ci, ci)]
@@ -115,11 +118,13 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
     def updateShockCapturingHistory(self):
         self.nSteps += 1
         if self.lag:
+            #update the values of numDiff_last based numDiff, numDiff_last still being a different object
             for ci in range(1, 4):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
         if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             logEvent("RANS2P.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
+            #if lagging, then create a separate object identical to numDiff 
             for ci in range(1, 4):
                 self.numDiff_last[ci] = self.numDiff[ci].copy()
         logEvent("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
