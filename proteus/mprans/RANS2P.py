@@ -38,9 +38,7 @@ class SubgridError(proteus.SubgridError.SGE_base):
         coefficients.stencil[0].add(0)
         self.hFactor = hFactor
         self.nStepsToDelay = nStepsToDelay
-        #self.nSteps made -1 to be consistent with previous code behavior
-        #this is because update is called multiple times prior to first time step 
-        self.nSteps = -1
+        self.nSteps = 0
         if self.lag:
             logEvent("RANS2P.SubgridError: lagging requested but must lag the first step; switching lagging off and delaying")
             #Ensure nStepsToDelay value makes sense by throwing an error
@@ -66,7 +64,6 @@ class SubgridError(proteus.SubgridError.SGE_base):
         self.v_last = self.cq[('velocity', 0)]
 
     def updateSubgridErrorHistory(self, initializationPhase=False):
-        self.nSteps += 1
         if self.lag:
             if self.nSteps > self.nStepsToDelay:
                 #at this point, v_last must be a separate object
@@ -78,6 +75,7 @@ class SubgridError(proteus.SubgridError.SGE_base):
                 self.v_last = self.cq[('velocity', 0)].copy()
             else:
                 pass
+            self.nSteps += 1
 
 
     def calculateSubgridError(self, q):
@@ -104,9 +102,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
     def __init__(self, coefficients, nd, shockCapturingFactor=0.25, lag=False, nStepsToDelay=1):
         proteus.ShockCapturing.ShockCapturing_base.__init__(self, coefficients, nd, shockCapturingFactor, lag)
         self.nStepsToDelay = nStepsToDelay
-        #self.nSteps made -1 to be consistent with previous code behavior
-        #this is because update is called multiple times prior to first time step 
-        self.nSteps = -1
+        self.nSteps = 0
         if self.lag:
             logEvent("RANS2P.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
             #Ensure nStepsToDelay value makes sense by throwing an error
@@ -123,7 +119,6 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             self.numDiff_last[ci] = cq[('numDiff', ci, ci)]
 
     def updateShockCapturingHistory(self):
-        self.nSteps += 1
         if self.lag:
             if self.nSteps > self.nStepsToDelay:
                 #numDiff_last is a different object
@@ -137,8 +132,9 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
                     self.numDiff_last[ci] = self.numDiff[ci].copy()
             else:
                 pass
+            self.nSteps += 1
 
-        logEvent("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
+            logEvent("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
                                                                          globalMax(self.numDiff_last[2].max()),
                                                                          globalMax(self.numDiff_last[3].max())))
 
