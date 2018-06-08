@@ -461,7 +461,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   //in->goodQuality = 0.16;//0.027;
-  double mass_before = getTotalMass();
+  //double mass_before = getTotalMass();
   
   double t1 = PCU_Time();
   //ma::adapt(in);
@@ -469,9 +469,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   double t2 = PCU_Time();
 
   m->verify();
-  double mass_after = getTotalMass();
-  PCU_Add_Doubles(&mass_before,1);
-  PCU_Add_Doubles(&mass_after,1);
+  //double mass_after = getTotalMass();
+  //PCU_Add_Doubles(&mass_before,1);
+  //PCU_Add_Doubles(&mass_after,1);
   if(comm_rank==0 && logging_config=="on"){
 /*
     std::ios::fmtflags saved(std::cout.flags());
@@ -482,11 +482,12 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     myfile.open("adapt_timing.txt", std::ios::app);
     myfile << t2-t1<<std::endl;
     myfile.close();
-
+/*
     std::ofstream mymass;
     mymass.open("mass_check.txt", std::ios::app);
     mymass <<std::setprecision(15)<<mass_before<<","<<mass_after<<","<<mass_after-mass_before<<std::endl;
     mymass.close();
+*/
   }
   if(size_field_config=="ERM"){
     if (has_gBC)
