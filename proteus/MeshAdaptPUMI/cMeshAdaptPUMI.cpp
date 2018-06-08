@@ -453,8 +453,10 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   }
   ma::validateInput(in);
   in->shouldRunPreZoltan = true;
-  in->shouldRunMidParma = true;
-  in->shouldRunPostParma = true;
+  in->shouldRunMidZoltan = true;
+  in->shouldRunPostZoltan = true;
+  //in->shouldRunMidParma = true;
+  //in->shouldRunPostParma = true;
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
   in->shouldSnap = false;
