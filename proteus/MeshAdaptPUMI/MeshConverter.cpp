@@ -571,9 +571,13 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
     PCU_COMM_UNPACK(f);
     PCU_COMM_UNPACK(geomTag);
     int currentTag = apf::getScalar(nodeMaterials,f,0);
-    //if vertex is not interior and had no adjacent faces, take received value
-    if(currentTag == -1)
+    int newTag = std::min(currentTag,geomTag);
+    //if vertex is not interior and had no adjacent faces, take received values
+    //else take minimum value of all tags
+    if(currentTag==-1)
       apf::setScalar(nodeMaterials,f,0,geomTag);
+    else
+      apf::setScalar(nodeMaterials,f,0,newTag);
   }
   //Ensure there are no mismatches across parts and then assign node materials
   apf::synchronize(nodeMaterials);
