@@ -908,7 +908,6 @@ class InvOperatorShell(OperatorShell):
             exit()
         num_dof = self.getSize()
         num_unknown_dof = num_dof - num_known_dof
-#        import pdb ; pdb.set_trace()
         # Use boolean mask to collect unknown DOF indices
         self.dof_indices = numpy.arange(num_dof,
                                         dtype = 'int32')
@@ -1290,31 +1289,6 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         self._create_constant_nullspace()
         self._set_dirichlet_idx_set()
 
-        # Initialize operators for apply function
-        # self.kspAp_rho = self.create_petsc_ksp_obj('innerTPPCDsolver_Ap_rho_',
-        #                                             self.Ap_rho.getSubMatrix(self.unknown_dof_is,
-        #                                                                      self.unknown_dof_is))
-
-
-        # self.Np_rho_reduced = self.Np_rho.getSubMatrix(self.unknown_dof_is,
-        #                                                self.unknown_dof_is)
-        # if self.num_chebyshev_its:
-        #     self.Qp_visc = LS.ChebyshevSemiIteration(self.Qp_visc.getSubMatrix(self.unknown_dof_is,
-        #                                                                        self.unknown_dof_is),
-        #                                              0.5,
-        #                                              2.0)
-        #     self.Qp_dens = LS.ChebyshevSemiIteration(self.Qp_dens.getSubMatrix(self.unknown_dof_is,
-        #                                                                        self.unknown_dof_is),
-        #                                              0.5,
-        #                                              2.0)
-        # else:
-        #     self.kspQp_visc = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_visc_',
-        #                                                 self.Qp_visc.getSubMatrix(self.unknown_dof_is,
-        #                                                                           self.unknown_dof_is))
-        #     self.kspQp_dens = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_dens_',
-        #                                                 self.Qp_dens.getSubMatrix(self.unknown_dof_is,
-        #                                                                           self.unknown_dof_is))
-
         self.kspAp_rho = self.create_petsc_ksp_obj('innerTPPCDsolver_Ap_rho_',
                                                    self.Ap_rho,
                                                    self.laplace_null_space)
@@ -1329,10 +1303,13 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
                                                      0.5,
                                                      2.0)
         else:
-            self.kspQp_visc = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_visc_',
-                                                        self.Qp_visc)
-            self.kspQp_dens = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_dens_',
-                                                        self.Qp_dens)
+            pass
+            # Using ksp objects for the lumped mass matrices is much
+            # slower than pointwise division.
+            # self.kspQp_visc = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_visc_',
+            #                                             self.Qp_visc)
+            # self.kspQp_dens = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_dens_',
+            #                                             self.Qp_dens)
 
     def getSize(self):
         """ Return the total number of DOF for the shell problem. """
@@ -1363,32 +1340,25 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         is then loaded into the original y-vector.
         """
         comm = Comm.get()
-        y.zeroEntries()
         x_tmp = self._create_copy_vec(x)
-        y_tmp = self._create_copy_vec(y)
-#        x_tmp = x.getSubVector(self.unknown_dof_is)
-#        y_tmp = y.getSubVector(self.unknown_dof_is)
         tmp1 = self._create_copy_vec(x_tmp)
         tmp2 = self._create_copy_vec(x_tmp)
-        tmp3 = self._create_copy_vec(x_tmp)
-        tmp3.zeroEntries()
 
         if self.num_chebyshev_its:
             self.Qp_visc.apply(x_tmp,
-                               y_tmp,
+                               y,
                                self.num_chebyshev_its)
             self.Qp_dens.apply(x_tmp,
                                tmp1,
                                self.num_chebyshev_its)
         else:
-#            y_tmp.pointwiseDivide(x_tmp,self.kspQp_visc.getOperators()[0].getDiagonal())
-#            tmp1.pointwiseDivide(x_tmp,self.kspQp_dens.getOperators()[0].getDiagonal())
-            self.kspQp_visc.solve(x_tmp,y)
-            self.kspQp_dens.solve(x_tmp,tmp1)
+            y.pointwiseDivide(x_tmp,self.Qp_visc.getDiagonal())
+            tmp1.pointwiseDivide(x_tmp,self.Qp_dens.getDiagonal())
+            # Pointwise divide appears to be much faster than ksp.
+            # self.kspQp_visc.solve(x_tmp,y)
+            # self.kspQp_dens.solve(x_tmp,tmp1)
 
         self.Np_rho.mult(tmp1,tmp2)
-
-#        self.Np_rho_reduced.mult(tmp1,tmp2)
 
         if self.alpha is True:
             tmp2.axpy(1./self.delta_t,x_tmp)
@@ -1401,10 +1371,12 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         tmp2.setValues(self.known_dof_is.getIndices(),zero_array)
         tmp2.assemblyEnd()
 
-        self.kspAp_rho.solve(tmp2, tmp3)
-        y.axpy(1.,tmp3)
+        self.kspAp_rho.solve(tmp2, tmp1)
+        y.axpy(1.,tmp1)
+        y.setValues(self.known_dof_is.getIndices(),zero_array)
+        
         assert numpy.isnan(y.norm())==False, "Applying the schur complement \
-resulted in not-a-number."
+        resulted in not-a-number."
 
 def l2Norm(x):
     """
