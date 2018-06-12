@@ -11,7 +11,7 @@
 #include <PCU.h>
 #include <samElementCount.h>
 #include <queue>
-#include <algorithm> //std::min
+#include <algorithm> 
 
 static void SmoothField(apf::Field *f);
 void gradeAnisoMesh(apf::Mesh* m,double gradingFactor);
@@ -24,29 +24,10 @@ static double isotropicFormula(double phi, double dphi, double verr, double hmin
   double size;
   double dphi_size_factor;
   double v_size_factor;
-  //This is just a hack for now. This disable the refinement over phi and does it over phi_s
-  // if (phi_s != 0.0)
-  // {
-  //epsFact*hmin
   if (fabs(phi_s) < (epsFact*2) * hmin)
     return hmin;
   else
     return hmax;
-  // }
-  // else
-  // {
-  //   if (fabs(phi) < 5.0 * hmin)
-  //   {
-  //     dphi_size_factor = fmax(hmin / 10.0, fmin(1.0, pow(((hmin / 1000.0) / fabs(dphi + 1.0e-8)), 1.0 / 2.0)));
-  //     size = hmin * dphi_size_factor;
-  //   }
-  //   else
-  //     size = hmax;
-
-  //   size = fmax(hmin / 100.0, fmin(size, 0.001 / (verr + 1.0e-8)));
-
-  //   return size;
-  // }
 }
 
 int MeshAdaptPUMIDrvr::calculateSizeField()
@@ -57,69 +38,18 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   apf::MeshEntity *v;
   apf::Field *phif = m->findField("phi");
   assert(phif);
-  ////////////////////////////////////////
-  //apf::Field *phisError = m->findField("phi_s");
-  //assert(phisError);
-  /////////////////////////////////////////
-  //apf::Field *phiCorr = m->findField("phiCorr");
-  //assert(phiCorr);
-  //apf::Field *velocityError = m->findField("velocityError");
-  //assert(phiCorr);
   while ((v = m->iterate(it)))
   {
     double phi = apf::getScalar(phif, v, 0);
-    //double phi_s = apf::getScalar(phisError, v, 0);
-    // double dphi = apf::getScalar(phiCorr, v, 0);
-    // double verr = apf::getScalar(velocityError, v, 0);
     double size = isotropicFormula(0.0, 0.0, 0.0, hPhi, hmax, phi,N_interface_band);
     apf::setScalar(size_iso, v, 0, size);
   
-    //hack the size field for gradation testing purposes
-    apf::Vector3 pt;
-    m->getPoint(v,0,pt);
-
   }
   PCU_Barrier();
   apf::synchronize(size_iso);
   m->end(it);
 
-  /*
-    If you just smooth then hmax will just diffuse into the hmin band
-    and you won't really get a band around phi=0 with uniform diameter
-    hmin. Instead, reset to hmin after each smooth within the band in
-    order to ensure the band uses hmin. Iterate on that process until
-    changes in the smoothed size are less than 50% of hmin.
-   */
-/*
-  double err_h_max=hmax;
-  //int its=0;
-  //while (err_h_max > 0.5*hmin && its < 200)
-  for(int its=0;its<200;its++)
-    {
-      its++;
-      SmoothField(size_iso);
-      err_h_max=0.0;
-      it = m->begin(0);
-      while ((v = m->iterate(it))) {
-	double phi = apf::getScalar(phif, v, 0);
-	double dphi = apf::getScalar(phiCorr, v, 0);
-	double verr = apf::getScalar(velocityError, v, 0);
-	double size_current = apf::getScalar(size_iso, v, 0);
-	double size = fmin(size_current,isotropicFormula(phi, dphi, verr, hmin, hmax));
-	err_h_max = fmax(err_h_max,fabs(size_current-size));
-	apf::setScalar(size_iso, v, 0, size);
-      }
-      m->end(it);
-    }
-  PCU_Barrier();    
-*/
-/*
-  int nCount=0;
-  char namebuffer[20];
-  sprintf(namebuffer,"isoGrade_%i",nCount);
-  apf::writeVtkFiles(namebuffer, m);
-  nCount++;
-*/
+  //Grade the Mesh
   gradeMesh();
 
   return 0;
