@@ -142,6 +142,15 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
+
+    Notes
+    -----
+    The PRESSURE_PROJECTION_STABILIZATION flag allows the user to use
+    the Bochev-Dohrmann-Gunzburger stabilization introduced in
+    Stabilization of Low-Order Mixed Finite Elements for the  Stokes
+    Equation.  This option should be turned off for most problems,
+    but in some instances it may produced better preconditioning
+    results than the full SGE approach.
     """
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate
@@ -198,7 +207,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  PRESSURE_SGE=1.0,
                  VELOCITY_SGE=1.0,
                  PRESSURE_PROJECTION_STABILIZATION=0.0,
-                 phaseFunction=None):
+                 phaseFunction=None,
+                 LAG_LES=1.0):
+        self.LAG_LES=LAG_LES
         self.phaseFunction=phaseFunction
         self.NONCONSERVATIVE_FORM=NONCONSERVATIVE_FORM
         self.MOMENTUM_SGE=MOMENTUM_SGE
@@ -1032,6 +1043,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('u', 1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('u', 2)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('u', 3)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe['eddy_viscosity'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe['eddy_viscosity_last'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('advectiveFlux_bc_flag', 0)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
         self.ebqe[('advectiveFlux_bc_flag', 1)] = numpy.zeros(
@@ -1068,6 +1081,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # VRANS start, defaults to RANS
         self.q[('r', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['eddy_viscosity'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['eddy_viscosity_last'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         # VRANS end
         # RANS 2eq Models start
         self.q[('grad(u)', 1)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
@@ -1515,7 +1529,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.q_turb_var[0],
                                       self.coefficients.q_turb_var[1],
                                       self.coefficients.q_turb_var_grad[0],
+                                      self.coefficients.LAG_LES,
                                       self.q['eddy_viscosity'],
+                                      self.q['eddy_viscosity_last'],
+                                      self.ebqe['eddy_viscosity'],
+                                      self.ebqe['eddy_viscosity_last'],
                                       # VRANS end
                                       self.u[0].femSpace.dofMap.l2g,
                                       self.u[1].femSpace.dofMap.l2g,
@@ -1740,6 +1758,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.q_turb_var[0],
                                       self.coefficients.q_turb_var[1],
                                       self.coefficients.q_turb_var_grad[0],
+                                      self.coefficients.LAG_LES,
+                                      self.q['eddy_viscosity_last'],
+                                      self.ebqe['eddy_viscosity_last'],
                                       # VRANS end
                                       self.u[0].femSpace.dofMap.l2g,
                                       self.u[1].femSpace.dofMap.l2g,
@@ -1845,7 +1866,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.csrColumnOffsets_eb[(3, 3)],
                                       self.mesh.elementMaterialTypes,
                                       self.mesh.elementBoundaryMaterialTypes)
-
+        
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
         else:
@@ -2017,6 +2038,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q['velocityError'][:] = self.q[('velocity', 0)]
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
         self.q['velocityError'] -= self.q[('velocity', 0)]
+        self.q['eddy_viscosity_last'][:] = self.q['eddy_viscosity']
+        self.ebqe['eddy_viscosity_last'][:] = self.ebqe['eddy_viscosity']
+        
     def updateAfterMeshMotion(self):
         pass
 
