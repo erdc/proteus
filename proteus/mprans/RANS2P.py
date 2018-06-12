@@ -3,6 +3,7 @@ Optimized  Two-Phase Reynolds Averaged Navier-Stokes
 """
 import math
 import proteus
+import sys
 from proteus.mprans.cRANS2P import *
 from proteus.mprans.cRANS2P2D import *
 from proteus import Profiling
@@ -31,7 +32,7 @@ class SubgridError(proteus.SubgridError.SGE_base):
             turn off pressure stab
     """
 
-    def __init__(self, coefficients, nd, lag=False, nStepsToDelay=0, hFactor=1.0, noPressureStabilization=False):
+    def __init__(self, coefficients, nd, lag=False, nStepsToDelay=1, hFactor=1.0, noPressureStabilization=False):
         self.noPressureStabilization = noPressureStabilization
         proteus.SubgridError.SGE_base.__init__(self, coefficients, nd, lag)
         coefficients.stencil[0].add(0)
@@ -40,8 +41,9 @@ class SubgridError(proteus.SubgridError.SGE_base):
         self.nSteps = 0
         if self.lag:
             logEvent("RANS2P.SubgridError: lagging requested but must lag the first step; switching lagging off and delaying")
-            self.nStepsToDelay = 1
-            self.lag = False
+            #Ensure nStepsToDelay value makes sense by throwing an error
+            if(self.nStepsToDelay is None or self.nStepsToDelay < 1):
+                sys.exit("RANS2P.SubgridError: nStepsToDelay cannot be None or < 1 with lagging, please specify an integer: nStepsToDelay>=1")
 
     def initializeElementQuadrature(self, mesh, t, cq):
         """
@@ -58,16 +60,23 @@ class SubgridError(proteus.SubgridError.SGE_base):
         """
         import copy
         self.cq = cq
+        #default behavior is to set v_last to point to cq[('velocity')]
         self.v_last = self.cq[('velocity', 0)]
 
     def updateSubgridErrorHistory(self, initializationPhase=False):
-        self.nSteps += 1
         if self.lag:
-            self.v_last[:] = self.cq[('velocity', 0)]
-        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
-            logEvent("RANS2P.SubgridError: switched to lagged subgrid error")
-            self.lag = True
-            self.v_last = self.cq[('velocity', 0)].copy()
+            if self.nSteps > self.nStepsToDelay:
+                #at this point, v_last must be a separate object
+                #update the values of v_last based on cq[('velocity')]
+                self.v_last[:] = self.cq[('velocity', 0)]
+            elif self.nSteps == self.nStepsToDelay:
+                logEvent("RANS2P.SubgridError: switched to lagged subgrid error")
+                #create a separate object identical to cq[('velocity')] 
+                self.v_last = self.cq[('velocity', 0)].copy()
+            else:
+                pass
+            self.nSteps += 1
+
 
     def calculateSubgridError(self, q):
         pass
@@ -90,34 +99,42 @@ class NumericalFlux(proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_
 
 
 class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
-    def __init__(self, coefficients, nd, shockCapturingFactor=0.25, lag=False, nStepsToDelay=3):
+    def __init__(self, coefficients, nd, shockCapturingFactor=0.25, lag=False, nStepsToDelay=1):
         proteus.ShockCapturing.ShockCapturing_base.__init__(self, coefficients, nd, shockCapturingFactor, lag)
         self.nStepsToDelay = nStepsToDelay
         self.nSteps = 0
         if self.lag:
             logEvent("RANS2P.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
-            self.nStepsToDelay = 1
-            self.lag = False
+            #Ensure nStepsToDelay value makes sense by throwing an error
+            if(self.nStepsToDelay is None or self.nStepsToDelay < 1):
+                sys.exit("RANS2P.ShockCapturing: nStepsToDelay cannot be None or < 1 with lagging, please specify an integer: nStepsToDelay>=1")
 
     def initializeElementQuadrature(self, mesh, t, cq):
         self.mesh = mesh
         self.numDiff = {}
         self.numDiff_last = {}
+        #default behavior is to set both numDiff_last and numDiff to point to cq[('numDiff')]
         for ci in range(1, 4):
             self.numDiff[ci] = cq[('numDiff', ci, ci)]
             self.numDiff_last[ci] = cq[('numDiff', ci, ci)]
 
     def updateShockCapturingHistory(self):
-        self.nSteps += 1
         if self.lag:
-            for ci in range(1, 4):
-                self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
-            logEvent("RANS2P.ShockCapturing: switched to lagged shock capturing")
-            self.lag = True
-            for ci in range(1, 4):
-                self.numDiff_last[ci] = self.numDiff[ci].copy()
-        logEvent("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
+            if self.nSteps > self.nStepsToDelay:
+                #numDiff_last is a different object
+                #update the values of numDiff_last based on numDiff, 
+                for ci in range(1, 4):
+                    self.numDiff_last[ci][:] = self.numDiff[ci]
+            elif self.nSteps == self.nStepsToDelay:
+                logEvent("RANS2P.ShockCapturing: switched to lagged shock capturing")
+                #if lagging, then create a separate object identical to numDiff 
+                for ci in range(1, 4):
+                    self.numDiff_last[ci] = self.numDiff[ci].copy()
+            else:
+                pass
+            self.nSteps += 1
+
+            logEvent("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
                                                                          globalMax(self.numDiff_last[2].max()),
                                                                          globalMax(self.numDiff_last[3].max())))
 
@@ -1849,7 +1866,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.csrColumnOffsets_eb[(3, 3)],
                                       self.mesh.elementMaterialTypes,
                                       self.mesh.elementBoundaryMaterialTypes)
-
+        
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
         else:
