@@ -137,6 +137,102 @@ def _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output=False):
         numpy.save(output,dense_matrix)
     return dense_matrix
 
+def superlu_get_rank(sparse_matrix):
+    """ Returns the rank of a superluWrapper sparse matrix.
+
+    Parameters
+    ----------
+    sparse_matrix : :class:`proteus.superluWrappers.SparseMatrix`
+
+    Returns
+    -------
+    matrix_rank : int
+        The rank of the sparse_matrix
+
+    Notes
+    -----
+    This function is a tool for debugging and should only be used
+    for small matrices.
+    """
+    A = superlu_sparse_2_dense(sparse_matrix)
+    return numpy.linalg.matrix_rank(A)
+
+def petsc4py_get_rank(sparse_matrix):
+    """ Returns the rank of a superluWrapper sparse matrix.
+
+    Parameters
+    ----------
+    sparse_matrix : :class:`p4pyPETSc.Mat`
+
+    Returns
+    -------
+    matrix_rank : int
+        The rank of the sparse_matrix
+
+    Notes
+    -----
+    This function is a debugging tool and should only be used
+    for small matrices.
+    """
+    A = petsc4py_sparse_2_dense(sparse_matrix)
+    return numpy.linalg.matrix_rank(A)
+
+def superlu_has_pressure_null_space(sparse_matrix):
+    """
+    Checks whether a superluWrapper sparse matrix has a constant
+    pressure null space.
+
+    Parameters
+    ----------
+    sparse_matrix : :class:`proteus.superluWrappers.SparseMatrix`
+
+    Returns
+    -------
+    does : bool
+       Boolean variable indicating whether the pressure term
+       creates a null space.
+
+    Notes
+    -----
+    Assumes interwoven dof.
+    This function was written mainly for debugging purposes and may be
+    slow for large matrices.
+    """
+    A = superlu_2_petsc4py(sparse_matrix)
+    return petsc4py_mat_has_pressure_null_space(A)
+
+def petsc4py_mat_has_pressure_null_space(A):
+    """
+    Checks whether a PETSc4Py sparse matrix has a constant
+    pressure null space.
+
+    Parameters
+    ----------
+    A : :class:`p4pyPETSc.Mat`
+
+    Returns
+    -------
+    does : bool
+       Boolean variable indicating whether the pressure term
+       creates a null space.
+
+    Notes
+    -----
+    Assumes interwoven dof.
+    This function was written mainly for debugging purposes and may be
+    slow for large matrices.
+    """
+    x = numpy.zeros(A.getSize()[1])
+    y = numpy.zeros(A.getSize()[1])
+    x[::3] = 1
+    x_petsc = p4pyPETSc.Vec().createWithArray(x)
+    y_petsc = p4pyPETSc.Vec().createWithArray(y)
+    A.mult(x_petsc,y_petsc)
+    if y_petsc.norm() < 1e-15:
+        return True
+    else:
+        return False
+
 def superlu_sparse_2_dense(sparse_matrix,output=False):
     """ Converts a sparse superluWrapper into a dense matrix.
 
@@ -908,7 +1004,6 @@ class InvOperatorShell(OperatorShell):
             exit()
         num_dof = self.getSize()
         num_unknown_dof = num_dof - num_known_dof
-#        import pdb ; pdb.set_trace()
         # Use boolean mask to collect unknown DOF indices
         self.dof_indices = numpy.arange(num_dof,
                                         dtype = 'int32')
