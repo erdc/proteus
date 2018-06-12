@@ -5,6 +5,9 @@
 
 //This function to accepts a string which gets passed to the logEvent Python function in Profiling
 int logEvent(char* logString,int logLevel)
+
+//logString is the desired string: usually set with sprintf() to combine characters with numbers
+//logLevel means the same as with the python function
 {
   if(!Py_IsInitialized())
     Py_Initialize();
