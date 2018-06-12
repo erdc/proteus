@@ -2090,7 +2090,7 @@ namespace proteus
                              double* velocityError,
                              double* velocityErrorNodal)
       {
-        logEvent("Entered get residual",5);
+        logEvent("Entered mprans 3D calculateResidual",6);
         //
         //loop over elements to compute volume integrals and load them into element and global residual
         //
