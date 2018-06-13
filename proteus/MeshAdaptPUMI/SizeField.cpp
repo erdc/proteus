@@ -30,14 +30,127 @@ static double isotropicFormula(double phi, double dphi, double verr, double hmin
     return hmax;
 }
 
+static void setSizeField(apf::Mesh2 *m,apf::MeshEntity *vertex,double h,apf::MeshTag *marker,apf::Field* sizeField)
+{
+  int isMarked=0;
+  //m->getIntTag(vertex,marker,&isMarked);
+  if(m->hasTag(vertex,marker))
+    isMarked=1;
+  double h_new;
+  if(isMarked)
+    h_new = std::min(h,apf::getScalar(sizeField,vertex,0));
+  else
+  {
+    h_new = h;
+    int newMark = 1;
+    m->setIntTag(vertex,marker,&newMark);
+  }
+  apf::setScalar(sizeField,vertex,0,h_new);
+
+  //Parallel Communication with owning copy
+  if(!m->isOwned(vertex))
+  {
+    apf::Copies remotes;
+    m->getRemotes(vertex,remotes);
+    int owningPart=m->getOwner(vertex);
+    PCU_COMM_PACK(owningPart, remotes[owningPart]);
+    PCU_COMM_PACK(owningPart, h_new);
+  }
+}
+
+
 int MeshAdaptPUMIDrvr::calculateSizeField()
 {
   freeField(size_iso);
   size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
-  apf::MeshIterator *it = m->begin(0);
-  apf::MeshEntity *v;
   apf::Field *phif = m->findField("phi");
   assert(phif);
+
+  //Implementation of banded interface, edge intersection algorithm
+  apf::MeshTag* vertexMarker = m->createIntTag("vertexMarker",1);
+  apf::MeshIterator *it = m->begin(1);
+  apf::MeshEntity *edge;
+
+  double safetyFactor = 2.0; //need to make this user defined
+  double L_band = N_interface_band*hPhi*safetyFactor;
+
+  PCU_Comm_Begin();
+  while ((edge = m->iterate(it)))
+  {
+    apf::Adjacent edge_adjVerts;
+    m->getAdjacent(edge,0,edge_adjVerts);
+    apf::MeshEntity *vertex1 = edge_adjVerts[0];
+    apf::MeshEntity *vertex2 = edge_adjVerts[1];
+    double phi1 = apf::getScalar(phif,vertex1,0);
+    double phi2 = apf::getScalar(phif,vertex2,0);
+    int caseNumber = 1;
+    if(std::fabs(phi1)>L_band)
+      caseNumber++;
+    if(std::fabs(phi2)>L_band)
+      caseNumber++;
+
+/*
+    if(localNumber(vertex1)==761 && localNumber(vertex2) == 1069 || localNumber(vertex2)==761 && localNumber(vertex1) == 1069){
+      std::cout<<"L_band "<< L_band<<" phi1 "<<phi1<<" phi2 "<<phi2<<" case num "<<caseNumber<<" fabs "<<std::fabs(phi1)<<" "<<fabs(phi2)<<" phi1*phi2 "<<phi1*phi2<<std::endl;
+      std::abort();
+    }
+*/
+/*
+    if(localNumber(vertex1)==761 && localNumber(vertex2) == 763 || localNumber(vertex2)==761 && localNumber(vertex1) == 763){
+      std::cout<<"L_band "<< L_band<<" phi1 "<<phi1<<" phi2 "<<phi2<<" case num "<<caseNumber<<" fabs "<<std::fabs(phi1)<<" "<<fabs(phi2)<<" phi1*phi2 "<<phi1*phi2<<std::endl;
+      std::abort();
+    }
+*/
+/*
+    if(PCU_Comm_Self()==3 && localNumber(vertex1)==53 && localNumber(vertex2) == 60 || PCU_Comm_Self()==3 && localNumber(vertex2)==53 && localNumber(vertex1) == 60){
+    //if(PCU_Comm_Self()==3 && localNumber(vertex1)==22 && localNumber(vertex2) == 13 || PCU_Comm_Self()==3 && localNumber(vertex2)==22 && localNumber(vertex1) == 13){
+      std::cout<<"L_band "<< L_band<<" phi1 "<<phi1<<" phi2 "<<phi2<<" case num "<<caseNumber<<" fabs "<<std::fabs(phi1)<<" "<<fabs(phi2)<<" phi1*phi2 "<<phi1*phi2<<std::endl;
+      std::abort();
+    }
+*/
+
+
+    if(caseNumber==1 || caseNumber == 2)
+    {
+      setSizeField(m,vertex1,hPhi,vertexMarker,size_iso);
+      setSizeField(m,vertex2,hPhi,vertexMarker,size_iso);
+    }
+    else
+    {
+      if (phi1*phi2 <0)
+      {
+        setSizeField(m,vertex1,hPhi,vertexMarker,size_iso);
+        setSizeField(m,vertex2,hPhi,vertexMarker,size_iso);
+      }
+      else
+      {
+        setSizeField(m,vertex1,hmax,vertexMarker,size_iso);
+        setSizeField(m,vertex2,hmax,vertexMarker,size_iso);
+      }
+    }
+
+  }//end while
+
+  PCU_Comm_Send();
+
+  //Take minimum between received value and current value
+  apf::MeshEntity *ent;
+  double h_received;
+  while(PCU_Comm_Receive())
+  {
+    //Note: the only receiving entities should be owning copies
+    PCU_COMM_UNPACK(ent);
+    PCU_COMM_UNPACK(h_received);
+    //take minimum of received values
+    double h_current = apf::getScalar(size_iso,ent,0);
+    double h_final = std::min(h_current,h_received);
+    apf::setScalar(size_iso,ent,0,h_final);
+  }
+
+/*
+  apf::MeshIterator *it = m->begin(0);
+  apf::MeshEntity *v;
+
   while ((v = m->iterate(it)))
   {
     double phi = apf::getScalar(phif, v, 0);
@@ -46,6 +159,7 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   
   }
   PCU_Barrier();
+*/
   apf::synchronize(size_iso);
   m->end(it);
 
