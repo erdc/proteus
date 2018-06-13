@@ -587,7 +587,8 @@ class SimulationTest(BasicTest):
                 if os.path.isfile(currentFile):
                     os.remove(currentFile)
 
-    def _setPETSc(self,petsc_file):
+    @staticmethod
+    def _setPETSc(petsc_file):
         """The function takes a file with petsc options and sets the options globally.
 
         petsc_file : str

@@ -617,7 +617,7 @@ class TestHsu(unittest.TestCase):
         
         
         
-    def test_mu_fr(self):
+    def test_mu_fr2D(self):
         gl=GlobalVariables()
         import random
         sqrt = np.sqrt
@@ -635,9 +635,10 @@ class TestHsu(unittest.TestCase):
         dwdz = random.random() + 1e-30
         rhoS = 2000
         divU = dudx + dvdy + dwdz
-        s_tensor = 0.5* np.array([ [ 2.*dudx  -(2./3.)*divU ,  dudy+dvdx,               dudz+dwdx],
-                                [ dudy+dvdx,                   2.*dvdy-(2./3.)*divU,    dvdz+dwdy],
-                                [ dudz+dwdx,                   dvdz+dwdy,               2.*dwdz-(2./3.)*divU]])
+        
+        s_tensor = 0.5* np.array([ [ 2.*dudx  -divU ,  dudy+dvdx,               dudz+dwdx],
+                                [ dudy+dvdx,                   2.*dvdy-divU,    dvdz+dwdy],
+                                [ dudz+dwdx,                   dvdz+dwdy,               2.*dwdz-divU]])
 
         product = s_tensor * s_tensor
         magn = sum(product)

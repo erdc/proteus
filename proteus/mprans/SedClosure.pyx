@@ -580,7 +580,7 @@ cdef class HsuSedStress:
 
     def k_diff(self,  sedF, rhoSolid, theta ):
         return self.thisptr.k_diff( sedF, rhoSolid, theta)
-    
+    
     def p_friction(self, sedF):
         return self.thisptr.p_friction(sedF)
 
