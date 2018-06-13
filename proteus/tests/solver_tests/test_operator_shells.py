@@ -260,10 +260,10 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
                                                 Qp_dens,
                                                 Ap_rho,
                                                 Np_rho,
-                                                alpha,
-                                                delta_t,
-                                                5,
-                                                dirichlet_nodes)
+                                                alpha = alpha,
+                                                delta_t = delta_t,
+                                                num_chebyshev_its = 5,
+                                                strong_dirichlet_DOF = dirichlet_nodes)
         # Test the index set is set correctly
         unknown_indices = np.arange(TPPCD_shell.getSize())
         known_indices_mask = np.ones(TPPCD_shell.getSize(),dtype=bool)
