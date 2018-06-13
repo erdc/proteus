@@ -33,7 +33,6 @@ static double isotropicFormula(double phi, double dphi, double verr, double hmin
 static void setSizeField(apf::Mesh2 *m,apf::MeshEntity *vertex,double h,apf::MeshTag *marker,apf::Field* sizeField)
 {
   int isMarked=0;
-  //m->getIntTag(vertex,marker,&isMarked);
   if(m->hasTag(vertex,marker))
     isMarked=1;
   double h_new;
@@ -89,27 +88,6 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
     if(std::fabs(phi2)>L_band)
       caseNumber++;
 
-/*
-    if(localNumber(vertex1)==761 && localNumber(vertex2) == 1069 || localNumber(vertex2)==761 && localNumber(vertex1) == 1069){
-      std::cout<<"L_band "<< L_band<<" phi1 "<<phi1<<" phi2 "<<phi2<<" case num "<<caseNumber<<" fabs "<<std::fabs(phi1)<<" "<<fabs(phi2)<<" phi1*phi2 "<<phi1*phi2<<std::endl;
-      std::abort();
-    }
-*/
-/*
-    if(localNumber(vertex1)==761 && localNumber(vertex2) == 763 || localNumber(vertex2)==761 && localNumber(vertex1) == 763){
-      std::cout<<"L_band "<< L_band<<" phi1 "<<phi1<<" phi2 "<<phi2<<" case num "<<caseNumber<<" fabs "<<std::fabs(phi1)<<" "<<fabs(phi2)<<" phi1*phi2 "<<phi1*phi2<<std::endl;
-      std::abort();
-    }
-*/
-/*
-    if(PCU_Comm_Self()==3 && localNumber(vertex1)==53 && localNumber(vertex2) == 60 || PCU_Comm_Self()==3 && localNumber(vertex2)==53 && localNumber(vertex1) == 60){
-    //if(PCU_Comm_Self()==3 && localNumber(vertex1)==22 && localNumber(vertex2) == 13 || PCU_Comm_Self()==3 && localNumber(vertex2)==22 && localNumber(vertex1) == 13){
-      std::cout<<"L_band "<< L_band<<" phi1 "<<phi1<<" phi2 "<<phi2<<" case num "<<caseNumber<<" fabs "<<std::fabs(phi1)<<" "<<fabs(phi2)<<" phi1*phi2 "<<phi1*phi2<<std::endl;
-      std::abort();
-    }
-*/
-
-
     if(caseNumber==1 || caseNumber == 2)
     {
       setSizeField(m,vertex1,hPhi,vertexMarker,size_iso);
@@ -147,19 +125,7 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
     apf::setScalar(size_iso,ent,0,h_final);
   }
 
-/*
-  apf::MeshIterator *it = m->begin(0);
-  apf::MeshEntity *v;
-
-  while ((v = m->iterate(it)))
-  {
-    double phi = apf::getScalar(phif, v, 0);
-    double size = isotropicFormula(0.0, 0.0, 0.0, hPhi, hmax, phi,N_interface_band);
-    apf::setScalar(size_iso, v, 0, size);
-  
-  }
-  PCU_Barrier();
-*/
+  //Synchronization has all remote copies track the owning copy value
   apf::synchronize(size_iso);
   m->end(it);
 
