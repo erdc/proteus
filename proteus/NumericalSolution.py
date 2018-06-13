@@ -952,6 +952,58 @@ class NS_base:  # (HasTraits):
                     index,
                     self.systemStepController.t_system_last+1.0e-6)
 
+    def PUMI_transferFields(self):
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
+
+        logEvent("Copying coordinates to PUMI")
+        p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
+            self.modelList[0].levelModelList[0].mesh.nodeArray)
+
+        logEvent("Copying DOF and parameters to PUMI")
+        for m in self.modelList:
+          for lm in m.levelModelList:
+            coef = lm.coefficients
+            if coef.vectorComponents is not None:
+              vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+              for vci in range(len(coef.vectorComponents)):
+                vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
+              p0.domain.PUMIMesh.transferFieldToPUMI(
+                     coef.vectorName, vector)
+              #Transfer dof_last
+              for vci in range(len(coef.vectorComponents)):
+                vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
+              p0.domain.PUMIMesh.transferFieldToPUMI(
+                     "velocity_old", vector)
+              del vector
+            for ci in range(coef.nc):
+              if coef.vectorComponents is None or \
+                 ci not in coef.vectorComponents:
+                scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+                scalar[:,0] = lm.u[ci].dof[:]
+                p0.domain.PUMIMesh.transferFieldToPUMI(
+                    coef.variableNames[ci], scalar)
+                del scalar
+
+        scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+
+        del scalar
+        #Get Physical Parameters
+        #Can we do this in a problem-independent  way?
+        rho = numpy.array([self.pList[0].ct.rho_0,
+                           self.pList[0].ct.rho_1])
+        nu = numpy.array([self.pList[0].ct.nu_0,
+                          self.pList[0].ct.nu_1])
+        g = numpy.asarray(self.pList[0].ct.g)
+        if(hasattr(self,"tn")):
+            deltaT = self.tn-self.tn_last
+        else:
+            deltaT = 0
+        epsFact = p0.epsFact_density 
+        p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+        del rho, nu, g, epsFact
+
+
     def PUMI_estimateError(self):
         """
         Estimate the error using the classical element residual method by
@@ -1042,9 +1094,6 @@ class NS_base:  # (HasTraits):
             p0.domain.PUMIMesh.adaptMesh() and
             self.so.useOneMesh and
             self.nSolveSteps%p0.domain.PUMIMesh.numAdaptSteps()==0):
-            logEvent("Copying coordinates to PUMI")
-            p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
-                self.modelList[0].levelModelList[0].mesh.nodeArray)
             if (p0.domain.PUMIMesh.size_field_config() == "isotropicProteus"):
                 p0.domain.PUMIMesh.transferFieldToPUMI("proteus_size",
                                                        self.modelList[0].levelModelList[0].mesh.size_field)
@@ -1063,47 +1112,8 @@ class NS_base:  # (HasTraits):
                 self.modelList[0].levelModelList[0].mesh.size_scale
                 p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
                 p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
-            p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
-                self.modelList[0].levelModelList[0].mesh.nodeArray)
-            logEvent("Copying DOF and parameters to PUMI")
-            for m in self.modelList:
-              for lm in m.levelModelList:
-                coef = lm.coefficients
-                if coef.vectorComponents is not None:
-                  vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
-                  for vci in range(len(coef.vectorComponents)):
-                    vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
-                  p0.domain.PUMIMesh.transferFieldToPUMI(
-                         coef.vectorName, vector)
-                  #Transfer dof_last
-                  for vci in range(len(coef.vectorComponents)):
-                    vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
-                  p0.domain.PUMIMesh.transferFieldToPUMI(
-                         "velocity_old", vector)
-                  del vector
-                for ci in range(coef.nc):
-                  if coef.vectorComponents is None or \
-                     ci not in coef.vectorComponents:
-                    scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-                    scalar[:,0] = lm.u[ci].dof[:]
-                    p0.domain.PUMIMesh.transferFieldToPUMI(
-                        coef.variableNames[ci], scalar)
-                    del scalar
 
-            scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-
-            del scalar
-            #Get Physical Parameters
-            #Can we do this in a problem-independent  way?
-            rho = numpy.array([self.pList[0].ct.rho_0,
-                               self.pList[0].ct.rho_1])
-            nu = numpy.array([self.pList[0].ct.nu_0,
-                              self.pList[0].ct.nu_1])
-            g = numpy.asarray(self.pList[0].ct.g)
-            deltaT = self.tn-self.tn_last
-            epsFact = p0.epsFact_density 
-            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
-            del rho, nu, g, epsFact
+            self.PUMI_transferFields()
 
             logEvent("Estimate Error")
             sfConfig = p0.domain.PUMIMesh.size_field_config()
@@ -1157,11 +1167,12 @@ class NS_base:  # (HasTraits):
         #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
         #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
         #    #    diff_flux)
-        p0 = self.pList[0]
-        n0 = self.nList[0]
+
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
         sfConfig = p0.domain.PUMIMesh.size_field_config()
         logEvent("h-adapt mesh by calling AdaptPUMIMesh")
-        p0.domain.PUMIMesh.adaptPUMIMesh()
+        #p0.domain.PUMIMesh.adaptPUMIMesh()
 
         #code to suggest adapting until error is reduced;
         #not fully baked and can lead to infinite loops of adaptation
@@ -1297,6 +1308,8 @@ class NS_base:  # (HasTraits):
                 logEvent("Hotstarting, new tnList is"+`self.tnList`)
         else:
             self.tCount=0#time step counter
+
+
         logEvent("Attaching models and running spin-up step if requested")
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         spinup = []
@@ -1417,6 +1430,30 @@ class NS_base:  # (HasTraits):
         systemStepFailed=False
         stepFailed=False
 
+        #### Perform an initial adapt after applying initial conditions ####
+        # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
+        # Needs to be placed here at this time because of the post-adapt routine requirements
+
+        if (hasattr(self.pList[0].domain, 'PUMIMesh') and
+            self.pList[0].domain.PUMIMesh.adaptMesh() and
+            self.so.useOneMesh):
+
+            self.PUMI_transferFields()
+            logEvent("Initial Adapt before Solve")
+            self.PUMI_adaptMesh()
+            logEvent("Converting PUMI mesh to Proteus")
+            if self.pList[0].domain.nd == 3:
+              mesh = MeshTools.TetrahedralMesh()
+            else:
+              mesh = MeshTools.TriangularMesh()
+    
+            mesh.convertFromPUMI(self.pList[0].domain.PUMIMesh,
+                             self.pList[0].domain.faceList,
+                             self.pList[0].domain.regList,
+                             parallel = self.comm.size() > 1,
+                             dim = self.pList[0].domain.nd)
+            self.PUMI2Proteus(mesh)
+
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
         #outer loop is over user defined time intervals for the entire
@@ -1440,7 +1477,7 @@ class NS_base:  # (HasTraits):
 
         self.nSequenceSteps = 0
         nSequenceStepsLast=self.nSequenceSteps # prevent archiving the same solution twice
-        self.nSolveSteps=-1#self.nList[0].adaptMesh_nSteps-1
+        self.nSolveSteps=0
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
@@ -1598,8 +1635,8 @@ class NS_base:  # (HasTraits):
                 #if(self.tn < 0.05):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
-                if(self.PUMI_estimateError()):
-                    self.PUMI_adaptMesh()
+                #if(self.PUMI_estimateError()):
+                #    self.PUMI_adaptMesh()
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
                 nSequenceStepsLast = self.nSequenceSteps
