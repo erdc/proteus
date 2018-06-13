@@ -1,3 +1,4 @@
+
 #ifndef RANS3PSed2D_H
 #define RANS3PSed2D_H
 #include <cmath>
@@ -602,7 +603,7 @@ namespace proteus
                                   double dmom_w_ham_grad_p[nSpace],
                                   double dmom_w_ham_grad_w[nSpace])
       {
-        double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
+        double rho,rho_f,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
         d_rho = (1.0-useVF)*smoothedDirac(eps_rho,phi);
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -639,15 +640,15 @@ namespace proteus
         // we need fluid rho and nu for turbulence
         // we need fluid rho and nu for momentum interface
         rho = rho_s;
-        //rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
+        rho_f = rho_0*(1.0-H_rho)+rho_1*H_rho;
         nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
-        nu = nu_s;
+        nu = nu_0*(1.0-H_mu)+nu_1*H_mu;
         //nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         nu += nu_t;
         //mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-        mu = rho_s*nu_s;
+        mu = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
 
-        eddy_viscosity = nu_t*rho;
+        eddy_viscosity = rho_0*nu_t0*(1.0-H_mu)+rho_1*nu_t1*H_mu;
 
         // mass (volume accumulation)
         //..hardwired
@@ -876,6 +877,34 @@ namespace proteus
       dmom_w_source[2] = (vos)*new_beta;*/
     }
 
+
+    inline void updatePenaltyForPacking(const double vos,
+				   const double u,
+				   const double v,
+				   const double w,
+				   double& mom_u_source,
+				   double& mom_v_source,
+				   double& mom_w_source,
+				   double dmom_u_source[nSpace],
+				   double dmom_v_source[nSpace],
+				   double dmom_w_source[nSpace])
+				   
+    {
+      double meanPack = (closure.maxFraction_ + closure.frFraction_)/2.;
+      double epsPack = (closure.maxFraction_ - closure.frFraction_)/2.;
+      double dVos = vos - meanPack;
+      double sigma = smoothedHeaviside( epsPack, dVos);
+      double packPenalty = 1e6;
+      mom_u_source += sigma * packPenalty*u;
+      mom_v_source += sigma * packPenalty*v;
+      dmom_u_source[0] += sigma * packPenalty;
+      dmom_v_source[1] += sigma * packPenalty;
+      //mom_w_source += coeff * grad_vos[2];
+
+    }  
+
+
+    
     inline
       void updateFrictionalPressure(const double vos,
                                     const double grad_vos[nSpace],
@@ -892,7 +921,7 @@ namespace proteus
     }  
 
     inline
-      void updateFrictionalStress(const double vos,
+            void updateFrictionalStress(const double vos,
                                   const double eps_rho,
                                   const double eps_mu,
                                   const double rho_0,
@@ -920,10 +949,11 @@ namespace proteus
       double H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
       double rho_fluid = rho_0*(1.0-H_rho)+rho_1*H_rho;
       double nu_fluid  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+
       double mu_fr = closure.mu_fr(vos,
-                                   grad_u[0], grad_u[1], grad_u[2], 
-                                   grad_v[0], grad_v[1], grad_v[2], 
-                                   grad_w[0], grad_w[1], grad_w[2]);
+                                   grad_u[0], grad_u[1], 0., 
+                                   grad_v[0], grad_v[1], 0., 
+                                   0., 0. , 0.);
       double rho_solid = rho_s;
 
       mom_uu_diff_ten[0] += 2. * mu_fr * (2./3.); 
@@ -1064,9 +1094,16 @@ namespace proteus
         viscosity = a;
         nrm_df = 0.0;
         for (int I = 0; I < nSpace; I++)
-          nrm_df += df[I] * df[I];
-        nrm_df = sqrt(nrm_df);
-        cfl = nrm_df / (fabs(h * density)+1e-10); //this is really cfl/dt, but that's what we want to know, the step controller expect this
+          {nrm_df += df[I] * df[I];}
+	nrm_df = sqrt(nrm_df);
+	if(density > 1e-8)
+	  {
+	    cfl = nrm_df / (fabs(h * density)); 
+	  }
+	else
+	  {
+	    cfl = nrm_df / fabs(h ); 
+	  }
         oneByAbsdt = fabs(dmt);
         tau_v = 1.0 / (4.0 * viscosity / (h * h) + 2.0 * nrm_df / h + oneByAbsdt);
         tau_p = (4.0 * viscosity + 2.0 * nrm_df * h + oneByAbsdt * h * h) / pfac;
@@ -1265,15 +1302,31 @@ namespace proteus
         /*     if (flowSpeedNormal < 0.0) */
         /*       flux_wmom+=bc_speed*(bc_w - w); */
         /*   } */
+	
         if (isFluxBoundary_u == 1)
           {
             flux_umom = bc_flux_umom;
-	    velocity[0] = bc_flux_umom/vos;
+	    if(vos > 1e-8)
+	      {
+		velocity[0] = bc_flux_umom/fabs(vos);
+	      }
+	    else
+	      {
+		velocity[0] = bc_flux_umom;
+	      }
           }
         if (isFluxBoundary_v == 1)
           {
             flux_vmom = bc_flux_vmom;
-	    velocity[1] = bc_flux_vmom/vos;
+	    if(vos > 1e-8)
+	      {
+		velocity[1] = bc_flux_umom/fabs(vos);
+	      }
+	    else
+	      {
+		velocity[1] = bc_flux_vmom;
+	      }
+
           }
         /* if (isFluxBoundary_w == 1) */
         /*   { */
@@ -1973,10 +2026,10 @@ namespace proteus
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not?
 
-                updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
-                                                  /* nonlinearDragFactor, */
-                                                  /* vos, */
-                                                  /* meanGrainSize, */
+                updateDarcyForchheimerTerms_Ergun(// linearDragFactor,
+                                                  // nonlinearDragFactor,
+                                                  // vos,
+                                                  // meanGrainSize,
                                                   q_dragAlpha[eN_k],
                                                   q_dragBeta[eN_k],
                                                   eps_rho,
@@ -2005,12 +2058,23 @@ namespace proteus
                                                   dmom_u_source,
                                                   dmom_v_source,
                                                   dmom_w_source);
-                updateFrictionalPressure(vos,
+		updatePenaltyForPacking(vos,
+					u,
+					v,
+					w,
+					mom_u_source,
+					mom_v_source,
+					mom_w_source,
+					dmom_u_source,
+					dmom_v_source,
+					dmom_w_source);
+
+				               updateFrictionalPressure(vos,
                         grad_vos,
 						mom_u_source,
 						mom_v_source,
 						mom_w_source);      
-                updateFrictionalStress(vos,
+		     updateFrictionalStress(vos,
                                  eps_rho,
                                  eps_mu,
                                  rho_0,
@@ -2830,7 +2894,7 @@ namespace proteus
                 //calculate the numerical fluxes 
                 // 
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 exteriorNumericalAdvectiveFlux(isDOFBoundary_p[ebNE_kb],
                                                isDOFBoundary_u[ebNE_kb],
                                                isDOFBoundary_v[ebNE_kb],
@@ -3677,10 +3741,10 @@ namespace proteus
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not
 
-                updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
-                                                  /* nonlinearDragFactor, */
-                                                  /* vos, */
-                                                  /* meanGrainSize, */
+                updateDarcyForchheimerTerms_Ergun(// linearDragFactor,
+                                                  // nonlinearDragFactor,
+                                                  // vos,
+                                                  // meanGrainSize,
                                                   q_dragAlpha[eN_k],
                                                   q_dragBeta[eN_k],
                                                   eps_rho,
@@ -3709,12 +3773,23 @@ namespace proteus
                                                   dmom_u_source,
                                                   dmom_v_source,
                                                   dmom_w_source);
-                updateFrictionalPressure(vos,
+		updatePenaltyForPacking(vos,
+					u,
+					v,
+					w,
+					mom_u_source,
+					mom_v_source,
+					mom_w_source,
+					dmom_u_source,
+					dmom_v_source,
+					dmom_w_source);
+
+		updateFrictionalPressure(vos,
                         grad_vos,
 						mom_u_source,
 						mom_v_source,
 						mom_w_source);      
-                updateFrictionalStress(vos,
+		           updateFrictionalStress(vos,
                                  eps_rho,
                                  eps_mu,
                                  rho_0,
@@ -4681,7 +4756,7 @@ namespace proteus
                 //calculate the flux jacobian
                 //
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
                     register int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
