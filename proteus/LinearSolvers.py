@@ -1521,19 +1521,6 @@ class SchurPrecon(KSP_Preconditioner):
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
 
-
-    def _setSchurApproximation(self,global_ksp):
-        """ Set the Schur approximation to the Schur block.
-
-        Parameters
-        ----------
-        global_ksp :
-        """
-        assert self.matcontext_inv is not None, "no matrix context has been set."
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
-
     def _initializePC(self,
                       prefix):
         r"""
