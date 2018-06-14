@@ -79,6 +79,7 @@ namespace proteus
 				   //
 				   int* u_l2g, 
 				   double* elementDiameter,
+				   double* meshSize,
 				   int degree_polynomial,
 				   double* u_dof,
 				   double* u_dof_old,
@@ -143,15 +144,17 @@ namespace proteus
 				   double* max_u_bc,
 				   // FOR BLENDING SPACES
 				   double* force,
+				   double* uexact,
+				   double* gradx_uexact,
+				   double* grady_uexact,
 				   double* alpha_value,
-				   double* gradx_alpha,
-				   double* grady_alpha,
 				   double* alpha_dof,
 				   double* aux_test_ref,
 				   double* aux_grad_test_ref,
 				   // FOR 
 				   // AUX QUANTITIES OF INTEREST
-				   double* quantDOFs)=0;
+				   double* quantDOFs,
+				   double beta)=0;
     virtual void calculateResidual_entropy_viscosity(//element
 						     double dt,
 						     double* mesh_trial_ref,
@@ -189,6 +192,7 @@ namespace proteus
 						     //
 						     int* u_l2g, 
 						     double* elementDiameter,
+						     double* meshSize,
 						     int degree_polynomial,
 						     double* u_dof,
 						     double* u_dof_old,
@@ -253,14 +257,16 @@ namespace proteus
 						     double* max_u_bc,
 						     // FOR BLENDING SPACES
 						     double* force,
+						     double* uexact,
+						     double* gradx_uexact,
+						     double* grady_uexact,
 						     double* alpha_value,
-						     double* gradx_alpha,
-						     double* grady_alpha,
 						     double* alpha_dof,
 						     double* aux_test_ref,
 						     double* aux_grad_test_ref,
 						     // AUX QUANTITIES OF INTEREST
-						     double* quantDOFs)=0;
+						     double* quantDOFs,
+						     double beta)=0;
     virtual void calculateResidual_blending_spaces(//element
 						     double dt,
 						     double* mesh_trial_ref,
@@ -298,6 +304,7 @@ namespace proteus
 						     //
 						     int* u_l2g, 
 						     double* elementDiameter,
+						     double* meshSize,
 						     int degree_polynomial,
 						     double* u_dof,
 						     double* u_dof_old,
@@ -362,14 +369,16 @@ namespace proteus
 						     double* max_u_bc,
 						     // FOR BLENDING SPACES
 						     double* force,
+						     double* uexact,
+						     double* gradx_uexact,
+						     double* grady_uexact,
 						     double* alpha_value,
-						     double* gradx_alpha,
-						     double* grady_alpha,
 						     double* alpha_dof,
 						     double* aux_test_ref,
 						     double* aux_grad_test_ref,
 						     // AUX QUANTITIES OF INTEREST
-						     double* quantDOFs)=0;    
+						     double* quantDOFs,
+						     double beta)=0;    
     virtual void calculateJacobian(//element
 				   double dt,
 				   double* mesh_trial_ref,
@@ -431,11 +440,10 @@ namespace proteus
 				   int LUMPED_MASS_MATRIX,
 				   // FOR BLENDING SPACES
 				   double* alpha_value,
-				   double* gradx_alpha,
-				   double* grady_alpha,
 				   double* alpha_dof,
 				   double* aux_test_ref,
-				   double* aux_grad_test_ref
+				   double* aux_grad_test_ref,
+				   double beta
 				   )=0;
     virtual void calculateJacobian_blending_spaces(//element
 				   double dt,
@@ -498,11 +506,10 @@ namespace proteus
 				   int LUMPED_MASS_MATRIX,
 				   // FOR BLENDING SPACES
 				   double* alpha_value,
-				   double* gradx_alpha,
-				   double* grady_alpha,
 				   double* alpha_dof,
 				   double* aux_test_ref,
-				   double* aux_grad_test_ref
+				   double* aux_grad_test_ref,
+				   double beta
 						   )=0;    
     virtual void calculateMassMatrix(//element
 				     double dt,
@@ -565,12 +572,59 @@ namespace proteus
 				     int LUMPED_MASS_MATRIX,
 				     // FOR BLENDING SPACES
 				     double* alpha_value,
-				     double* gradx_alpha,
-				     double* grady_alpha,
 				     double* alpha_dof,
 				     double* aux_test_ref,
 				     double* aux_grad_test_ref
 				     )=0;
+        virtual void calculateMetricsAtEOS( //EOS=End Of Simulation
+                                       double* mesh_trial_ref,
+                                       double* mesh_grad_trial_ref,
+                                       double* mesh_dof,
+                                       int* mesh_l2g,
+                                       double* dV_ref,
+                                       double* u_trial_ref,
+                                       double* u_grad_trial_ref,
+                                       double* u_test_ref,
+                                       //physics
+                                       int nElements_global,
+                                       int nElements_owned,
+                                       int useMetrics,
+                                       int* u_l2g,
+                                       double* elementDiameter,
+				       double* meshSize,
+                                       double* nodeDiametersArray,
+                                       double epsFactHeaviside,
+                                       double* q_uh,
+				       double* q_grad_uh,
+                                       double* u_exact,
+				       double* gradx_u_exact,
+				       double* gracy_u_exact,
+                                       int offset_u, int stride_u,
+                                       double* global_L2,
+                                       double* global_H1,
+                                       double* global_L2_Omega1,
+                                       double* global_H1_Omega1,
+                                       double* global_Omega1,
+                                       double* global_L2_Omega2,
+                                       double* global_H1_Omega2,
+				       double* global_Omega2,
+				       double* global_L2_sH,
+				       double* global_L2_1msH)=0;
+    virtual void getLumpedL2Projection(double* mesh_trial_ref,
+				       double* mesh_grad_trial_ref,
+				       double* mesh_dof,
+				       int* mesh_l2g,
+				       double* dV_ref,
+				       double* u_trial_ref,
+				       double* u_grad_trial_ref,
+				       double* u_test_ref,
+				       int nElements_global,
+				       int* u_l2g,
+				       double* elementDiameter,
+				       double* q_alpha,
+				       int offset_u, int stride_u,
+				       int numDOFs,
+				       double* lumpedL2Projection)=0;
   };
 
   template<class CompKernelType,
@@ -607,6 +661,33 @@ namespace proteus
       }
     }
 
+    
+    inline double smoothedHeaviside(double eps, double u)
+    {
+      double H;
+      if (u > eps)
+	H=1.0;
+      else if (u < -eps)
+	H=0.0;
+      else if (u==0.0)
+	H=0.5;
+      else
+	H = 0.5*(1.0 + u/eps + sin(M_PI*u/eps)/M_PI);
+      return H;
+    }
+
+    inline double Heaviside(double u)
+    {
+      double H;
+      if (u > 0.)
+	H=1.0;
+      else if (u < 0.)
+	H=0.0;
+      else 
+	H=0.5;
+      return H;
+    }
+      
     inline void Mult(const double mat[nSpace*nSpace],
 		     const double vec[nSpace],
 		     double *mat_times_vector)
@@ -928,6 +1009,7 @@ namespace proteus
 			   //
 			   int* u_l2g, 
 			   double* elementDiameter,
+			   double* meshSize,
 			   int degree_polynomial,
 			   double* u_dof,
 			   double* u_dof_old,
@@ -992,14 +1074,16 @@ namespace proteus
 			   double* max_u_bc,
 			   // FOR BLENDING SPACES
 			   double* force,
+			   double* uexact,
+			   double* gradx_uexact,
+			   double* grady_uexact,
 			   double* alpha_value,
-			   double* gradx_alpha,
-			   double* grady_alpha,
 			   double* alpha_dof,
 			   double* aux_test_ref,
 			   double* aux_grad_test_ref,
 			   // AUX QUANTITIES OF INTEREST 
-			   double* quantDOFs)
+			   double* quantDOFs,
+			   double beta)
     {
       double Ct_sge = 4.0;	  
       //
@@ -1432,6 +1516,7 @@ namespace proteus
 					     //
 					     int* u_l2g, 
 					     double* elementDiameter,
+					     double* meshSize,
 					     int degree_polynomial,
 					     double* u_dof,
 					     double* u_dof_old,
@@ -1496,14 +1581,16 @@ namespace proteus
 					     double* max_u_bc,
 					     // FOR BLENDING SPACES
 					     double* force,
+					     double* uexact,
+					     double* gradx_uexact,
+					     double* grady_uexact,
 					     double* alpha_value,
-					     double* gradx_alpha,
-					     double* grady_alpha,
 					     double* alpha_dof,
 					     double* aux_test_ref,
 					     double* aux_grad_test_ref,
 					     // AUX QUANTITIES OF INTEREST 
-					     double* quantDOFs)
+					     double* quantDOFs,
+					     double beta)
     {
       // NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
       // Allocate space for the transport matrices
@@ -2066,6 +2153,7 @@ namespace proteus
 			   //
 			   int* u_l2g, 
 			   double* elementDiameter,
+			   double* meshSize,
 			   int degree_polynomial,
 			   double* u_dof,
 			   double* u_dof_old,
@@ -2130,14 +2218,16 @@ namespace proteus
 			   double* max_u_bc,
 			   // FOR BLENDING SPACES
 			   double* force,
+			   double* uexact,
+			   double* gradx_uexact,
+			   double* grady_uexact,
 			   double* alpha_value,
-			   double* gradx_alpha,
-			   double* grady_alpha,
 			   double* alpha_dof,
 			   double* aux_test_ref,
 			   double* aux_grad_test_ref,
 			   // AUX QUANTITIES OF INTEREST 
-			   double* quantDOFs)
+			   double* quantDOFs,
+			   double beta)
     {
       double Ct_sge = 4.0;	  
       //
@@ -2221,13 +2311,11 @@ namespace proteus
 		      blended_grad_test_ref[counter] = 
 			alpha*grad_phiH_i + (1-alpha)*grad_phiL_i
 			+ grad_alpha_referenceElement[I]*(phiH_i-phiL_i);
-
 		      // update counter
 		      counter++;
 		    }
 		}
 	    } //k
-	  //abort();
 
 	  ////////////////////////////////////////////////////////////////
 	  // END OF COMPUTING BLENDING SHAPE FUNCTIONS FOR CURRENT CELL //
@@ -2310,17 +2398,43 @@ namespace proteus
 	      // save grad
 	      for(int I=0;I<nSpace;I++)
 		q_grad_u[eN_k_nSpace+I]=grad_u[I];
+	      if (q_dV_last[eN_k] <= -100)
+                q_dV_last[eN_k] = dV;
+              q_dV[eN_k] = dV;
 	      //
 	      //update element residual 
-	      // 
+	      //
+	      double velocityBeta[2];
+	      double epsilon=0.01;
+	      velocityBeta[0] = 1.0;
+	      velocityBeta[1] = 3.0;
+
+
+	      double grad_uexact[2];
+	      grad_uexact[0] = gradx_uexact[eN_k];
+	      grad_uexact[1] = grady_uexact[eN_k];
 	      for(int i=0;i<nDOF_test_element;i++) 
-		{ 
+		{
 		  register int i_nSpace=i*nSpace;
+		  // poisson like u-Delta u = f//
 		  elementResidual_u[i] +=
+		    //  u*u_test_dV[i]
 		    ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace])
 		    - force[eN_k]*u_test_dV[i];
-		    //- forceViaInterpolation*u_test_dV[i];
-		    //- grad_forceViaInterpolation[0]*u_test_dV[i];
+		    //-ck.NumericalDiffusion(1.0,grad_uexact,&u_grad_test_dV[i_nSpace]);
+		  //  //- forceViaInterpolation*u_test_dV[i];
+		  //  //- grad_forceViaInterpolation[0]*u_test_dV[i];
+
+		  /////////////////////////
+		  // ADVECTION-DIFFUSION //
+		  /////////////////////////
+		  //elementResidual_u[i] +=
+		  //ck.NumericalDiffusion(1.0,
+		  //			  velocityBeta,
+		  //			  grad_u)*u_test_dV[i]
+		  //+epsilon*ck.NumericalDiffusion(1.0,
+		  //				   grad_u,
+		  //				   &u_grad_test_dV[i_nSpace]);
 		}//i
 	    }
 	  //abort();
@@ -2578,11 +2692,10 @@ namespace proteus
 			   int LUMPED_MASS_MATRIX,
 			   // FOR BLENDING SPACES
 			   double* alpha_value,
-			   double* gradx_alpha,
-			   double* grady_alpha,
 			   double* alpha_dof,
 			   double* aux_test_ref,
-			   double* aux_grad_test_ref)
+			   double* aux_grad_test_ref,
+			   double beta)
     {
       //std::cout<<"ndjaco  address "<<q_numDiff_u_last<<std::endl;
       double Ct_sge = 4.0;
@@ -3036,11 +3149,10 @@ namespace proteus
 			   int LUMPED_MASS_MATRIX,
 			   // FOR BLENDING SPACES
 			   double* alpha_value,
-			   double* gradx_alpha,
-			   double* grady_alpha,
 			   double* alpha_dof,
 			   double* aux_test_ref,
-			   double* aux_grad_test_ref)
+			   double* aux_grad_test_ref,
+			   double beta)
     {
       //std::cout<<"ndjaco  address "<<q_numDiff_u_last<<std::endl;
       double Ct_sge = 4.0;
@@ -3112,7 +3224,6 @@ namespace proteus
 		      blended_grad_test_ref[counter] =
 			alpha*grad_phiH_i + (1-alpha)*grad_phiL_i
 			+ grad_alpha_referenceElement[I]*(phiH_i-phiL_i);
-		      
 		      // update counter
 		      counter++;
 		    }
@@ -3164,28 +3275,43 @@ namespace proteus
 		  for (int I=0;I<nSpace;I++)
 		      u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;
 		}
-
+	      double velocityBeta[2];
+	      double epsilon=0.01;
+	      velocityBeta[0] = 1.0;
+	      velocityBeta[1] = 3.0;
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
 		  for(int j=0;j<nDOF_trial_element;j++)
 		    {
 		      int j_nSpace = j*nSpace;
 		      int i_nSpace = i*nSpace;
+		      ////////////////////////////////
+		      // poisson like: u-Delta u = f//
+		      ////////////////////////////////
 		      elementJacobian_u_u[i][j] +=
-			//blended_test_ref[k*nDOF_trial_element+j]*u_test_dV[i];
+			//blended_test_ref[k*nDOF_trial_element+j]*u_test_dV[i]
 			ck.NumericalDiffusion(1.0,
 					      &u_grad_trial[j_nSpace],
 					      &u_grad_test_dV[i_nSpace]);
-
-		      //double Aij = ck.NumericalDiffusion(1.0,&u_grad_trial[j_nSpace],
-		      //				 &u_grad_test_dV[i_nSpace]);
-		      //if (i==j and Aij<=0.)
-		      //std::cout << Aij << std::endl;
-		      //if (i!=j and Aij>0)
-		      //std::cout << Aij << "\t" 
-		      //	  << (u_grad_trial[j_nSpace+0]*u_grad_trial[i_nSpace+0]
-		      //	      + u_grad_trial[j_nSpace+1]*u_grad_trial[i_nSpace+1])*dV
-		      //	  << std::endl;
+		      ////double Aij = ck.NumericalDiffusion(1.0,&u_grad_trial[j_nSpace],
+		      ////				 &u_grad_test_dV[i_nSpace]);
+		      ////if (i==j and Aij<=0.)
+		      ////std::cout << Aij << std::endl;
+		      ////if (i!=j and Aij>0)
+		      ////std::cout << Aij << "\t" 
+		      ////	  << (u_grad_trial[j_nSpace+0]*u_grad_trial[i_nSpace+0]
+		      ////	      + u_grad_trial[j_nSpace+1]*u_grad_trial[i_nSpace+1])*dV
+		      ////	  << std::endl;
+		      /////////////////////////
+		      // ADVECTION-DIFFUSION //
+		      /////////////////////////
+		      //elementJacobian_u_u[i][j] +=
+		      //ck.NumericalDiffusion(1.0,
+		      //		      velocityBeta,
+		      //		      &u_grad_trial[j_nSpace])*u_test_dV[i]
+		      //+epsilon*ck.NumericalDiffusion(1.0,
+		      //			       &u_grad_trial[j_nSpace],
+		      //			       &u_grad_test_dV[i_nSpace]);
 		    }//j
 		}//i
 	    }//k
@@ -3468,8 +3594,6 @@ namespace proteus
 			     int LUMPED_MASS_MATRIX,
 			     // FOR BLENDING SPACES
 			     double* alpha_value,
-			     double* gradx_alpha,
-			     double* grady_alpha,
 			     double* alpha_dof,
 			     double* aux_test_ref,
 			     double* aux_grad_test_ref)
@@ -3665,6 +3789,245 @@ namespace proteus
 	    }//i
 	}//elements
     }//computeJacobian
+
+      void calculateMetricsAtEOS( //EOS=End Of Simulation
+                                 double* mesh_trial_ref,
+                                 double* mesh_grad_trial_ref,
+                                 double* mesh_dof,
+                                 int* mesh_l2g,
+                                 double* dV_ref,
+                                 double* u_trial_ref,
+                                 double* u_grad_trial_ref,
+                                 double* u_test_ref,
+                                 //physics
+                                 int nElements_global,
+                                 int nElements_owned,
+                                 int useMetrics,
+                                 int* u_l2g,
+                                 double* elementDiameter,
+				 double* meshSize,
+                                 double* nodeDiametersArray,
+                                 double epsFactHeaviside,
+                                 double* q_uh,
+				 double* q_grad_uh,
+                                 double* u_exact,
+				 double* gradx_u_exact,
+				 double* grady_u_exact,
+                                 int offset_u, int stride_u,
+				 double* global_L2,
+				 double* global_H1,
+                                 double* global_L2_Omega1,
+				 double* global_H1_Omega1,
+                                 double* global_Omega1,				 
+                                 double* global_L2_Omega2,
+				 double* global_H1_Omega2,
+                                 double* global_Omega2,
+				 double* global_L2_sH,
+				 double* global_L2_1msH)
+      {
+	*global_L2 = 0.0;
+	*global_H1 = 0.0;
+        *global_L2_Omega1 = 0.0;
+	*global_H1_Omega1 = 0.0;
+	*global_Omega1 = 0.0;
+        *global_L2_Omega2 = 0.0;
+	*global_H1_Omega2 = 0.0;
+	*global_Omega2 = 0.0;
+	*global_L2_sH = 0.0;
+	*global_L2_1msH = 0.0;
+        //////////////////////
+        // ** LOOP IN CELLS //
+        //////////////////////
+        for(int eN=0;eN<nElements_global;eN++)
+          {
+            if (eN<nElements_owned) // just consider the locally owned cells
+              {
+                //declare local storage for local contributions and initialize
+                double cell_L2 = 0., cell_H1 = 0.,
+		  cell_L2_Omega1 = 0., cell_H1_Omega1 = 0., cell_Omega1 = 0.,
+		  cell_L2_Omega2 = 0., cell_H1_Omega2 = 0., cell_Omega2 = 0.,
+		  cell_L2_sH = 0., cell_L2_1msH = 0.;
+
+                //loop over quadrature points and compute integrands
+                for  (int k=0;k<nQuadraturePoints_element;k++)
+                  {
+                    //compute indeces and declare local storage
+                    register int eN_k = eN*nQuadraturePoints_element+k,
+                      eN_k_nSpace = eN_k*nSpace,
+                      eN_nDOF_trial_element = eN*nDOF_trial_element;
+                    register double
+                      u, gradx_u, grady_u,
+		      u_grad_trial[nDOF_trial_element*nSpace],
+		      uh, grad_uh[nSpace],                      
+                      //for general use
+                      jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+                      dV,x,y,z,h_phi;
+                    //get the physical integration weight
+                    ck.calculateMapping_element(eN,
+                                                k,
+                                                mesh_dof,
+                                                mesh_l2g,
+                                                mesh_trial_ref,
+                                                mesh_grad_trial_ref,
+                                                jac,
+                                                jacDet,
+                                                jacInv,
+                                                x,y,z);
+                    ck.calculateH_element(eN,
+                                          k,
+                                          nodeDiametersArray,
+                                          mesh_l2g,
+                                          mesh_trial_ref,
+                                          h_phi);
+                    dV = fabs(jacDet)*dV_ref[k];
+		    // load exact solution and its gradient
+		    u = u_exact[eN_k];
+		    gradx_u = gradx_u_exact[eN_k];
+		    grady_u = grady_u_exact[eN_k];
+                    // get numerical solution
+		    uh = q_uh[eN_k];
+                    // get gradients of numerical solution
+		    grad_uh[0] = q_grad_uh[eN_k_nSpace+0];
+		    grad_uh[1] = q_grad_uh[eN_k_nSpace+1];
+		    // Norms in whole domain //		    
+		    cell_L2 += std::pow(u-uh,2)*dV;
+		    cell_H1 += (std::pow(u-uh,2) +
+		    		(std::pow(grad_uh[0] - gradx_u,2.0) +
+		    		 std::pow(grad_uh[1] - grady_u,2.0)) )*dV;
+
+		    // Norms in Omega 1 //		    
+		    //if (x < 0.5 - 2*meshSize[0])
+		    if (x < 0.5 - 0.25)
+		      {
+			cell_L2_Omega1 += std::pow(u-uh,2)*dV;
+			cell_H1_Omega1 += (std::pow(u-uh,2) +
+					   (std::pow(grad_uh[0] - gradx_u,2) +
+					    std::pow(grad_uh[1] - grady_u,2)) )*dV;
+			cell_Omega1 += dV;
+		      }
+		    //if (x > 0.5 + 2*meshSize[0])
+		    if (x > 0.5 + 0.25)
+		      {
+			cell_L2_Omega2 += std::pow(u-uh,2)*dV;
+			cell_H1_Omega2 += (std::pow(u-uh,2) +
+					   (std::pow(grad_uh[0] - gradx_u,2) +
+					    std::pow(grad_uh[1] - grady_u,2)) )*dV;
+			cell_Omega2 += dV;
+		      }
+		    //double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/2.0;
+		    double epsHeaviside = 0.1;
+		    double sH = smoothedHeaviside(epsHeaviside,x-0.75);		    
+		    //double epsHeaviside = meshSize[0];
+		    //double sH = smoothedHeaviside(epsHeaviside,x-0.5-4*epsHeaviside);
+		    //double sH = Heaviside(x-0.75);
+		    cell_L2_sH += std::pow((u-uh)*sH,2)*dV;
+		    cell_L2_1msH += std::pow(sH,2)*dV;
+		    //cell_L2_1msH += std::pow(u-uh,2)*(1.0-sH)*dV;
+                  }
+		*global_L2 += cell_L2;
+		*global_H1 += cell_H1;
+		*global_L2_Omega1 += cell_L2_Omega1;
+		*global_H1_Omega1 += cell_H1_Omega1;
+		*global_Omega1 += cell_Omega1;
+		*global_L2_Omega2 += cell_L2_Omega2;
+		*global_H1_Omega2 += cell_H1_Omega2;
+		*global_Omega2 += cell_Omega2;
+		*global_L2_sH += cell_L2_sH;
+		*global_L2_1msH += cell_L2_1msH;
+              }//elements
+          }
+      }
+
+      void getLumpedL2Projection(//element
+				 double* mesh_trial_ref,
+				 double* mesh_grad_trial_ref,
+				 double* mesh_dof,
+				 int* mesh_l2g,
+				 double* dV_ref,
+				 double* u_trial_ref,
+				 double* u_grad_trial_ref,
+				 double* u_test_ref,
+				 //physics
+				 int nElements_global,
+				 int* u_l2g,
+				 double* elementDiameter,
+				 double* q_alpha,
+				 int offset_u, int stride_u,
+				 // PARAMETERS FOR EDGE VISCOSITY
+				 int numDOFs,
+				 double* lumpedL2Projection)
+      {
+        register double
+          lumped_mass_matrix[numDOFs];
+        for (int i=0; i<numDOFs; i++)
+          {
+            lumpedL2Projection[i]=0.;
+            lumped_mass_matrix[i]=0.;
+          }
+        for(int eN=0;eN<nElements_global;eN++)
+          {
+            //declare local storage for local contributions and initialize
+            register double
+              element_lumped_mass_matrix[nDOF_test_element],	      
+              element_lumpedL2Projection[nDOF_test_element];
+            for (int i=0;i<nDOF_test_element;i++)
+              {
+                element_lumped_mass_matrix[i]=0.0;
+                element_lumpedL2Projection[i]=0.0;
+              }
+            //loop over quadrature points and compute integrands
+            for(int k=0;k<nQuadraturePoints_element;k++)
+              {
+                //compute indeces and declare local storage
+                register int eN_k = eN*nQuadraturePoints_element+k,
+                  eN_k_nSpace = eN_k*nSpace,
+                  eN_nDOF_trial_element = eN*nDOF_trial_element;
+                register double
+                  alpha,
+                  u_test_dV[nDOF_trial_element],
+                  //for general use
+                  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+                  dV,x,y,z;
+                //get the physical integration weight
+                ck.calculateMapping_element(eN,
+                                            k,
+                                            mesh_dof,
+                                            mesh_l2g,
+                                            mesh_trial_ref,
+                                            mesh_grad_trial_ref,
+                                            jac,
+                                            jacDet,
+                                            jacInv,
+                                            x,y,z);
+                dV = fabs(jacDet)*dV_ref[k];
+                //precalculate test function products with integration weights for mass matrix terms
+                for (int j=0;j<nDOF_trial_element;j++)
+                  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+		alpha=q_alpha[eN_k];
+                for(int i=0;i<nDOF_test_element;i++)
+                  {
+                    element_lumped_mass_matrix[i] += u_test_dV[i];
+                    element_lumpedL2Projection[i] += alpha*u_test_dV[i];
+                  }
+              } //k
+            // DISTRIBUTE //
+            for(int i=0;i<nDOF_test_element;i++)
+              {
+                int eN_i=eN*nDOF_test_element+i;
+                int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+
+                lumped_mass_matrix[gi] += element_lumped_mass_matrix[i];
+                lumpedL2Projection[gi] += element_lumpedL2Projection[i];
+              }//i
+          }//elements
+        // COMPUTE LUMPED L2 PROJECTION
+        for (int i=0; i<numDOFs; i++)
+          {
+            double mi = lumped_mass_matrix[i];
+            lumpedL2Projection[i] /= mi;
+          }
+      }      
   };//VOF
 
   inline VOF_base* newVOF(int nSpaceIn,

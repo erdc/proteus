@@ -368,6 +368,65 @@ namespace proteus
 			  else
 			    NO_INSTANCE
 			}
+		      ////
+		      else if (nQuadraturePoints_elementIn == 100) 
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 10) 
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,100,4,9,9,10>());			      
+			    }
+			  else
+			    NO_INSTANCE
+			}		      
+		      ////
+		      else if (nQuadraturePoints_elementIn == 144) 
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 12) 
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,144,4,9,9,12>());			      
+			    }
+			  else
+			    NO_INSTANCE
+			}
+		      else if (nQuadraturePoints_elementIn == 196) 
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 14) 
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,196,4,9,9,14>());			      
+			    }
+			  else
+			    NO_INSTANCE
+			}		      
+		      ////
+		      else if (nQuadraturePoints_elementIn == 256) 
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 16) 
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,256,4,9,9,16>());	 
+			    }
+			  else
+			    NO_INSTANCE
+			}
+		      else if (nQuadraturePoints_elementIn == 324) 
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 18) 
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,324,4,9,9,18>());
+			    }
+			  else
+			    NO_INSTANCE
+			}
+		      ////
+		      else if (nQuadraturePoints_elementIn == 400) 
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 20) 
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,400,4,9,9,20>());			      			      
+			    }
+			  else
+			    NO_INSTANCE
+			}		      		      
+		      ////
 		      else //other quad rules
 			NO_INSTANCE
 		    }

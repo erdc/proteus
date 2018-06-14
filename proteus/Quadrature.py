@@ -57,6 +57,17 @@ class GaussEdge(Q_base):
         [p7,w7]=numpy.polynomial.legendre.leggauss(7); p7=0.5*(p7+1); w7=0.5*w7
         [p8,w8]=numpy.polynomial.legendre.leggauss(8); p8=0.5*(p8+1); w8=0.5*w8
         [p9,w9]=numpy.polynomial.legendre.leggauss(9); p9=0.5*(p9+1); w9=0.5*w9
+        [p10,w10]=numpy.polynomial.legendre.leggauss(10); p10=0.5*(p10+1); w10=0.5*w10
+        [p11,w11]=numpy.polynomial.legendre.leggauss(11); p11=0.5*(p11+1); w11=0.5*w11
+        [p12,w12]=numpy.polynomial.legendre.leggauss(12); p12=0.5*(p12+1); w12=0.5*w12
+        [p13,w13]=numpy.polynomial.legendre.leggauss(13); p13=0.5*(p13+1); w13=0.5*w13
+        [p14,w14]=numpy.polynomial.legendre.leggauss(14); p14=0.5*(p14+1); w14=0.5*w14
+        [p15,w15]=numpy.polynomial.legendre.leggauss(15); p15=0.5*(p15+1); w15=0.5*w15
+        [p16,w16]=numpy.polynomial.legendre.leggauss(16); p16=0.5*(p16+1); w16=0.5*w16
+        [p17,w17]=numpy.polynomial.legendre.leggauss(17); p17=0.5*(p17+1); w17=0.5*w17
+        [p18,w18]=numpy.polynomial.legendre.leggauss(18); p18=0.5*(p18+1); w18=0.5*w18
+        [p19,w19]=numpy.polynomial.legendre.leggauss(19); p19=0.5*(p19+1); w19=0.5*w19
+        [p20,w20]=numpy.polynomial.legendre.leggauss(20); p20=0.5*(p20+1); w20=0.5*w20       
         #mwf for convenience, see Ern and Guermond
         a1 = 0.5*sqrt((15.0+2.0*sqrt(30))/35.0)
         a2 = 0.5*sqrt((15.0-2.0*sqrt(30))/35.0)
@@ -106,8 +117,173 @@ class GaussEdge(Q_base):
              EVec(p9[5]),
              EVec(p9[6]),
              EVec(p9[7]),                          
-             EVec(p9[8]))
-            )        
+             EVec(p9[8])),
+            (EVec(p10[0]), #n=10
+             EVec(p10[1]),
+             EVec(p10[2]),
+             EVec(p10[3]),
+             EVec(p10[4]),
+             EVec(p10[5]),
+             EVec(p10[6]),
+             EVec(p10[7]),                          
+             EVec(p10[8]),
+             EVec(p10[9])),
+            (EVec(p11[0]), #n=11
+             EVec(p11[1]),
+             EVec(p11[2]),
+             EVec(p11[3]),
+             EVec(p11[4]),
+             EVec(p11[5]),
+             EVec(p11[6]),
+             EVec(p11[7]),                          
+             EVec(p11[8]),
+             EVec(p11[9]),
+             EVec(p11[10])),
+            (EVec(p12[0]), #n=12
+             EVec(p12[1]),
+             EVec(p12[2]),
+             EVec(p12[3]),
+             EVec(p12[4]),
+             EVec(p12[5]),
+             EVec(p12[6]),
+             EVec(p12[7]),                          
+             EVec(p12[8]),
+             EVec(p12[9]),
+             EVec(p12[10]),
+             EVec(p12[11])),
+            (EVec(p13[0]), #n=13
+             EVec(p13[1]),
+             EVec(p13[2]),
+             EVec(p13[3]),
+             EVec(p13[4]),
+             EVec(p13[5]),
+             EVec(p13[6]),
+             EVec(p13[7]),                          
+             EVec(p13[8]),
+             EVec(p13[9]),
+             EVec(p13[10]),
+             EVec(p13[11]),
+             EVec(p13[12])),            
+            (EVec(p14[0]), #n=14
+             EVec(p14[1]),
+             EVec(p14[2]),
+             EVec(p14[3]),
+             EVec(p14[4]),
+             EVec(p14[5]),
+             EVec(p14[6]),
+             EVec(p14[7]),                          
+             EVec(p14[8]),
+             EVec(p14[9]),
+             EVec(p14[10]),
+             EVec(p14[11]),
+             EVec(p14[12]),
+             EVec(p14[13])),
+            (EVec(p15[0]), #n=15
+             EVec(p15[1]),
+             EVec(p15[2]),
+             EVec(p15[3]),
+             EVec(p15[4]),
+             EVec(p15[5]),
+             EVec(p15[6]),
+             EVec(p15[7]),                          
+             EVec(p15[8]),
+             EVec(p15[9]),
+             EVec(p15[10]),
+             EVec(p15[11]),
+             EVec(p15[12]),
+             EVec(p15[13]),             
+             EVec(p15[14])),            
+            (EVec(p16[0]), #n=16
+             EVec(p16[1]),
+             EVec(p16[2]),
+             EVec(p16[3]),
+             EVec(p16[4]),
+             EVec(p16[5]),
+             EVec(p16[6]),
+             EVec(p16[7]),                          
+             EVec(p16[8]),
+             EVec(p16[9]),
+             EVec(p16[10]),
+             EVec(p16[11]),
+             EVec(p16[12]),
+             EVec(p16[13]),
+             EVec(p16[14]),
+             EVec(p16[15])),
+            (EVec(p17[0]), #n=17
+             EVec(p17[1]),
+             EVec(p17[2]),
+             EVec(p17[3]),
+             EVec(p17[4]),
+             EVec(p17[5]),
+             EVec(p17[6]),
+             EVec(p17[7]),                          
+             EVec(p17[8]),
+             EVec(p17[9]),
+             EVec(p17[10]),
+             EVec(p17[11]),
+             EVec(p17[12]),
+             EVec(p17[13]),
+             EVec(p17[14]),
+             EVec(p17[15]),
+             EVec(p17[16])),
+            (EVec(p18[0]), #n=18
+             EVec(p18[1]),
+             EVec(p18[2]),
+             EVec(p18[3]),
+             EVec(p18[4]),
+             EVec(p18[5]),
+             EVec(p18[6]),
+             EVec(p18[7]),                          
+             EVec(p18[8]),
+             EVec(p18[9]),
+             EVec(p18[10]),
+             EVec(p18[11]),
+             EVec(p18[12]),
+             EVec(p18[13]),
+             EVec(p18[14]),
+             EVec(p18[15]),
+             EVec(p18[16]),
+             EVec(p18[17])),
+            (EVec(p19[0]), #n=19
+             EVec(p19[1]),
+             EVec(p19[2]),
+             EVec(p19[3]),
+             EVec(p19[4]),
+             EVec(p19[5]),
+             EVec(p19[6]),
+             EVec(p19[7]),                          
+             EVec(p19[8]),
+             EVec(p19[9]),
+             EVec(p19[10]),
+             EVec(p19[11]),
+             EVec(p19[12]),
+             EVec(p19[13]),
+             EVec(p19[14]),
+             EVec(p19[15]),
+             EVec(p19[16]),
+             EVec(p19[17]),
+             EVec(p19[18])),
+            (EVec(p20[0]), #n=20
+             EVec(p20[1]),
+             EVec(p20[2]),
+             EVec(p20[3]),
+             EVec(p20[4]),
+             EVec(p20[5]),
+             EVec(p20[6]),
+             EVec(p20[7]),                          
+             EVec(p20[8]),
+             EVec(p20[9]),
+             EVec(p20[10]),
+             EVec(p20[11]),
+             EVec(p20[12]),
+             EVec(p20[13]),
+             EVec(p20[14]),
+             EVec(p20[15]),
+             EVec(p20[16]),
+             EVec(p20[17]),
+             EVec(p20[18]),
+             EVec(p20[19]))            
+            )
         self.weightsAll=(
             (1.0,), #n=1
             (0.5, #n=2
@@ -124,8 +300,19 @@ class GaussEdge(Q_base):
             (w6[0],w6[1],w6[2],w6[3],w6[4],w6[5]), #n=6
             (w7[0],w7[1],w7[2],w7[3],w7[4],w7[5],w7[6]), #n=7
             (w8[0],w8[1],w8[2],w8[3],w8[4],w8[5],w8[6],w8[7]), #n=8
-            (w9[0],w9[1],w9[2],w9[3],w9[4],w9[5],w9[6],w9[7],w9[8]) #n=9
-            )
+            (w9[0],w9[1],w9[2],w9[3],w9[4],w9[5],w9[6],w9[7],w9[8]), #n=9
+            (w10[0],w10[1],w10[2],w10[3],w10[4],w10[5],w10[6],w10[7],w10[8],w10[9]), #n=10
+            (w11[0],w11[1],w11[2],w11[3],w11[4],w11[5],w11[6],w11[7],w11[8],w11[9],w11[10]), #n=11
+            (w12[0],w12[1],w12[2],w12[3],w12[4],w12[5],w12[6],w12[7],w12[8],w12[9],w12[10],w12[11]), #n=12
+            (w13[0],w13[1],w13[2],w13[3],w13[4],w13[5],w13[6],w13[7],w13[8],w13[9],w13[10],w13[11],w13[12]), #n=13
+            (w14[0],w14[1],w14[2],w14[3],w14[4],w14[5],w14[6],w14[7],w14[8],w14[9],w14[10],w14[11],w14[12],w14[13]), #n=14
+            (w15[0],w15[1],w15[2],w15[3],w15[4],w15[5],w15[6],w15[7],w15[8],w15[9],w15[10],w15[11],w15[12],w15[13],w15[14]), #n=15
+            (w16[0],w16[1],w16[2],w16[3],w16[4],w16[5],w16[6],w16[7],w16[8],w16[9],w16[10],w16[11],w16[12],w16[13],w16[14],w16[15]), #n=16
+            (w17[0],w17[1],w17[2],w17[3],w17[4],w17[5],w17[6],w17[7],w17[8],w17[9],w17[10],w17[11],w17[12],w17[13],w17[14],w17[15],w17[16]), #n=17
+            (w18[0],w18[1],w18[2],w18[3],w18[4],w18[5],w18[6],w18[7],w18[8],w18[9],w18[10],w18[11],w18[12],w18[13],w18[14],w18[15],w18[16],w18[17]), #n=18
+            (w19[0],w19[1],w19[2],w19[3],w19[4],w19[5],w19[6],w19[7],w19[8],w19[9],w19[10],w19[11],w19[12],w19[13],w19[14],w19[15],w19[16],w19[17],w19[18]), #n=19
+            (w20[0],w20[1],w20[2],w20[3],w20[4],w20[5],w20[6],w20[7],w20[8],w20[9],w20[10],w20[11],w20[12],w20[13],w20[14],w20[15],w20[16],w20[17],w20[18],w20[19]) #n=20
+        )
         self.setOrder(order)
 
     def setOrder(self,order,domain=[0.0,1.0]):
@@ -137,7 +324,66 @@ class GaussEdge(Q_base):
         for i in range(order):
             self.points.append(EVec((domain[1]-domain[0])*points[i][0] +domain[0]))
             self.weights.append((domain[1]-domain[0])*weights[i])
-        
+
+########################
+class GaussCompositeEdge(Q_base):
+    """
+    Gaussian Quadrature on the unit interval.
+    """
+    def __init__(self,order=1):
+        [p1,w1]=numpy.polynomial.legendre.leggauss(1); #p1=0.5*(p1+1); w1=0.5*w6
+        [p2,w2]=numpy.polynomial.legendre.leggauss(2); #p2=0.5*(p2+1); w2=0.5*w6
+        [p3,w3]=numpy.polynomial.legendre.leggauss(3); #p3=0.5*(p3+1); w3=0.5*w6
+        [p4,w4]=numpy.polynomial.legendre.leggauss(4); #p4=0.5*(p4+1); w4=0.5*w6
+        [p5,w5]=numpy.polynomial.legendre.leggauss(5); #p5=0.5*(p5+1); w5=0.5*w6        
+        [p6,w6]=numpy.polynomial.legendre.leggauss(6); #p6=0.5*(p6+1); w6=0.5*w6
+        Q_base.__init__(self,order)
+        self.pointsAll=(
+            (EVec(p1[0])), #n=1
+            (EVec(p2[0]),  #n=2
+             EVec(p2[1])),
+            (EVec(p3[0]),  #n=3
+             EVec(p3[1]),
+             EVec(p3[2])),
+            (EVec(p4[0]),  #n=4
+             EVec(p4[1]),
+             EVec(p4[2]),             
+             EVec(p4[3])),
+            (EVec(p5[0]),  #n=5
+             EVec(p5[1]),
+             EVec(p5[2]),
+             EVec(p5[3]),
+             EVec(p5[4])),                        
+            (EVec(p6[0]),  #n=6
+             EVec(p6[1]),
+             EVec(p6[2]),
+             EVec(p6[3]),
+             EVec(p6[4]),
+             EVec(p6[5]))
+            )
+        self.weightsAll=(
+            (w1[0]), #n=1
+            (w2[0],w2[1]), #n=2
+            (w3[0],w3[1],w3[2]), #n=3
+            (w4[0],w4[1],w4[2],w4[3]), #n=4
+            (w5[0],w5[1],w5[2],w5[3],w5[4]), #n=5
+            (w6[0],w6[1],w6[2],w6[3],w6[4],w6[5]) #n=6
+        )
+        self.setOrder(order)
+
+    def setOrder(self,order,domain=[0.0,1.0]):
+        Q_base.setOrder(self,order)
+        points = self.points
+        weights = self.weights
+        self.points = []
+        self.weights = []
+        for i in range(order):
+            #t = 0.5*(x + 1)*(b - a) + a
+            #gauss = sum(w * f(t)) * 0.5*(b - a)
+            self.points.append(EVec(0.5*(domain[1]-domain[0])*(points[i][0]+1.) +domain[0]))
+            self.weights.append(0.5*(domain[1]-domain[0])*weights[i])
+########################
+
 class LobattoEdge(Q_base):
     """
     Gauss-Lobatto quadrature on the unit interval.
@@ -987,6 +1233,50 @@ class CubeGaussQuadrature(Q_base):
                         self.points.append(EVec(self.quadrature.points[i][0],self.quadrature.points[j][0],self.quadrature.points[k][0]))
                         self.weights.append(self.quadrature.weights[i]*self.quadrature.weights[j]*self.quadrature.weights[k])
 
+
+class CubeGaussCompositeQuadrature(Q_base):
+    """
+    A class for all quadrature on unit simplices.
+    """
+    def __init__(self,nd=3,order=1):
+        Q_base.__init__(self,order)
+        self.nd=nd
+        self.quadratureNeg = GaussCompositeEdge(order=order)
+        self.quadraturePos = GaussCompositeEdge(order=order)
+        self.setOrder(order)
+
+    def setOrder(self,order):
+        self.points = []
+        self.weights = []
+        self.quadratureNeg.setOrder(order,[-1.0,0.0])
+        self.quadraturePos.setOrder(order,[0.0,1.0])
+
+        if self.nd == 1 or self.nd == 3:
+            raise("Not implemented")
+        ## Neg x Neg
+        for i in range(order):
+            for j in range(order):
+                self.points.append(EVec(self.quadratureNeg.points[i][0],
+                                        self.quadratureNeg.points[j][0]))
+                self.weights.append(self.quadratureNeg.weights[i]*self.quadratureNeg.weights[j])
+        ## Neg x Pos
+        for i in range(order):
+            for j in range(order):
+                self.points.append(EVec(self.quadratureNeg.points[i][0],
+                                        self.quadraturePos.points[j][0]))
+                self.weights.append(self.quadratureNeg.weights[i]*self.quadraturePos.weights[j])
+        ## Pos x Neg
+        for i in range(order):
+            for j in range(order):
+                self.points.append(EVec(self.quadraturePos.points[i][0],
+                                        self.quadratureNeg.points[j][0]))
+                self.weights.append(self.quadraturePos.weights[i]*self.quadratureNeg.weights[j])
+        ## Pos x Pos
+        for i in range(order):
+            for j in range(order):
+                self.points.append(EVec(self.quadraturePos.points[i][0],
+                                        self.quadraturePos.points[j][0]))
+                self.weights.append(self.quadraturePos.weights[i]*self.quadraturePos.weights[j])
 
 class SimplexLobattoQuadrature(Q_base):
     """
