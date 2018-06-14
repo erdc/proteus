@@ -1172,7 +1172,7 @@ class NS_base:  # (HasTraits):
         n0 = self.nList[0].ct
         sfConfig = p0.domain.PUMIMesh.size_field_config()
         logEvent("h-adapt mesh by calling AdaptPUMIMesh")
-        #p0.domain.PUMIMesh.adaptPUMIMesh()
+        p0.domain.PUMIMesh.adaptPUMIMesh()
 
         #code to suggest adapting until error is reduced;
         #not fully baked and can lead to infinite loops of adaptation
@@ -1441,18 +1441,6 @@ class NS_base:  # (HasTraits):
             self.PUMI_transferFields()
             logEvent("Initial Adapt before Solve")
             self.PUMI_adaptMesh()
-            logEvent("Converting PUMI mesh to Proteus")
-            if self.pList[0].domain.nd == 3:
-              mesh = MeshTools.TetrahedralMesh()
-            else:
-              mesh = MeshTools.TriangularMesh()
-    
-            mesh.convertFromPUMI(self.pList[0].domain.PUMIMesh,
-                             self.pList[0].domain.faceList,
-                             self.pList[0].domain.regList,
-                             parallel = self.comm.size() > 1,
-                             dim = self.pList[0].domain.nd)
-            self.PUMI2Proteus(mesh)
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
@@ -1635,8 +1623,8 @@ class NS_base:  # (HasTraits):
                 #if(self.tn < 0.05):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
-                #if(self.PUMI_estimateError()):
-                #    self.PUMI_adaptMesh()
+                if(self.PUMI_estimateError()):
+                    self.PUMI_adaptMesh()
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
                 nSequenceStepsLast = self.nSequenceSteps
