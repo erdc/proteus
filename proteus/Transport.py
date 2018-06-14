@@ -1591,7 +1591,6 @@ class OneLevelTransport(NonlinearEquation):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         import PostProcessingTools
-#        import pdb ; pdb.set_trace()
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
@@ -3269,8 +3268,6 @@ class OneLevelTransport(NonlinearEquation):
             for cj,flag in cjDict.iteritems():
                 if flag == 'nonlinear':
                     #mwf
-                    #import pdb
-                    #pdb.set_trace()
                     self.phi[ck].projectFromInterpolationConditions(self.phi_ip[('phi',ck)])
                     self.dphi[(ck,cj)].projectFromInterpolationConditions(self.phi_ip[('dphi',ck,cj)])
                     #mwf need to communicate values across processors if have spatial heterogeneity and spatial dependence of
