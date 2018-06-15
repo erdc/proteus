@@ -429,18 +429,7 @@ namespace proteus
               1.00),
         nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
-          {/*          std::cout<<"Constructing cppRANS3PSed2D<CompKernelTemplate<"
-                       <<0<<","
-                       <<0<<","
-                       <<0<<","
-                       <<0<<">,"*/
-            /*  <<nSpaceIn<<","
-                <<nQuadraturePoints_elementIn<<","
-                <<nDOF_mesh_trial_elementIn<<","
-                <<nDOF_trial_elementIn<<","
-                <<nDOF_test_elementIn<<","
-                <<nQuadraturePoints_elementBoundaryIn<<">());"*/
-            /*  <<std::endl<<std::flush; */
+          {
           }
 
       void setSedClosure(double aDarcy,
@@ -852,12 +841,12 @@ namespace proteus
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
-      double solid_velocity[3]={uStar,vStar,wStar}, fluid_velocity[3]={u_f,v_f,w_f};
+      double solid_velocity[2]={u,v}, fluid_velocity[2]={u_f,v_f};
       double new_beta =    closure.betaCoeff(vos,
-                                           rhoFluid,
-                                       fluid_velocity,
-                                         solid_velocity,
-                                         viscosity);
+					     rhoFluid,
+					     fluid_velocity,
+					     solid_velocity,
+					     viscosity);
       //new_beta/=rhoFluid;
       //std::cout<<"total "<<(1.0-phi_s)*new_beta<<std::endl;
       mom_u_source +=  (vos)*new_beta*(u-u_f);
