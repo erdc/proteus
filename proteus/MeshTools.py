@@ -4576,7 +4576,7 @@ class QuadrilateralMesh(Mesh):
                 self.newQuadrilateral([e0,e1,e2,e3])
         self.finalize()
         self.buildNodeDiameterArray()
-
+        self.buildElementBoundaryNodesArray()
         
     def generateFromQuadFileIFISS(self,meshfile):
         ''' WIP - read a matlab.mat file containing IFISS vertices
@@ -4740,6 +4740,27 @@ Number of nodes : %d\n""" % (self.nElements_global,
             self.quadDict[q].N = qN
             self.quadList.append(self.quadDict[q])
         self.polygonList = self.quadList
+
+    def buildElementBoundaryNodesArray(self):
+        xmin = min(self.nodeArray[:,0]) ; xmax = max(self.nodeArray[:,0])
+        ymin = min(self.nodeArray[:,1]) ; ymax = max(self.nodeArray[:,1])
+        epsilon = 1.0e-8
+        for ebNE in range(self.nExteriorElementBoundaries_global):
+            ebN = self.exteriorElementBoundariesArray[ebNE]
+            nN_0 = self.elementBoundaryNodesArray[ebN][0]
+            nN_1 = self.elementBoundaryNodesArray[ebN][1]
+            x0 = self.nodeArray[nN_0][0]
+            y0 = self.nodeArray[nN_0][1]
+            x1 = self.nodeArray[nN_1][0]
+            y1 = self.nodeArray[nN_1][1]
+            if (x0 <= xmin + epsilon) and (x1 <= xmin+ epsilon):
+                self.elementBoundaryMaterialTypes[ebN] = 4
+            elif (x0 >= xmax-epsilon) and (x1 >= xmax - epsilon):
+                self.elementBoundaryMaterialTypes[ebN] = 2
+            elif (y0 <= ymin + epsilon) and (y1 <= ymin+epsilon):
+                self.elementBoundaryMaterialTypes[ebN] = 1
+            elif (y0 >= ymax - epsilon) and (y1 >= ymax - epsilon):
+                self.elementBoundaryMaterialTypes[ebN] = 3
 
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0,EB=False):
         Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Quadrilateral",tCount,EB=EB)

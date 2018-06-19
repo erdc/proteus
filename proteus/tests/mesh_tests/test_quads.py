@@ -64,6 +64,15 @@ def test_buildNodeDiameterArray_1(simple_mesh):
     assert np.allclose(quad_mesh.nodeDiametersArray,expected)
     assert abs(quad_mesh.volume-4.0) < 1e-12
 
+@pytest.mark.MeshTools
+def test_buildElementBoundaryNodesArray_1(simple_mesh):
+    mlMesh, nnx, nny = simple_mesh
+    quad_mesh = mlMesh.meshList[0]
+    expected = np.array([4, 1, 4, 0, 4, 0, 3, 0, 1, 0, 0, 0, 0, 3, 0,
+                         1, 0, 0, 0, 0, 3, 2, 2, 2])
+    assert np.allclose(quad_mesh.elementBoundaryMaterialTypes,
+                       expected)
+
 @pytest.mark.modelTest
 @pytest.mark.moderateTest
 @pytest.mark.MeshTools
