@@ -2,6 +2,7 @@
 #define DSW2DCV_H
 #include <cmath>
 #include <iostream>
+#include <fstream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include <assert.h>
@@ -14,7 +15,7 @@
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 //#define lambda 1.0 // For Dispersive Model
-#define WHICH_DISP_MODEL 0
+#define WHICH_DISP_MODEL 1
 // EJT. If WHICH_DISP_MODEL is 1, then this is
 // Guermond's dispersive  model. If 0,
 // then this is Gavrilyuk's dispersive model
@@ -2410,6 +2411,7 @@ namespace proteus
           // ********** Loop on DOFs ********** // to compute flux and dissipative terms
           ////////////////////////////////////////
           ij = 0;
+	  
           for (int i=0; i<numDOFsPerEqn; i++)
             {
               double hi = h_dof_old[i];
@@ -2474,22 +2476,15 @@ namespace proteus
 	      
 	      // EJT. Corrected terms to match our paper
 	      // and define both Guermond and Gavrilyuk force terms for hw equation.
-	      double lambda = 0.05;	      
+	      double lambda = 0.0;	      
 	      double etai = hetai*one_over_hiReg;
 	      double meshi = std::sqrt(mi);
 	     
 	      
 	      // stuff for water height goes to 0 fix
-	      
-	      double alpha = 1.0;
-	      double hiSqd = std::pow(hi,2.0);
-	      double SGN_aux_i2 = fmax(2.0*hetai,mi)/(hiSqd + std::pow(fmax(hi,alpha*meshi),2.0));
-	      
-	      //double xxi = hetai* SGN_aux_i2;
 	      double xxi = etai*one_over_hiReg;
-	      if (hi < 1E-3)
-		    {lambda = 0.0;}
 	      
+	      	      
 	      // This is Guermond's force term on hwi
 	      double psii = 12.0 * (xxi - 1.0);
 	      double force_term_hetai = hwi*mi;
@@ -2500,7 +2495,7 @@ namespace proteus
 		{
 		 force_term_hwi = -lambda * (xxi-1.0) * mi; 
 		}
-
+	      
               // loop over the sparsity pattern of the i-th DOF
               for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
                 {
@@ -2521,24 +2516,20 @@ namespace proteus
 
                   // stuff for water height goes to 0 fix 
 		  
-		  double hjSqd = std::pow(hj,2.0);
-		  double SGN_aux_j2 = fmax(2.0*hetaj,mj)/(hjSqd + std::pow(fmax(hj,alpha*meshj),2.0));
-          	  double xxj = etaj*one_over_hjReg;
-		  if (hj < 1E-3)
-		    {lambda = 0.0;}		  
+		  double xxj = etaj*one_over_hjReg;
+				  
 		  // This is used to make definition of pTildej cleaner
-		  double polyj = 2.0 + 4.0*std::pow(xxj,3.) - 6.0*std::pow(xxj,4.);
+	    	  double polyj = 2.0 + 4.0 * std::pow(xxj,3.0) - 6.0*std::pow(xxj,4.0);
                   // Define pTildej here. Standard is Guermond's model 
                   double pTildej = lambda*g/(3. * meshj)*std::pow(hj,3.)*polyj;
 		  
-		  
-		  
+				  
                   // if WHICH_DISP_MODEL is 0 then Gavrilyuk's model is used.
                       if (WHICH_DISP_MODEL==0)
                           {       		   
 			    pTildej = -lambda/3.*(xxj-1.0)*etaj; 
 	                  }
-		    
+		  
 		    
 
                   // Nodal projection of fluxes
