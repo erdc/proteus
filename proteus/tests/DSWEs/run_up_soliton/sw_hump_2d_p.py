@@ -6,27 +6,21 @@ import numpy as np
 
 nd=2
 
-L=(10.0,1.0)
+L=(50.0,5.0)
 g = 9.81
 
-# for bathymetry
-SS = 9.0 #SS for slope starting point 
-TH = 0.09  #TH for topography height
-
-# for initial/exact solution 
-x0 = 2.0 #where solitary wave starts
-h1=  0.1 + .005
-h2=  0.14
+h1=0.0 + 1.1
+h2=0.28 + 1.1
+x0 = 10
 D = np.sqrt(g * h2)
 
-
-T = 4.0
+T=9
 nDTout=150
 
 domain = RectangularDomain(L=L,x=[0,0,0])
-mannings=0.0
+mannings=0
 
-cE=1.0
+cE=0
 LUMPED_MASS_MATRIX=1
 LINEAR_FRICTION=1
 
@@ -39,9 +33,10 @@ domain.writePoly("tank2d")
 ##### BATHYMETRY #####
 ######################
 def bathymetry_function(X):
-    x=X[0] 
-    bath = np.piecewise(x, [x < SS, x >= SS], [lambda x: TH, lambda x: TH + 1.0/19.85 * (x-SS)])
-    #bath = TH
+    x=X[0]
+    #SS = 31.5 #SS for slope starting point
+    SS = 40.0  #SS for slope starting point 
+    bath = np.piecewise(x, [x < SS, x >= SS], [lambda x: 1.0, lambda x: 1.0 + 1.0/19.85 * (x-SS)])
     return bath
 
 ##############################
@@ -57,58 +52,59 @@ def solitary(X,t):
 
 class water_height_at_t0:
     def uOfXT(self,X,t):
-        #return solitary(X,t)
         return max(solitary(X,t)-bathymetry_function(X),0.0)
 
 class mom_at_t0:
     def uOfXT(self,X,t):
-        h =  max(solitary(X,t)-bathymetry_function(X),0.0)
-        return D*(h - h1)
-       
-class heta_at_t0:
+        return D*(solitary(X,t) - h1)
+    #return 3.0
+    
+class eta_at_t0:
     def uOfXT(self,X,t):
-        h =  max(solitary(X,t)-bathymetry_function(X),0.0)
-        return  h**2
-       
+        h = max(solitary(X,t) - bathymetry_function(X),0.0)
+        return h**2.
+
 class Zero:
     def uOfXT(self,x,t):
         return 0.0
 
-analyticalSolution = {0:water_height_at_t0(),
-                      1:Zero(),
-                      2:Zero(),
-                      3:Zero(),
-                      4:Zero()}
+#analyticalSolution = {0:water_height_at_t0(),
+#                      1:Zero(),
+#                      2:Zero(),
+#                      3:Zero(),
+#                      4:Zero()}
 
 initialConditions = {0:water_height_at_t0(),
                      1:mom_at_t0(),
                      2:Zero(),
-                     3:heta_at_t0(),
+                     3:eta_at_t0(),
                      4:Zero()}
 
 ###################################
 ##### FOR BOUNDARY CONDITIONS #####
 ###################################
 def getDBC_h(x,flag):
-    if x[0]==0: # or x[0]==L[0]:
-        return lambda x,t: h1 - TH#bathymetry_function([0])
-    elif x[0]==L[0]:
-        return lambda x,t: 0.0
-
+    #None 
+    if x[0]==0:
+        return lambda x,t: h1
+#    elif x[0]==L[0]:
+#        return lambda x,t: 0
+#
 def getDBC_hu(x,flag):
     None
-   # if x[0]==0: #or x[0]==L[0]:
-   #    return lambda x,t: 0.
+    #if x[0]==0 or x[0]==L[0]:
+    #    return lambda x,t: 0.
 
 def getDBC_hv(x,flag):
-    return lambda x,t: 0.0
+    None
+    #return lambda x,t: 0.0
 
 def getDBC_heta(x,flag):
-     None
- #    if x[0] == 0: #or x[0]==L[0]:
- #       return lambda x,t: (h1 - TH)**2#bathymetry_function([0]))**2
- #  elif x[0] == L[0]:
- #     return lambda x,t: 0.0
+    if x[0]==0:
+        return lambda x,t: h1**2
+    #None
+    #if x[0]==0 or x[0]==L[0]:
+    #    return lambda x,t: h1**2.
 
 def getDBC_hw(x,flag):
     None
