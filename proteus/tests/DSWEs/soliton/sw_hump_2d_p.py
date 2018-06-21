@@ -9,13 +9,13 @@ nd=2
 L=(10.0,1.0)
 g = 9.81
 
-h1=0.1
-h2=0.11
-x0 = 2
+h1=0.1 
+h2=0.11 
+x0 = 2.0 
 D = np.sqrt(g * h2)
 
-T=4.0
-nDTout=100
+T = 4.0
+nDTout=150
 
 domain = RectangularDomain(L=L,x=[0,0,0])
 mannings=0.0
@@ -34,7 +34,7 @@ domain.writePoly("tank2d")
 ######################
 def bathymetry_function(X):
     x=X[0]
-    return 0*x
+    return 0*x 
 
 ##############################
 ##### INITIAL CONDITIONS #####
@@ -47,6 +47,16 @@ def solitary(X,t):
     soliton =  h1 + (h2 - h1) * 1.0/(np.cosh(xi/2.0 * z)**2)
     return soliton
     #return (X[0]>=1.0)*(X[0]<=2.0) * (h2-h1) + h1
+
+def hwInit(X,t):
+    xi = X[0] - D*t-x0
+    z1 = 3.0*(h2-h1)
+    z2 = h2 * h1**2
+    z = np.sqrt(z1 / z2)
+    sechSqd =  1.0/(np.cosh(xi/2.0 * z)**2)
+    tanh    =  np.tanh(xi/2.0 * z)**2
+    init = -D * h1 * ( (h1-h2)*z*sechSqd*tanh )
+    return init*0.0
     
 class water_height_at_t0:
     def uOfXT(self,X,t):
@@ -59,7 +69,10 @@ class mom_at_t0:
 class heta_at_t0:
     def uOfXT(self,X,t):
         return solitary(X,t)**2
-
+class hw_at_t0:
+    def uOfXT(self,X,t):
+        return hwInit(X,t)
+      
 class Zero:
     def uOfXT(self,x,t):
         return 0.0
@@ -80,9 +93,9 @@ initialConditions = {0:water_height_at_t0(),
 ##### FOR BOUNDARY CONDITIONS #####
 ###################################
 def getDBC_h(x,flag):
-    None
-    #if x[0]==0 or x[0]==L[0]:
-    #    return lambda x,t: h1
+   # None
+    if x[0]==0 or x[0]==L[0]:
+        return lambda x,t: h1
 
 def getDBC_hu(x,flag):
     None
