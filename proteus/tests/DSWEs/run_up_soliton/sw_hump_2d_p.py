@@ -8,19 +8,22 @@ nd=2
 
 L=(50.0,5.0)
 g = 9.81
+# for topography
+SS = 40.0
 
+# for exact solution
 h1=0.0 + 1.1
 h2=0.28 + 1.1
 x0 = 10
 D = np.sqrt(g * h2)
 
-T=9
+T=4
 nDTout=150
 
 domain = RectangularDomain(L=L,x=[0,0,0])
 mannings=0
 
-cE=0
+cE=1.0
 LUMPED_MASS_MATRIX=1
 LINEAR_FRICTION=1
 
@@ -34,34 +37,33 @@ domain.writePoly("tank2d")
 ######################
 def bathymetry_function(X):
     x=X[0]
-    #SS = 31.5 #SS for slope starting point
-    SS = 40.0  #SS for slope starting point 
     bath = np.piecewise(x, [x < SS, x >= SS], [lambda x: 1.0, lambda x: 1.0 + 1.0/19.85 * (x-SS)])
     return bath
 
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
-def solitary(X,t):
+def soliton(X,t):
     xi = X[0] - D*t-x0
     z1 = 3.0*(h2-h1)
     z2 = h2 * h1**2
     z = np.sqrt(z1 / z2)
-    soliton =  h1 + (h2 - h1) * 1.0/(np.cosh(xi/2.0 * z)**2)
-    return soliton
+    solitary =  h1 + (h2 - h1) * 1.0/(np.cosh(xi/2.0 * z)**2)
+    return solitary
 
 class water_height_at_t0:
     def uOfXT(self,X,t):
-        return max(solitary(X,t)-bathymetry_function(X),0.0)
+        return max(soliton(X,t)-bathymetry_function(X),0.0)
 
 class mom_at_t0:
     def uOfXT(self,X,t):
-        return D*(solitary(X,t) - h1)
-    #return 3.0
-    
+        h = soliton(X,t)-bathymetry_function([0])
+        h11 = h1 - bathymetry_function([0])
+        return D*(h - h11)
+        
 class eta_at_t0:
     def uOfXT(self,X,t):
-        h = max(solitary(X,t) - bathymetry_function(X),0.0)
+        h = max(soliton(X,t) - bathymetry_function(X),0.0)
         return h**2.
 
 class Zero:
@@ -86,7 +88,7 @@ initialConditions = {0:water_height_at_t0(),
 def getDBC_h(x,flag):
     #None 
     if x[0]==0:
-        return lambda x,t: h1
+        return lambda x,t: h1 - bathymetry_function([0])
 #    elif x[0]==L[0]:
 #        return lambda x,t: 0
 #
@@ -96,12 +98,12 @@ def getDBC_hu(x,flag):
     #    return lambda x,t: 0.
 
 def getDBC_hv(x,flag):
-    None
-    #return lambda x,t: 0.0
+    return lambda x,t: 0.0
 
 def getDBC_heta(x,flag):
-    if x[0]==0:
-        return lambda x,t: h1**2
+    None
+    #if x[0]==0:
+    #    return lambda x,t: h1**2
     #None
     #if x[0]==0 or x[0]==L[0]:
     #    return lambda x,t: h1**2.
