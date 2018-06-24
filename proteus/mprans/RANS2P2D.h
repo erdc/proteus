@@ -4905,6 +4905,49 @@ namespace proteus
         dmom_v_acc_v = 1. / mu;
       }
       inline
+        void evaluateTPViscosityMassCoefficients(const int use_numerical_viscosity,
+						 const double numerical_viscosity,
+						 const double eps_rho,
+						 const double eps_mu,
+						 const double rho_0,
+						 double nu_0,
+						 const double rho_1,
+						 double nu_1,
+						 const double useVF,
+						 const double& vf,
+						 const double& phi,
+						 const double& p,
+						 const double& u,
+						 const double& v,
+						 double& mom_p_acc,
+						 double& dmom_p_acc_p,
+						 double& mom_u_acc,
+						 double& dmom_u_acc_u,
+						 double& mom_v_acc,
+						 double& dmom_v_acc_v)
+      {
+        // This should be split off into a seperate function
+        double H_rho, H_mu, rho, nu, mu;
+
+        H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+        H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+
+        rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
+        nu = nu_0*(1.0-H_mu) + nu_1*H_mu;
+
+        mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu + use_numerical_viscosity*numerical_viscosity;
+        //mu = rho*nu;
+
+        mom_p_acc = p * mu;
+        dmom_p_acc_p =  mu;
+
+        mom_u_acc = u * mu;
+        dmom_u_acc_u =  mu;
+
+        mom_v_acc = v * mu;
+        dmom_v_acc_v = mu;
+      }
+      inline
         void evaluateTPDensityMassCoefficients(const double eps_rho,
                                                const double rho_0,
                                                const double rho_1,
@@ -5421,6 +5464,28 @@ namespace proteus
                                                 mom_v_acc,
                                                 dmom_v_acc_v) ;
             }
+	    else if(scale_type==2){
+	      evaluateTPViscosityMassCoefficients(use_numerical_viscosity,
+						  numerical_viscosity[eN_k],
+						  eps_rho,
+						  eps_mu,
+						  rho_0,
+						  nu_0,
+						  rho_1,
+						  nu_1,
+						  useVF,
+						  vf[eN_k],
+						  phi[eN_k],
+						  p,
+						  u,
+						  v,
+						  mom_p_acc,
+						  dmom_p_acc_p,
+						  mom_u_acc,
+						  dmom_u_acc_u,
+						  mom_v_acc,
+						  dmom_v_acc_v) ;
+	    }
 
             // Step 1.2.3 Loop over test and weighted trial functions
             // to evaluate local inner product contrubtions
