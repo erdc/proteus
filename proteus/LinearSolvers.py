@@ -727,6 +727,12 @@ class KSP_petsc4py(LinearSolver):
                                                                    prefix,
                                                                    self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
+            elif Preconditioner == NavierStokes_TwoPhaseLSC:
+                logEvent("NA Head Preconditioner TwoPhaseLSC")
+                self.preconditioner = NavierStokes_TwoPhaseLSC(par_L,
+                                                               prefix,
+                                                               self.bdyNullSpace)
+                self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_LSC:
                 logEvent("NAHeader Preconditioner LSC")
                 self.preconditioner = Schur_LSC(par_L,prefix,self.bdyNullSpace)
@@ -897,8 +903,50 @@ class SchurOperatorConstructor:
         self.two_phase_Ap_inv_csr_rep_local = self.two_phase_Ap_inv.csr_rep_local
         return self.two_phase_Ap_inv
 
+    def initializeTwoPhaseQ_visc(self):
+        """ Initialize a two phase viscosity mass matrix.
+
+        Returns
+        -------
+        two_phase_Qp_visc :
+        """
+        import Comm
+        comm = Comm.get()
+        self.opBuilder.attachViscosityScaledMassOperator()
+        par_info = self.linear_smoother.L.pde.par_info
+        if comm.size() == 1:
+            self.two_phase_Q_viscosity_scaled = ParMat_petsc4py(self.opBuilder.TPViscosityScaledMassOperator,
+                                                                par_info.par_bs,
+                                                                par_info.par_n,
+                                                                par_info.par_N,
+                                                                par_info.par_nghost,
+                                                                par_info.subdomain2global)
+        else:
+            mixed = False
+            if mixed == True:
+                self.petsc_two_phase_Q_viscosity_scaled = self._initializeMat(self.opBuilder.TPViscosityScaledMassOperator)
+                self.two_phase_Q_viscosity_scaled = ParMat_petsc4py(self.petsc_two_phase_Q_viscosity_scaled,
+                                                                    par_info.par_bs,
+                                                                    par_info.par_n,
+                                                                    par_info.par_N,
+                                                                    par_info.par_nghost,
+                                                                    par_info.petsc_subdomain2global_petsc,
+                                                                    pde=self.L.pde,
+                                                                    proteus_jacobian=self.opBuilder.TPViscosityScaledMassOperator,
+                                                                    nzval_proteus2petsc=par_info.nzval_proteus2petsc)
+            else:
+                self.two_phase_Q_viscosity_scaled = ParMat_petsc4py(self.opBuilder.TPViscosityScaledMassOperator,
+                                                                    par_info.par_bs,
+                                                                    par_info.par_n,
+                                                                    par_info.par_N,
+                                                                    par_info.par_nghost,
+                                                                    par_info.subdomain2global)
+        self.two_phase_Q_viscosity_scaled_csr_rep = self.two_phase_Q_viscosity_scaled.csr_rep
+        self.two_phase_Q_viscosity_scaled_csr_rep_local = self.two_phase_Q_viscosity_scaled.csr_rep_local
+        return self.two_phase_Q_viscosity_scaled
+
     def initializeTwoPhaseQp_rho(self):
-        """Initialize a two phase scaled laplace operator Ap.
+        """Initialize a two phase scaled mass matrix.
 
         Returns
         -------
@@ -940,7 +988,7 @@ class SchurOperatorConstructor:
         return self.two_phase_Qp_scaled
 
     def initializeTwoPhaseInvScaledQp(self):
-        """Initialize a two phase scaled laplace operator Ap.
+        """Initialize a two phase scaled mass operator Qp.
 
         Returns
         -------
@@ -1123,7 +1171,7 @@ class SchurOperatorConstructor:
             calculated as a lumped matrix (True) or as a full
             matrix (False).
         output_matrix : bool
-            Save updated laplace operator.
+            Save updated mass operator.
         """
         self.opBuilder.updateTwoPhaseMassOperator_rho(density_scaling = density_scaling,
                                                       lumped = lumped)
@@ -1138,6 +1186,41 @@ class SchurOperatorConstructor:
         self.two_phase_Qp_scaled.assemblyEnd()
         if output_matrix is True:
             self._exportMatrix(self.two_phase_Qp_scaled,'Qp_scaled')
+
+    def updateTwoPhaseQ_visc(self,
+                             viscosity_scaling = True,
+                             numerical_viscosity = True,
+                             lumped = True,
+                             output_matrix=False):
+        """Update the two-phase inverse viscosity scaled mass matrix.
+
+        Parameters
+        ----------
+        density : bool
+            Indicates whether the density mass matrix should
+            be scaled with viscosity (True) or 1 (False).
+        lumped : bool
+            Flag indicating whether the mass operator should be
+            calculated as a lumped matrix (True) or as a full
+            matrix (False).
+        output_matrix : bool
+            Save updated Mass operator.
+        """
+        self.opBuilder.updateTwoPhaseMassOperator_visc(viscosity_scaling = viscosity_scaling,
+                                                       numerical_viscosity = numerical_viscosity,
+                                                       lumped = lumped)
+        self.two_phase_Q_viscosity_scaled.zeroEntries()
+        if self.two_phase_Q_viscosity_scaled.proteus_jacobian != None:
+            self.two_phase_Q_viscosity_scaled_csr_rep[2][self.two_phase_Qp_scaled.nzval_proteus2petsc] = self.two_phase_Qp_scaled.proteus_csr_rep[2][:]
+        self.two_phase_Q_viscosity_scaled.setValuesLocalCSR(self.two_phase_Q_viscosity_scaled_csr_rep_local[0],
+                                                            self.two_phase_Q_viscosity_scaled_csr_rep_local[1],
+                                                            self.two_phase_Q_viscosity_scaled_csr_rep_local[2],
+                                                            p4pyPETSc.InsertMode.INSERT_VALUES)
+        self.two_phase_Q_viscosity_scaled.assemblyBegin()
+        self.two_phase_Q_viscosity_scaled.assemblyEnd()
+        if output_matrix is True:
+            self._exportMatrix(self.two_phase_Q_viscosity_scaled,'Qp_scaled')
+
 
     def updateTwoPhaseInvScaledQp_visc(self,
                                        numerical_viscosity = True,
@@ -1731,6 +1814,99 @@ class NavierStokesSchur(SchurPrecon):
                                                              pde_type='navier_stokes')
 
 
+class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
+    r"""
+    Two-phase PCD Schur complement approximation class. Details of
+    this operator are in the forthcoming paper 'Preconditioners for
+    Two-Phase Incompressible Navier-Stokes Flow', Bootland et. al.
+    2017.
+    """
+    def __init__(self,
+                 L,
+                 prefix = None,
+                 bdyNullSpace = False,
+                 numerical_viscosity = True,
+                 lumped = True,
+                 infsup_fe = False):
+        """
+        Initialize the two-phase LSC preconditioning class.
+
+        Parameters
+        ----------
+        L : petsc4py Matrix
+            Defines the problem's operator.
+        prefix : str
+            String allowing PETSc4py options.
+        bdyNullSpace : bool
+            Does the boundary create a global null space
+        numerical_viscosity : bool
+            Should numerical viscosity be included
+        lumped : bool
+            Should the diagonal velocity mass matrix be lumped
+        infsup_fe : bool
+            Are the simulation's fe inf-sup stable
+        """
+        NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
+        # Initialize velocity
+        self.Q_scaledVisc = self.operator_constructor.initializeTwoPhaseQ_visc()
+        self.numerical_viscosity = numerical_viscosity
+        self.lumped = lumped
+        self.infsup_fe = infsup_fe
+
+    def setUp(self, global_ksp):
+        import Comm
+        comm = Comm.get()
+        self.operator_constructor.updateTwoPhaseQ_visc(viscosity_scaling=True,
+                                                       numerical_viscosity = self.numerical_viscosity,
+                                                       lumped = self.lumped)
+
+        self.Qv_scaledVisc = self.Q_scaledVisc.getSubMatrix(self.operator_constructor.linear_smoother.isv,
+                                                           self.operator_constructor.linear_smoother.isv)
+
+        self.F = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
+                                                           self.operator_constructor.linear_smoother.isv)
+
+        self.Bt = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
+                                                            self.operator_constructor.linear_smoother.isp)
+
+        self.B = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                           self.operator_constructor.linear_smoother.isv)
+
+        if self.infsup_fe is False:
+            self.C = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                               self.operator_constructor.linear_smoother.isp)
+
+        L_sizes = self.B.getSizes()[0][0]
+        self.TP_LSCInv_shell = p4pyPETSc.Mat().create()
+        self.TP_LSCInv_shell.setSizes(L_sizes)
+        self.TP_LSCInv_shell.setType('python')
+        if self.infsup_fe:
+            self.matcontext_inv = LSCInv_shell(self.Qv_scaledVisc,
+                                               self.B,
+                                               self.Bt,
+                                               self.F)
+        else:
+            self.matcontext_inv = LSC_stabilized_Inv_shell(self.Qv_scaledVisc,
+                                                           self.B,
+                                                           self.Bt,
+                                                           self.F,
+                                                           self.C)
+        self.TP_LSCInv_shell.setPythonContext(self.matcontext_inv)
+        self.TP_LSCInv_shell.setUp()
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        self._setSchurlog(global_ksp)
+        if self.bdyNullSpace == True:
+            nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                               vectors = (),
+                                               constant = True)
+            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
+            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
+        self._setSchurlog(global_ksp)
+        if self.bdyNullSpace == True:
+            self._setConstantPressureNullSpace(global_ksp)
+
 class NavierStokes_TwoPhasePCD(NavierStokesSchur):
     r""" Two-phase PCD Schur complement approximation class.
          Details of this operator are in the forthcoming paper
@@ -1846,6 +2022,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         # self.Sp.axpy( 1. , self.A11)
 
         # End ******** Sp for Ap ***********
+
         self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
                                               self.operator_constructor.linear_smoother.isp)
 
@@ -3125,7 +3302,7 @@ class OperatorConstructor:
                                                  self.model.rowptr)
 
     def attachScaledMassOperator(self):
-        """ Create discrete InvScaled Mass operator. """
+        """ Create discrete Scaled Mass operator. """
         self._scaled_mass_val = self.model.nzval.copy()
         self._scaled_mass_val.fill(0.)
         self.TPScaledMassOperator = SparseMat(self.model.nFreeVDOF_global,
@@ -3134,6 +3311,17 @@ class OperatorConstructor:
                                               self._scaled_mass_val,
                                               self.model.colind,
                                               self.model.rowptr)
+
+    def attachViscosityScaledMassOperator(self):
+        """ Create discrete Scaled Mass operator. """
+        self._visc_scaled_mass_val = self.model.nzval.copy()
+        self._visc_scaled_mass_val.fill(0.)
+        self.TPViscosityScaledMassOperator = SparseMat(self.model.nFreeVDOF_global,
+                                                       self.model.nFreeVDOF_global,
+                                                       self.model.nnz,
+                                                       self._visc_scaled_mass_val,
+                                                       self.model.colind,
+                                                       self.model.rowptr)
 
     def attachLaplaceOperator(self):
         """ Create discrete Laplace matrix operator. """
@@ -3271,7 +3459,7 @@ class OperatorConstructor_rans2p(OperatorConstructor):
         rho_0 = density_scaling*self.model.coefficients.rho_0 + (1-density_scaling)*1
         nu_0 = density_scaling*self.model.coefficients.nu_0 + (1-density_scaling)*1
         rho_1 = density_scaling*self.model.coefficients.rho_1 + (1-density_scaling)*1
-        nu_1 = density_scaling*self.model.coefficients.nu_1 + (1-density_scaling)*1        
+        nu_1 = density_scaling*self.model.coefficients.nu_1 + (1-density_scaling)*1
 
         self.TPScaledMassOperator.getCSRrepresentation()[2].fill(0.)
         self.model.rans2p.getTwoPhaseScaledMassOperator(1,
@@ -3308,7 +3496,70 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                         self.model.csrRowIndeces[(0,0)],self.model.csrColumnOffsets[(0,0)],
                                                         self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
                                                         self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
-                                                        self.TPScaledMassOperator)    
+                                                        self.TPScaledMassOperator)
+
+    def updateTwoPhaseMassOperator_visc(self,
+                                        viscosity_scaling = True,
+                                        numerical_viscosity = True,
+                                        lumped = True):
+        """
+        Create a discrete TwoPhase Mass operator matrix.
+
+        Parameters
+        ----------
+        viscosity_scaling : bool
+            Indicates whether advection terms should be scaled with
+            the viscosity (True) or 1 (False)
+        numerical_viscosity : False
+            Indicates whether the numerical viscosity should be
+            included with the mass matrix.
+        lumped : bool
+            Indicates whether the mass matrices should be lumped or
+            full.
+
+        """
+        rho_0 = viscosity_scaling*self.model.coefficients.rho_0 + (1-viscosity_scaling)*1
+        nu_0 = viscosity_scaling*self.model.coefficients.nu_0 + (1-viscosity_scaling)*1
+        rho_1 = viscosity_scaling*self.model.coefficients.rho_1 + (1-viscosity_scaling)*1
+        nu_1 = viscosity_scaling*self.model.coefficients.nu_1 + (1-viscosity_scaling)*1
+
+        self.TPViscosityScaledMassOperator.getCSRrepresentation()[2].fill(0.)
+        self.model.rans2p.getTwoPhaseScaledMassOperator(2,
+                                                        numerical_viscosity,
+                                                        lumped,
+                                                        self.model.u[0].femSpace.elementMaps.psi,
+                                                        self.model.u[0].femSpace.elementMaps.grad_psi,
+                                                        self.model.mesh.nodeArray,
+                                                        self.model.mesh.elementNodesArray,
+                                                        self.model.elementQuadratureWeights[('u',0)],
+                                                        self.model.u[0].femSpace.psi,
+                                                        self.model.u[0].femSpace.psi,
+                                                        self.model.u[1].femSpace.psi,
+                                                        self.model.u[1].femSpace.psi,
+                                                        self.model.elementDiameter,
+                                                        self.model.mesh.nodeDiametersArray,
+                                                        self.model.coefficients.numerical_viscosity,
+                                                        self.model.mesh.nElements_global,
+                                                        self.model.coefficients.useMetrics,
+                                                        self.model.coefficients.epsFact_density,
+                                                        self.model.coefficients.epsFact,
+                                                        rho_0,
+                                                        nu_0,
+                                                        rho_1,
+                                                        nu_1,
+                                                        self.model.u[0].femSpace.dofMap.l2g,
+                                                        self.model.u[1].femSpace.dofMap.l2g,
+                                                        self.model.u[0].dof,
+                                                        self.model.u[1].dof,
+                                                        self.model.u[2].dof,
+                                                        self.model.coefficients.useVF,
+                                                        self.model.coefficients.q_vf,
+                                                        self.model.coefficients.q_phi,
+                                                        self.model.csrRowIndeces[(0,0)],self.model.csrColumnOffsets[(0,0)],
+                                                        self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
+                                                        self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
+                                                        self.TPViscosityScaledMassOperator)
+
 
     def updateTwoPhaseInvScaledMassOperator(self,
                                             numerical_viscosity = True,
