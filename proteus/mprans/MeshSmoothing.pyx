@@ -74,6 +74,7 @@ cdef double[:,:] cySmoothNodesLaplace(double[:,:] nodeArray,
     else:
         nodeArrayMod = nodeArray
     cdef double[:] sum_star = np.zeros(3)
+    cdef double[:] bN = np.zeros(3)
     cdef int nNodeInStar
     for i in range(nSmooth):
         for node in range(nNodes_owned):
@@ -84,6 +85,8 @@ cdef double[:,:] cySmoothNodesLaplace(double[:,:] nodeArray,
                     sum_star[0] += nodeArrayMod[nodeStarArray[nOffset], 0]
                     sum_star[1] += nodeArrayMod[nodeStarArray[nOffset], 1]
                     sum_star[2] += nodeArrayMod[nodeStarArray[nOffset], 2]
+                    if node == 1000:
+                        print('nodestar', nodeStarArray[nOffset], nodeArrayMod[nodeStarArray[nOffset], 0])
                 nNodeInStar = abs(nodeStarOffsets[node]-nodeStarOffsets[node+1])
                 nodeArrayMod[node, 0] = sum_star[0]/nNodeInStar
                 nodeArrayMod[node, 1] = sum_star[1]/nNodeInStar
@@ -103,15 +106,15 @@ cdef double[:,:] cySmoothNodesLaplace(double[:,:] nodeArray,
                                 sum_star[1] += nodeArrayMod[nodeStarArray[nOffset], 1]
                                 sum_star[2] += nodeArrayMod[nodeStarArray[nOffset], 2]
                             nNodeInStar = abs(nodeStarOffsets[node]-nodeStarOffsets[node+1])
-                            nodeArrayMod[node, 0] = sum_star[0]/nNodeInStar*(1-bN[0])
-                            nodeArrayMod[node, 1] = sum_star[1]/nNodeInStar*(1-bN[1])
-                            nodeArrayMod[node, 2] = sum_star[2]/nNodeInStar*(1-bN[2])
+                            nodeArrayMod[node, 0] = sum_star[0]/nNodeInStar*(1-np.abs(bN[0]))
+                            nodeArrayMod[node, 1] = sum_star[1]/nNodeInStar*(1-np.abs(bN[1]))
+                            nodeArrayMod[node, 2] = sum_star[2]/nNodeInStar*(1-np.abs(bN[2]))
             if i == nSmooth-1:
-                disp[node, 0] = disp[node, 0]-nodeArray[node, 0]
-                disp[node, 1] = disp[node, 1]-nodeArray[node, 1]
-                disp[node, 2] = disp[node, 2]-nodeArray[node, 2]
+                disp[node, 0] = nodeArrayMod[node, 0]-disp[node, 0]
+                disp[node, 1] = nodeArrayMod[node, 1]-disp[node, 1]
+                disp[node, 2] = nodeArrayMod[node, 2]-disp[node, 2]
     return disp
-            
+
 
 
 
@@ -144,7 +147,7 @@ cdef tuple cyGetQualityMetrics(double[:,:,:] J_array,
     cdef double[:] dilation_array
     for eN in range(len(target_area_array)):
         detJ = detJ_array[eN, 0]  # index 0 as it is the same for all quadrature points
-        dilation = target_area_array[eN]/detJ  
+        dilation = target_area_array[eN]/detJ
         if dilation < 1.:
             dilation = 1/dilation
         dilation_array[eN] = dilation-1
@@ -406,14 +409,15 @@ def getLocalNearestElement(double[:] coords,
                                      elementNeighborsArray,
                                      eN)
 
-cdef tuple pyxGetLocalNearestElementNormal(double[:] coords,
-                                           double[:,:,:] elementNormalsArray,
-                                           int[:,:] elementBoundariesArray,
-                                           double[:,:] elementBoundaryBarycentersArray,
-                                           int[:,:] elementNeighborsArray,
-                                           double[:,:] elementBarycentersArray,
-                                           int[:] exteriorElementBoundariesBoolArray,
-                                           int eN):
+cdef tuple pyxGetLocalNearestElementIntersection(double[:] coords,
+                                                 double[:,:,:] elementNormalsArray,
+                                                 int[:,:] elementBoundariesArray,
+                                                 double[:,:] elementBoundaryBarycentersArray,
+                                                 int[:,:] elementNeighborsArray,
+                                                 double[:,:] elementBarycentersArray,
+                                                 int[:] exteriorElementBoundariesBoolArray,
+                                                 int eN,
+                                                 double tol=1e-10):
     """Finds nearest node to coordinates (local)
     """
     # determine local nearest node distance
@@ -452,42 +456,36 @@ cdef tuple pyxGetLocalNearestElementNormal(double[:] coords,
                 normal[2] = elementNormalsArray[nearest_eN0, j, 2]
                 bound_bar = elementBoundaryBarycentersArray[b_i]
                 dot = normal[0]*direction[0]+normal[1]*direction[1]+normal[2]*direction[2]
-                dot2 = (bound_bar[0]-eN_coords[0])*normal[0]+(bound_bar[1]-eN_coords[1])*normal[1]+(bound_bar[2]-eN_coords[2])*normal[2]
-                if dot > 0. and dot2 > -1e-10:
-                    alpha = dot2/dot
-                    if 0. < alpha < alpha_min:
-                        alpha_min = alpha
-                        nearest_eN = elementNeighborsArray[nearest_eN0, j]
-                        b_i_last = b_i
+                if dot > 0.:
+                    dot2 = (bound_bar[0]-eN_coords[0])*normal[0]+(bound_bar[1]-eN_coords[1])*normal[1]+(bound_bar[2]-eN_coords[2])*normal[2]
+                    if dot2 >= 0.:
+                        alpha = dot2/dot
+                        if 0. < alpha < alpha_min:
+                            alpha_min = alpha
+                            nearest_eN = elementNeighborsArray[nearest_eN0, j]
+                            b_i_last = b_i
         if nearest_eN != nearest_eN0:
-            if min_dist-alpha_min > 0.:
+            if min_dist-alpha_min > 0:
                 eN_coords[0] += alpha_min*direction[0]
                 eN_coords[1] += alpha_min*direction[1]
                 eN_coords[2] += alpha_min*direction[2]
                 min_dist -= alpha_min
-            else:
+            else:  # going too far
                 nearest_eN = nearest_eN0
-                found_eN = True
-        # if nearest_eN != nearest_eN0:
-        #     # not checking min_dist, wrong result
-        #     eN_coords[0] += alpha_min*direction[0]
-        #     eN_coords[1] += alpha_min*direction[1]
-        #     eN_coords[2] += alpha_min*direction[2]
-        #     min_dist -= alpha_min
         if nearest_eN0 == nearest_eN:
             found_eN = True
         i += 1
     return nearest_eN, min_dist
 
-def getLocalNearestElementNormal(double[:] coords,
-                                 double[:,:,:] elementNormalsArray,
-                                 int[:,:] elementBoundariesArray,
-                                 double[:,:] elementBoundaryBarycentersArray,
-                                 int[:,:] elementNeighborsArray,
-                                 double[:,:] elementBarycentersArray,
-                                 int[:] exteriorElementBoundariesBoolArray,
-                                 int eN):
-    return pyxGetLocalNearestElementNormal(coords,
+def getLocalNearestElementIntersection(double[:] coords,
+                                       double[:,:,:] elementNormalsArray,
+                                       int[:,:] elementBoundariesArray,
+                                       double[:,:] elementBoundaryBarycentersArray,
+                                       int[:,:] elementNeighborsArray,
+                                       double[:,:] elementBarycentersArray,
+                                       int[:] exteriorElementBoundariesBoolArray,
+                                       int eN):
+    return pyxGetLocalNearestElementIntersection(coords,
                                            elementNormalsArray,
                                            elementBoundariesArray,
                                            elementBoundaryBarycentersArray,

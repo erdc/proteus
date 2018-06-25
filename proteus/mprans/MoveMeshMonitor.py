@@ -33,8 +33,14 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         to the material type set as: 0 -> not fixed, 1 -> fixed.
         e.g. is nodes of material type 3 should be fixed: fixedNodes[3]=1.
         (!) must be integers
-    nSmooth: int
-        number of smoothing steps after solving
+    nSmoothIn: int
+        number of smoothing steps while pseudo time stepping (during each step)
+    nSmoothOut: int
+        number of smoothing steps after finishing pseudo time stepping
+    epsFact_density: double
+        epsFact*he_min where refinement is the same
+    epsTimeStep: double
+        pseudo time step size (0 < epsTimeStep <= 1)
     """
     def __init__(self,
                  func,
@@ -45,8 +51,10 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                  nd=2,
                  boundaryNormals=None,
                  fixedNodes=None,
-                 nSmooth=0,
-                 epsFact=3):
+                 nSmoothIn=0,
+                 nSmoothOut=0,
+                 epsFact_density=3,
+                 epsTimeStep=1.):
         self.myfunc = func
         self.LS_MODEL = LS_MODEL
         self.ME_MODEL = ME_MODEL
@@ -55,12 +63,16 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.C = 1.  # scaling coefficient for f (computed in preStep)
         self.integral_area = 1.
         self.nd = nd
+        assert 0 < epsTimeStep <= 1, 'epsTimeStep must be between 0. and 1.'
+        self.epsTimeStep = epsTimeStep
+        self.epsFact_density = epsFact_density
         aOfX = [lambda x: np.array([[1., 0.], [0., 1.]])]
         fOfX = [self.uOfX]  # scaled function reciprocal
         self.t = 0
         self.boundaryNormals = boundaryNormals
         self.fixedNodes = fixedNodes
-        self.nSmooth = nSmooth
+        self.nSmoothIn = nSmoothIn
+        self.nSmoothOut = nSmoothOut
         self.dt_last = None
         self.u_phi = None
         #super(MyCoeff, self).__init__(aOfX, fOfX)
@@ -101,6 +113,9 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.model.areas = self.areas
         logEvent("Finished updating area function",
                  level=3)
+        if t != self.t:
+            self.t = t
+            self.model.mesh.nodeVelocityArray[:] = 0.
 
     def postStep(self, t,firstStep=False):
         # gradient recovery
@@ -126,9 +141,9 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.gamma0 = 10.  # user defined parameter
         self.na = np.log(self.gamma)/np.log(self.gamma0)
         # pseudo-time step
-        eps = 0.1
         self.PHI[:] = self.mesh.nodeArray
-        self.cCoefficients.pseudoTimeStepping(eps=eps, xx=self.PHI)
+        self.cCoefficients.pseudoTimeStepping(eps=self.epsTimeStep,
+                                              xx=self.PHI)
         # move nodes
         if self.dt_last is not None:
             # dt = self.model.timeIntegration.dt
@@ -136,19 +151,21 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             #     dt = self.dt_last
             # dt = self.model.timeIntegration.dt
             dt = self.dt_last
-            logEvent('Smoothing Mesh with Laplace Smoothing - '+str(self.nSmooth))
-            if self.nSmooth > 0:
+            logEvent('Smoothing Mesh with Laplace Smoothing - '+str(self.nSmoothOut))
+            if self.nSmoothOut > 0:
                 disp = MeshSmoothing.smoothNodesLaplace(nodeArray=self.PHI,
                                                         nodeStarOffsets=self.mesh.nodeStarOffsets,
                                                         nodeStarArray=self.mesh.nodeStarArray,
                                                         nodeMaterialTypes=self.mesh.nodeMaterialTypes,
                                                         nNodes_owned=self.mesh.nNodes_owned,
-                                                        nSmooth=self.nSmooth,
+                                                        nSmooth=self.nSmoothOut,
                                                         boundaryNormals=self.boundaryNormals,
                                                         fixedNodes=self.fixedNodes,
                                                         apply_directly=False)
+                print(self.PHI[1000,0])
                 self.PHI += disp
-            self.model.mesh.nodeVelocityArray[:] = (self.PHI-self.model.mesh.nodeArray)/dt
+                import pdb; pdb.set_trace()
+            self.model.mesh.nodeVelocityArray[:] += (self.PHI-self.model.mesh.nodeArray)/dt
             #self.model.mesh.nodeVelocityArray[:] = disp/dt
             #self.model.mesh.nodeVelocityArray[:] = np.zeros(self.model.mesh.nodeArray.shape)
             self.model.mesh.nodeArray[:] = self.PHI
