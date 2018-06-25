@@ -99,6 +99,7 @@ cdef class cCoefficients:
         cdef double[:] v_grad = np.zeros(nd)
         cdef bool found_vars
         cdef object femSpace = pc.model.u[0].femSpace
+        cdef bool find_nearest_node
         # initialise mesh memoryview before loop
         cdef double[:,:] nodeArray = pc.mesh.nodeArray
         cdef int[:] nodeStarOffsets = pc.mesh.nodeStarOffsets
@@ -113,6 +114,11 @@ cdef class cCoefficients:
         for b_i in pc.mesh.exteriorElementBoundariesArray:
             exteriorElementBoundariesBoolArray[b_i] = 1
         cdef double[:,:,:] elementNormalsArray
+        cdef double[:,:] boundaryNormals = pc.boundaryNormals
+        cdef int nNodes_owned = pc.mesh.nNodes_owned
+        cdef int nElements_owned = pc.mesh.nElements_owned
+        cdef int nSmoothIn = pc.nSmoothIn
+        cdef bool inside_eN = False
         if pc.nd == 2:
             elementNormalsArray = ms.getElementBoundaryNormalsTriangle2D(nodeArray,
                                                                          elementBoundariesArray,
@@ -154,38 +160,44 @@ cdef class cCoefficients:
                             ls_phi = u_phi[i]
                     else:  # find node that moved already (search)
                         # line below needs optimisation:
-                        eN, nearest_node = pyxSearchNearestNodeElement(x=xx[i],
-                                                                       nodeArray=nodeArray,
-                                                                       nodeStarOffsets=nodeStarOffsets,
-                                                                       nodeStarArray=nodeStarArray,
-                                                                       nodeElementOffsets=nodeElementOffsets,
-                                                                       nodeElementsArray=nodeElementsArray,
-                                                                       elementBarycentersArray=elementBarycentersArray,
-                                                                       elementNeighborsArray=elementNeighborsArray,
-                                                                       elementBoundariesArray=elementBoundariesArray,
-                                                                       elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
-                                                                       exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
-                                                                       elementNormalsArray=elementNormalsArray,
-                                                                       nearest_node=nearest_nodes[i],
-                                                                       eN=eN_phi[i])
-                        xi = femSpace.elementMaps.getInverseValue(eN, xx[i])
+                        if j > 1:
+                            find_nearest_node = True#False
+                        else:
+                            find_nearest_node = True
+                        inside_eN = False
+                        eN, nearest_node, inside_eN = pyxSearchNearestNodeElement(x=xx[i],
+                                                                                  nodeArray=nodeArray,
+                                                                                  nodeStarOffsets=nodeStarOffsets,
+                                                                                  nodeStarArray=nodeStarArray,
+                                                                                  nodeElementOffsets=nodeElementOffsets,
+                                                                                  nodeElementsArray=nodeElementsArray,
+                                                                                  elementBarycentersArray=elementBarycentersArray,
+                                                                                  elementNeighborsArray=elementNeighborsArray,
+                                                                                  elementBoundariesArray=elementBoundariesArray,
+                                                                                  elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                                                                  exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
+                                                                                  elementNormalsArray=elementNormalsArray,
+                                                                                  nearest_node=nearest_nodes[i],
+                                                                                  eN=eN_phi[i],
+                                                                                  find_nearest_node=find_nearest_node)
                         eN_phi[i] = eN
                         nearest_nodes[i] = nearest_node
-                        if eN is None:
-                            found_vars = False
-                            print("Element not found for:", i)
-                        else:
+                        if inside_eN:
+                            xi = femSpace.elementMaps.getInverseValue(eN, xx[i])
                             # line below needs optimisation:
                             v_grad = pc.getGradientValue(eN, xi)
                             area = areas[eN]
-                        if u_phi is not None and eN is not None:
-                            # line below needs optimisation:
-                            ls_phi = pc.getLevelSetValue(eN, xx[i])
+                            if u_phi is not None:
+                                # line below needs optimisation:
+                                ls_phi = pc.getLevelSetValue(eN, xx[i])
+                            else:
+                                ls_phi = None
                         else:
-                            ls_phi = None
+                            found_vars = False
+                            print("Element not found for:", i)
                     # line below needs optimisation:
-                    f = pc.evaluateFunAtX(x=xx[i], ls_phi=ls_phi)
                     if found_vars:
+                        f = pc.evaluateFunAtX(x=xx[i], ls_phi=ls_phi)
                         for ndi in range(nd):
                             dphi[ndi] = v_grad[ndi]/(t*1./(f*pc.C)+(1-t)*1./area)
                     # # -----
@@ -194,10 +206,23 @@ cdef class cCoefficients:
                     if flag == 0:  # node in fluid domain
                         for ndi in range(nd):
                             xx[i, ndi] += dphi[ndi]*dt
+                    if i == 1000:
+                        print('phi', xx[i, 0], dphi[0])
                     elif fixed is False:  # slide along boundary
                         for ndi in range(nd):
                             xx[i, ndi] += dphi[ndi]*(1-np.abs(bNs[flag, ndi]))*dt
+            if nSmoothIn > 0:
+                ms.smoothNodesLaplace(nodeArray=xx,
+                                      nodeStarOffsets=nodeStarOffsets,
+                                      nodeStarArray=nodeStarArray,
+                                      nodeMaterialTypes=nodeMaterialTypes,
+                                      nNodes_owned=nNodes_owned,
+                                      nSmooth=nSmoothIn,
+                                      boundaryNormals=boundaryNormals,
+                                      fixedNodes=fixedNodes,
+                                      apply_directly=True)
             t_last = t
+            print('end', xx[1000,0])
 
 
     # def evaluateFunAtX(self, x, ls_phi=None):
@@ -366,15 +391,24 @@ cdef tuple pyxSearchNearestNodeElementFromMeshObject(object mesh,
                                                nodeElementsArray=mesh.nodeElementsArray,
                                                elementBarycenterArray=mesh.elementBarycentersArray,
                                                node=n)
-    eN, d = ms.getLocalNearestElementNormal(coords=x,
-                                            elementNormalsArray=elementNormalsArray,
-                                            elementBoundariesArray=mesh.elementBoundariesArray,
-                                            elementBarycentersArray=mesh.elementBoundaryBarycentersArray,
-                                            elementNeighborsArray=mesh.elementNeighborsArray,
-                                            elementBarycentersArray=mesh.elementBarycentersArray,
-                                            exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
-                                            eN=eN)
-    return eN, n
+    eN, d = ms.getLocalNearestElementIntersection(coords=x,
+                                                  elementNormalsArray=elementNormalsArray,
+                                                  elementBoundariesArray=mesh.elementBoundariesArray,
+                                                  elementBarycentersArray=mesh.elementBoundaryBarycentersArray,
+                                                  elementNeighborsArray=mesh.elementNeighborsArray,
+                                                  elementBarycentersArray=mesh.elementBarycentersArray,
+                                                  exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
+                                                  eN=eN)
+    # check if actually inside eN
+    inside_eN = True
+    for j, b_i in enumerate(mesh.elementBoundariesArray[eN]):
+        normal = mesh.elementNormalsArray[eN, j]
+        bound_bar = mesh.elementBoundaryBarycentersArray[b_i]
+        dot = (bound_bar[0]-x[0])*normal[0]+(bound_bar[1]-x[1])*normal[1]+(bound_bar[2]-x[2])*normal[2]
+        if dot < 0:
+            inside_eN = False
+            break
+    return eN, n, inside_eN
 
 
 cdef tuple pyxSearchNearestNodeElement(double[:] x,
@@ -390,23 +424,37 @@ cdef tuple pyxSearchNearestNodeElement(double[:] x,
                                        int[:] exteriorElementBoundariesBoolArray,
                                        double[:,:,:] elementNormalsArray,
                                        int nearest_node,
-                                       int eN):
-    n, d = ms.getLocalNearestNode(coords=x,
-                                  nodeArray=nodeArray,
-                                  nodeStarOffsets=nodeStarOffsets,
-                                  nodeStarArray=nodeStarArray,
-                                  node=nearest_node)
-    eN, d = ms.getLocalNearestElementAroundNode(coords=x,
-                                               nodeElementOffsets=nodeElementOffsets,
-                                               nodeElementsArray=nodeElementsArray,
-                                               elementBarycentersArray=elementBarycentersArray,
-                                               node=n)
-    eN, d = ms.getLocalNearestElementNormal(coords=x,
-                                            elementNormalsArray=elementNormalsArray,
-                                            elementBoundariesArray=elementBoundariesArray,
-                                            elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
-                                            elementNeighborsArray=elementNeighborsArray,
-                                            elementBarycentersArray=elementBarycentersArray,
-                                            exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
-                                            eN=eN)
-    return eN, n
+                                       int eN,
+                                       bool find_nearest_node=True):
+    if find_nearest_node is True:
+        nearest_node, d = ms.getLocalNearestNode(coords=x,
+                                                 nodeArray=nodeArray,
+                                                 nodeStarOffsets=nodeStarOffsets,
+                                                 nodeStarArray=nodeStarArray,
+                                                 node=nearest_node)
+        eN, d = ms.getLocalNearestElementAroundNode(coords=x,
+                                                    nodeElementOffsets=nodeElementOffsets,
+                                                    nodeElementsArray=nodeElementsArray,
+                                                    elementBarycentersArray=elementBarycentersArray,
+                                                    node=nearest_node)
+    eN, d = ms.getLocalNearestElementIntersection(coords=x,
+                                                  elementNormalsArray=elementNormalsArray,
+                                                  elementBoundariesArray=elementBoundariesArray,
+                                                  elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                                  elementNeighborsArray=elementNeighborsArray,
+                                                  elementBarycentersArray=elementBarycentersArray,
+                                                  exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
+                                                  eN=eN)
+    # check if actually inside eN
+    cdef bool inside_eN = True
+    cdef double[:] normal = np.zeros(3)
+    for j, b_i in enumerate(elementBoundariesArray[eN]):
+        normal[0] = elementNormalsArray[eN, j, 0]
+        normal[1] = elementNormalsArray[eN, j, 1]
+        normal[2] = elementNormalsArray[eN, j, 2]
+        bound_bar = elementBoundaryBarycentersArray[b_i]
+        dot = (bound_bar[0]-x[0])*normal[0]+(bound_bar[1]-x[1])*normal[1]+(bound_bar[2]-x[2])*normal[2]
+        if dot < 0:
+            inside_eN = False
+            break
+    return eN, nearest_node, inside_eN
