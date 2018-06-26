@@ -2,7 +2,7 @@ import numpy as np
 import copy
 from proteus.Profiling import logEvent
 from proteus import TransportCoefficients
-from proteus.mprans import MeshSmoothing
+from proteus.mprans import MeshSmoothing as ms
 from proteus.mprans import cMoveMeshMonitor as cmm
 
 class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
@@ -54,12 +54,14 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                  nSmoothIn=0,
                  nSmoothOut=0,
                  epsFact_density=3,
-                 epsTimeStep=1.):
+                 epsTimeStep=1.,
+                 grading=1.1):
         self.myfunc = func
         self.LS_MODEL = LS_MODEL
         self.ME_MODEL = ME_MODEL
         self.he_min = he_min
         self.he_max = he_max
+        self.grading = grading
         self.C = 1.  # scaling coefficient for f (computed in preStep)
         self.integral_area = 1.
         self.nd = nd
@@ -82,6 +84,22 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.mesh = mesh
         self.areas_nodes = np.zeros(self.mesh.elementNodesArray.shape[0])
         self.areas = np.zeros(self.mesh.elementNodesArray.shape[0])
+        # get Normals
+        self.elementNormalsArray = np.zeros((len(self.mesh.elementBoundariesArray), 3, 3))
+        if self.nd == 2:
+            ms.updateElementBoundaryNormalsTriangle2D(self.elementNormalsArray,
+                                                      self.mesh.nodeArray,
+                                                      self.mesh.elementBoundariesArray,
+                                                      self.mesh.elementBoundaryNodesArray,
+                                                      self.mesh.elementBoundaryBarycentersArray,
+                                                      self.mesh.elementBarycentersArray)
+        elif self.nd == 3:
+            ms.updateElementBoundaryNormalsTetra3D(self.elementNormalsArray,
+                                                   self.mesh.nodeArray,
+                                                   self.mesh.elementBoundariesArray,
+                                                   self.mesh.elementBoundaryNodesArray,
+                                                   self.mesh.elementBoundaryBarycentersArray,
+                                                   self.mesh.elementBarycentersArray)
 
     def attachModels(self,modelList):
         self.model = modelList[self.ME_MODEL]
@@ -140,12 +158,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.gamma = f_over_g_max/f_over_g_min
         self.gamma0 = 10.  # user defined parameter
         self.na = np.log(self.gamma)/np.log(self.gamma0)
-        # pseudo-time step
-        self.PHI[:] = self.mesh.nodeArray
-        self.cCoefficients.pseudoTimeStepping(eps=self.epsTimeStep,
-                                              xx=self.PHI)
-        # move nodes
         if self.dt_last is not None:
+            # pseudo-time step
+            self.PHI[:] = self.mesh.nodeArray
+            self.cCoefficients.pseudoTimeStepping(eps=self.epsTimeStep,
+                                                  xx=self.PHI)
             # dt = self.model.timeIntegration.dt
             # else:
             #     dt = self.dt_last
@@ -153,18 +170,17 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             dt = self.dt_last
             logEvent('Smoothing Mesh with Laplace Smoothing - '+str(self.nSmoothOut))
             if self.nSmoothOut > 0:
-                disp = MeshSmoothing.smoothNodesLaplace(nodeArray=self.PHI,
-                                                        nodeStarOffsets=self.mesh.nodeStarOffsets,
-                                                        nodeStarArray=self.mesh.nodeStarArray,
-                                                        nodeMaterialTypes=self.mesh.nodeMaterialTypes,
-                                                        nNodes_owned=self.mesh.nNodes_owned,
-                                                        nSmooth=self.nSmoothOut,
-                                                        boundaryNormals=self.boundaryNormals,
-                                                        fixedNodes=self.fixedNodes,
-                                                        apply_directly=False)
-                print(self.PHI[1000,0])
+                disp = ms.smoothNodesLaplace(nodeArray=self.PHI,
+                                             nodeStarOffsets=self.mesh.nodeStarOffsets,
+                                             nodeStarArray=self.mesh.nodeStarArray,
+                                             nodeMaterialTypes=self.mesh.nodeMaterialTypes,
+                                             nNodes_owned=self.mesh.nNodes_owned,
+                                             nSmooth=self.nSmoothOut,
+                                             boundaryNormals=self.boundaryNormals,
+                                             fixedNodes=self.fixedNodes,
+                                             apply_directly=False)
                 self.PHI += disp
-                import pdb; pdb.set_trace()
+            # move nodes
             self.model.mesh.nodeVelocityArray[:] += (self.PHI-self.model.mesh.nodeArray)/dt
             #self.model.mesh.nodeVelocityArray[:] = disp/dt
             #self.model.mesh.nodeVelocityArray[:] = np.zeros(self.model.mesh.nodeArray.shape)
@@ -174,6 +190,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             # re-initialise containing element
             self.eN_phi[:] = None
         self.dt_last = self.model.timeIntegration.dt
+        self.cCoefficients.postStep()
         # copyInstructions = {'clear_uList': True}
         # return copyInstructions
 
@@ -288,11 +305,12 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         # f_scaled_reciprocal = 1./f_scaled
         if ls_phi is not None:
             f = min(abs(ls_phi), self.myfunc(x, self.t))
-            f = max(self.he_min, f)
-            f = min(self.he_max, f)
+            # f = max(self.he_min, f)
+            # f = min(self.he_max, f)
         else:
-            f = max(self.he_min, self.myfunc(x, self.t))
-            f = min(self.he_max, f)
+            f = self.myfunc(x, self.t)
+            # f = min(self.he_max, f)
+        f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
         return f
 
     def evaluateFunAtNodes(self):
@@ -300,12 +318,12 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             if self.LS_MODEL is not None:
                 f = min(abs(self.u_phi[i]),
                         self.myfunc(self.mesh.nodeArray[i], self.t))
-                f = max(self.he_min, f)
-                f = min(self.he_max, f)
+                # f = max(self.he_min, f)
+                # f = min(self.he_max, f)
             else:
-                f = max(self.he_min,
-                        self.myfunc(self.mesh.nodeArray[i], self.t))
-                f = min(self.he_max, f)
+                f = self.myfunc(self.mesh.nodeArray[i], self.t)
+                # f = min(self.he_max, f)
+            f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
             self.uOfXTatNodes[i] = f
 
     def evaluateFunAtQuadraturePoints(self):
@@ -316,12 +334,12 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                 if self.LS_MODEL is not None:
                     f = min(abs(self.q_phi[e, k]),
                             self.myfunc(xx[e, k], self.t))
-                    f = max(self.he_min, f)
-                    f = min(self.he_max, f)
+                    # f = max(self.he_min, f)
+                    # f = min(self.he_max, f)
                 else:
-                    f = max(self.he_min,
-                            self.myfunc(xx[e, k], self.t))
-                    f = min(self.he_max, f)
+                    f = self.myfunc(xx[e, k], self.t)
+                    # f = min(self.he_max, f)
+                f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
                 self.uOfXTatQuadrature[e, k] = f
 
     def getLevelSetValue(self, eN, xi):

@@ -85,30 +85,28 @@ cdef double[:,:] cySmoothNodesLaplace(double[:,:] nodeArray,
                     sum_star[0] += nodeArrayMod[nodeStarArray[nOffset], 0]
                     sum_star[1] += nodeArrayMod[nodeStarArray[nOffset], 1]
                     sum_star[2] += nodeArrayMod[nodeStarArray[nOffset], 2]
-                    if node == 1000:
-                        print('nodestar', nodeStarArray[nOffset], nodeArrayMod[nodeStarArray[nOffset], 0])
                 nNodeInStar = abs(nodeStarOffsets[node]-nodeStarOffsets[node+1])
                 nodeArrayMod[node, 0] = sum_star[0]/nNodeInStar
                 nodeArrayMod[node, 1] = sum_star[1]/nNodeInStar
                 nodeArrayMod[node, 2] = sum_star[2]/nNodeInStar
-            else:
-                if boundaryNormals is not None:
-                    fixed = False
-                    if fixedNodes is not None:
-                        if fixedNodes[nodeMaterialTypes[node]] == 1:
-                            fixed = True
-                    if fixed is False:
-                        bN = boundaryNormals[nodeMaterialTypes[node]]
-                        if not bN[0] == 0 and bN[1] == 0 and bN[2] == 0:
-                            for nOffset in range(nodeStarOffsets[node],
-                                                 nodeStarOffsets[node+1]):
-                                sum_star[0] += nodeArrayMod[nodeStarArray[nOffset], 0]
-                                sum_star[1] += nodeArrayMod[nodeStarArray[nOffset], 1]
-                                sum_star[2] += nodeArrayMod[nodeStarArray[nOffset], 2]
-                            nNodeInStar = abs(nodeStarOffsets[node]-nodeStarOffsets[node+1])
-                            nodeArrayMod[node, 0] = sum_star[0]/nNodeInStar*(1-np.abs(bN[0]))
-                            nodeArrayMod[node, 1] = sum_star[1]/nNodeInStar*(1-np.abs(bN[1]))
-                            nodeArrayMod[node, 2] = sum_star[2]/nNodeInStar*(1-np.abs(bN[2]))
+            # else:
+            #     if boundaryNormals is not None:
+            #         fixed = False
+            #         if fixedNodes is not None:
+            #             if fixedNodes[nodeMaterialTypes[node]] == 1:
+            #                 fixed = True
+            #         if fixed is False:
+            #             bN = boundaryNormals[nodeMaterialTypes[node]]
+            #             if not bN[0] == 0 and bN[1] == 0 and bN[2] == 0:
+            #                 for nOffset in range(nodeStarOffsets[node],
+            #                                      nodeStarOffsets[node+1]):
+            #                     sum_star[0] += nodeArrayMod[nodeStarArray[nOffset], 0]
+            #                     sum_star[1] += nodeArrayMod[nodeStarArray[nOffset], 1]
+            #                     sum_star[2] += nodeArrayMod[nodeStarArray[nOffset], 2]
+            #                 nNodeInStar = abs(nodeStarOffsets[node]-nodeStarOffsets[node+1])
+            #                 nodeArrayMod[node, 0] = sum_star[0]/nNodeInStar*(1-np.abs(bN[0]))
+            #                 nodeArrayMod[node, 1] = sum_star[1]/nNodeInStar*(1-np.abs(bN[1]))
+            #                 nodeArrayMod[node, 2] = sum_star[2]/nNodeInStar*(1-np.abs(bN[2]))
             if i == nSmooth-1:
                 disp[node, 0] = nodeArrayMod[node, 0]-disp[node, 0]
                 disp[node, 1] = nodeArrayMod[node, 1]-disp[node, 1]
@@ -672,13 +670,113 @@ cdef double[:,:,:] pyxGetElementBoundaryNormalsTriangle2D(double[:,:] nodeArray,
                 normals[i,j,1] = -normals[i,j,1]
     return normals
 
-def getElementBoundaryNormalsTriangle2D(nodeArray,
+def updateElementBoundaryNormalsTriangle2D(normals,
+                                           nodeArray,
+                                           elementBoundariesArray,
+                                           elementBoundaryNodesArray,
+                                           elementBoundaryBarycentersArray,
+                                           elementBarycentersArray):
+    return pyxUpdateElementBoundaryNormalsTriangle2D(normals=normals,
+                                                     nodeArray=nodeArray,
+                                                     elementBoundariesArray=elementBoundariesArray,
+                                                     elementBoundaryNodesArray=elementBoundaryNodesArray,
+                                                     elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                                     elementBarycentersArray=elementBarycentersArray)
+
+
+cdef pyxUpdateElementBoundaryNormalsTetra3D(double[:,:,:] normals,
+                                            double[:,:] nodeArray,
+                                            int[:,:] elementBoundariesArray,
+                                            int[:,:] elementBoundaryNodesArray,
+                                            double[:,:] elementBoundaryBarycentersArray,
+                                            double[:,:] elementBarycentersArray):
+    cdef double[:] normal_check = np.zeros(3)
+    cdef double[:] U = np.zeros(3)
+    cdef double[:] V = np.zeros(3)
+    cdef double lengthn
+    cdef int b_i
+    cdef double[:] node0
+    cdef double[:] node1
+    cdef double[:] node2
+    for i in range(len(normals)):
+        for j in range(len(normals[i])):
+            b_i = elementBoundariesArray[i, j]
+            node0 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],0]]
+            node1 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],1]]
+            node2 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],2]]
+            U[0] = node1[0]-node0[0]
+            U[1] = node1[1]-node0[1]
+            U[2] = node1[2]-node0[2]
+            V[0] = node2[0]-node0[0]
+            V[1] = node2[1]-node0[1]
+            V[2] = node2[2]-node0[2]
+            normals[i,j,0] = U[1]*V[2]-U[2]*V[1]
+            normals[i,j,1] = U[2]*V[0]-U[0]*V[2]
+            normals[i,j,2] = U[0]*V[1]-U[1]*V[0]
+            lenghtn = np.sqrt(normals[i,j,0]**2+normals[i,j,1]**2+normals[i,j,2]**2)
+            normals[i,j,0] /= lenghtn
+            normals[i,j,1] /= lenghtn
+            normals[i,j,2] /= lenghtn
+            normal_check[0] = elementBoundaryBarycentersArray[b_i][0]-elementBarycentersArray[i][0]
+            normal_check[1] = elementBoundaryBarycentersArray[b_i][1]-elementBarycentersArray[i][1]
+            normal_check[2] = elementBoundaryBarycentersArray[b_i][2]-elementBarycentersArray[i][2]
+            if np.dot(normals[i,j], normal_check) < 0:
+                normals[i,j,0] = -normals[i,j,0]
+                normals[i,j,1] = -normals[i,j,1]
+                normals[i,j,2] = -normals[i,j,2]
+
+def updateElementBoundaryNormalsTetra3D(normals,
+                                        nodeArray,
                                         elementBoundariesArray,
                                         elementBoundaryNodesArray,
                                         elementBoundaryBarycentersArray,
                                         elementBarycentersArray):
-    return pyxGetElementBoundaryNormalsTriangle2D(nodeArray=nodeArray,
+    return pyxUpdateElementBoundaryNormalsTetra3D(normals=normals,
+                                                  nodeArray=nodeArray,
                                                   elementBoundariesArray=elementBoundariesArray,
                                                   elementBoundaryNodesArray=elementBoundaryNodesArray,
                                                   elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
                                                   elementBarycentersArray=elementBarycentersArray)
+
+cdef pyxUpdateElementBoundaryNormalsTriangle2D(double[:,:,:] normals,
+                                               double[:,:] nodeArray,
+                                               int[:,:] elementBoundariesArray,
+                                               int[:,:] elementBoundaryNodesArray,
+                                               double[:,:] elementBoundaryBarycentersArray,
+                                               double[:,:] elementBarycentersArray):
+    cdef double[:] normal_check = np.zeros(3)
+    cdef double[:] U = np.zeros(3)
+    cdef double lengthn
+    cdef int b_i
+    cdef double[:] node0
+    cdef double[:] node1
+    for i in range(len(normals)):
+        for j in range(len(normals[i])):
+            b_i = elementBoundariesArray[i, j]
+            node0 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],0]]
+            node1 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],1]]
+            U[0] = node1[0]-node0[0]
+            U[1] = node1[1]-node0[1]
+            normals[i,j,0] = -U[1]
+            normals[i,j,1] = U[0]
+            lenghtn = np.sqrt(normals[i,j,0]**2+normals[i,j,1]**2)
+            normals[i,j,0] /= lenghtn
+            normals[i,j,1] /= lenghtn
+            normal_check[0] = elementBoundaryBarycentersArray[b_i][0]-elementBarycentersArray[i][0]
+            normal_check[1] = elementBoundaryBarycentersArray[b_i][1]-elementBarycentersArray[i][1]
+            if np.dot(normals[i,j], normal_check) < 0:
+                normals[i,j,0] = -normals[i,j,0]
+                normals[i,j,1] = -normals[i,j,1]
+
+def updateElementBoundaryNormalsTriangle2D(normals,
+                                           nodeArray,
+                                           elementBoundariesArray,
+                                           elementBoundaryNodesArray,
+                                           elementBoundaryBarycentersArray,
+                                           elementBarycentersArray):
+    return pyxUpdateElementBoundaryNormalsTriangle2D(normals=normals,
+                                                     nodeArray=nodeArray,
+                                                     elementBoundariesArray=elementBoundariesArray,
+                                                     elementBoundaryNodesArray=elementBoundaryNodesArray,
+                                                     elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                                     elementBarycentersArray=elementBarycentersArray)
