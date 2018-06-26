@@ -166,11 +166,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self, t, firstStep=False):
         if self.applyCorrection:
             # ls
+
             self.lsModel.u[0].dof += self.massCorrModel.u[0].dof
             self.lsModel.q[('u', 0)] += self.massCorrModel.q[('u', 0)]
             self.lsModel.ebqe[('u', 0)] += self.massCorrModel.ebqe[('u', 0)]
             self.lsModel.q[('grad(u)', 0)] += self.massCorrModel.q[('grad(u)', 0)]
-            self.lsModel.ebqe[('grad(u)', 0)] += self.massCorrModel.ebqe[('grad(u)', 0)]
+            #self.lsModel.ebqe[('grad(u)', 0)] += self.massCorrModel.ebqe[('grad(u)', 0)]
+            self.lsModel.ebqe[('grad(u)', 0)][:] = self.massCorrModel.ebqe[('grad(u)', 0)]
+
+
             # vof
             if self.edgeBasedStabilizationMethods == False:
                 self.massCorrModel.setMassQuadrature()
@@ -189,9 +193,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                                                                                                  self.massCorrModel.mesh.nElements_owned),), level=2)
             logEvent("Phase 0 mass (consistent) after mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)
         copyInstructions = {}
+        copyInstructions = {'reset_uList_other': True,
+                            'uList_model': (self.levelSetModelIndex,self.VOFModelIndex)}
+
         # get the waterline on the obstacle if option set in NCLS (boundary==7)
         self.lsModel.computeWaterline(t)
         return copyInstructions
+
+    def postAdaptStep(self):
+        if self.applyCorrection:
+            # ls
+            self.lsModel.ebqe[('grad(u)', 0)][:] = self.massCorrModel.ebqe[('grad(u)', 0)]
 
     def evaluate(self, t, c):
         import math
@@ -672,6 +684,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
+
         logEvent("Global residual", level=9, data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         logEvent("   Mass Conservation Error: ", level=3, data=self.coefficients.massConservationError)
@@ -1137,6 +1150,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_L2p_vof_mass_correction.size)
 
     def setMassQuadrature(self):
+
         self.mcorr.setMassQuadrature(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,

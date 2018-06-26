@@ -283,6 +283,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 # save the boundary level set in the numerical flux to use for
                 self.nModel.numericalFlux.ebqe[('u', 0)][:] = self.rdModel.ebqe[('u', 0)]
             copyInstructions = {}
+            copyInstructions = {'reset_uList_other': True,
+                            'uList_model': (self.nModelId,)}
             return copyInstructions
         else:
             return {}
@@ -1006,7 +1008,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if self.interface_locator[gi] == 1.0:
                     self.u[0].dof[gi] = self.coefficients.dof_u0[gi]
         # END OF FREEZING INTERFACE #
-        
         self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1076,6 +1077,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_qy,
             self.lumped_qz,
             self.coefficients.alpha/self.elementDiameter.min())
+
 
         # FREEZE INTERFACE #
         if self.coefficients.alpha == 0:
