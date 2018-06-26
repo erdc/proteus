@@ -902,14 +902,6 @@ class NS_base:  # (HasTraits):
             m.stepController.t_model_last = mOld.stepController.t_model_last
             m.stepController.substeps = mOld.stepController.substeps
         
-        #the copy is needed because uList is different from levelModelList[0].dof for LS model because of RD, copying u[0].dof is not sufficient
-        import copy
-        ##VOF
-        #self.modelList[1].uList = copy.deepcopy(modelListOld[1].uList)
-        ##LS
-        #self.modelList[2].uList = copy.deepcopy(modelListOld[2].uList)
-
-
         #Attach models and do sample residual calculation. The results are usually irrelevant.
         #What's important right now is to re-establish the relationships between data structures.
         #The necessary values will be written in later.
@@ -917,27 +909,16 @@ class NS_base:  # (HasTraits):
             logEvent("Attaching models to model "+ptmp.name)
             m.attachModels(self.modelList)
         logEvent("Evaluating residuals and time integration")
+        
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 lm.timeTerm=True
-                #if(m.name == "ls_p"):
-                #    import pdb; pdb.set_trace()
                 lm.getResidual(lu,lr)
-                #import pdb; pdb.set_trace()
-                #if lm.u_dof_old is None:
-                #    # Pass initial condition to u_dof_old
-                #    lm.u_dof_old = numpy.copy(lm.u[0].dof)
-
                 lm.timeIntegration.initializeTimeHistory(resetFromDOF=True)
                 lm.initializeTimeHistory()
                 lm.timeIntegration.initializeSpaceHistory()
                 lm.getResidual(lu,lr)
-                # assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
-                # assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
-                # assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
-                #lm.coefficients.evaluate(self.t_stepSequence,lm.q)
-                #lm.coefficients.evaluate(self.t_stepSequence,lm.ebqe)
-                #lm.timeIntegration.calculateElementCoefficients(lm.q)
+                #lm.estimate_mt() #function is empty in all models 
             assert(m.stepController.dt_model == mOld.stepController.dt_model)
             assert(m.stepController.t_model == mOld.stepController.t_model)
             assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
@@ -953,62 +934,10 @@ class NS_base:  # (HasTraits):
                 self.systemStepController.controllerList.append(model)
                 self.systemStepController.maxFailures = model.stepController.maxSolverFailures
         self.systemStepController.choose_dt_system()
-        # for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
-        #     for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-        #         assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
-        #         assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
-        #         assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
-        #     assert(m.stepController.dt_model == mOld.stepController.dt_model)
-        #     assert(m.stepController.t_model == mOld.stepController.t_model)
-        #     assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
-
-        #for model in self.modelList:
-        #    if(model.name == "ls_consrv_p"):
-        #        import pdb; pdb.set_trace()
-        #        model.levelModelList[0].coefficients.postAdaptStep()
-
-        #My goal is to get the velocity quadrature values based on the previous solution prior to redistancing....
-        #I can do this by copying this information over, this will test whether or not this is what is necessary for alignment
-
-
 
         ##This section is to correct any differences in the quadrature point field from the old model 
-        import pdb; pdb.set_trace()
 
-        self.modelList[0].levelModelList[0].coefficients.q_phi[:] = modelListOld[0].levelModelList[0].coefficients.q_phi 
-        self.modelList[0].levelModelList[0].coefficients.q_vf[:] = modelListOld[0].levelModelList[0].coefficients.q_vf 
-
-        self.modelList[0].levelModelList[0].coefficients.ebqe_vf[:] = modelListOld[0].levelModelList[0].coefficients.ebqe_vf
-        self.modelList[0].levelModelList[0].coefficients.bc_ebqe_vf[:] = modelListOld[0].levelModelList[0].coefficients.bc_ebqe_vf
-        self.modelList[0].levelModelList[0].coefficients.ebqe_phi[:] = modelListOld[0].levelModelList[0].coefficients.ebqe_phi
-        self.modelList[0].levelModelList[0].coefficients.bc_ebqe_phi[:] = modelListOld[0].levelModelList[0].coefficients.bc_ebqe_phi
-
-        #LS        
-
-        self.modelList[2].levelModelList[0].q[('m_last',0)][:] = modelListOld[2].levelModelList[0].q[('m_last',0)]
-
-        #RD
-
-        self.modelList[3].levelModelList[0].u_dof_last[:] = modelListOld[3].levelModelList[0].u_dof_last
-
-        #unneeded for redistancing
-        #VOF - needed to make MCorr work
-        #self.modelList[1].levelModelList[0].q[('m_last',0)][:] = modelListOld[1].levelModelList[0].q[('m_last',0)]
-        #self.modelList[1].levelModelList[0].q[('m_tmp',0)][:] = modelListOld[1].levelModelList[0].q[('m_tmp',0)]
-        #self.modelList[1].levelModelList[0].u_dof_last[:] = modelListOld[1].levelModelList[0].u_dof_last
-
-
-        #LS
-        ##self.modelList[2].levelModelList[0].q[('u',0)][:] = modelListOld[2].levelModelList[0].q[('u',0)]
-        #self.modelList[2].levelModelList[0].ebqe[('u',0)][:] = modelListOld[2].levelModelList[0].ebqe[('u',0)]
-        #self.modelList[2].levelModelList[0].q[('grad(u)',0)][:] = modelListOld[2].levelModelList[0].q[('grad(u)',0)]
-        #self.modelList[2].levelModelList[0].ebqe[('grad(u)',0)][:] = modelListOld[2].levelModelList[0].ebqe[('grad(u)',0)]
-
-
-        #RD
-        ##self.modelList[3].levelModelList[0].q[('m_last',0)][:] = modelListOld[3].levelModelList[0].q[('m_last',0)]
-        ##self.modelList[3].levelModelList[0].q[('m_tmp',0)][:] = modelListOld[3].levelModelList[0].q[('m_tmp',0)]
-
+        self.modelList[4].levelModelList[0].coefficients.postAdaptStep()
 
         if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
             #hack for archiving initial solution on adapted mesh
@@ -1433,6 +1362,7 @@ class NS_base:  # (HasTraits):
                 
                 m.stepController.initializeTimeHistory()
                 m.stepController.setInitialGuess(m.uList,m.rList)
+
                 solverFailed = m.solver.solveMultilevel(uList=m.uList,
                                                         rList=m.rList,
                                                         par_uList=m.par_uList,
@@ -1570,8 +1500,6 @@ class NS_base:  # (HasTraits):
                     logEvent("Split operator iteration %i" % (self.systemStepController.its,),level=3)
                     self.nSequenceSteps += 1
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
-                        #if(self.tn_last > 0.04 and model.name=="ls_p"):
-                        #    import pdb; pdb.set_trace()
 
                         logEvent("NumericalAnalytics Model %s " % (model.name), level=0)
                         logEvent("Model: %s" % (model.name),level=1)
@@ -1583,11 +1511,6 @@ class NS_base:  # (HasTraits):
                                 m.updateAfterMeshMotion()
                                 m.tLast_mesh = m.t_mesh
 
-                        #if(self.nSolveSteps%self.pList[0].domain.PUMIMesh.numAdaptSteps()==0 and model.name=="ls_p" and self.pList[0].domain.PUMIMesh.adaptMesh()):
-                        #    logEvent("ERROR IN PARADISE")
-                        #    pass
-                        #else:
-                        #    self.preStep(model)
                         self.preStep(model)
                         self.setWeakDirichletConditions(model)
 
@@ -1705,8 +1628,6 @@ class NS_base:  # (HasTraits):
                 #if(self.tn < 0.05):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
-                #if(self.tn > 0.04):
-                #    import pdb; pdb.set_trace()
                 if(self.PUMI_estimateError()):
                     self.PUMI_adaptMesh()
             #end system step iterations
@@ -1785,6 +1706,12 @@ class NS_base:  # (HasTraits):
                 for u_ci_lhs,u_ci_rhs in zip(self.modelList[postCopy['uList_model']].levelModelList[level].u.values(),model.levelModelList[level].u.values()):
                     u_ci_lhs.dof[:] = u_ci_rhs.dof
                 self.modelList[postCopy['uList_model']].levelModelList[level].setFreeDOF(self.modelList[postCopy['uList_model']].uList[level])
+            if postCopy is not None and postCopy.has_key(('reset_uList_other')) and postCopy['reset_uList_other'] == True:
+                for idx in postCopy['uList_model']:
+                    model_other = self.modelList[idx]
+                    for level_other, levelModel_other in enumerate(model_other.levelModelList):
+                        levelModel_other.setFreeDOF(model_other.uList[level_other])
+                        levelModel_other.getResidual(model_other.uList[level_other],model_other.rList[level_other])
 
     def setWeakDirichletConditions(self,model):
         if model.weakDirichletConditions is not None:
