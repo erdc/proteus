@@ -54,6 +54,63 @@ cdef class cCoefficients:
                     q_fci[eN, k, kk] = 0.0
                 q_rci[eN, k] = -(1./(q_uOfX[eN, k]*self.C)-1./areas_[eN])
 
+    def postStep(self):
+        pc = self.pyCoefficients
+        self.cppPostStep()
+
+    cdef cppPostStep(self):
+        cdef object pc = self.pyCoefficients
+        cdef object mesh = pc.mesh
+        cdef double[:,:] elementBoundaryBarycentersArray = mesh.elementBoundaryBarycentersArray
+        cdef double[:,:] elementBarycentersArray = mesh.elementBarycentersArray
+        cdef double[:,:] nodeArray = mesh.nodeArray
+        cdef int[:,:] elementBoundaryNodesArray = mesh.elementBoundaryNodesArray
+        cdef int[:,:] elementNodesArray = mesh.elementNodesArray
+        cdef int[:,:] elementBoundariesArray = mesh.elementBoundariesArray
+        cdef int nElementBoundaries_global = mesh.nElementBoundaries_global
+        cdef int nNodes_elementBoundary = mesh.nNodes_elementBoundary
+        cdef int nElements_global = mesh.nElements_global
+        cdef int nNodes_element = mesh.nNodes_element
+        cdef double[:,:,:] elementNormalsArray = pc.elementNormalsArray
+        # update element boundary barycenters
+        for ebN in range(nElementBoundaries_global):
+            elementBoundaryBarycentersArray[ebN, 0] = 0.
+            elementBoundaryBarycentersArray[ebN, 1] = 0.
+            elementBoundaryBarycentersArray[ebN, 2] = 0.
+            for nN in range(nNodes_elementBoundary):
+                elementBoundaryBarycentersArray[ebN, 0] += nodeArray[elementBoundaryNodesArray[ebN, nN], 0]
+                elementBoundaryBarycentersArray[ebN, 1] += nodeArray[elementBoundaryNodesArray[ebN, nN], 1]
+                elementBoundaryBarycentersArray[ebN, 2] += nodeArray[elementBoundaryNodesArray[ebN, nN], 2]
+            elementBoundaryBarycentersArray[ebN, 0] /= nNodes_elementBoundary
+            elementBoundaryBarycentersArray[ebN, 1] /= nNodes_elementBoundary
+            elementBoundaryBarycentersArray[ebN, 2] /= nNodes_elementBoundary
+        # update element barycenters
+        for eN in range(nElements_global):
+            elementBarycentersArray[eN, 0] = 0.
+            elementBarycentersArray[eN, 1] = 0.
+            elementBarycentersArray[eN, 2] = 0.
+            for ebN in range(nNodes_element):
+                elementBarycentersArray[eN, 0] += nodeArray[elementNodesArray[eN, ebN], 0]
+                elementBarycentersArray[eN, 1] += nodeArray[elementNodesArray[eN, ebN], 1]
+                elementBarycentersArray[eN, 2] += nodeArray[elementNodesArray[eN, ebN], 2]
+            elementBarycentersArray[eN, 0] /= nNodes_element
+            elementBarycentersArray[eN, 1] /= nNodes_element
+            elementBarycentersArray[eN, 2] /= nNodes_element
+        # update normals
+        if pc.nd == 2:
+            ms.updateElementBoundaryNormalsTriangle2D(elementNormalsArray,
+                                                      nodeArray,
+                                                      elementBoundariesArray,
+                                                      elementBoundaryNodesArray,
+                                                      elementBoundaryBarycentersArray,
+                                                      elementBarycentersArray)
+        elif pc.nd == 3:
+            ms.updateElementBoundaryNormalsTetra3D(elementNormalsArray,
+                                                   nodeArray,
+                                                   elementBoundariesArray,
+                                                   elementBoundaryNodesArray,
+                                                   elementBoundaryBarycentersArray,
+                                                   elementBarycentersArray)
 
     def pseudoTimeStepping(self,
                            xx,
@@ -61,7 +118,6 @@ cdef class cCoefficients:
         pc = self.pyCoefficients
         return self.cppPseudoTimeStepping(xx=xx,
                                           eps=eps,
-                                          nodeMaterialTypes=pc.mesh.nodeMaterialTypes,
                                           grads=pc.grads,
                                           areas_nodes=pc.areas_nodes,
                                           areas=pc.areas,
@@ -73,7 +129,6 @@ cdef class cCoefficients:
     cdef cppPseudoTimeStepping(self,
                                double[:,:] xx,
                                double eps,
-                               int[:] nodeMaterialTypes,
                                double[:,:] grads,
                                double[:] areas_nodes,
                                double[:] areas,
@@ -87,6 +142,7 @@ cdef class cCoefficients:
         cdef double[:] t_range = np.linspace(0., 1., int(1./eps+1))[1:]
         cdef int[:] eN_phi = np.zeros(len(xx), dtype=np.int32)
         cdef int[:] nearest_nodes = np.zeros(len(xx), dtype=np.int32)
+        cdef double[:] normal = np.zeros(3)
         cdef double t_last = 0
         cdef double dt = 0
         cdef int flag
@@ -106,6 +162,7 @@ cdef class cCoefficients:
         cdef int[:] nodeStarArray = pc.mesh.nodeStarArray
         cdef int[:] nodeElementOffsets = pc.mesh.nodeElementOffsets
         cdef int[:] nodeElementsArray = pc.mesh.nodeElementsArray
+        cdef int[:] nodeMaterialTypes = pc.mesh.nodeMaterialTypes
         cdef double[:,:] elementBarycentersArray = pc.mesh.elementBarycentersArray
         cdef int[:,:] elementNeighborsArray = pc.mesh.elementNeighborsArray
         cdef int[:,:] elementBoundariesArray = pc.mesh.elementBoundariesArray
@@ -113,24 +170,12 @@ cdef class cCoefficients:
         cdef int[:] exteriorElementBoundariesBoolArray = np.zeros(pc.mesh.nElementBoundaries_global, dtype=np.int32)
         for b_i in pc.mesh.exteriorElementBoundariesArray:
             exteriorElementBoundariesBoolArray[b_i] = 1
-        cdef double[:,:,:] elementNormalsArray
+        cdef double[:,:,:] elementNormalsArray = pc.elementNormalsArray
         cdef double[:,:] boundaryNormals = pc.boundaryNormals
         cdef int nNodes_owned = pc.mesh.nNodes_owned
         cdef int nElements_owned = pc.mesh.nElements_owned
         cdef int nSmoothIn = pc.nSmoothIn
         cdef bool inside_eN = False
-        if pc.nd == 2:
-            elementNormalsArray = ms.getElementBoundaryNormalsTriangle2D(nodeArray,
-                                                                         elementBoundariesArray,
-                                                                         pc.mesh.elementBoundaryNodesArray,
-                                                                         elementBoundaryBarycentersArray,
-                                                                         elementBarycentersArray)
-        elif pc.nd == 3:
-            elementNormalsArray = ms.getElementBoundaryNormalsTetra3D(nodeArray,
-                                                                      elementBoundariesArray,
-                                                                      pc.mesh.elementBoundaryNodesArray,
-                                                                      elementBoundaryBarycentersArray,
-                                                                      elementBarycentersArray)
         for j, t in enumerate(t_range):
             logEvent("Pseudo-time stepping t={t}".format(t=t), level=3)
             for i in range(len(xx)):
@@ -182,6 +227,9 @@ cdef class cCoefficients:
                                                                                   find_nearest_node=find_nearest_node)
                         eN_phi[i] = eN
                         nearest_nodes[i] = nearest_node
+                        # xi = femSpace.elementMaps.getInverseValue(eN, xx[i])
+                        # if not pc.model.u[0].femSpace.elementMaps.referenceElement.onElement(xi) == inside_eN:
+                        #     import pdb; pdb.set_trace()
                         if inside_eN:
                             xi = femSpace.elementMaps.getInverseValue(eN, xx[i])
                             # line below needs optimisation:
@@ -206,8 +254,6 @@ cdef class cCoefficients:
                     if flag == 0:  # node in fluid domain
                         for ndi in range(nd):
                             xx[i, ndi] += dphi[ndi]*dt
-                    if i == 1000:
-                        print('phi', xx[i, 0], dphi[0])
                     elif fixed is False:  # slide along boundary
                         for ndi in range(nd):
                             xx[i, ndi] += dphi[ndi]*(1-np.abs(bNs[flag, ndi]))*dt
@@ -222,7 +268,6 @@ cdef class cCoefficients:
                                       fixedNodes=fixedNodes,
                                       apply_directly=True)
             t_last = t
-            print('end', xx[1000,0])
 
 
     # def evaluateFunAtX(self, x, ls_phi=None):
