@@ -871,6 +871,11 @@ class NS_base:  # (HasTraits):
                      coef.vectorName, vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof[:] = vector[:,vci]
+              p0.domain.PUMIMesh.transferFieldToProteus(
+                     coef.vectorName+"_old", vector)
+              for vci in range(len(coef.vectorComponents)):
+                lm.u[coef.vectorComponents[vci]].dof_last[:] = vector[:,vci]
+
               del vector
             for ci in range(coef.nc):
               if coef.vectorComponents is None or \
@@ -879,17 +884,20 @@ class NS_base:  # (HasTraits):
                 p0.domain.PUMIMesh.transferFieldToProteus(
                     coef.variableNames[ci], scalar)
                 lm.u[ci].dof[:] = scalar[:,0]
+                p0.domain.PUMIMesh.transferFieldToProteus(
+                    coef.variableNames[ci]+"_old", scalar)
+                lm.u[ci].dof_last[:] = scalar[:,0]
                 del scalar
         logEvent("Attaching models on new mesh to each other")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
-                save_dof=[]
-                for ci in range(lm.coefficients.nc):
-                    save_dof.append( lm.u[ci].dof.copy())
-                    lm.u[ci].dof_last = lm.u[ci].dof.copy()
+                #save_dof=[]
+                #for ci in range(lm.coefficients.nc):
+                #    save_dof.append( lm.u[ci].dof.copy())
+                #    lm.u[ci].dof_last = lm.u[ci].dof.copy()
                 lm.setFreeDOF(lu)
-                for ci in range(lm.coefficients.nc):
-                    assert((save_dof[ci] == lm.u[ci].dof).all())
+                #for ci in range(lm.coefficients.nc):
+                #    assert((save_dof[ci] == lm.u[ci].dof).all())
                 lm.calculateSolutionAtQuadrature()
                 lm.timeIntegration.tLast = lmOld.timeIntegration.tLast
                 lm.timeIntegration.t = lmOld.timeIntegration.t
@@ -939,6 +947,26 @@ class NS_base:  # (HasTraits):
 
         self.modelList[4].levelModelList[0].coefficients.postAdaptStep()
 
+        #Shock capturing lagging needs to be matched
+
+        import copy
+        self.modelList[1].levelModelList[0].u_store = copy.deepcopy(self.modelList[1].levelModelList[0].u)
+        self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u[0].dof_last
+        self.modelList[1].levelModelList[0].calculateElementResidual()
+        self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
+
+        self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u_store[0].dof
+        self.modelList[1].levelModelList[0].u[0].dof_last[:] = self.modelList[1].levelModelList[0].u_store[0].dof_last
+
+        self.modelList[1].levelModelList[0].calculateElementResidual()
+        self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
+
+        if(modelListOld[1].levelModelList[0].shockCapturing.nSteps > modelListOld[1].levelModelList[0].shockCapturing.nStepsToDelay):
+            self.modelList[1].levelModelList[0].shockCapturing.nSteps=self.modelList[1].levelModelList[0].shockCapturing.nStepsToDelay
+            self.modelList[1].levelModelList[0].shockCapturing.updateShockCapturingHistory() 
+
+
+
         if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
             #hack for archiving initial solution on adapted mesh
             self.tCount+=1
@@ -965,23 +993,26 @@ class NS_base:  # (HasTraits):
               for vci in range(len(coef.vectorComponents)):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
                 
-              print m.name, coef.vectorName
               p0.domain.PUMIMesh.transferFieldToPUMI(
                      coef.vectorName, vector)
               #Transfer dof_last
               for vci in range(len(coef.vectorComponents)):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
               p0.domain.PUMIMesh.transferFieldToPUMI(
-                     "velocity_old", vector)
+                     coef.vectorName+"_old", vector)
               del vector
             for ci in range(coef.nc):
               if coef.vectorComponents is None or \
                  ci not in coef.vectorComponents:
                 scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                 scalar[:,0] = lm.u[ci].dof[:]
-                print m.name, coef.variableNames[ci]
                 p0.domain.PUMIMesh.transferFieldToPUMI(
                     coef.variableNames[ci], scalar)
+                
+                #Transfer dof_last
+                scalar[:,0] = lm.u[ci].dof_last[:]
+                p0.domain.PUMIMesh.transferFieldToPUMI(
+                     coef.variableNames[ci]+"_old", scalar)
                 del scalar
 
         scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
@@ -1196,6 +1227,7 @@ class NS_base:  # (HasTraits):
                              p0.domain.regList,
                              parallel = self.comm.size() > 1,
                              dim = p0.domain.nd)
+
         self.PUMI2Proteus(mesh)
       ##chitak end Adapt
 
@@ -1532,11 +1564,11 @@ class NS_base:  # (HasTraits):
                 
 
                                 model.stepController.setInitialGuess(model.uList,model.rList)
-
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
+
                                 Profiling.memory("solver.solveMultilevel")
                                 if self.opts.wait:
                                     raw_input("Hit any key to continue")
@@ -1712,6 +1744,7 @@ class NS_base:  # (HasTraits):
                     for level_other, levelModel_other in enumerate(model_other.levelModelList):
                         levelModel_other.setFreeDOF(model_other.uList[level_other])
                         levelModel_other.getResidual(model_other.uList[level_other],model_other.rList[level_other])
+                        levelModel_other.shockCapturing.updateShockCapturingHistory() #make sure numDiff is computed based on corrected values
 
     def setWeakDirichletConditions(self,model):
         if model.weakDirichletConditions is not None:
