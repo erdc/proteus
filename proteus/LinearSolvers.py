@@ -1,4 +1,4 @@
-"""
+r"""
 A hierarchy of classes for linear algebraic system solvers.
 
 .. inheritance-diagram:: proteus.LinearSolvers
@@ -456,7 +456,7 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.atol = atol
         logEvent("KSP atol %e rtol %e" % (self.ksp.atol,self.ksp.rtol))
 
-    def prepare(self,b=None):
+    def prepare(self,b=None,newton_it=0):
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
         if self.petsc_L.proteus_jacobian is not None:
@@ -477,7 +477,7 @@ class KSP_petsc4py(LinearSolver):
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
             if self.preconditioner:
-                self.preconditioner.setUp(self.ksp)
+                self.preconditioner.setUp(self.ksp,newton_it=newton_it)
         self.ksp.setUp()
         self.ksp.pc.setUp()
 
@@ -700,7 +700,14 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleNavierStokes2D:
                 logEvent("NAHeader Preconditioner SimpleNavierStokes" )
-                self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
+                try:
+                    self.preconditioner = SimpleNavierStokes2D(par_L,
+                                                               prefix,
+                                                               velocity_block_preconditioner=self.preconditionerOptions[0])
+                except IndexError:
+                    logEvent("Preconditioner options not specified, using defaults")
+                    self.preconditioner = SimpleNavierStokes2D(par_L,
+                                                               prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Sp:
                 logEvent("NAHeader Preconditioner selfp" )
@@ -720,7 +727,8 @@ class KSP_petsc4py(LinearSolver):
                                                                    numerical_viscosity=self.preconditionerOptions[1],
                                                                    lumped=self.preconditionerOptions[2],
                                                                    num_chebyshev_its=self.preconditionerOptions[3],
-                                                                   laplace_null_space=self.preconditionerOptions[4])
+                                                                   laplace_null_space=self.preconditionerOptions[4],
+                                                                   velocity_block_preconditioner=self.preconditionerOptions[5])
                 except IndexError:
                     logEvent("Preconditioner options not specified, using defaults")
                     self.preconditioner = NavierStokes_TwoPhasePCD(par_L,
@@ -1305,7 +1313,14 @@ class petsc_LU(KSP_Preconditioner):
         pass
 
 class DofOrderInfo(object):
-    """Base class for managing DOF ordering information"""
+    """Base class for managing DOF ordering information
+
+    Parameters
+    dof_order_type : str
+        This describes the type of dof ordering that will
+        be constructed.  Currently supports: 'blocked'
+        and 'interlaced'.
+    """
     def __init__(self, dof_order_type):
         self.dof_order_type = dof_order_type
 
@@ -1363,6 +1378,61 @@ class BlockedDofOrderType(DofOrderInfo):
                                    step=1,
                                    dtype="i")
         return [velocityDOF, pressureDOF]
+
+class VelocityInterlacedDofOrderType(DofOrderInfo):
+    """Manages the DOF for blocked velocity and pressure ordering.
+
+    Parameters
+    ----------
+    n_DOF_pressure : int
+        Number of pressure degrees of freedom.
+
+    Notes
+    -----
+    Blocked degree of freedom ordering occurs when all the pressure
+    unknowns appear first, followed by all the u-components of the
+    velocity and then all the v-components of the velocity etc.
+    """
+    def __init__(self):
+        DofOrderInfo.__init__(self,'interlaced_velocity')
+
+    def create_DOF_lists(self,
+                         ownership_range,
+                         num_equations,
+                         num_components):
+        """
+        Build interlaced DOF arrays for the components of the velocity.
+
+        Parameters
+        ----------
+        ownership_range: tuple
+            Local ownership range of DOF
+        num_equations: int
+            Number of local equations
+        num_components: int
+            Number of pressure and velocity components
+
+        Returns
+        -------
+        DOF_output : lst of arrays
+            Each element of this list corresponds to a component of
+            the velocity.  E.g. for u, v, w : [vel_u,vel_v,vel_w].
+        """
+        import Comm
+        comm = Comm.get()
+        vel_comp_DOF = []
+        vel_comp_DOF_vel=[]
+        scaled_ownership_range = ownership_range[0] * 2 / 3
+        for i in range(1,num_components):
+            vel_comp_DOF.append(numpy.arange(start=ownership_range[0] + i,
+                                             stop=ownership_range[0] + num_equations,
+                                             step=num_components,
+                                             dtype="i"))
+            vel_comp_DOF_vel.append(numpy.arange(start=scaled_ownership_range + i - 1,
+                                                 stop=scaled_ownership_range + int(2./num_components*num_equations),
+                                                 step=num_components-1,
+                                                 dtype="i"))
+        return vel_comp_DOF, vel_comp_DOF_vel
 
 class InterlacedDofOrderType(DofOrderInfo):
     """Manages the DOF for interlaced velocity and pressure ordering.
@@ -1546,9 +1616,8 @@ class SchurPrecon(KSP_Preconditioner):
         case, the degrees of freedom are interlaced (e.g. p[0], u[0],
         v[0], p[1], u[1], v[1], ...).
         """
-        L_sizes = self.L.getSizes()
         L_range = self.L.getOwnershipRange()
-        neqns = L_sizes[0][0]
+        neqns = self.L.getSizes()[0][0]
         dof_arrays = self.model_info.dof_order_type.create_DOF_lists(L_range,
                                                                      neqns,
                                                                      self.model_info.nc)
@@ -1706,16 +1775,89 @@ class Schur_Qp(SchurPrecon) :
             self._setConstantPressureNullSpace(global_ksp)
 
 class NavierStokesSchur(SchurPrecon):
-    """ Schur complement preconditioners for Navier-Stokes problems.
+    r""" Schur complement preconditioners for Navier-Stokes problems.
 
     This class is derived from SchurPrecond and serves as the base
     class for all NavierStokes preconditioners which use the Schur complement
     method.
     """
-    def __init__(self,L,prefix=None,bdyNullSpace=False):
+    def __init__(self,
+                 L,
+                 prefix=None,
+                 bdyNullSpace=False,
+                 velocity_block_preconditioner=True):
         SchurPrecon.__init__(self,L,prefix)
         self.operator_constructor = SchurOperatorConstructor(self,
                                                              pde_type='navier_stokes')
+        self.velocity_block_preconditioner = velocity_block_preconditioner
+        if self.velocity_block_preconditioner:
+            self._initialize_velocity_idx()
+
+    def _initialize_velocity_idx(self):
+        """
+        This function creates four index sets for use when a block
+        preconditioner is used for the velocity solve.  The first two
+        (e.g. is_vel_u and is_vel_v) describe the global dof
+        associated with the u and v component of the velocity.
+        (TODO - This clear needs to be extended into 3D).  The second
+        two (e.g. isu_local and isv_local) describe the local dof
+        indexes relative to the velocity block itself.
+        """
+        L_range = self.L.getOwnershipRange()
+        neqns = self.L.getSizes()[0][0]
+
+        velocity_dof_calculator = VelocityInterlacedDofOrderType()
+        velocity_DOF_full, velocity_DOF_local = velocity_dof_calculator.create_DOF_lists(L_range,
+                                                                                         neqns,
+                                                                                         self.model_info.nc)
+        self.is_vel_u = p4pyPETSc.IS()
+        self.is_vel_u.createGeneral(velocity_DOF_full[0],comm=p4pyPETSc.COMM_WORLD)
+        self.is_vel_v = p4pyPETSc.IS()
+        self.is_vel_v.createGeneral(velocity_DOF_full[1],comm=p4pyPETSc.COMM_WORLD)
+        self.isu_local = p4pyPETSc.IS()
+        self.isu_local.createGeneral(velocity_DOF_local[0],comm=p4pyPETSc.COMM_WORLD)
+        self.isv_local = p4pyPETSc.IS()
+        self.isv_local.createGeneral(velocity_DOF_local[1],comm=p4pyPETSc.COMM_WORLD)
+
+    def _initialize_velocity_block_preconditioner(self,global_ksp):
+        r""" Initialize the velocity block preconditioner.
+
+        """
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setType('fieldsplit')
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitType(0)  # This is for additive (e.g. Jacobi)
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitIS(('v1',self.isu_local),
+                                                                  ('v2',self.isv_local))
+
+    def _setup_velocity_block_preconditioner(self,global_ksp):
+        r"""To improve the effiency of the velocity-block solve in the
+            Schur complement preconditioner, we can apply a block
+            preconditioner.  This function builds an index set to
+            support this.
+
+        Parameters
+        ----------
+        global_ksp : xxx
+           xxx
+
+        Notes
+        -----
+        This is currently only set up for interlaced DOF ordering.
+        """
+        self.velocity_sub_matrix = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
+        self.velocity_u_sub_matrix = global_ksp.getOperators()[0].getSubMatrix(self.is_vel_u,self.is_vel_u)
+        self.velocity_v_sub_matrix = global_ksp.getOperators()[0].getSubMatrix(self.is_vel_v,self.is_vel_v)
+
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[0].setOperators(self.velocity_u_sub_matrix,
+                                                                                        self.velocity_u_sub_matrix)
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[1].setOperators(self.velocity_v_sub_matrix,
+                                                                                        self.velocity_v_sub_matrix)
+
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[0].setFromOptions()
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[1].setFromOptions()
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[0].setUp()
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[1].setUp()        
+        global_ksp.pc.getFieldSplitSubKSP()[0].setUp()
+        global_ksp.pc.setUp()
 
 
 class NavierStokes_TwoPhasePCD(NavierStokesSchur):
@@ -1754,7 +1896,8 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                  numerical_viscosity = True,
                  lumped = True,
                  num_chebyshev_its = 0,
-                 laplace_null_space = True):
+                 laplace_null_space = True,
+                 velocity_block_preconditioner=False):
         """
         Initialize the two-phase PCD preconditioning class.
 
@@ -1784,8 +1927,11 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         laplace_null_space : bool
             Indicates whether the laplace operator inside the
             two-phase PCD operator has a constant null space.
+        velocity_block_preconditioner : bool
+            Indicates whether to use a block preconditioner for the
+            velocity solve.
         """
-        NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
+        NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace, velocity_block_preconditioner)
         # Initialize the discrete operators
         self.N_rho = self.operator_constructor.initializeTwoPhaseCp_rho()
         self.A_invScaledRho = self.operator_constructor.initializeTwoPhaseInvScaledAp()
@@ -1803,15 +1949,33 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         except KeyError:
             self.strongPressureDOF = []
 
-    def setUp(self, global_ksp):
+    def setUp(self, global_ksp, newton_it=0):
         import Comm
         comm = Comm.get()
+
         self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
         self.operator_constructor.updateInvScaledAp()
         self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
                                                        lumped = self.lumped)
-        self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
-                                                                 lumped = self.lumped)
+        if newton_it==0:
+            self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
+            self.operator_constructor.updateInvScaledAp()
+            self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
+                                                           lumped = self.lumped)
+            self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
+                                                                     lumped = self.lumped)
+            self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                  self.operator_constructor.linear_smoother.isp)
+            self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                                    self.operator_constructor.linear_smoother.isp)
+            self.Qp_rho = self.Q_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                  self.operator_constructor.linear_smoother.isp)
+            self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                                    self.operator_constructor.linear_smoother.isp)
+        elif newton_it>0:
+            self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
+            self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                  self.operator_constructor.linear_smoother.isp)
 
         # ****** Sp for Ap *******
         # TODO - This is included for a possible extension which exchanges Ap with Sp for short
@@ -1833,20 +1997,10 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         # self.Sp.axpy( 1. , self.A11)
 
         # End ******** Sp for Ap ***********
-        self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                              self.operator_constructor.linear_smoother.isp)
-
-        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                                self.operator_constructor.linear_smoother.isp)
-
-        self.Qp_rho = self.Q_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                              self.operator_constructor.linear_smoother.isp)
-
-        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                                self.operator_constructor.linear_smoother.isp)
 
         L_sizes = self.Qp_rho.size
         L_range = self.Qp_rho.owner_range
+
         self.TP_PCDInv_shell = p4pyPETSc.Mat().create()
         self.TP_PCDInv_shell.setSizes(L_sizes)
         self.TP_PCDInv_shell.setType('python')
@@ -1866,6 +2020,11 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+
+        if self.velocity_block_preconditioner:
+            self._setup_velocity_block_preconditioner(global_ksp)
+
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setUp()
 
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
@@ -2086,47 +2245,29 @@ class SimpleDarcyFC:
     def setUp(self, global_ksp=None):
         pass
 
-class NavierStokes2D:
-    def __init__(self,L,prefix=None):
-        self.L=L
-        L_sizes = L.getSizes()
-        L_range = L.getOwnershipRange()
-        neqns = L_sizes[0][0]
-        rank = p4pyPETSc.COMM_WORLD.rank
-        if self.L.pde.stride[0] == 1:#assume end to end
-            pSpace = self.L.pde.u[0].femSpace
-            pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
-            nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
-            self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+nDOF_pressure,
-                                            dtype="i")
-            self.velocityDOF = numpy.arange(start=L_range[0]+nDOF_pressure,
-                                            stop=L_range[0]+neqns,
-                                            step=1,
-                                            dtype="i")
-        else: #assume blocked
-            self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+neqns,
-                                            step=3,
-                                            dtype="i")
-            velocityDOF = []
-            for start in range(1,3):
-                velocityDOF.append(numpy.arange(start=L_range[0]+start,
-                                                stop=L_range[0]+neqns,
-                                                step=3,
-                                                dtype="i"))
-                self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
-        self.pc = p4pyPETSc.PC().create()
-        if prefix:
-            self.pc.setOptionsPrefix(prefix)
-        self.pc.setType('fieldsplit')
-        self.isp = p4pyPETSc.IS()
-        self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
-        self.isv = p4pyPETSc.IS()
-        self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
-        self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
-        self.pc.setFromOptions()
-    def setUp(self, global_ksp=None):
+class NavierStokes2D(NavierStokesSchur):
+    def __init__(self,
+                 L,
+                 prefix=None,
+                 velocity_block_preconditioner=False):
+        NavierStokesSchur.__init__(self,
+                                   L,
+                                   prefix,
+                                   velocity_block_preconditioner=velocity_block_preconditioner)
+        if self.velocity_block_preconditioner:
+            self.velocity_block_preconditioner_set = False
+
+    def setUp(self, global_ksp=None,newton_it=None):
+        try:
+            if self.velocity_block_preconditioner_set is False:
+                self._initialize_velocity_block_preconditioner(global_ksp)
+                self.velocity_block_preconditioner_set = True
+        except AttributeError:
+            pass
+
+        if self.velocity_block_preconditioner:
+            self._setup_velocity_block_preconditioner(global_ksp)
+
         try:
             if self.L.pde.pp_hasConstantNullSpace:
                 if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type

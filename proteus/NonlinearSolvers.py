@@ -519,7 +519,7 @@ class Newton(NonlinearSolver):
                         self.norm_2_Jinv_current = np.inf
                     self.kappa_current = self.norm_2_J_current*self.norm_2_Jinv_current
                     self.betaK_current = self.norm_2_Jinv_current
-                self.linearSolver.prepare(b=r)
+                self.linearSolver.prepare(b=r,newton_it=self.its-1)
             self.du[:]=0.0
             if not self.directSolver:
                 if self.EWtol:
