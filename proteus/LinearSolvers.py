@@ -1824,7 +1824,8 @@ class NavierStokesSchur(SchurPrecon):
 
         """
         global_ksp.pc.getFieldSplitSubKSP()[0].pc.setType('fieldsplit')
-        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitType(0)  # This is for additive (e.g. Jacobi)
+        # ARB - need to run some tests to see what the best option is here
+#        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitType(1)  # This is for additive (e.g. Jacobi)
         global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitIS(('v1',self.isu_local),
                                                                   ('v2',self.isv_local))
 
@@ -1948,6 +1949,8 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
             self.strongPressureDOF = L.pde.dirichletConditionsForceDOF[0].DOFBoundaryPointDict.keys()
         except KeyError:
             self.strongPressureDOF = []
+        if self.velocity_block_preconditioner:
+            self.velocity_block_preconditioner_set = False
 
     def setUp(self, global_ksp, newton_it=0):
         import Comm
@@ -1997,6 +2000,16 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         # self.Sp.axpy( 1. , self.A11)
 
         # End ******** Sp for Ap ***********
+
+        try:
+            if self.velocity_block_preconditioner_set is False:
+                self._initialize_velocity_block_preconditioner(global_ksp)
+                self.velocity_block_preconditioner_set = True
+        except AttributeError:
+            pass
+
+        if self.velocity_block_preconditioner:
+            self._setup_velocity_block_preconditioner(global_ksp)
 
         L_sizes = self.Qp_rho.size
         L_range = self.Qp_rho.owner_range
