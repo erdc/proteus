@@ -27,7 +27,8 @@ def smoothNodesLaplace(double[:,:] nodeArray,
                        int nSmooth=1,
                        double[:,:] boundaryNormals=None,
                        int[:] fixedNodes=None,
-                       bool apply_directly=False):
+                       bool apply_directly=False,
+                       bool simultaneous=False):
     """
     Laplace Smoothing:
     Mesh nodes are displaced to the centroid of neighbouring nodes
@@ -45,15 +46,16 @@ def smoothNodesLaplace(double[:,:] nodeArray,
     nSmooth: int
         number of times Laplace smoothing should be executed
     """
-    return cySmoothNodesLaplace(nodeArray,
-                                nodeStarOffsets,
-                                nodeStarArray,
-                                nodeMaterialTypes,
-                                nNodes_owned,
-                                nSmooth,
-                                boundaryNormals,
-                                fixedNodes,
-                                apply_directly)
+    return cySmoothNodesLaplace(nodeArray=nodeArray,
+                                nodeStarOffsets=nodeStarOffsets,
+                                nodeStarArray=nodeStarArray,
+                                nodeMaterialTypes=nodeMaterialTypes,
+                                nNodes_owned=nNodes_owned,
+                                nSmooth=nSmooth,
+                                boundaryNormals=boundaryNormals,
+                                fixedNodes=fixedNodes,
+                                apply_directly=apply_directly,
+                                simultaneous=simultaneous)
 
 
 cdef double[:,:] cySmoothNodesLaplace(double[:,:] nodeArray,
@@ -64,9 +66,13 @@ cdef double[:,:] cySmoothNodesLaplace(double[:,:] nodeArray,
                                       int nSmooth,
                                       double[:,:] boundaryNormals,
                                       int[:] fixedNodes,
-                                      bool apply_directly=False):
+                                      bool apply_directly=False,
+                                      bool simultaneous=False):
     cdef double[:,:] disp = np.zeros_like(nodeArray)
-    disp[:] = nodeArray
+    cdef double[:,:] nodeArray0 = np.zeros_like(nodeArray)
+    nodeArray0[:] = nodeArray
+    cdef double[:,:] nodeArraySimultaneous = np.zeros_like(nodeArray)
+    nodeArraySimultaneous[:] = nodeArray
     cdef double[:,:] nodeArrayMod
     if not apply_directly:
         nodeArrayMod = np.zeros_like(nodeArray)
@@ -82,9 +88,14 @@ cdef double[:,:] cySmoothNodesLaplace(double[:,:] nodeArray,
             if nodeMaterialTypes[node] == 0:
                 for nOffset in range(nodeStarOffsets[node],
                                      nodeStarOffsets[node+1]):
-                    sum_star[0] += nodeArrayMod[nodeStarArray[nOffset], 0]
-                    sum_star[1] += nodeArrayMod[nodeStarArray[nOffset], 1]
-                    sum_star[2] += nodeArrayMod[nodeStarArray[nOffset], 2]
+                    if simultaneous is True:
+                        sum_star[0] += nodeArraySimultaneous[nodeStarArray[nOffset], 0]
+                        sum_star[1] += nodeArraySimultaneous[nodeStarArray[nOffset], 1]
+                        sum_star[2] += nodeArraySimultaneous[nodeStarArray[nOffset], 2]
+                    else:
+                        sum_star[0] += nodeArrayMod[nodeStarArray[nOffset], 0]
+                        sum_star[1] += nodeArrayMod[nodeStarArray[nOffset], 1]
+                        sum_star[2] += nodeArrayMod[nodeStarArray[nOffset], 2]
                 nNodeInStar = abs(nodeStarOffsets[node]-nodeStarOffsets[node+1])
                 nodeArrayMod[node, 0] = sum_star[0]/nNodeInStar
                 nodeArrayMod[node, 1] = sum_star[1]/nNodeInStar
@@ -108,9 +119,12 @@ cdef double[:,:] cySmoothNodesLaplace(double[:,:] nodeArray,
             #                 nodeArrayMod[node, 1] = sum_star[1]/nNodeInStar*(1-np.abs(bN[1]))
             #                 nodeArrayMod[node, 2] = sum_star[2]/nNodeInStar*(1-np.abs(bN[2]))
             if i == nSmooth-1:
-                disp[node, 0] = nodeArrayMod[node, 0]-disp[node, 0]
-                disp[node, 1] = nodeArrayMod[node, 1]-disp[node, 1]
-                disp[node, 2] = nodeArrayMod[node, 2]-disp[node, 2]
+                disp[node, 0] = nodeArrayMod[node, 0]-nodeArray0[node, 0]
+                disp[node, 1] = nodeArrayMod[node, 1]-nodeArray0[node, 1]
+                disp[node, 2] = nodeArrayMod[node, 2]-nodeArray0[node, 2]
+        if simultaneous is True:
+            # update array for next smoothing iteration
+            nodeArraySimultaneous[:] = nodeArrayMod
     return disp
 
 
@@ -128,21 +142,21 @@ cdef double[:,:] cySmoothNodesLaplace(double[:,:] nodeArray,
 #                             jacInv,
 #                             x,y,z);
 
-cdef tuple cyGetQualityMetrics(double[:,:,:] J_array,
+cdef tuple cyGetQualityMetrics(double[:,:,:,:] J_array,
                                double[:,:] detJ_array,
                                double[:] target_area_array,
                                int nd):
     #W = np.array([[1., 0.5],
     #              [0., 0.866]]) # [0., np.sqrt(3)/2.]
-    cdef double[:] J
-    cdef double[:] JT
+    cdef double[:,:] J
+    cdef double[:,:] JT
     cdef double detJ
     cdef double trJTJ
     cdef double[:,:] JTJ
     cdef double dilation
     cdef double distortion
-    cdef double[:] distortion_array
-    cdef double[:] dilation_array
+    cdef double[:] distortion_array = np.zeros(len(target_area_array))
+    cdef double[:] dilation_array = np.zeros(len(target_area_array))
     for eN in range(len(target_area_array)):
         detJ = detJ_array[eN, 0]  # index 0 as it is the same for all quadrature points
         dilation = target_area_array[eN]/detJ
@@ -150,7 +164,7 @@ cdef tuple cyGetQualityMetrics(double[:,:,:] J_array,
             dilation = 1/dilation
         dilation_array[eN] = dilation-1
         J = J_array[eN][0]
-        JT = J.T
+        JT = np.transpose(J)
         JTJ = np.zeros_like(J)
         JTJ = np.dot(J, JT)
         trJTJ = 0.
@@ -162,16 +176,128 @@ cdef tuple cyGetQualityMetrics(double[:,:,:] J_array,
         dilation_array[eN] = dilation
     return distortion_array, dilation_array
 
-
-def getQualityMetrics(double[:,:,:] J_array,
+def getQualityMetrics(double[:,:,:,:] J_array,
                       double[:,:] detJ_array,
                       double[:] target_area_array,
                       int nd):
     return cyGetQualityMetrics(J_array=J_array,
-                             detJ_array=detJ_array,
-                             target_area_array=target_area_array,
-                             nd=nd)
+                               detJ_array=detJ_array,
+                               target_area_array=target_area_array,
+                               nd=nd)
 
+cdef tuple cyGetInverseMeanRatioTriangle(double[:,:] nodeArray,
+                                         int[:,:] elementNodesArray,
+                                         int[:] nodeElementOffsets,
+                                         int[:] nodeElementsArray,
+                                         bool el_average=False):
+    cdef double[:,:] W = np.array([[1., 0.5],
+                                   [0., np.sqrt(3)/2.]])
+    cdef double[:,:] A = np.zeros((2,2))
+    cdef double[:,:] AW = np.zeros((2,2))
+    cdef double[:] IMR_nodes = np.zeros(len(nodeArray))
+    cdef double[:] IMR_elements = np.zeros(len(elementNodesArray))
+    cdef int[:] nElements = np.zeros(len(nodeArray), dtype=np.int32)
+    cdef double[:] vec_a
+    cdef double[:] vec_b
+    cdef double[:] vec_c
+    cdef double IMR
+    cdef int nEl = 0
+    for eN in range(len(elementNodesArray)):
+        for iN, node in enumerate(elementNodesArray[eN]):
+            vec_a = nodeArray[elementNodesArray[eN, iN]]
+            vec_b = nodeArray[elementNodesArray[eN, iN-1]]
+            vec_c = nodeArray[elementNodesArray[eN, iN-2]]
+            A[0,0] = vec_b[0]-vec_a[0]
+            A[1,0] = vec_b[1]-vec_a[1]
+            A[0,1] = vec_c[0]-vec_a[0]
+            A[1,1] = vec_c[1]-vec_a[1]
+            AW = np.dot(A, np.linalg.inv(W))
+            IMR = (AW[0,0]**2+AW[0,1]**2+AW[1,0]**2+AW[1,1]**2)/(2*np.abs(AW[0,0]*AW[1,1]-AW[0,1]*AW[1,0]))
+            IMR_nodes[node] += IMR
+            nElements[node] += 1
+            IMR_elements[eN] += IMR
+        IMR_elements[eN] = IMR_elements[eN]/3.
+    for node in range(len(IMR_nodes)):
+        if not el_average:
+            IMR_nodes[node] = IMR_nodes[node]/nElements[node]
+        else:
+            nEl = 0
+            IMR_nodes[node] = 0.
+            for eOffset in range(nodeElementOffsets[node],
+                                nodeElementOffsets[node+1]):
+                eN = nodeElementsArray[eOffset]
+                nEl += 1
+                IMR_nodes[node] += IMR_elements[eN]
+            IMR_nodes[node] = IMR_nodes[node]/nEl
+    return IMR_nodes, IMR_elements
+
+def getInverseMeanRatioTriangle(double[:,:] nodeArray,
+                                int[:,:] elementNodesArray,
+                                int[:] nodeElementOffsets,
+                                int[:] nodeElementsArray):
+    return cyGetInverseMeanRatioTriangle(nodeArray=nodeArray,
+                                         elementNodesArray=elementNodesArray,
+                                         nodeElementOffsets=nodeElementOffsets,
+                                         nodeElementsArray=nodeElementsArray)
+
+cdef double cyGetInverseMeanRatioSingleTriangle(int node0,
+                                                double[:,:] nodeArray,
+                                                int[:,:] elementNodesArray,
+                                                int[:] nodeElementOffsets,
+                                                int[:] nodeElementsArray,
+                                                bool el_average=False):
+    cdef double[:,:] W = np.array([[1., 0.5],
+                                   [0., np.sqrt(3)/2.]])
+    cdef double[:,:] A = np.zeros((2,2))
+    cdef double[:,:] AW = np.zeros((2,2))
+    cdef double IMR_node = 0.
+    cdef int nEl = 0
+    cdef double[:] vec_a
+    cdef double[:] vec_b
+    cdef double[:] vec_c
+    cdef double IMR
+    for eOffset in range(nodeElementOffsets[node0],
+                         nodeElementOffsets[node0+1]):
+        eN = nodeElementsArray[eOffset]
+        nEl += 1
+        ################
+        for iN, node in enumerate(elementNodesArray[eN]):
+            if el_average:
+                vec_a = nodeArray[elementNodesArray[eN, iN]]
+                vec_b = nodeArray[elementNodesArray[eN, iN-1]]
+                vec_c = nodeArray[elementNodesArray[eN, iN-2]]
+                A[0,0] = vec_b[0]-vec_a[0]
+                A[1,0] = vec_b[1]-vec_a[1]
+                A[0,1] = vec_c[0]-vec_a[0]
+                A[1,1] = vec_c[1]-vec_a[1]
+                AW = np.dot(A, np.linalg.inv(W))
+                IMR = (AW[0,0]**2+AW[0,1]**2+AW[1,0]**2+AW[1,1]**2)/(2*np.abs(AW[0,0]*AW[1,1]-AW[0,1]*AW[1,0]))
+                IMR_node += IMR/3.  # /3. because 3 nodes in element
+            else:
+                if node == node0:
+                    vec_a = nodeArray[elementNodesArray[eN, iN]]
+                    vec_b = nodeArray[elementNodesArray[eN, iN-1]]
+                    vec_c = nodeArray[elementNodesArray[eN, iN-2]]
+                    A[0,0] = vec_b[0]-vec_a[0]
+                    A[1,0] = vec_b[1]-vec_a[1]
+                    A[0,1] = vec_c[0]-vec_a[0]
+                    A[1,1] = vec_c[1]-vec_a[1]
+                    AW = np.dot(A, np.linalg.inv(W))
+                    IMR = (AW[0,0]**2+AW[0,1]**2+AW[1,0]**2+AW[1,1]**2)/(2*np.abs(AW[0,0]*AW[1,1]-AW[0,1]*AW[1,0]))
+                    IMR_node += IMR
+    IMR_node = IMR_node/nEl
+    return IMR_node
+
+def getInverseMeanRatioSingleTriangle(int node0,
+                                      double[:,:] nodeArray,
+                                      int[:,:] elementNodesArray,
+                                      int[:] nodeElementOffsets,
+                                      int[:] nodeElementsArray):
+    return cyGetInverseMeanRatioSingleTriangle(node0=node0,
+                                               nodeArray=nodeArray,
+                                               elementNodesArray=elementNodesArray,
+                                               nodeElementOffsets=nodeElementOffsets,
+                                               nodeElementsArray=nodeElementsArray)
 
 cdef double[:,:] cySmoothNodesQuality(double[:] distortion,
                                       double[:] dilation,
