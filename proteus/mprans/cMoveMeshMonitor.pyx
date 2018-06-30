@@ -71,7 +71,7 @@ cdef class cCoefficients:
         cdef int nNodes_elementBoundary = mesh.nNodes_elementBoundary
         cdef int nElements_global = mesh.nElements_global
         cdef int nNodes_element = mesh.nNodes_element
-        cdef double[:,:,:] elementNormalsArray = pc.elementNormalsArray
+        cdef double[:,:,:] elementBoundaryNormalsArray = pc.mesh.elementBoundaryNormalsArray
         # update element boundary barycenters
         for ebN in range(nElementBoundaries_global):
             elementBoundaryBarycentersArray[ebN, 0] = 0.
@@ -98,19 +98,21 @@ cdef class cCoefficients:
             elementBarycentersArray[eN, 2] /= nNodes_element
         # update normals
         if pc.nd == 2:
-            ms.updateElementBoundaryNormalsTriangle2D(elementNormalsArray,
-                                                      nodeArray,
-                                                      elementBoundariesArray,
-                                                      elementBoundaryNodesArray,
-                                                      elementBoundaryBarycentersArray,
-                                                      elementBarycentersArray)
+            # triangle
+            ms.updateElementBoundaryNormalsTriangle(elementBoundaryNormalsArray,
+                                                    nodeArray,
+                                                    elementBoundariesArray,
+                                                    elementBoundaryNodesArray,
+                                                    elementBoundaryBarycentersArray,
+                                                    elementBarycentersArray)
         elif pc.nd == 3:
-            ms.updateElementBoundaryNormalsTetra3D(elementNormalsArray,
-                                                   nodeArray,
-                                                   elementBoundariesArray,
-                                                   elementBoundaryNodesArray,
-                                                   elementBoundaryBarycentersArray,
-                                                   elementBarycentersArray)
+            # tetra
+            ms.updateElementBoundaryNormalsTetra(elementBoundaryNormalsArray,
+                                                 nodeArray,
+                                                 elementBoundariesArray,
+                                                 elementBoundaryNodesArray,
+                                                 elementBoundaryBarycentersArray,
+                                                 elementBarycentersArray)
 
     def pseudoTimeStepping(self,
                            xx,
@@ -166,19 +168,25 @@ cdef class cCoefficients:
         cdef double[:,:] elementBarycentersArray = pc.mesh.elementBarycentersArray
         cdef int[:,:] elementNeighborsArray = pc.mesh.elementNeighborsArray
         cdef int[:,:] elementBoundariesArray = pc.mesh.elementBoundariesArray
+        cdef int[:,:] elementNodesArray = pc.mesh.elementNodesArray
         cdef double[:,:] elementBoundaryBarycentersArray = pc.mesh.elementBoundaryBarycentersArray
         cdef int[:] exteriorElementBoundariesBoolArray = np.zeros(pc.mesh.nElementBoundaries_global, dtype=np.int32)
         for b_i in pc.mesh.exteriorElementBoundariesArray:
             exteriorElementBoundariesBoolArray[b_i] = 1
-        cdef double[:,:,:] elementNormalsArray = pc.elementNormalsArray
+        cdef double[:,:,:] elementBoundaryNormalsArray = pc.mesh.elementBoundaryNormalsArray
         cdef double[:,:] boundaryNormals = pc.boundaryNormals
         cdef int nNodes_owned = pc.mesh.nNodes_owned
         cdef int nElements_owned = pc.mesh.nElements_owned
         cdef int nSmoothIn = pc.nSmoothIn
         cdef bool inside_eN = False
+        cdef double[:] vec = np.zeros(3)
+        cdef double[:] vec2 = np.zeros(3)
+        cdef double vec_dist
+        cdef double[:] fixed_dir = np.ones(3)
         for j, t in enumerate(t_range):
             logEvent("Pseudo-time stepping t={t}".format(t=t), level=3)
             for i in range(len(xx)):
+                node = i
                 # reinitialise values
                 fixed = False
                 found_vars = True
@@ -188,12 +196,49 @@ cdef class cCoefficients:
                     dphi[ndi] = 0.
                 dt = t-t_last
                 flag = nodeMaterialTypes[i]
-                if flag != 0 and bNs is not None:
-                    if bNs[flag, 0] == 0. and bNs[flag, 1] == 0. and bNs[flag, 2] == 0:
-                        fixed = True
-                    if fixedNodes is not None:
+                if flag != 0:
+                    if bNs is not None:
+                        if bNs[flag, 0] == 0. and bNs[flag, 1] == 0. and bNs[flag, 2] == 0:
+                            fixed = True
+                        else:
+                            fixed_dir[0] = abs(bNs[flag, 0])
+                            fixed_dir[1] = abs(bNs[flag, 1])
+                            fixed_dir[2] = abs(bNs[flag, 2])
+                    if fixed is False and fixedNodes is not None:
                         if fixedNodes[flag] == 1:
                             fixed = True
+                    # smooth on boundary only unless it is a corner node
+                    if fixed is False:
+                        # tridelat todo: works only in 2D here
+                        vec[:] = 0.
+                        vec2[:] = 0.
+                        for nOffset in range(nodeStarOffsets[node],
+                                             nodeStarOffsets[node+1]):
+                            if nodeMaterialTypes[nodeStarArray[nOffset]] != 0:
+                                if vec[0] == 0. and vec[1] == 0. and vec[2] == 0.:
+                                    vec[0] = nodeArray[node, 0]-nodeArray[nodeStarArray[nOffset], 0]
+                                    vec[1] = nodeArray[node, 1]-nodeArray[nodeStarArray[nOffset], 1]
+                                    vec[2] = nodeArray[node, 2]-nodeArray[nodeStarArray[nOffset], 2]
+                                    vec_dist = np.sqrt(vec[0]**2+vec[1]**2+vec[2]**2)
+                                    vec[0] = vec[0]/vec_dist
+                                    vec[1] = vec[1]/vec_dist
+                                    vec[2] = vec[2]/vec_dist
+                                    fixed_dir[0] = abs(vec[0])
+                                    fixed_dir[1] = abs(vec[1])
+                                    fixed_dir[2] = abs(vec[2])
+                                else:
+                                    vec2[0] = nodeArray[node, 0]-nodeArray[nodeStarArray[nOffset], 0]
+                                    vec2[1] = nodeArray[node, 1]-nodeArray[nodeStarArray[nOffset], 1]
+                                    vec2[2] = nodeArray[node, 2]-nodeArray[nodeStarArray[nOffset], 2]
+                                    vec_dist = np.sqrt(vec2[0]**2+vec2[1]**2+vec2[2]**2)
+                                    vec2[0] = vec2[0]/vec_dist
+                                    vec2[1] = vec2[1]/vec_dist
+                                    vec2[2] = vec2[2]/vec_dist
+                                    dot = vec[0]*vec2[0]+vec[1]*vec2[1]+vec[2]*vec2[2]
+                                    if dot == 1. or dot == -1.:
+                                        dot = 1.
+                                    else:
+                                        fixed = True
                 if not fixed:  # either flag==0 or not fixed
                     if j == 0:  # nodes are at original position (no search)
                         v_grad = grads[i]
@@ -221,7 +266,7 @@ cdef class cCoefficients:
                                                                                   elementBoundariesArray=elementBoundariesArray,
                                                                                   elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
                                                                                   exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
-                                                                                  elementNormalsArray=elementNormalsArray,
+                                                                                  elementBoundaryNormalsArray=elementBoundaryNormalsArray,
                                                                                   nearest_node=nearest_nodes[i],
                                                                                   eN=eN_phi[i],
                                                                                   find_nearest_node=find_nearest_node)
@@ -256,17 +301,25 @@ cdef class cCoefficients:
                             xx[i, ndi] += dphi[ndi]*dt
                     elif fixed is False:  # slide along boundary
                         for ndi in range(nd):
-                            xx[i, ndi] += dphi[ndi]*(1-np.abs(bNs[flag, ndi]))*dt
-            if nSmoothIn > 0:
-                ms.smoothNodesLaplace(nodeArray=xx,
+                            xx[i, ndi] += dphi[ndi]*fixed_dir[ndi]*dt
+            for iS in range(nSmoothIn):
+                # if nd == 2:
+                #     ms.updateElementVolumesTriangle(elementVolumesArray_=elementVolumesArray,
+                #                                   elementNodesArray=elementNodesArray,
+                #                                   nodeArray=xx)
+                # if nd == 3:
+                #     ms.updateElementVolumesTetra(elementVolumesArray_=elementVolumesArray,
+                #                                  elementNodesArray=elementNodesArray,
+                #                                  nodeArray=xx)
+                # ms.updateElementBarycenters(elementBarycentersArray_=elementBarycentersArray,
+                #                             elementNodesArray=elementNodesArray,
+                #                             nodeArray=xx)
+                ms.smoothNodesLaplace(nodeArray_=xx,
                                       nodeStarOffsets=nodeStarOffsets,
                                       nodeStarArray=nodeStarArray,
                                       nodeMaterialTypes=nodeMaterialTypes,
                                       nNodes_owned=nNodes_owned,
-                                      nSmooth=nSmoothIn,
-                                      boundaryNormals=boundaryNormals,
-                                      fixedNodes=fixedNodes,
-                                      apply_directly=True)
+                                      simultaneous=True)
             t_last = t
 
 
@@ -419,35 +472,74 @@ cdef double[:,:] cppGradientRecoveryAtNodes(double[:,:,:] grads,
             recovered_grads[node, ndi] = grad_sum[ndi]/nb_el
     return recovered_grads
 
+def gradientRecoveryAtNodesWeighted(double[:,:,:] grads,
+                                    int[:] nodeElementsArray,
+                                    int[:] nodeElementOffsets,
+                                    double[:,:] detJ_array,
+                                    int nd):
+    return cppGradientRecoveryAtNodesWeighted(grads=grads,
+                                              nodeElementsArray=nodeElementsArray,
+                                              nodeElementOffsets=nodeElementOffsets,
+                                              detJ_array=detJ_array,
+                                              nd=nd)
+
+cdef double[:,:] cppGradientRecoveryAtNodesWeighted(double[:,:,:] grads,
+                                                    int[:] nodeElementsArray,
+                                                    int[:] nodeElementOffsets,
+                                                    double[:,:] detJ_array,
+                                                    int nd):
+    cdef double[:, :] recovered_grads = np.zeros((len(nodeElementOffsets)-1, nd))
+    cdef int nb_el
+    cdef double detJ_patch = 0.
+    cdef double[:] grad_sum = np.zeros(nd)
+    for node in range(len(nodeElementOffsets)-1):
+        nb_el = 0
+        detJ_patch = 0.
+        for ndi in range(nd):
+            grad_sum[ndi] = 0.
+        for eOffset in range(nodeElementOffsets[node],
+                             nodeElementOffsets[node+1]):
+            nb_el += 1
+            eN = nodeElementsArray[eOffset]
+            # for k in range(n_quad):
+            #     grad_k = grads[eN, k]
+            #     grad_eN_av += grad_k
+            # grad_eN_av /= n_quad
+            detJ_patch += detJ_array[eN,0]
+            for ndi in range(nd):
+                grad_sum[ndi] += detJ_array[eN,0]*grads[eN, 0, ndi]  # same value at all quad points
+        for ndi in range(nd):
+            recovered_grads[node, ndi] = grad_sum[ndi]/detJ_patch
+    return recovered_grads
 
 cdef tuple pyxSearchNearestNodeElementFromMeshObject(object mesh,
                                                      double[:] x,
                                                      int[:] exteriorElementBoundariesBoolArray,
-                                                     double[:,:,:] elementNormalsArray,
+                                                     double[:,:,:] elementBoundaryNormalsArray,
                                                      int nearest_node,
                                                      int eN):
-    n, d = ms.getLocalNearestNode(coords=x,
-                                  nodeArray=mesh.nodeArray,
-                                  nodeStarOffsets=mesh.nodeStarOffsets,
-                                  nodeStarArray=mesh.nodeStarArray,
-                                  node=nearest_node)
-    n, d = ms.getLocalNearestElementAroundNode(coords=x,
-                                               nodeElementOffsets=mesh.nodeElementOffsets,
-                                               nodeElementsArray=mesh.nodeElementsArray,
-                                               elementBarycenterArray=mesh.elementBarycentersArray,
-                                               node=n)
-    eN, d = ms.getLocalNearestElementIntersection(coords=x,
-                                                  elementNormalsArray=elementNormalsArray,
-                                                  elementBoundariesArray=mesh.elementBoundariesArray,
-                                                  elementBarycentersArray=mesh.elementBoundaryBarycentersArray,
-                                                  elementNeighborsArray=mesh.elementNeighborsArray,
-                                                  elementBarycentersArray=mesh.elementBarycentersArray,
-                                                  exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
-                                                  eN=eN)
+    n = ms.getLocalNearestNode(coords=x,
+                               nodeArray=mesh.nodeArray,
+                               nodeStarOffsets=mesh.nodeStarOffsets,
+                               nodeStarArray=mesh.nodeStarArray,
+                               node=nearest_node)
+    n = ms.getLocalNearestElementAroundNode(coords=x,
+                                            nodeElementOffsets=mesh.nodeElementOffsets,
+                                            nodeElementsArray=mesh.nodeElementsArray,
+                                            elementBarycenterArray=mesh.elementBarycentersArray,
+                                            node=n)
+    eN = ms.getLocalNearestElementIntersection(coords=x,
+                                               elementBoundaryNormalsArray=elementBoundaryNormalsArray,
+                                               elementBoundariesArray=mesh.elementBoundariesArray,
+                                               elementBarycentersArray=mesh.elementBoundaryBarycentersArray,
+                                               elementNeighborsArray=mesh.elementNeighborsArray,
+                                               elementBarycentersArray=mesh.elementBarycentersArray,
+                                               exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
+                                               eN=eN)
     # check if actually inside eN
     inside_eN = True
     for j, b_i in enumerate(mesh.elementBoundariesArray[eN]):
-        normal = mesh.elementNormalsArray[eN, j]
+        normal = mesh.elementBoundaryNormalsArray[eN, j]
         bound_bar = mesh.elementBoundaryBarycentersArray[b_i]
         dot = (bound_bar[0]-x[0])*normal[0]+(bound_bar[1]-x[1])*normal[1]+(bound_bar[2]-x[2])*normal[2]
         if dot < 0:
@@ -467,36 +559,36 @@ cdef tuple pyxSearchNearestNodeElement(double[:] x,
                                        int[:,:] elementBoundariesArray,
                                        double[:,:] elementBoundaryBarycentersArray,
                                        int[:] exteriorElementBoundariesBoolArray,
-                                       double[:,:,:] elementNormalsArray,
+                                       double[:,:,:] elementBoundaryNormalsArray,
                                        int nearest_node,
                                        int eN,
                                        bool find_nearest_node=True):
     if find_nearest_node is True:
-        nearest_node, d = ms.getLocalNearestNode(coords=x,
-                                                 nodeArray=nodeArray,
-                                                 nodeStarOffsets=nodeStarOffsets,
-                                                 nodeStarArray=nodeStarArray,
+        nearest_node = ms.getLocalNearestNode(coords=x,
+                                              nodeArray=nodeArray,
+                                              nodeStarOffsets=nodeStarOffsets,
+                                              nodeStarArray=nodeStarArray,
+                                              node=nearest_node)
+        eN = ms.getLocalNearestElementAroundNode(coords=x,
+                                                 nodeElementOffsets=nodeElementOffsets,
+                                                 nodeElementsArray=nodeElementsArray,
+                                                 elementBarycentersArray=elementBarycentersArray,
                                                  node=nearest_node)
-        eN, d = ms.getLocalNearestElementAroundNode(coords=x,
-                                                    nodeElementOffsets=nodeElementOffsets,
-                                                    nodeElementsArray=nodeElementsArray,
-                                                    elementBarycentersArray=elementBarycentersArray,
-                                                    node=nearest_node)
-    eN, d = ms.getLocalNearestElementIntersection(coords=x,
-                                                  elementNormalsArray=elementNormalsArray,
-                                                  elementBoundariesArray=elementBoundariesArray,
-                                                  elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
-                                                  elementNeighborsArray=elementNeighborsArray,
-                                                  elementBarycentersArray=elementBarycentersArray,
-                                                  exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
-                                                  eN=eN)
+    eN = ms.getLocalNearestElementIntersection(coords=x,
+                                               elementBoundaryNormalsArray=elementBoundaryNormalsArray,
+                                               elementBoundariesArray=elementBoundariesArray,
+                                               elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                               elementNeighborsArray=elementNeighborsArray,
+                                               elementBarycentersArray=elementBarycentersArray,
+                                               exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
+                                               eN=eN)
     # check if actually inside eN
     cdef bool inside_eN = True
     cdef double[:] normal = np.zeros(3)
     for j, b_i in enumerate(elementBoundariesArray[eN]):
-        normal[0] = elementNormalsArray[eN, j, 0]
-        normal[1] = elementNormalsArray[eN, j, 1]
-        normal[2] = elementNormalsArray[eN, j, 2]
+        normal[0] = elementBoundaryNormalsArray[eN, j, 0]
+        normal[1] = elementBoundaryNormalsArray[eN, j, 1]
+        normal[2] = elementBoundaryNormalsArray[eN, j, 2]
         bound_bar = elementBoundaryBarycentersArray[b_i]
         dot = (bound_bar[0]-x[0])*normal[0]+(bound_bar[1]-x[1])*normal[1]+(bound_bar[2]-x[2])*normal[2]
         if dot < 0:
