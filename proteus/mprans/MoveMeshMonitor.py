@@ -85,21 +85,36 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.areas_nodes = np.zeros(self.mesh.elementNodesArray.shape[0])
         self.areas = np.zeros(self.mesh.elementNodesArray.shape[0])
         # get Normals
-        self.elementNormalsArray = np.zeros((len(self.mesh.elementBoundariesArray), 3, 3))
         if self.nd == 2:
-            ms.updateElementBoundaryNormalsTriangle2D(self.elementNormalsArray,
-                                                      self.mesh.nodeArray,
-                                                      self.mesh.elementBoundariesArray,
-                                                      self.mesh.elementBoundaryNodesArray,
-                                                      self.mesh.elementBoundaryBarycentersArray,
-                                                      self.mesh.elementBarycentersArray)
+            # triangle
+            self.mesh.elementBoundaryNormalsArray = np.zeros((len(self.mesh.elementBoundariesArray), 3, 3))
         elif self.nd == 3:
-            ms.updateElementBoundaryNormalsTetra3D(self.elementNormalsArray,
-                                                   self.mesh.nodeArray,
-                                                   self.mesh.elementBoundariesArray,
-                                                   self.mesh.elementBoundaryNodesArray,
-                                                   self.mesh.elementBoundaryBarycentersArray,
-                                                   self.mesh.elementBarycentersArray)
+            # tetra
+            self.mesh.elementBoundaryNormalsArray = np.zeros((len(self.mesh.elementBoundariesArray), 4, 3))
+        if self.nd == 2:
+            ms.updateElementBoundaryNormalsTriangle(self.mesh.elementBoundaryNormalsArray,
+                                                    self.mesh.nodeArray,
+                                                    self.mesh.elementBoundariesArray,
+                                                    self.mesh.elementBoundaryNodesArray,
+                                                    self.mesh.elementBoundaryBarycentersArray,
+                                                    self.mesh.elementBarycentersArray)
+        elif self.nd == 3:
+            ms.updateElementBoundaryNormalsTetra(self.mesh.elementBoundaryNormalsArray,
+                                                 self.mesh.nodeArray,
+                                                 self.mesh.elementBoundariesArray,
+                                                 self.mesh.elementBoundaryNodesArray,
+                                                 self.mesh.elementBoundaryBarycentersArray,
+                                                 self.mesh.elementBarycentersArray)
+        # nodes to keep fixed
+        self.mesh.fixedNodesBoolArray = np.zeros(len(self.mesh.nodeArray), dtype=np.int32)
+        # find corner nodes
+        self.mesh.cornerNodes = ms.getCornerNodesTriangle(nodeArray=self.mesh.nodeArray,
+                                                          nodeStarArray=self.mesh.nodeStarArray,
+                                                          nodeStarOffsets=self.mesh.nodeStarOffsets,
+                                                          nodeMaterialTypes=self.mesh.nodeMaterialTypes,
+                                                          nNodes_owned=self.mesh.nNodes_owned)
+        for cn in self.mesh.cornerNodes:
+            self.mesh.fixedNodesBoolArray[cn] = 1
 
     def attachModels(self,modelList):
         self.model = modelList[self.ME_MODEL]
@@ -142,6 +157,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                                                     nodeElementsArray=self.mesh.nodeElementsArray,
                                                     nodeElementOffsets=self.mesh.nodeElementOffsets,
                                                     nd=self.nd)
+        # self.grads[:] = cmm.gradientRecoveryAtNodesWeighted(grads=self.model.q[('grad(u)', 0)],
+        #                                                     nodeElementsArray=self.mesh.nodeElementsArray,
+        #                                                     nodeElementOffsets=self.mesh.nodeElementOffsets,
+        #                                                     detJ_array=self.model.q[('abs(det(J))')],
+        #                                                     nd=self.nd)
         self.model.grads = self.grads
         # area recovery
         logEvent("Area recovery at mesh nodes", level=3)
@@ -169,17 +189,35 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             # dt = self.model.timeIntegration.dt
             dt = self.dt_last
             logEvent('Smoothing Mesh with Laplace Smoothing - '+str(self.nSmoothOut))
-            if self.nSmoothOut > 0:
-                disp = ms.smoothNodesLaplace(nodeArray=self.PHI,
-                                             nodeStarOffsets=self.mesh.nodeStarOffsets,
-                                             nodeStarArray=self.mesh.nodeStarArray,
-                                             nodeMaterialTypes=self.mesh.nodeMaterialTypes,
-                                             nNodes_owned=self.mesh.nNodes_owned,
-                                             nSmooth=self.nSmoothOut,
-                                             boundaryNormals=self.boundaryNormals,
-                                             fixedNodes=self.fixedNodes,
-                                             apply_directly=False)
-                self.PHI += disp
+            for iS in range(self.nSmoothOut):
+                # elementVolumesArray = self.model.q['abs(det(J))'][:,0]
+                # elementBarycentersArray = self.mesh.elementBarycentersArray
+                # ms.updateElementVolumes(elementVolumesArray_=elementVolumesArray,
+                #                       elementNodesArray=self.mesh.elementNodesArray,
+                #                       nodeArray=self.PHI)
+                # ms.updateElementBarycenters(elementBarycentersArray_=elementBarycentersArray,
+                #                             elementNodesArray=self.mesh.elementNodesArray,
+                #                             nodeArray=self.PHI)
+                simultaneous = True
+                ms.smoothNodesLaplace(nodeArray_=self.PHI,
+                                      nodeStarOffsets=self.mesh.nodeStarOffsets,
+                                      nodeStarArray=self.mesh.nodeStarArray,
+                                      nodeMaterialTypes=self.mesh.nodeMaterialTypes,
+                                      nNodes_owned=self.mesh.nNodes_owned,
+                                      simultaneous=simultaneous,
+                                      smoothBoundaries=True,
+                                      fixedNodesBoolArray=self.mesh.fixedNodesBoolArray,
+                                      alpha=0.)
+                # disp = ms.smoothNodesCentroid(nodeArray=self.PHI,
+                #                               nodeElementOffsets=self.mesh.nodeElementOffsets,
+                #                               nodeElementsArray=self.mesh.nodeElementsArray,
+                #                               nodeMaterialTypes=self.mesh.nodeMaterialTypes,
+                #                               elementBarycentersArray=elementBarycentersArray,
+                #                               elementVolumesArray=elementVolumesArray,
+                #                               elementNodesArray=self.mesh.elementNodesArray,
+                #                               nNodes_owned=self.mesh.nNodes_owned,
+                #                               simultaneous=simultaneous)
+            logEvent('Done smoothing')
             # move nodes
             self.model.mesh.nodeVelocityArray[:] += (self.PHI-self.model.mesh.nodeArray)/dt
             #self.model.mesh.nodeVelocityArray[:] = disp/dt
@@ -193,6 +231,12 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.cCoefficients.postStep()
         # copyInstructions = {'clear_uList': True}
         # return copyInstructions
+        IMR_nodes = ms.getInverseMeanRatioTriangleNodes(nodeArray=self.mesh.nodeArray,
+                                                        elementNodesArray=self.mesh.elementNodesArray,
+                                                        nodeElementOffsets=self.mesh.nodeElementOffsets,
+                                                        nodeElementsArray=self.mesh.nodeElementsArray,
+                                                        el_average=False)
+        self.model.u[0].dof[:] = IMR_nodes
 
     def uOfX(self, x, eN=None):
         """
