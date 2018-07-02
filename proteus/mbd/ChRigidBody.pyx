@@ -1806,7 +1806,7 @@ cdef class ProtChSystem:
         else:
             sys.exit('ProtChSystem: no time step set in calculate()')
         if self.model is not None:
-            if self.build_kdtree is True and self.dist_search is False:
+            if self.build_kdtree is True:
                 Profiling.logEvent("Building k-d tree for mooring nodes lookup")
                 self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
         if t >= self.next_sample:
@@ -1835,19 +1835,19 @@ cdef class ProtChSystem:
         Calls calculate_init and poststep on all subcomponents
         (bodies, moorings, etc) attached to the system.
         """
+        if self.model is not None:
+            self.model_mesh = self.model.levelModelList[-1].mesh
+            if self.build_kdtree is True:
+                Profiling.logEvent("Building k-d tree for mooring nodes lookup on first time step")
+                self.u = self.model.levelModelList[-1].u
+                # finite element space (! linear for p, quadratic for velocity)
+                self.femSpace_velocity = self.u[1].femSpace
+                self.femSpace_pressure = self.u[0].femSpace
+                self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
         if not self.initialised:
             Profiling.logEvent("Starting init"+str(self.next_sample))
             self.directory = str(Profiling.logDir)+'/'
             self.thisptr.setDirectory(self.directory)
-            if self.model is not None:
-                self.model_mesh = self.model.levelModelList[-1].mesh
-                if self.build_kdtree is True:
-                    Profiling.logEvent("Building k-d tree for mooring nodes lookup on first time step")
-                    self.u = self.model.levelModelList[-1].u
-                    # finite element space (! linear for p, quadratic for velocity)
-                    self.femSpace_velocity = self.u[1].femSpace
-                    self.femSpace_pressure = self.u[0].femSpace
-                    self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
             for s in self.subcomponents:
                 s.calculate_init()
             Profiling.logEvent("Setup initial"+str(self.next_sample))
@@ -3030,9 +3030,13 @@ cdef class ProtChMoorings:
         cdef bool dist_search = False
         if self.ProtChSystem.model is not None and self.external_forces_from_ns is True:
             mesh_search = True
-            if self.ProtChSystem.dist_search is True and self.ProtChSystem.first_step is False:
-                Profiling.logEvent("Starting distance search for cable nodes")
+            if self.ProtChSystem.dist_search is True:
                 dist_search = True
+                if self.ProtChSystem.first_step is True:
+                    if self.build_kdtree is True:
+                        dist_search = False
+            if dist_search is True:
+                Profiling.logEvent("Starting distance search for cable nodes")
             else:
                 Profiling.logEvent("Starting k-d tree search for cable nodes")
         for i in range(nb_nodes):
