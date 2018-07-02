@@ -3033,7 +3033,7 @@ cdef class ProtChMoorings:
             if self.ProtChSystem.dist_search is True:
                 dist_search = True
                 if self.ProtChSystem.first_step is True:
-                    if self.build_kdtree is True:
+                    if self.ProtChSystem.build_kdtree is True:
                         dist_search = False
             if dist_search is True:
                 Profiling.logEvent("Starting distance search for cable nodes")
