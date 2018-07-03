@@ -140,15 +140,31 @@ Chaper 11 or k-omega (Wilcox 1998).
     from proteus.ctransportCoefficients import kEpsilon_k_3D_Evaluate_sd
     from proteus.ctransportCoefficients import kEpsilon_k_2D_Evaluate_sd
 
-    def __init__(self, LS_model=None, V_model=0, RD_model=None, kappa_model=None, ME_model=7,
+    def __init__(self,
+                 VOS_model=None, # Solid model
+                 V_model=None, # Fluid model
+                 LS_model=None,
+                 RD_model=None,
+                 kappa_model=None,
+                 ME_model=None,
                  dissipation_model_flag=1,  # default K-Epsilon, 2 --> K-Omega 1998, 3 --> K-Omega 1988
-                 c_mu=0.09, c_1=0.126, c_2=1.92, c_e=0.07,
+                 c_mu=0.09,
+                 c_1=0.126,
+                 c_2=1.92,
+                 c_e=0.07,
                  sigma_e=1.29,
-                 rho_0=998.2, nu_0=1.004e-6,
-                 rho_1=1.205, nu_1=1.500e-5,
+                 rho_0=998.2,
+                 nu_0=1.004e-6,
+                 rho_1=1.205,
+                 nu_1=1.500e-5,
                  g=[0.0, -9.8],
                  nd=3,
-                 epsFact=0.01, useMetrics=0.0, sc_uref=1.0, sc_beta=1.0, default_kappa=1.0e-3):
+                 epsFact=0.01,
+                 useMetrics=0.0,
+                 sc_uref=1.0,
+                 sc_beta=1.0,
+                 default_kappa=1.0e-3
+                 closure = None):
         self.useMetrics = useMetrics
         self.dissipation_model_flag = dissipation_model_flag  # default K-Epsilon, 2 ==> K-Omega 1998, 3 --> K-Omega 1988
         self.variableNames = ['epsilon']
@@ -196,6 +212,7 @@ Chaper 11 or k-omega (Wilcox 1998).
         self.modelIndex = ME_model
         self.RD_modelIndex = RD_model
         self.LS_modelIndex = LS_model
+        self.VOS_modelIndex = VOS_model
         self.kappa_modelIndex = kappa_model
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
@@ -206,6 +223,7 @@ Chaper 11 or k-omega (Wilcox 1998).
         self.eps = self.epsFact * mesh.h
 
     def attachModels(self, modelList):
+        
         assert self.modelIndex is not None and self.modelIndex < len(
             modelList), "Dissipation: invalid index for self model allowed range: [0,%s]" % len(modelList)
         # self
@@ -213,7 +231,9 @@ Chaper 11 or k-omega (Wilcox 1998).
 
         #self.u_old_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
         self.u_old_dof = numpy.copy(self.model.u[0].dof)
-
+        # VOS model
+        if self.VOS_model is not None:
+            self.vosModel = model[self.VOS_modelIndex ]
         # redistanced level set
         if self.RD_modelIndex is not None:
             self.rdModel = modelList[self.RD_modelIndex]
