@@ -62,7 +62,8 @@ setup(name='ChMBDModel',
                               language="c++",
                               extra_compile_args=PROTEUS_OPT,
                               include_dirs=[numpy.get_include(),
-                                            '/Users/yy/p/proteus/proteus'],
+                                            '/Users/yy/p/proteus/proteus',
+                                            '/Users/yy/p/proteus/darwin/include'],#boost
                               library_dirs=[config.PROTEUS_LIB_DIR,config.PROTEUS_LIB_DIR[:-3]+'lib64'],
                                 ),
                 ]

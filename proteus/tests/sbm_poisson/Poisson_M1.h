@@ -5,25 +5,15 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <cstring>
+#include <cassert>
+#include <boost/assert.hpp>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
 #define GAMMA 1.4
 #define Sign(z) (z >= 0.0 ? 1.0 : -1.0)
 
-#define POWER_SMOOTHNESS_INDICATOR 2
-#define IS_BETAij_ONE 0
-
-/////////////////////
-//ENTROPY FUNCTION //
-/////////////////////
-// Power entropy //
-#define entropy_power 2. // phiL and phiR are dummy variables
-#define ENTROPY(phi,dummyL,dummyR) 1./entropy_power*std::pow(fabs(phi),entropy_power)
-#define DENTROPY(phi,dummyL,dummyR) entropy_power == 1. ? 0. : std::pow(fabs(phi),entropy_power-1.)*(phi >= 0. ? 1. : -1.)
-
-#define ENTROPY_LOG(phi,phiL,phiR) std::log(fabs((phi-phiL)*(phiR-phi))+1E-14)
-#define DENTROPY_LOG(phi,phiL,phiR) (phiL+phiR-2*phi)*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(fabs((phi-phiL)*(phiR-phi))+1E-14)
 
 namespace proteus
 {
@@ -103,6 +93,7 @@ namespace proteus
                                     int* u_l2g,
                                     double* elementDiameter,
                                     double* u_dof,
+                                    int u_ndofs,
                                     double* velocity,
                                     double* q_m_betaBDF,
                                     int* csrRowIndeces_u_u,
@@ -209,150 +200,7 @@ namespace proteus
         ball_angular_velocity[1]=0.0;
         ball_angular_velocity[2]=0.0;
       }
-
-      inline void evaluateCoefficients(const double v[nSpace],
-                       const double& u,
-                       const double grad_u[nSpace],
-                       double& m,
-                       double& dm,
-                       double& H,
-                       double dH[nSpace])
-      {
-    m = u;
-    dm=1.0;
-    H = 0.0;
-    for (int I=0; I < nSpace; I++)
-      {
-        H += v[I]*grad_u[I];
-        dH[I] = v[I];
-      }
-      }
-    
-      inline
-    void calculateCFL(const double& elementDiameter,
-              const double df[nSpace],
-              double& cfl)
-      {
-    double h,nrm_v;
-    h = elementDiameter;
-    nrm_v=0.0;
-    for(int I=0;I<nSpace;I++)
-      nrm_v+=df[I]*df[I];
-    nrm_v = sqrt(nrm_v);
-    cfl = nrm_v/h;
-      }
-      inline
-    void calculateCFL(const double& elementDiameter,
-              const double df,
-              double& cfl)
-      {
-    double h,nrm_v;
-    h = elementDiameter;
-    nrm_v=fabs(df);
-    cfl = nrm_v/h;
-      }
-      inline
-    void calculateSubgridError_tau(const double& elementDiameter,
-                       const double& dmt,
-                       const double dH[nSpace],
-                       double& cfl,
-                       double& tau)
-      {
-    double h,nrm_v,oneByAbsdt;
-    h = elementDiameter;
-    nrm_v=0.0;
-    for(int I=0;I<nSpace;I++)
-      nrm_v+=dH[I]*dH[I];
-    nrm_v = sqrt(nrm_v);
-    cfl = nrm_v/h;
-    oneByAbsdt =  fabs(dmt);
-    tau = 1.0/(2.0*nrm_v/h + oneByAbsdt + 1.0e-8);
-      }
-
-
-      inline
-    void calculateSubgridError_tau(     const double&  Ct_sge,
-                        const double   G[nSpace*nSpace],
-                        const double&  A0,
-                        const double   Ai[nSpace],
-                        double& tau_v,
-                        double& cfl)
-      {
-    double v_d_Gv=0.0;
-    for(int I=0;I<nSpace;I++)
-      for (int J=0;J<nSpace;J++)
-        v_d_Gv += Ai[I]*G[I*nSpace+J]*Ai[J];
-
-    tau_v = 1.0/sqrt(Ct_sge*A0*A0 + v_d_Gv + 1.0e-8);
-      }
-
-      void exteriorNumericalFlux(const double n[nSpace],
-                 const double& bc_u,
-                 const double& u,
-                 const double velocity[nSpace],
-                 const double velocity_movingDomain[nSpace],
-                 double& flux)
-      {
-    double flow_total=0.0,flow_fluid=0.0,flow_movingDomain=0.0;
-    for (int I=0; I < nSpace; I++)
-      {
-        flow_fluid += n[I]*velocity[I];
-        //flow_movingDomain -= n[I]*velocity_movingDomain[I];
-      }
-    flow_total = flow_fluid+flow_movingDomain;
-    if (flow_total > 0.0)
-      {
-        flux = u*flow_movingDomain;
-      }
-    else
-      {
-        flux = bc_u*flow_movingDomain - flow_fluid*(u-bc_u);
-      }
-      }
-
-      inline
-    void exteriorNumericalFluxDerivative(const double n[nSpace],
-                         const double velocity[nSpace],
-                         const double velocity_movingDomain[nSpace],
-                         double& dflux)
-      {
-    double flow_total=0.0,flow_fluid=0.0,flow_movingDomain=0.0;
-    for (int I=0; I < nSpace; I++)
-      {
-        flow_fluid += n[I]*velocity[I];
-        //flow_movingDomain -= n[I]*velocity_movingDomain[I];
-      }
-    flow_total=flow_fluid+flow_movingDomain;
-    if (flow_total > 0.0)
-      {
-        dflux = flow_movingDomain;
-      }
-    else
-      {
-        dflux = -flow_fluid;
-      }
-      }
-
-      inline
-    double sign(const double phi,
-            const double eps) //eps=epsFactRedistancing=0.33*he (for instance)
-      {
-    double H;
-    if (phi > eps)
-      H = 1.0;
-    else if (phi < -eps)
-      H = 0.0;
-    else if (phi == 0.0)
-      H = 0.5;
-    else
-      H = 0.5*(1.0 + phi/eps + std::sin(M_PI*phi/eps)/M_PI);
-    return -1.0 + 2.0*H;
-    //return (u > 0 ? 1. : -1.)*(u ==0 ? 0. : 1.);
-    //double tol_sign 0.1;
-    //return (u > tol_sign*epsFactRedistancing ? 1. : -1.)*((u > -tol_sign*epsFactRedistancing && u < tol_sign*epsFactRedistancing) ? 0. : 1.);
-      }
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       void calculateJacobian(//element
                  double dt,
                  double* mesh_trial_ref,
@@ -378,6 +226,7 @@ namespace proteus
                  int* u_l2g,
                  double* elementDiameter,
                  double* u_dof,
+                 int u_ndofs,
                  double* velocity,
                  double* q_m_betaBDF,
                  int* csrRowIndeces_u_u,
@@ -454,10 +303,12 @@ namespace proteus
                       int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
                       surrogate_boundaries.push_back(ebN);
                       //now find which element neighbor this element is
-                      if (eN == elementBoundaryElementsArray[eN*2+0])
+                      if (eN == elementBoundaryElementsArray[ebN*2+0])/////////YY: should be ebN
                           surrogate_boundary_elements.push_back(1);
-                      else
+                      else if(eN == elementBoundaryElementsArray[ebN*2+1])
                           surrogate_boundary_elements.push_back(0);
+                      else
+                          assert(0);
 
                       //check which particle this surrogate edge is related to.
                       int j=-1;
@@ -558,7 +409,7 @@ namespace proteus
                       for (int j=0;j<nDOF_trial_element;j++)
                       {
                               local_dd[i][j] += (u_grad_trial[i*nSpace+0]*u_grad_trial[j*nSpace+0]
-                                               +u_grad_trial[i*nSpace+1]*u_grad_trial[j*nSpace+1])*dV;
+                                                +u_grad_trial[i*nSpace+1]*u_grad_trial[j*nSpace+1])*dV;
                       }
 
                   }
@@ -705,7 +556,10 @@ namespace proteus
 
                       normal_Omega[0] = -P_normal[0];
                       normal_Omega[1] = -P_normal[1];
-
+                      assert(dist>0.0);
+                      assert(h_penalty>0.0);
+                      if (h_penalty < dist)
+                          h_penalty = dist;
                       double C_adim = C_sbm/h_penalty;
                       double beta_adim = beta_sbm/h_penalty;
 
@@ -719,8 +573,9 @@ namespace proteus
 
                           for (int j=0;j<nDOF_trial_element;j++)
                           {
+                              assert(surrogate_boundary_elements[ebN_s]==0);///////YY: ??It does not work
                               register int ebN_i_j = (ebN*4
-                                                      +surrogate_boundary_elements[ebN_s]*3/////////YYYYY
+                                                      +surrogate_boundary_elements[ebN_s]*3/////////YY: bug
                                                       )*nDOF_test_X_trial_element
                                                       + i*nDOF_trial_element + j;
 
@@ -871,17 +726,12 @@ namespace proteus
           for(int eN=0;eN<nElements_global;eN++)
           {
           ///////////////////////////////////////////////////////////////////////////////////////////////
-              register double  local_dd[nDOF_test_element][nDOF_trial_element];
               register double  local_r[nDOF_test_element];
 
               double element_active=1;//use 1 since by default it is assembled over all elements
 
               for (int i=0;i<nDOF_test_element;i++)
               {
-                  for (int j=0;j<nDOF_trial_element;j++)
-                  {
-                          local_dd[i][j]=0.0;
-                  }
                   local_r[i]=0.0;
               }
               ///////////////////////////////////////////////////////////////////////////////////////////////check surrogate boundary
@@ -924,11 +774,11 @@ namespace proteus
                       int opp_node=-1;
                       for (int I=0;I<nDOF_mesh_trial_element;I++)
                       {
-                          quantDOFs[offset_u+stride_u*u_l2g[eN*nDOF_trial_element + I]] = 2.0;
+                          quantDOFs[offset_u+stride_u*u_l2g[eN*nDOF_trial_element + I]] = 2.0;////////YY: for test
                           if (_distance[I] < 0)
                           {
                               opp_node = I;
-                              quantDOFs[offset_u+stride_u*u_l2g[eN*nDOF_trial_element + I]] = 1.0;
+                              quantDOFs[offset_u+stride_u*u_l2g[eN*nDOF_trial_element + I]] = 1.0;////////YY: for test
                           }
                       }
                       assert(opp_node >=0);
@@ -936,11 +786,12 @@ namespace proteus
                       int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
                       surrogate_boundaries.push_back(ebN);
                       //now find which element neighbor this element is
-                      if (eN == elementBoundaryElementsArray[eN*2+0])
+                      if (eN == elementBoundaryElementsArray[ebN*2+0])/////////YY: sould be ebN
                           surrogate_boundary_elements.push_back(1);
-                      else
+                      else if(eN == elementBoundaryElementsArray[ebN*2+1])/////////YY: sould be ebN
                           surrogate_boundary_elements.push_back(0);
-
+                      else
+                          assert(0);
                       //check which particle this surrogate edge is related to.
                       int j=-1;
                       if(use_ball_as_particle==1)
@@ -1087,6 +938,7 @@ namespace proteus
                   {
                       elementResidual_u[i]=0.0;
                   }
+
                   for (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
                   {
                       register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
@@ -1097,16 +949,18 @@ namespace proteus
                         bc_u_ext=0.0,
                         bc_v_ext=0.0,
                         grad_u_ext[nSpace],
-                        jac_ext[nSpace*nSpace],
+                        grad_ux_ext[nSpace]={0.0},
+                        grad_uy_ext[nSpace]={0.0},
+                        jac_ext[nSpace*nSpace]={0.0},
                         jacDet_ext,
-                        jacInv_ext[nSpace*nSpace],
-                        boundaryJac[nSpace*(nSpace-1)],
-                        metricTensor[(nSpace-1)*(nSpace-1)],
+                        jacInv_ext[nSpace*nSpace]={0.0},
+                        boundaryJac[nSpace*(nSpace-1)]={0.0},
+                        metricTensor[(nSpace-1)*(nSpace-1)]={0.0},
                         metricTensorDetSqrt,
                         dS,
-                        u_test_dS[nDOF_test_element],
-                        u_grad_test_dS[nDOF_trial_element*nSpace],
-                        u_grad_trial_trace[nDOF_trial_element*nSpace],
+                        u_test_dS[nDOF_test_element]={0.0},
+                        u_grad_test_dS[nDOF_trial_element*nSpace]={0.0},
+                        u_grad_trial_trace[nDOF_trial_element*nSpace]={0.0},
                         normal[2],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
                         G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty;
                       //compute information about mapping from reference element to physical element
@@ -1194,7 +1048,8 @@ namespace proteus
 
                       assert(dist>0.0);
                       assert(h_penalty>0.0);
-
+                      if (h_penalty < dist)
+                          h_penalty = dist;
                       distance[0] = -P_normal[0]*dist;
                       distance[1] = -P_normal[1]*dist;
                       P_tangent[0] = -P_normal[1];
@@ -1294,197 +1149,9 @@ namespace proteus
                    int PURE_BDF,
                    int LUMPED_MASS_MATRIX)
       {
-    double Ct_sge = 4.0;
-
-    //
-    //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
-    //
-    for(int eN=0;eN<nElements_global;eN++)
-      {
-        register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
-        for (int i=0;i<nDOF_test_element;i++)
-          for (int j=0;j<nDOF_trial_element;j++)
-        {
-          elementJacobian_u_u[i][j]=0.0;
-        }
-        for  (int k=0;k<nQuadraturePoints_element;k++)
-          {
-        int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
-          eN_k_nSpace = eN_k*nSpace,
-          eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
-
-        //declare local storage
-        register double u=0.0,
-          grad_u[nSpace],
-          m=0.0,dm=0.0,
-          H=0.0,dH[nSpace],
-          f[nSpace],df[nSpace],//MOVING_MESH
-          m_t=0.0,dm_t=0.0,
-          dpdeResidual_u_u[nDOF_trial_element],
-          Lstar_u[nDOF_test_element],
-          dsubgridError_u_u[nDOF_trial_element],
-          tau=0.0,tau0=0.0,tau1=0.0,
-          jac[nSpace*nSpace],
-          jacDet,
-          jacInv[nSpace*nSpace],
-          u_grad_trial[nDOF_trial_element*nSpace],
-          dV,
-          u_test_dV[nDOF_test_element],
-          u_grad_test_dV[nDOF_test_element*nSpace],
-          x,y,z,xt,yt,zt,
-          G[nSpace*nSpace],G_dd_G,tr_G;
-        //
-        //calculate solution and gradients at quadrature points
-        //
-        //get jacobian, etc for mapping reference element
-        ck.calculateMapping_element(eN,
-                        k,
-                        mesh_dof,
-                        mesh_l2g,
-                        mesh_trial_ref,
-                        mesh_grad_trial_ref,
-                        jac,
-                        jacDet,
-                        jacInv,
-                        x,y,z);
-        ck.calculateMappingVelocity_element(eN,
-                            k,
-                            mesh_velocity_dof,
-                            mesh_l2g,
-                            mesh_trial_ref,
-                            xt,yt,zt);
-        //get the physical integration weight
-        dV = fabs(jacDet)*dV_ref[k];
-        ck.calculateG(jacInv,G,G_dd_G,tr_G);
-        //get the trial function gradients
-        ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
-        //get the solution
-        ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
-        //get the solution gradients
-        ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
-        //precalculate test function products with integration weights
-        for (int j=0;j<nDOF_trial_element;j++)
-          {
-            u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
-            for (int I=0;I<nSpace;I++)
-              {
-            u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
-              }
-          }
-        //
-        //calculate pde coefficients and derivatives at quadrature points
-        //
-        evaluateCoefficients(&velocity[eN_k_nSpace],
-                     u,
-                     grad_u,
-                     m,
-                     dm,
-                     H,
-                     dH);
-        //
-        //moving mesh
-        //
-        double mesh_velocity[3];
-        mesh_velocity[0] = xt;
-        mesh_velocity[1] = yt;
-        mesh_velocity[2] = zt;
-        for (int I=0;I<nSpace;I++)
-          {
-            f[I] = -MOVING_DOMAIN*m*mesh_velocity[I];
-            df[I] = -MOVING_DOMAIN*dm*mesh_velocity[I];
-          }
-        //
-        //calculate time derivatives
-        //
-        ck.bdf(alphaBDF,
-               q_m_betaBDF[eN_k],
-               m,
-               dm,
-               m_t,
-               dm_t);
-        //
-        //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
-        //
-        //calculate the adjoint times the test functions
-        for (int i=0;i<nDOF_test_element;i++)
-          {
-            //int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace;
-            //Lstar_u[i]=ck.Hamiltonian_adjoint(dH,&u_grad_test_dV[eN_k_i_nSpace]);
-            register int i_nSpace = i*nSpace;
-            Lstar_u[i]=ck.Hamiltonian_adjoint(dH,&u_grad_test_dV[i_nSpace]) + MOVING_DOMAIN*ck.Advection_adjoint(df,&u_grad_test_dV[i_nSpace]);
-
-          }
-        //calculate the Jacobian of strong residual
-        for (int j=0;j<nDOF_trial_element;j++)
-          {
-            //int eN_k_j=eN_k*nDOF_trial_element+j;
-            //int eN_k_j_nSpace = eN_k_j*nSpace;
-            int j_nSpace = j*nSpace;
-            dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref[k*nDOF_trial_element+j]) +
-              ck.HamiltonianJacobian_strong(dH,&u_grad_trial[j_nSpace]) +
-              MOVING_DOMAIN*ck.AdvectionJacobian_strong(df,&u_grad_trial[j_nSpace]);
-
-          }
-        //tau and tau*Res
-        double subgridErrorVelocity[nSpace];
-        for (int I=0;I<nSpace;I++)
-          subgridErrorVelocity[I] = dH[I] - MOVING_DOMAIN*df[I];
-
-        calculateSubgridError_tau(elementDiameter[eN],
-                      dm_t,
-                      subgridErrorVelocity,//dH,
-                      cfl[eN_k],
-                      tau0);
-
-        calculateSubgridError_tau(Ct_sge,
-                      G,
-                      dm_t,
-                      subgridErrorVelocity,//dH,
-                      tau1,
-                      cfl[eN_k]);
-        tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
-
-        for(int j=0;j<nDOF_trial_element;j++)
-          dsubgridError_u_u[j] = -tau*dpdeResidual_u_u[j];
-
-        for(int i=0;i<nDOF_test_element;i++)
-          {
-            //int eN_k_i=eN_k*nDOF_test_element+i;
-            //int eN_k_i_nSpace=eN_k_i*nSpace;
-            for(int j=0;j<nDOF_trial_element;j++)
-              {
-            //int eN_k_j=eN_k*nDOF_trial_element+j;
-            //int eN_k_j_nSpace = eN_k_j*nSpace;
-            int j_nSpace = j*nSpace;
-            int i_nSpace = i*nSpace;
-            if (LUMPED_MASS_MATRIX==1)
-              {
-                if (i==j)
-                  elementJacobian_u_u[i][j] += u_test_dV[i];
-              }
-            else
-              {
-                elementJacobian_u_u[i][j] +=
-                  dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]);
-              }
-              }//j
-          }//i
-          }//k
-        //
-        //load into element Jacobian into global Jacobian
-        //
-        for (int i=0;i<nDOF_test_element;i++)
-          {
-        int eN_i = eN*nDOF_test_element+i;
-        for (int j=0;j<nDOF_trial_element;j++)
-          {
-            int eN_i_j = eN_i*nDOF_trial_element+j;
-            globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
-          }//j
-          }//i
-      }//elements
+          assert(0);
       }//computeMassMatrix
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     };//Poisson
 
   inline Poisson_base* newPoisson(int nSpaceIn,

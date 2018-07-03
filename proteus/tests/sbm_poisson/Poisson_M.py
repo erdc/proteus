@@ -1296,8 +1296,8 @@ class LevelModel(OneLevelTransport):
 #             pass
         
         print "**"*10,"dt= ",self.timeIntegration.dt
-#         import pdb
-#         pdb.set_trace()
+        import pdb
+        pdb.set_trace()
         self.isActiveDOF = np.ones_like(r);#####YY:Used for sbm
         self.Poisson.calculateResidual(  # element
 #         self.coefficients.calculateResidual(#YY
@@ -1336,7 +1336,7 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.nFreeDOF_global[0],#number of free dofs of 0-component #1089
+            self.nFreeDOF_global[0],#number of free dofs of 0-component #1089 #####YY: should be the size of self.u[0].dof == global size of the vector
             self.nnz,   #non-zero elements in global matrix  
             self.rowptr,  # Row indices for global sparse pattern; global = all components #len is 4357(1089*4+1)
             self.colind,  # Column indices for global sparse pattern; global = all components
@@ -1414,6 +1414,7 @@ class LevelModel(OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.u[0].dof,
+            self.u[0].dof.shape[0],
             self.coefficients.q_v,
             self.timeIntegration.beta_bdf[0],  # mwf was self.timeIntegration.m_last[0],
             self.csrRowIndeces[(0, 0)], 
