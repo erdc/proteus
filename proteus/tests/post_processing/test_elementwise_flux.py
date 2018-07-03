@@ -4,6 +4,7 @@
 Test module for BDM2 Elements
 
 """
+from __future__ import print_function
 import proteus.test_utils.TestTools
 import os
 import sys
@@ -48,7 +49,7 @@ class TestElementwiseFlux2D():
             if os.path.exists(file):
                 try:
                     os.remove(file)
-                except OSError, e:
+                except OSError as e:
                     print ("Error: %s - %s." %(e.filename, e.strerror ))
             else:
                 pass

@@ -13,6 +13,7 @@
 #
 #
 
+from __future__ import print_function
 import os
 import proteus
 
@@ -237,7 +238,7 @@ if opts.dataDir != '':
     if comm.isMaster() and not os.path.exists(opts.dataDir):
     	try:
             os.makedirs(opts.dataDir)
-        except Exception, e:
+        except Exception as e:
             print(
                 "Exiting parun, failed creating dataDir = {0}\n{1}".format(
                     opts.dataDir,
@@ -361,11 +362,11 @@ for i in range(len(pList)):
 log("Running Proteus version "+proteus.__version__,level=0)
 if opts.viewer:
     log("Starting viewer")
-    Viewers.viewerOn(so.name+`comm.rank()`,opts.viewer)
+    Viewers.viewerOn(so.name+repr(comm.rank()),opts.viewer)
 
 log("Setting simulation processing defaults")
 for p,simFlags in zip(pList,simFlagsList):
-    pNameProc = p.name + `comm.rank()`
+    pNameProc = p.name + repr(comm.rank())
     simFlags['simulationName'] = p.name
     simFlags['simulationNameProc'] = pNameProc
     simFlags['dataFile']       = pNameProc+'.dat'
@@ -375,15 +376,15 @@ for p,simFlags in zip(pList,simFlagsList):
         simFlags['plotQuantities'] = ['u']  #plot soln and exact soln if exists
         p.coefficients.plotCoefficients = opts.plotCoefficients
     if opts.ensight:
-        if simFlags.has_key('plotOptions'):
-            if simFlags['plotOptions'].has_key('ensight'):
+        if 'plotOptions' in simFlags:
+            if 'ensight' in simFlags['plotOptions']:
                 simFlags['plotOptions']['ensight']['on'] = True
             else:
                 simFlags['plotOptions']['ensight'] = {'on':True}
         else:
             simFlags['plotOptions'] = {'ensight':{'on':True}}
         #control convention on case file for multiple models, doesn't effect parun right now
-        simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`
+        simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ repr(comm.rank())
 if opts.batchFileName != "":
     log("Reading batch file = ",opts.batchFileName)
     #try to split batch file into executable blocks delimited by
@@ -429,7 +430,7 @@ while running:
     elif opts.batchFileName != "":
         userInput = False
         lines = '\n'.join(batchBlocks.pop(0))
-        exec lines
+        exec(lines)
         run = True
         running = len(batchBlocks) > 0
     else:
@@ -450,7 +451,7 @@ while running:
                 running = False
             else:
                 userInput = True
-                exec line
+                exec(line)
                 sys.stdout.write(">>>")
         else:
             userInput = False

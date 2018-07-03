@@ -708,7 +708,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         logEvent("================================================================")
         logEvent("=================== Rigid Body Calculation =====================")
         logEvent("================================================================")
-        logEvent("Name: " + `self.Shape.name`)
+        logEvent("Name: " + repr(self.Shape.name))
         logEvent("================================================================")
         logEvent("[proteus] t=%1.5fsec to t=%1.5fsec" %
                  (t_previous, t_current))

@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from proteus.default_n import *
-import ls_p as physics
+from . import ls_p as physics
 from proteus import (StepControl,
                      TimeIntegration,
                      NonlinearSolvers,

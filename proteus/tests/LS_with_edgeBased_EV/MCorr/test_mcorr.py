@@ -2,6 +2,7 @@
 """
 Test module for the conservative LS with EV
 """
+from __future__ import absolute_import
 
 from proteus.iproteus import *
 from proteus import Comm
@@ -10,16 +11,16 @@ Profiling.logLevel=2
 Profiling.verbose=True
 import numpy as np
 import tables
-import thelper_cons_ls
-import thelper_cons_ls_so
-import thelper_vof_p
-import thelper_vof_n
-import thelper_ncls_p
-import thelper_ncls_n
-import thelper_redist_p
-import thelper_redist_n
-import thelper_MCorr_p
-import thelper_MCorr_n
+from . import thelper_cons_ls
+from . import thelper_cons_ls_so
+from . import thelper_vof_p
+from . import thelper_vof_n
+from . import thelper_ncls_p
+from . import thelper_ncls_n
+from . import thelper_redist_p
+from . import thelper_redist_n
+from . import thelper_MCorr_p
+from . import thelper_MCorr_n
 
 class TestMCorr():
 

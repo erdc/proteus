@@ -5,7 +5,8 @@ A module of objective functions
 .. inheritance-diagram:: proteus.ObjectiveFunctions
    :parts: 1
 """
-from Optimizers import ObjectiveFunction_base
+from __future__ import absolute_import
+from .Optimizers import ObjectiveFunction_base
 #John Chrispell, Summer 07
 import math
 import numpy

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
 from proteus import *
 import numpy
 def generateTrajectories(mesh,v,x_source,t_0,t_f):
@@ -99,7 +100,7 @@ def test_onesource(nx=11,Lx=1.0,ndt=20,q=1.0,theta=1.0,timeflag=0,testflag=0,plo
             if wait4plot:
                 raw_input('hit return to continue')
         else:
-            print 'tau= %s c= %s ' % (tau,c)
+            print('tau= %s c= %s ' % (tau,c))
     #
 #
 

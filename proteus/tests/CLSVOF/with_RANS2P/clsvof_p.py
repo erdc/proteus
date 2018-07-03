@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
 from math import *
-from multiphase import *
+from .multiphase import *
 from proteus.mprans import CLSVOF
 
 LevelModelType = CLSVOF.LevelModel

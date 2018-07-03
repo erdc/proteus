@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
 from proteus.richards import Richards
 
 nd=3
-from griffiths_lane_6 import *
+from .griffiths_lane_6 import *
 genMesh=True
 he = 4.0
 he*=0.5

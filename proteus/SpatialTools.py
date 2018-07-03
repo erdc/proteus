@@ -28,6 +28,7 @@ Example::
    :parts: 1
 
 """
+from __future__ import print_function
 
 from math import cos, sin, sqrt
 import math
@@ -39,6 +40,7 @@ from .Profiling import logEvent
 from subprocess import check_call
 from proteus import Comm
 from copy import deepcopy
+from functools import reduce
 
 
 class Shape(object):
@@ -62,7 +64,7 @@ class Shape(object):
 
     def __init__(self, domain, nd=None, BC_class=None):
         if nd != domain.nd:
-            logEvent('Shape ('+`nd`+'D) and Domain ('+`domain.nd`+'D)' \
+            logEvent('Shape ('+repr(nd)+'D) and Domain ('+repr(domain.nd)+'D)' \
                 ' have different dimensions!')
             sys.exit()
         self.Domain = domain
@@ -203,7 +205,7 @@ class Shape(object):
             parent (current) shape's local index of volume (3D) or facet (2D)
             containing the child shape
         """
-        if self.children.has_key(ind):
+        if ind in self.children:
             self.children[ind] += [shape]
         else:
             self.children[ind] = [shape]
@@ -222,7 +224,7 @@ class Shape(object):
             parent shape's local index of volume (3D) or facet (2D) containing
             the child (current) shape
         """
-        if shape.children.has_key(ind):
+        if ind in shape.children:
             shape.children[ind] += [self]
         else:
             shape.children[ind] = [self]
@@ -1486,7 +1488,7 @@ def _assembleGeometry(domain, BC_class):
                 volumes_to_remove = []
                 for i, volume in enumerate(volumes):
                     # add holes to volumes
-                    if shape.children.has_key(i):
+                    if i in shape.children:
                         for child in shape.children[i]:
                             child_vols = []
                             child_facets = []  # facets in volumes
@@ -1559,7 +1561,7 @@ def getGmshPhysicalGroups(geofile):
                     tag = str(tagflag[0][2:-2])
                     boundaryTags[tag] = None  # add empty BC holder
                     flag = int(tagflag[1])
-                    print tagflag
+                    print(tagflag)
                 else:
                     try:
                         flag = tag = int(tagflag[0])

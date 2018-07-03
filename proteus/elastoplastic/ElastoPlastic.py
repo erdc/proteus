@@ -1,3 +1,4 @@
+from __future__ import print_function
 import proteus
 from .cElastoPlastic import *
 
@@ -21,8 +22,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.gmag = sqrt(sum([gi**2 for gi in g]))
         self.rhow=rhow
         self.pore_fluid_unit_weight = self.gmag*self.rhow
-        print "pore_fluid_unit_weight", self.pore_fluid_unit_weight
-        print "soil_unit_weight", self.materialProperties[0,13]*self.gmag
+        print("pore_fluid_unit_weight", self.pore_fluid_unit_weight)
+        print("soil_unit_weight", self.materialProperties[0,13]*self.gmag)
         self.pa=pa
         self.nd=nd
         mass={}
@@ -135,7 +136,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.materialProperties[it,6] = self.materialProperties_default[it,6]/self.SRF#c_mc
             self.copyInstructions = {'reset_uList':True}
         else:
-            print "Completed========================SRF = "+`self.SRF`+"==============================="
+            print("Completed========================SRF = "+repr(self.SRF)+"===============================")
             self.lastStepWasGravityStep = False
             self.SRF += 0.05
             for it in range(self.materialProperties.shape[0]):
@@ -143,12 +144,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.materialProperties[it,5] = atan(tan(self.materialProperties_default[it,5])/self.SRF)#phi_mc
                     self.materialProperties[it,6] = self.materialProperties_default[it,6]/self.SRF#c_mc
             self.copyInstructions = None
-        print "=========Not Updating Mesh================="
+        print("=========Not Updating Mesh=================")
         #self.mesh.nodeArray[:,0]+=self.model.u[0].dof
         #self.mesh.nodeArray[:,1]+=self.model.u[1].dof
         #self.mesh.nodeArray[:,2]+=self.model.u[2].dof
     def preStep(self,t,firstStep=False):
-        print "Starting========================SRF = "+`self.SRF`+"==============================="
+        print("Starting========================SRF = "+repr(self.SRF)+"===============================")
         if self.lastStepWasGravityStep:
             self.model.u[0].dof[:]=0.0
             self.model.u[1].dof[:]=0.0
@@ -234,28 +235,28 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #cek come back
 	if self.stabilization != None:
 	    for ci in range(self.nc):
-		if coefficients.mass.has_key(ci):
+		if ci in coefficients.mass:
 		    for flag in coefficients.mass[ci].values():
 			if flag == 'nonlinear':
 			    self.stabilizationIsNonlinear=True
-		if  coefficients.advection.has_key(ci):
+		if  ci in coefficients.advection:
 		    for  flag  in coefficients.advection[ci].values():
 			if flag == 'nonlinear':
 			    self.stabilizationIsNonlinear=True
-		if  coefficients.diffusion.has_key(ci):
+		if  ci in coefficients.diffusion:
 		    for diffusionDict in coefficients.diffusion[ci].values():
 			for  flag  in diffusionDict.values():
 			    if flag != 'constant':
 				self.stabilizationIsNonlinear=True
-		if  coefficients.potential.has_key(ci):
+		if  ci in coefficients.potential:
  		    for flag in coefficients.potential[ci].values():
 			if  flag == 'nonlinear':
 			    self.stabilizationIsNonlinear=True
-		if coefficients.reaction.has_key(ci):
+		if ci in coefficients.reaction:
 		    for flag in coefficients.reaction[ci].values():
 			if  flag == 'nonlinear':
 			    self.stabilizationIsNonlinear=True
-		if coefficients.hamiltonian.has_key(ci):
+		if ci in coefficients.hamiltonian:
 		    for flag in coefficients.hamiltonian[ci].values():
 			if  flag == 'nonlinear':
 			    self.stabilizationIsNonlinear=True
@@ -289,7 +290,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         elemQuadIsDict = isinstance(elementQuadrature,dict)
         if elemQuadIsDict: #set terms manually
             for I in self.coefficients.elementIntegralKeys:
-                if elementQuadrature.has_key(I):
+                if I in elementQuadrature:
                     elementQuadratureDict[I] = elementQuadrature[I]
                 else:
                     elementQuadratureDict[I] = elementQuadrature['default']
@@ -299,7 +300,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stabilization != None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(I):
+                    if I in elementQuadrature:
                         elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature[I]
                     else:
                         elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature['default']
@@ -308,7 +309,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.shockCapturing != None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(('numDiff',ci,ci)):
+                    if ('numDiff',ci,ci) in elementQuadrature:
                         elementQuadratureDict[('numDiff',ci,ci)] = elementQuadrature[('numDiff',ci,ci)]
                     else:
                         elementQuadratureDict[('numDiff',ci,ci)] = elementQuadrature['default']
@@ -327,7 +328,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         elementBoundaryQuadratureDict={}
         if isinstance(elementBoundaryQuadrature,dict): #set terms manually
             for I in self.coefficients.elementBoundaryIntegralKeys:
-                if elementBoundaryQuadrature.has_key(I):
+                if I in elementBoundaryQuadrature:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature[I]
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
@@ -595,13 +596,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux = None
         #set penalty terms
         #cek todo move into numerical flux initialization
-        if self.ebq_global.has_key('penalty'):
+        if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebq_global['penalty'][ebN,k] = self.numericalFlux.penalty_constant/(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         #penalty term
         #cek move  to Numerical flux initialization
-        if self.ebqe.has_key('penalty'):
+        if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):

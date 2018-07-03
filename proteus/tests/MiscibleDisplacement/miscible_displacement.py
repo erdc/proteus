@@ -20,6 +20,7 @@ common definitions for simple miscible displacement problem
      We'll assume \hat{\mu}(c) = a*(c-c_0) + b
      
 """
+from __future__ import print_function
 from proteus import *
 from proteus import SubsurfaceTransportCoefficients as STC
 
@@ -48,9 +49,9 @@ class MiscibleDisplacementCoefficients_Flow(STC.SinglePhaseDarcyCoefficients):
                  timeVaryingCoefficients=False, #do the coefficients vary in time?
                  materialValuesLocallyConstant=False): #are the material functions constants? e.g., K_j(x,t) = K^0_j ?
         if concentration_model_id is not None and viscosity_a <= 1.0e-16:
-            print "Warning, specified concentration model with id {0} but no viscosity dependence mu=a*c+b with a={1:10.3e} b={2:10.3e} ".format(concentration_model_id,viscosity_a,viscosity_b)
+            print("Warning, specified concentration model with id {0} but no viscosity dependence mu=a*c+b with a={1:10.3e} b={2:10.3e} ".format(concentration_model_id,viscosity_a,viscosity_b))
         if concentration_model_id is None and viscosity_a > 1.0e-16:
-            print "Warning, no specified concentration model but have viscosity dependence mu=a*c+b with a={0:10.3e} b={1:10.3e} ".format(viscosity_a,viscosity_b)
+            print("Warning, no specified concentration model but have viscosity dependence mu=a*c+b with a={0:10.3e} b={1:10.3e} ".format(viscosity_a,viscosity_b))
         
         self.concentration_model_id = concentration_model_id; self.concentration_model = None
         self.viscosity_a = viscosity_a 
@@ -73,10 +74,10 @@ class MiscibleDisplacementCoefficients_Flow(STC.SinglePhaseDarcyCoefficients):
             #exterior boundary of domain
             self.ebqe_c = self.concentration_model.ebqe[('u',0)]
             #element boundary points treated as unique per element (e.g., for DG) 
-            if self.concentration_model.ebq.has_key(('u',0)):
+            if ('u',0) in self.concentration_model.ebq:
                 self.ebq_c = self.concentration_model.ebq[('u',0)]
             #element boundary points treated as unique per element boundary
-            if self.concentration_model.ebq_global.has_key(('u',0)):
+            if ('u',0) in self.concentration_model.ebq_global:
                 self.ebq_global_c = self.concentration_model.ebq_global[('u',0)]
 
     def initializeElementQuadrature(self,t,cq):

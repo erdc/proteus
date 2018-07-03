@@ -4,6 +4,8 @@ Class hierarchies for working with minimization problems
 .. inheritance-diagram:: proteus.Optimizers
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
 #John Chrispell, Summer 07
 class ObjectiveFunction_base:
     def __init__(self,LHS_x,RHS_x):
@@ -138,7 +140,7 @@ class fminbound(MinAlgo_base):
 
 if __name__ == '__main__':
      # This is a test driver for the Search Algorithm function
-    from ObjectiveFunctions import *
+    from .ObjectiveFunctions import *
     import Gnuplot
     import numpy
 
@@ -180,4 +182,4 @@ if __name__ == '__main__':
     g.plot(d, dmin)
     raw_input('Please press return to continue...\n')
 
-    print "Minimum at (x,f(x)) = (",xmin,",",fmin,")"
+    print("Minimum at (x,f(x)) = (",xmin,",",fmin,")")

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from proteus import Domain
 #if True uses PETSc solvers
 parallel = False
@@ -50,7 +51,7 @@ box=Domain.RectangularDomain(L=(2.0,2.0),
                              name="box");
 box.writePoly("box")
 if unstructured:
-    from rotationDomain import *
+    from .rotationDomain import *
     domain=Domain.PlanarStraightLineGraphDomain(fileprefix="box")
     domain.boundaryTags = box.boundaryTags
     bt = domain.boundaryTags
@@ -104,6 +105,6 @@ correctionType = 'cg'
 #correctionType = 'none'
 if useHex:
     hex=True
-    soname="rotation_c0q"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="rotation_c0q"+repr(pDegree_ls)+correctionType+"_"+timeIntegration_vof+"_"+repr(timeOrder)+"_level_"+repr(lRefinement)
 else:
-    soname="rotation_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="rotation_c0p"+repr(pDegree_ls)+correctionType+"_"+timeIntegration_vof+"_"+repr(timeOrder)+"_level_"+repr(lRefinement)

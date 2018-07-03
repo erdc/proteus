@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+from __future__ import print_function
 from math import *
 from proteus import Domain
 
@@ -56,7 +57,7 @@ def gl_6_3d(width):
                   boundaryLegend['bottom']]
     regions = [[0.001,0.001,0.001]]
     regionFlags = [1]
-    print vertices,vertexFlags,facets,facetFlags,regions,regionFlags
+    print(vertices,vertexFlags,facets,facetFlags,regions,regionFlags)
     domain = Domain.PiecewiseLinearComplexDomain(vertices=vertices,
                                                  vertexFlags=vertexFlags,
                                                  facets=facets,
@@ -73,6 +74,6 @@ if __name__=='__main__':
     domain.writeAsymptote("gl_6_3d")
     domain.writePoly("gl_6_3d")
     domain.writePLY("gl_6_3d")
-    print domain.boundaryFlags
+    print(domain.boundaryFlags)
     #os.system("asy -V gl_6_3d")
     os.system("tetgen -KVApfen gl_6_3d.poly")

@@ -4,6 +4,7 @@ A class hierarchy and tools for building domains of PDE's.
 .. inheritance-diagram:: proteus.Domain
    :parts: 1
 """
+from __future__ import print_function
 
 import sys
 import numpy as np
@@ -783,7 +784,7 @@ class PlanarStraightLineGraphDomain(D_base):
                 pf.write('%d\n' % (0,))
             pf.close()
         else:
-            print "File already exists, not writing polyfile: " +`self.polyfile`
+            print("File already exists, not writing polyfile: " +repr(self.polyfile))
     def writeAsymptote(self,fileprefix):
         """
         Write a representation of the PSLG in the Asymptote vector graphics language
@@ -862,16 +863,16 @@ property float z
                     pf.write("\n")
             #write the segments
             for sN,s in enumerate(self.segments):
-                pf.write(`len(s)`)
+                pf.write(repr(len(s)))
                 for vN in s:
-                    pf.write(" "+`vN`)
+                    pf.write(" "+repr(vN))
                 if hasSegmentFlags:
                     pf.write(" %d\n" % (self.segmentFlags[fN],))
                 else:
                     pf.write("\n")
             pf.close()
         else:
-            print "File already exists, not writing polyfile: " +`self.polyfile`
+            print("File already exists, not writing polyfile: " +repr(self.polyfile))
     def writeXdmf(self,ar):
         """
         Store the PSLG domain in an XDMF file. For now we store the information on holes in and Information element.
@@ -1133,13 +1134,13 @@ class PiecewiseLinearComplexDomain(D_base):
                 else:
                     pf.write('%d %d\n' % (len(f), nFacetHoles))
                 for segmentList in f:
-                    pf.write(`len(segmentList)`+" ")
+                    pf.write(repr(len(segmentList))+" ")
                     for vN in segmentList:
-                        pf.write(`vN+1`+" ")
+                        pf.write(repr(vN+1)+" ")
                     pf.write('\n')
                 if self.facetHoles:
                     for hN, h in enumerate(self.facetHoles[fN]):
-                        pf.write(`hN+1`+' %f %f %f\n' % (h[0],h[1],h[2]))
+                        pf.write(repr(hN+1)+' %f %f %f\n' % (h[0],h[1],h[2]))
             if self.holes:
                 pf.write('%d\n' % (len(self.holes),))
                 for hN, h in enumerate(self.holes):
@@ -1165,7 +1166,7 @@ class PiecewiseLinearComplexDomain(D_base):
                 pf.write('%d\n' % (0,))
             pf.close()
         else:
-            print "File already exists, not writing polyfile: " +`self.polyfile`
+            print("File already exists, not writing polyfile: " +repr(self.polyfile))
 
     def writePLY(self, fileprefix):
         """
@@ -1207,16 +1208,16 @@ property float z
             #write the facets
             for fN,f in enumerate(self.facets):
                 for segmentList in f:
-                    pf.write(`len(segmentList)`)
+                    pf.write(repr(len(segmentList)))
                     for vN in segmentList:
-                        pf.write(" "+`vN`)
+                        pf.write(" "+repr(vN))
                     if hasFacetFlags:
                         pf.write(" %d\n" % (self.facetFlags[fN],))
                     else:
                         pf.write("\n")
             pf.close()
         else:
-            print "File already exists, not writing polyfile: " +`self.polyfile`
+            print("File already exists, not writing polyfile: " +repr(self.polyfile))
 
     def writeAsymptote(self, fileprefix):
         """
@@ -1399,7 +1400,7 @@ def getGmshPhysicalGroups(geofile):
                     tag = tagflag[0]
                     boundaryTags[tag] = None  # add empty BC holder
                     flag = int(tagflag[1])
-                    print tagflag
+                    print(tagflag)
                 else:
                     try:
                         flag = tag = int(tagflag[0])

@@ -4,9 +4,11 @@ Collect higher level tools for running simulation, processing results, etc
 .. inheritance-diagram:: proteus.SimTools
    :parts: 1
 """
-import Norms
+from __future__ import print_function
+from __future__ import absolute_import
+from . import Norms
 import numpy
-import FemTools
+from . import FemTools
 from .Profiling import logEvent
 
 from proteus import Comm
@@ -215,7 +217,7 @@ class SimulationProcessor:
     #end init
 
     def preprocess(self,mlvt,tsim):
-        import Viewers
+        from . import Viewers
         """
         calculate desired quantities before simulation starts
         input :
@@ -233,7 +235,7 @@ class SimulationProcessor:
         if 'globalMassBalance' in self.flags['errorTypes']:
             for il,m in enumerate(mlvt.levelModelList):
                 for ci in range(p.coefficients.nc):
-                    if ci in self.flags['components'] and m.q.has_key(('m',ci)):
+                    if ci in self.flags['components'] and ('m',ci) in m.q:
                         self.errorData[ci][il]['globalMass0'] = Norms.globalScalarDomainIntegral(m.q['abs(det(J))'],
                                                                                              m.elementQuadratureWeights[('m',ci)],
                                                                                              m.q[('m',ci)])
@@ -248,7 +250,7 @@ class SimulationProcessor:
         if 'globalHeavisideMassBalance' in self.flags['errorTypes']:
             for il,m in enumerate(mlvt.levelModelList):
                 for ci in range(p.coefficients.nc):
-                    if ci in self.flags['components'] and m.q.has_key(('m',ci)):
+                    if ci in self.flags['components'] and ('m',ci) in m.q:
                         hm = numpy.where(m.q[('m',ci)] >= 0.0,1.0,0.0)
                         self.errorData[ci][il]['globalHeavisideMass0'] = Norms.globalScalarDomainIntegral(m.q['abs(det(J))'],
                                                                                                   m.elementQuadratureWeights[('m',ci)],
@@ -268,12 +270,12 @@ class SimulationProcessor:
             has_q_velocity = False ; has_ebq_global_velocity = False
             for ci in self.flags['components']:
                 pcikey = "q:('velocity',%s)" % ci
-                if mlvt.levelModelList[-1].q.has_key(('velocity',ci)):
+                if ('velocity',ci) in mlvt.levelModelList[-1].q:
                     has_q_velocity = True
                     if pcikey not in self.flags['plotQuantities']:
                         self.flags['plotQuantities'].append(pcikey)
                 pcikey = "ebq:('velocity',%s)" % ci
-                if mlvt.levelModelList[-1].ebq_global.has_key(('velocity',ci)):
+                if ('velocity',ci) in mlvt.levelModelList[-1].ebq_global:
                     has_ebq_global_velocity = True
                     if pcikey not in self.flags['plotQuantities']:
                         self.flags['plotQuantities'].append(pcikey)
@@ -282,7 +284,7 @@ class SimulationProcessor:
         #end velocity key fix
         ### set options for various output types ...
         for plotter in SimulationProcessor.defaultFlags['plotOptions'].keys():
-            if not self.flags['plotOptions'].has_key(plotter):
+            if plotter not in self.flags['plotOptions']:
                 self.flags['plotOptions'][plotter] = {'on':False}
         #mwf debug
         #import pdb
@@ -293,19 +295,19 @@ class SimulationProcessor:
                 if plotter == Viewers.viewerType:
                     self.flags['plotOptions'][plotter]['on']=True
         if (self.flags['plotOptions']['gnuplot']['on'] and
-            not self.flags['plotOptions']['gnuplot'].has_key('setGnuplotGridSize')):
+            'setGnuplotGridSize' not in self.flags['plotOptions']['gnuplot']):
             self.flags['plotOptions']['gnuplot']['setGnuplotGridSize'] = True
         if (self.flags['plotOptions']['matlab']['on'] and
-            not self.flags['plotOptions']['matlab'].has_key('usePDEtoolbox')):
+            'usePDEtoolbox' not in self.flags['plotOptions']['matlab']):
             self.flags['plotOptions']['matlab']['usePDEtoolbox'] = False
         if self.flags['plotOptions']['vtk']['on']:
-            if not self.flags['plotOptions']['vtk'].has_key('pause'):
+            if 'pause' not in self.flags['plotOptions']['vtk']:
                 self.flags['plotOptions']['vtk']['pause']=False
-            if not self.flags['plotOptions']['vtk'].has_key('hardcopy'):
+            if 'hardcopy' not in self.flags['plotOptions']['vtk']:
                 self.flags['plotOptions']['vtk']['hardcopy']=False
         #try to setup ensight header files correctly
         if self.flags['plotOptions']['ensight']['on']:
-            if not self.flags['plotOptions']['ensight'].has_key('caseFileName'):
+            if 'caseFileName' not in self.flags['plotOptions']['ensight']:
                 self.flags['plotOptions']['ensight']['caseFileName'] = self.flags['simulationNameProc']
             mlvt.levelModelList[-1].u[0].femSpace.writeMeshEnsight(self.flags['plotOptions']['ensight']['caseFileName'],
                                                               self.flags['plotOptions']['ensight']['caseFileName'])
@@ -321,7 +323,7 @@ class SimulationProcessor:
                 recType = quant.split(':')
                 if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                     stval = eval(recType[1])
-                    if mlvt.levelModelList[-1].q.has_key(stval) and not ensight_q_header_written:
+                    if stval in mlvt.levelModelList[-1].q and not ensight_q_header_written:
                         self.writeEnsightMeshForElementQuantities(self.flags['plotOptions']['ensight']['caseFileName'],mlvt)
                         ensight_q_header_written = True
                         self.plottingQuadratureValuesForEnsight['elements']=True
@@ -333,7 +335,7 @@ class SimulationProcessor:
                     recType = quant.split(':')
                     if len(recType) > 1 and recType[0] == 'ebq_global': #found element boundary quadrature (global) quantity
                         stval = eval(recType[1])
-                        if mlvt.levelModelList[-1].ebq_global.has_key(stval) and not ensight_ebq_global_header_written:
+                        if stval in mlvt.levelModelList[-1].ebq_global and not ensight_ebq_global_header_written:
                             self.writeEnsightMeshForElementBoundaryQuantities(self.flags['plotOptions']['ensight']['caseFileName'],mlvt)
                             ensight_ebq_global_header_written = True
                             self.plottingQuadratureValuesForEnsight['elementBoundaries']=True
@@ -377,10 +379,10 @@ class SimulationProcessor:
                 recType = quant.split(':')
                 if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                     stval = eval(recType[1])
-                    if (mlvt.levelModelList[-1].q.has_key(stval) and
+                    if (stval in mlvt.levelModelList[-1].q and
                         len(mlvt.levelModelList[-1].q[stval].shape) == 2): #found quantity and it's a scalar
                         self.writeScalarElementFunctionHeaderEnsight(stval,case_filename,append=False,firstVariable=False)
-                    elif (mlvt.levelModelList[-1].q.has_key(stval) and
+                    elif (stval in mlvt.levelModelList[-1].q and
                           len(mlvt.levelModelList[-1].q[stval].shape) == 3): #found quantity and it's a vector
                         self.writeVectorElementFunctionHeaderEnsight(stval,case_filename,append=False,firstVariable=False)
                     #vec
@@ -391,10 +393,10 @@ class SimulationProcessor:
                     recType = quant.split(':')
                     if len(recType) > 1 and recType[0] == 'ebq_global': #found element quadrature quantity
                         stval = eval(recType[1])
-                        if (mlvt.levelModelList[-1].ebq_global.has_key(stval) and
+                        if (stval in mlvt.levelModelList[-1].ebq_global and
                             len(mlvt.levelModelList[-1].ebq_global[stval].shape) == 2): #found quantity and it's a scalar
                             self.writeScalarElementFunctionHeaderEnsight(stval,case_filename,append=False,firstVariable=False)
-                        elif (mlvt.levelModelList[-1].q.has_key(stval) and
+                        elif (stval in mlvt.levelModelList[-1].q and
                               len(mlvt.levelModelList[-1].q[stval].shape) == 3): #found quantity and it's a vector
                             self.writeVectorElementFunctionHeaderEnsight(stval,case_filename,append=False,firstVariable=False)
                         #vec
@@ -437,7 +439,7 @@ class SimulationProcessor:
                 mlvt.levelModelList[-1].saveSolution()
             self.stepStoreQuantities(mlvt,tsim)
         #end if
-        if 'mesh' in self.flags['storeQuantities'] and not self.dataStorage.has_key('mesh'):
+        if 'mesh' in self.flags['storeQuantities'] and 'mesh' not in self.dataStorage:
             #write out mesh information that is needed by at least ensight?
             meshDict = {}
             pm = mlvt.levelModelList[-1].mesh
@@ -498,7 +500,7 @@ class SimulationProcessor:
         if 'globalMassBalance' in self.flags['errorTypes']:
             for il,m in enumerate(mlvt.levelModelList):
                 for ci in range(p.coefficients.nc):
-                    if ci in self.flags['components'] and m.q.has_key(('m',ci)):
+                    if ci in self.flags['components'] and ('m',ci) in m.q:
                         self.errorData[ci][il]['globalMassF'].append(Norms.globalScalarDomainIntegral(m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                                                                       m.elementQuadratureWeights[('m',ci)],
                                                                                                       m.q[('m',ci)][0:m.mesh.subdomainMesh.nElements_owned]))
@@ -514,7 +516,7 @@ class SimulationProcessor:
         if 'globalHeavisideMassBalance' in self.flags['errorTypes']:
             for il,m in enumerate(mlvt.levelModelList):
                 for ci in range(p.coefficients.nc):
-                    if ci in self.flags['components'] and m.q.has_key(('m',ci)):
+                    if ci in self.flags['components'] and ('m',ci) in m.q:
                         hm = numpy.where(m.q[('m',ci)][0:m.mesh.subdomainMesh.nElements_owned] >= 0.0,1.0,0.0)
                         self.errorData[ci][il]['globalHeavisideMassF'].append(Norms.globalScalarDomainIntegral(m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                                                                        m.elementQuadratureWeights[('m',ci)],
@@ -557,7 +559,7 @@ class SimulationProcessor:
                                 self.errorData[ci][il][kerrtL2] = self.math.sqrt(errTL2)
                                 self.errorData[ci][il][kexatL2] = self.math.sqrt(exaTL2)
                                 if self.flags['echo']:
-                                    print """t= %g; %s[%d][%d]= %g;""" % (tsim,kerrtL2,ci,il,errTL2)
+                                    print("""t= %g; %s[%d][%d]= %g;""" % (tsim,kerrtL2,ci,il,errTL2))
                                 #end if
                             if calcNorm and 'L1_'+snorm in self.flags['errorNorms']:
                                 errTL1 = 0.0
@@ -582,7 +584,7 @@ class SimulationProcessor:
                                 self.errorData[ci][il][kerrtL1] = errL1TV
                                 self.errorData[ci][il][kexatL1] = exaL1TV
                                 if self.flags['echo']:
-                                    print """t= %g; %s[%d][%d]= %g;""" % (tsim,kerrtL1,ci,il,errL1TV)
+                                    print("""t= %g; %s[%d][%d]= %g;""" % (tsim,kerrtL1,ci,il,errL1TV))
                                 #end if
                             #if calcL1+snorm
                             if calcNorm and 'LI_'+snorm in self.flags['errorNorms']:
@@ -597,7 +599,7 @@ class SimulationProcessor:
                                 self.errorData[ci][il][kerrtLI] = errTLI
                                 self.errorData[ci][il][kexatLI] = exaTLI
                                 if self.flags['echo']:
-                                    print """t= %g; %s[%d][%d]= %g;""" % (tsim,kerrtLI,ci,il,errTLI)
+                                    print("""t= %g; %s[%d][%d]= %g;""" % (tsim,kerrtLI,ci,il,errTLI))
                                 #end if
                             #calcLI norm
                         #end space norms
@@ -677,7 +679,7 @@ class SimulationProcessor:
         hasAnalyticalSolution = {}
         hasAnalyticalSolutionVelocity = {}
         for ci in range(p.coefficients.nc):
-            hasAnalyticalSolution[ci] = (self.analyticalSolution.has_key(ci)  and
+            hasAnalyticalSolution[ci] = (ci in self.analyticalSolution  and
                                          self.analyticalSolution[ci] is not None)
             hasAnalyticalSolutionVelocity[ci] = ('analyticalSolutionVelocity' in dir(p) and
                                                  p.analyticalSolutionVelocity is not None and
@@ -1198,7 +1200,7 @@ class SimulationProcessor:
             #end for il
         #end if numerical solution
         if 'localMassBalance' in self.flags['errorTypes']:
-            import cfemIntegrals
+            from . import cfemIntegrals
             for ci in self.flags['components']:
                 for il,m in enumerate(mlvt.levelModelList):
                     #
@@ -1240,7 +1242,7 @@ class SimulationProcessor:
         if 'globalMassBalance' in self.flags['errorTypes']:
             for il,m in enumerate(mlvt.levelModelList):
                 for ci in range(p.coefficients.nc):
-                    if ci in self.flags['components'] and m.q.has_key(('m',ci)):
+                    if ci in self.flags['components'] and ('m',ci) in m.q:
                         globalMass = Norms.globalScalarDomainIntegral(m.q['abs(det(J))'],
                                                              m.elementQuadratureWeights[('m',ci)],
                                                              m.q[('m',ci)])
@@ -1257,7 +1259,7 @@ class SimulationProcessor:
         if 'globalHeavisideMassBalance' in self.flags['errorTypes']:
             for il,m in enumerate(mlvt.levelModelList):
                 for ci in range(p.coefficients.nc):
-                    if ci in self.flags['components'] and m.q.has_key(('m',ci)):
+                    if ci in self.flags['components'] and ('m',ci) in m.q:
                         hm = numpy.where(m.q[('m',ci)] >= 0.0,1.0,0.0)
                         globalMass = Norms.globalScalarDomainIntegral(m.q['abs(det(J))'],
                                                               m.elementQuadratureWeights[('m',ci)],
@@ -1284,7 +1286,7 @@ class SimulationProcessor:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                 stval = eval(recType[1])
-                if (mlvt.levelModelList[-1].q.has_key(stval) and
+                if (stval in mlvt.levelModelList[-1].q and
                     len(mlvt.levelModelList[-1].q[stval].shape) == 2): #found quantity and it's a scalar
                     scalarElementStorageKeys.append(stval)
         return scalarElementStorageKeys
@@ -1298,7 +1300,7 @@ class SimulationProcessor:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                 stval = eval(recType[1])
-                if (mlvt.levelModelList[-1].q.has_key(stval) and
+                if (stval in mlvt.levelModelList[-1].q and
                     len(mlvt.levelModelList[-1].q[stval].shape) == 3): #found quantity and it's a vector
                     vectorElementStorageKeys.append(stval)
         return vectorElementStorageKeys
@@ -1312,7 +1314,7 @@ class SimulationProcessor:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                 stval = eval(recType[1])
-                if (mlvt.levelModelList[-1].q.has_key(stval) and
+                if (stval in mlvt.levelModelList[-1].q and
                     len(mlvt.levelModelList[-1].q[stval].shape) == 4): #found quantity and it's a tensor
                     tensorElementStorageKeys.append(stval)
         return tensorElementStorageKeys
@@ -1326,7 +1328,7 @@ class SimulationProcessor:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebq_global': #found element quadrature quantity
                 stval = eval(recType[1])
-                if (mlvt.levelModelList[-1].ebq_global.has_key(stval) and
+                if (stval in mlvt.levelModelList[-1].ebq_global and
                     len(mlvt.levelModelList[-1].ebq_global[stval].shape) == 2): #found quantity and it's a scalar
                     scalarElementStorageKeys.append(stval)
         return scalarElementStorageKeys
@@ -1340,7 +1342,7 @@ class SimulationProcessor:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebq_global': #found element quadrature quantity
                 stval = eval(recType[1])
-                if (mlvt.levelModelList[-1].ebq_global.has_key(stval) and
+                if (stval in mlvt.levelModelList[-1].ebq_global and
                     len(mlvt.levelModelList[-1].ebq_global[stval].shape) == 3): #found quantity and it's a vector
                     vectorElementStorageKeys.append(stval)
         return vectorElementStorageKeys
@@ -1354,7 +1356,7 @@ class SimulationProcessor:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebq_global': #found element quadrature quantity
                 stval = eval(recType[1])
-                if (mlvt.levelModelList[-1].ebq_global.has_key(stval) and
+                if (stval in mlvt.levelModelList[-1].ebq_global and
                     len(mlvt.levelModelList[-1].ebq_global[stval].shape) == 4): #found quantity and it's a tensor
                     tensorElementStorageKeys.append(stval)
         return tensorElementStorageKeys
@@ -1368,7 +1370,7 @@ class SimulationProcessor:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebqe': #found element quadrature quantity
                 stval = eval(recType[1])
-                if (mlvt.levelModelList[-1].ebqe.has_key(stval) and
+                if (stval in mlvt.levelModelList[-1].ebqe and
                     len(mlvt.levelModelList[-1].ebqe[stval].shape) == 2): #found quantity and it's a scalar
                     scalarElementStorageKeys.append(stval)
         return scalarElementStorageKeys
@@ -1382,7 +1384,7 @@ class SimulationProcessor:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebqe': #found element quadrature quantity
                 stval = eval(recType[1])
-                if (mlvt.levelModelList[-1].ebqe.has_key(stval) and
+                if (stval in mlvt.levelModelList[-1].ebqe and
                     len(mlvt.levelModelList[-1].ebqe[stval].shape) == 3): #found quantity and it's a vector
                     vectorElementStorageKeys.append(stval)
         return vectorElementStorageKeys
@@ -1396,7 +1398,7 @@ class SimulationProcessor:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebqe': #found element quadrature quantity
                 stval = eval(recType[1])
-                if (mlvt.levelModelList[-1].ebqe.has_key(stval) and
+                if (stval in mlvt.levelModelList[-1].ebqe and
                     len(mlvt.levelModelList[-1].ebqe[stval].shape) == 4): #found quantity and it's a tensor
                     tensorElementStorageKeys.append(stval)
         return tensorElementStorageKeys
@@ -1419,21 +1421,21 @@ class SimulationProcessor:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                 stval = eval(recType[1])
-                if (mlvt.levelModelList[-1].q.has_key(stval) and
+                if (stval in mlvt.levelModelList[-1].q and
                     len(mlvt.levelModelList[-1].q[stval].shape) == 2): #found quantity and it's a scalar
                     plottedSomething = True
                     self.plotScalarElementQuantityEnsight(stval,mlvt,tsim)
-                elif (mlvt.levelModelList[-1].q.has_key(stval) and
+                elif (stval in mlvt.levelModelList[-1].q and
                       len(mlvt.levelModelList[-1].q[stval].shape) == 3): #found quantity and it's a vector
                     plottedSomething = True
                     self.plotVectorElementQuantityEnsight(stval,mlvt,tsim)
             elif len(recType) > 1 and recType[0] == 'ebq_global': #found global element boundary quantity
                 stval = eval(recType[1])
-                if (mlvt.levelModelList[-1].ebq_global.has_key(stval) and
+                if (stval in mlvt.levelModelList[-1].ebq_global and
                     len(mlvt.levelModelList[-1].ebq_global[stval].shape) == 2): #found quantity and it's a scalar
                     plottedSomething = True
                     self.plotScalarGlobalElementBoundaryQuantityEnsight(stval,mlvt,tsim)
-                elif (mlvt.levelModelList[-1].ebq_global.has_key(stval) and
+                elif (stval in mlvt.levelModelList[-1].ebq_global and
                       len(mlvt.levelModelList[-1].ebq_global[stval].shape) == 3): #found quantity and its a vector
                     self.plotVectorGlobalElementBoundaryQuantityEnsight(stval,mlvt,tsim)
                     plottedSomething = False
@@ -1488,15 +1490,15 @@ class SimulationProcessor:
             if len(recType) > 1:
                 quadDict = recType[0]
                 stval    = eval(recType[1])
-                if recType[0] == 'q' and m.q.has_key(stval):
+                if recType[0] == 'q' and stval in m.q:
                     q[stval]=m.q[stval]
                     #if not q.has_key('x'):
                     #    q['x']= m.q['x']
-                elif recType[0] == 'ebq' and m.ebq.has_key(stval):
+                elif recType[0] == 'ebq' and stval in m.ebq:
                     ebq[stval] = m.ebq[stval]
                     #if not ebq.has_key('x'):
                     #    ebq['x']=m.ebq['x']
-                elif recType[0] == 'ebq_global' and m.ebq_global.has_key(stval):
+                elif recType[0] == 'ebq_global' and stval in m.ebq_global:
                     ebq_global = m.ebq_global[stval]
                     #if not ebq_global.has_key('x'):
                     #    ebq_global['x']=m.ebq_global['x']
@@ -1514,7 +1516,7 @@ class SimulationProcessor:
             #mwf debug
             #print """SimTools stepStore tsim=%s d=%s len(dval)=%d """ % (tsim,d,len(dval))
             if len(dval) > 0:
-                if self.dataStorage.has_key(d):
+                if d in self.dataStorage:
                     dtmp = self.dataStorage[d]
                     dtmp['t'].append(tsim)
                     dtmp['vals'].append(dval)
@@ -1536,7 +1538,7 @@ class SimulationProcessor:
         if need values of quantities at mesh nodes and don't have them already, use this
         only compute values on finest mesh for now
         """
-        import Quadrature
+        from . import Quadrature
         self.nodalQuadratureInfo = {}
         vt = mlvt.levelModelList[-1]
         nd = vt.nSpace_global; nq = nd+1 ; ne = vt.mesh.nElements_global
@@ -1755,7 +1757,7 @@ class SimulationProcessor:
         vmax=1. #no scaling by default
         if scaleOutput == 'maxComponent':
             vmax =max(mlvt.levelModelList[-1].q[ckey].flat[:])+1.0e-8
-            print "WARNING SimTools Ensight_q_%s: Scaling velocity for output by %s" % (ckey,vmax)
+            print("WARNING SimTools Ensight_q_%s: Scaling velocity for output by %s" % (ckey,vmax))
         for eN in range(mlvt.levelModelList[-1].mesh.nElements_global):
             for k in range(mlvt.levelModelList[-1].nQuadraturePoints_element):
                 for i in range(mlvt.levelModelList[-1].q[ckey].shape[-1]):
@@ -1837,7 +1839,7 @@ class SimulationProcessor:
         vmax=1. #no scaling by default
         if scaleOutput == 'maxComponent':
             vmax =max(mlvt.levelModelList[-1].q[ckey].flat[:])+1.0e-8
-            print "WARNING SimTools Ensight_ebq_global_%s: Scaling velocity for output by %s" % (ckey,vmax)
+            print("WARNING SimTools Ensight_ebq_global_%s: Scaling velocity for output by %s" % (ckey,vmax))
         for ebN in range(mlvt.levelModelList[-1].mesh.nElementBoundaries_global):
             for k in range(mlvt.levelModelList[-1].nElementBoundaryQuadraturePoints_elementBoundary):
                 for i in range(mlvt.levelModelList[-1].ebq_global[ckey].shape[-1]):
@@ -1907,7 +1909,7 @@ def projectToFinestLevel(mlTransport,level,tsim=0.0,verbose=0):
         #else
     #ci
     if verbose > 2:
-        import Viewers
+        from . import Viewers
         if 'viewerType' in dir(Viewers) and Viewers.viewerType == 'gnuplot' and mFine.nSpace_global == 2:
             for ci in range(coefficients.nc):
                 for eN in range(uqprojFine[ci].shape[0]):
@@ -2045,7 +2047,7 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
         velciprojFine = numpy.zeros(mFine.q[('velocity',ci)].shape,'d')
         if mCoarse.velocityPostProcessor.postProcessingTypes[ci] == 'point-eval':
             #assume constant solution/potential gradient over coarse grid
-            print "WARNING projectVelocityToFinestLevelNC type= point-eval assuming constant potential on coarse grid"
+            print("WARNING projectVelocityToFinestLevelNC type= point-eval assuming constant potential on coarse grid")
 
             for ef in range(nEf):
                 ec = ef
@@ -2053,12 +2055,12 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
                     ep = P[lf-l][ec]
                     ec = ep
                 for iq in range(nqf):
-                    if mFine.q.has_key(('a',ci,ci)):
+                    if ('a',ci,ci) in mFine.q:
                         velciprojFine[ef,iq,:] = -numpy.dot(mFine.q[('a',ci,ci)][ef,iq,:,:],
                                                               mCoarse.q[('grad(phi)',ci)][ec,0,:])
                     else:
                         velciprojFine[ef,iq,:] = 0.0
-                    if mFine.q.has_key(('f',ci)):
+                    if ('f',ci) in mFine.q:
                         velciprojFine[ef,iq,:]  += mFine.q[('f',ci)][ef,iq,:]
                 #iq
             #ef
@@ -2076,10 +2078,10 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
         #postprocessing type
     #else on level
     if verbose > 2:
-        print """velocityProjNC \n xArray=%s velciprojFine= %s \n""" % (xArray,
-                                                                        velciprojFine)
+        print("""velocityProjNC \n xArray=%s velciprojFine= %s \n""" % (xArray,
+                                                                        velciprojFine))
     if verbose > 1:
-        import Viewers
+        from . import Viewers
         if 'viewerType' in dir(Viewers) and Viewers.viewerType == 'gnuplot' and mFine.nSpace_global == 2:
             max_u=max(numpy.absolute(numpy.take(velciprojFine,[0],2).flat))
             max_v=max(numpy.absolute(numpy.take(velciprojFine,[1],2).flat))

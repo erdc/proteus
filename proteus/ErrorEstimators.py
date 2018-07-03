@@ -4,15 +4,16 @@ Classes for a posteriori error estimation
 .. inheritance-diagram:: proteus.ErrorEstimators
    :parts: 1
 """
-from Profiling import logEvent
+from __future__ import absolute_import
+from .Profiling import logEvent
 
 class HierarchicalMeshEstimator:
     def __init__(self,mlTransport):
         self.mlTransport = mlTransport
     def calculate(self):
         import numpy
-        import Norms
-        import FemTools
+        from . import Norms
+        from . import FemTools
         t=0.0
         nLevels = len(self.mlTransport.uList)
         assert nLevels > 1, "Need at least two grids for hierarchical mesh estimate"
@@ -45,5 +46,5 @@ class HierarchicalMeshEstimator:
                     localRefinement=True
         if not localRefinement:
             elementTagArray.flat[:]=1
-        logEvent("error "+`error`,level=3)#mwf debug turn off,"elementTagArray",elementTagArray
+        logEvent("error "+repr(error),level=3)#mwf debug turn off,"elementTagArray",elementTagArray
         return (error,elementTagArray)

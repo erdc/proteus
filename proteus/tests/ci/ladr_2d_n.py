@@ -1,6 +1,11 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from ladr_2d_p import *
+try:
+    from .ladr_2d_p import *
+except:
+    from ladr_2d_p import *
+
 timeIntegration = BackwardEuler_cfl
 stepController = Min_dt_cfl_controller
 runCFL=1.0

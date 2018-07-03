@@ -1,3 +1,4 @@
+from __future__ import print_function
 ## Automatically adapted for numpy.oldnumeric Apr 14, 2008 by -c
 
 #! /usr/bin/env python
@@ -93,7 +94,7 @@ def proteusRun(runRoutines):
     (opts,args) = parser.parse_args()
     if opts.petscOptions != None:
         sys.argv = sys.argv[:-1]+opts.petscOptions.split()
-        print sys.argv
+        print(sys.argv)
     comm = Comm.init()
     #mwf modify path to be able to load proteus test problems
     #for now always insert
@@ -194,7 +195,7 @@ def proteusRun(runRoutines):
         elif opts.batchFileName != "":
             userInput = False
             lines = '\n'.join(batchBlocks.pop(0))
-            exec lines
+            exec(lines)
             run     = True
             running = len(batchBlocks) > 0
         else:
@@ -215,7 +216,7 @@ def proteusRun(runRoutines):
                     running = False
                 else:
                     userInput = True
-                    exec line
+                    exec(line)
                     sys.stdout.write(">>>")
             else:
                 userInput = False
@@ -257,7 +258,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         elemQuadIsDict = isinstance(n.elementQuadrature,dict)
         if elemQuadIsDict: #set terms manually
             for I in p.coefficients.elementIntegralKeys:
-                if n.elementQuadrature.has_key(I):
+                if I in n.elementQuadrature:
                     elementQuadratureDict[I] = n.elementQuadrature[I]
                 else:
                     elementQuadratureDict[I] = n.elementQuadrature['default']
@@ -267,7 +268,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         if n.subgridError != None:
             for I in p.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
-                    if n.elementQuadrature.has_key(I):
+                    if I in n.elementQuadrature:
                         elementQuadratureDict[('stab',)+I[1:]] = n.elementQuadrature[I]
                     else:
                         elementQuadratureDict[('stab',)+I[1:]] = n.elementQuadrature['default']
@@ -276,7 +277,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         if n.shockCapturing != None:
             for ci in n.shockCapturing.components:
                 if elemQuadIsDict:
-                    if n.elementQuadrature.has_key(('numDiff',ci,ci)):
+                    if ('numDiff',ci,ci) in n.elementQuadrature:
                         elementQuadratureDict[('numDiff',ci,ci)] = n.elementQuadrature[('numDiff',ci,ci)]
                     else:
                         elementQuadratureDict[('numDiff',ci,ci)] = n.elementQuadrature['default']
@@ -295,7 +296,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         elementBoundaryQuadratureDict={}
         if isinstance(n.elementBoundaryQuadrature,dict): #set terms manually
             for I in p.coefficients.elementBoundaryIntegralKeys:
-                if n.elementBoundaryQuadrature.has_key(I):
+                if I in n.elementBoundaryQuadrature:
                     elementBoundaryQuadratureDict[I] = n.elementBoundaryQuadrature[I]
                 else:
                     elementBoundaryQuadratureDict[I] = n.elementBoundaryQuadrature['default']
@@ -324,7 +325,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                                                   refinementLevels=n.nLevels)
         elif pM.nd==2:
             if pM.polyfile != None:
-                print "reading triangle mesh"
+                print("reading triangle mesh")
                 tmesh = TriangleTools.TriangleBaseMesh(baseFlags="q30Den",
                                                        nbase=1,
                                                        verbose=10)
@@ -352,8 +353,8 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         cPickle.dump(mlMesh,mlMeshFile,protocol=cPickle.HIGHEST_PROTOCOL)
     #mwf debug
     for l in range(n.nLevels):
-        print """proteusRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
-                                                                                      mlMesh.meshList[l].nElements_global,mlMesh.meshList[l].nNodes_global,mlMesh.meshList[l].nElementBoundaries_global,mlMesh.meshList[l].h)
+        print("""proteusRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
+                                                                                      mlMesh.meshList[l].nElements_global,mlMesh.meshList[l].nNodes_global,mlMesh.meshList[l].nElementBoundaries_global,mlMesh.meshList[l].h))
 
 
     Profiling.memory("mesh")
@@ -515,11 +516,11 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     failedFlag=False
     mM = mList[opts.masterModel]
     dt = pList[opts.masterModel].T/nList[opts.masterModel].nDTout
-    print "dt",dt
+    print("dt",dt)
     firstStep=True
     for n,ti,tn in zip(nList,timeIntegratorList,tnList):
         ti.initialize(n.DT,t0=tn,T=pList[opts.masterModel].T)
-        print "proteusRunSSONew2 init stage DT",n.DT
+        print("proteusRunSSONew2 init stage DT",n.DT)
     for m in mList:
         #mwf debug
         #temporarily turn off if not 1d
@@ -535,10 +536,10 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         failedStep = [False for m in mList]
 
         for it in range(len(mList)):
-            print "Model Number =",it
+            print("Model Number =",it)
             for l,mm in enumerate(mList[it].modelList):
                 preCopy = mm.coefficients.preStep(tnList[it],firstStep=firstStep)
-                if preCopy != None and preCopy.has_key(('copy_uList')) and preCopy['copy_uList'] == True:
+                if preCopy != None and ('copy_uList') in preCopy and preCopy['copy_uList'] == True:
                     #cek have to use dof here because models might have different strong Dirichlet conditions.
                     #mList[it].uList[l].flat[:] = mList[preCopy['uList_model']].uList[l].flat[:]
                     for u_ci_lhs,u_ci_rhs in zip(mList[it].modelList[l].u.values(),mList[preCopy['uList_model']].modelList[l].u.values()):
@@ -558,8 +559,8 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
             if True:#firstStep == True:
                 mList[it].chooseDT(nList[it].DT,tnList[it]+dt)
             #mwf debug
-            print """proteusRunSSONew2 tnMaster=%g tn[it]=%g dt=%g model= %s""" % (tnList[opts.masterModel],tnList[it],dt,it)
-            print "tnList[it],dt",tnList[it],dt
+            print("""proteusRunSSONew2 tnMaster=%g tn[it]=%g dt=%g model= %s""" % (tnList[opts.masterModel],tnList[it],dt,it))
+            print("tnList[it],dt",tnList[it],dt)
             failedStep[it],tnList[it] = timeIntegratorList[it].calculateSolution(tnList[it],tnList[it]+dt)
 
             #cek debug
@@ -574,7 +575,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
             #end cek debug
             for l,mm in enumerate(mList[it].modelList):
                 postCopy = mm.coefficients.postStep(tnList[it],firstStep=firstStep)
-                if postCopy != None and postCopy.has_key(('copy_uList')) and postCopy['copy_uList'] == True:
+                if postCopy != None and ('copy_uList') in postCopy and postCopy['copy_uList'] == True:
                     #cek have to use dof here because models might have different strong Dirichlet conditions.
                     #mList[postCopy['uList_model']].uList[l].flat[:] = mList[it].uList[l].flat[:]
                     for u_ci_lhs,u_ci_rhs in zip(mList[postCopy['uList_model']].modelList[l].u.values(),mList[it].modelList[l].u.values()):
@@ -595,7 +596,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         if abs(tnList[opts.masterModel]+dt) > abs(pList[opts.masterModel].T-1.0e-8*tnList[opts.masterModel]):
             dt = pList[opts.masterModel].T-tnList[opts.masterModel]
         if failedFlag:
-            print """proteusRunSSO tn=%g dt=%g failedStep= %s""" % (tnList[opts.masterModel],dt,failedStep)
+            print("""proteusRunSSO tn=%g dt=%g failedStep= %s""" % (tnList[opts.masterModel],dt,failedStep))
         if abs(pList[opts.masterModel].T-tnList[opts.masterModel]) < 1.0e-8*tnList[opts.masterModel]:
             tnList[opts.masterModel] = pList[opts.masterModel].T
         for m,p,pName in zip(mList,pList,pNameList):

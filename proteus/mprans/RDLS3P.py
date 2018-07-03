@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import proteus
 import numpy
 from proteus import *
@@ -16,7 +17,7 @@ from proteus.Transport import OneLevelTransport
 from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
-import cRDLS3P
+from . import cRDLS3P
 
 
 class SubgridError(proteus.SubgridError.SGE_base):
@@ -245,7 +246,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.nModelId is not None:
             self.nModel = modelList[self.nModelId]
             self.q_u0 = self.nModel.q[('u', 0)]
-            if self.nModel.ebq.has_key(('u', 0)):
+            if ('u', 0) in self.nModel.ebq:
                 self.ebq_u0 = self.nModel.ebq[('u', 0)]
             self.ebqe_u0 = self.nModel.ebqe[('u', 0)]
             self.dof_u0 = self.nModel.u[0].dof
@@ -601,28 +602,28 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # cek come back
         if self.stabilization is not None:
             for ci in range(self.nc):
-                if coefficients.mass.has_key(ci):
+                if ci in coefficients.mass:
                     for flag in coefficients.mass[ci].values():
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.advection.has_key(ci):
+                if ci in coefficients.advection:
                     for flag in coefficients.advection[ci].values():
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.diffusion.has_key(ci):
+                if ci in coefficients.diffusion:
                     for diffusionDict in coefficients.diffusion[ci].values():
                         for flag in diffusionDict.values():
                             if flag != 'constant':
                                 self.stabilizationIsNonlinear = True
-                if coefficients.potential.has_key(ci):
+                if ci in coefficients.potential:
                     for flag in coefficients.potential[ci].values():
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.reaction.has_key(ci):
+                if ci in coefficients.reaction:
                     for flag in coefficients.reaction[ci].values():
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.hamiltonian.has_key(ci):
+                if ci in coefficients.hamiltonian:
                     for flag in coefficients.hamiltonian[ci].values():
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
@@ -663,7 +664,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         elemQuadIsDict = isinstance(elementQuadrature, dict)
         if elemQuadIsDict:  # set terms manually
             for I in self.coefficients.elementIntegralKeys:
-                if elementQuadrature.has_key(I):
+                if I in elementQuadrature:
                     elementQuadratureDict[I] = elementQuadrature[I]
                 else:
                     elementQuadratureDict[I] = elementQuadrature['default']
@@ -673,7 +674,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(I):
+                    if I in elementQuadrature:
                         elementQuadratureDict[
                             ('stab',) + I[1:]] = elementQuadrature[I]
                     else:
@@ -685,7 +686,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(('numDiff', ci, ci)):
+                    if ('numDiff', ci, ci) in elementQuadrature:
                         elementQuadratureDict[('numDiff', ci, ci)] = elementQuadrature[
                             ('numDiff', ci, ci)]
                     else:
@@ -711,7 +712,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         elementBoundaryQuadratureDict = {}
         if isinstance(elementBoundaryQuadrature, dict):  # set terms manually
             for I in self.coefficients.elementBoundaryIntegralKeys:
-                if elementBoundaryQuadrature.has_key(I):
+                if I in elementBoundaryQuadrature:
                     elementBoundaryQuadratureDict[
                         I] = elementBoundaryQuadrature[I]
                 else:
@@ -923,7 +924,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux = None
         # set penalty terms
         # cek todo move into numerical flux initialization
-        if self.ebq_global.has_key('penalty'):
+        if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(
                         self.nElementBoundaryQuadraturePoints_elementBoundary):
@@ -931,7 +932,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         # penalty term
         # cek move  to Numerical flux initialization
-        if self.ebqe.has_key('penalty'):
+        if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(
@@ -955,7 +956,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag', ci)] = numpy.zeros(
                 self.ebqe[('advectiveFlux_bc', ci)].shape, 'i')
             for t, g in fbcObject.advectiveFluxBoundaryConditionsDict.iteritems():
-                if self.coefficients.advection.has_key(ci):
+                if ci in self.coefficients.advection:
                     self.ebqe[
                         ('advectiveFlux_bc', ci)][
                         t[0], t[1]] = g(

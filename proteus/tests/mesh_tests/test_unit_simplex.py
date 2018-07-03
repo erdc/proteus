@@ -4,6 +4,7 @@
 Test module for generating unit_simplex elements
 
 """
+from __future__ import print_function
 import pytest
 
 from proteus.iproteus import *
@@ -34,7 +35,7 @@ class TestReferenceSimplex():
             if os.path.exists(file):
                 try:
                     os.remove(file)
-                except OSError, e:
+                except OSError as e:
                     print ("Error: %s - %s." %(e.filename,e.strerror))
             else:
                 pass

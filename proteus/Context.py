@@ -25,6 +25,7 @@ Example (use the global context)::
   nnx = ct.nnx
 
 """
+from __future__ import print_function
 from collections import  namedtuple
 from recordtype import recordtype
 
@@ -92,7 +93,7 @@ def Options(optionsList=None,mutable=False):
         option_overides=contextOptionsString.split(" ")
         for option in option_overides:
             lvalue, rvalue = option.split("=")
-            if contextOptionsDict.has_key(lvalue):
+            if lvalue in contextOptionsDict:
                 logEvent("Processing context input options from commandline")
                 try:
                     contextOptionsDict[lvalue] = ast.literal_eval(rvalue)

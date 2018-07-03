@@ -82,7 +82,7 @@ atolLevelSet     = max(1.0e-12,0.001*he**2)
 linearSolverConvergenceTest = 'r-true' 
 fmmFlag=0
 
-soname="vortex_c0p"+`pDegree_ls`+"_level_"+`ct.refinement`
+soname="vortex_c0p"+repr(pDegree_ls)+"_level_"+repr(ct.refinement)
 
 class MyCoefficients(NCLS.Coefficients):
     def attachModels(self,modelList):

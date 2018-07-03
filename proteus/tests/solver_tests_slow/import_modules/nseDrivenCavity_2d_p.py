@@ -1,8 +1,14 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
 from proteus import Domain
-import nseDrivenCavity_2d
-from TwophaseNavierStokes_ST_LS_SO_VV import TwophaseNavierStokes_ST_LS_SO_VV
+try:
+    from . import nseDrivenCavity_2d
+    from .TwophaseNavierStokes_ST_LS_SO_VV import TwophaseNavierStokes_ST_LS_SO_VV
+except:
+    import nseDrivenCavity_2d
+    from TwophaseNavierStokes_ST_LS_SO_VV import TwophaseNavierStokes_ST_LS_SO_VV
+    
 ct = nseDrivenCavity_2d.opts
 
 """

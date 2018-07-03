@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
-from multiphase import *
+from .multiphase import *
 from proteus.mprans import MCorr3P
 
 LevelModelType = MCorr3P.LevelModel

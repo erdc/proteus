@@ -8,11 +8,13 @@ representations using PETSc.
 .. inheritance-diagram:: proteus.LinearAlgebraTools
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
 import numpy
 import math
 import sys
-import superluWrappers
-import Comm
+from . import superluWrappers
+from . import Comm
 from .superluWrappers import *
 from .Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc
@@ -422,7 +424,7 @@ class ParVec:
                  nghosts=None,
                  subdomain2global=None,
                  blockVecType="simple"):#"block"
-        import flcbdfWrappers
+        from . import flcbdfWrappers
         self.dim_proc=n*blockSize
         if nghosts is None:
             if blockVecType=="simple":
@@ -567,20 +569,20 @@ class ParInfo_petsc4py:
         self.mixed = False
 
     def print_info(cls):
-        import Comm
+        from . import Comm
         comm = Comm.get()
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_bs = ' + `cls.par_bs`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_n = ' + `cls.par_n`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_n_lst = ' + `cls.par_n_lst`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_N = ' + `cls.par_N`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_nghost = ' + `cls.par_nghost`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_nghost_lst = ' + `cls.par_nghost_lst`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' petsc_subdomain2global_petsc = ' + `cls.petsc_subdomain2global_petsc`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' subdomain2global = ' + `cls.subdomain2global`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' proteus2petsc_subdomain = ' + `cls.proteus2petsc_subdomain`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' petsc2proteus_subomdain = ' + `cls.petsc2proteus_subdomain`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' dim = ' + `cls.dim`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' nzval_proteus2petsc = ' + `cls.nzval_proteus2petsc`)
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_bs = ' + repr(cls.par_bs))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_n = ' + repr(cls.par_n))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_n_lst = ' + repr(cls.par_n_lst))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_N = ' + repr(cls.par_N))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_nghost = ' + repr(cls.par_nghost))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_nghost_lst = ' + repr(cls.par_nghost_lst))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' petsc_subdomain2global_petsc = ' + repr(cls.petsc_subdomain2global_petsc))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' subdomain2global = ' + repr(cls.subdomain2global))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' proteus2petsc_subdomain = ' + repr(cls.proteus2petsc_subdomain))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' petsc2proteus_subomdain = ' + repr(cls.petsc2proteus_subdomain))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' dim = ' + repr(cls.dim))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' nzval_proteus2petsc = ' + repr(cls.nzval_proteus2petsc))
 
 class ParMat_petsc4py(p4pyPETSc.Mat):
     """  Parallel matrix based on petsc4py's wrappers for PETSc.
@@ -778,7 +780,7 @@ def SparseMatFromDict(nr,nc,aDict):
     """
     Build a nr x nc sparse matrix from a dictionary representation
     """
-    import superluWrappers
+    from . import superluWrappers
     indeces = aDict.keys()
     indeces.sort()
     nnz     = len(indeces)
@@ -999,8 +1001,8 @@ class InvOperatorShell(OperatorShell):
         try:
             num_known_dof = len(self.strong_dirichlet_DOF)
         except AttributeError:
-            print "ERROR - strong_dirichlet_DOF have not been " \
-                  " assigned for this inverse operator object."
+            print("ERROR - strong_dirichlet_DOF have not been " \
+                  " assigned for this inverse operator object.")
             exit()
         num_dof = self.getSize()
         num_unknown_dof = num_dof - num_known_dof
@@ -1367,7 +1369,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         par_info : ParInfoClass
             Provides parallel info.
         """
-        import LinearSolvers as LS
+        from . import LinearSolvers as LS
 
         # Set attributes
         self.Qp_visc = Qp_visc

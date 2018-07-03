@@ -1,12 +1,20 @@
 """
 Incompressible Navier-Stokes flow around a cylinder in 2D.
 """
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
 import sys
-import step2d
+try:
+    from . import step2d
+except:
+    import step2d
 reload(step2d)
-from step2d import *
+try:
+    from .step2d import *
+except:
+    from step2d import *
+
 from proteus.mprans import RANS2P
 
 from proteus import Context

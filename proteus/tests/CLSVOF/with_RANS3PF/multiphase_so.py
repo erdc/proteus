@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from proteus.default_so import *
-import multiphase
+from . import multiphase
 
 from proteus.SplitOperator import Sequential_FixedStep_Simple, defaultSystem
 

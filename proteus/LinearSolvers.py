@@ -4,14 +4,16 @@ A hierarchy of classes for linear algebraic system solvers.
 .. inheritance-diagram:: proteus.LinearSolvers
    :parts: 1
 """
-from LinearAlgebraTools import *
-import LinearAlgebraTools as LAT
-import FemTools
-import lapackWrappers
-import superluWrappers
-import TransportCoefficients
-import cfemIntegrals
-import Quadrature
+from __future__ import print_function
+from __future__ import absolute_import
+from .LinearAlgebraTools import *
+from . import LinearAlgebraTools as LAT
+from . import FemTools
+from . import lapackWrappers
+from . import superluWrappers
+from . import TransportCoefficients
+from . import cfemIntegrals
+from . import Quadrature
 from petsc4py import PETSc as p4pyPETSc
 from math import *
 import math
@@ -181,7 +183,7 @@ class LinearSolver():
         if convergedFlag == True and self.computeRates == True:
             self.computeAverages()
         if self.printInfo == True:
-            print self.info()
+            print(self.info())
         return convergedFlag
     def failed(self):
         failedFlag = False
@@ -329,15 +331,15 @@ class LU(LinearSolver):
                                                      self.work,
                                                      5*self.n)
             eigen_mags = numpy.sqrt(self.eigenvalues_r**2 + self.eigenvalues_i**2)
-            logEvent("Minimum eigenvalue magnitude"+`eigen_mags.min()`)
-            logEvent("Maximum eigenvalue magnitude"+`eigen_mags.max()`)
-            logEvent("Minimum real part of eigenvalue "+`self.eigenvalues_r.min()`)
-            logEvent("Maximum real part of eigenvalue "+`self.eigenvalues_r.max()`)
-            logEvent("Minimum complex part of eigenvalue "+`self.eigenvalues_i.min()`)
-            logEvent("Maximum complex part of eigenvalue "+`self.eigenvalues_i.max()`)
+            logEvent("Minimum eigenvalue magnitude"+repr(eigen_mags.min()))
+            logEvent("Maximum eigenvalue magnitude"+repr(eigen_mags.max()))
+            logEvent("Minimum real part of eigenvalue "+repr(self.eigenvalues_r.min()))
+            logEvent("Maximum real part of eigenvalue "+repr(self.eigenvalues_r.max()))
+            logEvent("Minimum complex part of eigenvalue "+repr(self.eigenvalues_i.min()))
+            logEvent("Maximum complex part of eigenvalue "+repr(self.eigenvalues_i.max()))
 class PETSc(LinearSolver):
     def __init__(self,L,par_L,prefix=None):
-        import flcbdfWrappers
+        from . import flcbdfWrappers
         LinearSolver.__init__(self,L)
         assert type(L).__name__ == 'SparseMatrix', "PETSc can only be called with a local sparse matrix"
         self.solverName  = "PETSc"
@@ -755,8 +757,8 @@ class SchurOperatorConstructor:
         """
         from proteus.mprans import RANS2P
         if linear_smoother.PCType!='schur':
-            raise Exception, 'This function only works with the' \
-                'LinearSmoothers for Schur Complements.'
+            raise Exception('This function only works with the' \
+                'LinearSmoothers for Schur Complements.')
         self.linear_smoother=linear_smoother
         self.L = linear_smoother.L
         self.pde_type = pde_type
@@ -770,7 +772,7 @@ class SchurOperatorConstructor:
                 pass
 
     def _initializeMat(self,jacobian):
-        import Comm
+        from . import Comm
         comm = Comm.get()
         transport = self.L.pde
         rowptr, colind, nzval = jacobian.getCSRrepresentation()
@@ -818,7 +820,7 @@ class SchurOperatorConstructor:
         -------
         two_phase_Cp_rho : matrix
         """
-        import Comm
+        from . import Comm
         comm = Comm.get()
         self.opBuilder.attachTPAdvectionOperator()
         par_info = self.linear_smoother.L.pde.par_info
@@ -861,7 +863,7 @@ class SchurOperatorConstructor:
         -------
         two_phase_Ap_inv : matrix
         """
-        import Comm
+        from . import Comm
         comm = Comm.get()
         self.opBuilder.attachLaplaceOperator()
         par_info = self.linear_smoother.L.pde.par_info
@@ -904,7 +906,7 @@ class SchurOperatorConstructor:
         -------
         two_phase_Ap_inv : matrix
         """
-        import Comm
+        from . import Comm
         comm = Comm.get()
         self.opBuilder.attachScaledMassOperator()
         par_info = self.linear_smoother.L.pde.par_info
@@ -946,7 +948,7 @@ class SchurOperatorConstructor:
         -------
         two_phase_Ap_inv : matrix
         """
-        import Comm
+        from . import Comm
         comm = Comm.get()
         self.opBuilder.attachInvScaledMassOperator()
         par_info = self.linear_smoother.L.pde.par_info
@@ -989,7 +991,7 @@ class SchurOperatorConstructor:
         Q : matrix
             The mass matrix.
         """
-        import Comm
+        from . import Comm
         comm = Comm.get()
         self.opBuilder.attachMassOperator()
         par_info = self.linear_smoother.L.pde.par_info
@@ -1817,7 +1819,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
             self.strongPressureDOF = []
 
     def setUp(self, global_ksp):
-        import Comm
+        from . import Comm
         comm = Comm.get()
         self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
         self.operator_constructor.updateInvScaledAp()
@@ -1996,7 +1998,7 @@ class NavierStokes3D:
             self.Qsys_petsc4py.assemblyBegin()
             self.Qsys_petsc4py.assemblyEnd()
             self.Qp = self.Qsys_petsc4py.getSubMatrix(self.isp,self.isp)
-            from LinearAlgebraTools import _petsc_view
+            from .LinearAlgebraTools import _petsc_view
             _petsc_view(self.Qp, "Qp")#write to Qp.m
             #running Qp.m will load into matlab  sparse matrix
             #runnig Qpf = full(Mat_...) will get the full matrix
@@ -2081,9 +2083,9 @@ class SimpleDarcyFC:
     def __init__(self,L):
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
-        print "L_sizes",L_sizes
+        print("L_sizes",L_sizes)
         neqns = L_sizes[0][0]
-        print "neqns",neqns
+        print("neqns",neqns)
         self.saturationDOF = numpy.arange(L_range[0],L_range[0]+neqns/2,dtype="i")
         #print "saturation",self.saturationDOF
         self.pressureDOF = numpy.arange(L_range[0]+neqns/2,L_range[0]+neqns,dtype="i")
@@ -2187,7 +2189,7 @@ class Jacobi(LinearSolver):
     """
     Damped Jacobi iteration.
     """
-    import csmoothers
+    from . import csmoothers
     def __init__(self,
                  L,
                  weight=1.0,
@@ -2235,7 +2237,7 @@ class GaussSeidel(LinearSolver):
     """
     Damped Gauss-Seidel.
     """
-    import csmoothers
+    from . import csmoothers
     def __init__(self,
                  connectionList,
                  L,
@@ -2302,7 +2304,7 @@ class StarILU(LinearSolver):
     """
     Alternating Schwarz Method on node stars.
     """
-    import csmoothers
+    from . import csmoothers
     def __init__(self,
                  connectionList,
                  L,
@@ -2405,7 +2407,7 @@ class StarBILU(LinearSolver):
     """
     Alternating Schwarz Method on 'blocks' consisting of consectutive rows in system for things like dg ...
     """
-    import csmoothers
+    from . import csmoothers
     def __init__(self,
                  connectionList,
                  L,
@@ -2928,7 +2930,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                   printInfo = printLevelSolverInfo))
         levelLinearSolver = levelLinearSolverList
     else:
-        raise RuntimeError,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Unknown level linear solver "+ levelLinearSolverType
+        raise RuntimeError("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Unknown level linear solver "+ levelLinearSolverType)
     if multilevelLinearSolverType == NI:
         multilevelLinearSolver = NI(solverList = levelLinearSolverList,
                                     prolongList = prolongList,
@@ -2950,7 +2952,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                         computeRates = computeSolverRates,
                                                         printInfo=printSolverInfo)
     else:
-        raise RuntimeError,"Unknown linear solver %s" % multilevelLinearSolverType
+        raise RuntimeError("Unknown linear solver %s" % multilevelLinearSolverType)
     if (levelLinearSolverType == LU):
         directSolverFlag=True
     else:
@@ -2963,8 +2965,8 @@ def multilevelLinearSolverChooser(linearOperatorList,
 
 if __name__ == '__main__':
     from LinearAlgebra import *
-    import LinearSolvers
-    from LinearSolvers import *
+    from . import LinearSolvers
+    from .LinearSolvers import *
     import Gnuplot
     from Gnuplot import *
     from math import *
@@ -3080,7 +3082,7 @@ if __name__ == '__main__':
         dev.computeEigenvalues()
         evals.append(dev.eigenvalues)
         ratio = (max(abs(dev.eigenvalues))/min(abs(dev.eigenvalues)))*(h**2)
-        print "k*h**2 %12.5E" % ratio
+        print("k*h**2 %12.5E" % ratio)
     gevals = Gnuplot.Gnuplot()
     gevals("set terminal x11")
     gevals.plot(Gnuplot.Data(evals[0],title='eigenvalues'))
@@ -3649,10 +3651,10 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
                 'd')
 
         for ci in range(self.model.nc):
-            if Q.has_key(('w',ci)):
+            if ('w',ci) in Q:
                 self.model.testSpace[ci].getBasisValues(self.model.elementQuadraturePoints,
                                                       Q[('w',ci)])
-            if Q.has_key(('grad(w)',ci)):
+            if ('grad(w)',ci) in Q:
                 self.model.testSpace[ci].getBasisGradientValues(self.model.elementQuadraturePoints,
                                                               Q[('inverse(J)')],
                                                               Q[('grad(w)',ci)])
@@ -3687,10 +3689,10 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
                 'd')
 
         for ci in range(self.model.nc):
-            if Q.has_key(('v',ci)):
+            if ('v',ci) in Q:
                 self.model.testSpace[ci].getBasisValues(self.model.elementQuadraturePoints,
                                                       Q[('v',ci)])
-            if Q.has_key(('grad(v)',ci)):
+            if ('grad(v)',ci) in Q:
                 self.model.testSpace[ci].getBasisGradientValues(self.model.elementQuadraturePoints,
                                                               Q[('inverse(J)')],
                                                               Q[('grad(v)',ci)])
@@ -3751,7 +3753,7 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
         (elementQuadraturePoints,elementQuadratureWeights,
          elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
         for ci in range(self.model.nc):
-            if Q.has_key(('w*dV_m',ci)):
+            if ('w*dV_m',ci) in Q:
                 cfemIntegrals.calculateWeightedShape(elementQuadratureWeights[('m',ci)],
                                                      self._operatorQ['abs(det(J))'],
                                                      self._operatorQ[('w',ci)],

@@ -6,11 +6,13 @@ approximate) for the free surface deformation and subsurface velocity
 components of water waves. These can be used as boundary conditions, wave
 generation sources, and validation solutions for numerical wave codes.
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
 import cython
 import numpy as np
 import cmath as cmat
-from Profiling import logEvent
+from .Profiling import logEvent
 from proteus import Comm
 import time as tt
 import sys as sys
@@ -1663,7 +1665,7 @@ class DirectionalWaves:
 
 
         # Directional waves propagate usually in a plane -90 to 90 deg with respect to the direction vector, normal to the gavity direction. Rotating the waveDir0 vector around the g vector to produce the directional space
-        from SpatialTools import rotation3D
+        from .SpatialTools import rotation3D
         thetas = np.linspace(-M_PI/2,M_PI/2,2*M+1)
         dth = (thetas[1] - thetas[0])
         self.waveDirs = np.zeros((2*M+1,3),)
@@ -2467,12 +2469,12 @@ class RandomWavesFast:
 
 
         """
-        print "Number of windows=",self.Nwind
-        print "Direct reconstruction? ",self.rec_d
-        print "Start Time =", self.series[0,0]
-        print "End time= ",self.series[-1,0]
-        print "Cutoff=", self.cutoff
-        print "Er1 =", self.er1
+        print("Number of windows=",self.Nwind)
+        print("Direct reconstruction? ",self.rec_d)
+        print("Start Time =", self.series[0,0])
+        print("End time= ",self.series[-1,0])
+        print("Cutoff=", self.cutoff)
+        print("Er1 =", self.er1)
 
 
 

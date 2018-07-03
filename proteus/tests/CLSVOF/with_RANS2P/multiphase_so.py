@@ -1,9 +1,10 @@
 """
 Split operator module for multiphase: CLSVOF with RANS2P
 """
+from __future__ import absolute_import
 import os
 from proteus.default_so import *
-import multiphase
+from . import multiphase
 
 if multiphase.useCLSVOF:
     pnList = [("twp_navier_stokes_p", "twp_navier_stokes_n"),

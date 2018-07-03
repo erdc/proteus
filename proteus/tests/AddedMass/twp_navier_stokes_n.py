@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import StepControl, TimeIntegration, NonlinearSolvers, LinearSolvers
 from proteus.default_n import *
-from twp_navier_stokes_p import *
+from .twp_navier_stokes_p import *
 from proteus import Context
 
 ct = Context.get()

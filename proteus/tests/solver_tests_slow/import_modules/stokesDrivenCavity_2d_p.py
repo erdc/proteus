@@ -1,7 +1,11 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
 from proteus import Domain
-import stokesDrivenCavity_2d
+try:
+    from . import stokesDrivenCavity_2d
+except:
+    import stokesDrivenCavity_2d
 ct = stokesDrivenCavity_2d.opts
 """
 Stokes Driven Cavity Flow - this file contains the physics

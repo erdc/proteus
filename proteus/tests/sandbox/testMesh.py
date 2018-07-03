@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from MeshTools import *
 import numpy
 
@@ -182,28 +183,28 @@ if __name__=='__main__':
     viewMesh = 2
     mesh = constructTriangularMeshOnRectangle(Lx,Ly,nx,ny,viewMesh)
 
-    print 'mesh Info says \n',mesh.meshInfo()
+    print('mesh Info says \n',mesh.meshInfo())
     fileName2 = 'meshV2'
     mp,me,mt = buildMatlabMeshDataStructures(mesh,fileName2)
 
     if verboseLevel > 1:
         #do brute force loop through array to look at it
-        print 'matlab node array is '
+        print('matlab node array is ')
         for j in xrange(mp.shape[1]): #number of columns is number of nodes
-            print '\t',mp[0,j],' ',mp[1,j]
+            print('\t',mp[0,j],' ',mp[1,j])
         #end for
 
         #do brute force loop through edge array too
-        print 'matlab edge array holds (matlab edge id, node 0, node 1)'
-        print 'note base 0'
+        print('matlab edge array holds (matlab edge id, node 0, node 1)')
+        print('note base 0')
         for j in xrange(me.shape[1]): #number of columns is number of edges
-            print '\t',me[4,j]-1,' ',me[0,j]-1,' ',me[1,j]-1
+            print('\t',me[4,j]-1,' ',me[0,j]-1,' ',me[1,j]-1)
         #end for
 
         #do brute force loop through element array too
-        print 'matlab elem array (matlab elem id, node 0, node 1, node 3)'
-        print 'note base 0'
+        print('matlab elem array (matlab elem id, node 0, node 1, node 3)')
+        print('note base 0')
         for j in xrange(mt.shape[1]): #number of columns is number of edges
-            print '\t',j,' ',mt[0,j]-1,' ',mt[1,j]-1,' ',mt[2,j]-1
+            print('\t',j,' ',mt[0,j]-1,' ',mt[1,j]-1,' ',mt[2,j]-1)
         #end for
     #end verbose print out for mesh

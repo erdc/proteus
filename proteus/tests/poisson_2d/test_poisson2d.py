@@ -9,11 +9,13 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
 from proteus.iproteus import *
 import os
 import numpy as np
-import poisson_het_2d_p
-import poisson_het_2d_c0pk_n
+from . import poisson_het_2d_p
+from . import poisson_het_2d_c0pk_n
 
 class TestPoisson2D():
 
@@ -39,7 +41,7 @@ class TestPoisson2D():
             if os.path.exists(f):
                 try:
                     os.remove(f)
-                except OSError, e:
+                except OSError as e:
                     print ("Error: %s - %s" %(e.filename,e.strerror))
             else:
                 pass
@@ -50,7 +52,7 @@ class TestPoisson2D():
         nList = [poisson_het_2d_c0pk_n]
         reload(default_so)
         so = default_so
-        so.name = pList[0].name = "poisson_2d_c0p1"+"pe"+`comm.size()`
+        so.name = pList[0].name = "poisson_2d_c0p1"+"pe"+repr(comm.size())
         reload(default_s)
         so.sList=[default_s]
         opts.logLevel=7
@@ -81,7 +83,7 @@ class TestPoisson2D():
         nList = [poisson_het_2d_c0pk_n]
         reload(default_so)
         so = default_so
-        so.name = pList[0].name = "poisson_2d_c0p2"+"pe"+`comm.size()`
+        so.name = pList[0].name = "poisson_2d_c0p2"+"pe"+repr(comm.size())
         reload(default_s)
         so.sList=[default_s]
         opts.logLevel=7
@@ -124,7 +126,7 @@ class TestPoisson2D():
         nList = [poisson_het_2d_c0pk_n]
         reload(default_so)
         so = default_so
-        so.name = pList[0].name = "poisson_2d_c0p1_2dm"+"pe"+`comm.size()`
+        so.name = pList[0].name = "poisson_2d_c0p1_2dm"+"pe"+repr(comm.size())
         reload(default_s)
         so.sList=[default_s]
         opts.logLevel=7
@@ -147,14 +149,14 @@ class TestPoisson2D():
         del ns
 
 def compute_load_vector(use_weak_dirichlet=False):
-    import poisson_het_2d_p
+    from . import poisson_het_2d_p
     reload(poisson_het_2d_p)
-    import poisson_het_2d_c0pk_n
+    from . import poisson_het_2d_c0pk_n
     pList = [poisson_het_2d_p]
     nList = [poisson_het_2d_c0pk_n]
     reload(default_so)
     so = default_so
-    so.name = pList[0].name = "poisson_2d_c0p1"+"pe"+`comm.size()`
+    so.name = pList[0].name = "poisson_2d_c0p1"+"pe"+repr(comm.size())
     reload(default_s)
     so.sList=[default_s]
     opts.logLevel=7

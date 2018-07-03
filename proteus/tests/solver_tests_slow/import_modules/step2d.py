@@ -1,3 +1,4 @@
+from __future__ import print_function
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -33,7 +34,7 @@ he = opts.he
 
 # Input checks
 if spaceOrder not in [1,2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit() 
 if spaceOrder == 1:
     hFactor=1.0

@@ -4,22 +4,24 @@ A hierarchy of classes for managing complete numerical solution implementations
 .. inheritance-diagram:: proteus.NumericalSolution
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import numpy
 from subprocess import check_call
 
-import LinearSolvers
-import NonlinearSolvers
-import TriangleTools
-import MeshTools
-import Profiling
-import Transport
-import SimTools
-import Archiver
-import Viewers
-from Archiver import ArchiveFlags
-import Domain
+from . import LinearSolvers
+from . import NonlinearSolvers
+from . import TriangleTools
+from . import MeshTools
+from . import Profiling
+from . import Transport
+from . import SimTools
+from . import Archiver
+from . import Viewers
+from .Archiver import ArchiveFlags
+from . import Domain
 
 from .Profiling import logEvent
 
@@ -60,7 +62,7 @@ class NS_base:  # (HasTraits):
     """
 
     def __init__(self,so,pList,nList,sList,opts,simFlagsList=None):
-        import Comm
+        from . import Comm
         comm=Comm.get()
         self.comm=comm
         message = "Initializing NumericalSolution for "+so.name+"\n System includes: \n"
@@ -105,7 +107,7 @@ class NS_base:  # (HasTraits):
         if simFlagsList is not None:
             assert len(simFlagsList) == len(self.pList), "len(simFlagsList) = %s should be %s " % (len(simFlagsList),len(self.pList))
             for index in range(len(self.pList)):
-                if simFlagsList[index].has_key('storeQuantities'):
+                if 'storeQuantities' in simFlagsList[index]:
                     for quant in filter(lambda a: a is not None,simFlagsList[index]['storeQuantities']):
                         recType = quant.split(':')
                         if len(recType) > 1 and recType[0] == 'q':
@@ -580,10 +582,10 @@ class NS_base:  # (HasTraits):
             if p.coefficients.sdInfo == {}:
                 for ci,ckDict in p.coefficients.diffusion.iteritems():
                     for ck in ckDict.keys():
-                        if not p.coefficients.sdInfo.has_key((ci,ck)):
+                        if (ci,ck) not in p.coefficients.sdInfo:
                             p.coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=p.nd**2+1,step=p.nd,dtype='i'),
                                                               numpy.array([range(p.nd) for row in range(p.nd)],dtype='i').flatten())
-                            logEvent("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`p.coefficients.sdInfo[(ci,ck)]`)
+                            logEvent("Numerical Solution Sparse diffusion information key "+repr((ci,ck))+' = '+repr(p.coefficients.sdInfo[(ci,ck)]))
         self.sList = sList
         self.mlMesh_nList = mlMesh_nList
         self.allocateModels()
@@ -618,14 +620,14 @@ class NS_base:  # (HasTraits):
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
         logEvent(Profiling.memory("NumericalSolution memory",className='NumericalSolution',memSaved=memBase))
         if so.tnList is None:
-            logEvent("Building tnList from model = "+pList[0].name+" nDTout = "+`nList[0].nDTout`)
+            logEvent("Building tnList from model = "+pList[0].name+" nDTout = "+repr(nList[0].nDTout))
             self.tnList=[float(n)*nList[0].T/float(nList[0].nDTout)
                          for n in range(nList[0].nDTout+1)]
         else:
             logEvent("Using tnList from so = "+so.name)
             self.tnList = so.tnList
-        logEvent("Time sequence"+`self.tnList`)
-        logEvent("NAHeader Num Time Steps "+`len(self.tnList)-1`)
+        logEvent("Time sequence"+repr(self.tnList))
+        logEvent("NAHeader Num Time Steps "+repr(len(self.tnList)-1))
         logEvent("Setting "+so.name+" systemStepController to object of type "+str(so.systemStepControllerType))
         self.systemStepController = so.systemStepControllerType(self.modelList,stepExact=so.systemStepExact)
         self.systemStepController.setFromOptions(so)
@@ -1093,7 +1095,7 @@ class NS_base:  # (HasTraits):
             
             deltaT_test = self.systemStepController.dt_system
             deltaT = self.systemStepController.t_system-self.systemStepController.t_system_last
-            print("deltaT %f",deltaT," dt_system ", deltaT_test)
+            print(("deltaT %f",deltaT," dt_system ", deltaT_test))
             p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT)
             del rho, nu, g, deltaT
 
@@ -1255,7 +1257,7 @@ class NS_base:  # (HasTraits):
                 else:
                     logEvent("Not enough steps in hot start file set set dt, setting dt to 1.0")
                     dt = 1.0
-                logEvent("Hot starting from time step t = "+`time`)
+                logEvent("Hot starting from time step t = "+repr(time))
                 for lm,lu,lr in zip(m.levelModelList,m.uList,m.rList):
                     for cj in range(lm.coefficients.nc):
                         lm.u[cj].femSpace.readFunctionXdmf(self.ar[index],lm.u[cj],tCount)
@@ -1279,14 +1281,14 @@ class NS_base:  # (HasTraits):
                 ndtout = len(self.tnList)
                 self.tnList = [time + i for i in self.tnList]
                 self.tnList.insert(1, 0.9*self.tnList[0]+0.1*self.tnList[1])
-                logEvent("New tnList"+`self.tnList`)
+                logEvent("New tnList"+repr(self.tnList))
             else:
                 tnListNew=[time]
                 for n,t in enumerate(self.tnList):
                     if time < t-1.0e-8:
                         tnListNew.append(t)
                 self.tnList=tnListNew
-                logEvent("Hotstarting, new tnList is"+`self.tnList`)
+                logEvent("Hotstarting, new tnList is"+repr(self.tnList))
         else:
             self.tCount=0#time step counter
         logEvent("Attaching models and running spin-up step if requested")
@@ -1467,7 +1469,7 @@ class NS_base:  # (HasTraits):
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
                         logEvent("NumericalAnalytics Model %s " % (model.name), level=0)
                         logEvent("Model: %s" % (model.name),level=1)
-                        logEvent("NumericalAnalytics Time Step " + `self.t_stepSequence`, level=0)
+                        logEvent("NumericalAnalytics Time Step " + repr(self.t_stepSequence), level=0)
                         logEvent("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name),level=3)
                         for m in model.levelModelList:
                             if m.movingDomain and m.tLast_mesh != self.systemStepController.t_system_last:
@@ -1648,15 +1650,15 @@ class NS_base:  # (HasTraits):
     def preStep(self,model):
         for level,levelModel in enumerate(model.levelModelList):
             preCopy = levelModel.coefficients.preStep(model.stepController.t_model,firstStep=self.firstStep)
-            if (preCopy is not None and preCopy.has_key(('copy_uList')) and preCopy['copy_uList'] == True):
+            if (preCopy is not None and ('copy_uList') in preCopy and preCopy['copy_uList'] == True):
                 for u_ci_lhs,u_ci_rhs in zip(levelModel.u.values(),self.modelList[preCopy['uList_model']].levelModelList[level].u.values()):
                     u_ci_lhs.dof[:] = u_ci_rhs.dof
                 levelModel.setFreeDOF(model.uList[level])
-            if preCopy is not None and preCopy.has_key(('clear_uList')) and preCopy['clear_uList'] == True:
+            if preCopy is not None and ('clear_uList') in preCopy and preCopy['clear_uList'] == True:
                 for u_ci_lhs in levelModel.u.values():
                     u_ci_lhs.dof[:] = 0.0
                 levelModel.setFreeDOF(model.uList[level])
-            if preCopy is not None and preCopy.has_key(('reset_uList')) and preCopy['reset_uList'] == True:
+            if preCopy is not None and ('reset_uList') in preCopy and preCopy['reset_uList'] == True:
                 levelModel.setFreeDOF(model.uList[level])
                 levelModel.getResidual(model.uList[level],model.rList[level])
 
@@ -1664,7 +1666,7 @@ class NS_base:  # (HasTraits):
     def postStep(self,model):
         for level,levelModel in enumerate(model.levelModelList):
             postCopy = levelModel.coefficients.postStep(model.stepController.t_model,firstStep=self.firstStep)
-            if postCopy is not None and postCopy.has_key(('copy_uList')) and postCopy['copy_uList'] == True:
+            if postCopy is not None and ('copy_uList') in postCopy and postCopy['copy_uList'] == True:
                 for u_ci_lhs,u_ci_rhs in zip(self.modelList[postCopy['uList_model']].levelModelList[level].u.values(),model.levelModelList[level].u.values()):
                     u_ci_lhs.dof[:] = u_ci_rhs.dof
                 self.modelList[postCopy['uList_model']].levelModelList[level].setFreeDOF(self.modelList[postCopy['uList_model']].uList[level])

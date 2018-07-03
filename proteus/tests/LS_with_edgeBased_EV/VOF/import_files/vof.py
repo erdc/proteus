@@ -69,7 +69,7 @@ if unstructured:
 else:
     domain = box
 
-soname="vof_level_"+`ct.refinement`
+soname="vof_level_"+repr(ct.refinement)
 
 class MyCoefficients(VOF.Coefficients):
     def attachModels(self,modelList):

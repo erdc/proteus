@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -37,7 +39,7 @@ fl_H = H
 
 # Input checks
 if spaceOrder not in [1,2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit() 
 if spaceOrder == 1:
     hFactor=1.0
@@ -62,7 +64,7 @@ elif spaceOrder == 2:
 
 nLevels = 1
 #from cylinder2dDomain import *
-from symmetricDomain_john import *
+from .symmetricDomain_john import *
 domain = symmetric2D(box=(2.2,0.41),
                      L= 0.2,
                      H = 0.2,
@@ -109,7 +111,7 @@ g = [0.0,0.0]
 
 #triangleOptions="pAq30.0Dena%f" % (.5*DX**2)  #% (0.5*(DX)**2,)
 triangleOptions="pAq30.0Dena"
-print triangleOptions
+print(triangleOptions)
 genMesh=True
 domain.writePLY('cylinder2D')
 domain.writePoly('cylinder2D')

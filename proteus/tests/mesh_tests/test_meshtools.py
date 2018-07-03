@@ -1,3 +1,4 @@
+from __future__ import print_function
 from proteus import Comm, Profiling
 from collections import namedtuple
 import numpy.testing as npt
@@ -67,7 +68,7 @@ class TestMeshTools():
             if os.path.exists(f):
                 try:
                     os.remove(f)
-                except OSError, e:
+                except OSError as e:
                     print("Error: %s - %s." %(e.filename,e.strerror))
             else:
                     pass

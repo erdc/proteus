@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import os
 from proteus import *
 from proteus.default_p import *
@@ -6,7 +8,7 @@ from proteus.elastoplastic import ElastoPlastic
 Soil mechanics model for problem 6.3 in Smith and Griffiths
 """
 nd=3
-from griffiths_lane_6 import *
+from .griffiths_lane_6 import *
 genMesh=True
 he = 4.0
 he*=0.5
@@ -91,7 +93,7 @@ for it in domain.regionLegend.values():
     smTypes[it,7] = psi_mc
     smTypes[it,12] = pa
     smTypes[it,13] = rhos
-print "smFlags",smFlags
+print("smFlags",smFlags)
 initialConditions = None
 
 analyticalSolution = None

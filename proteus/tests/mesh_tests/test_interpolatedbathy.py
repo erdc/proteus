@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 
 from proteus.Domain import InterpolatedBathymetryDomain
@@ -35,7 +36,7 @@ class TestInterpolatedBathy():
             if os.path.exists(f):
                 try:
                     os.remove(f)
-                except OSError, e:
+                except OSError as e:
                     print ("Error: %s - %s." %(e.filename,e.strerror))
             else:
                 pass

@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
-from NS_hotstart import *
+from .NS_hotstart import *
 from proteus.mprans import RANS3PF
 
 

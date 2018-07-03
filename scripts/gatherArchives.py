@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import numpy
 import os
 from xml.etree.ElementTree import *
@@ -71,7 +72,7 @@ def gatherXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nStepsOnly=None,
     nSteps = len(tree.getroot()[-1][-1])
     if nStepsOnly != None:
         nSteps = nStepsOnly
-    print "nSteps",nSteps
+    print("nSteps",nSteps)
     #stepsToGather=[i*stride for i in range(nSteps/stride)]
     stepsToGather = range(0,nSteps,stride)
     fAll = open(os.path.join(dataDir,filename+addname+str(size)+".xmf"),"w")
@@ -82,8 +83,8 @@ def gatherXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nStepsOnly=None,
     <Grid CollectionType="Temporal" GridType="Collection" Name="Mesh Spatial_Domain">
 """)
     for tn  in stepsToGather:
-        print "time step",tn
-        print "subdomain",0
+        print("time step",tn)
+        print("subdomain",0)
         fAll.write(r"""      <Grid CollectionType="Spatial" GridType="Collection">
         """)
         xmlFile = open(os.path.join(dataDir,filename+str(0)+".xmf"),"r")
@@ -94,7 +95,7 @@ def gatherXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nStepsOnly=None,
         del Grid[0]
         fAll.write(tostring(Grid))
         for i in range(1,size):
-            print "subdomain",i
+            print("subdomain",i)
             xmlFile = open(os.path.join(dataDir,filename+str(i)+".xmf"),"r")
             tree = ElementTree(file=xmlFile)
             xmlFile.close()
@@ -123,7 +124,7 @@ def gatherSplitTimeStepXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nSt
     nSteps = len(tree.getroot()[-1][-1])
     if nStepsOnly != None:
         nSteps = nStepsOnly
-    print "nSteps",nSteps
+    print("nSteps",nSteps)
     stepsToGather=[i*stride for i in range(nSteps/stride)]
     for tn  in stepsToGather:
         fAll = open(os.path.join(dataDir,filename+"_t"+str(tn) + addname+str(size)+".xmf"),"w")
@@ -134,8 +135,8 @@ def gatherSplitTimeStepXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nSt
     <Grid CollectionType="Temporal" GridType="Collection" Name="Mesh Spatial_Domain">
 """)
 
-        print "time step",tn
-        print "subdomain",0
+        print("time step",tn)
+        print("subdomain",0)
         fAll.write(r"""      <Grid CollectionType="Spatial" GridType="Collection">
         """)
         xmlFile = open(os.path.join(dataDir,filename+str(0)+".xmf"),"r")
@@ -146,7 +147,7 @@ def gatherSplitTimeStepXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nSt
         del Grid[0]
         fAll.write(tostring(Grid))
         for i in range(1,size):
-            print "subdomain",i
+            print("subdomain",i)
             xmlFile = open(os.path.join(dataDir,filename+str(i)+".xmf"),"r")
             tree = ElementTree(file=xmlFile)
             xmlFile.close()

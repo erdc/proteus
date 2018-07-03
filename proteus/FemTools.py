@@ -4,12 +4,14 @@ Class hierarchies for constructing and working with finite element spaces
 .. inheritance-diagram:: proteus.FemTools
    :parts: 1
 """
-from EGeometry import *
-from MeshTools import *
-from LinearAlgebraTools import *
-from Quadrature import *
-import cfemIntegrals
-from Profiling import logEvent
+from __future__ import print_function
+from __future__ import absolute_import
+from .EGeometry import *
+from .MeshTools import *
+from .LinearAlgebraTools import *
+from .Quadrature import *
+from . import cfemIntegrals
+from .Profiling import logEvent
 import numpy as np
 
 
@@ -781,10 +783,10 @@ class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
     \psi_9 &= 4\lambda_0\lambda_3
     """
     def __init__(self,nd=3):
-        from RefUtils import baryCoords
-        from RefUtils import fact
-        from RefUtils import baryGrads
-        from RefUtils import p2refNodes
+        from .RefUtils import baryCoords
+        from .RefUtils import fact
+        from .RefUtils import baryGrads
+        from .RefUtils import p2refNodes
 
         self.referenceElement = ReferenceSimplex(nd)
         LocalFunctionSpace.__init__(self,fact(nd+2)/(2*fact(nd)),
@@ -1067,10 +1069,10 @@ class BernsteinOnSimplex(LocalFunctionSpace):
     \psi_9 &= 2\lambda_0\lambda_3
     """
     def __init__(self,nd=3):
-        from RefUtils import baryCoords
-        from RefUtils import fact
-        from RefUtils import baryGrads
-        from RefUtils import p2refNodes
+        from .RefUtils import baryCoords
+        from .RefUtils import fact
+        from .RefUtils import baryGrads
+        from .RefUtils import p2refNodes
 
         self.referenceElement = ReferenceSimplex(nd)
         LocalFunctionSpace.__init__(self,fact(nd+2)/(2*fact(nd)),
@@ -1464,8 +1466,8 @@ class P1BubblesWithNodalBasis(LocalFunctionSpace):
     the nodes. The last shape function is the bubble, b
     """
     def __init__(self,nd=3):
-        from RefUtils import baryCoords
-        from RefUtils import baryGrads
+        from .RefUtils import baryCoords
+        from .RefUtils import baryGrads
 
         self.referenceElement = ReferenceSimplex(nd)
         LocalFunctionSpace.__init__(self,nd+2,self.referenceElement)
@@ -1635,8 +1637,8 @@ class P1P0BubblesWithNodalBasis(LocalFunctionSpace):
     the nodes. The last shape function is the bubble, b
     """
     def __init__(self,nd=3):
-        from RefUtils import baryCoords
-        from RefUtils import baryGrads
+        from .RefUtils import baryCoords
+        from .RefUtils import baryGrads
 
         self.referenceElement = ReferenceSimplex(nd)
         LocalFunctionSpace.__init__(self,nd+2,self.referenceElement)
@@ -1836,8 +1838,8 @@ class NodalInterpolationConditions(InterpolationConditions):
                                                               finiteElementFunction.dof)
 
 class CubeNodalInterpolationConditions(NodalInterpolationConditions):
-    from RefUtils import quadrilateralLocalBoundaryLookup
-    from RefUtils import hexahedronLocalBoundaryLookup
+    from .RefUtils import quadrilateralLocalBoundaryLookup
+    from .RefUtils import hexahedronLocalBoundaryLookup
     def __init__(self,referenceElement):
         NodalInterpolationConditions.__init__(self,referenceElement)
     def definedOnLocalElementBoundary(self,k,ebN_local):
@@ -1856,11 +1858,11 @@ class QuadraticLagrangeNodalInterpolationConditions(InterpolationConditions):
     Obtains the DOF from the function values at vertices and
     midpoints of edges (whole element is considered an edge in 1d)
     """
-    from RefUtils import p2tetrahedronLocalBoundaryLookup
+    from .RefUtils import p2tetrahedronLocalBoundaryLookup
     from math import fmod
     def __init__(self,referenceElement):
-        from RefUtils import fact
-        from RefUtils import p2refNodes
+        from .RefUtils import fact
+        from .RefUtils import p2refNodes
         sdim  = referenceElement.dim
         self.nInterpNodes= fact(2+sdim)/(2*fact(sdim))
         InterpolationConditions.__init__(self,self.nInterpNodes,referenceElement)
@@ -1908,12 +1910,12 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
     Obtains the DOF from the function values at vertices and
     midpoints of edges (whole element is considered an edge in 1d)
     """
-    from RefUtils import q2quadrilateralLocalBoundaryLookup
-    from RefUtils import q2hexahedronLocalBoundaryLookup
+    from .RefUtils import q2quadrilateralLocalBoundaryLookup
+    from .RefUtils import q2hexahedronLocalBoundaryLookup
     from math import fmod
     def __init__(self,referenceElement):
-        from RefUtils import fact
-        from RefUtils import q2refNodes
+        from .RefUtils import fact
+        from .RefUtils import q2refNodes
         sdim  = referenceElement.dim
         if sdim==2:
             self.nInterpNodes = 9
@@ -2031,7 +2033,7 @@ class FaceBarycenterInterpolationConditions(InterpolationConditions):
 #end interp conditions
 
 class p0InterpolationConditions(InterpolationConditions):
-    import Quadrature
+    from . import Quadrature
     """
     Obtains the DOF from the function values at the nodes
     """
@@ -2053,12 +2055,12 @@ class p0InterpolationConditions(InterpolationConditions):
         return True #if matching quadrature2DOF_element behavior,
 
 class MonomialInterpolationConditions(InterpolationConditions):
-    import Quadrature
+    from . import Quadrature
     """
     Obtains the DOF from the function values at the nodes
     """
     def __init__(self,referenceElement,monomialSpace):
-        import LinearSolvers
+        from . import LinearSolvers
         self.quadrature=self.Quadrature.SimplexGaussQuadrature(referenceElement.dim,max(monomialSpace.kOrder*2,1))
         InterpolationConditions.__init__(self,monomialSpace.dim,referenceElement)
         self.quadraturePointArray = numpy.zeros((len(self.quadrature.weights),3),'d')
@@ -2164,12 +2166,12 @@ class P1BubbleInterpolationConditions(InterpolationConditions):
 
 
 class P1P0BubbleInterpolationConditions(InterpolationConditions):
-    import Quadrature
+    from . import Quadrature
     """
     Obtains the DOF from the function values at the nodes
     """
     def __init__(self,referenceElement,monomialSpace):
-        import LinearSolvers
+        from . import LinearSolvers
         self.quadrature=self.Quadrature.SimplexGaussQuadrature(referenceElement.dim,2)
         InterpolationConditions.__init__(self,monomialSpace.dim,referenceElement)
         self.quadraturePointArray = numpy.zeros((len(self.quadrature.weights),3),'d')
@@ -2361,7 +2363,7 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
     # after __init__ or not
     def __init__(self,mesh,localFunctionSpace,nd):
         if nd == 1:
-            print "QuadraticLagrangeCubeDOFMap not supported for nd = 1"
+            print("QuadraticLagrangeCubeDOFMap not supported for nd = 1")
             #ndof += mesh.nElements_global
         elif nd == 2:
             ndof = mesh.nNodes_global
@@ -3896,8 +3898,8 @@ class ParametricFiniteElementSpace:
     def endTimeSeriesEnsight(self,timeValues,filename,description,ts=1):
         #cek this could break something, but it should be true:
         self.nOutput = len(timeValues)
-        lines = ('TIME\n'+'time set: '+`ts`+' '+description+'\n'+
-                 'number of steps: '+ `self.nOutput`+'\n'+
+        lines = ('TIME\n'+'time set: '+repr(ts)+' '+description+'\n'+
+                 'number of steps: '+ repr(self.nOutput)+'\n'+
                  'filename start number: 0\n'+
                  'filename increment: 1\n'+
                  'time values:')
@@ -4002,8 +4004,8 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                     "Dimensions":"%i" % (self.mesh.nNodes_global,)})
             if ar.hdfFile is not None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                    ar.create_dataset_async(u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
+                    values.text = ar.hdfFilename+":/"+u.name+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
+                    ar.create_dataset_async(u.name+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data = u.dof)
                 else:
                     values.text = ar.hdfFilename+":/"+u.name+str(tCount)
                     ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
@@ -4029,7 +4031,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                         #faster way
                         #u.dof[:] = ar.hdfFile["/"+u.name+"_t"+str(tCount)].value[self.mesh.globalMesh.nodeNumbering_subdomain2global]                        
                     else:
-                        u.dof[:]=ar.hdfFile["/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)]
+                        u.dof[:]=ar.hdfFile["/"+u.name+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)]
                 else:
                     u.dof[:]=ar.hdfFile.get_node("/",u.name+str(tCount))
         else:
@@ -4088,8 +4090,8 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                        ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
+                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
+                        ar.create_dataset_async(vectorName+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data = velocity)
                     else:
                         values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
                         ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
@@ -4231,9 +4233,9 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 else:
                     fout = open(output,'w')
             else:
-                raise IOError, "output = %s should be file or filename"
+                raise IOError("output = %s should be file or filename")
 
-            import Viewers
+            from . import Viewers
             writer = Viewers.MatlabWriter(nxgrid=50,nygrid=50,nzgrid=10)
             nout = writer.viewScalar_LagrangeC0P1(fout,
                                                   u.femSpace.nSpace_global,
@@ -4327,8 +4329,8 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                     "Dimensions":"%i" % (self.mesh.nNodes_global,)})
             if ar.hdfFile is not None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                    ar.create_dataset_async(u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
+                    values.text = ar.hdfFilename+":/"+u.name+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
+                    ar.create_dataset_async(u.name+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data = u.dof)
                 else:
                     values.text = ar.hdfFilename+":/"+u.name+str(tCount)
                     ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
@@ -4387,8 +4389,8 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                        ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
+                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
+                        ar.create_dataset_async(vectorName+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data = velocity)
                     else:
                         values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
                         ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
@@ -4451,8 +4453,8 @@ class C0_LagrangeOnCubeWithNodalBasis(C0_AffineLinearOnSimplexWithNodalBasis):
                                                          LagrangeOnCubeWithNodalBasis(nd,order=mesh.px)),
                                               QuadraticLagrangeCubeDOFMap(mesh))
 
-        print "C0_LagrangeOnCubeWithNodalBasis"
-        print mesh.px
+        print("C0_LagrangeOnCubeWithNodalBasis")
+        print(mesh.px)
 
 class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
     """
@@ -4493,7 +4495,7 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                 else:
                     assert(abs(psi_ij) < 1.0e-8)
         #for archiving
-        import Archiver
+        from . import Archiver
         self.XdmfWriter=Archiver.XdmfWriter()
 
     def writeMeshXdmf(self,ar,name,t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0):
@@ -4542,8 +4544,8 @@ class C0_BernsteinOnCube(C0_AffineLinearOnSimplexWithNodalBasis):
                                                          LagrangeOnCubeWithNodalBasis(nd,order=mesh.px)),
                                               QuadraticLagrangeCubeDOFMap(mesh))
 
-        print "C0_BernsteinOnCubeWithNodalBasis"
-        print mesh.px
+        print("C0_BernsteinOnCubeWithNodalBasis")
+        print(mesh.px)
 
 class C0_AffineBernsteinOnCube(ParametricFiniteElementSpace):
     """
@@ -4581,7 +4583,7 @@ class C0_AffineBernsteinOnCube(ParametricFiniteElementSpace):
                 psi_ij = localFunctionSpace.basis[i](x_j)
                 #print i,j,x_j,psi_ij
         #for archiving
-        import Archiver
+        from . import Archiver
         self.XdmfWriter=Archiver.XdmfWriter()
 
     def writeMeshXdmf(self,ar,name,t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0):
@@ -4622,7 +4624,7 @@ class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpac
                                               DiscontinuousGalerkinDOFMap(mesh,localFunctionSpace))
         self.strongDirichletConditions = False
         #for archiving
-        import Archiver
+        from . import Archiver
         self.XdmfWriter = Archiver.XdmfWriter()
 
     def writeMeshEnsight(self,filename,description=None):
@@ -4651,7 +4653,7 @@ class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpac
                 else:
                     fout = open(output,'w')
             else:
-                raise IOError, "output = %s should be file or filename"
+                raise IOError("output = %s should be file or filename")
 
             basisValuesAtInterpolationPoints = None
             if 'basisValuesAtInterpolationPoints' in dir(u):
@@ -4669,7 +4671,7 @@ class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpac
                 u.interpolationValuesArray = numpy.zeros((u.femSpace.interpolationPoints.shape[0],
                                                           u.femSpace.interpolationPoints.shape[1]),'d')
             u.getValues(u.basisValuesAtInterpolationPoints,u.interpolationValuesArray)
-            import Viewers
+            from . import Viewers
             writer = Viewers.MatlabWriter(nxgrid=50,nygrid=50,nzgrid=10)
             nout = writer.viewScalar_MonomialDGPK(fout,
                                                   u.femSpace.nSpace_global,
@@ -4875,7 +4877,7 @@ class DG_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                               DiscontinuousGalerkinDOFMap(mesh,localFunctionSpace))
         self.strongDirichletConditions = False
         #for archiving
-        import Archiver
+        from . import Archiver
         self.XdmfWriter = Archiver.XdmfWriter()
 
     def writeFunctionGnuplot(self,u,filename):
@@ -5040,9 +5042,9 @@ class DG_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 else:
                     fout = open(output,'w')
             else:
-                raise IOError, "output = %s should be file or filename"
+                raise IOError("output = %s should be file or filename")
 
-            import Viewers
+            from . import Viewers
             writer = Viewers.MatlabWriter(nxgrid=50,nygrid=50,nzgrid=10)
             nout = writer.viewScalar_LagrangeDGP1(fout,
                                                   u.femSpace.nSpace_global,
@@ -5105,7 +5107,7 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                               QuadraticLagrangeDOFMap(mesh,localFunctionSpace,nd))
 
         #for archiving
-        import Archiver
+        from . import Archiver
         self.XdmfWriter=Archiver.XdmfWriter()
     def writeFunctionGnuplot(self,u,filename):
         """
@@ -5375,7 +5377,7 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                         if n0 == self.dofMap.l2g[eN,3]:
                             nodes[4+5]=base+self.dofMap.l2g[eN,edgeN_element+4]
                     else:
-                        print "fell through",n0,n1
+                        print("fell through",n0,n1)
                 meshOut.write('%10i%10i%10i%10i%10i%10i%10i%10i%10i%10i\n' % tuple(nodes.values()))
         meshOut.close()
     def writeFunctionHeaderEnsight(self,u,filename,append=False,firstVariable=True,case_filename=None):
@@ -5404,7 +5406,7 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 permute = np.argsort(u.femSpace.dofMap.subdomain2global)
                 u.dof[permute] = ar.hdfFile["/"+u.name+"_t"+str(tCount)][u.femSpace.dofMap.subdomain2global[permute].tolist()]
             else:
-                u.dof[:]=ar.hdfFile["/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)].value
+                u.dof[:]=ar.hdfFile["/"+u.name+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)].value
         else:
             assert False,"to read data on P2-FE use h5 file"
 
@@ -5579,9 +5581,9 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 else:
                     fout = open(output,'w')
             else:
-                raise IOError, "output = %s should be file or filename"
+                raise IOError("output = %s should be file or filename")
 
-            import Viewers
+            from . import Viewers
             writer = Viewers.MatlabWriter(nxgrid=50,nygrid=50,nzgrid=10)
             nout = writer.viewScalar_LagrangeC0P2(fout,
                                                   u.femSpace.nSpace_global,
@@ -5624,7 +5626,7 @@ class C0_AffineBernsteinOnSimplex(C0_AffineQuadraticOnSimplexWithNodalBasis):
                                               QuadraticLagrangeDOFMap(mesh,localFunctionSpace,nd))
 
         #for archiving
-        import Archiver
+        from . import Archiver
         self.XdmfWriter=Archiver.XdmfWriter()
 
 class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
@@ -5650,7 +5652,7 @@ class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
         self.strongDirichletConditions = False
         self.CGDOFMap = QuadraticLagrangeDOFMap(mesh,localFunctionSpace,nd)
         #for archiving
-        import Archiver
+        from . import Archiver
         self.XdmfWriter = Archiver.XdmfWriter()
     def writeMeshEnsight(self,filename,description=None):
         base=1
@@ -5882,7 +5884,7 @@ class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             right_J_cg = self.CGDOFMap.l2g[right_eN_global,right_j_element]
             right_J_dg = self.dofMap.l2g[right_eN_global,right_j_element]
             if left_J_cg != right_J_cg:
-                print "problem in DGAffineQuadratic writeFunctionEnsight"
+                print("problem in DGAffineQuadratic writeFunctionEnsight")
             for t in u.range_dim_dof:
                 nodal_average[left_J_cg*u.dim_dof + t] = 0.5*(u.dof[left_J_dg*u.dim_dof + t]
                                                               +
@@ -5932,9 +5934,9 @@ class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 else:
                     fout = open(output,'w')
             else:
-                raise IOError, "output = %s should be file or filename"
+                raise IOError("output = %s should be file or filename")
 
-            import Viewers
+            from . import Viewers
             writer = Viewers.MatlabWriter(nxgrid=50,nygrid=50,nzgrid=10)
             nout = writer.viewScalar_LagrangeDGP2(fout,
                                                   u.femSpace.nSpace_global,
@@ -5995,7 +5997,7 @@ class NC_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                                          LinearOnSimplexWithNodalBasis(nd)),
                                               ElementBoundaryDOFMap(mesh))
         #for archiving
-        import Archiver
+        from . import Archiver
         self.XdmfWriter = Archiver.XdmfWriter()
     def writeFunctionGnuplot(self,u,filename):
         import Gnuplot
@@ -6147,9 +6149,9 @@ class NC_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 else:
                     fout = open(output,'w')
             else:
-                raise IOError, "output = %s should be file or filename"
+                raise IOError("output = %s should be file or filename")
 
-            import Viewers
+            from . import Viewers
             writer = Viewers.MatlabWriter(nxgrid=50,nygrid=50,nzgrid=10)
             nout = writer.viewScalar_CrouzeixRaviartP1(fout,
                                                        u.femSpace.nSpace_global,
@@ -6194,7 +6196,7 @@ class DG_Constants(ParametricFiniteElementSpace):
                                                          LinearOnSimplexWithNodalBasis(nd)),
                                               p0DOFMap(mesh))
         self.strongDirichletConditions = False
-        import Archiver
+        from . import Archiver
         self.XdmfWriter = Archiver.XdmfWriter()
     def writeMeshEnsight(self,filename,description=None):
         self.mesh.writeMeshEnsight(filename,description)#need to allow paraview to even read in quadpoint data
@@ -6219,9 +6221,9 @@ class DG_Constants(ParametricFiniteElementSpace):
                 else:
                     fout = open(output,'w')
             else:
-                raise IOError, "output = %s should be file or filename"
+                raise IOError("output = %s should be file or filename")
 
-            import Viewers
+            from . import Viewers
             writer = Viewers.MatlabWriter(nxgrid=50,nygrid=50,nzgrid=10)
             nout = writer.viewScalar_DGP0(fout,
                                           u.femSpace.nSpace_global,
@@ -6278,7 +6280,7 @@ class C0_AffineP1BubbleOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                               P1BubbleDOFMap(mesh,localFunctionSpace,nd))
         self.strongDirichletConditions = True
         #for archiving
-        import Archiver
+        from . import Archiver
         self.XdmfWriter = Archiver.XdmfWriter()
 
     def writeMeshEnsight(self,filename,description=None):
@@ -6307,7 +6309,7 @@ class C0_AffineP1BubbleOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 else:
                     fout = open(output,'w')
             else:
-                raise IOError, "output = %s should be file or filename"
+                raise IOError("output = %s should be file or filename")
 
             basisValuesAtInterpolationPoints = None
             if 'basisValuesAtInterpolationPoints' in dir(u):
@@ -6325,7 +6327,7 @@ class C0_AffineP1BubbleOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 u.interpolationValuesArray = numpy.zeros((u.femSpace.interpolationPoints.shape[0],
                                                           u.femSpace.interpolationPoints.shape[1]),'d')
             u.getValues(u.basisValuesAtInterpolationPoints,u.interpolationValuesArray)
-            import Viewers
+            from . import Viewers
             writer = Viewers.MatlabWriter(nxgrid=50,nygrid=50,nzgrid=10)
             nout = writer.viewScalar_MonomialDGPK(fout,
                                                   u.femSpace.nSpace_global,
@@ -6383,7 +6385,7 @@ class C0_AffineP1P0BubbleOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                               P1BubbleDOFMap(mesh,localFunctionSpace,nd))
         self.strongDirichletConditions = True
         #for archiving
-        import Archiver
+        from . import Archiver
         self.XdmfWriter = Archiver.XdmfWriter()
 
     def writeMeshEnsight(self,filename,description=None):
@@ -6412,7 +6414,7 @@ class C0_AffineP1P0BubbleOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 else:
                     fout = open(output,'w')
             else:
-                raise IOError, "output = %s should be file or filename"
+                raise IOError("output = %s should be file or filename")
 
             basisValuesAtInterpolationPoints = None
             if 'basisValuesAtInterpolationPoints' in dir(u):
@@ -6430,7 +6432,7 @@ class C0_AffineP1P0BubbleOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 u.interpolationValuesArray = numpy.zeros((u.femSpace.interpolationPoints.shape[0],
                                                           u.femSpace.interpolationPoints.shape[1]),'d')
             u.getValues(u.basisValuesAtInterpolationPoints,u.interpolationValuesArray)
-            import Viewers
+            from . import Viewers
             writer = Viewers.MatlabWriter(nxgrid=50,nygrid=50,nzgrid=10)
             nout = writer.viewScalar_MonomialDGPK(fout,
                                                   u.femSpace.nSpace_global,
@@ -6485,8 +6487,8 @@ class C0_AffineP1P0BubbleOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
 """
 Members of the finite element space.
 """
-from LinearAlgebraTools import ParVec
-import Comm
+from .LinearAlgebraTools import ParVec
+from . import Comm
 
 class FiniteElementFunction:
     """A member of a finite element space of scalar functions.
@@ -6835,7 +6837,7 @@ class DOFBoundaryConditions:
                                 if getPeriodicBoundaryConditions is not None:
                                     p = getPeriodicBoundaryConditions(x,materialFlag)
                                 if p is not None:
-                                    if self.periodicDOFDict.has_key(ptuple(p)):
+                                    if ptuple(p) in self.periodicDOFDict:
                                         self.periodicDOFDict[ptuple(p)].add(dofN)
                                     else:
                                         self.periodicDOFDict[ptuple(p)] = set([dofN])
@@ -6871,7 +6873,7 @@ class DOFBoundaryConditions:
                             p = getPeriodicBoundaryConditions(x)
                         if p is not None:
                             #print "periodic DOF bc ",tuple(p)
-                            if self.periodicDOFDict.has_key(ptuple(p)):
+                            if ptuple(p) in self.periodicDOFDict:
                                 self.periodicDOFDict[ptuple(p)].add(dofN)
                                 self.freeDOFSet.discard(dofN)
                             else:
@@ -6941,7 +6943,7 @@ class DOFBoundaryConditions:
             nodeList = list(nodeSet)
             nodeList.sort()
             free_dofN = self.global2freeGlobal[nodeList[0]]
-            print "node list",nodeList
+            print("node list",nodeList)
             for dofN in nodeSet:
                 self.global2freeGlobal[dofN] = free_dofN
                 self.myFreeDOF[dofN] = nodeList[0]
@@ -7036,7 +7038,7 @@ class DOFBoundaryConditions_alt:
                             if getPeriodicBoundaryConditions is not None:
                                 p = getPeriodicBoundaryConditions(x,materialFlag)
                             if p is not None:
-                                if self.periodicDOFDict.has_key(ptuple(p)):
+                                if ptuple(p) in self.periodicDOFDict:
                                     self.periodicDOFDict[ptuple(p)].add(dofN)
                                 else:
                                     self.periodicDOFDict[ptuple(p)] = set([dofN])
@@ -7067,7 +7069,7 @@ class DOFBoundaryConditions_alt:
             nodeList = list(nodeSet)
             nodeList.sort()
             free_dofN = self.global2freeGlobal[nodeList[0]]
-            print "node list",nodeList
+            print("node list",nodeList)
             for dofN in nodeSet:
                 self.global2freeGlobal[dofN] = free_dofN
                 self.myFreeDOF[dofN] = nodeList[0]
@@ -7419,7 +7421,7 @@ class MultilevelProjectionOperators:
                                         F_ij *= 0.5
                                         #have to allow for summing up values hit multiple times
                                         #only here
-                                        if rbc.has_key((J,I)):
+                                        if (J,I) in rbc:
                                             rbc[(J,I)] += F_ij
                                             pbc[(I,J)] += F_ij
                                         else:
@@ -7430,9 +7432,9 @@ class MultilevelProjectionOperators:
                                         pbc[(I,J)] = F_ij
                                     rbcColumnIndeces[J].add(I)
                                     #check why this is being called, todo
-                                    if fineDOFBoundaryConditions.global2freeGlobal.has_key(I):
+                                    if I in fineDOFBoundaryConditions.global2freeGlobal:
                                         II = fineDOFBoundaryConditions.global2freeGlobal[I]*strideListList[l+1][cj]+offsetListList[l+1][cj]
-                                        if coarseDOFBoundaryConditions.global2freeGlobal.has_key(J):
+                                        if J in coarseDOFBoundaryConditions.global2freeGlobal:
                                             JJ = coarseDOFBoundaryConditions.global2freeGlobal[J]*strideListList[l][cj]+offsetListList[l][cj]
                                             rColumnIndeces[JJ].add(II)
                                             r[(JJ,II)] = rbc[(J,I)]
@@ -7500,177 +7502,177 @@ if __name__ == '__main__':
     xiArray3D[2,:] = [0.0,1.0,0.0]
     xiArray3D[3,:] = [0.0,0.0,1.0]
     xiArray3D[4,:] = [0.25,0.25,0.25]
-    print "****************************************ReferenceSimplex(1)****************************************"
+    print("****************************************ReferenceSimplex(1)****************************************")
     unitInterval = ReferenceSimplex(1)
-    print "dim = "+`unitInterval.dim`
-    print "nNodes = "+`unitInterval.nNodes`
-    print "nElementBoundaries = "+`unitInterval.nElementBoundaries`
+    print("dim = "+repr(unitInterval.dim))
+    print("nNodes = "+repr(unitInterval.nNodes))
+    print("nElementBoundaries = "+repr(unitInterval.nElementBoundaries))
     for nN in unitInterval.range_nNodes:
-        print "nN = "+`nN`+" : "+`unitInterval.nodeList[nN]`
+        print("nN = "+repr(nN)+" : "+repr(unitInterval.nodeList[nN]))
     for ebN in unitInterval.range_nElementBoundaries:
-        print "ebN = "+`ebN`
-        print "JHat = "+`unitInterval.boundaryJacobianList[ebN]`
-        print "nHat = "+`unitInterval.boundaryUnitNormalList[ebN]`
+        print("ebN = "+repr(ebN))
+        print("JHat = "+repr(unitInterval.boundaryJacobianList[ebN]))
+        print("nHat = "+repr(unitInterval.boundaryUnitNormalList[ebN]))
         for k in range(nq1Db):
-            print "xBar = "+`xiArray0D[k]`
-            print "xHat(xBar) = "+`unitInterval.boundaryMapList[ebN](xiArray0D[k])`
-    print "****************************************LinearOnSimplexWithNodalBasis(1)****************************************"
+            print("xBar = "+repr(xiArray0D[k]))
+            print("xHat(xBar) = "+repr(unitInterval.boundaryMapList[ebN](xiArray0D[k])))
+    print("****************************************LinearOnSimplexWithNodalBasis(1)****************************************")
     localFunctionSpace1D = LinearOnSimplexWithNodalBasis(1)
-    print "dim = "+`localFunctionSpace1D.dim`
-    print "v and grad(v)"
+    print("dim = "+repr(localFunctionSpace1D.dim))
+    print("v and grad(v)")
     for j in localFunctionSpace1D.range_dim:
-        print "j = "+`j`
+        print("j = "+repr(j))
         for k in range(nq1D):
-            print "xHat = "+`xiArray1D[k]`
-            print "v = "+`localFunctionSpace1D.basis[j](xiArray1D[k])`
-            print "grad(v) = "+`localFunctionSpace1D.basisGradients[j](xiArray1D[k])`
-    print "trace(v) and trace(grad(v))"
+            print("xHat = "+repr(xiArray1D[k]))
+            print("v = "+repr(localFunctionSpace1D.basis[j](xiArray1D[k])))
+            print("grad(v) = "+repr(localFunctionSpace1D.basisGradients[j](xiArray1D[k])))
+    print("trace(v) and trace(grad(v))")
     for j in localFunctionSpace1D.range_dim:
-        print "j = "+`j`
+        print("j = "+repr(j))
         for ebN in localFunctionSpace1D.referenceElement.range_nElementBoundaries:
-            print "ebN = "+`ebN`
+            print("ebN = "+repr(ebN))
             for k in range(nq1Db):
-                print "xBar = "+`xiArray0D[k]`
-                print "trace(v) = "+`localFunctionSpace1D.basisTrace[ebN][j](xiArray0D[k])`
-                print "trace(grad(v)) = "+`localFunctionSpace1D.basisGradientsTrace[ebN][j](xiArray0D[k])`
-    print "****************************************NodalInterpolationConditions(unitInterval)****************************************"
+                print("xBar = "+repr(xiArray0D[k]))
+                print("trace(v) = "+repr(localFunctionSpace1D.basisTrace[ebN][j](xiArray0D[k])))
+                print("trace(grad(v)) = "+repr(localFunctionSpace1D.basisGradientsTrace[ebN][j](xiArray0D[k])))
+    print("****************************************NodalInterpolationConditions(unitInterval)****************************************")
     interpolationConditions = NodalInterpolationConditions(unitInterval)
     for j in localFunctionSpace1D.range_dim:
         for i in localFunctionSpace1D.range_dim:
-            print "F(i="+`i`+",v(j="+`j`+"))="+`interpolationConditions.functionals[i](localFunctionSpace1D.basis[j])`
+            print("F(i="+repr(i)+",v(j="+repr(j)+"))="+repr(interpolationConditions.functionals[i](localFunctionSpace1D.basis[j])))
     fListList = [[1.0,0.0],[0.0,1.0]]
-    print "fListList = "+`fListList`
+    print("fListList = "+repr(fListList))
     for i in localFunctionSpace1D.range_dim:
         for fList in fListList:
-            print "F(i="+`i`+",fList="+`fList`+")="+`interpolationConditions.functionalsQuadrature[i](fList)`
-    print "****************************************ReferenceFiniteElement*********************************************"
+            print("F(i="+repr(i)+",fList="+repr(fList)+")="+repr(interpolationConditions.functionalsQuadrature[i](fList)))
+    print("****************************************ReferenceFiniteElement*********************************************")
     referenceFiniteElement = ReferenceFiniteElement(localFunctionSpace1D,interpolationConditions)
-    print "****************************************ReferenceSimplex(2)****************************************"
+    print("****************************************ReferenceSimplex(2)****************************************")
     unitTriangle = ReferenceSimplex(2)
-    print "dim = "+`unitTriangle.dim`
-    print "nNodes = "+`unitTriangle.nNodes`
-    print "nElementBoundaries = "+`unitTriangle.nElementBoundaries`
+    print("dim = "+repr(unitTriangle.dim))
+    print("nNodes = "+repr(unitTriangle.nNodes))
+    print("nElementBoundaries = "+repr(unitTriangle.nElementBoundaries))
     for nN in unitTriangle.range_nNodes:
-        print "nN = "+`nN`+" : "+`unitTriangle.nodeList[nN]`
+        print("nN = "+repr(nN)+" : "+repr(unitTriangle.nodeList[nN]))
     for ebN in unitTriangle.range_nElementBoundaries:
-        print "ebN = "+`ebN`
-        print "JHat = "+`unitTriangle.boundaryJacobianList[ebN]`
-        print "nHat = "+`unitTriangle.boundaryUnitNormalList[ebN]`
+        print("ebN = "+repr(ebN))
+        print("JHat = "+repr(unitTriangle.boundaryJacobianList[ebN]))
+        print("nHat = "+repr(unitTriangle.boundaryUnitNormalList[ebN]))
         for k in range(nq2Db):
-            print "xBar = "+`xiArray1D[k]`
-            print "xHat(xBar) = "+`unitTriangle.boundaryMapList[ebN](xiArray1D[k])`
-    print "****************************************LinearOnSimplexWithNodalBasis(2)****************************************"
+            print("xBar = "+repr(xiArray1D[k]))
+            print("xHat(xBar) = "+repr(unitTriangle.boundaryMapList[ebN](xiArray1D[k])))
+    print("****************************************LinearOnSimplexWithNodalBasis(2)****************************************")
     localFunctionSpace2D = LinearOnSimplexWithNodalBasis(2)
-    print "dim = "+`localFunctionSpace2D.dim`
-    print "v and grad(v)"
+    print("dim = "+repr(localFunctionSpace2D.dim))
+    print("v and grad(v)")
     for j in localFunctionSpace2D.range_dim:
-        print "j = "+`j`
+        print("j = "+repr(j))
         for k in range(nq2D):
-            print "xHat = "+`xiArray2D[k]`
-            print "v = "+`localFunctionSpace2D.basis[j](xiArray2D[k])`
-            print "grad(v) = "+`localFunctionSpace2D.basisGradients[j](xiArray2D[k])`
-    print "trace(v) and trace(grad(v))"
+            print("xHat = "+repr(xiArray2D[k]))
+            print("v = "+repr(localFunctionSpace2D.basis[j](xiArray2D[k])))
+            print("grad(v) = "+repr(localFunctionSpace2D.basisGradients[j](xiArray2D[k])))
+    print("trace(v) and trace(grad(v))")
     for j in localFunctionSpace2D.range_dim:
-        print "j = "+`j`
+        print("j = "+repr(j))
         for ebN in localFunctionSpace2D.referenceElement.range_nElementBoundaries:
-            print "ebN = "+`ebN`
+            print("ebN = "+repr(ebN))
             for k in range(nq2Db):
-                print "xBar = "+`xiArray1D[k]`
-                print "trace(v) = "+`localFunctionSpace2D.basisTrace[ebN][j](xiArray1D[k])`
-                print "trace(grad(v)) = "+`localFunctionSpace2D.basisGradientsTrace[ebN][j](xiArray1D[k])`
-    print "****************************************NodalInterpolationConditions(unitTriangle)****************************************"
+                print("xBar = "+repr(xiArray1D[k]))
+                print("trace(v) = "+repr(localFunctionSpace2D.basisTrace[ebN][j](xiArray1D[k])))
+                print("trace(grad(v)) = "+repr(localFunctionSpace2D.basisGradientsTrace[ebN][j](xiArray1D[k])))
+    print("****************************************NodalInterpolationConditions(unitTriangle)****************************************")
     interpolationConditions = NodalInterpolationConditions(unitTriangle)
     for i in localFunctionSpace2D.range_dim:
         for j in localFunctionSpace2D.range_dim:
-            print "F(i="+`i`+",j="+`j`+")="+`interpolationConditions.functionals[i](localFunctionSpace2D.basis[j])`
+            print("F(i="+repr(i)+",j="+repr(j)+")="+repr(interpolationConditions.functionals[i](localFunctionSpace2D.basis[j])))
     fListList = [[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]
-    print fListList
+    print(fListList)
     for i in localFunctionSpace2D.range_dim:
         for fList in fListList:
-            print "F(i="+`i`+",fList="+`fList`+")="+`interpolationConditions.functionalsQuadrature[i](fList)`
-    print "****************************************ReferenceFiniteElement*********************************************"
+            print("F(i="+repr(i)+",fList="+repr(fList)+")="+repr(interpolationConditions.functionalsQuadrature[i](fList)))
+    print("****************************************ReferenceFiniteElement*********************************************")
     referenceFiniteElement = ReferenceFiniteElement(localFunctionSpace2D,interpolationConditions)
-    print "****************************************ReferenceSimplex(3)****************************************"
+    print("****************************************ReferenceSimplex(3)****************************************")
     unitTetrahedron = ReferenceSimplex(3)
-    print "dim = "+`unitTetrahedron.dim`
-    print "nNodes = "+`unitTetrahedron.nNodes`
-    print "nElementBoundaries = "+`unitTetrahedron.nElementBoundaries`
+    print("dim = "+repr(unitTetrahedron.dim))
+    print("nNodes = "+repr(unitTetrahedron.nNodes))
+    print("nElementBoundaries = "+repr(unitTetrahedron.nElementBoundaries))
     for nN in unitTetrahedron.range_nNodes:
-        print "nN = "+`nN`+" : "+`unitTetrahedron.nodeList[nN]`
-    print "boundary maps"
+        print("nN = "+repr(nN)+" : "+repr(unitTetrahedron.nodeList[nN]))
+    print("boundary maps")
     for ebN in unitTetrahedron.range_nElementBoundaries:
-        print "ebN = "+`ebN`
-        print "JHat = "+`unitTetrahedron.boundaryJacobianList[ebN]`
-        print "nHat = "+`unitTetrahedron.boundaryUnitNormalList[ebN]`
+        print("ebN = "+repr(ebN))
+        print("JHat = "+repr(unitTetrahedron.boundaryJacobianList[ebN]))
+        print("nHat = "+repr(unitTetrahedron.boundaryUnitNormalList[ebN]))
         for k in range(nq3Db):
-            print "xBar = "+`xiArray2D[k]`
-            print "xHat(xBar) = "+`unitTetrahedron.boundaryMapList[ebN](xiArray2D[k])`
-    print "****************************************LinearOnSimplexWithNodalBasis(3)****************************************"
+            print("xBar = "+repr(xiArray2D[k]))
+            print("xHat(xBar) = "+repr(unitTetrahedron.boundaryMapList[ebN](xiArray2D[k])))
+    print("****************************************LinearOnSimplexWithNodalBasis(3)****************************************")
     localFunctionSpace3D = LinearOnSimplexWithNodalBasis(3)
-    print "dim = "+`localFunctionSpace3D.dim`
-    print "v and grad(v)"
+    print("dim = "+repr(localFunctionSpace3D.dim))
+    print("v and grad(v)")
     for j in localFunctionSpace3D.range_dim:
-        print "j = "+`j`
+        print("j = "+repr(j))
         for k in range(nq3D):
-            print "xHat = "+`xiArray3D[k]`
-            print "v = "+`localFunctionSpace3D.basis[j](xiArray3D[k])`
-            print "grad(v) = "+`localFunctionSpace3D.basisGradients[j](xiArray3D[k])`
-    print "trace(v) and trace(grad(v))"
+            print("xHat = "+repr(xiArray3D[k]))
+            print("v = "+repr(localFunctionSpace3D.basis[j](xiArray3D[k])))
+            print("grad(v) = "+repr(localFunctionSpace3D.basisGradients[j](xiArray3D[k])))
+    print("trace(v) and trace(grad(v))")
     for j in localFunctionSpace3D.range_dim:
-        print "j = "+`j`
+        print("j = "+repr(j))
         for ebN in localFunctionSpace3D.referenceElement.range_nElementBoundaries:
-            print "ebN = "+`ebN`
+            print("ebN = "+repr(ebN))
             for k in range(nq3Db):
-                print "xBar = "+`xiArray2D[k]`
-                print "trace(v) = "+`localFunctionSpace3D.basisTrace[ebN][j](xiArray2D[k])`
-                print "trace(grad(v))"+`localFunctionSpace3D.basisGradientsTrace[ebN][j](xiArray2D[k])`
-    print "****************************************NodalInterpolationConditions(unitTetrahedron)****************************************"
+                print("xBar = "+repr(xiArray2D[k]))
+                print("trace(v) = "+repr(localFunctionSpace3D.basisTrace[ebN][j](xiArray2D[k])))
+                print("trace(grad(v))"+repr(localFunctionSpace3D.basisGradientsTrace[ebN][j](xiArray2D[k])))
+    print("****************************************NodalInterpolationConditions(unitTetrahedron)****************************************")
     interpolationConditions = NodalInterpolationConditions(unitTetrahedron)
     for i in localFunctionSpace3D.range_dim:
         for j in localFunctionSpace3D.range_dim:
-            print "F(i = "+`i`+", j = "+`j`+") = "+`interpolationConditions.functionals[i](localFunctionSpace3D.basis[j])`
+            print("F(i = "+repr(i)+", j = "+repr(j)+") = "+repr(interpolationConditions.functionals[i](localFunctionSpace3D.basis[j])))
     fListList = [[1.0, 0.0, 0.0, 0.0],[0.0, 1.0, 0.0, 0.0],[0.0, 0.0, 1.0, 0.0],[0.0, 0.0, 0.0, 1.0]]
     for i in localFunctionSpace3D.range_dim:
         for fList in fListList:
-            print fList
-            print "F_i(fList) = "+`interpolationConditions.functionalsQuadrature[i](fList)`
-    print "****************************************ReferenceFiniteElement*********************************************"
+            print(fList)
+            print("F_i(fList) = "+repr(interpolationConditions.functionalsQuadrature[i](fList)))
+    print("****************************************ReferenceFiniteElement*********************************************")
     referenceFiniteElement = ReferenceFiniteElement(localFunctionSpace3D,interpolationConditions)
-    print "****************************************NodalDOFMap-1D************************************************************"
+    print("****************************************NodalDOFMap-1D************************************************************")
     nnDim = 3
     grid1d = RectangularGrid(nnDim,1,1,1.0,1.0,1.0)
     mesh1d = EdgeMesh()
     mesh1d.rectangularToEdge(grid1d)
     mesh1d.writeMeshEnsight("mesh1d","1D test mesh")
     dofMap = NodalDOFMap(mesh1d)
-    print "nDOF"
-    print dofMap.nDOF
+    print("nDOF")
+    print(dofMap.nDOF)
     for eN in range(mesh1d.nElements_global):
         for nN in range(mesh1d.nNodes_element):
-            print "l2g(eN="+`eN`+",nN_element="+`nN`+")="+`dofMap.l2g[eN,nN]`
-    print "****************************************NodalDOFMap-2D************************************************************"
+            print("l2g(eN="+repr(eN)+",nN_element="+repr(nN)+")="+repr(dofMap.l2g[eN,nN]))
+    print("****************************************NodalDOFMap-2D************************************************************")
     grid2d = RectangularGrid(nnDim,nnDim,1,1.0,1.0,1.0)
     mesh2d = TriangularMesh()
     mesh2d.rectangularToTriangular(grid2d)
     mesh2d.writeMeshEnsight("mesh2d","2D test mesh")
     dofMap = NodalDOFMap(mesh2d)
-    print "nDOF"
-    print dofMap.nDOF
+    print("nDOF")
+    print(dofMap.nDOF)
     for eN in range(mesh2d.nElements_global):
         for nN in range(mesh2d.nNodes_element):
-            print "l2g(eN="+`eN`+",nN_element="+`nN`+")="+`dofMap.l2g[eN,nN]`
-    print "****************************************NodalDOFMap-3D************************************************************"
+            print("l2g(eN="+repr(eN)+",nN_element="+repr(nN)+")="+repr(dofMap.l2g[eN,nN]))
+    print("****************************************NodalDOFMap-3D************************************************************")
     grid3d = RectangularGrid(nnDim,nnDim,nnDim,1.0,1.0,1.0)
     mesh3d = TetrahedralMesh()
     mesh3d.rectangularToTetrahedral(grid3d)
     mesh3d.writeMeshEnsight("mesh3d","3D test mesh")
     dofMap = NodalDOFMap(mesh3d)
-    print "nDOF"
-    print dofMap.nDOF
+    print("nDOF")
+    print(dofMap.nDOF)
     for eN in range(mesh3d.nElements_global):
         for nN in range(mesh3d.nNodes_element):
-            print "l2g(eN="+`eN`+",nN_element="+`nN`+")="+`dofMap.l2g[eN,nN]`
-    print "**************************************AffineMaps-1D**************************************************************"
+            print("l2g(eN="+repr(eN)+",nN_element="+repr(nN)+")="+repr(dofMap.l2g[eN,nN]))
+    print("**************************************AffineMaps-1D**************************************************************")
     elementMaps1D = AffineMaps(mesh1d,unitInterval,localFunctionSpace1D)
     xArray1D = numpy.zeros((mesh1d.nElements_global,nq1D,1),'d')
     xiArray1DNew = numpy.zeros((mesh1d.nElements_global,nq1D,1),'d')
@@ -7688,26 +7690,26 @@ if __name__ == '__main__':
                                     jacobianDeterminantArray1D)
     for eN in range(mesh1d.nElements_global):
         for k in range(nq1D):
-            print "hat(x)"
-            print xiArray1D[k]
-            print "x"
-            print xArray1D[eN,k]
-            print "jacobian"
-            print jacobianArray1D[eN,k]
-            print "jacobianInverse"
-            print jacobianInverseArray1D[eN,k]
-            print "determinant"
-            print jacobianDeterminantArray1D[eN,k]
-    print "inverse map"
+            print("hat(x)")
+            print(xiArray1D[k])
+            print("x")
+            print(xArray1D[eN,k])
+            print("jacobian")
+            print(jacobianArray1D[eN,k])
+            print("jacobianInverse")
+            print(jacobianInverseArray1D[eN,k])
+            print("determinant")
+            print(jacobianDeterminantArray1D[eN,k])
+    print("inverse map")
     elementMaps1D.getInverseValues(jacobianInverseArray1D,xArray1D,xiArray1DNew)
     for eN in range(mesh1d.nElements_global):
         for k in range(nq1D):
-            print "hat(x)"
-            print xiArray1D[k]
-            print "x"
-            print xArray1D[eN,k]
-            print "hat(x)(x)"
-            print xiArray1DNew[eN,k]
+            print("hat(x)")
+            print(xiArray1D[k])
+            print("x")
+            print(xArray1D[eN,k])
+            print("hat(x)(x)")
+            print(xiArray1DNew[eN,k])
     xArray1DTrace = numpy.zeros((mesh1d.nElements_global,elementMaps1D.referenceElement.nElementBoundaries,nq1Db,elementMaps1D.referenceElement.dim),'d')
     #the metric tensor only makes sense in dim > 1 so we use dim here but dim-1 for 2 and 3d
     jacobianInverseArray1DTrace = numpy.zeros((mesh1d.nElements_global,
@@ -7730,28 +7732,28 @@ if __name__ == '__main__':
                                          metricTensorDeterminantSqrtArray1D,
                                          unitNormalArray1D)
     for eN in range(mesh1d.nElements_global):
-        print "eN"
-        print eN
+        print("eN")
+        print(eN)
         for ebN in elementMaps1D.referenceElement.range_nElementBoundaries:
-            print "ebN"
-            print ebN
+            print("ebN")
+            print(ebN)
             for k in range(nq1Db):
-                print "x"
-                print xArray1DTrace[eN,ebN,k]
-                print "jacobian inverse"
-                print jacobianInverseArray1DTrace[eN,ebN,k]
-                print "metric tensor"
-                print metricTensorArray1D[eN,ebN,k]
-                print "metric tensor determinant sqrt"
-                print metricTensorDeterminantSqrtArray1D[eN,ebN,k]
-                print "unit normal"
-                print unitNormalArray1D[eN,ebN,k]
-                print "metric tensor"
-                print metricTensorArray1D[eN,ebN,k]
-                print "metric tensor determinant sqrt"
-                print metricTensorDeterminantSqrtArray1D[eN,ebN,k]
-                print "unit normal"
-                print unitNormalArray1D[eN,ebN,k]
+                print("x")
+                print(xArray1DTrace[eN,ebN,k])
+                print("jacobian inverse")
+                print(jacobianInverseArray1DTrace[eN,ebN,k])
+                print("metric tensor")
+                print(metricTensorArray1D[eN,ebN,k])
+                print("metric tensor determinant sqrt")
+                print(metricTensorDeterminantSqrtArray1D[eN,ebN,k])
+                print("unit normal")
+                print(unitNormalArray1D[eN,ebN,k])
+                print("metric tensor")
+                print(metricTensorArray1D[eN,ebN,k])
+                print("metric tensor determinant sqrt")
+                print(metricTensorDeterminantSqrtArray1D[eN,ebN,k])
+                print("unit normal")
+                print(unitNormalArray1D[eN,ebN,k])
     caseOut=open('mesh1d.case','a')
     caseOut.write('measured: mesh1dFaceQuadrature.geo\n')
     caseOut.write('VARIABLE\n')
@@ -7776,7 +7778,7 @@ if __name__ == '__main__':
     normalOut.write('\n')
     normalOut.close()
     quadratureOut.close()
-    print "**************************************AffineMaps-2D**************************************************************"
+    print("**************************************AffineMaps-2D**************************************************************")
     elementMaps2D = AffineMaps(mesh2d,unitTriangle,localFunctionSpace2D)
     xArray2D = numpy.zeros((mesh2d.nElements_global,
                             nq2D,
@@ -7806,24 +7808,24 @@ if __name__ == '__main__':
                                     jacobianDeterminantArray2D)
     for eN in range(mesh2d.nElements_global):
         for k in range(nq2D):
-            print "x"
-            print xArray2D[eN,k]
-            print "jacobian"
-            print jacobianArray2D[eN,k]
-            print "jacobianInverse"
-            print jacobianInverseArray2D[eN,k]
-            print "determinant"
-            print jacobianDeterminantArray2D[eN,k]
-    print "inverse map"
+            print("x")
+            print(xArray2D[eN,k])
+            print("jacobian")
+            print(jacobianArray2D[eN,k])
+            print("jacobianInverse")
+            print(jacobianInverseArray2D[eN,k])
+            print("determinant")
+            print(jacobianDeterminantArray2D[eN,k])
+    print("inverse map")
     elementMaps2D.getInverseValues(jacobianInverseArray2D,xArray2D,xiArray2DNew)
     for eN in range(mesh2d.nElements_global):
         for k in range(nq2D):
-            print "hat(x)"
-            print xiArray2D[k]
-            print "x"
-            print xArray2D[eN,k]
-            print "hat(x)(x)"
-            print xiArray2DNew[eN,k]
+            print("hat(x)")
+            print(xiArray2D[k])
+            print("x")
+            print(xArray2D[eN,k])
+            print("hat(x)(x)")
+            print(xiArray2DNew[eN,k])
     xArray2DTrace = numpy.zeros((mesh2d.nElements_global,elementMaps2D.referenceElement.nElementBoundaries,nq2Db,elementMaps2D.referenceElement.dim),'d')
     #the metric tensor only makes sense in dim > 1 so we use dim here but dim-1 for 2 and 3d
     jacobianInverseArray2DTrace = numpy.zeros((mesh2d.nElements_global,
@@ -7846,28 +7848,28 @@ if __name__ == '__main__':
                                          metricTensorDeterminantSqrtArray2D,
                                          unitNormalArray2D)
     for eN in range(mesh2d.nElements_global):
-        print "eN"
-        print eN
+        print("eN")
+        print(eN)
         for ebN in elementMaps2D.referenceElement.range_nElementBoundaries:
-            print "ebN"
-            print ebN
+            print("ebN")
+            print(ebN)
             for k in range(nq2Db):
-                print "x"
-                print xArray2DTrace[eN,ebN,k]
-                print "jacobian inverse"
-                print jacobianInverseArray2DTrace[eN,ebN,k]
-                print "metric tensor"
-                print metricTensorArray2D[eN,ebN,k]
-                print "metric tensor determinant sqrt"
-                print metricTensorDeterminantSqrtArray2D[eN,ebN,k]
-                print "unit normal"
-                print unitNormalArray2D[eN,ebN,k]
-                print "metric tensor"
-                print metricTensorArray2D[eN,ebN,k]
-                print "metric tensor determinant sqrt"
-                print metricTensorDeterminantSqrtArray2D[eN,ebN,k]
-                print "unit normal"
-                print unitNormalArray2D[eN,ebN,k]
+                print("x")
+                print(xArray2DTrace[eN,ebN,k])
+                print("jacobian inverse")
+                print(jacobianInverseArray2DTrace[eN,ebN,k])
+                print("metric tensor")
+                print(metricTensorArray2D[eN,ebN,k])
+                print("metric tensor determinant sqrt")
+                print(metricTensorDeterminantSqrtArray2D[eN,ebN,k])
+                print("unit normal")
+                print(unitNormalArray2D[eN,ebN,k])
+                print("metric tensor")
+                print(metricTensorArray2D[eN,ebN,k])
+                print("metric tensor determinant sqrt")
+                print(metricTensorDeterminantSqrtArray2D[eN,ebN,k])
+                print("unit normal")
+                print(unitNormalArray2D[eN,ebN,k])
     caseOut=open('mesh2d.case','a')
     caseOut.write('measured: mesh2dFaceQuadrature.geo\n')
     caseOut.write('VARIABLE\n')
@@ -7892,7 +7894,7 @@ if __name__ == '__main__':
     normalOut.write('\n')
     normalOut.close()
     quadratureOut.close()
-    print "**************************************AffineMaps-3D**************************************************************"
+    print("**************************************AffineMaps-3D**************************************************************")
     elementMaps3D = AffineMaps(mesh3d,unitTetrahedron,localFunctionSpace3D)
     xArray3D = numpy.zeros((mesh3d.nElements_global,
                             nq3D,
@@ -7922,24 +7924,24 @@ if __name__ == '__main__':
                                     jacobianDeterminantArray3D)
     for eN in range(mesh3d.nElements_global):
         for k in range(nq3D):
-            print "x"
-            print xArray3D[eN,k]
-            print "jacobian"
-            print jacobianArray3D[eN,k]
-            print "jacobianInverse"
-            print jacobianInverseArray3D[eN,k]
-            print "determinant"
-            print jacobianDeterminantArray3D[eN,k]
-    print "inverse map"
+            print("x")
+            print(xArray3D[eN,k])
+            print("jacobian")
+            print(jacobianArray3D[eN,k])
+            print("jacobianInverse")
+            print(jacobianInverseArray3D[eN,k])
+            print("determinant")
+            print(jacobianDeterminantArray3D[eN,k])
+    print("inverse map")
     elementMaps3D.getInverseValues(jacobianInverseArray3D,xArray3D,xiArray3DNew)
     for eN in range(mesh2d.nElements_global):
         for k in range(nq3D):
-            print "hat(x)"
-            print xiArray3D[k]
-            print "x"
-            print xArray3D[eN,k]
-            print "hat(x)(x)"
-            print xiArray3DNew[eN,k]
+            print("hat(x)")
+            print(xiArray3D[k])
+            print("x")
+            print(xArray3D[eN,k])
+            print("hat(x)(x)")
+            print(xiArray3DNew[eN,k])
     xArray3DTrace = numpy.zeros((mesh3d.nElements_global,elementMaps3D.referenceElement.nElementBoundaries,nq3Db,elementMaps3D.referenceElement.dim),'d')
     #the metric tensor only makes sense in dim > 1 so we use dim here but dim-1 for 2 and 3d
     jacobianInverseArray3DTrace = numpy.zeros((mesh3d.nElements_global,
@@ -7962,26 +7964,26 @@ if __name__ == '__main__':
                                          metricTensorDeterminantSqrtArray3D,
                                          unitNormalArray3D)
     for eN in range(mesh3d.nElements_global):
-        print "eN"
-        print eN
+        print("eN")
+        print(eN)
         for ebN in elementMaps3D.referenceElement.range_nElementBoundaries:
-            print "ebN"
-            print ebN
+            print("ebN")
+            print(ebN)
             for k in range(nq3Db):
-                print "x"
-                print xArray3DTrace[eN,ebN,k]
-                print "metric tensor"
-                print metricTensorArray3D[eN,ebN,k]
-                print "metric tensor determinant sqrt"
-                print metricTensorDeterminantSqrtArray3D[eN,ebN,k]
-                print "unit normal"
-                print unitNormalArray3D[eN,ebN,k]
-                print "metric tensor"
-                print metricTensorArray3D[eN,ebN,k]
-                print "metric tensor determinant sqrt"
-                print metricTensorDeterminantSqrtArray3D[eN,ebN,k]
-                print "unit normal"
-                print unitNormalArray3D[eN,ebN,k]
+                print("x")
+                print(xArray3DTrace[eN,ebN,k])
+                print("metric tensor")
+                print(metricTensorArray3D[eN,ebN,k])
+                print("metric tensor determinant sqrt")
+                print(metricTensorDeterminantSqrtArray3D[eN,ebN,k])
+                print("unit normal")
+                print(unitNormalArray3D[eN,ebN,k])
+                print("metric tensor")
+                print(metricTensorArray3D[eN,ebN,k])
+                print("metric tensor determinant sqrt")
+                print(metricTensorDeterminantSqrtArray3D[eN,ebN,k])
+                print("unit normal")
+                print(unitNormalArray3D[eN,ebN,k])
     caseOut=open('mesh3d.case','a')
     caseOut.write('measured: mesh3dFaceQuadrature.geo\n')
     caseOut.write('VARIABLE\n')
@@ -8006,7 +8008,7 @@ if __name__ == '__main__':
     normalOut.write('\n')
     normalOut.close()
     quadratureOut.close()
-    print "*********************************C0_AffineLinearOnSimplexWithNodalBasis-1D******************************************************"
+    print("*********************************C0_AffineLinearOnSimplexWithNodalBasis-1D******************************************************")
     femSpace1D = C0_AffineLinearOnSimplexWithNodalBasis(mesh1d,1)
     vArray1D = numpy.zeros((mesh1d.nElements_global,nq1D,femSpace1D.referenceFiniteElement.localFunctionSpace.dim),
                              'd')
@@ -8018,22 +8020,22 @@ if __name__ == '__main__':
     femSpace1D.getBasisValues(xiArray1D,vArray1D)
     femSpace1D.getBasisGradientValues(xiArray1D,jacobianInverseArray1D,grad_vArray1D)
     for eN in range(mesh1d.nElements_global):
-        print "eN"
-        print eN
+        print("eN")
+        print(eN)
         for k in range(nq1D):
-            print "k"
-            print k
-            print "xHat"
-            print xiArray1D[k]
-            print "x"
-            print xArray1D[eN,k]
+            print("k")
+            print(k)
+            print("xHat")
+            print(xiArray1D[k])
+            print("x")
+            print(xArray1D[eN,k])
             for j in femSpace1D.referenceFiniteElement.localFunctionSpace.range_dim:
-                print "j"
-                print j
-                print "v"
-                print vArray1D[eN,k,j]
-                print "grad(v)"
-                print grad_vArray1D[eN,k,j]
+                print("j")
+                print(j)
+                print("v")
+                print(vArray1D[eN,k,j])
+                print("grad(v)")
+                print(grad_vArray1D[eN,k,j])
     nq1Db = 1
     vArray1DTrace = numpy.zeros((mesh1d.nElements_global,
                                    femSpace1D.referenceFiniteElement.referenceElement.nElementBoundaries,
@@ -8050,26 +8052,26 @@ if __name__ == '__main__':
     femSpace1D.getBasisValuesTrace(xiArray0D,vArray1DTrace)
     femSpace1D.getBasisGradientValuesTrace(xiArray0D,jacobianInverseArray1DTrace,grad_vArray1DTrace)
     for eN in range(mesh1d.nElements_global):
-        print "eN"
-        print eN
+        print("eN")
+        print(eN)
         for ebN in femSpace1D.referenceFiniteElement.referenceElement.range_nElementBoundaries:
-            print "ebN"
-            print ebN
+            print("ebN")
+            print(ebN)
             for k in range(nq1Db):
-                print "k"
-                print k
-                print "xBar"
-                print xiArray0D[k]
-                print "x"
-                print xArray1DTrace[eN,ebN,k]
+                print("k")
+                print(k)
+                print("xBar")
+                print(xiArray0D[k])
+                print("x")
+                print(xArray1DTrace[eN,ebN,k])
                 for j in femSpace1D.referenceFiniteElement.localFunctionSpace.range_dim:
-                    print "j"
-                    print j
-                    print "v"
-                    print vArray1DTrace[eN,ebN,k,j]
-                    print "grad(v)"
-                    print grad_vArray1DTrace[eN,ebN,k,j]
-    print "*********************************C0_AffineLinearOnSimplexWithNodalBasis-2D******************************************************"
+                    print("j")
+                    print(j)
+                    print("v")
+                    print(vArray1DTrace[eN,ebN,k,j])
+                    print("grad(v)")
+                    print(grad_vArray1DTrace[eN,ebN,k,j])
+    print("*********************************C0_AffineLinearOnSimplexWithNodalBasis-2D******************************************************")
     femSpace2D = C0_AffineLinearOnSimplexWithNodalBasis(mesh2d,2)
     vArray2D = numpy.zeros((mesh2d.nElements_global,nq2D,femSpace2D.referenceFiniteElement.localFunctionSpace.dim),'d')
     grad_vArray2D = numpy.zeros((mesh2d.nElements_global,
@@ -8080,22 +8082,22 @@ if __name__ == '__main__':
     femSpace2D.getBasisValues(xiArray2D,vArray2D)
     femSpace2D.getBasisGradientValues(xiArray2D,jacobianInverseArray2D,grad_vArray2D)
     for eN in range(mesh2d.nElements_global):
-        print "eN"
-        print eN
+        print("eN")
+        print(eN)
         for k in range(nq2D):
-            print "k"
-            print k
-            print "xHat"
-            print xiArray2D[k]
-            print "x"
-            print xArray2D[eN,k]
+            print("k")
+            print(k)
+            print("xHat")
+            print(xiArray2D[k])
+            print("x")
+            print(xArray2D[eN,k])
             for j in femSpace2D.referenceFiniteElement.localFunctionSpace.range_dim:
-                print "j"
-                print j
-                print "v"
-                print vArray2D[eN,k,j]
-                print "grad(v)"
-                print grad_vArray2D[eN,k,j]
+                print("j")
+                print(j)
+                print("v")
+                print(vArray2D[eN,k,j])
+                print("grad(v)")
+                print(grad_vArray2D[eN,k,j])
     nq2Db = nq1D
     vArray2DTrace = numpy.zeros((mesh2d.nElements_global,
                                    femSpace2D.referenceFiniteElement.referenceElement.nElementBoundaries,
@@ -8112,26 +8114,26 @@ if __name__ == '__main__':
     femSpace2D.getBasisValuesTrace(xiArray1D,vArray2DTrace)
     femSpace2D.getBasisGradientValuesTrace(xiArray1D,jacobianInverseArray2DTrace,grad_vArray2DTrace)
     for eN in range(mesh2d.nElements_global):
-        print "eN"
-        print eN
+        print("eN")
+        print(eN)
         for ebN in femSpace2D.referenceFiniteElement.referenceElement.range_nElementBoundaries:
-            print "ebN"
-            print ebN
+            print("ebN")
+            print(ebN)
             for k in range(nq2Db):
-                print "k"
-                print k
-                print "xBar"
-                print xiArray1D[k]
-                print "x"
-                print xArray2DTrace[eN,ebN,k]
+                print("k")
+                print(k)
+                print("xBar")
+                print(xiArray1D[k])
+                print("x")
+                print(xArray2DTrace[eN,ebN,k])
                 for j in femSpace2D.referenceFiniteElement.localFunctionSpace.range_dim:
-                    print "j"
-                    print j
-                    print "v"
-                    print vArray2DTrace[eN,ebN,k,j]
-                    print "grad(v)"
-                    print grad_vArray2DTrace[eN,ebN,k,j]
-    print "*********************************C0_AffineLinearOnSimplexWithNodalBasis-3D******************************************************"
+                    print("j")
+                    print(j)
+                    print("v")
+                    print(vArray2DTrace[eN,ebN,k,j])
+                    print("grad(v)")
+                    print(grad_vArray2DTrace[eN,ebN,k,j])
+    print("*********************************C0_AffineLinearOnSimplexWithNodalBasis-3D******************************************************")
     femSpace3D = C0_AffineLinearOnSimplexWithNodalBasis(mesh3d,3)
     vArray3D = numpy.zeros((mesh3d.nElements_global,nq3D,femSpace3D.referenceFiniteElement.localFunctionSpace.dim),'d')
     grad_vArray3D = numpy.zeros((mesh3d.nElements_global,
@@ -8142,22 +8144,22 @@ if __name__ == '__main__':
     femSpace3D.getBasisValues(xiArray3D,vArray3D)
     femSpace3D.getBasisGradientValues(xiArray3D,jacobianInverseArray3D,grad_vArray3D)
     for eN in range(mesh3d.nElements_global):
-        print "eN"
-        print eN
+        print("eN")
+        print(eN)
         for k in range(nq3D):
-            print "k"
-            print k
-            print "xHat"
-            print xiArray3D[k]
-            print "x"
-            print xArray3D[eN,k]
+            print("k")
+            print(k)
+            print("xHat")
+            print(xiArray3D[k])
+            print("x")
+            print(xArray3D[eN,k])
             for j in femSpace3D.referenceFiniteElement.localFunctionSpace.range_dim:
-                print "j"
-                print j
-                print "v"
-                print vArray3D[eN,k,j]
-                print "grad(v)"
-                print grad_vArray3D[eN,k,j]
+                print("j")
+                print(j)
+                print("v")
+                print(vArray3D[eN,k,j])
+                print("grad(v)")
+                print(grad_vArray3D[eN,k,j])
     nq3Db = nq2D
     vArray3DTrace = numpy.zeros((mesh3d.nElements_global,
                                    femSpace3D.referenceFiniteElement.referenceElement.nElementBoundaries,
@@ -8173,26 +8175,26 @@ if __name__ == '__main__':
     femSpace3D.getBasisValuesTrace(xiArray2D,vArray3DTrace)
     femSpace3D.getBasisGradientValuesTrace(xiArray2D,jacobianInverseArray3DTrace,grad_vArray3DTrace)
     for eN in range(mesh3d.nElements_global):
-        print "eN"
-        print eN
+        print("eN")
+        print(eN)
         for ebN in femSpace3D.referenceFiniteElement.referenceElement.range_nElementBoundaries:
-            print "ebN"
-            print ebN
+            print("ebN")
+            print(ebN)
             for k in range(nq3Db):
-                print "k"
-                print k
-                print "xBar"
-                print xiArray2D[k]
-                print "x"
-                print xArray3DTrace[eN,ebN,k]
+                print("k")
+                print(k)
+                print("xBar")
+                print(xiArray2D[k])
+                print("x")
+                print(xArray3DTrace[eN,ebN,k])
                 for j in femSpace3D.referenceFiniteElement.localFunctionSpace.range_dim:
-                    print "j"
-                    print j
-                    print "v"
-                    print vArray3DTrace[eN,ebN,k,j]
-                    print "grad(v)"
-                    print grad_vArray3DTrace[eN,ebN,k,j]
-    print "*************************************************FiniteElementFunction-1D-Scalar************************************************"
+                    print("j")
+                    print(j)
+                    print("v")
+                    print(vArray3DTrace[eN,ebN,k,j])
+                    print("grad(v)")
+                    print(grad_vArray3DTrace[eN,ebN,k,j])
+    print("*************************************************FiniteElementFunction-1D-Scalar************************************************")
     u1ds = FiniteElementFunction(femSpace1D,name="dist0.5")
     for nN in range(mesh1d.nNodes_global):
         u1ds.dof[nN] = sqrt((mesh1d.nodeArray[nN,0]-0.5)**2)
@@ -8258,7 +8260,7 @@ if __name__ == '__main__':
     distOut.close()
     gradDistOut.write('\n')
     gradDistOut.close()
-    print "*************************************************FiniteElementFunction-2D-Scalar************************************************"
+    print("*************************************************FiniteElementFunction-2D-Scalar************************************************")
     u2ds = FiniteElementFunction(femSpace2D,name="dist(0.5,x)")
     for nN in range(mesh2d.nNodes_global):
         u2ds.dof[nN] = sqrt((mesh2d.nodeArray[nN,0] - 0.5)**2+(mesh2d.nodeArray[nN,1]-0.5)**2)
@@ -8322,11 +8324,11 @@ if __name__ == '__main__':
     distOut.close()
     gradDistOut.write('\n')
     gradDistOut.close()
-    print "*************************************************FiniteElementFunction-3D-Scalar************************************************"
+    print("*************************************************FiniteElementFunction-3D-Scalar************************************************")
     u3ds = FiniteElementFunction(femSpace3D,name="dist(0.5,x)")
     for nN in range(mesh3d.nNodes_global):
         u3ds.dof[nN] = sqrt((mesh3d.nodeArray[nN,0]-0.5)**2+(mesh3d.nodeArray[nN,1]-0.5)**2+(mesh3d.nodeArray[nN,2]-0.5)**2)
-        print u3ds.dof[nN]
+        print(u3ds.dof[nN])
     u3ds.writeFunctionEnsight("mesh3d",append=True)
     uArray3D = numpy.zeros((mesh3d.nElements_global,nq3D),'d')
     grad_uArray3D = numpy.zeros((mesh3d.nElements_global,
@@ -8390,22 +8392,22 @@ if __name__ == '__main__':
     gradDistOut.close()
     mlMesh1D = MultilevelEdgeMesh(3,1,1,refinementLevels=3)
     meshTransfers1D = MultilevelProjectionOperators(mlMesh1D,C0_AffineLinearOnSimplexWithNodalBasis,1)
-    print meshTransfers1D.prolongList
-    print meshTransfers1D.restrictList
-    print meshTransfers1D.prolong_bcList
-    print meshTransfers1D.restrict_bcList
+    print(meshTransfers1D.prolongList)
+    print(meshTransfers1D.restrictList)
+    print(meshTransfers1D.prolong_bcList)
+    print(meshTransfers1D.restrict_bcList)
     mlMesh2D = MultilevelTriangularMesh(3,3,1,refinementLevels=3)
     meshTransfers2D = MultilevelProjectionOperators(mlMesh2D,C0_AffineLinearOnSimplexWithNodalBasis,2)
-    print meshTransfers2D.prolongList
-    print meshTransfers2D.restrictList
-    print meshTransfers2D.prolong_bcList
-    print meshTransfers2D.restrict_bcList
+    print(meshTransfers2D.prolongList)
+    print(meshTransfers2D.restrictList)
+    print(meshTransfers2D.prolong_bcList)
+    print(meshTransfers2D.restrict_bcList)
     mlMesh3D = MultilevelTetrahedralMesh(3,3,3,refinementLevels=3)
     meshTransfers3D = MultilevelProjectionOperators(mlMesh3D,C0_AffineLinearOnSimplexWithNodalBasis,3)
-    print meshTransfers3D.prolongList
-    print meshTransfers3D.restrictList
-    print meshTransfers3D.prolong_bcList
-    print meshTransfers3D.restrict_bcList
+    print(meshTransfers3D.prolongList)
+    print(meshTransfers3D.restrictList)
+    print(meshTransfers3D.prolong_bcList)
+    print(meshTransfers3D.restrict_bcList)
     #
     # mwf tests
     #
@@ -8429,17 +8431,17 @@ if __name__ == '__main__':
     mesh = TriangularMesh()
     mesh.constructTriangularMeshOnRectangle(Lx,Ly,nx,ny,viewMesh)
 
-    print 'mesh Info says \n',mesh.meshInfo()
+    print('mesh Info says \n',mesh.meshInfo())
 
     #now create a DG1 finite element space
     globalDGspace = DG_AffineLinearOnSimplexWithNodalBasis(mesh,2)
     globalCGspace = C0_AffineLinearOnSimplexWithNodalBasis(mesh,2)
     dgDofMap = globalDGspace.dofMap
     if verboseLevel > 0:
-        print "DG1 dofMap l2g is "
+        print("DG1 dofMap l2g is ")
         for eN in range(mesh.nElements_global):
             sn = '\t %i %i %i' % tuple(dgDofMap.l2g[eN,:])
-            print sn
+            print(sn)
     ngdim = globalDGspace.dim
     nelem = mesh.nElements_global
     polydim = 3
@@ -8453,7 +8455,7 @@ if __name__ == '__main__':
     #nodalRefPoints[2,:] = (0.0,1.0)
     nodalRefPoints = u.femSpace.referenceFiniteElement.interpolationConditions.quadraturePointArray
     if verboseLevel > 0:
-        print 'nodalRefPoints = \n',nodalRefPoints
+        print('nodalRefPoints = \n',nodalRefPoints)
     #end verbose check
 
     #physNodes = numpy.zeros((nelem,polydim,2),'d')
@@ -8465,7 +8467,7 @@ if __name__ == '__main__':
     u.femSpace.elementMaps.getValues(nodalRefPoints,physNodes)
 
     if verboseLevel > 0:
-        print 'physical Nodes = \n',physNodes
+        print('physical Nodes = \n',physNodes)
     #end verbose check
 
     #set value of u manually
@@ -8480,7 +8482,7 @@ if __name__ == '__main__':
     #end element loop
 
     if verboseLevel > 0:
-        print 'u dof values = \n',u.dof
+        print('u dof values = \n',u.dof)
     #end verbose check
 
     u.writeFunctionMatlab('sol','mesh')
@@ -8586,15 +8588,15 @@ if __name__ == '__main__':
         for n in range(nElementBoundaryPoints):
             jumps[ebNI,n] = uTraceArray[left_eN_global,left_ebN_element,n] - uTraceArray[right_eN_global,right_ebN_element,n]
             if abs(jumps[ebNI,n]) > jumpTol:
-                print 'Warning edge ',ebN,' jumpValues big= \n',jumps[ebNI,n]
-                print 'left element ',left_eN_global,'left edge ',left_ebN_element,' value = ',uTraceArray[left_eN_global,left_ebN_element,n]
-                print 'right element ',right_eN_global,'right edge ', right_eN_global,' value = ',uTraceArray[right_eN_global,right_ebN_element,n]
-                print 'left element ',left_eN_global,'left edge ',left_ebN_element,' value = ',ucgTraceArray[left_eN_global,left_ebN_element,n]
-                print 'right element ',right_eN_global,'right edge ', right_eN_global,' value = ',ucgTraceArray[right_eN_global,right_ebN_element,n]
-                print physTraceArray[left_eN_global,left_ebN_element,n]
-                print physTraceArray[right_eN_global,right_ebN_element,n]
-                print math.sin(0.5*math.pi*physTraceArray[left_eN_global,left_ebN_element,n,0])*math.cos(0.5*math.pi*physTraceArray[left_eN_global,left_ebN_element,n,1])
-                print math.sin(0.5*math.pi*physTraceArray[right_eN_global,right_ebN_element,n,0])*math.cos(0.5*math.pi*physTraceArray[right_eN_global,right_ebN_element,n,1])
+                print('Warning edge ',ebN,' jumpValues big= \n',jumps[ebNI,n])
+                print('left element ',left_eN_global,'left edge ',left_ebN_element,' value = ',uTraceArray[left_eN_global,left_ebN_element,n])
+                print('right element ',right_eN_global,'right edge ', right_eN_global,' value = ',uTraceArray[right_eN_global,right_ebN_element,n])
+                print('left element ',left_eN_global,'left edge ',left_ebN_element,' value = ',ucgTraceArray[left_eN_global,left_ebN_element,n])
+                print('right element ',right_eN_global,'right edge ', right_eN_global,' value = ',ucgTraceArray[right_eN_global,right_ebN_element,n])
+                print(physTraceArray[left_eN_global,left_ebN_element,n])
+                print(physTraceArray[right_eN_global,right_ebN_element,n])
+                print(math.sin(0.5*math.pi*physTraceArray[left_eN_global,left_ebN_element,n,0])*math.cos(0.5*math.pi*physTraceArray[left_eN_global,left_ebN_element,n,1]))
+                print(math.sin(0.5*math.pi*physTraceArray[right_eN_global,right_ebN_element,n,0])*math.cos(0.5*math.pi*physTraceArray[right_eN_global,right_ebN_element,n,1]))
 #          #end if big jump
 #      #end for loop on edges
 #  #end checkFunctionTrace

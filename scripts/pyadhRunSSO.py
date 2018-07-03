@@ -1,3 +1,4 @@
+from __future__ import print_function
 ## Automatically adapted for numpy.oldnumeric Apr 14, 2008 by -c
 
 #! /usr/bin/env python
@@ -142,7 +143,7 @@ def proteusRun(runRoutines):
                     running = False
                 else:
                     userInput = True
-                    exec line
+                    exec(line)
                     sys.stdout.write(">>>")
             else:
                 userInput = False
@@ -216,7 +217,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts):
                                                   refinementLevels=n.nLevels)
         elif pM.nd==2:
             if pM.polyfile != None:
-                print "reading triangle mesh"
+                print("reading triangle mesh")
                 tmesh = TriangleTools.TriangleBaseMesh(baseFlags="q30Den",
                                                        nbase=1,
                                                        verbose=10)
@@ -396,7 +397,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts):
         plotOffSet=0
         it=0
         for p,n,m,ls,nls,pName in zip(pList,nList,mList,lsList,nlsList,pNameList):
-            print "Model = ",pName
+            print("Model = ",pName)
             #1 stage integration by default
             nStages = 1
             if 'nStagesTime' in dir(n):

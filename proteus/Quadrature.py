@@ -4,7 +4,8 @@ A class hierarchy for numerical integration on reference domains in 1,2, and 3D.
 .. inheritance-diagram:: proteus.Quadrature
    :parts: 1
 """
-from EGeometry import *
+from __future__ import absolute_import
+from .EGeometry import *
 from .Profiling import logEvent
 from math import *
 

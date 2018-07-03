@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from sp_gw_p import *
+from .sp_gw_p import *
 reload(proteus.default_n)
 
 #fixed time step

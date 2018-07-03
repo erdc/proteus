@@ -4,6 +4,7 @@ Module for controlling MPI
 .. inheritance-diagram:: proteus.Comm
    :parts: 1
 """
+from __future__ import absolute_import
 
 import ctypes
 import sys
@@ -13,7 +14,7 @@ from .Profiling import logEvent
 
 
 # Special workaround for broken MPI on certain Cray systems
-import config
+from . import config
 mpi_preload_libs=[]
 for lib in config.PROTEUS_PRELOAD_LIBS:
     mpi_preload_libs.append(ctypes.CDLL(lib,mode=ctypes.RTLD_GLOBAL))

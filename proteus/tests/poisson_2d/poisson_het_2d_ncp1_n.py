@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from poisson_het_2d_p import *
+from .poisson_het_2d_p import *
 
 parallel = False
 

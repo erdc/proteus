@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -37,15 +39,15 @@ openTop=True
 fl_H = 0.41
 # Input checks
 if spaceOrder not in [1, 2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit()
 
 if useRBLES not in [0.0, 1.0]:
-    print "INVALID: useRBLES" + useRBLES
+    print("INVALID: useRBLES" + useRBLES)
     sys.exit()
 
 if useMetrics not in [0.0, 1.0]:
-    print "INVALID: useMetrics"
+    print("INVALID: useMetrics")
     sys.exit()
 
 nd = 2
@@ -91,9 +93,11 @@ nLayersOfOverlapForParallel = 0
 structured = False
 
 he=ct.he
-DX=he 
-from symmetricDomain_john import symmetric2D
-
+DX=he
+try:
+    from .symmetricDomain_john import symmetric2D
+except:
+    from symmetricDomain_john import symmetric2D
 domain = symmetric2D(box=(2.2,0.41),
                      L= 0.2,
                      H = 0.2,

@@ -9,6 +9,8 @@ Some simple modules for doing runtime visualization
 .. inheritance-diagram:: proteus.Viewers
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
 import  subprocess
 import numpy
 
@@ -92,11 +94,11 @@ class V_base:
                  n=None,
                  s=None):
         if p is None:
-            import default_p as p
+            from . import default_p as p
         if n is None:
-            import default_n as n
+            from . import default_n as n
         if s is None:
-            import default_s as s
+            from . import default_s as s
         global cmdFile,datFile,datFilename,viewerPipe,viewerType,plotNumber,windowNumber,meshDataStructuresWritten
         self.cmdFile=cmdFile
         self.datFile=datFile
@@ -211,7 +213,7 @@ class V_base:
             if (ci in self.s.viewComponents):
                 plotExact= 'u_exact' in self.s.viewQuantities and \
                            self.p.analyticalSolution is not None and \
-                           self.p.analyticalSolution.has_key(ci)  and \
+                           ci in self.p.analyticalSolution  and \
                            self.p.analyticalSolution[ci] is not None
                 if plotExact:
                 #copy the code from VectorTransport.viewSolution as much as possibe
@@ -323,7 +325,7 @@ class V_base:
                 plotExactVel = ('velocity_exact' in self.s.viewQuantities and
                                 'p.analyticalSolutionVelocity' in dir(p) and
                                 self.p.p.analyticalSolutionVelocity is not None and
-                                vt.q.has_key(('velocity',ci)))
+                                ('velocity',ci) in vt.q)
                 if plotExactVel:
                     import math
                     if self.viewerType == 'gnuplot':
@@ -469,7 +471,7 @@ class V_base:
                 uci = vt.coefficients.vectorComponents[0]; vci = vt.coefficients.vectorComponents[1]
                 plotVector = (uci in self.s.viewComponents and vci in self.s.viewComponents and
                               self.p.analyticalSolution is not None and
-                              self.p.analyticalSolution.has_key(uci) and self.p.analyticalSolution.has_key(vci) and
+                              uci in self.p.analyticalSolution and vci in self.p.analyticalSolution and
                               self.p.analyticalSolution[uci] is not None and self.p.analyticalSolution[vci] is not None)
                 if plotVector and self.viewerType == 'gnuplot':
                     for x in vt.mesh.nodeArray[:,:]:
@@ -492,8 +494,8 @@ class V_base:
                 plotVector = (uci in self.s.viewComponents and vci in self.s.viewComponents and
                               wci in self.s.viewComponents and self.p.analyticalSolution is not None and
                               self.p.analyticalSolution is not None and
-                              self.p.analyticalSolution.has_key(uci) and self.p.analyticalSolution.has_key(vci) and
-                              self.p.analyticalSolution.has_key(wci) and
+                              uci in self.p.analyticalSolution and vci in self.p.analyticalSolution and
+                              wci in self.p.analyticalSolution and
                               self.p.analyticalSolution[uci] is not None and self.p.analyticalSolution[vci] is not None and
                               self.p.analyticalSolution[wci] is not None)
 
@@ -572,17 +574,17 @@ class V_base:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                 stval = eval(recType[1])
-                if (mlvt.levelModelList[-1].q.has_key(stval) and
+                if (stval in mlvt.levelModelList[-1].q and
                     len(mlvt.levelModelList[-1].q[stval].shape) == 2): #found quantity and it's a scalar
                     self.plotScalarElementQuantity(stval,mlvt,tsim)
                     plottedSomething = True
-                elif (mlvt.levelModelList[-1].q.has_key(stval) and
+                elif (stval in mlvt.levelModelList[-1].q and
                       len(mlvt.levelModelList[-1].q[stval].shape) == 3): #found quantity and it's a vector
                     self.plotVectorElementQuantity(stval,mlvt,tsim)
                     plottedSomething = True
             elif len(recType) > 1 and recType[0] == 'ebq_global': #found global element boundary quantity
                 stval = eval(recType[1])
-                if mlvt.levelModelList[-1].ebq_global.has_key(stval):
+                if stval in mlvt.levelModelList[-1].ebq_global:
                     if len(mlvt.levelModelList[-1].ebq_global[stval].shape) == 3: #found quantity and its a vector
                         self.plotVectorGlobalElementBoundaryQuantity(stval,mlvt,tsim)
                         plottedSomething = True
@@ -608,7 +610,7 @@ class V_base:
         from proteusGraphical import vtkViewers
         vt = mlvt.levelModelList[-1]
         title = """q[%s]""" % (ckey,)
-        assert vt.q.has_key(ckey)
+        assert ckey in vt.q
         if self.viewerType == 'gnuplot':
             if vt.nSpace_global == 1:
                 npoints  = vt.q['x'].shape[0]*vt.q['x'].shape[1]
@@ -748,7 +750,7 @@ class V_base:
 
         vt = mlvt.levelModelList[-1]
         title = """ebq_global[%s] t= %s""" % (ckey,tsim)
-        assert vt.ebq_global.has_key(ckey)
+        assert ckey in vt.ebq_global
         if self.viewerType == 'gnuplot':
             if vt.nSpace_global == 1:
                 max_u=max(numpy.absolute(numpy.take(vt.ebq_global[ckey],[0],2).flat))
@@ -765,7 +767,7 @@ class V_base:
                 cmd = "set term x11 %i; plot \'%s\' index %i with linespoints title \"%s\" \n" % (self.windowNumber(),
                                                                                                   self.datFilename,
                                                                                                   self.plotNumber(),
-                                                                                                  title+" max= "+`max_u`)
+                                                                                                  title+" max= "+repr(max_u))
                 self.cmdFile.write(cmd)
                 self.viewerPipe.write(cmd)
                 newPlot()
@@ -944,7 +946,7 @@ class V_base:
 
         vt = mlvt.levelModelList[-1]
         title = """q[%s] t= %s""" % (ckey,tsim)
-        assert vt.q.has_key(ckey)
+        assert ckey in vt.q
         if self.viewerType == 'gnuplot':
             if vt.nSpace_global == 1:
                 max_u=max(numpy.absolute(numpy.take(vt.q[ckey],[0],2).flat))
@@ -1136,9 +1138,9 @@ class MatlabWriter:
                                                   figureNumber=figureNumber,title=title)
         nPoints_element = q['x'].shape[1]
         if nPoints_element <= nSpace:
-            print """
+            print("""
 Warning! viewScalarPointData nPoints_element=%s < %s too small for useLocal, using global interp""" % (nPoints_element,
-                                                                                                       nSpace+1)
+                                                                                                       nSpace+1))
             return self.viewGlobalScalarPointData(cmdFile,nSpace,q,ckey,name=name,
                                                   storeMeshData=storeMeshData,
                                                   figureNumber=figureNumber,title=title)
@@ -1162,7 +1164,7 @@ Warning! viewScalarPointData nPoints_element=%s < %s too small for useLocal, usi
                                                   storeMeshData=storeMeshData,
                                                   figureNumber=figureNumber,title=title)
         else:
-            print "viewLocalVectorPointData not implemented, using global!"
+            print("viewLocalVectorPointData not implemented, using global!")
             return self.viewGlobalVectorPointData(cmdFile,nSpace,q,ckey,name=name,
                                                   storeMeshData=storeMeshData,
                                                   figureNumber=figureNumber,title=title)
@@ -1245,7 +1247,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                 name += "_%s" % ckey[1+i]
         if title is None:
             title = name
-        assert q.has_key(ckey), " ckey = %s missing from q " % ckey
+        assert ckey in q, " ckey = %s missing from q " % ckey
         assert len(q[ckey].shape) == 2, " q[%s].shape= %s should be ( , ) " % (ckey,q[ckey].shape)
 
         if storeMeshData:
@@ -1369,7 +1371,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                 name += "_%s" % ckey[1+i]
         if title is None:
             title = name
-        assert q.has_key(ckey), " ckey = %s missing from q " % ckey
+        assert ckey in q, " ckey = %s missing from q " % ckey
         assert len(q[ckey].shape) == 3, " q[%s].shape= %s should be ( , , ) " % (ckey,q[ckey].shape)
 
         if storeMeshData:
@@ -1512,7 +1514,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                 name += "_%s" % ckey[1+i]
         if title is None:
             title = name
-        assert q.has_key(ckey), " ckey = %s missing from q " % ckey
+        assert ckey in q, " ckey = %s missing from q " % ckey
         assert len(q[ckey].shape) == 2, " q[%s].shape= %s should be ( , ) " % (ckey,q[ckey].shape)
 
         nElements_global = q['x'].shape[0]; nPoints_element = q['x'].shape[1];
@@ -2219,7 +2221,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                 cmdFile.write(" \n ")
             cmdFile.write("];")
         else:
-            print """3d LagrangeC0P2 not implemented yet"""
+            print("""3d LagrangeC0P2 not implemented yet""")
             return 0
         #
         #assumes l2g layout consistent with matlab one
@@ -2394,7 +2396,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                 cmdFile.write(" \n ")
             cmdFile.write("];")
         else:
-            print """3d LagrangeC0P2 not implemented yet"""
+            print("""3d LagrangeC0P2 not implemented yet""")
             return 0
         #
 
@@ -2945,7 +2947,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                 cmdFile.write(" \n ")
             cmdFile.write("; \n ")
         else:
-            print """3d LagrangeDGP2 not implemented yet"""
+            print("""3d LagrangeDGP2 not implemented yet""")
             return 0
 
         #

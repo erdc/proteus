@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus.default_p import *
 from proteus.mprans import RDLS
-from multiphase import *
+from .multiphase import *
 
 LevelModelType = RDLS.LevelModel
 coefficients = RDLS.Coefficients(applyRedistancing=applyRedistancing,

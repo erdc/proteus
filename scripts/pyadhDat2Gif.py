@@ -1,3 +1,4 @@
+from __future__ import print_function
 ## Automatically adapted for numpy.oldnumeric Apr 14, 2008 by -c
 
 #! /usr/bin/env python
@@ -51,7 +52,7 @@ parser.add_option("-f", "--frames",
 if len(args) < 1:
     raise RuntimeError("No input file specified")
 
-print "Making animations"
+print("Making animations")
 inFile = args[0]+'.cmd'
 datFile = args[0]+'.dat'
 YRange = 'set yrange ' + opts.yrange
@@ -97,9 +98,9 @@ while (i < LineTotal -1):
     time  = float(words[-1].strip('\'\"'))
 
     if (AllWindows == 0):
-        print Window
-        print int(Window)
-        print WindowLastSeen
+        print(Window)
+        print(int(Window))
+        print(WindowLastSeen)
         if(int(Window) >= WindowLastSeen):
             Variables.add(Variable)
         else:
@@ -125,7 +126,7 @@ while (i < LineTotal -1):
 
 k = 0
 AnimationNames = list(Variables)
-print "Names ", AnimationNames
+print("Names ", AnimationNames)
 while(k <= AllWindows):
     Convert = 'convert -loop 1 ' + str(AnimationNames[k])  + 'plot*MakeAnimations.eps ' + str(AnimationNames[k]) + str(k) + '.gif'
     os.system(Convert)

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 from proteus import Domain
 from proteus.mprans import SpatialTools as st
@@ -97,15 +98,15 @@ useRANS = 0.
             # 3 -- K-Omega, 1988
 # Input checks
 if spaceOrder not in [1,2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit()
 
 if useRBLES not in [0.0, 1.0]:
-    print "INVALID: useRBLES" + useRBLES
+    print("INVALID: useRBLES" + useRBLES)
     sys.exit()
 
 if useMetrics not in [0.0, 1.0]:
-    print "INVALID: useMetrics"
+    print("INVALID: useMetrics")
     sys.exit()
 
 #  Discretization

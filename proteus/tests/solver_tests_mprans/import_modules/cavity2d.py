@@ -1,3 +1,4 @@
+from __future__ import print_function
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -31,7 +32,7 @@ he = opts.he
 
 # Input checks
 if spaceOrder not in [1,2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit() 
 if spaceOrder == 1:
     hFactor=1.0
@@ -150,7 +151,7 @@ g = [0.0,0.0]
 # point.
 if structured is False:
     triangleOptions= "pAq30.0Dena%f" % (.5*DX**2)  #% (0.5*(DX)**2,)
-    print triangleOptions
+    print(triangleOptions)
     genMesh=True
     domain.writePLY('cavity2D')
     domain.writePoly('cavity2D')

@@ -4,10 +4,12 @@ Classes representing analytical solutions of differential and partial differenti
 .. inheritance-diagram:: proteus.AnalyticalSolutions
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
 from math import *
-from EGeometry import *
-from LinearAlgebraTools import *
-from Profiling import logEvent
+from .EGeometry import *
+from .LinearAlgebraTools import *
+from .Profiling import logEvent
 
 class AS_base:
     """
@@ -197,7 +199,7 @@ class NonlinearAD_SteadyState(LinearAD_SteadyState):
                 rtmC = sqrt(1.5)
                 while abs(f(rtmC)) > 1.0e-8:
                     rtmC -= f(rtmC)/df(rtmC)
-                logEvent("sqrt(-C)="+`rtmC`)
+                logEvent("sqrt(-C)="+repr(rtmC))
                 self.rtmC_ = rtmC
                 self.sol_ = lambda x : self.rtmC_* \
                             tanh((-self.b_*self.rtmC_/self.a_)*(x - 1.0))
@@ -211,29 +213,29 @@ class NonlinearAD_SteadyState(LinearAD_SteadyState):
                 return 2.0*(log(C-1.0) - log(C)) + 2.0*C*(1.0/(C-1.0) - 1.0/C)
             C = 1.0 + 1.0e-10
             f0 = f(C)
-            print f0
+            print(f0)
             while abs(f(C)) > (1.0e-7*abs(f0) + 1.0e-7):
                 dC = -f(C)/df(C)
                 logEvent("dc")
-                print dC
+                print(dC)
                 Ctmp = C + dC
                 while (abs(f(Ctmp)) > 0.99*abs(f(C))
                        or Ctmp <= 1.0):
-                    print f(Ctmp)
-                    print f(C)
+                    print(f(Ctmp))
+                    print(f(C))
                     logEvent("ls")
                     dC*=0.9
                     Ctmp = C + dC
                 logEvent("out")
-                print Ctmp
-                print f(Ctmp)
-                print df(Ctmp)
+                print(Ctmp)
+                print(f(Ctmp))
+                print(df(Ctmp))
                 C=Ctmp
-            logEvent("C="+`C`)
+            logEvent("C="+repr(C))
             self.nlC_ = C
             self.nlD_ = 0.5*(2.0*C*log(C*(C-1)) - \
                              4.0*C + 2.0 - self.b_/self.a_)
-            logEvent("D="+`self.nlD_`)
+            logEvent("D="+repr(self.nlD_))
 #              def f(C):
 #                  return (2.0*self.a_/self.b_)*(1.0 +
 #                                                C*log((C-1.0)/C))
@@ -517,7 +519,7 @@ class PlaneCouetteFlow_u(SteadyState):
     """
     The exact solution for the u component of  velocity in plane Couette Flow
     """
-    from canalyticalSolutions import PlaneCouetteFlow_u
+    from .canalyticalSolutions import PlaneCouetteFlow_u
     def __init__(self,
                  plateSeperation=1.0,
                  upperPlateVelocity=0.01,
@@ -561,7 +563,7 @@ class PlaneCouetteFlow_p(SteadyState):
         return 0.0
 
 class PlanePoiseuilleFlow_u(SteadyState):
-    from canalyticalSolutions import PlanePoiseuilleFlow_u
+    from .canalyticalSolutions import PlanePoiseuilleFlow_u
     """
     The exact solution for the u component of  velocity in plane Poiseuille Flow
     """
@@ -698,7 +700,7 @@ class PlaneBase(SteadyState):
                         maxZ = (Z,x)
         self.Zshift = minZ[0]
         self.Zsep = maxZ[0] - minZ[0]
-        print self.Zshift
+        print(self.Zshift)
         #allocated iwork and rwork arrays and load in values
 #         self.iwork = numpy.zeros((1,),'i') #( (shape_0,shape_1,...), typecode)
 #         self.rwork = numpy.array([mu,

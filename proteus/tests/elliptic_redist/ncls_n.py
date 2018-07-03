@@ -1,7 +1,9 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from ncls_p import *
-from vortex2D import *
+from .ncls_p import *
+from .vortex2D import *
 nd = 2
 
 # About time integration 
@@ -27,7 +29,7 @@ if useHex:
     elif pDegree_ls == 2:
         femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}
     else:
-        print "pDegree_ls = %s not recognized " % pDegree_ls
+        print("pDegree_ls = %s not recognized " % pDegree_ls)
     elementQuadrature = CubeGaussQuadrature(nd,vortex_quad_order)
     elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,vortex_quad_order)
 else:
@@ -36,7 +38,7 @@ else:
     elif pDegree_ls == 2:
         femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
-        print "pDegree_ls = %s not recognized " % pDegree_ls
+        print("pDegree_ls = %s not recognized " % pDegree_ls)
     elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
 

@@ -2,6 +2,7 @@
 """
 Test module for Elliptic Re-distancing
 """
+from __future__ import print_function
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -149,6 +150,6 @@ class TestEllipticRedistancing():
                                                opts)
         ns.calculateSolution('rdls3P')
         actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_3.h5','r')
-        print np.amax(actual.root.u_t2)
+        print(np.amax(actual.root.u_t2))
         assert np.isclose(np.amax(actual.root.u_t2),0.113047815938,atol=1e-10)
         actual.close()

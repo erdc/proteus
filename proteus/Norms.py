@@ -4,11 +4,12 @@ Tools for calculating norms on function spaces.
 .. inheritance-diagram:: proteus.Norms
    :parts: 1
 """
-from FemTools import *
-from Quadrature import *
+from __future__ import absolute_import
+from .FemTools import *
+from .Quadrature import *
 #from cmeshTools import globalSum,globalMax
-from flcbdfWrappers import globalSum,globalMax
-import  cfemIntegrals
+from .flcbdfWrappers import globalSum,globalMax
+from . import  cfemIntegrals
 
 useC = True
 

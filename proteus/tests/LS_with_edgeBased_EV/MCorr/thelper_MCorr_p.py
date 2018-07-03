@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
-from thelper_cons_ls import *
+from .thelper_cons_ls import *
 name=soname+"_phicor"
 from proteus.mprans import MCorr
 

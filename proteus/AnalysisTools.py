@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 from scipy import signal as sn
 #from pylab import *
@@ -45,7 +46,7 @@ def signalFilter(time,data,minfreq,maxfreq,costapCut = False):
         if dt_temp!=dt:
             doInterp = True
     if(doInterp):
-        print "Interpolating series"
+        print("Interpolating series")
         time_lin = np.linspace(time[0],time[-1],len(time))
         try:
             for ii in range(nprobes):
@@ -145,7 +146,7 @@ def zeroCrossing(time,data,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e30
         height = mean(height[ii:])
         period = mean(period)
     else:
-        print "mode must be either 'period', 'mean' or an integer "
+        print("mode must be either 'period', 'mean' or an integer ")
 
 
     return [period,height]

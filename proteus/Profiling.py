@@ -70,7 +70,7 @@ def openLog(filename,level,logLocation=None):
     if  procID == 0:
         logFile=open(filename_full,'w')
     elif logAllProcesses:
-        logFile=open(filename_full+`procID`,'w')
+        logFile=open(filename_full+repr(procID),'w')
     logLevel = level
     for string,level,data in preInitBuffer:
         logEvent(string,level,data)
@@ -147,11 +147,11 @@ def memory(message=None,className='',memSaved=None):
                     line = "Unknown Line"
                 if message is None:
                     message = ''
-                logEvent("PROTEUS ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %f MB in routine, %f MB in program, %f MB is hard limit" % (memInc,mem,memHardLimit))
+                logEvent("PROTEUS ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+repr(line)+": "+message+", %f MB in routine, %f MB in program, %f MB is hard limit" % (memInc,mem,memHardLimit))
                 MPI.COMM_WORLD.Abort(1)
                 sys.exit("MPI.COMM_WORLD.Abort(1); exit(1)")
         if message:
-            return "In "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %f MB in routine, %f MB in program" % (memInc,mem)
+            return "In "+filename.split("/")[-1]+", "+className+caller+", line "+repr(line)+": "+message+", %f MB in routine, %f MB in program" % (memInc,mem)
 
 def memorySummary():
     global memLog
@@ -163,7 +163,7 @@ def memorySummary():
         mem = memory_usage(-1)[0]
         if mem > 0:
             for pair in memList:
-                logEvent(`pair[0]`+"  %"+`100.0*pair[1]/memMax`)
+                logEvent(repr(pair[0])+"  %"+repr(100.0*pair[1]/memMax))
 
 
 class Dispatcher():
@@ -245,7 +245,7 @@ Wall clock percentage of top 20 calls
                 msg+=("{0:11.1%} {1:s}\n".format(statsm[f][2]/stats.__dict__['total_tt'],str(fname)))
                 total += statsm[f][2]/stats.__dict__['total_tt']
             logEvent(msg)
-            logEvent("Representing "+`total*100.`+"%")
+            logEvent("Representing "+repr(total*100.)+"%")
         return func_return
 
 @atexit.register

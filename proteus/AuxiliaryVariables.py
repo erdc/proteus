@@ -4,20 +4,22 @@ Classes for calculating auxiliary variables based on the numerical solution.
 .. inheritance-diagram:: proteus.AuxiliaryVariables
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
 import numpy
-import Viewers
-import Archiver
+from . import Viewers
+from . import Archiver
 from xml.etree.ElementTree import *
 
-import Profiling
-from Profiling import logEvent
+from . import Profiling
+from .Profiling import logEvent
 
 try:
     from proteusGraphical import vtkViewers
 except:
     pass
 import copy
-import cfemIntegrals
+from . import cfemIntegrals
 import math
 import os
 
@@ -58,7 +60,7 @@ class GatherDOF(AV_base):
         self.filename=filename
         self.firstCall = True
     def calculate(self):
-        import Comm
+        from . import Comm
         comm = Comm.get()
         if self.firstCall:
             self.firstCall = False
@@ -66,8 +68,8 @@ class GatherDOF(AV_base):
 
         self.fineGridModel=self.model.levelModelList[-1]
         comm.beginSequential()
-        print "writing for dof processsor ",comm.rank()
-        print "opening dof and node files for processsor ",comm.rank()
+        print("writing for dof processsor ",comm.rank())
+        print("opening dof and node files for processsor ",comm.rank())
         if comm.isMaster():
             doffile=open(self.filename+"_dof.txt","w")
             nodefile=open(self.filename+"_node.txt","w")
@@ -75,13 +77,13 @@ class GatherDOF(AV_base):
             doffile=open(self.filename+"_dof.txt","a")
             nodefile=open(self.filename+"_node.txt","a")
         for j in range(self.fineGridModel.nc):
-            print "writing dof for component ",j
+            print("writing dof for component ",j)
             self.fineGridModel.u[j].dof.tofile(doffile,sep='\n',format='%21.16e')
             doffile.write('\n')
-        print "writing nodes for processor ",comm.rank()
+        print("writing nodes for processor ",comm.rank())
         self.fineGridModel.mesh.nodeArray.tofile(nodefile,sep='\n',format='%21.16e')
         nodefile.write('\n')
-        print "closing dof and node files for processsor ",comm.rank()
+        print("closing dof and node files for processsor ",comm.rank())
         doffile.close()
         nodefile.close()
         comm.endSequential()
@@ -106,7 +108,7 @@ class BoundaryForce(AV_base):
             elif self.nd == 3:
                 F = numpy.zeros((self.nForces,3),'d')
             else:
-                logEvent("Can't use stress computation for nd = "+`self.nd`)
+                logEvent("Can't use stress computation for nd = "+repr(self.nd))
                 F=None
             self.levelFlist.append(F)
         self.historyF=[]
@@ -144,16 +146,16 @@ class BoundaryForce(AV_base):
                                                                        m.ebqe[('n')],
                                                                        F)
             logEvent("Force")
-            logEvent(`F`)
+            logEvent(repr(F))
             Ftot=F[0,:]
             for ib in range(1,self.nForces):
                 Ftot+=F[ib,:]
             logEvent("Total force on all boundaries")
-            logEvent(`Ftot`)
-        logEvent("Drag Force " +`self.model.stepController.t_model`+" "+`F[-1,0]`)
-        logEvent("Lift Force " +`self.model.stepController.t_model`+" "+`F[-1,1]`)
-        logEvent("Drag Coefficient " +`self.model.stepController.t_model`+" "+`self.C_fact*F[-1,0]`)
-        logEvent("Lift Coefficient " +`self.model.stepController.t_model`+" "+`self.C_fact*F[-1,1]`)
+            logEvent(repr(Ftot))
+        logEvent("Drag Force " +repr(self.model.stepController.t_model)+" "+repr(F[-1,0]))
+        logEvent("Lift Force " +repr(self.model.stepController.t_model)+" "+repr(F[-1,1]))
+        logEvent("Drag Coefficient " +repr(self.model.stepController.t_model)+" "+repr(self.C_fact*F[-1,0]))
+        logEvent("Lift Coefficient " +repr(self.model.stepController.t_model)+" "+repr(self.C_fact*F[-1,1]))
 #        for ib in range(self.nForces):
 #             self.writeScalarXdmf(self.C_fact*F[ib,0],"Drag Coefficient %i" % (ib,))
 #             self.writeScalarXdmf(self.C_fact*F[ib,1],"Lift Coefficient %i" % (ib,))
@@ -207,7 +209,7 @@ class PressureProfile(AV_base):
             elif self.nd == 3:
                 pass
             else:
-                logEvent("Can't use stress computation for nd = "+`self.nd`)
+                logEvent("Can't use stress computation for nd = "+repr(self.nd))
                 pass
             self.levelPlist.append(p)
             self.levelThetalist.append(theta)
@@ -345,7 +347,7 @@ class RecirculationLength(AV_base):
 #             self.viewL()
 #         except:
 #             pass
-        logEvent("Recirculation Length "+`self.levelLlist[-1]`)
+        logEvent("Recirculation Length "+repr(self.levelLlist[-1]))
 #     def viewL(self):
 #         tList=[]
 #         LList=[]
@@ -390,7 +392,7 @@ class VelocityAverage(AV_base):
             elif self.nd == 3:
                 V = numpy.zeros((3,),'d')
             else:
-                logEvent("Can't use velocity average for nd = "+`self.nd`)
+                logEvent("Can't use velocity average for nd = "+repr(self.nd))
                 V=None
             self.levelVlist.append(V)
 #         self.historyV=[]
@@ -425,7 +427,7 @@ class VelocityAverage(AV_base):
 #                                                                m.q[('dV_u',0)],#dV
 #                                                                V)
             logEvent("Average Velocity")
-            logEvent(`V`)
+            logEvent(repr(V))
             if self.nd == 2:
                 self.Vfile.write('%21.15e %21.15e \n' % tuple(V))
             else:
@@ -480,13 +482,13 @@ class BoundaryPressure(AV_base):
                 if abs(A[i]) > 0.0:
                     P[i] /= A[i]
             logEvent("Pressure")
-            logEvent(`P`)
+            logEvent(repr(P))
         self.historyP.append(copy.deepcopy(self.levelPlist))
 
 class ConservationHistoryMC(AV_base):
     """A simple class for storing the time history of things related conservation in conservative level set methods"""
     def __init__(self,filename):
-        import Comm
+        from . import Comm
         self.comm = Comm.get()
         self.filename=filename
         AV_base.__init__(self)
@@ -512,7 +514,7 @@ class ConservationHistoryMC(AV_base):
 class ConservationHistoryLS(AV_base):
     """A simple class for storing the time history of things related conservation in non-conservative level set methods"""
     def __init__(self,filename):
-        import Comm
+        from . import Comm
         self.comm = Comm.get()
         self.filename=filename
         AV_base.__init__(self)
@@ -636,7 +638,7 @@ class PT123velocityGenerator(AV_base):
     write out the velocity field from a model for PT123 to use in tracking as a
     standalone application
     """
-    from cpostprocessing import getElementRT0velocityValues
+    from .cpostprocessing import getElementRT0velocityValues
     def __init__(self,filebase,tnList,ci=0):
         self.filebase = filebase
         self.tnList = tnList

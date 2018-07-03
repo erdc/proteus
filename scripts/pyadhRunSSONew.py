@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 import sys
 import socket
@@ -94,7 +95,7 @@ def proteusRun(runRoutines):
     (opts,args) = parser.parse_args()
     if opts.petscOptions != None:
         sys.argv = sys.argv[:-1]+opts.petscOptions.split()
-        print sys.argv
+        print(sys.argv)
     comm = Comm.init()
     #mwf modify path to be able to load proteus test problems
     #for now always insert
@@ -139,7 +140,7 @@ def proteusRun(runRoutines):
     for i in range(len(pNameList)):
         simFlagsList.append({})
     for pName,p,simFlags in zip(pNameList,pList,simFlagsList):
-        pNameProc = pName + `comm.rank()`
+        pNameProc = pName + repr(comm.rank())
         simFlags['simulationName'] = pName
         simFlags['simulationNameProc'] = pNameProc
         simFlags['dataFile']       = pNameProc
@@ -151,15 +152,15 @@ def proteusRun(runRoutines):
             simFlags['plotQuantities'] = ['u']  #plot soln and exact soln if exists
             p.coefficients.plotCoefficients = opts.plotCoefficients
         if opts.ensight:
-            if simFlags.has_key('plotOptions'):
-                if simFlags['plotOptions'].has_key('ensight'):
+            if 'plotOptions' in simFlags:
+                if 'ensight' in simFlags['plotOptions']:
                     simFlags['plotOptions']['ensight']['on'] = True
                 else:
                     simFlags['plotOptions']['ensight'] = {'on':True}
             else:
                 simFlags['plotOptions'] = {'ensight':{'on':True}}
             #control convention on case file for multiple models, doesn't effect proteusRun right now
-            simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`
+            simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ repr(comm.rank())
 
         #viewers section
     #pName,simFlags defaults
@@ -208,7 +209,7 @@ def proteusRun(runRoutines):
         elif opts.batchFileName != "":
             userInput = False
             lines = '\n'.join(batchBlocks.pop(0))
-            exec lines
+            exec(lines)
             run     = True
             running = len(batchBlocks) > 0
         else:
@@ -229,7 +230,7 @@ def proteusRun(runRoutines):
                     running = False
                 else:
                     userInput = True
-                    exec line
+                    exec(line)
                     sys.stdout.write(">>>")
             else:
                 userInput = False
@@ -340,7 +341,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         elif pM.nd==2:
             if pM.polyfile != None:
                 ##\todo fix triangle tools to work with cmesh
-                print "reading triangle mesh"
+                print("reading triangle mesh")
                 tmesh = TriangleTools.TriangleBaseMesh(baseFlags=nM.triangleOptions,
                                                        nbase=1,
                                                        verbose=10)
@@ -375,7 +376,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                         os.path.exists(pM.polyfile+".node")):
                     tetcmd = "tetgen -%s %s.poly" % (nM.triangleOptions,pM.polyfile)
                     #mwf debug
-                    print "proteusRun trying to run tetgen with %s " % tetcmd
+                    print("proteusRun trying to run tetgen with %s " % tetcmd)
                     failed = os.system(tetcmd)
                     elefile = "%s.1.ele" % pM.polyfile
                     nodefile = "%s.1.node" % pM.polyfile
@@ -390,7 +391,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                     tmp = "%s.node" % pM.polyfile
                     os.rename(nodefile,tmp)
                     assert os.path.exists(tmp)
-                print "reading tetgen mesh node and element files directly"
+                print("reading tetgen mesh node and element files directly")
                 nbase = 1
                 mesh=MeshTools.TetrahedralMesh()
                 mesh.generateFromTetgenFiles(pM.polyfile,nbase)
@@ -402,8 +403,8 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                                                              refinementLevels=nM.nLevels)
     #mwf debug
     for l in range(n.nLevels):
-        print """proteusRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
-                                                                                      mlMesh.meshList[l].nElements_global,mlMesh.meshList[l].nNodes_global,mlMesh.meshList[l].nElementBoundaries_global,mlMesh.meshList[l].h)
+        print("""proteusRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
+                                                                                      mlMesh.meshList[l].nElements_global,mlMesh.meshList[l].nNodes_global,mlMesh.meshList[l].nElementBoundaries_global,mlMesh.meshList[l].h))
 
 
     Profiling.memory("mesh")
@@ -420,8 +421,8 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                 mlMesh.meshList[l].computeGeometricInfo()
             tolList.append(n.tolFac*(mlMesh.meshList[l].h**2))
             linTolList.append(n.linTolFac*(mlMesh.meshList[l].h**2))
-        print n.atol
-        print tolList
+        print(n.atol)
+        print(tolList)
         mlTransport = Transport.MultilevelTransport(
             p.nd,
             mlMesh,
@@ -553,13 +554,13 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
             comm = Comm.get()
             if comm.isMaster():
                 sosOut = open(pName+'.sos','w')
-                header = "FORMAT\n"+"type: master_server gold\n"+"SERVERS\n"+"number of servers: "+`comm.size()`+"\n\n"
+                header = "FORMAT\n"+"type: master_server gold\n"+"SERVERS\n"+"number of servers: "+repr(comm.size())+"\n\n"
                 sosOut.write(header)
                 for proc in range(comm.size()):
                     machineEntry = ("machine id: "+socket.gethostname()+"\n"+
                                     "executable: ensight8.server\n"+
                                     "data_path: "+os.getcwd()+"\n"+
-                                    "casefile: "+pName+`proc`+".case\n\n")
+                                    "casefile: "+pName+repr(proc)+".case\n\n")
                     sosOut.write(machineEntry)
                 sosOut.close()
             #
@@ -631,13 +632,13 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     mM = mList[opts.masterModel]
     dt = pList[opts.masterModel].T/nList[opts.masterModel].nDTout
     dtInit=1.0e-5
-    print "master T",pList[opts.masterModel].T
-    print "master nDTout",nList[opts.masterModel].nDTout
-    print "initial dt",dt
+    print("master T",pList[opts.masterModel].T)
+    print("master nDTout",nList[opts.masterModel].nDTout)
+    print("initial dt",dt)
     firstStep=True
     for n,ti,tn in zip(nList,timeIntegratorList,tnList):
         ti.initialize(n.DT,t0=tn,T=pList[opts.masterModel].T)
-        print "DT after initialize",n.DT
+        print("DT after initialize",n.DT)
     for m in mList:
         #mwf debug
         #temporarily turn off if not 1d
@@ -656,16 +657,16 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         #        ti.initialize(dt,t0=tn)
 
         for it in range(len(mList)):
-            print "Begin step for Model Number =",it
+            print("Begin step for Model Number =",it)
             for l,mm in enumerate(mList[it].modelList):
                 preCopy = mm.coefficients.preStep(tnList[it],firstStep=firstStep)
-                if preCopy != None and preCopy.has_key(('copy_uList')) and preCopy['copy_uList'] == True:
+                if preCopy != None and ('copy_uList') in preCopy and preCopy['copy_uList'] == True:
                     #cek have to use dof here because models might have different strong Dirichlet conditions.
                     #mList[it].uList[l].flat[:] = mList[preCopy['uList_model']].uList[l].flat[:]
                     for u_ci_lhs,u_ci_rhs in zip(mList[it].modelList[l].u.values(),mList[preCopy['uList_model']].modelList[l].u.values()):
                         u_ci_lhs.dof[:] = u_ci_rhs.dof
                     mList[it].modelList[l].setFreeDOF(mList[it].uList[l])
-                if preCopy != None and preCopy.has_key(('clear_uList')) and preCopy['clear_uList'] == True:
+                if preCopy != None and ('clear_uList') in preCopy and preCopy['clear_uList'] == True:
                     #cek have to use dof here because models might have different strong Dirichlet conditions.
                     #mList[it].uList[l].flat[:] = mList[preCopy['uList_model']].uList[l].flat[:]
                     for u_ci_lhs in mList[it].modelList[l].u.values():
@@ -683,7 +684,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
             #end if on weakDirichlet conditions
             #mwf debug
             #print """proteusRunSSO tn=%g dt=%g model= %s""" % (tnList[opts.masterModel],dt,it)
-            print "tnList[it],dt",tnList[it],dt
+            print("tnList[it],dt",tnList[it],dt)
             failedStep[it],tnList[it] = timeIntegratorList[it].calculateSolution(tnList[it],tnList[it]+dt)
             if it == opts.masterModel:
                 for n,ti in enumerate(timeIntegratorList):
@@ -702,21 +703,21 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
             #end cek debug
             for l,mm in enumerate(mList[it].modelList):
                 postCopy = mm.coefficients.postStep(tnList[it],firstStep=firstStep)
-                if postCopy != None and postCopy.has_key(('copy_uList')) and postCopy['copy_uList'] == True:
+                if postCopy != None and ('copy_uList') in postCopy and postCopy['copy_uList'] == True:
                     #cek have to use dof here because models might have different strong Dirichlet conditions.
                     #mList[postCopy['uList_model']].uList[l].flat[:] = mList[it].uList[l].flat[:]
                     for u_ci_lhs,u_ci_rhs in zip(mList[postCopy['uList_model']].modelList[l].u.values(),mList[it].modelList[l].u.values()):
                         u_ci_lhs.dof[:] = u_ci_rhs.dof
                     mList[it].modelList[l].setFreeDOF(mList[it].uList[l])
             #postcopy loop
-            print "End step for Model Number =",it
+            print("End step for Model Number =",it)
             simOutputList[it].processTimeLevel(pList[it],nList[it],mList[it],tnList[it])
         #end model time step loops
         failedFlag = True in failedStep
 #         if abs(tnList[opts.masterModel]+dt) > abs(pList[opts.masterModel].T-1.0e-8*tnList[opts.masterModel]):
 #             dt = pList[opts.masterModel].T-tnList[opts.masterModel]
         if failedFlag:
-            print """proteusRunSSO tn=%g dt=%g failedStep= %s""" % (tnList[opts.masterModel],dt,failedStep)
+            print("""proteusRunSSO tn=%g dt=%g failedStep= %s""" % (tnList[opts.masterModel],dt,failedStep))
         plotOffSet=0
         if opts.viewer and viewSolutionOrig:
             for m,p,tn,pName,mi in zip(mList,pList,tnList,pNameList,range(len(mList))):
@@ -724,7 +725,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                 m.modelList[l].saveSolution()
                 plotOffSet+=m.modelList[-1].coefficients.nc
                 #mwf debug
-                if m.modelList[-1].q.has_key(('velocity',0)):
+                if ('velocity',0) in m.modelList[-1].q:
                     plotOffSet+=1
                 if m.modelList[-1].coefficients.vectorComponents != None:
                     plotOffSet += 1

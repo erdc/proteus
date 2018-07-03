@@ -1,6 +1,7 @@
 #! /usr/bin/env pvpython
 
 # for use with pvpython versions at least 4.4
+from __future__ import print_function
 from paraview import servermanager
 from paraview.simple import *
 from optparse import OptionParser
@@ -54,7 +55,7 @@ pprobe=ProbeLocation(ProbeType=point,Input=reader)
 
 outfile = open("height.txt",'w')
 for time in timesteps:
-    print "Time =" + str(time)
+    print("Time =" + str(time))
     outfile.write(str(time))
 
     phi_old = 99.99
@@ -81,7 +82,7 @@ for time in timesteps:
                 pdata2= fp2.GetPointData()
                 phi  = pdata2.GetArray("phid").GetTuple1(0)
                 height = height - phi
-                print time,height, phi
+                print(time,height, phi)
         else:
             height = 0.0
         outfile.write("  " + str(height))

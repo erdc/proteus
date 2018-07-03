@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from proteus import Domain
 from proteus import Norms
 from proteus import Profiling
@@ -5,7 +6,7 @@ from proteus import Context
 from proteus.mprans import CLSVOF
 import numpy as np
 import math
-from parameters import *
+from .parameters import *
 
 AUTOMATED_TEST=True
 
@@ -99,7 +100,7 @@ if unstructured:
 else:
     domain = box
 
-soname="clsvof_level_"+`refinement`
+soname="clsvof_level_"+repr(refinement)
 
 class MyCoefficients(CLSVOF.Coefficients):
     def attachModels(self,modelList):

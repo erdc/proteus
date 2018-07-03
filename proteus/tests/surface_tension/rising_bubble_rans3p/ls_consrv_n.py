@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
-from risingBubble import *
-from ls_consrv_p import *
+from .risingBubble import *
+from .ls_consrv_p import *
 
 timeIntegrator  = ForwardIntegrator
 timeIntegration = NoIntegration

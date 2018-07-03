@@ -9,11 +9,13 @@ One is for writing out triangleWrappers data arrays in Triangle's fileformat
 .. inheritance-diagram:: proteus.TriangleUtils
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
 #import standard Python modules
 import sys,os
 import numpy
-import triangleWrappers
-import TriangleFileUtils
+from . import triangleWrappers
+from . import TriangleFileUtils
 
 
 ########################################################################
@@ -36,7 +38,7 @@ def writeOutTriangulation(tri,filebase="mesh",nbase=0,verbose=0):
         failed = True
         return failed
     if not nbase in [0,1]:
-        print 'must have vertex base numbering = 0 or 1, got nbase= ',nbase
+        print('must have vertex base numbering = 0 or 1, got nbase= ',nbase)
         failed = True
         return failed
     #end
@@ -45,13 +47,13 @@ def writeOutTriangulation(tri,filebase="mesh",nbase=0,verbose=0):
     patts = triangleWrappers.getPointAttributes(tri)
     pmarks= triangleWrappers.getPointMarkers(tri)
     if verbose > 0:
-        print 'writing node file'
+        print('writing node file')
     printNodeFile(nodes,filebase,patts,pmarks,nbase=nbase)
 
     elems = triangleWrappers.getTriangles(tri)
     eatts = triangleWrappers.getTriangleAttributes(tri)
     if verbose > 0:
-        print 'writing elements file'
+        print('writing elements file')
     printElemFile(elems,filebase,eatts,nbase=nbase)
 
     segms  = triangleWrappers.getSegments(tri)
@@ -59,19 +61,19 @@ def writeOutTriangulation(tri,filebase="mesh",nbase=0,verbose=0):
     holes  = triangleWrappers.getHoles(tri)
     regions= triangleWrappers.getRegions(tri)
     if verbose > 0:
-        print 'writing poly file'
+        print('writing poly file')
     printPolyFile(nodes,segms,filebase,patts,pmarks,
                   segmmks,holes,regions,nbase=nbase)
 
     edges  = triangleWrappers.getEdges(tri)
     edgemks= triangleWrappers.getEdgeMarkers(tri)
     if verbose > 0:
-        print 'writing edges file'
+        print('writing edges file')
     printEdgeFile(edges,filebase,edgemks,nbase=nbase)
 
     neigs  = triangleWrappers.getNeighbors(tri)
     if verbose > 0:
-        print 'writing neighbors file'
+        print('writing neighbors file')
     printNeighborFile(neigs,filebase,nbase=nbase)
 
     return failed
@@ -93,7 +95,7 @@ def printNodeFile(nodes,filebase='mesh',attrib=None,markers=None,nbase=0):
         return failed
     #end empty areas check
     if not nbase in [0,1]:
-        print 'must have vertex base numbering = 0 or 1, got nbase= ',nbase
+        print('must have vertex base numbering = 0 or 1, got nbase= ',nbase)
         failed = True
         return failed
     #end
@@ -147,7 +149,7 @@ def printElemFile(elems,filebase='mesh',attrib=None,nbase=0):
         return failed
     #end empty areas check
     if not nbase in [0,1]:
-        print 'must have vertex base numbering = 0 or 1, got nbase= ',nbase
+        print('must have vertex base numbering = 0 or 1, got nbase= ',nbase)
         failed = True
         return failed
     #end
@@ -215,7 +217,7 @@ def printPolyFile(nodes,segments,filebase='mesh',
     #end if
     #end empty areas check
     if not nbase in [0,1]:
-        print 'must have vertex base numbering = 0 or 1, got nbase= ',nbase
+        print('must have vertex base numbering = 0 or 1, got nbase= ',nbase)
         failed = True
         return failed
     #end
@@ -321,7 +323,7 @@ def printAreaFile(elemAreas,filebase='mesh',nbase=0):
         return failed
     #end elemAreas empty
     if not nbase in [0,1]:
-        print 'must have vertex base numbering = 0 or 1, got nbase= ',nbase
+        print('must have vertex base numbering = 0 or 1, got nbase= ',nbase)
         failed = True
         return failed
     #end
@@ -362,7 +364,7 @@ def printEdgeFile(edges,filebase='mesh',markers=None,nbase=0):
     #end empty arrays check
 
     if not nbase in [0,1]:
-        print 'must have vertex base numbering = 0 or 1, got nbase= ',nbase
+        print('must have vertex base numbering = 0 or 1, got nbase= ',nbase)
         failed = True
         return failed
     #end
@@ -408,7 +410,7 @@ def printNeighborFile(neigs,filebase='mesh',nbase=0):
         return failed
     #end
     if not nbase in [0,1]:
-        print 'must have vertex base numbering = 0 or 1, got nbase= ',nbase
+        print('must have vertex base numbering = 0 or 1, got nbase= ',nbase)
         failed = True
         return failed
     #end

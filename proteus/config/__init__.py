@@ -1,24 +1,25 @@
+from __future__ import absolute_import
 import os
 
 if 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('garnet'):
-    from garnet import *
+    from .garnet import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('topaz'):
-    from topaz import *
+    from .topaz import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('spirit'):
-    from spirit import *
+    from .spirit import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('stampede'):
-    from stampede import *
+    from .stampede import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('copper'):
-    from copper import *
+    from .copper import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('lightning'):
-    from lightning import *
+    from .lightning import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('excalibur'):
-    from excalibur import *
+    from .excalibur import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('viutill'):
-    from viutill import *
+    from .viutill import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('tamucluster'):
-    from tamucluster import *
+    from .tamucluster import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('centos'):
-    from centos import *
+    from .centos import *
 else:
-    from default import *
+    from .default import *

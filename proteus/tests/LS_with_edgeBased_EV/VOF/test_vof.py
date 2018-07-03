@@ -2,6 +2,7 @@
 """
 Test module for VOF with EV
 """
+from __future__ import absolute_import
 
 from proteus.iproteus import *
 from proteus import Comm
@@ -10,9 +11,9 @@ Profiling.logLevel=2
 Profiling.verbose=True
 import numpy as np
 import tables
-import thelper_vof
-import thelper_vof_p
-import thelper_vof_n
+from . import thelper_vof
+from . import thelper_vof_p
+from . import thelper_vof_n
 
 class TestVOF():
 

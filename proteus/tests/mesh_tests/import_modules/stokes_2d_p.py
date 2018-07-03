@@ -1,9 +1,13 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus import iproteus as ip
 from proteus.default_p import *
 reload(default_p)
 from proteus import Domain
-import stokes_2d
+try:
+    from . import stokes_2d
+except:
+    import stokes_2d
 from proteus import Context
 Context.setFromModule(stokes_2d)
 ct=Context.get()

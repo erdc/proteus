@@ -4,10 +4,11 @@ A class hierarchy for numerical flux (numerical trace) computations
 .. inheritance-diagram:: proteus.NumericalFlux
    :parts: 1
 """
-import cfemIntegrals,cnumericalFlux
+from __future__ import absolute_import
+from . import cfemIntegrals,cnumericalFlux
 import numpy
 from .Profiling import logEvent,memory
-from EGeometry import enorm
+from .EGeometry import enorm
 #TODO:
 #  allow different flags for Dirichlet bc's, keep isDOFBoundary = 1 by default
 #  ? allow flux bc's to have type flags too?
@@ -97,13 +98,13 @@ class NF_base:
         #                              max(1,self.vt.nSpace_global-1)),
                 #'d')
         if self.vt.movingDomain:
-            if self.vt.ebqe.has_key('xt'):
+            if 'xt' in self.vt.ebqe:
                 self.ebqe['xt'] = self.vt.ebqe['xt']
                 self.ebqe['n'] = self.vt.ebqe['n']
                 self.ebqe['sqrt(det(g))'] = self.vt.ebqe['sqrt(det(g))']
         #copy over stuff from vt.ebq
         for term in self.ebqeTerms:
-            if self.vt.ebqe.has_key(term):
+            if term in self.vt.ebqe:
                 self.ebqe[term].flat[:] = self.vt.ebqe[term].flat[:]
 
         logEvent(memory("ebqe","NumericalFlux"),level=4)
@@ -122,7 +123,7 @@ class NF_base:
             def __hash__(self):
                 return hash(tuple(self.p))
             def __str__(self):
-                return `self.p`
+                return repr(self.p)
             def __eq__(self,other):
                 return  enorm(self.p - other.p) < self.h
             def __lt__(self,other):
@@ -202,7 +203,7 @@ class NF_base:
                             p = getPeriodicBoundaryConditions[ci](x)
                             self.isDOFBoundary[ci][ebNE,k]=gFlag #mql. if periodic BCs then set isDOFBoundary to 1
                         if p is not None and not parallelPeriodic:
-                            if self.periodicBoundaryConditionsDictList[ci].has_key(ptuple(p)):#.hash()):
+                            if ptuple(p) in self.periodicBoundaryConditionsDictList[ci]:#.hash()):
                                 self.periodicBoundaryConditionsDictList[ci][ptuple(p)].append((ebNE,k))
                             else:
                                 self.periodicBoundaryConditionsDictList[ci][ptuple(p)]=[(ebNE,k)]#[ptuple(p).hash()]=[(ebNE,k)]
@@ -210,7 +211,7 @@ class NF_base:
                             self.isDOFBoundary[ci][ebNE,k]=gFlag
                             self.DOFBoundaryConditionsDictList[ci][(ebNE,k)] = g
                             self.DOFBoundaryPointDictList[ci][(ebNE,k)]=x
-                    if getAdvectiveFluxBoundaryConditions.has_key(ci):
+                    if ci in getAdvectiveFluxBoundaryConditions:
                         try:
                             g = getAdvectiveFluxBoundaryConditions[ci](x,materialFlag)
                             if g is not None:
@@ -220,7 +221,7 @@ class NF_base:
                             g = getAdvectiveFluxBoundaryConditions[ci](x)
                             if g is not None:
                                 self.isAdvectiveFluxBoundary[ci][ebNE,k]=1
-                    if getDiffusiveFluxBoundaryConditions.has_key(ci):
+                    if ci in getDiffusiveFluxBoundaryConditions:
                         for ck in getDiffusiveFluxBoundaryConditions[ci].keys():
                             try:
                                 g = getDiffusiveFluxBoundaryConditions[ci][ck](x,materialFlag)
@@ -282,12 +283,12 @@ class DoNothing(NF_base):
 class NoFlux(NF_base):
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         for ci in range(self.nc):
-            if ebq_global.has_key(('advectiveFlux',ci)):
+            if ('advectiveFlux',ci) in ebq_global:
                 ebq_global[('advectiveFlux',ci)].flat[:]=0.0
                 ebq_global[('dadvectiveFlux_left',ci,ci)].flat[:]=0.0
                 ebq_global[('dadvectiveFlux_right',ci,ci)].flat[:]=0.0
             for ck in range(self.nc):
-                if ebq_global.has_key(('diffusiveFlux',ck,ci)):
+                if ('diffusiveFlux',ck,ci) in ebq_global:
                     ebq_global[('diffusiveFlux',ck,ci)].flat[:]=0.0
     def updateInteriorNumericalFluxJacobian(self,l2g,q,ebq,ebq_global,dphi,fluxJacobian,fluxJacobian_eb,fluxJacobian_hj):
         for ci in range(self.nc):
@@ -536,7 +537,7 @@ class Advection_DiagonalUpwind_Diffusion_IIPG(NF_base):
                  getDiffusiveFluxBoundaryConditions)
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         for ci in range(self.nc):
-            if ebq.has_key(('f',ci)):
+            if ('f',ci) in ebq:
                 cnumericalFlux.calculateInteriorNumericalAdvectiveFlux(self.mesh.interiorElementBoundariesArray,
                                                                       self.mesh.elementBoundaryElementsArray,
                                                                       self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -549,7 +550,7 @@ class Advection_DiagonalUpwind_Diffusion_IIPG(NF_base):
                                                                       ebq_global[('dadvectiveFlux_right',ci,ci)])
                 #print "af",ebq_global[('advectiveFlux',ci)]
             for ck in range(self.nc):
-                if ebq.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebq:
                     if self.vt.sd:
                         cnumericalFlux.calculateInteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                   self.mesh.interiorElementBoundariesArray,
@@ -585,7 +586,7 @@ class Advection_DiagonalUpwind_Diffusion_IIPG(NF_base):
         if self.vt.movingDomain:
             self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
         for ci in range(self.nc):
-            if ebqe.has_key(('f',ci)):
+            if ('f',ci) in ebqe:
                 cnumericalFlux.calculateExteriorNumericalAdvectiveFlux(self.mesh.exteriorElementBoundariesArray,
                                                                        self.mesh.elementBoundaryElementsArray,
                                                                        self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -602,7 +603,7 @@ class Advection_DiagonalUpwind_Diffusion_IIPG(NF_base):
                                                                        ebqe[('dadvectiveFlux_left',ci,ci)])
                 #print "afe",ebq_global[('advectiveFlux',ci)]
             for ck in range(self.nc):
-                if ebqe.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebqe:
                     if self.vt.sd:
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                   self.mesh.exteriorElementBoundariesArray,
@@ -660,7 +661,7 @@ class Advection_DiagonalUpwind_Diffusion_IIPG(NF_base):
     def updateInteriorNumericalFluxJacobian(self,l2g,q,ebq,ebq_global,dphi,fluxJacobian,fluxJacobian_eb,fluxJacobian_hj):
         for ci in range(self.nc):
             if self.vt.timeIntegration.advectionIsImplicit[ci]:
-                if ebq.has_key(('f',ci)):
+                if ('f',ci) in ebq:
                     cnumericalFlux.updateInteriorNumericalAdvectiveFluxJacobian(self.mesh.interiorElementBoundariesArray,
                                                                                self.mesh.elementBoundaryElementsArray,
                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -669,9 +670,9 @@ class Advection_DiagonalUpwind_Diffusion_IIPG(NF_base):
                                                                                ebq[('v',ci)],
                                                                                fluxJacobian[ci][ci])
             for ck in range(self.nc):
-                if ebq.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebq:
                     for cj in range(self.nc):
-                        if dphi.has_key((ck,cj)):
+                        if (ck,cj) in dphi:
                             if self.vt.sd:
                                 cnumericalFlux.updateInteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                                dphi[(ck,cj)].femSpace.dofMap.l2g,
@@ -706,7 +707,7 @@ class Advection_DiagonalUpwind_Diffusion_IIPG(NF_base):
         #pass
         for ci in range(self.nc):
             if self.vt.timeIntegration.advectionIsImplicit[ci]:
-                if ebqe.has_key(('f',ci)):
+                if ('f',ci) in ebqe:
                     cnumericalFlux.updateExteriorNumericalAdvectiveFluxJacobian(self.mesh.exteriorElementBoundariesArray,
                                                                                 self.mesh.elementBoundaryElementsArray,
                                                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -716,9 +717,9 @@ class Advection_DiagonalUpwind_Diffusion_IIPG(NF_base):
                                                                                 fluxJacobian_exterior[ci][ci])
             if self.vt.timeIntegration.diffusionIsImplicit[ci]:
                 for ck in range(self.nc):
-                    if ebqe.has_key(('a',ci,ck)):
+                    if ('a',ci,ck) in ebqe:
                         for cj in range(self.nc):
-                            if dphi.has_key((ck,cj)):
+                            if (ck,cj) in dphi:
                                 if self.vt.sd:
                                     cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                                    dphi[(ck,cj)].femSpace.dofMap.l2g,
@@ -832,7 +833,7 @@ class Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                                                                    ebqe[('advectiveFlux',ci)],
                                                                    ebqe[('dadvectiveFlux_left',ci,ci)])
             for ck in range(self.nc):
-                if ebqe.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebqe:
                     if self.vt.sd:
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                   self.mesh.exteriorElementBoundariesArray,
@@ -888,9 +889,9 @@ class Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                                                                             fluxJacobian_exterior[ci][ci])
             if self.vt.timeIntegration.diffusionIsImplicit[ci]:
                 for ck in range(self.nc):
-                    if ebqe.has_key(('a',ci,ck)):
+                    if ('a',ci,ck) in ebqe:
                         for cj in range(self.nc):
-                            if dphi.has_key((ck,cj)):
+                            if (ck,cj) in dphi:
                                 if self.vt.sd:
                                     cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                                    dphi[(ck,cj)].femSpace.dofMap.l2g,
@@ -953,11 +954,11 @@ class ConstantAdvection_Diffusion_IIPG_exterior(NF_base):
         self.setDirichletValues(ebqe)
         self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
         for ci in range(self.nc):
-            if ebqe.has_key(('f',ci)):
+            if ('f',ci) in ebqe:
                 ebqe[('advectiveFlux',ci)][:] = (ebqe[('f',ci)]*ebqe['n']).sum(-1)
             ebqe[('dadvectiveFlux_left',ci,ci)][:] = 0.0
             for ck in range(self.nc):
-                if ebqe.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebqe:
                     if self.vt.sd:
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                   self.mesh.exteriorElementBoundariesArray,
@@ -997,9 +998,9 @@ class ConstantAdvection_Diffusion_IIPG_exterior(NF_base):
         for ci in range(self.nc):
             if self.vt.timeIntegration.diffusionIsImplicit[ci]:
                 for ck in range(self.nc):
-                    if ebqe.has_key(('a',ci,ck)):
+                    if ('a',ci,ck) in ebqe:
                         for cj in range(self.nc):
-                            if dphi.has_key((ck,cj)):
+                            if (ck,cj) in dphi:
                                 fluxJacobian_exterior[ci][cj][:] = 0.0
                                 if self.vt.sd:
                                     cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
@@ -1112,7 +1113,7 @@ class MixedDarcy_exterior(NF_base):
                                                                     ebqe[('dadvectiveFlux_left',1,1)])
         for ci in range(self.nc):
             for ck in range(self.nc):
-                if ebqe.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebqe:
                     if self.vt.sd:
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                   self.mesh.exteriorElementBoundariesArray,
@@ -1168,9 +1169,9 @@ class MixedDarcy_exterior(NF_base):
         for ci in range(self.nc):
             if self.vt.timeIntegration.diffusionIsImplicit[ci]:
                 for ck in range(self.nc):
-                    if ebqe.has_key(('a',ci,ck)):
+                    if ('a',ci,ck) in ebqe:
                         for cj in range(self.nc):
-                            if dphi.has_key((ck,cj)):
+                            if (ck,cj) in dphi:
                                 if self.vt.sd:
                                     cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                                    dphi[(ck,cj)].femSpace.dofMap.l2g,
@@ -1349,7 +1350,7 @@ class Curvature_exterior(NF_base):
                                                                         ebqe[('advectiveFlux',ci)],
                                                                         ebqe[('dadvectiveFlux_left',ci,ci)])
             for ck in range(self.nc):
-                if ebqe.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebqe:
                     if self.vt.sd:
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_free_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                        self.mesh.exteriorElementBoundariesArray,
@@ -1393,9 +1394,9 @@ class Curvature_exterior(NF_base):
                                                                                  fluxJacobian_exterior[ci][ci])
             if self.vt.timeIntegration.diffusionIsImplicit[ci]:
                 for ck in range(self.nc):
-                    if ebqe.has_key(('a',ci,ck)):
+                    if ('a',ci,ck) in ebqe:
                         for cj in range(self.nc):
-                            if dphi.has_key((ck,cj)):
+                            if (ck,cj) in dphi:
                                 if self.vt.sd:
                                     cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_free_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                                         dphi[(ck,cj)].femSpace.dofMap.l2g,
@@ -1511,7 +1512,7 @@ class Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                                                                            ebqe[('dadvectiveFlux_left',3,0)],
                                                                            ebqe[('velocity',0)])
         for ci in range(1,self.nc):
-            if ebqe.has_key(('a',ci,ci)):
+            if ('a',ci,ci) in ebqe:
                 if self.vt.sd:
                     cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ci)][0],
                                                                               self.vt.coefficients.sdInfo[(ci,ci)][1],
@@ -1551,7 +1552,7 @@ class Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
     def updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb, fluxJacobian_hj):
         for ci in range(self.nc):
             for cj in range(self.nc):
-                if ebqe.has_key(('dadvectiveFlux_left',ci,cj)):
+                if ('dadvectiveFlux_left',ci,cj) in ebqe:
                     cnumericalFlux.updateExteriorNumericalAdvectiveFluxJacobian(self.mesh.exteriorElementBoundariesArray,
                                                                                 self.mesh.elementBoundaryElementsArray,
                                                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -1699,7 +1700,7 @@ class StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                                                                            ebqe[('dadvectiveFlux_left',3,0)])
 
         for ci in range(1,self.nc):
-            if ebqe.has_key(('a',ci,ci)):
+            if ('a',ci,ci) in ebqe:
                 if self.vt.sd:
                     cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ci)][0],self.vt.coefficients.sdInfo[(ci,ci)][1],
                                                                               self.mesh.exteriorElementBoundariesArray,
@@ -1808,7 +1809,7 @@ class NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         pass
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
-        import ctransportCoefficients
+        from . import ctransportCoefficients
         self.setDirichletValues(ebqe)
         self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
         if self.vt.nSpace_global == 2:
@@ -1904,7 +1905,7 @@ class NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                                                                                  ebqe[('dadvectiveFlux_left',3,3)],
                                                                                  ebqe[('velocity',0)])
         for ci in range(1,self.nc):
-            if ebqe.has_key(('a',ci,ci)):
+            if ('a',ci,ci) in ebqe:
                 if self.vt.sd:
                     ebqe[('diffusiveFlux',ci,ci)].fill(0.0)
                     cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ci)][0],self.vt.coefficients.sdInfo[(ci,ci)][1],
@@ -1943,10 +1944,10 @@ class NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
     def updateInteriorNumericalFluxJacobian(self,l2g,q,ebq,ebq_global,dphi,fluxJacobian,fluxJacobian_eb,fluxJacobian_hj):
         pass
     def updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb,fluxJacobian_hj):
-        import ctransportCoefficients
+        from . import ctransportCoefficients
         for ci in range(self.nc):
             for cj in range(self.nc):
-                if ebqe.has_key(('dadvectiveFlux_left',ci,cj)):
+                if ('dadvectiveFlux_left',ci,cj) in ebqe:
                     cnumericalFlux.updateExteriorNumericalAdvectiveFluxJacobian(self.mesh.exteriorElementBoundariesArray,
                                                                                 self.mesh.elementBoundaryElementsArray,
                                                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -2032,7 +2033,7 @@ class Diffusion_IIPG_exterior(NF_base):
             self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
         for ci in range(self.nc):
             for ck in range(self.nc):
-                if ebqe.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebqe:
                     #print self.ebqe[('u',ck)]
                     ebqe[('advectiveFlux',ci)].flat[:]=0.0
                     ebqe[('diffusiveFlux',ck,ci)].flat[:]=0.0
@@ -2075,9 +2076,9 @@ class Diffusion_IIPG_exterior(NF_base):
         for ci in range(self.nc):
             if self.vt.timeIntegration.diffusionIsImplicit[ci]:
                 for ck in range(self.nc):
-                    if ebqe.has_key(('a',ci,ck)):
+                    if ('a',ci,ck) in ebqe:
                         for cj in range(self.nc):
-                            if dphi.has_key((ck,cj)):
+                            if (ck,cj) in dphi:
                                 if self.vt.sd:
                                     cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                                    dphi[(ck,cj)].femSpace.dofMap.l2g,
@@ -2213,9 +2214,9 @@ class DarcySplitPressure_IIPG_exterior(NF_base):
         for ci in range(self.nc):
             if self.vt.timeIntegration.diffusionIsImplicit[ci]:
                 for ck in range(self.nc):
-                    if ebqe.has_key(('a',ci,ck)):
+                    if ('a',ci,ck) in ebqe:
                         for cj in range(self.nc):
-                            if dphi.has_key((ck,cj)):
+                            if (ck,cj) in dphi:
                                 if self.vt.sd:
                                     cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                                    dphi[(ck,cj)].femSpace.dofMap.l2g,
@@ -2286,7 +2287,7 @@ class Diffusion_LDG(NF_base):
         self.aSplittingsHaveBeenAllocated= False
         for ci in range(self.nc):
             for ck in range(self.nc):
-                if self.vt.coefficients.sdInfo.has_key((ci,ck)):
+                if (ci,ck) in self.vt.coefficients.sdInfo:
                     self.diagEntry_a[(ci,ck)] = numpy.zeros((self.vt.nSpace_global,),'i')
                     rowptr = self.vt.coefficients.sdInfo[(ci,ck)][0]
                     colind = self.vt.coefficients.sdInfo[(ci,ck)][1]
@@ -2379,7 +2380,7 @@ class Diffusion_LDG(NF_base):
         if not self.aSplittingsHaveBeenAllocated:
             for ci in range(self.nc):
                 for ck in range(self.nc):
-                    if self.vt.coefficients.sdInfo.has_key((ci,ck)):
+                    if (ci,ck) in self.vt.coefficients.sdInfo:
                         self.eb_aTilde[(ci,ck)] = numpy.zeros(ebq[('a',ci,ck)].shape,dtype='d')
                         self.eb_aHat[(ci,ck)]   = numpy.zeros(ebq[('a',ci,ck)].shape,dtype='d')
                         self.aTilde[(ci,ck)]    = numpy.zeros(q[('a',ci,ck)].shape,dtype='d')
@@ -2387,7 +2388,7 @@ class Diffusion_LDG(NF_base):
             self.aSplittingsHaveBeenAllocated = True
         for ci in range(self.nc):
             for ck in range(self.nc):
-                if self.vt.coefficients.sdInfo.has_key((ci,ck)):
+                if (ci,ck) in self.vt.coefficients.sdInfo:
                     if self.aSplit == 0:
                         self.eb_aTilde[(ci,ck)]=ebq[('a',ci,ck)]
                         self.aTilde[(ci,ck)]=q[('a',ci,ck)]
@@ -2522,7 +2523,7 @@ class Diffusion_LDG(NF_base):
         for ci in range(self.nc):
             ##\todo fix numerical diffusive flux for multiple diffusion terms
             for ck in range(self.nc):
-                if ebq.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebq:
                     if self.vt.sd == True:
                         cnumericalFlux.calculateInteriorNumericalDiffusiveFlux_LDG_upwind_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],
                                                                                              self.vt.coefficients.sdInfo[(ci,ck)][1],
@@ -2553,7 +2554,7 @@ class Diffusion_LDG(NF_base):
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
         for ci in range(self.nc):
             for ck in range(self.nc):
-                if ebqe.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebqe:
                     if self.vt.sd:
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_LDG_upwind_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                              self.mesh.exteriorElementBoundariesArray,
@@ -2651,9 +2652,9 @@ class Diffusion_LDG(NF_base):
         for ci in range(self.nc):
             #ignore advection contribution for right now
             for ck in range(self.nc):
-                if ebq.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebq:
                     for cj in range(self.nc):
-                        if dphi.has_key((ck,cj)):
+                        if (ck,cj) in dphi:
                             if self.vt.sd:
                                 cnumericalFlux.updateInteriorNumericalDiffusiveFluxJacobian_LDG_upwind_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                                           self.mesh.interiorElementBoundariesArray,
@@ -2692,9 +2693,9 @@ class Diffusion_LDG(NF_base):
             #ignore advection contribution for now
             if self.vt.timeIntegration.diffusionIsImplicit[ci]:
                 for ck in range(self.nc):
-                    if ebqe.has_key(('a',ci,ck)):
+                    if ('a',ci,ck) in ebqe:
                         for cj in range(self.nc):
-                            if dphi.has_key((ck,cj)):
+                            if (ck,cj) in dphi:
                                 if self.vt.sd:
                                     cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_LDG_upwind_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],
                                                                                                               self.vt.coefficients.sdInfo[(ci,ck)][1],
@@ -2744,7 +2745,7 @@ class Advection_DiagonalUpwind_Diffusion_LDG(Diffusion_LDG):
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         Diffusion_LDG.calculateInteriorNumericalFlux(self,q,ebq,ebq_global)
         for ci in range(self.nc):
-            if ebq.has_key(('f',ci)):
+            if ('f',ci) in ebq:
                 cnumericalFlux.calculateInteriorNumericalAdvectiveFlux(self.mesh.interiorElementBoundariesArray,
                                                                       self.mesh.elementBoundaryElementsArray,
                                                                       self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -2758,7 +2759,7 @@ class Advection_DiagonalUpwind_Diffusion_LDG(Diffusion_LDG):
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
         Diffusion_LDG.calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe)
         for ci in range(self.nc):
-            if ebqe.has_key(('f',ci)):
+            if ('f',ci) in ebqe:
                 cnumericalFlux.calculateExteriorNumericalAdvectiveFlux(self.mesh.exteriorElementBoundariesArray,
                                                                        self.mesh.elementBoundaryElementsArray,
                                                                        self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -2774,7 +2775,7 @@ class Advection_DiagonalUpwind_Diffusion_LDG(Diffusion_LDG):
                                                                        ebqe[('advectiveFlux',ci)],
                                                                        ebqe[('dadvectiveFlux_left',ci,ci)])
         for ci in range(self.nc):
-            if ebqe.has_key(('f',ci)):
+            if ('f',ci) in ebqe:
                 cnumericalFlux.calculateGlobalExteriorInflowNumericalAdvectiveFlux(self.mesh.exteriorElementBoundariesArray,
                                                                                    self.mesh.elementBoundaryElementsArray,
                                                                                    self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -2790,7 +2791,7 @@ class Advection_DiagonalUpwind_Diffusion_LDG(Diffusion_LDG):
         Diffusion_LDG.updateInteriorNumericalFluxJacobian(self,l2g,q,ebq,ebq_global,dphi,fluxJacobian,fluxJacobian_eb,fluxJacobian_hj)
         for ci in range(self.nc):
             if self.vt.timeIntegration.advectionIsImplicit[ci]:
-                if ebq.has_key(('f',ci)):
+                if ('f',ci) in ebq:
                     cnumericalFlux.updateInteriorNumericalAdvectiveFluxJacobian(self.mesh.interiorElementBoundariesArray,
                                                                                self.mesh.elementBoundaryElementsArray,
                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -2802,7 +2803,7 @@ class Advection_DiagonalUpwind_Diffusion_LDG(Diffusion_LDG):
         Diffusion_LDG.updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb,fluxJacobian_hj)
         for ci in range(self.nc):
             if self.vt.timeIntegration.advectionIsImplicit[ci]:
-                if ebqe.has_key(('f',ci)):
+                if ('f',ci) in ebqe:
                     cnumericalFlux.updateExteriorNumericalAdvectiveFluxJacobian(self.mesh.exteriorElementBoundariesArray,
                                                                                 self.mesh.elementBoundaryElementsArray,
                                                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -2832,19 +2833,19 @@ class RusanovNumericalFlux_Diagonal(Advection_DiagonalUpwind):
         for ci in range(self.nc):
             #ebq
             vt.ebq[('u_advectiveNumericalFlux',ci)]= vt.ebq[('u',ci)]
-            if vt.ebq.has_key(('f',ci)):
+            if ('f',ci) in vt.ebq:
                 vt.ebq[('f_advectiveNumericalFlux',ci)]= vt.ebq[('f',ci)]
             for cj in range(self.nc):
-                if vt.ebq.has_key(('df',ci,cj)):
+                if ('df',ci,cj) in vt.ebq:
                     vt.ebq[('df_advectiveNumericalFlux',ci,cj)]= vt.ebq[('df',ci,cj)]
-                if vt.q.has_key(('df',ci,cj)):
+                if ('df',ci,cj) in vt.q:
                     vt.q[('df_advectiveNumericalFlux',ci,cj)] = vt.q[('df',ci,cj)]
             #ebqe
             vt.ebqe[('u_advectiveNumericalFlux',ci)]= vt.ebqe[('u',ci)]
-            if vt.ebqe.has_key(('f',ci)):
+            if ('f',ci) in vt.ebqe:
                 vt.ebqe[('f_advectiveNumericalFlux',ci)]= vt.ebqe[('f',ci)]
             for cj in range(self.nc):
-                if vt.ebqe.has_key(('df',ci,cj)):
+                if ('df',ci,cj) in vt.ebqe:
                     vt.ebqe[('df_advectiveNumericalFlux',ci,cj)]= vt.ebqe[('df',ci,cj)]
 
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
@@ -2927,24 +2928,24 @@ class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diff
         for ci in range(self.nc):
             #ebq
             vt.ebq[('u_advectiveNumericalFlux',ci)]= vt.ebq[('u',ci)]
-            if vt.ebq.has_key(('f',ci)):
+            if ('f',ci) in vt.ebq:
                 vt.ebq[('f_advectiveNumericalFlux',ci)]= vt.ebq[('f',ci)]
             for cj in range(self.nc):
-                if vt.ebq.has_key(('df',ci,cj)):
+                if ('df',ci,cj) in vt.ebq:
                     vt.ebq[('df_advectiveNumericalFlux',ci,cj)]= vt.ebq[('df',ci,cj)]
-                if vt.q.has_key(('df',ci,cj)):
+                if ('df',ci,cj) in vt.q:
                     vt.q[('df_advectiveNumericalFlux',ci,cj)] = vt.q[('df',ci,cj)]
             #ebqe
             vt.ebqe[('u_advectiveNumericalFlux',ci)]= vt.ebqe[('u',ci)]
-            if vt.ebqe.has_key(('f',ci)):
+            if ('f',ci) in vt.ebqe:
                 vt.ebqe[('f_advectiveNumericalFlux',ci)]= vt.ebqe[('f',ci)]
             for cj in range(self.nc):
-                if vt.ebqe.has_key(('df',ci,cj)):
+                if ('df',ci,cj) in vt.ebqe:
                     vt.ebqe[('df_advectiveNumericalFlux',ci,cj)]= vt.ebqe[('df',ci,cj)]
 
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         for ci in range(self.nc):
-            if ebq.has_key(('f',ci)):
+            if ('f',ci) in ebq:
                 cnumericalFlux.calculateInteriorNumericalAdvectiveFluxRusanov(self.safetyFactor,
                                                                               self.mesh.interiorElementBoundariesArray,
                                                                               self.mesh.elementBoundaryElementsArray,
@@ -2958,7 +2959,7 @@ class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diff
                                                                               ebq_global[('dadvectiveFlux_left',ci,ci)],
                                                                               ebq_global[('dadvectiveFlux_right',ci,ci)])
             for ck in range(self.nc):
-                if ebq.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebq:
                     if self.vt.sd:
                         cnumericalFlux.calculateInteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                   self.mesh.interiorElementBoundariesArray,
@@ -2993,7 +2994,7 @@ class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diff
         if self.vt.movingDomain:
             self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
         for ci in range(self.nc):
-            if ebqe.has_key(('f',ci)):
+            if ('f',ci) in ebqe:
                 cnumericalFlux.calculateExteriorNumericalAdvectiveFluxRusanov(self.safetyFactor,
                                                                               self.mesh.exteriorElementBoundariesArray,
                                                                               self.mesh.elementBoundaryElementsArray,
@@ -3011,7 +3012,7 @@ class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diff
                                                                               ebqe[('advectiveFlux',ci)],
                                                                               ebqe[('dadvectiveFlux_left',ci,ci)])
             for ck in range(self.nc):
-                if ebqe.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebqe:
                     if self.vt.sd:
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                   self.mesh.exteriorElementBoundariesArray,
@@ -3228,7 +3229,7 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG(NF_base):
                                                                         ebq[('dHamiltonJacobiFlux_right',ci,ci)])
 
             for ck in range(self.nc):
-                if ebq.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebq:
                     if self.vt.sd:
                         cnumericalFlux.calculateInteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                self.mesh.interiorElementBoundariesArray,
@@ -3289,7 +3290,7 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG(NF_base):
                                                                         ebqe[('HamiltonJacobiFlux',ci)],
                                                                         ebqe[('dHamiltonJacobiFlux_left',ci,ci)])
             for ck in range(self.nc):
-                if ebqe.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebqe:
                     if self.vt.sd:
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][0],
                                                                                   self.mesh.exteriorElementBoundariesArray,
@@ -3336,9 +3337,9 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG(NF_base):
                                                                            fluxJacobian_hj[ci][ci])
             if self.vt.timeIntegration.diffusionIsImplicit[ci]:
                 for ck in range(self.nc):
-                    if ebq.has_key(('a',ci,ck)):
+                    if ('a',ci,ck) in ebq:
                         for cj in range(self.nc):
-                            if dphi.has_key((ck,cj)):
+                            if (ck,cj) in dphi:
                                 if self.vt.sd:
                                     cnumericalFlux.updateInteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                                    dphi[(ck,cj)].femSpace.dofMap.l2g,
@@ -3389,9 +3390,9 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG(NF_base):
 
             if self.vt.timeIntegration.diffusionIsImplicit[ci]:
                 for ck in range(self.nc):
-                    if ebqe.has_key(('a',ci,ck)):
+                    if ('a',ci,ck) in ebqe:
                         for cj in range(self.nc):
-                            if dphi.has_key((ck,cj)):
+                            if (ck,cj) in dphi:
                                 if self.vt.sd:
                                     cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                                    dphi[(ck,cj)].femSpace.dofMap.l2g,
@@ -3513,7 +3514,7 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Diffusion_SI
                                                                         ebqe[('HamiltonJacobiFlux',ci)],
                                                                         ebqe[('dHamiltonJacobiFlux_left',ci,ci)])
             for ck in range(self.nc):
-                if ebqe.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebqe:
                     if self.vt.sd:
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][0],
                                                                                   self.mesh.exteriorElementBoundariesArray,
@@ -3561,9 +3562,9 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Diffusion_SI
 
             if self.vt.timeIntegration.diffusionIsImplicit[ci]:
                 for ck in range(self.nc):
-                    if ebqe.has_key(('a',ci,ck)):
+                    if ('a',ci,ck) in ebqe:
                         for cj in range(self.nc):
-                            if dphi.has_key((ck,cj)):
+                            if (ck,cj) in dphi:
                                 if self.vt.sd:
                                     cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
                                                                                                    dphi[(ck,cj)].femSpace.dofMap.l2g,
@@ -3666,7 +3667,7 @@ class HamiltonJacobi_Pressure_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Ham
             ebqe[('dHamiltonJacobiFlux_left',ci,ci)][:] += 0.0
 
             for ck in range(self.nc):
-                if ebqe.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebqe:
                     if self.vt.sd:
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][0],
                                                                                   self.mesh.exteriorElementBoundariesArray,
@@ -4523,7 +4524,7 @@ class RusanovNumericalFlux(RusanovNumericalFlux_Diagonal):
                                                getDiffusiveFluxBoundaryConditions)
 
         self.ebqe['eigen_bound']=numpy.copy(self.ebqe[('u',0)])
-        if not self.vt.q.has_key('eigen_bound'):
+        if 'eigen_bound' not in self.vt.q:
             self.vt.q['eigen_bound']=numpy.copy(self.vt.q[('u',0)])
         #mwf debug
         #self.safetyFactor=1.5
@@ -4613,25 +4614,25 @@ class RusanovLDG(Diffusion_LDG):
                               getDiffusiveFluxBoundaryConditions)
         self.safetyFactor=1.1
         self.ebqe['eigen_bound']=numpy.copy(self.ebqe[('u',0)])
-        if not self.vt.q.has_key('eigen_bound'):
+        if 'eigen_bound' not in self.vt.q:
             self.vt.q['eigen_bound']=numpy.copy(self.vt.q[('u',0)])
         #add extra terms that can be lagged specifically for advective flux. Time integrator has to do this though
         for ci in range(self.nc):
             #ebq
             vt.ebq[('u_advectiveNumericalFlux',ci)]= vt.ebq[('u',ci)]
-            if vt.ebq.has_key(('f',ci)):
+            if ('f',ci) in vt.ebq:
                 vt.ebq[('f_advectiveNumericalFlux',ci)]= vt.ebq[('f',ci)]
             for cj in range(self.nc):
-                if vt.ebq.has_key(('df',ci,cj)):
+                if ('df',ci,cj) in vt.ebq:
                     vt.ebq[('df_advectiveNumericalFlux',ci,cj)]= vt.ebq[('df',ci,cj)]
-                if vt.q.has_key(('df',ci,cj)):
+                if ('df',ci,cj) in vt.q:
                     vt.q[('df_advectiveNumericalFlux',ci,cj)] = vt.q[('df',ci,cj)]
             #ebqe
             vt.ebqe[('u_advectiveNumericalFlux',ci)]= vt.ebqe[('u',ci)]
-            if vt.ebqe.has_key(('f',ci)):
+            if ('f',ci) in vt.ebqe:
                 vt.ebqe[('f_advectiveNumericalFlux',ci)]= vt.ebqe[('f',ci)]
             for cj in range(self.nc):
-                if vt.ebqe.has_key(('df',ci,cj)):
+                if ('df',ci,cj) in vt.ebqe:
                     vt.ebqe[('df_advectiveNumericalFlux',ci,cj)]= vt.ebqe[('df',ci,cj)]
 
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
@@ -4647,7 +4648,7 @@ class RusanovLDG(Diffusion_LDG):
         #print "Rusanov System \nh=%s \nu=%s \ncfl_0=%s \ncfl_1=%s \neigen_bound=%s " % (q[('u',0)],q[('u',1)],q[('cfl',0)],q[('cfl',1)],self.vt.q['eigen_bound'])
         #TODO need an additional loop through j to get nondiagonal flux derivatives for Jacobian
         for ci in range(self.nc):
-            if ebq.has_key(('f',ci)):
+            if ('f',ci) in ebq:
                 cnumericalFlux.calculateInteriorNumericalAdvectiveFluxRusanovWithEigenvalueBound(self.safetyFactor,
                                                                                                  self.mesh.interiorElementBoundariesArray,
                                                                                                  self.mesh.elementBoundaryElementsArray,
@@ -4672,7 +4673,7 @@ class RusanovLDG(Diffusion_LDG):
             self.vt.q['eigen_bound'][:,k] *= self.vt.mesh.elementDiametersArray
         #TODO need an additional loop through j to get nondiagonal flux derivatives for Jacobian
         for ci in range(self.nc):
-            if ebqe.has_key(('f',ci)):
+            if ('f',ci) in ebqe:
                 cnumericalFlux.calculateExteriorNumericalAdvectiveFluxRusanovWithEigenvalueBound(self.safetyFactor,
                                                                                                  self.mesh.exteriorElementBoundariesArray,
                                                                                                  self.mesh.elementBoundaryElementsArray,
@@ -4815,7 +4816,7 @@ class Stress_IIPG_exterior(NF_base):
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         pass
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
-        import ctransportCoefficients
+        from . import ctransportCoefficients
         self.setDirichletValues(ebqe)
         #not using any coefficients on boundary
         #self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)

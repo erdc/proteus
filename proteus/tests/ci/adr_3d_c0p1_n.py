@@ -1,6 +1,10 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from adr_3d_p import *
+try:
+    from .adr_3d_p import *
+except:
+    from adr_3d_p import *
 
 #steady-state so no time integration
 timeIntegration = NoIntegration

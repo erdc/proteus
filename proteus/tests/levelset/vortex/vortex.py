@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 #if True uses PETSc solvers
 parallel = False
 linearSmoother = None
@@ -49,7 +50,7 @@ else:
     L = [1.0,1.0,1.0]
 unstructured=True#True for tetgen, false for tet or hex from rectangular grid
 if unstructured:
-    from tank3dDomain import *
+    from .tank3dDomain import *
     domain = tank3d(L=L)
     bt = domain.boundaryTags
     domain.writePoly("tank3d")
@@ -94,6 +95,6 @@ correctionType = 'cg'
 #correctionType = 'none'
 if useHex:
     hex=True
-    soname="vortex_c0q"+`pDegree_ls`+correctionType+"_bdf_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="vortex_c0q"+repr(pDegree_ls)+correctionType+"_bdf_"+repr(timeOrder)+"_level_"+repr(lRefinement)
 else:
-    soname="vortex_c0p"+`pDegree_ls`+correctionType+"_bdf_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="vortex_c0p"+repr(pDegree_ls)+correctionType+"_bdf_"+repr(timeOrder)+"_level_"+repr(lRefinement)

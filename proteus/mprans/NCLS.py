@@ -82,7 +82,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         # per component stage values, list with array at each stage
         self.u_dof_stage = {}
         for ci in range(self.nc):
-            if transport.q.has_key(('m', ci)):
+            if ('m', ci) in transport.q:
                 self.u_dof_last[ci] = transport.u[ci].dof.copy()
                 self.u_dof_stage[ci] = []
                 for k in range(self.nStages + 1):
@@ -212,7 +212,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         # per component stage values, list with array at each stage
         self.u_dof_stage = {}
         for ci in range(self.nc):
-            if self.transport.q.has_key(('m', ci)):
+            if ('m', ci) in self.transport.q:
                 self.u_dof_stage[ci] = []
                 for k in range(self.nStages + 1):
                     self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
@@ -329,14 +329,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.flowModel = modelList[self.flowModelIndex]
             self.q_v = modelList[self.flowModelIndex].q[('velocity', 0)]
             self.ebqe_v = modelList[self.flowModelIndex].ebqe[('velocity', 0)]
-            if modelList[self.flowModelIndex].ebq.has_key(('velocity', 0)):
+            if ('velocity', 0) in modelList[self.flowModelIndex].ebq:
                 self.ebq_v = modelList[self.flowModelIndex].ebq[('velocity', 0)]
             else:
                 self.ebq_v = None
-            if not self.model.ebq.has_key(('u', 0)) and self.flowModel.ebq.has_key(('u', 0)):
+            if ('u', 0) not in self.model.ebq and ('u', 0) in self.flowModel.ebq:
                 self.model.ebq[('u', 0)] = numpy.zeros(self.flowModel.ebq[('u', 0)].shape, 'd')
                 self.model.ebq[('grad(u)', 0)] = numpy.zeros(self.flowModel.ebq[('grad(u)', 0)].shape, 'd')
-            if self.flowModel.ebq.has_key(('v', 1)):
+            if ('v', 1) in self.flowModel.ebq:
                 self.model.u[0].getValuesTrace(self.flowModel.ebq[('v', 1)], self.model.ebq[('u', 0)])
                 self.model.u[0].getGradientValuesTrace(self.flowModel.ebq[('grad(v)', 1)], self.model.ebq[('grad(u)', 0)])
         if self.RD_modelIndex is not None:
@@ -454,7 +454,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         elif self.ebq_v is not None and c[('dH', 0, 0)].shape == self.ebq_v.shape:
             v = self.ebq_v
         else:
-            raise RuntimeError, "don't have v for NC Level set of shape = " + `c[('dH', 0, 0)].shape`
+            raise RuntimeError("don't have v for NC Level set of shape = " + repr(c[('dH', 0, 0)].shape))
         if v is not None:
             self.ncLevelSetCoefficientsEvaluate(v,
                                                 c[('u', 0)],
@@ -545,28 +545,28 @@ class LevelModel(OneLevelTransport):
         # cek come back
         if self.stabilization is not None:
             for ci in range(self.nc):
-                if coefficients.mass.has_key(ci):
+                if ci in coefficients.mass:
                     for flag in coefficients.mass[ci].values():
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.advection.has_key(ci):
+                if ci in coefficients.advection:
                     for flag in coefficients.advection[ci].values():
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.diffusion.has_key(ci):
+                if ci in coefficients.diffusion:
                     for diffusionDict in coefficients.diffusion[ci].values():
                         for flag in diffusionDict.values():
                             if flag != 'constant':
                                 self.stabilizationIsNonlinear = True
-                if coefficients.potential.has_key(ci):
+                if ci in coefficients.potential:
                     for flag in coefficients.potential[ci].values():
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.reaction.has_key(ci):
+                if ci in coefficients.reaction:
                     for flag in coefficients.reaction[ci].values():
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.hamiltonian.has_key(ci):
+                if ci in coefficients.hamiltonian:
                     for flag in coefficients.hamiltonian[ci].values():
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
@@ -600,7 +600,7 @@ class LevelModel(OneLevelTransport):
         elemQuadIsDict = isinstance(elementQuadrature, dict)
         if elemQuadIsDict:  # set terms manually
             for I in self.coefficients.elementIntegralKeys:
-                if elementQuadrature.has_key(I):
+                if I in elementQuadrature:
                     elementQuadratureDict[I] = elementQuadrature[I]
                 else:
                     elementQuadratureDict[I] = elementQuadrature['default']
@@ -610,7 +610,7 @@ class LevelModel(OneLevelTransport):
         if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(I):
+                    if I in elementQuadrature:
                         elementQuadratureDict[('stab',) + I[1:]] = elementQuadrature[I]
                     else:
                         elementQuadratureDict[('stab',) + I[1:]] = elementQuadrature['default']
@@ -619,7 +619,7 @@ class LevelModel(OneLevelTransport):
         if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(('numDiff', ci, ci)):
+                    if ('numDiff', ci, ci) in elementQuadrature:
                         elementQuadratureDict[('numDiff', ci, ci)] = elementQuadrature[('numDiff', ci, ci)]
                     else:
                         elementQuadratureDict[('numDiff', ci, ci)] = elementQuadrature['default']
@@ -638,7 +638,7 @@ class LevelModel(OneLevelTransport):
         elementBoundaryQuadratureDict = {}
         if isinstance(elementBoundaryQuadrature, dict):  # set terms manually
             for I in self.coefficients.elementBoundaryIntegralKeys:
-                if elementBoundaryQuadrature.has_key(I):
+                if I in elementBoundaryQuadrature:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature[I]
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
@@ -829,14 +829,14 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux = None
         # set penalty terms
         # cek todo move into numerical flux initialization
-        if self.ebq_global.has_key('penalty'):
+        if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebq_global['penalty'][ebN, k] = self.numericalFlux.penalty_constant / \
                         (self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         # penalty term
         # cek move  to Numerical flux initialization
-        if self.ebqe.has_key('penalty'):
+        if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):

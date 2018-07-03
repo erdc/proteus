@@ -4,11 +4,13 @@ Fast marching and fast sweeping solvers
 .. inheritance-diagram:: proteus.UnstructuredFMMandFSWsolvers
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
 import numpy
 import math
 import sys,atexit
-import FemTools,MeshTools,EGeometry
-import StupidHeap as SHeap
+from . import FemTools,MeshTools,EGeometry
+from . import StupidHeap as SHeap
 
 ########################################################################
 #solvers
@@ -271,18 +273,18 @@ def unstructuredEx1d(initFunc,Lx,nx,method='FMM',verbose=0):
     failed = False
     if method == 'FSW':
         solver = FSWEikonalSolver(mesh,FemPhi0.femSpace.dofMap.l2g,1,iterAtol=1.0e-8,maxIts=100)
-        print "calling FSWEikonalSolver.solve for + ..."
+        print("calling FSWEikonalSolver.solve for + ...")
         failed = solver.solve(FemPhi0p.dof,FemTp.dof,verbose=verbose)
-        print "back. calling FSWEikonalSolver.solve for - ..."
+        print("back. calling FSWEikonalSolver.solve for - ...")
         failed = solver.solve(FemPhi0m.dof,FemTm.dof,verbose=verbose)
-        print "back."
+        print("back.")
     else:
         solver = FMMEikonalSolver(mesh,FemPhi0.femSpace.dofMap.l2g,1)
-        print "calling FMMEikonalSolver.solve for + ..."
+        print("calling FMMEikonalSolver.solve for + ...")
         failed = solver.solve(FemPhi0p.dof,FemTp.dof,verbose=verbose)
-        print "back. calling FMMEikonalSolver.solve for - ..."
+        print("back. calling FMMEikonalSolver.solve for - ...")
         failed = solver.solve(FemPhi0m.dof,FemTm.dof,verbose=verbose)
-        print "back."
+        print("back.")
 
 
     fout = open("T.dat",'w')
@@ -333,18 +335,18 @@ def unstructuredEx2d(initFunc,Lx,Ly,nx,ny,method='FMM',verbose=0):
         refNodes = numpy.array([[0.25,0.25,0.0],[0.5,0.5,0.0],[0.75,0.75,0.0]])
         #solver = FSWEikonalSolver(mesh,FemPhi0.femSpace.dofMap.l2g,2,iterAtol=1.0e-8,refPoints=refNodes,maxIts=100)
         solver = FSWEikonalSolver(mesh,FemPhi0.femSpace.dofMap.l2g,2,iterAtol=1.0e-8,maxIts=100)
-        print "calling FSWEikonalSolver.solve for + ..."
+        print("calling FSWEikonalSolver.solve for + ...")
         failed = solver.solve(FemPhi0p.dof,FemTp.dof,verbose=verbose)
-        print "back. calling FSWEikonalSolver.solve for - ..."
+        print("back. calling FSWEikonalSolver.solve for - ...")
         failed = solver.solve(FemPhi0m.dof,FemTm.dof,verbose=verbose)
-        print "back."
+        print("back.")
     else:
         solver = FMMEikonalSolver(mesh,FemPhi0.femSpace.dofMap.l2g,2)
-        print "calling FMMEikonalSolver.solve for + ..."
+        print("calling FMMEikonalSolver.solve for + ...")
         failed = solver.solve(FemPhi0p.dof,FemTp.dof,verbose=verbose)
-        print "back. calling FMMEikonalSolver.solve for - ..."
+        print("back. calling FMMEikonalSolver.solve for - ...")
         failed = solver.solve(FemPhi0m.dof,FemTm.dof,verbose=verbose)
-        print "back."
+        print("back.")
     #meth switch
 
     fout = open("T.dat",'w')
@@ -392,18 +394,18 @@ def unstructuredEx3d(initFunc,Lx,Ly,Lz,nx,ny,nz,method='FMM',verbose=0):
     failed = False
     if method == 'FSW':
         solver = FSWEikonalSolver(mesh,FemPhi0.femSpace.dofMap.l2g,3,iterAtol=1.0e-8,maxIts=100)
-        print "calling FSWEikonalSolver.solve for + ..."
+        print("calling FSWEikonalSolver.solve for + ...")
         failed = solver.solve(FemPhi0p.dof,FemTp.dof,verbose=verbose)
-        print "back. calling FSWEikonalSolver.solve for - ..."
+        print("back. calling FSWEikonalSolver.solve for - ...")
         failed = solver.solve(FemPhi0m.dof,FemTm.dof,verbose=verbose)
-        print "back."
+        print("back.")
     else:
         solver = FMMEikonalSolver(mesh,FemPhi0.femSpace.dofMap.l2g,3)
-        print "calling FMMEikonalSolver.solve for + ..."
+        print("calling FMMEikonalSolver.solve for + ...")
         failed = solver.solve(FemPhi0p.dof,FemTp.dof,verbose=verbose)
-        print "back. calling FMMEikonalSolver.solve for - ..."
+        print("back. calling FMMEikonalSolver.solve for - ...")
         failed = solver.solve(FemPhi0m.dof,FemTm.dof,verbose=verbose)
-        print "back."
+        print("back.")
     #method switch
 
     fout = open("T.dat",'w')
@@ -442,9 +444,9 @@ def test3dLocalSolver(verbose=0):
     N = [0,1,2];
     T[N_A]=0; T[N_B]=sqrt3/3.0; T[N_C]=2.0*sqrt3/3.0
 
-    print "calling qianZhangLocalSolver\n\t nodes=%s \n N=%s \n\t T=%s " % (nodes,N,T)
+    print("calling qianZhangLocalSolver\n\t nodes=%s \n N=%s \n\t T=%s " % (nodes,N,T))
     T_D = qianZhangLocalSolver3d(eN,N_D,N[0],N[1],N[2],nodes,T,eikSpeed,verbose=verbose)
-    print "T_D= %s " % T_D
+    print("T_D= %s " % T_D)
 
 def unstructuredEx1dInCpp(initFunc,Lx,nx,method='FMM',verbose=0):
     """
@@ -485,18 +487,18 @@ def unstructuredEx1dInCpp(initFunc,Lx,nx,method='FMM',verbose=0):
     if method == 'FSW':
         solver = cfmmfsw.FSWEikonalSolver(nd,mesh.cmesh,atol=1.0e-8,rtol=1.0e-8,maxIts=100,
                                           initFlag=0)
-        print "calling FSWEikonalSolver.solve for + ..."
+        print("calling FSWEikonalSolver.solve for + ...")
         failed = solver.solve(FemPhi0p.dof,nodalSpeeds,FemTp.dof,initFlag=0,verbose=verbose)
-        print "back. calling FSWEikonalSolver.solve for - ..."
+        print("back. calling FSWEikonalSolver.solve for - ...")
         failed = solver.solve(FemPhi0m.dof,nodalSpeeds,FemTm.dof,initFlag=0,verbose=verbose)
-        print "back."
+        print("back.")
     else:
         solver = cfmmfsw.FMMEikonalSolver(nd,mesh.cmesh)
-        print "calling FMMEikonalSolver.solve for + ..."
+        print("calling FMMEikonalSolver.solve for + ...")
         failed = solver.solve(FemPhi0p.dof,nodalSpeeds,FemTp.dof,initFlag=0,verbose=verbose)
-        print "back. calling FMMEikonalSolver.solve for - ..."
+        print("back. calling FMMEikonalSolver.solve for - ...")
         failed = solver.solve(FemPhi0m.dof,nodalSpeeds,FemTm.dof,initFlag=0,verbose=verbose)
-        print "back."
+        print("back.")
 
 
     fout = open("T.dat",'w')
@@ -548,22 +550,22 @@ def unstructuredEx2dInCpp(initFunc,Lx,Ly,nx,ny,method='FMM',verbose=0):
     if method == 'FSW':
         solver = cfmmfsw.FSWEikonalSolver(nd,mesh.cmesh,atol=1.0e-8,rtol=1.0e-8,maxIts=100,
                                           initFlag=0)
-        print "calling FSWEikonalSolver.solve for + ..."
+        print("calling FSWEikonalSolver.solve for + ...")
         failed = solver.solve(FemPhi0p.dof,nodalSpeeds,FemTp.dof,zeroTol=1.0e-4,trialTol=1.0e-1,
                               initFlag=0,verbose=verbose)
-        print "back. calling FSWEikonalSolver.solve for - ..."
+        print("back. calling FSWEikonalSolver.solve for - ...")
         failed = solver.solve(FemPhi0m.dof,nodalSpeeds,FemTm.dof,zeroTol=1.0e-4,trialTol=1.0e-1,
                               initFlag=0,verbose=verbose)
-        print "back. failed= %s" % failed
+        print("back. failed= %s" % failed)
     else:
         solver = cfmmfsw.FMMEikonalSolver(nd,mesh.cmesh)
-        print "calling FMMEikonalSolver.solve for + ..."
+        print("calling FMMEikonalSolver.solve for + ...")
         failed = solver.solve(FemPhi0p.dof,nodalSpeeds,FemTp.dof,zeroTol=1.0e-4,trialTol=1.0e-1,
                               initFlag=0,verbose=verbose)
-        print "back. calling FMMEikonalSolver.solve for - ..."
+        print("back. calling FMMEikonalSolver.solve for - ...")
         failed = solver.solve(FemPhi0m.dof,nodalSpeeds,FemTm.dof,zeroTol=1.0e-4,trialTol=1.0e-1,
                               initFlag=0,verbose=verbose)
-        print "back."
+        print("back.")
     #meth switch
 
     fout = open("T.dat",'w')
@@ -616,22 +618,22 @@ def unstructuredEx3dinCpp(initFunc,Lx,Ly,Lz,nx,ny,nz,method='FMM',verbose=0):
     if method == 'FSW':
         solver = cfmmfsw.FSWEikonalSolver(nd,mesh.cmesh,atol=1.0e-8,rtol=1.0e-8,maxIts=100,
                                           initFlag=0)
-        print "calling FSWEikonalSolver.solve for + ..."
+        print("calling FSWEikonalSolver.solve for + ...")
         failed = solver.solve(FemPhi0p.dof,nodalSpeeds,FemTp.dof,zeroTol=1.0e-4,trialTol=1.0e-1,
                               initFlag=0,verbose=verbose)
-        print "back. failed= %s  calling FSWEikonalSolver.solve for - ..."  % failed
+        print("back. failed= %s  calling FSWEikonalSolver.solve for - ..."  % failed)
         failed = solver.solve(FemPhi0m.dof,nodalSpeeds,FemTm.dof,zeroTol=1.0e-4,trialTol=1.0e-1,
                               initFlag=0,verbose=verbose)
-        print "back. failed= %s" % failed
+        print("back. failed= %s" % failed)
     else:
         solver = cfmmfsw.FMMEikonalSolver(nd,mesh.cmesh)
-        print "calling FMMEikonalSolver.solve for + ..."
+        print("calling FMMEikonalSolver.solve for + ...")
         failed = solver.solve(FemPhi0p.dof,nodalSpeeds,FemTp.dof,zeroTol=1.0e-4,trialTol=1.0e-1,
                               initFlag=0,verbose=verbose)
-        print "back. calling FMMEikonalSolver.solve for - ..."
+        print("back. calling FMMEikonalSolver.solve for - ...")
         failed = solver.solve(FemPhi0m.dof,nodalSpeeds,FemTm.dof,zeroTol=1.0e-4,trialTol=1.0e-1,
                               initFlag=0,verbose=verbose)
-    print "back."
+    print("back.")
     #method switch
 
     fout = open("T.dat",'w')

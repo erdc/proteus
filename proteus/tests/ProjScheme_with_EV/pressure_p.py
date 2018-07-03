@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from math import *
 from proteus import *
 from proteus.default_p import *
-from NS_convergence import *
+from .NS_convergence import *
 from proteus.mprans import Pres
 
 name = "pressure"

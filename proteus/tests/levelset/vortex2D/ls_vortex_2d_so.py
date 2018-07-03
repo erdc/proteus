@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus.default_so import *
-import vortex2D
-from vortex2D import *
+from . import vortex2D
+from .vortex2D import *
 
 if applyRedistancing:
     if applyCorrection:

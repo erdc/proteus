@@ -5,13 +5,15 @@ TransportCoefficients for flow and transport in porous media
    :parts: 1
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
 from math import *
-from TransportCoefficients import TC_base
+from .TransportCoefficients import TC_base
 import numpy
 from .Profiling import logEvent
 from proteus import FemTools
 from proteus import Transport
-import subsurfaceTransportFunctions as stfuncs
+from . import subsurfaceTransportFunctions as stfuncs
 
 ######################################################################
 #Utility classes for dealing with common aspects of flow and transport
@@ -148,7 +150,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                 stfuncs.setVectorMaterialFunctionOverElements(self.elementMaterialTypes,
                                                               cq[('a',ci,ci)],
                                                               self.K_types_const)
-                if cq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cq:
                     stfuncs.setScalarMaterialFunctionOverElements(self.elementMaterialTypes,
                                                                   cq[('dm',ci,ci)],
                                                                   self.S_s_types_const)
@@ -169,7 +171,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                    cq[('a',ci,ci)],
                                                                    self.K_types)
 
-                if cq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cq:
                     stfuncs.evaluateScalarMaterialFunctionOverElements(t,self.elementMaterialTypes,
                                                                        cq['x'],
                                                                        cq[('dm',ci,ci)],
@@ -187,21 +189,21 @@ class SinglePhaseDarcyCoefficients(TC_base):
             for mat in self.S_s_types.keys():
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
             for ci in range(self.nc):
-                if cebq.has_key(('f',ci)): cebq[('f',ci)].flat[:] = 0.0
-                if cebq.has_key(('r',ci)):
+                if ('f',ci) in cebq: cebq[('f',ci)].flat[:] = 0.0
+                if ('r',ci) in cebq:
                     stfuncs.setScalarMaterialFunctionOverElementBoundaries_arithmeticAverage(self.elementBoundariesArray,
                                                                                              self.elementBoundaryTypes,
                                                                                              cebq[('r',ci)],
                                                                                              self.source_types_const)
                     cebq[('r',ci)] *= -1.0
-                if cebq.has_key(('a',ci,ci)):
+                if ('a',ci,ci) in cebq:
                     stfuncs.setSparseTensorMaterialFunctionOverElementBoundaries_harmonicAverage(self.nd,
                                                                                                  self.elementBoundariesArray,
                                                                                                  self.elementBoundaryTypes,
                                                                                                  cebq[('a',ci,ci)],
                                                                                                  self.K_types_const)
 
-                if cebq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cebq:
                     stfuncs.setScalarMaterialFunctionOverElementBoundaries_arithmeticAverage(self.elementBoundariesArray,
                                                                                              self.elementBoundaryTypes,
                                                                                              cebq[('dm',ci,ci)],
@@ -211,8 +213,8 @@ class SinglePhaseDarcyCoefficients(TC_base):
 
         else:
             for ci in range(self.nc):
-                if cebq.has_key(('f',ci)): cebq[('f',ci)].fill(0.0)
-                if cebq.has_key(('r',ci)):
+                if ('f',ci) in cebq: cebq[('f',ci)].fill(0.0)
+                if ('r',ci) in cebq:
                     stfuncs.evaluateScalarMaterialFunctionOverElementBoundaries_arithmeticAverage(t,
                                                                                                   self.elementBoundariesArray,
                                                                                                   self.elementBoundaryTypes,
@@ -220,7 +222,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                   cebq[('r',ci)],
                                                                                                   self.source_types)
                     cebq[('r',ci)] *= -1.0
-                if cebq.has_key(('a',ci,ci)):
+                if ('a',ci,ci) in cebq:
                     stfuncs.evaluateSparseTensorMaterialFunctionOverElementBoundaries_harmonicAverage(self.nd,
                                                                                                       t,
                                                                                                       self.elementBoundariesArray,
@@ -228,7 +230,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                       cebq['x'],
                                                                                                       cebq[('a',ci,ci)],
                                                                                                       self.K_types)
-                if cebq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cebq:
                     stfuncs.evaluateScalarMaterialFunctionOverElementBoundaries_arithmeticAverage(t,
                                                                                                   self.elementBoundariesArray,
                                                                                                   self.elementBoundaryTypes,
@@ -250,21 +252,21 @@ class SinglePhaseDarcyCoefficients(TC_base):
             for mat in self.S_s_types.keys():
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
             for ci in range(self.nc):
-                if cebq_global.has_key(('f',ci)): cebq_global[('f',ci)].flat[:] = 0.0
-                if cebq_global.has_key(('r',ci)):
+                if ('f',ci) in cebq_global: cebq_global[('f',ci)].flat[:] = 0.0
+                if ('r',ci) in cebq_global:
                     stfuncs.setScalarMaterialFunctionOverGlobalElementBoundaries_arithmeticAverage(self.elementBoundariesArray,
                                                                                                    self.elementBoundaryTypes,
                                                                                                    cebq_global[('r',ci)],
                                                                                                    self.source_types_const)
                     cebq_global[('r',ci)] *= -1.0
-                if cebq_global.has_key(('a',ci,ci)):
+                if ('a',ci,ci) in cebq_global:
                     stfuncs.setSparseTensorMaterialFunctionOverGlobalElementBoundaries_harmonicAverage(self.nd,
                                                                                                        self.elementBoundariesArray,
                                                                                                        self.elementBoundaryTypes,
                                                                                                        cebq_global[('a',ci,ci)],
                                                                                                        self.K_types_const)
 
-                if cebq_global.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cebq_global:
                     stfuncs.setScalarMaterialFunctionOverGlobalElementBoundaries_arithmeticAverage(self.elementBoundariesArray,
                                                                                                    self.elementBoundaryTypes,
                                                                                                    cebq_global[('dm',ci,ci)],
@@ -273,8 +275,8 @@ class SinglePhaseDarcyCoefficients(TC_base):
                     cebq_global[('m',ci)] *= cebq_global[('dm',ci,ci)]
         else:
             for ci in range(self.nc):
-                if cebq_global.has_key(('f',ci)): cebq_global[('f',ci)].flat[:] = 0.0
-                if cebq_global.has_key(('r',ci)):
+                if ('f',ci) in cebq_global: cebq_global[('f',ci)].flat[:] = 0.0
+                if ('r',ci) in cebq_global:
                     stfuncs.evaluateScalarMaterialFunctionOverGlobalElementBoundaries_arithmeticAverage(t,
                                                                                                         self.elementBoundariesArray,
                                                                                                         self.elementBoundaryTypes,
@@ -282,7 +284,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                         cebq_global[('r',ci)],
                                                                                                         self.source_types)
                     cebq_global[('r',ci)] *= -1.0
-                if cebq_global.has_key(('a',ci,ci)):
+                if ('a',ci,ci) in cebq_global:
                     stfuncs.evaluateSparseTensorMaterialFunctionOverGlobalElementBoundaries_harmonicAverage(self.nd,
                                                                                                             t,
                                                                                                             self.elementBoundariesArray,
@@ -291,7 +293,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                             cebq_global[('a',ci,ci)],
                                                                                                             self.K_types)
 
-                if cebq_global.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cebq_global:
                     stfuncs.evaluateScalarMaterialFunctionOverGlobalElementBoundaries_arithmeticAverage(t,
                                                                                                         self.elementBoundariesArray,
                                                                                                         self.elementBoundaryTypes,
@@ -321,7 +323,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                               cebqe[('a',ci,ci)],
                                                               self.K_types_const)
 
-                if cebqe.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cebqe:
                     stfuncs.setScalarMaterialFunctionOverElements(self.exteriorElementBoundaryTypes,
                                                                   cebqe[('dm',ci,ci)],
                                                                   self.S_s_types_const)
@@ -342,7 +344,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                    cebqe[('a',ci,ci)],
                                                                    self.K_types)
 
-                if cebqe.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cebqe:
                     stfuncs.evaluateScalarMaterialFunctionOverElements(t,self.exteriorElementBoundaryTypes,
                                                                        cebqe['x'],
                                                                        cebqe[('dm',ci,ci)],
@@ -372,8 +374,8 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
     """version of Re where element material type id's used in evals
 
     """
-    from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
-    from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchten_sd_het
+    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
+    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchten_sd_het
     def __init__(self,
                  nd,
                  Ksw_types,
@@ -812,7 +814,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
         for cj in range(self.nc):
             self.u[cj].getValues(self.q[('v',cj)],
                                  self.q[('u',cj)])
-            if self.q.has_key(('grad(u)',cj)):
+            if ('grad(u)',cj) in self.q:
                 self.u[cj].getGradientValues(self.q[('grad(v)',cj)],
                                              self.q[('grad(u)',cj)])
 
@@ -1054,7 +1056,7 @@ class TwophaseDarcyFlow_base(TC_base):
         self.psk_tolerances={'default':{'eps_small':1.0e-16},
                              'VGM':{'eps_small':1.0e-16,'ns_del':1.0e-8}}
         for psk_model_id in self.psk_types:
-            if not self.psk_tolerances.has_key(psk_model_id):
+            if psk_model_id not in self.psk_tolerances:
                 self.psk_tolerances[psk_model_id] = self.psk_tolerances['default']
         self.nPskTolerances=1
         assert(self.psk_model in self.psk_types.keys())
@@ -1109,7 +1111,7 @@ class TwophaseDarcyFlow_base(TC_base):
         cebq[('dpsi_n',1)] = numpy.zeros(cebq[('u',0)].shape,'d')
         for ci in range(2):
             self.ebq[('vol_frac',ci)] = numpy.zeros(self.ebq_shape,'d')
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global['psi_n'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',0)] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',1)] = numpy.zeros(cebq_global[('u',0)].shape,'d')
@@ -1733,11 +1735,11 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
         cq[('dpsi_n',1)].fill(1.0)
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         TwophaseDarcyFlow_base.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
-        if cebq.has_key(('u',0)):
+        if ('u',0) in cebq:
             cebq['sw'] = numpy.zeros(cebq[('u',0)].shape,'d')
             cebq[('dpsi_n',0)].fill(1.0)
             cebq[('dpsi_n',1)].fill(1.0)
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global['sw'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',0)].fill(1.0)
             cebq_global[('dpsi_n',1)].fill(1.0)
@@ -1894,7 +1896,7 @@ class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
         self.psk_tolerances['VGM']['eps_small']=vgm_small_eps
         self.psk_tolerances['VGM']['ns_del']   =vgm_ns_del
         if self.use_spline:
-            import cpskRelations
+            from . import cpskRelations
             self.splineTableWork = numpy.zeros((self.nPskParams*self.nMaterialTypes),'d')
             pskCalcFlag = 1 #formulation is f(psic)
             rwork_tmp = numpy.zeros((4,),'d')
@@ -2047,16 +2049,16 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
         self.capillaryDiffusionScaling=capillaryDiffusionScaling
     def attachModels(self,modelList):
         if self.nSatModel is None:
-            print 'Warning TwophaseDarcy_split_pressure_base nSatModel is None returning in attachModels'
+            print('Warning TwophaseDarcy_split_pressure_base nSatModel is None returning in attachModels')
             return
         #not ideal, but need a way to force nonlinear potential to be evaluated in saturation model
         modelList[self.nSatModel].calculateElementCoefficients()
         self.q_s_w   = modelList[self.nSatModel].q[('u',0)]
         self.ebqe_s_w = modelList[self.nSatModel].ebqe[('u',0)]
-        if modelList[self.nSatModel].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.nSatModel].ebq:
             self.ebq_s_w = modelList[self.nSatModel].ebq[('u',0)]
         #mwf need to check
-        assert modelList[self.nSatModel].phi_ip.has_key(('u',0))
+        assert ('u',0) in modelList[self.nSatModel].phi_ip
         assert self.ip_s_w.shape ==  modelList[self.nSatModel].phi_ip[('u',0)].shape
         self.ip_s_w = modelList[self.nSatModel].phi_ip[('u',0)]
         #mwf hack 04/03/09 skip
@@ -2065,19 +2067,19 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
         #mwf end ip stuff
         self.q_grad_psic   = modelList[self.nSatModel].q[('grad(phi)',0)]
         self.ebqe_grad_psic = modelList[self.nSatModel].ebqe[('grad(phi)',0)]
-        if modelList[self.nSatModel].ebq.has_key(('grad(phi)',0)):
+        if ('grad(phi)',0) in modelList[self.nSatModel].ebq:
             self.ebq_grad_psic = modelList[self.nSatModel].ebq[('grad(phi)',0)]
         self.q_psic   = modelList[self.nSatModel].q[('phi',0)]
         self.ebqe_psic= modelList[self.nSatModel].ebqe[('phi',0)]
-        if modelList[self.nSatModel].ebq.has_key(('phi',0)):
+        if ('phi',0) in modelList[self.nSatModel].ebq:
             self.ebq_psic = modelList[self.nSatModel].ebq[('phi',0)]
-        assert modelList[self.nSatModel].phi_ip.has_key(('phi',0))
+        assert ('phi',0) in modelList[self.nSatModel].phi_ip
         assert self.ip_psic.shape ==  modelList[self.nSatModel].phi_ip[('phi',0)].shape
         self.ip_psic = modelList[self.nSatModel].phi_ip[('phi',0)]
         #
         self.q_grad_sw   = modelList[self.nSatModel].q[('grad(u)',0)]
         self.ebqe_grad_sw = modelList[self.nSatModel].ebqe[('grad(u)',0)]
-        if modelList[self.nSatModel].ebq.has_key(('grad(u)',0)):
+        if ('grad(u)',0) in modelList[self.nSatModel].ebq:
             self.ebq_grad_sw = modelList[self.nSatModel].ebq[('grad(u)',0)]
 
     def initializeElementQuadrature(self,t,cq):
@@ -2100,10 +2102,10 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
         self.ebq_grad_psic = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_psic = numpy.zeros(cebq[('u',0)].shape,'d')
         self.ebq_grad_sw = numpy.zeros(cebq[('f',0)].shape,'d')
-        if cebq.has_key(('u',0)):
+        if ('u',0) in cebq:
             cebq['psi_n'] = numpy.zeros(cebq[('u',0)].shape,'d')
             cebq[('dpsi_n',0)] = numpy.ones(cebq[('u',0)].shape,'d')
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global['psi_n'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',0)] = numpy.ones(cebq_global[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
@@ -2177,20 +2179,20 @@ class TwophaseDarcy_split_saturation_base(TwophaseDarcyFlow_base):
         self.advectionScaling=advectionScaling
     def attachModels(self,modelList):
         if self.nPressModel is None:
-            print 'Warning TwophaseDarcy_split_saturation_base nPressModel is None returning in attachModels'
+            print('Warning TwophaseDarcy_split_saturation_base nPressModel is None returning in attachModels')
             return
         self.flowModel = modelList[self.nPressModel]
         #
         self.q_q_t    = modelList[self.nPressModel].q[('velocity',0)]
         self.ebqe_q_t  = modelList[self.nPressModel].ebqe[('velocity',0)]
-        if modelList[self.nPressModel].ebq.has_key(('velocity',0)):
+        if ('velocity',0) in modelList[self.nPressModel].ebq:
             self.ebq_q_t  = modelList[self.nPressModel].ebq[('velocity',0)]
         #do we really need other model values for q_t in potential calculation?
         assert self.ip_psiw.shape == modelList[self.nPressModel].phi_ip[('u',0)].shape
         self.ip_psiw = modelList[self.nPressModel].phi_ip[('u',0)]
         self.q_psiw    = modelList[self.nPressModel].q[('u',0)]
         self.ebqe_psiw = modelList[self.nPressModel].ebqe[('u',0)]
-        if modelList[self.nPressModel].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.nPressModel].ebq:
             self.ebq_psiw = modelList[self.nPressModel].ebq[('u',0)]
     def initializeElementQuadrature(self,t,cq):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
@@ -3286,23 +3288,23 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
         self.capillaryDiffusionScaling=capillaryDiffusionScaling
     def attachModels(self,modelList):
         if self.nSatModel is None:
-            print 'Warning TwophaseDarcy_split_pressure_base nSatModel is None returning in attachModels'
+            print('Warning TwophaseDarcy_split_pressure_base nSatModel is None returning in attachModels')
             return
         #not ideal, but need a way to force nonlinear potential to be evaluated in saturation model
         modelList[self.nSatModel].calculateElementCoefficients()
         self.q_s_w   = modelList[self.nSatModel].q['sw']
         self.ebqe_s_w = modelList[self.nSatModel].ebqe['sw']
-        if modelList[self.nSatModel].ebq.has_key('sw'):
+        if 'sw' in modelList[self.nSatModel].ebq:
             self.ebq_s_w = modelList[self.nSatModel].ebq['sw']
         self.q_grad_psic   = modelList[self.nSatModel].q[('grad(phi)',0)]
         self.ebqe_grad_psic = modelList[self.nSatModel].ebqe[('grad(phi)',0)]
-        if modelList[self.nSatModel].ebq.has_key(('grad(phi)',0)):
+        if ('grad(phi)',0) in modelList[self.nSatModel].ebq:
             self.ebq_grad_psic = modelList[self.nSatModel].ebq[('grad(phi)',0)]
         self.q_psic   = modelList[self.nSatModel].q[('phi',0)]
         self.ebqe_psic= modelList[self.nSatModel].ebqe[('phi',0)]
-        if modelList[self.nSatModel].ebq.has_key(('phi',0)):
+        if ('phi',0) in modelList[self.nSatModel].ebq:
             self.ebq_psic = modelList[self.nSatModel].ebq[('phi',0)]
-        assert modelList[self.nSatModel].phi_ip.has_key(('phi',0))
+        assert ('phi',0) in modelList[self.nSatModel].phi_ip
         assert self.ip_psic.shape ==  modelList[self.nSatModel].phi_ip[('phi',0)].shape
         self.ip_psic = modelList[self.nSatModel].phi_ip[('phi',0)]
 
@@ -3325,10 +3327,10 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
         self.ebq_s_w.fill(self.swConstant)
         self.ebq_grad_psic = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_psic = numpy.zeros(cebq[('u',0)].shape,'d')
-        if cebq.has_key(('u',0)):
+        if ('u',0) in cebq:
             cebq['psi_n'] = numpy.zeros(cebq[('u',0)].shape,'d')
             cebq[('dpsi_n',0)] = numpy.ones(cebq[('u',0)].shape,'d')
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global['psi_n'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',0)] = numpy.ones(cebq_global[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
@@ -3396,20 +3398,20 @@ class TwophaseDarcy_split_pp_saturation_base(TwophaseDarcyFlow_base):
         self.advectionScaling=advectionScaling
     def attachModels(self,modelList):
         if self.nPressModel is None:
-            print 'Warning TwophaseDarcy_split_saturation_base nPressModel is None returning in attachModels'
+            print('Warning TwophaseDarcy_split_saturation_base nPressModel is None returning in attachModels')
             return
         self.flowModel = modelList[self.nPressModel]
         #
         self.q_q_t    = modelList[self.nPressModel].q[('velocity',0)]
         self.ebqe_q_t  = modelList[self.nPressModel].ebqe[('velocity',0)]
-        if modelList[self.nPressModel].ebq.has_key(('velocity',0)):
+        if ('velocity',0) in modelList[self.nPressModel].ebq:
             self.ebq_q_t  = modelList[self.nPressModel].ebq[('velocity',0)]
         #do we really need other model values for q_t in potential calculation?
         assert self.ip_psiw.shape == modelList[self.nPressModel].phi_ip[('u',0)].shape
         self.ip_psiw = modelList[self.nPressModel].phi_ip[('u',0)]
         self.q_psiw    = modelList[self.nPressModel].q[('u',0)]
         self.ebqe_psiw = modelList[self.nPressModel].ebqe[('u',0)]
-        if modelList[self.nPressModel].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.nPressModel].ebq:
             self.ebq_psiw = modelList[self.nPressModel].ebq[('u',0)]
     def initializeElementQuadrature(self,t,cq):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
@@ -3424,9 +3426,9 @@ class TwophaseDarcy_split_pp_saturation_base(TwophaseDarcyFlow_base):
         self.ebq_q_t = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_q_t[:] = self.qScalarConstant
         self.ebq_psiw = numpy.ones(cebq[('u',0)].shape,'d')
-        if cebq.has_key(('u',0)):
+        if ('u',0) in cebq:
             cebq['sw'] = numpy.zeros(cebq[('u',0)].shape,'d')
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global['sw'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         TwophaseDarcyFlow_base.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
@@ -4554,9 +4556,9 @@ class GroundwaterTransportCoefficients(TC_base):
             for ci in range(self.nc):
                 self.q[('velocity',ci)]    = self.flowModel.q[('velocity',ci)]
                 self.ebqe[('velocity',ci)] = self.flowModel.ebqe[('velocity',ci)]
-                if self.flowModel.ebq.has_key(('velocity',ci)):
+                if ('velocity',ci) in self.flowModel.ebq:
                     self.ebq[('velocity',ci)] = self.flowModel.ebq[('velocity',ci)]
-                if self.flowModel.ebq_global.has_key(('velocity',ci)):
+                if ('velocity',ci) in self.flowModel.ebq_global:
                     self.ebq_global[('velocity',ci)] = self.flowModel.ebq_global[('velocity',ci)]
 
     def evaluateVelocity(self,t,c):
@@ -4593,8 +4595,8 @@ class GroundwaterTransportCoefficients(TC_base):
                 v = self.ebq[('velocity',ci)]
                 materialTypes = self.materialTypes_ebq
             else:
-                print c[('df',ci,ci)].shape
-                print "no v---------------------"
+                print(c[('df',ci,ci)].shape)
+                print("no v---------------------")
                 raise RuntimeError
 
             self.groundwaterTransportCoefficientsEvaluate_hetMat(self.d[ci],
@@ -4698,9 +4700,9 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
             for ci in range(self.nc):
                 self.q[('velocity',ci)]    = self.flowModel.q[('velocity',ci)]
                 self.ebqe[('velocity',ci)] = self.flowModel.ebqe[('velocity',ci)]
-                if self.flowModel.ebq.has_key(('velocity',ci)):
+                if ('velocity',ci) in self.flowModel.ebq:
                     self.ebq[('velocity',ci)] = self.flowModel.ebq[('velocity',ci)]
-                if self.flowModel.ebq_global.has_key(('velocity',ci)):
+                if ('velocity',ci) in self.flowModel.ebq_global:
                     self.ebq_global[('velocity',ci)] = self.flowModel.ebq_global[('velocity',ci)]
                 self.q[('vol_frac',ci)]    = self.flowModel.coefficients.q[('vol_frac',ci)]
                 self.ebqe[('vol_frac',ci)] = self.flowModel.coefficients.ebqe[('vol_frac',ci)]
@@ -4741,8 +4743,8 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
                 materialTypes = self.materialTypes_ebq
                 vol_frac = self.ebq[('vol_frac',ci)]
             else:
-                print c[('df',ci,ci)].shape
-                print "no v---------------------"
+                print(c[('df',ci,ci)].shape)
+                print("no v---------------------")
                 raise RuntimeError
 
             self.variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat(self.d[ci],
@@ -4823,8 +4825,8 @@ class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwa
                 materialTypes = self.materialTypes_ebq
                 vol_frac = self.ebq[('vol_frac',ci)]
             else:
-                print c[('df',ci,ci)].shape
-                print "no v---------------------"
+                print(c[('df',ci,ci)].shape)
+                print("no v---------------------")
                 raise RuntimeError
 
             self.variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat(self.density_w,

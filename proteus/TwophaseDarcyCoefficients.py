@@ -4,10 +4,12 @@ An extension of the TransportCoefficients module for two-phase flow in porous me
 .. inheritance-diagram:: proteus.TwophaseDarcyCoefficients
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
 from math import *
-from TransportCoefficients import TC_base
+from .TransportCoefficients import TC_base
 import numpy
-from Profiling import logEvent
+from .Profiling import logEvent
 
 #base class for setting up fluid and material properties
 class TwophaseDarcyFlow_base(TC_base):
@@ -152,11 +154,11 @@ class TwophaseDarcyFlow_base(TC_base):
                                self.omega_q)
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         #mwf not sure if this is ok
-        if cebq.has_key(('u',0)):
+        if ('u',0) in cebq:
             cebq['psi_n'] = numpy.zeros(cebq[('u',0)].shape,'d')
             cebq[('dpsi_n',0)] = numpy.zeros(cebq[('u',0)].shape,'d')
             cebq[('dpsi_n',1)] = numpy.zeros(cebq[('u',0)].shape,'d')
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global['psi_n'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',0)] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',1)] = numpy.zeros(cebq_global[('u',0)].shape,'d')
@@ -813,7 +815,7 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
         self.capillaryDiffusionScaling = capillaryDiffusionScaling
     def attachModels(self,modelList):
         if self.nModel is None:
-            print 'Warning Twophase_split_pressure nModel is None returning in attachModels'
+            print('Warning Twophase_split_pressure nModel is None returning in attachModels')
             return
         #mwf debug
         #import pdb
@@ -825,10 +827,10 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
 
         self.q_s_w   = modelList[self.nModel].q[('u',0)]
         self.ebqe_s_w = modelList[self.nModel].ebqe[('u',0)]
-        if modelList[self.nModel].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.nModel].ebq:
             self.ebq_s_w = modelList[self.nModel].ebq[('u',0)]
         #mwf need to check
-        assert modelList[self.nModel].phi_ip.has_key(('u',0))
+        assert ('u',0) in modelList[self.nModel].phi_ip
         assert self.ip_s_w.shape ==  modelList[self.nModel].phi_ip[('u',0)].shape
         self.ip_s_w = modelList[self.nModel].phi_ip[('u',0)]
         #mwf hack 04/03/09 skip
@@ -837,13 +839,13 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
         #mwf end ip stuff
         self.q_grad_psic   = modelList[self.nModel].q[('grad(phi)',0)]
         self.ebqe_grad_psic = modelList[self.nModel].ebqe[('grad(phi)',0)]
-        if modelList[self.nModel].ebq.has_key(('grad(phi)',0)):
+        if ('grad(phi)',0) in modelList[self.nModel].ebq:
             self.ebq_grad_psic = modelList[self.nModel].ebq[('grad(phi)',0)]
         self.q_psic   = modelList[self.nModel].q[('phi',0)]
         self.ebqe_psic= modelList[self.nModel].ebqe[('phi',0)]
-        if modelList[self.nModel].ebq.has_key(('phi',0)):
+        if ('phi',0) in modelList[self.nModel].ebq:
             self.ebq_psic = modelList[self.nModel].ebq[('phi',0)]
-        assert modelList[self.nModel].phi_ip.has_key(('phi',0))
+        assert ('phi',0) in modelList[self.nModel].phi_ip
         assert self.ip_psic.shape ==  modelList[self.nModel].phi_ip[('phi',0)].shape
         self.ip_psic = modelList[self.nModel].phi_ip[('phi',0)]
 
@@ -869,10 +871,10 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
             self.ebq_s_w.flat[i] = 1.0e-4
         self.ebq_grad_psic = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_psic = numpy.zeros(cebq[('u',0)].shape,'d')
-        if cebq.has_key(('u',0)):
+        if ('u',0) in cebq:
             cebq['psi_n'] = numpy.zeros(cebq[('u',0)].shape,'d')
             cebq[('dpsi_n',0)] = numpy.ones(cebq[('u',0)].shape,'d')
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global['psi_n'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',0)] = numpy.ones(cebq_global[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
@@ -1112,21 +1114,21 @@ class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
         self.capillaryDiffusionScaling = capillaryDiffusionScaling
     def attachModels(self,modelList):
         if self.nModel is None:
-            print 'Warning Twophase_split_saturation nModel is None returning in attachModels'
+            print('Warning Twophase_split_saturation nModel is None returning in attachModels')
             return
         #mwf debug
         self.flowModel = modelList[self.nModel]
         #
         self.q_q_t    = modelList[self.nModel].q[('velocity',0)]
         self.ebqe_q_t  = modelList[self.nModel].ebqe[('velocity',0)]
-        if modelList[self.nModel].ebq.has_key(('velocity',0)):
+        if ('velocity',0) in modelList[self.nModel].ebq:
             self.ebq_q_t  = modelList[self.nModel].ebq[('velocity',0)]
         #do we really need other model values for q_t in potential calculation?
         assert self.ip_psiw.shape == modelList[self.nModel].phi_ip[('u',0)].shape
         self.ip_psiw = modelList[self.nModel].phi_ip[('u',0)]
         self.q_psiw    = modelList[self.nModel].q[('u',0)]
         self.ebqe_psiw = modelList[self.nModel].ebqe[('u',0)]
-        if modelList[self.nModel].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.nModel].ebq:
             self.ebq_psiw = modelList[self.nModel].ebq[('u',0)]
     def initializeElementQuadrature(self,t,cq):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)

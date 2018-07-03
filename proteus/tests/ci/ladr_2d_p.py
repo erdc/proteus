@@ -1,7 +1,10 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
-from adr import *
-
+try:
+    from .adr import *
+except:
+    from adr import *
 name = "ladr_2d"
 nd = 2; #Two dimensions
 L=(1.0,1.0,1.0); 

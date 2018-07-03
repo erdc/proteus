@@ -4,6 +4,7 @@ A stupid implementation of a heap for fast marching methods
 .. inheritance-diagram:: proteus.StupidHeap
    :parts: 1
 """
+from __future__ import print_function
 class StupidHeap:
     """
     Min Heap
@@ -34,8 +35,8 @@ class StupidHeap:
         """
 
         """
-        if self.heapPos.has_key(key):
-            print """insertWithCheckForExistingKey found existing key=%s using updateNode!""" % key
+        if key in self.heapPos:
+            print("""insertWithCheckForExistingKey found existing key=%s using updateNode!""" % key)
             return self.updateNode(key,val)
         last = len(self.heap)
         self.heap.append((key,val))
@@ -153,8 +154,8 @@ class StupidHeap:
                                                                                               self.heapPos[self.heap[i][K]])
 
     def printHeap(self):
-        print "heap= %s " % self.heap
-        print "heapPos= %s " % self.heapPos
+        print("heap= %s " % self.heap)
+        print("heapPos= %s " % self.heapPos)
 
 if __name__ == "__main__":
     H = StupidHeap()
@@ -164,7 +165,7 @@ if __name__ == "__main__":
     a = [(i, 10.-i) for i in range(10)]
     a.append((11,5.)); a.append((-1,6.))
     for i in range(nn):
-        print "inserting a[%s]=%s " % (i,a[i])
+        print("inserting a[%s]=%s " % (i,a[i]))
 
         H.insert(a[i][0],a[i][1])
     H.printHeap()
@@ -173,11 +174,11 @@ if __name__ == "__main__":
 
     while not H.isempty():
         h = H.pop()
-        print "H.pop = (%s,%s) " % h
+        print("H.pop = (%s,%s) " % h)
         H.checkHeap()
 
     for i in range(nn):
-        print "re inserting a[%s]=%s " % (i,a[i])
+        print("re inserting a[%s]=%s " % (i,a[i]))
 
         H.insert(a[i][0],a[i][1])
 
@@ -186,5 +187,5 @@ if __name__ == "__main__":
     H.updateNode(7,100.); H.checkHeap()
     while not H.isempty():
         h = H.pop()
-        print "H.pop = (%s,%s) " % h
+        print("H.pop = (%s,%s) " % h)
         H.checkHeap()

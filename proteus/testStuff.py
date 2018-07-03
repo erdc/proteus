@@ -3,13 +3,15 @@
 just add a place to put things I'm testing out before they are ready for
 including in proteus
 """
-import Norms
-import testStuffImpl
+from __future__ import print_function
+from __future__ import absolute_import
+from . import Norms
+from . import testStuffImpl
 import numpy
-import FemTools
+from . import FemTools
 #for timing
 import sys,os,copy,timeit
-import Profiling
+from . import Profiling
 from .Profiling import logEvent
 TESTVPPTIMES = False
 
@@ -161,8 +163,8 @@ class ExplicitLevelSetSolver:
             #dtau  = min(1.0e-3,dtau)
             nredSteps = min(10,nredSteps)
             #mwf debug
-            print """test redistance hmin=%g dtau=%g nredSteps=%d\n """ %(hmin,dtau,nredSteps)
-            print """test redistance hmax=%g eps=%g \n """ %(hmax,eps)
+            print("""test redistance hmin=%g dtau=%g nredSteps=%d\n """ %(hmin,dtau,nredSteps))
+            print("""test redistance hmax=%g eps=%g \n """ %(hmax,eps))
             self.redPhi.flat[:] = self.phiP1.flat[:]
             if self.enforceWeakDirichletBCs:
                 for i in range(nredSteps):
@@ -214,7 +216,7 @@ class ExplicitLevelSetSolver:
         return
     #end computeSolution
 
-import TimeIntegration
+from . import TimeIntegration
 
 class ExplicitLevelSetIntegrator(TimeIntegration.ForwardIntegrator):
     """
@@ -238,7 +240,7 @@ class ExplicitLevelSetIntegrator(TimeIntegration.ForwardIntegrator):
         """
         maxCFL = 1.0e-6
         ci = self.lsSolver.component
-        if self.mlvTran.modelList[-1].q.has_key(('cfl',ci)):
+        if ('cfl',ci) in self.mlvTran.modelList[-1].q:
             maxCFL = max(max(max(self.mlvTran.modelList[-1].q[('cfl',ci)])),maxCFL)
         dt = self.nOptions.runCFL/maxCFL
         if self.dtLast is None:
@@ -267,7 +269,7 @@ class ExplicitLevelSetIntegrator(TimeIntegration.ForwardIntegrator):
 
             self.tLast = t
             maxCFL=1.e-6
-            if self.mlvTran.modelList[-1].q.has_key(('cfl',ci)):
+            if ('cfl',ci) in self.mlvTran.modelList[-1].q:
                 maxCFL = max(max(max(self.mlvTran.modelList[-1].q[('cfl',ci)])),maxCFL)
             dt = self.nOptions.runCFL/maxCFL
             if dt/self.dtLast  > self.dtRatioMax:
@@ -288,7 +290,7 @@ class ExplicitLevelSetIntegrator(TimeIntegration.ForwardIntegrator):
 ########################################################################
 #test projecting solutions to fine grid for computing error
 ########################################################################
-from FemTools import *
+from .FemTools import *
 
 def projectToFinestLevel(mlTransport,level,tsim=0.0):
     """
@@ -480,7 +482,7 @@ def projectToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0):
 
     #mwf debug
     if verbose > 1:
-        import Viewers
+        from . import Viewers
         if 'viewerType' in dir(Viewers) and Viewers.viewerType == 'gnuplot' and mFine.nSpace_global == 2:
             for eN in range(uqciprojFine.shape[0]):
                 for k in range(uqciprojFine.shape[1]):
@@ -563,7 +565,7 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
             iqc = 0
             for k,x in xc[ec].iteritems():
                 #mwf debug
-                print "ec=%d iqc=%d x=%s " % (ec,iqc,x)
+                print("ec=%d iqc=%d x=%s " % (ec,iqc,x))
                 xArray[ec,iqc,:] = x
                 iqc += 1
             #end x
@@ -571,7 +573,7 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
         velciprojFine = numpy.zeros(mFine.q[('velocity',ci)].shape,'d')
         if mCoarse.velocityPostProcessor.postProcessingTypes[ci] == 'point-eval':
             #assume constant solution/potential gradient over coarse grid
-            print "WARNING projectVelocityToFinestLevelNC type= point-eval assuming constant potential on coarse grid"
+            print("WARNING projectVelocityToFinestLevelNC type= point-eval assuming constant potential on coarse grid")
 
             for ef in range(nEf):
                 ec = ef
@@ -579,12 +581,12 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
                     ep = P[lf-l][ec]
                     ec = ep
                 for iq in range(nqf):
-                    if mFine.q.has_key(('a',ci,ci)):
+                    if ('a',ci,ci) in mFine.q:
                         velciprojFine[ef,iq,:] = -numpy.dot(mFine.q[('a',ci,ci)][ef,iq,:,:],
                                                               mCoarse.q[('grad(phi)',ci)][ec,0,:])
                     else:
                         velciprojFine[ef,iq,:] = 0.0
-                    if mFine.q.has_key(('f',ci)):
+                    if ('f',ci) in mFine.q:
                         velciprojFine[ef,iq,:]  += mFine.q[('f',ci)][ef,iq,:]
                 #iq
             #ef
@@ -602,10 +604,10 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
         #postprocessing type
     #else on level
     if verbose > 2:
-        print """testStuff velocityProjNC \n xArray=%s velciprojFine= %s \n""" % (xArray,
-                                                                                 velciprojFine)
+        print("""testStuff velocityProjNC \n xArray=%s velciprojFine= %s \n""" % (xArray,
+                                                                                 velciprojFine))
     if verbose > 1:
-        import Viewers
+        from . import Viewers
         if 'viewerType' in dir(Viewers) and Viewers.viewerType == 'gnuplot' and mFine.nSpace_global == 2:
             max_u=max(numpy.absolute(numpy.take(velciprojFine,[0],2).flat))
             max_v=max(numpy.absolute(numpy.take(velciprojFine,[1],2).flat))
@@ -794,7 +796,7 @@ class MultilevelProjectionOperatorsNC:
                 #need to care about nonconforming points
                 if (not isinstance(fineSpace,FemTools.NC_AffineLinearOnSimplexWithNodalBasis) and
                     referenceElement.dim > 1 and usingAtLeastOneNCproj):
-                    print """WARNING testStuff.MultilevelProjectionOperatorsNC mixing NC and C0 projection operators!!!"""
+                    print("""WARNING testStuff.MultilevelProjectionOperatorsNC mixing NC and C0 projection operators!!!""")
                 #map reference interpolation points of fine elements to physical space
                 interpolationPointsOnFineElement_physical =  fineSpace.updateInterpolationPoints()
                 #copy physical space reference points on fine elements to an array for their parents
@@ -855,7 +857,7 @@ class MultilevelProjectionOperatorsNC:
                                         F_ij *= 0.5
                                         #have to allow for summing up values hit multiple times
                                         #only here
-                                        if rbc.has_key((J,I)):
+                                        if (J,I) in rbc:
                                             rbc[(J,I)] += F_ij
                                             pbc[(I,J)] += F_ij
                                         else:
@@ -865,9 +867,9 @@ class MultilevelProjectionOperatorsNC:
                                         rbc[(J,I)] = F_ij
                                         pbc[(I,J)] = F_ij
                                     rbcColumnIndeces[J].add(I)
-                                    if fineDOFBoundaryConditions.global2freeGlobal.has_key(I):
+                                    if I in fineDOFBoundaryConditions.global2freeGlobal:
                                         II = fineDOFBoundaryConditions.global2freeGlobal[I]*strideListList[l+1][cj]+offsetListList[l+1][cj]
-                                        if coarseDOFBoundaryConditions.global2freeGlobal.has_key(J):
+                                        if J in coarseDOFBoundaryConditions.global2freeGlobal:
                                             JJ = coarseDOFBoundaryConditions.global2freeGlobal[J]*strideListList[l][cj]+offsetListList[l][cj]
                                             rColumnIndeces[JJ].add(II)
                                             r[(JJ,II)] = rbc[(J,I)]
@@ -986,11 +988,11 @@ class AdaptiveForwardIntegrator:
                     self.mlvTran.chooseDT(tOut-t)
                     lastStep = True
                     #mwf debug
-                    print """adaptfint adjusting DT0 to %g """ % self.mlvTran.DT
+                    print("""adaptfint adjusting DT0 to %g """ % self.mlvTran.DT)
             while t < tOut and failedFlag== False:
                 #assume dt already selected
                 #mwf debug
-                print """\nadaptfint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.DTSET,self.mlvTran.DT)
+                print("""\nadaptfint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.DTSET,self.mlvTran.DT))
                 self.writeProgress(t,self.mlvTran.DT,tOut)
                 istage = 0
                 nlSolveFailed = False
@@ -1006,7 +1008,7 @@ class AdaptiveForwardIntegrator:
                         self.mlvTran.updateStage()
                         istage += 1
                     #mwf debug
-                    print """adaptfint t=%g istage=%d failed=%s """ % (t,istage,nlSolveFailed)
+                    print("""adaptfint t=%g istage=%d failed=%s """ % (t,istage,nlSolveFailed))
                 #end stages
                 if nlSolveFailed:
                     nNLfailures += 1
@@ -1044,7 +1046,7 @@ class AdaptiveForwardIntegrator:
         """
         just echo to screen what new and final time levels are
         """
-        import Profiling
+        from . import Profiling
         if Profiling.logLevel < 2:
             eraseTime='\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b'
             if self.tstring is not None:
@@ -1077,7 +1079,7 @@ class AdaptiveForwardIntegrator:
                 self.mlvTran.chooseDT(tOut-t)
                 lastStep = True
                 #mwf debug
-                print """adaptfint adjusting DT to %g """ % self.mlvTran.DT
+                print("""adaptfint adjusting DT to %g """ % self.mlvTran.DT)
             #end stepExact
             return stepOk,lastStep
         #short circuit MultilevelTransport's choose step by asking finest level
@@ -1129,7 +1131,7 @@ class AdaptiveBackwardEuler(TimeIntegration.BackwardEuler):
         if self.lastSolveFailed == True:
             self.DT *= self.dtRatioMin #0.25
             #should I reset lastSolveFailed here?
-            print "AdaptBackwardEuler chooseDT NLfail DT=%s " % (self.DT)
+            print("AdaptBackwardEuler chooseDT NLfail DT=%s " % (self.DT))
         else:
             predFactor = 0.5
 
@@ -1175,7 +1177,7 @@ class AdaptiveBackwardEuler(TimeIntegration.BackwardEuler):
             dtRat  = max(self.dtRatioMin,min(dtRatN,self.dtRatioMax))
             self.DT *= dtRat
 
-            print "AdaptBackwardEuler chooseDT error=%s dtRat=%s DT=%s " % (error,dtRat,self.DT)
+            print("AdaptBackwardEuler chooseDT error=%s dtRat=%s DT=%s " % (error,dtRat,self.DT))
 
     def updateTimeHistory(self,resetFromDOF=False,vectorTransport=None):
         TimeIntegration.BackwardEuler.updateTimeHistory(self,resetFromDOF,vectorTransport)
@@ -1202,16 +1204,16 @@ def stupidSort(A,hit=-12345):
     n = len(A)
     B = numpy.array(A)
     for islot in range(n):
-        print "islot=%d " % (islot)
+        print("islot=%d " % (islot))
         for i in range(islot+1,n):
-            print "i=%d" % (i)
+            print("i=%d" % (i))
             if A[i] > A[islot]:
-                print "A[%d]=%s > A[%d]=%s " % (i,A[i],islot,A[islot])
+                print("A[%d]=%s > A[%d]=%s " % (i,A[i],islot,A[islot]))
                 tmp = A[islot]
                 A[islot]=A[i]
                 A[i]= tmp
-            print "after i=%d A =%s " % (i,A)
-        print "after islot=%d A =%s " % (islot,A)
+            print("after i=%d A =%s " % (i,A))
+        print("after islot=%d A =%s " % (islot,A))
         #
     #islot
     return A
@@ -1223,7 +1225,7 @@ def checkOrder(A):
 
 ########################################################################
 #numerical fluxes
-import NumericalFlux,cnumericalFlux
+from . import NumericalFlux,cnumericalFlux
 class RusanovNumericalFlux_Diagonal_Diffusion_LDG(NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG):
     """
     apply numerical flus :math:`f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)` where
@@ -1295,7 +1297,7 @@ class RusanovNumericalFlux_Diagonal_Diffusion_LDG(NumericalFlux.Advection_Diagon
                                                                 q[('v',ck)],
                                                                 self.qV[ck])
         for ci in range(self.nc):
-            if ebq.has_key(('f',ci)):
+            if ('f',ci) in ebq:
                 cnumericalFlux.calculateInteriorNumericalAdvectiveFluxRusanov(self.safetyFactor,
                                                                               self.mesh.interiorElementBoundariesArray,
                                                                               self.mesh.elementBoundaryElementsArray,
@@ -1311,7 +1313,7 @@ class RusanovNumericalFlux_Diagonal_Diffusion_LDG(NumericalFlux.Advection_Diagon
 
             ##\todo fix numerical diffusive flux for multiple diffusion terms
             for ck in range(self.nc):
-                if ebq.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebq:
                     ebq_global[('diffusiveFlux',ck,ci)].flat[:]=0.0
                     cfemIntegrals.calculateInteriorNumericalDiffusiveFlux_LDG_upwind(self.mesh.interiorElementBoundariesArray,
                                                                                      self.mesh.elementBoundaryElementsArray,
@@ -1339,7 +1341,7 @@ class RusanovNumericalFlux_Diagonal_Diffusion_LDG(NumericalFlux.Advection_Diagon
                 self.ebq[('u',ci)][eN,ebN,k]=g(x,self.vt.T)
         self.vt.coefficients.evaluate(self.vt.T,self.ebq)
         for ci in range(self.nc):
-            if ebq.has_key(('f',ci)):
+            if ('f',ci) in ebq:
                 cnumericalFlux.calculateExteriorNumericalAdvectiveFluxRusanov(self.safetyFactor,
                                                                               self.mesh.exteriorElementBoundariesArray,
                                                                               self.mesh.elementBoundaryElementsArray,
@@ -1357,7 +1359,7 @@ class RusanovNumericalFlux_Diagonal_Diffusion_LDG(NumericalFlux.Advection_Diagon
                                                                               ebq_global[('advectiveFlux',ci)],
                                                                               ebq_global[('dadvectiveFlux_left',ci,ci)])
             for ck in range(self.nc):
-                if ebq.has_key(('a',ci,ck)):
+                if ('a',ci,ck) in ebq:
                     cfemIntegrals.calculateExteriorNumericalDiffusiveFlux_LDG_upwind(self.mesh.exteriorElementBoundariesArray,
                                                                                      self.mesh.elementBoundaryElementsArray,
                                                                                      self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -1370,7 +1372,7 @@ class RusanovNumericalFlux_Diagonal_Diffusion_LDG(NumericalFlux.Advection_Diagon
                                                                                      ebq_global[('penalty')],
                                                                                      ebq_global[('diffusiveFlux',ck,ci)])
         for ci in range(self.nc):
-            if ebq.has_key(('f',ci)):
+            if ('f',ci) in ebq:
                 cfemIntegrals.calculateExteriorInflowNumericalAdvectiveFlux(self.mesh.exteriorElementBoundariesArray,
                                                                             self.mesh.elementBoundaryElementsArray,
                                                                             self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -1386,8 +1388,8 @@ class RusanovNumericalFlux_Diagonal_Diffusion_LDG(NumericalFlux.Advection_Diagon
 
 ########################################################################
 #try special nonlinear solver to speed up rkdg
-import NonlinearSolvers
-import LinearSolvers
+from . import NonlinearSolvers
+from . import LinearSolvers
 class SSPRKNewton(NonlinearSolvers.Newton):
     """
     A simple iterative solver that is Newton's method
@@ -1432,7 +1434,7 @@ class SSPRKNewton(NonlinearSolvers.Newton):
         self.isFactored = False
 
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        import Viewers
+        from . import Viewers
         """
         Solve F(u) = b
 
@@ -1454,11 +1456,11 @@ class SSPRKNewton(NonlinearSolvers.Newton):
         self.gammaK_max=0.0
         while (not self.converged(r) and
                not self.failed()):
-            print "SSPRKNewton it", self.its, "norm(r)", self.norm_r
+            print("SSPRKNewton it", self.its, "norm(r)", self.norm_r)
             if self.updateJacobian or self.fullNewton and not self.isFactored:
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
-                print numpy.transpose(self.J)
+                print(numpy.transpose(self.J))
                 if self.linearSolver.computeEigenvalues:
                     self.JLast[:]=self.J
                     self.J_t_J[:]=self.J
@@ -1510,21 +1512,21 @@ class SSPRKNewton(NonlinearSolvers.Newton):
                 if self.its  == 2:
                     self.betaK_1 = self.betaK_current
                     self.etaK_1 = self.etaK_current
-                print "it = ",self.its
-                print "beta(|Jinv|)  ",self.betaK_current
-                print "eta(|du|)     ",self.etaK_current
-                print "gamma(Lip J') ",self.gammaK_current
-                print "gammaM(Lip J')",self.gammaK_max
-                print "kappa(cond(J))",self.kappa_current
+                print("it = ",self.its)
+                print("beta(|Jinv|)  ",self.betaK_current)
+                print("eta(|du|)     ",self.etaK_current)
+                print("gamma(Lip J') ",self.gammaK_current)
+                print("gammaM(Lip J')",self.gammaK_max)
+                print("kappa(cond(J))",self.kappa_current)
                 if self.betaK_current*self.etaK_current*self.gammaK_current <= 0.5:
-                    print "r         ",(1.0+sqrt(1.0-2.0*self.betaK_current*self.etaK_current*self.gammaK_current))/(self.betaK_current*self.gammaK_current)
+                    print("r         ",(1.0+sqrt(1.0-2.0*self.betaK_current*self.etaK_current*self.gammaK_current))/(self.betaK_current*self.gammaK_current))
                 if self.betaK_current*self.etaK_current*self.gammaK_max <= 0.5:
-                    print "r_max     ",(1.0+sqrt(1.0-2.0*self.betaK_current*self.etaK_current*self.gammaK_max))/(self.betaK_current*self.gammaK_max)
-                print "lambda_max",max(self.linearSolver.eigenvalues_r)
-                print "lambda_i_max",max(self.linearSolver.eigenvalues_i)
-                print "norm_J",self.norm_2_J_current
-                print "lambda_min",min(self.linearSolver.eigenvalues_r)
-                print "lambda_i_min",min(self.linearSolver.eigenvalues_i)
+                    print("r_max     ",(1.0+sqrt(1.0-2.0*self.betaK_current*self.etaK_current*self.gammaK_max))/(self.betaK_current*self.gammaK_max))
+                print("lambda_max",max(self.linearSolver.eigenvalues_r))
+                print("lambda_i_max",max(self.linearSolver.eigenvalues_i))
+                print("norm_J",self.norm_2_J_current)
+                print("lambda_min",min(self.linearSolver.eigenvalues_r))
+                print("lambda_i_min",min(self.linearSolver.eigenvalues_i))
             if self.lineSearch:
                 norm_r_cur = self.norm(r)
                 norm_r_last = 2.0*norm_r_cur
@@ -1547,19 +1549,19 @@ class SSPRKNewton(NonlinearSolvers.Newton):
                         par_r.scatter_forward_insert()
                     norm_r_last = norm_r_cur
                     norm_r_cur = self.norm(r)
-                    print """ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
+                    print("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
                                                                         norm_r_cur,
                                                                         self.atol_r,
-                                                                        self.rtol_r)
+                                                                        self.rtol_r))
                 if ls_its > 0:
                     logEvent("Linesearches = %i" % ls_its,level=3)
         else:
             if self.linearSolver.computeEigenvalues:
                 if self.betaK_0*self.etaK_0*self.gammaK_max <= 0.5:
-                    print "r_{-,0}     ",(1.0+sqrt(1.0-2.0*self.betaK_0*self.etaK_0*self.gammaK_max))/(self.betaK_0*self.gammaK_max)
+                    print("r_{-,0}     ",(1.0+sqrt(1.0-2.0*self.betaK_0*self.etaK_0*self.gammaK_max))/(self.betaK_0*self.gammaK_max))
                 if self.betaK_1*self.etaK_1*self.gammaK_max <= 0.5 and self.its > 1:
-                    print "r_{-,1}     ",(1.0+sqrt(1.0-2.0*self.betaK_1*self.etaK_1*self.gammaK_max))/(self.betaK_1*self.gammaK_max)
-                print "beta0*eta0*gamma ",self.betaK_0*self.etaK_0*self.gammaK_max
+                    print("r_{-,1}     ",(1.0+sqrt(1.0-2.0*self.betaK_1*self.etaK_1*self.gammaK_max))/(self.betaK_1*self.gammaK_max))
+                print("beta0*eta0*gamma ",self.betaK_0*self.etaK_0*self.gammaK_max)
                 if Viewers.viewerType == 'gnuplot':
                     max_r = max(1.0,max(self.linearSolver.eigenvalues_r))
                     max_i = max(1.0,max(self.linearSolver.eigenvalues_i))

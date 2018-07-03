@@ -1,7 +1,12 @@
+from __future__ import absolute_import
 from math import *
 from proteus import *
 from proteus.default_p import *
-from cylinder import *
+try:
+    from .cylinder import *
+except:
+    from cylinder import *
+    
 from proteus.mprans import Pres
 
 name = "pressure"

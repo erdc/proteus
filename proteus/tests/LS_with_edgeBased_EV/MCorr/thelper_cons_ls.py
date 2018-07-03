@@ -103,5 +103,5 @@ linearSolverConvergenceTest = 'r-true' #rits is do a set number of iterations, r
 #redist solver
 fmmFlag=0
 
-soname="cons_ls_level_"+`ct.refinement`
+soname="cons_ls_level_"+repr(ct.refinement)
 

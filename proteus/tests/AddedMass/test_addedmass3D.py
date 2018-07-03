@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+from __future__ import absolute_import
 import os
 from proteus.iproteus import *
 import unittest
@@ -41,7 +43,7 @@ class TestAddedMass3D(unittest.TestCase):
     def test_AddedMass_3D(self):
         from proteus import default_so
         reload(default_so)
-        import addedmass3D_so
+        from . import addedmass3D_so
         pList = []
         nList = []
         for (p,n) in addedmass3D_so.pnList:
@@ -66,15 +68,15 @@ class TestAddedMass3D(unittest.TestCase):
             while i < len(all):
                 if i < len(all)-1:
                     if all[i+1][0]!='-':
-                        print "setting ", all[i].strip(), all[i+1]
+                        print("setting ", all[i].strip(), all[i+1])
                         OptDB.setValue(all[i].strip('-'),all[i+1])
                         i=i+2
                     else:
-                        print "setting ", all[i].strip(), "True"
+                        print("setting ", all[i].strip(), "True")
                         OptDB.setValue(all[i].strip('-'),True)
                         i=i+1
                 else:
-                    print "setting ", all[i].strip(), "True"
+                    print("setting ", all[i].strip(), "True")
                     OptDB.setValue(all[i].strip('-'),True)
                     i=i+1
         ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)

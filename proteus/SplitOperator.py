@@ -4,6 +4,7 @@ A class hierarchy for split operator methods.
 .. inheritance-diagram:: proteus.SplitOperator
    :parts: 1
 """
+from __future__ import absolute_import
 from .Profiling import logEvent 
 
 class System:
@@ -347,7 +348,7 @@ class Sequential_MinFLCBDFModelStep(SO_base):
     well as all the model steps
     """
     def __init__(self,modelList,system=defaultSystem,stepExact=False):
-        from StepControl import FLCBDF_controller
+        from .StepControl import FLCBDF_controller
         SO_base.__init__(self,modelList,system,stepExact)
         self.flcbdfList = []
         for model  in self.modelList:
@@ -445,7 +446,7 @@ class Sequential_MinAdaptiveModelStep(SO_base):
     well as all the model steps
     """
     def __init__(self,modelList,system=defaultSystem,stepExact=False):
-        from StepControl import FLCBDF_controller
+        from .StepControl import FLCBDF_controller
         SO_base.__init__(self,modelList,system,stepExact)
         self.controllerList = []
         for model  in self.modelList:
@@ -576,7 +577,7 @@ class ISO_fixed_MinAdaptiveModelStep(SO_base):
     well as all the model steps
     """
     def __init__(self,modelList,system=defaultSystem,stepExact=False):
-        from StepControl import FLCBDF_controller
+        from .StepControl import FLCBDF_controller
         SO_base.__init__(self,modelList,system,stepExact)
         self.controllerList = []
         for model  in self.modelList:
@@ -705,7 +706,7 @@ class Sequential_MinAdaptiveModelStep_SS(SO_base):
     well as all the model steps
     """
     def __init__(self,modelList,system=defaultSystem,stepExact=False):
-        from StepControl import FLCBDF_controller
+        from .StepControl import FLCBDF_controller
         SO_base.__init__(self,modelList,system,stepExact)
         self.controllerList = []
         for model  in self.modelList:

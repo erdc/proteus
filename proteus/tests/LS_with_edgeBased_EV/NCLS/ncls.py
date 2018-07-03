@@ -87,7 +87,7 @@ if unstructured:
 else:
     domain = box
 
-soname="ncls_level_"+`ct.refinement`
+soname="ncls_level_"+repr(ct.refinement)
 
 class MyCoefficients(NCLS.Coefficients):
     def attachModels(self,modelList):

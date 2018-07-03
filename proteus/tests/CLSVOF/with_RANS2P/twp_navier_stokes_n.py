@@ -1,12 +1,13 @@
+from __future__ import absolute_import
 from proteus import (StepControl,
                      TimeIntegration,
                      NonlinearSolvers,
                      LinearSolvers,
                      LinearAlgebraTools)
 from proteus.default_n import *
-import twp_navier_stokes_p as physics
+from . import twp_navier_stokes_p as physics
 from proteus.mprans import RANS2P
-from multiphase import *
+from .multiphase import *
 
 #time stepping
 if timeDiscretization=='vbdf':

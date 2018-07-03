@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
-from parameters_for_poisson import *
+from .parameters_for_poisson import *
 
 name = "poisson"
 assert ct.nd==2 or ct.nd==3, "Choose nd=2, or 3"

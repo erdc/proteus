@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus.default_p import *
 from proteus.mprans import NCLS
-from multiphase import *
+from .multiphase import *
 
 LevelModelType = NCLS.LevelModel
 coefficients = NCLS.Coefficients(V_model=int(movingDomain)+0,

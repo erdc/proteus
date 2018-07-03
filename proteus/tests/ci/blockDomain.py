@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import numpy
 
 def genPoly(polyfileBase="blockDomain",
@@ -104,7 +105,7 @@ if __name__ == '__main__':
                        nx=nx,ny=ny,
                        Lx=Lx,Ly=Ly)
 
-    print "domain= %s nx=%s ny=%s boundaryTags=%s regions=%s " % (L,
+    print("domain= %s nx=%s ny=%s boundaryTags=%s regions=%s " % (L,
                                                                   nx,ny,
                                                                   bt,
-                                                                  reg)
+                                                                  reg))

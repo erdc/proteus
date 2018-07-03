@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus.default_so import *
-import rotation2D
-from rotation2D import *
+from . import rotation2D
+from .rotation2D import *
 
 if applyRedistancing:
     if applyCorrection:

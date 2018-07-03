@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from proteus import *
-from cylinder2d import *
+from .cylinder2d import *
 from proteus.default_n import *
-from twp_navier_stokes_cylinder_2d_p import *
+from .twp_navier_stokes_cylinder_2d_p import *
 
 systemStepExact=True
 

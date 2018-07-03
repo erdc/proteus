@@ -4,14 +4,16 @@ Module for diagnostic utilities
 .. inheritance-diagram:: proteus.DiagUtils
    :parts: 1
 """
-from EGeometry import *
-from MeshTools import *
-from FemTools import *
-from LinearAlgebraTools import *
-from LinearSolvers import *
-from Transport import *
-from Norms import *
-from Profiling import logEvent
+from __future__ import print_function
+from __future__ import absolute_import
+from .EGeometry import *
+from .MeshTools import *
+from .FemTools import *
+from .LinearAlgebraTools import *
+from .LinearSolvers import *
+from .Transport import *
+from .Norms import *
+from .Profiling import logEvent
 
 def L2errorFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArray,
                     functionValueArray,T=None):
@@ -126,7 +128,7 @@ def testCrRavNodalBasis(nd,verbose=0):
 
     """
     if verbose > -1:
-        print 'creating CrouzeixRaviartWithNodalBasis space dim= ',nd
+        print('creating CrouzeixRaviartWithNodalBasis space dim= ',nd)
     #end
     #look at values at element barycenter, and face barycenters
     npoints = 2 + nd
@@ -146,11 +148,11 @@ def testCrRavNodalBasis(nd,verbose=0):
                         [1./3., 1./3., 0.]]
     #end if
     if verbose > 1:
-        print 'trying to get values at points \n',xiArray
+        print('trying to get values at points \n',xiArray)
     space = CrouzeixRaviartWithNodalBasis(nd)
     #space = LinearOnSimplexWithNodalBasis(nd)
     if verbose > -1:
-        print 'number of dofs= \n',space.dim
+        print('number of dofs= \n',space.dim)
         bvals = numpy.zeros((npoints,space.dim),'d')
         bgrads= numpy.zeros((npoints,space.dim,nd),'d')
         for j in range(npoints):
@@ -159,9 +161,9 @@ def testCrRavNodalBasis(nd,verbose=0):
                 bgrads[j,k,:]= space.basisGradients[k](xiArray[j])
             #end k
         #end j
-        print 'basis values at \n',xiArray
-        print 'are \n',bvals
-        print 'basis gradients are \n',bgrads
+        print('basis values at \n',xiArray)
+        print('are \n',bvals)
+        print('basis gradients are \n',bgrads)
     #end if
 
     #look at values on faces as mapping from lower dimensional space
@@ -183,10 +185,10 @@ def testCrRavNodalBasis(nd,verbose=0):
                 bgrads[k,j,:] = space.basisGradientsTrace[k][j](exiArray[0])
             #end j
         #end k
-        print 'trace basis values at ',exiArray,' on edges 0:nd+1 are '
-        print bvals
-        print 'trace basis gradients are '
-        print bgrads
+        print('trace basis values at ',exiArray,' on edges 0:nd+1 are ')
+        print(bvals)
+        print('trace basis gradients are ')
+        print(bgrads)
     #end if
 #end testCr
 def testQuadNodalBasis(nd,verbose=0):
@@ -195,7 +197,7 @@ def testQuadNodalBasis(nd,verbose=0):
 
     """
     if verbose > -1:
-        print 'creating QuadraticOnSimplexWithNodal space dim= ',nd
+        print('creating QuadraticOnSimplexWithNodal space dim= ',nd)
     #end
     #look at values at element barycenter, and face barycenters
     tdim = '1d'
@@ -212,18 +214,18 @@ def testQuadNodalBasis(nd,verbose=0):
 
     #end if
     if verbose > 1:
-        print 'trying to get values at points ',xiArray
+        print('trying to get values at points ',xiArray)
     space = QuadraticOnSimplexWithNodalBasis(nd)
     if verbose > -1:
-        print 'number of dofs= ',space.dim
+        print('number of dofs= ',space.dim)
         bvals = numpy.zeros((npoints,space.dim),'d')
         bgrads= numpy.zeros((npoints,space.dim,nd),'d')
         if verbose > 6:
             for k in range(nd+1):
-                print 'baryCoord ',k,'(',xiArray[0],')=',baryCoords[tdim][k](xiArray[0])
+                print('baryCoord ',k,'(',xiArray[0],')=',baryCoords[tdim][k](xiArray[0]))
             #end k
             for k in space.range_dim:
-                print 'basis func ',k,'(',xiArray[0],')=',space.basis[k](xiArray[0])
+                print('basis func ',k,'(',xiArray[0],')=',space.basis[k](xiArray[0]))
             #end k
         #end verbose
         for j in range(npoints):
@@ -232,9 +234,9 @@ def testQuadNodalBasis(nd,verbose=0):
                 bgrads[j,k,:]= space.basisGradients[k](xiArray[j])
             #end k
         #end j
-        print 'basis values at \n',xiArray
-        print 'are \n',bvals
-        print 'basis gradients are \n',bgrads
+        print('basis values at \n',xiArray)
+        print('are \n',bvals)
+        print('basis gradients are \n',bgrads)
     #end if
 
     #look at values on faces as mapping from lower dimensional space
@@ -256,9 +258,9 @@ def testQuadNodalBasis(nd,verbose=0):
                 bgrads[k,j,:] = space.basisGradientsTrace[k][j](exiArray[0])
             #end j
         #end k
-        print 'trace basis values at ',exiArray,' on edges 0:nd+1 are'
-        print 'are \n',bvals
-        print 'trace basis gradients are \n',bgrads
+        print('trace basis values at ',exiArray,' on edges 0:nd+1 are')
+        print('are \n',bvals)
+        print('trace basis gradients are \n',bgrads)
     #end if
 #end testQuad
 
@@ -300,13 +302,13 @@ def testEdgeDOFMap(mesh,nd):
             ig = dofMap.l2g[eN,i]
             for j in range(ndofLoc):
                 jg = dofMap.l2g[eN,j]
-                print 'loc(',i,',',j,') = ',stiffMat[i,j],' --> A(',ig,',',jg,')= ',A[ig,jg]
+                print('loc(',i,',',j,') = ',stiffMat[i,j],' --> A(',ig,',',jg,')= ',A[ig,jg])
                 A[ig,jg] += stiffMat[i,j]
             #end j
         #end i
     #end eN
 
-    print 'leaving testEdgeDofMap A= \n',A
+    print('leaving testEdgeDofMap A= \n',A)
 
 def testQuadRefMats(nd,verbose=0):
     """
@@ -332,8 +334,8 @@ def testQuadRefMats(nd,verbose=0):
             #end j
         #end i
     #end p,w
-    print 'P2 localStiffMat = \n',stiffMat
-    print 'P2 localMassMat = \n',massMat
+    print('P2 localStiffMat = \n',stiffMat)
+    print('P2 localMassMat = \n',massMat)
 
 
 #end testQuadDofMap
@@ -365,25 +367,25 @@ def testQuadDOFMap(mesh,nd,verbose=0):
         #end i
     #end p,w
     if verbose > -1:
-        print 'P2 localStiffMat = \n',stiffMat
-        print 'P2 localMassMat = \n',massMat
+        print('P2 localStiffMat = \n',stiffMat)
+        print('P2 localMassMat = \n',massMat)
     #end verbose
 
     if verbose > 2:
-        print 'testQuadNodalDOF locDof= ',ndofLoc,' global nDof=',dofMap.nDOF
+        print('testQuadNodalDOF locDof= ',ndofLoc,' global nDof=',dofMap.nDOF)
     A = Mat(dofMap.nDOF,dofMap.nDOF)
     for eN in range(mesh.nElements_global):
         for i in range(ndofLoc):
             ig = dofMap.l2g[eN,i]
             for j in range(ndofLoc):
                 jg = dofMap.l2g[eN,j]
-                print 'loc(',i,',',j,') = ',stiffMat[i,j],' --> A(',ig,',',jg,')= ',A[ig,jg]
+                print('loc(',i,',',j,') = ',stiffMat[i,j],' --> A(',ig,',',jg,')= ',A[ig,jg])
                 A[ig,jg] += stiffMat[i,j]
             #end j
         #end i
     #end eN
 
-    print 'leaving testQuadDofMap A= \n',A
+    print('leaving testQuadDofMap A= \n',A)
 
 #end testQuadDofMap
 

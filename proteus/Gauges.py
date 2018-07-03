@@ -5,6 +5,7 @@ along lines to mimic gauges in lab and field experiments.
    :parts: 1
 
 """
+from __future__ import print_function
 import os
 from collections import defaultdict, OrderedDict
 from itertools import product
@@ -557,11 +558,11 @@ class Gauges(AV_base):
 
                 segment_length, proc_rank, segment = longest_segment
                 if segment_length == 0:
-                    print segment_pos
-                    print 'segments'
-                    for segment in selected_segments: print segment
-                    print 'length_segments'
-                    for length_segment in length_segments: print length_segment
+                    print(segment_pos)
+                    print('segments')
+                    for segment in selected_segments: print(segment)
+                    print('length_segments')
+                    for length_segment in length_segments: print(length_segment)
                     raise FloatingPointError("Unable to identify next segment while segmenting, are %s in domain?" %
                                              str(endpoints))
                 logEvent("Identified best segment of length %g on %d: %s" % (segment_length, proc_rank, str(segment)), 9)

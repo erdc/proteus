@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
 from proteus.mprans import VOF
-from multiphase import *
+from .multiphase import *
 
 LevelModelType = VOF.LevelModel
 if useOnlyVF:

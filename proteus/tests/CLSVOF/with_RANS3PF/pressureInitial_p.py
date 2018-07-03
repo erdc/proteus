@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from math import *
 from proteus import *
 from proteus.default_p import *
-from multiphase import *
+from .multiphase import *
 from proteus.mprans import PresInit
 
 name = "pressureInitial"

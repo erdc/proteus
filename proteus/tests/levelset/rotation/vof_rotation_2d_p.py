@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
-from rotation2D import *
+from .rotation2D import *
 from proteus.mprans import VOF
 name=soname+"_vof"
 

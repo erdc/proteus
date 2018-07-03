@@ -4,9 +4,11 @@ A class hierarchy for subgrid error estimation methods (multiscale methods)
 .. inheritance-diagram:: proteus.SubgridError
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
 import numpy
-import csubgridError
-import FemTools
+from . import csubgridError
+from . import FemTools
 from .Profiling import logEvent
 class SGE_base:
     def __init__(self,coefficients,nd,lag=False,trackSubScales=False):
@@ -28,13 +30,13 @@ class SGE_base:
             else:
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
             for cj in range(self.nc):
-                if cq.has_key(('df',ci,cj)):
+                if ('df',ci,cj) in cq:
                     cq[('df_sge',ci,cj)]=cq[('df',ci,cj)]
-                if cq.has_key(('dH',ci,cj)):
+                if ('dH',ci,cj) in cq:
                     cq[('dH_sge',ci,cj)]=cq[('dH',ci,cj)]
-                if cq.has_key(('dm',ci,cj)):
+                if ('dm',ci,cj) in cq:
                     cq[('dm_sge',ci,cj)]=cq[('dm',ci,cj)]
-                if cq.has_key(('dmt',ci,cj)):
+                if ('dmt',ci,cj) in cq:
                     cq[('dmt_sge',ci,cj)]=cq[('dmt',ci,cj)]
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             for ck,cjDict in ckDict.iteritems():
@@ -74,11 +76,11 @@ class Advection_ASGS(SGE_base):
             if self.lag:
                 self.tau_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
-                if cq.has_key(('df',ci,ci)):
+                if ('df',ci,ci) in cq:
                     self.df_last = copy.deepcopy(cq[('df',ci,ci)])
                     cq[('df_sge',ci,ci)] = self.df_last
             else:
-                if cq.has_key(('df',ci,ci)):
+                if ('df',ci,ci) in cq:
                     cq[('df_sge',ci,ci)] = cq[('df',ci,ci)]
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
     def updateSubgridErrorHistory(self,initializationPhase=False):
@@ -99,7 +101,7 @@ class Advection_ASGS(SGE_base):
             else:
                 tau=self.tau[ci]
             for cj in range(self.nc):
-                if q.has_key(('dpdeResidual',ci,cj)):
+                if ('dpdeResidual',ci,cj) in q:
                     csubgridError.calculateSubgridError_tauRes(tau,
                                                                q[('pdeResidual',ci)],
                                                                q[('dpdeResidual',ci,cj)],
@@ -122,11 +124,11 @@ class AdvectionLag_ASGS(SGE_base):
             if self.lag:
                 self.tau_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
-                if cq.has_key(('df',ci,ci)):
+                if ('df',ci,ci) in cq:
                     self.df_last = copy.deepcopy(cq[('df',ci,ci)])
                     cq[('df_sge',ci,ci)] = self.df_last
             else:
-                if cq.has_key(('df',ci,ci)):
+                if ('df',ci,ci) in cq:
                     cq[('df_sge',ci,ci)] = cq[('df',ci,ci)]
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
     def updateSubgridErrorHistory(self,initializationPhase=False):
@@ -144,7 +146,7 @@ class AdvectionLag_ASGS(SGE_base):
                                                       self.tau[ci])
             tau=self.tau[ci]
             for cj in range(self.nc):
-                if q.has_key(('dpdeResidual',ci,cj)):
+                if ('dpdeResidual',ci,cj) in q:
                     csubgridError.calculateSubgridError_tauRes(tau,
                                                                q[('pdeResidual',ci)],
                                                                q[('dpdeResidual',ci,cj)],
@@ -165,18 +167,18 @@ class AdvectionDiffusionReaction_ASGS(SGE_base):
             if self.lag:
                 self.tau_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
-                if cq.has_key(('df',ci,ci)):
+                if ('df',ci,ci) in cq:
                     cq[('df_sge',ci,ci)] = copy.deepcopy(cq[('df',ci,ci)])
-                if cq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cq:
                     cq[('dm_sge',ci,ci)] = copy.deepcopy(cq[('dm',ci,ci)])
-                if cq.has_key(('dmt',ci,ci)):
+                if ('dmt',ci,ci) in cq:
                     cq[('dmt_sge',ci,ci)] = copy.deepcopy(cq[('dmt',ci,ci)])
             else:
-                if cq.has_key(('df',ci,ci)):
+                if ('df',ci,ci) in cq:
                     cq[('df_sge',ci,ci)] = cq[('df',ci,ci)]
-                if cq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cq:
                     cq[('dm_sge',ci,ci)] = cq[('dm',ci,ci)]
-                if cq.has_key(('dmt',ci,ci)):
+                if ('dmt',ci,ci) in cq:
                     cq[('dmt_sge',ci,ci)] = cq[('dmt',ci,ci)]
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
 
@@ -269,7 +271,7 @@ class AdvectionDiffusionReaction_ASGS(SGE_base):
             else:
                 tau=self.tau[ci]
             for cj in range(self.nc):
-                if q.has_key(('dpdeResidual',ci,cj)):
+                if ('dpdeResidual',ci,cj) in q:
                     csubgridError.calculateSubgridError_tauRes(tau,
                                                                q[('pdeResidual',ci)],
                                                                q[('dpdeResidual',ci,cj)],
@@ -304,11 +306,11 @@ class FFDarcyFC_ASGS(SGE_base):
             if self.lag:
                 self.tau_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
-                if cq.has_key(('df',ci,ci)):
+                if ('df',ci,ci) in cq:
                     self.df_last = copy.deepcopy(cq[('df',ci,ci)])
                     cq[('df_sge',ci,ci)] = self.df_last
             else:
-                if cq.has_key(('df',ci,ci)):
+                if ('df',ci,ci) in cq:
                     cq[('df_sge',ci,ci)] = cq[('df',ci,ci)]
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
         self.cq=cq
@@ -454,7 +456,7 @@ class DarcyFC_ASGS(SGE_base):
 
         #'w' phase equation
         ci = 0; cj = 0; ck = 0;
-        if q.has_key(('dr',ci,cj)):
+        if ('dr',ci,cj) in q:
             self.drtmp[(ci,cj)] = q[('dr',ci,cj)]
         elif self.drtmp[(ci,cj)] is None:
             self.drtmp[(ci,cj)] = numpy.zeros(q[('r',ci)].shape,'d')
@@ -516,7 +518,7 @@ class DarcyFC_ASGS(SGE_base):
                                                                     self.tau[ci])
         #'n' phase equation
         ci = 1; cj = 0; ck = 1;
-        if q.has_key(('dr',ci,cj)):
+        if ('dr',ci,cj) in q:
             self.drtmp[(ci,cj)] = q[('dr',ci,cj)]
         elif self.drtmp[(ci,cj)] is None:
             self.drtmp[(ci,cj)] = numpy.zeros(q[('r',ci)].shape,'d')
@@ -645,18 +647,18 @@ class HamiltonJacobiDiffusionReaction_ASGS(SGE_base):
             if self.lag:
                 self.tau_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
-                if cq.has_key(('dH',ci,ci)):
+                if ('dH',ci,ci) in cq:
                     cq[('dH_sge',ci,ci)] = copy.deepcopy(cq[('dH',ci,ci)])
-                if cq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cq:
                     cq[('dm_sge',ci,ci)] = copy.deepcopy(cq[('dm',ci,ci)])
-                if cq.has_key(('dmt',ci,ci)):
+                if ('dmt',ci,ci) in cq:
                     cq[('dmt_sge',ci,ci)] = copy.deepcopy(cq[('dmt',ci,ci)])
             else:
-                if cq.has_key(('dH',ci,ci)):
+                if ('dH',ci,ci) in cq:
                     cq[('dH_sge',ci,ci)] = cq[('dH',ci,ci)]
-                if cq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cq:
                     cq[('dm_sge',ci,ci)] = cq[('dm',ci,ci)]
-                if cq.has_key(('dmt',ci,ci)):
+                if ('dmt',ci,ci) in cq:
                     cq[('dmt_sge',ci,ci)] = cq[('dmt',ci,ci)]
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
 
@@ -750,7 +752,7 @@ class HamiltonJacobiDiffusionReaction_ASGS(SGE_base):
             else:
                 tau=self.tau[ci]
             for cj in range(self.nc):
-                if q.has_key(('dpdeResidual',ci,cj)):
+                if ('dpdeResidual',ci,cj) in q:
                     csubgridError.calculateSubgridError_tauRes(tau,
                                                                q[('pdeResidual',ci)],
                                                                q[('dpdeResidual',ci,cj)],
@@ -953,7 +955,7 @@ class NavierStokesASGS_velocity_pressure(SGE_base):
                 self.tau_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
                 for cj in range(self.nc):
-                    if cq.has_key(('df',ci,cj)):
+                    if ('df',ci,cj) in cq:
                         if ci ==0:
                             cq[('df_sge',ci,cj)]=cq[('df',ci,cj)]
                         else:
@@ -965,7 +967,7 @@ class NavierStokesASGS_velocity_pressure(SGE_base):
                                 cq[('df_sge',ci,cj)] = numpy.zeros(cq[('df',ci,cj)].shape,'d')
             else:
                 for cj in range(self.nc):
-                    if cq.has_key(('df',ci,cj)):
+                    if ('df',ci,cj) in cq:
                         cq[('df_sge',ci,cj)]=cq[('df',ci,cj)]
                 self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
         for ci,ckDict in self.coefficients.diffusion.iteritems():
@@ -1011,7 +1013,7 @@ class NavierStokesASGS_velocity_pressure(SGE_base):
 #                         if ci != 0:
 #                             self.cq[('df_sge',ci,cj)][:] = self.cq[('df',ci,cj)]
     def calculateSubgridError(self,q):
-        import LinearAlgebraTools
+        from . import LinearAlgebraTools
         oldTau=True
         if self.nd == 2:
             if self.lag and self.nSteps < self.delayLagSteps:
@@ -1259,7 +1261,7 @@ class NavierStokesWithBodyForceASGS_velocity_pressure(NavierStokesASGS_velocity_
         self.q_dmt_r = numpy.zeros(cq[('dmt',1,1)].shape,'d')
 
     def calculateSubgridError(self,q):
-        import LinearAlgebraTools
+        from . import LinearAlgebraTools
         oldTau=True
         self.q_dmt_r.flat[:] = q[('dmt',1,1)].flat
         self.q_dmt_r += q[('dr',1,1)]
@@ -1822,7 +1824,7 @@ class AdvectionDiffusionReactionTransientSubscales_ASGS(AdvectionDiffusionReacti
                                                                                                                                                                                      tau.max()/dt)
                 #
             for cj in range(self.nc):
-                if q.has_key(('dpdeResidual',ci,cj)):
+                if ('dpdeResidual',ci,cj) in q:
                     csubgridError.calculateSubgridError_tauRes(tau,
                                                                q[('pdeResidual',ci)],
                                                                q[('dpdeResidual',ci,cj)],
@@ -1885,25 +1887,25 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS(SGE_base):
             self.subgridTmp_ip.append(numpy.zeros(cip[('u',ci)].shape,'d'))
             self.grad_u_last.append(numpy.zeros(cq[('grad(u)',ci)].shape,'d'))
             if self.lag:
-                if cip.has_key(('df',ci,ci)):
+                if ('df',ci,ci) in cip:
                     cip[('df_sge',ci,ci)] = copy.deepcopy(cip[('df',ci,ci)])
-                if cip.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cip:
                     cip[('dm_sge',ci,ci)] = copy.deepcopy(cip[('dm',ci,ci)])
-                if cip.has_key(('dmt',ci,ci)):
+                if ('dmt',ci,ci) in cip:
                     cip[('dmt_sge',ci,ci)] = copy.deepcopy(cip[('dmt',ci,ci)])
                 #
-                if cq.has_key(('df',ci,ci)):
+                if ('df',ci,ci) in cq:
                     cq[('df_sge',ci,ci)] = copy.deepcopy(cq[('df',ci,ci)])
-                if cq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cq:
                     cq[('dm_sge',ci,ci)] = copy.deepcopy(cq[('dm',ci,ci)])
-                if cq.has_key(('dmt',ci,ci)):
+                if ('dmt',ci,ci) in cq:
                     cq[('dmt_sge',ci,ci)] = copy.deepcopy(cq[('dmt',ci,ci)])
             else:
-                if cip.has_key(('df',ci,ci)):
+                if ('df',ci,ci) in cip:
                     cip[('df_sge',ci,ci)] = cip[('df',ci,ci)]
-                if cip.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cip:
                     cip[('dm_sge',ci,ci)] = cip[('dm',ci,ci)]
-                if cip.has_key(('dmt',ci,ci)):
+                if ('dmt',ci,ci) in cip:
                     cip[('dmt_sge',ci,ci)] = cip[('dmt',ci,ci)]
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             for ck,cjDict in ckDict.iteritems():
@@ -1964,9 +1966,9 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS(SGE_base):
             #self.strongResidualInterpolant[ci].projectFromInterpolationConditions(self.cip[('m',ci)]/self.timeIntegration.dt)
             #self.strongResidualInterpolant[ci].projectFromInterpolationConditions(self.cip[('r',ci)])
             self.subgridTmp_ip[ci].fill(0.0)
-            if self.cip.has_key(('mt',ci)):
+            if ('mt',ci) in self.cip:
                 self.subgridTmp_ip[ci] += self.cip[('mt',ci)]
-            if self.cip.has_key(('r',ci)):
+            if ('r',ci) in self.cip:
                 self.subgridTmp_ip[ci] += self.cip[('r',ci)]
             self.strongResidualInterpolant[ci].projectFromInterpolationConditions(self.subgridTmp_ip[ci])
     def calculateSubgridError(self,q):
@@ -2022,7 +2024,7 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS(SGE_base):
                 tau_gradient.fill(self.tau_11_force)
 
             for cj in range(self.nc):
-                if q.has_key(('dpdeResidual',ci,cj)):
+                if ('dpdeResidual',ci,cj) in q:
                     csubgridError.calculateSubgridError_tauRes(tau,
                                                                q[('pdeResidual',ci)],
                                                                q[('dpdeResidual',ci,cj)],
@@ -2040,7 +2042,7 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS(SGE_base):
                 q[('grad(pdeResidual)',ci)]        -= self.grad_u_last[ci]
                 q[('grad(pdeResidual)',ci)]        /= self.timeIntegration.dt
                 for cj in range(self.nc):
-                    if q.has_key(('dpdeResidual',ci,cj)):
+                    if ('dpdeResidual',ci,cj) in q:
                         csubgridError.calculateSubgridErrorGradient_tauRes(tau_gradient,
                                                                            q[('grad(pdeResidual)',ci)],
                                                                            q[('grad(subgridError)',ci)])
@@ -2159,9 +2161,9 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
                 self.subgridTmp_ip[ci] /= self.timeIntegration.dt
             else:
                 self.subgridTmp_ip[ci].fill(0.0)
-                if self.cip.has_key(('mt',ci)):
+                if ('mt',ci) in self.cip:
                     self.subgridTmp_ip[ci] += self.cip[('mt',ci)]
-                if self.cip.has_key(('r',ci)):
+                if ('r',ci) in self.cip:
                     self.subgridTmp_ip[ci] += self.cip[('r',ci)]
             if self.includeSubgridScalesInGradientStabilization:
                 #unless accumulate subgrid term has been callled this will miss old subgrid mass
@@ -2242,7 +2244,7 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
 
             if self.trackSubScales:
                 #mwf debug
-                print "HaukeSangalli_ASGS trackScales tau[ci].max= %s " % (tau[ci].max())
+                print("HaukeSangalli_ASGS trackScales tau[ci].max= %s " % (tau[ci].max()))
                 #
                 #would be nice to have dt^{n+1} alone, try to get this from timeIntegration directly?
                 dt = self.timeIntegration.dt
@@ -2263,7 +2265,7 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
 
             #
             for cj in range(self.nc):
-                if q.has_key(('dpdeResidual',ci,cj)):
+                if ('dpdeResidual',ci,cj) in q:
                     csubgridError.calculateSubgridError_tauRes(tau,
                                                                q[('pdeResidual',ci)],
                                                                q[('dpdeResidual',ci,cj)],
@@ -2273,7 +2275,7 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
 
             if self.trackSubScales:
                 for cj in range(self.nc):
-                    if self.cip.has_key(('dpdeResidual',ci,cj)):
+                    if ('dpdeResidual',ci,cj) in self.cip:
                         csubgridError.calculateSubgridError_tauRes(tau_ip,
                                                                    self.cip[('pdeResidual',ci)],
                                                                    self.cip[('dpdeResidual',ci,cj)],
@@ -2293,7 +2295,7 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
             self.strongResidualInterpolant[ci].getGradientValues(q[('grad(v)',ci)],
                                                                  q[('grad(pdeResidual)',ci)])
             for cj in range(self.nc):
-                if q.has_key(('dpdeResidual',ci,cj)):
+                if ('dpdeResidual',ci,cj) in q:
                     csubgridError.calculateSubgridErrorGradient_tauRes(tau_gradient,
                                                                        q[('grad(pdeResidual)',ci)],
                                                                        q[('grad(subgridError)',ci)])
@@ -2398,14 +2400,14 @@ class NavierStokesTransientSubScalesASGS_velocity_pressure(NavierStokesASGS_velo
                 self.subgridError_last.append(None)
                 self.subgridErrorMassCoef_last.append(None)
             if self.lag:
-                if cq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cq:
                     cq[('dm_sge',ci,ci)] = copy.deepcopy(cq[('dm',ci,ci)])
-                if cq.has_key(('dmt',ci,ci)):
+                if ('dmt',ci,ci) in cq:
                     cq[('dmt_sge',ci,ci)] = copy.deepcopy(cq[('dmt',ci,ci)])
             else:
-                if cq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cq:
                     cq[('dm_sge',ci,ci)] = cq[('dm',ci,ci)]
-                if cq.has_key(('dmt',ci,ci)):
+                if ('dmt',ci,ci) in cq:
                     cq[('dmt_sge',ci,ci)] = cq[('dmt',ci,ci)]
     def initializeTimeIntegration(self,timeIntegration):
         """
@@ -2455,7 +2457,7 @@ class NavierStokesTransientSubScalesASGS_velocity_pressure(NavierStokesASGS_velo
 
 
     def calculateSubgridError(self,q):
-        import LinearAlgebraTools
+        from . import LinearAlgebraTools
         oldTau=True
         if self.nd == 2:
             if self.lag and self.nSteps < self.delayLagSteps:
@@ -2615,7 +2617,7 @@ class NavierStokesTransientSubScalesASGS_velocity_pressure(NavierStokesASGS_velo
                 q[('dsubgridError',0,2)][:]=0.0
             #
             for ci in range(self.nc):
-                if q.has_key(('mt',ci)):
+                if ('mt',ci) in q:
                     logEvent("NS_ASGS trackSubScales calculateSubgridError mt[%s] max= %s min=%s  " % (ci,q[('mt',ci)].max(),q[('mt',ci)].min()),1)
                 logEvent("NS_ASGS trackSubScales calculateSubgridError pdeResidual[%s] max= %s min=%s  " % (ci,q[('pdeResidual',ci)].max(),q[('pdeResidual',ci)].min()),1)
 
@@ -2623,7 +2625,7 @@ class NavierStokesTransientSubScalesASGS_velocity_pressure(NavierStokesASGS_velo
                 if self.trackSubScales:
                     logEvent("NS_ASGS trackSubScales calculateSubgridError subgridError_last[%s] max= %s min=%s  " % (ci,self.subgridError_last[ci].max(),self.subgridError_last[ci].min()),1)
                 for cj in range(self.nc):
-                    if q.has_key(('df_sge',ci,cj)):
+                    if ('df_sge',ci,cj) in q:
                         logEvent("NS_ASGS trackSubScales calculateSubgridError df_sge %s %s max= %s min=%s  " % (ci,cj,q[('df_sge',ci,cj)].max(),q[('df_sge',ci,cj)].min()),1)
 
 

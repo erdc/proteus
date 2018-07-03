@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
 from math import *
-from risingBubble import *
+from .risingBubble import *
 from proteus.mprans import RDLS3P
 """
 The redistancing equation in the sloshbox test problem.

@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus.default_p import *
 from proteus.mprans import MCorr
-from multiphase import *
+from .multiphase import *
 
 LevelModelType = MCorr.LevelModel
 coefficients = MCorr.Coefficients(LSModel_index=int(movingDomain)+2,

@@ -1,4 +1,5 @@
 """ Helper functions commonly used in tests. """
+from __future__ import print_function
 
 import os
 import sys
@@ -221,20 +222,20 @@ class NumericResults:
 
     def print_info(self):
         """ Output a variety of information about the data-structure """
-        print " **** HEADER INFORMATION ****"
+        print(" **** HEADER INFORMATION ****")
         for key in self.data_dictionary_header.keys():
             if key == 'Petsc':
                 self._print_petsc_info()
             else:
-                print `key` + '   :   ' + `self.data_dictionary_header[key]`
-        print " *** VALID KEYS ***"
+                print(repr(key) + '   :   ' + repr(self.data_dictionary_header[key]))
+        print(" *** VALID KEYS ***")
         for key in self.data_dictionary.keys():
-            print `key`
+            print(repr(key))
 
     def _print_petsc_info(self):
         """ Prints the settings given in the PETSc command line """
         for term in self.data_dictionary_header['Petsc']:
-            print term
+            print(term)
 
     def print_header_latex(self):
         """ Prints the header information in a latex consistent format """
@@ -302,11 +303,11 @@ class NumericResults:
                         plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0])
                         legend.append((data_set[0],data_set[1]))
                     else:
-                        print 'The third key ' + `data_set[1]` + ' is not valid.'
+                        print('The third key ' + repr(data_set[1]) + ' is not valid.')
                 else:
-                    print 'The second key ' + `data_set[1]` + ' is not valid.'
+                    print('The second key ' + repr(data_set[1]) + ' is not valid.')
             else:
-                print 'The first key ' + `data_set[1]` + ' is not valid.'
+                print('The first key ' + repr(data_set[1]) + ' is not valid.')
 
         if user_legend is True:
             legend = user_legend
@@ -338,11 +339,11 @@ class NumericResults:
                         result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0]))
                         return_data.append(result)
                     else:
-                        print 'The third key ' + data_set[2] + 'is not valid.'
+                        print('The third key ' + data_set[2] + 'is not valid.')
                 else:
-                    print 'The second key ' + `data_set[1]` + 'is not valid.'
+                    print('The second key ' + repr(data_set[1]) + 'is not valid.')
             else:
-                print 'The first key ' + `data_set[0]` + 'is not valid.'
+                print('The first key ' + repr(data_set[0]) + 'is not valid.')
         return return_data
             
     def ipython_plot_ksp_residual(self,
@@ -371,13 +372,13 @@ class NumericResults:
                             plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]][0])
                             legend.append((data_set[0],data_set[1],data_set[2]))
                         else:
-                            print 'The fourth key ' + `data_set[3]` + ' is not valid.'
+                            print('The fourth key ' + repr(data_set[3]) + ' is not valid.')
                     else:
-                        print 'The third key ' + `data_set[1]` + ' is not valid.'
+                        print('The third key ' + repr(data_set[1]) + ' is not valid.')
                 else:
-                    print 'The second key ' + `data_set[1]` + ' is not valid.'
+                    print('The second key ' + repr(data_set[1]) + ' is not valid.')
             else:
-                print 'The first key ' + `data_set[1]` + ' is not valid.'
+                print('The first key ' + repr(data_set[1]) + ' is not valid.')
 
         if user_legend!=False:
             legend = user_legend
@@ -411,13 +412,13 @@ class NumericResults:
                             result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]][0]))
                             return_data.append(result)
                         else:
-                            print 'The fourth key ' + `data_set[3]` + ' is not valid.'
+                            print('The fourth key ' + repr(data_set[3]) + ' is not valid.')
                     else:
-                        print 'The third key ' + `data_set[2]` + 'is not valid.'
+                        print('The third key ' + repr(data_set[2]) + 'is not valid.')
                 else:
-                    print 'The second key ' + `data_set[1]` + 'is not valid.'
+                    print('The second key ' + repr(data_set[1]) + 'is not valid.')
             else:
-                print 'The first key ' + `data_set[0]` + 'is not valid.'
+                print('The first key ' + repr(data_set[0]) + 'is not valid.')
 
         return return_data
 
@@ -441,13 +442,13 @@ class NumericResults:
                     if data_set[3] in self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys():
                         return_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]][0])
                     else:
-                        print 'The fourth key ' + `data_set[3]` + ' is not valid.'
+                        print('The fourth key ' + repr(data_set[3]) + ' is not valid.')
                 else:
-                    print 'The third key ' + `data_set[2]` + ' is not valid.'
+                    print('The third key ' + repr(data_set[2]) + ' is not valid.')
             else:
-                print 'The second key ' + `data_set[1]` + ' is not valid.'
+                print('The second key ' + repr(data_set[1]) + ' is not valid.')
         else:
-            print 'The first key ' + `data_set[0]` + ' is not valid.'
+            print('The first key ' + repr(data_set[0]) + ' is not valid.')
         return return_data[0]
 
     def ipython_plot_ksp_schur_residual(self,time_level_it,axis=False):
@@ -470,11 +471,11 @@ class NumericResults:
                             plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]])
                             legend.append((data_set[0],data_set[1],data_set[2],data_set[3]))
                     else:
-                        print 'The third key ' + `data_set[1]` + ' is not valid.'
+                        print('The third key ' + repr(data_set[1]) + ' is not valid.')
                 else:
-                    print 'The second key ' + `data_set[1]` + ' is not valid.'
+                    print('The second key ' + repr(data_set[1]) + ' is not valid.')
             else:
-                print 'The first key ' + `data_set[1]` + ' is not valid.'
+                print('The first key ' + repr(data_set[1]) + ' is not valid.')
             
         if axis!=False:
             self._init_ipython_plot(plot_data,legend,title,axis_inline)

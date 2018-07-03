@@ -1,9 +1,13 @@
 """
 Incompressible Navier-Stokes flow around a cylinder in 2D.
 """
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
-from cavity2d import *
+try:
+    from .cavity2d import *
+except:
+    from cavity2d import *
 from proteus.mprans import RANS2P
 
 bcsTimeDependent = True

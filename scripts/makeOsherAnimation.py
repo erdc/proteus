@@ -1,3 +1,4 @@
+from __future__ import print_function
 ## Automatically adapted for numpy.oldnumeric Apr 14, 2008 by -c
 
 import sys
@@ -7,7 +8,7 @@ import numpy as numpy
 """
 Script to creat an animation of Osher solution dat file
 """
-print "Making animations"
+print("Making animations")
 
 datFile = sys.argv[1]
 totalNumberOfIndex = int(sys.argv[2])
@@ -44,5 +45,5 @@ while(i < 1000000):
     i = i + 1
 
 Convert = 'convert -loop 1 *MakeAnimations.eps OsherAnimation.gif'
-print Convert
+print(Convert)
 os.system(Convert)

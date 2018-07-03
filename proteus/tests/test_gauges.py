@@ -1,3 +1,4 @@
+from __future__ import print_function
 from math import ceil, sqrt, pow
 
 import os
@@ -296,7 +297,7 @@ def delete_file(filename):
     if os.path.exists(filename):
         try:
             os.remove(filename)
-        except OSError, e:
+        except OSError as e:
             print ("Error: %s - %s" %(e.filename,e.strerror))
         else:
             pass

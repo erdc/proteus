@@ -4,11 +4,12 @@ A class hierarchy for methods of controlling the step size
 .. inheritance-diagram:: proteus.StepControl
    :parts: 1
 """
+from __future__ import absolute_import
 from .Profiling import logEvent
 #mwf add Comm for saving info about time step in separate file
-import Comm
+from . import Comm
 from petsc4py import PETSc
-from flcbdfWrappers import globalMax
+from .flcbdfWrappers import globalMax
 
 class SC_base:
     """
@@ -551,7 +552,7 @@ class Osher_FMM_controller(Osher_controller):
      test with Fast Sweeping
     """
     def __init__(self,model,nOptions,maxOsherSteps=4):
-        import UnstructuredFMMandFSWsolvers,NonlinearSolvers
+        from . import UnstructuredFMMandFSWsolvers,NonlinearSolvers
         Osher_controller.__init__(self,model,nOptions)
         self.nStepsMax = maxOsherSteps
         self.finishWithFMM = True#False#True
@@ -706,16 +707,16 @@ class Min_dt_cfl_controller(Min_dt_controller):
         self.dt_ratio_max = 2.0
         self.cfl = {}
         for ci in range(model.levelModelList[-1].nc):
-            if model.levelModelList[-1].q.has_key(('cfl',ci)):
+            if ('cfl',ci) in model.levelModelList[-1].q:
                 self.cfl[ci] = model.levelModelList[-1].q[('cfl',ci)]
 
     def initialize_dt_model(self,t0,tOut):
-        from flcbdfWrappers import globalMax
+        from .flcbdfWrappers import globalMax
         self.saveSolution()
         m = self.model.levelModelList[-1]
         maxCFL = 1.0e-6
         for ci in range(m.nc):
-            if self.cfl.has_key(ci):
+            if ci in self.cfl:
                 maxCFL = max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt_model = self.runCFL/maxCFL
         if self.dt_model_last is None:
@@ -728,14 +729,14 @@ class Min_dt_cfl_controller(Min_dt_controller):
                                                                    self.dt_model),
             level=1)
     def choose_dt_model(self):
-        from flcbdfWrappers import globalMax
+        from .flcbdfWrappers import globalMax
         self.solverFailures=0
         self.errorFailures=0
         self.saveSolution()
         m = self.model.levelModelList[-1]
         maxCFL = 1.0e-6
         for ci in range(m.nc):
-            if self.cfl.has_key(ci):
+            if ci in self.cfl:
                 maxCFL = max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt_model = self.runCFL/maxCFL
         if self.dt_model_last is None:
@@ -1107,7 +1108,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
       Decide if retryStep_solverFailure should retry predictor as well, right now does not
     """
     def __init__(self,model,nOptions):
-        from LinearAlgebraTools import WeightedNorm
+        from .LinearAlgebraTools import WeightedNorm
         import copy
         SC_base.__init__(self,model,nOptions)
         self.nonlinearGrowthRateMax = 2    #r_a_max
@@ -1333,7 +1334,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
         if self.use_cfl_for_initial_dt:
             maxCFL = 1.0e-6
             for ci in range(m.nc):
-                if m.q.has_key(('cfl',ci)):
+                if ('cfl',ci) in m.q:
                     maxCFL=max(maxCFL,globalMax(m.q[('cfl',ci)].max()))
                     #mwf debug
                     logEvent("Gustafsson cfl initial step ci = %s maxCFL= %s " % (ci,maxCFL))
@@ -1380,7 +1381,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
         #this needs to be more general to allow not just setting based on m
         if self.errorNorm is not None:
             for ci in range(self.model.levelModelList[-1].nc):
-                if self.model.levelModelList[-1].q.has_key(('m',ci)):
+                if ('m',ci) in self.model.levelModelList[-1].q:
                     self.errorNorm[ci].setWeight(self.model.levelModelList[-1].q[('m',ci)])
     def errorFailure(self):
         #figure out how to pick error estimates, just try fine for now

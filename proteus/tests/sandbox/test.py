@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy
 #alt
 #nodes of reference hex laid out clockwise bottom to top
@@ -42,7 +43,7 @@ refQuadrilaterals = Numeric.array(refQuadrilaterals)
 #now we have lexicographically sorted reference nodes, edges, and quadrilaterals
 #we just need to map them to indeces
 ijk=Numeric.zeros((3,),Numeric.Int)
-print ijk.shape
+print(ijk.shape)
 for i in range(2):
     for j in range(2):
         for  k in range(2):
@@ -52,6 +53,6 @@ for i in range(2):
             nodeIndexes = refNodes+ijk
             edgeIndexes = refEdges+ijk
             quadrilateralIndexes = refQuadrilaterals+ijk
-            print nodeIndexes
-            print edgeIndexes
-            print quadrilateralIndexes
+            print(nodeIndexes)
+            print(edgeIndexes)
+            print(quadrilateralIndexes)

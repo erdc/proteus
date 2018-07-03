@@ -42,7 +42,7 @@ def gatherTimes(filename,dataDir='.',addname="_complete", tCount=None, global_sy
                 tCount = int(Grids[0].attrib['Name'])+1
             del TemporalGridCollection[:]
         for i in range(tCount):
-            dataset_name = TemporalGridCollection.attrib['Name']+"_"+`i`
+            dataset_name = TemporalGridCollection.attrib['Name']+"_"+repr(i)
             dataset_name = dataset_name.replace(" ","_")
             grid_array = h5File["/"+dataset_name]
             if global_sync:

@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from redist_vortex_2d_p import *
-from vortex2D import *
+from .redist_vortex_2d_p import *
+from .vortex2D import *
 
 if redist_Newton:
     timeIntegration = NoIntegration

@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 from proteus import Comm, Profiling
 import numpy as np
@@ -23,7 +24,7 @@ def remove_files(filenames):
         if os.path.exists(f):
             try:
                 os.remove(f)
-            except OSError, e:
+            except OSError as e:
                 print ("Error: %s - %s" %(e.filename,e.strerror))
         else:
             pass

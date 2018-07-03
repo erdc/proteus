@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from proteus.default_so import *
-import risingBubble
+from . import risingBubble
 
 from proteus.SplitOperator import Sequential_FixedStep_Simple, defaultSystem
 

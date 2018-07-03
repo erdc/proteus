@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus.default_p import *
 from proteus.mprans import RANS2P
-from multiphase import *
+from .multiphase import *
 import numpy as np
 
 

@@ -6,11 +6,13 @@ respects
 .. inheritance-diagram:: proteus.TriangleTools
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
 import os
 import numpy
-import triangleWrappers
-import TriangleUtils
-import TriangleFileUtils
+from . import triangleWrappers
+from . import TriangleUtils
+from . import TriangleFileUtils
 from .Profiling import logEvent
 
 class TriangleBaseMesh:
@@ -49,8 +51,8 @@ class TriangleBaseMesh:
         self.nbase  = nbase
         self.baseFlags = baseFlags
         if self.nbase == 0 and self.baseFlags.find('z') == -1:
-            print """WARNING TriangleMesh base numbering= %d
-            reqires z in baseFlags = %s, adding """ % (self.nbase,self.baseFlags)
+            print("""WARNING TriangleMesh base numbering= %d
+            reqires z in baseFlags = %s, adding """ % (self.nbase,self.baseFlags))
             self.baseFlags += "z"
         #end if
         if self.baseFlags.find('v') >= 0:
@@ -127,7 +129,7 @@ number of edges         = %d
             nodes
             elements
         """
-        import MeshTools
+        from . import MeshTools
         triInfo = triangleWrappers.getInfo(self.trirep[0])
         if verbose > 1:
             logEvent('generating proteus Mesh:')
@@ -789,7 +791,7 @@ def exProteusMesh1(baseFlags="zen",viewMesh=1,verbose=0):
     create a Triangle mesh representation
     convert the proteusMesh mesh to the Triangle mesh representation
     """
-    import MeshTools
+    from . import MeshTools
     import TriangleIface
     #simple domain for now
     Lx = 2.0
@@ -821,14 +823,14 @@ def exProteusMesh1(baseFlags="zen",viewMesh=1,verbose=0):
 def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
                         flagsAdd="",viewMesh=1,verbose=0):
     import QuadTools
-    import FemTools
+    from . import FemTools
     import TriangleIface
     import PoissonTestProblems
     import ScalarTransport
     import TimeIntegrationTools
-    import LinearAlgebraTools
-    import LinearSolvers
-    import NonlinearSolvers
+    from . import LinearAlgebraTools
+    from . import LinearSolvers
+    from . import NonlinearSolvers
 
     nbase = 0
     if baseFlags.find('z') == -1:
@@ -1212,7 +1214,7 @@ dV,x = TriangleTools.testGenerateSSIPtriangulation(points)
     nodeArray2d = triangleWrappers.getPoints(tri1)
     elementNodesArray = triangleWrappers.getTriangles(tri1)
 
-    import Quadrature,cfemIntegrals
+    from . import Quadrature,cfemIntegrals
     #try Gauss quadrature different orders
     #subElementQuadrature = Quadrature.GaussTriangle()
     #subElementQuadrature.setOrder(2)  #order(1)

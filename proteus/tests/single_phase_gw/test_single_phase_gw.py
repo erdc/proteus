@@ -9,15 +9,17 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
 import os
 import numpy as np
 import numpy.testing as npt
 
 from proteus.iproteus import *
 
-import sp_gw_p
-import sp_gw_c0p1_n
-import sp_gw_ncp1_n
+from . import sp_gw_p
+from . import sp_gw_c0p1_n
+from . import sp_gw_ncp1_n
 
 class TestSinglePhaseGW():
 
@@ -41,7 +43,7 @@ class TestSinglePhaseGW():
             if os.path.exists(f):
                 try:
                     os.remove(f)
-                except OSError, e:
+                except OSError as e:
                     print ("Error: %s - %s" %(e.filename,e.strerror))
             else:
                 pass
@@ -53,7 +55,7 @@ class TestSinglePhaseGW():
         nList = [sp_gw_c0p1_n]    
         so = default_so
         sim_name = "single_phase_gw_c0p1"
-        so.name = pList[0].name = sim_name +"pe"+`comm.size()`
+        so.name = pList[0].name = sim_name +"pe"+repr(comm.size())
         so.sList=[default_s]
         opts.logLevel=7
         opts.verbose=True
@@ -86,7 +88,7 @@ class TestSinglePhaseGW():
         nList = [sp_gw_ncp1_n]    
         so = default_so
         sim_name = "single_phase_gw_ncp1"
-        so.name = pList[0].name = sim_name +"pe"+`comm.size()`
+        so.name = pList[0].name = sim_name +"pe"+repr(comm.size())
         so.sList=[default_s]
         opts.logLevel=7
         opts.verbose=True
@@ -118,7 +120,7 @@ class TestSinglePhaseGW():
         pList[0].nDTout=1
         so = default_so
         sim_name = "single_phase_gw_c0p1"
-        so.name = pList[0].name = sim_name +"pe"+`comm.size()`
+        so.name = pList[0].name = sim_name +"pe"+repr(comm.size())
         self.aux_names.append(pList[0].name)
         so.sList=[default_s]
         opts.logLevel=7
