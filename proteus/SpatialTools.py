@@ -29,7 +29,12 @@ Example::
 
 """
 from __future__ import print_function
+from __future__ import division
 
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from math import cos, sin, sqrt
 import math
 import sys
@@ -441,9 +446,9 @@ class Cuboid(Shape):
                         self.BC['z+']]
         # self.BC = BCContainer(self.BC_dict)
         self.barycenter = np.array(barycenter) or np.array(coords)
-        self.It = np.array([[(W**2.+H**2.)/12., 0, 0],
-                            [0, (L**2.+H**2.)/12., 0],
-                            [0, 0, (W**2.+L**2.)/12.]])
+        self.It = np.array([[old_div((W**2.+H**2.),12.), 0, 0],
+                            [0, old_div((L**2.+H**2.),12.), 0],
+                            [0, 0, old_div((W**2.+L**2.),12.)]])
 
     def setDimensions(self, dim):
         """
@@ -582,8 +587,8 @@ class Sphere(Shape):
         nN+=1
 
 
-        hxi = radius/(math.sqrt(2.0)*float(nSectors));
-        heta = radius/(math.sqrt(2.0)*float(nSectors));
+        hxi = old_div(radius,(math.sqrt(2.0)*float(nSectors)));
+        heta = old_div(radius,(math.sqrt(2.0)*float(nSectors)));
     #now loop over grains
         #top half  sphere nodes
         top_nodes = {}
@@ -606,7 +611,7 @@ class Sphere(Shape):
                     y0s = (ii-nSectors)*heta
                     r0s = math.sqrt(x0s**2 + y0s**2)
                     theta0s = math.atan2(y0s,x0s)
-                    theta1s = theta0s - math.pi/4.0
+                    theta1s = theta0s - old_div(math.pi,4.0)
                     r1s = r0s
                     x1s = r1s*math.cos(theta1s)
                     y1s = r1s*math.sin(theta1s)
@@ -661,7 +666,7 @@ class Sphere(Shape):
                     y0s = (ii-nSectors)*heta
                     r0s = math.sqrt(x0s**2 + y0s**2)
                     theta0s = math.atan2(y0s,x0s)
-                    theta1s = theta0s - math.pi/4.0
+                    theta1s = theta0s - old_div(math.pi,4.0)
                     r1s = r0s
                     x1s = r1s*math.cos(theta1s)
                     y1s = r1s*math.sin(theta1s)
@@ -784,7 +789,7 @@ class Rectangle(Shape):
                         self.BC['y+'],
                         self.BC['x-']]
         # self.BC = BCContainer(self.BC_dict)
-        self.It = (L**2+H**2)/12
+        self.It = old_div((L**2+H**2),12)
 
     def setDimensions(self, dim):
         """
@@ -836,7 +841,7 @@ class Cylinder(Shape):
     def constructShape(self):
         h_offset = np.array([0., 0., self.height])
         arc = 2.*np.pi*self.radius/self.nPoints
-        ang = arc/self.radius
+        ang = old_div(arc,self.radius)
         vert = []
         facets = []
         segs = []
@@ -857,7 +862,7 @@ class Cylinder(Shape):
         for i in range(len(vert_bottom)-1):
             facets += [[[i, i+1, i+nvb+1, i+nvb]]]
         facets += [[[i+1, 0, nvb, i+1+nvb]]]  # last facet
-        self.vertices = np.vstack((vert_bottom, vert_top))-h_offset/2.+np.array(self.coords)
+        self.vertices = np.vstack((vert_bottom, vert_top))-old_div(h_offset,2.)+np.array(self.coords)
         self.segments = np.vstack((segs_bottom, segs_top))
         self.segmentFlags = np.array([1 for i in range(len(segs_bottom))]+[2 for i in range(len(segs_top))])
         self.facets = facets
@@ -900,7 +905,7 @@ class Circle(Shape):
         self.coords = xc, yc = np.array(coords)
         self.nPoints = nPoints
         self.arc=2.0*pi*self.radius/self.nPoints
-        self.ang=self.arc/self.radius
+        self.ang=old_div(self.arc,self.radius)
         verti=[]
         segm=[]
 
@@ -1010,7 +1015,7 @@ class CustomShape(Shape):
         super(CustomShape, self).__init__(domain, nd=len(vertices[0]))
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
-        self._checkFlags(boundaryTags.values())
+        self._checkFlags(list(boundaryTags.values()))
         self.boundaryTags = boundaryTags
         self.vertices = np.array(vertices)
         self.vertexFlags = np.array(vertexFlags)
@@ -1034,7 +1039,7 @@ class CustomShape(Shape):
         self.BC_list = [None]*len(boundaryTags)
         b_or = [None]*len(boundaryTags)
         self.b_or = b_or
-        for tag, flag in boundaryTags.iteritems():
+        for tag, flag in boundaryTags.items():
             b_i = flag-1  # start at index 0
             if boundaryOrientations is not None:
                 b_or[b_i] = boundaryOrientations[tag]
@@ -1223,15 +1228,15 @@ def rotation3D(points, rot, axis=(0., 0., 1.), pivot=(0., 0., 0.)):
     # make axis a unity vector
     axis = np.array(axis)
     r = np.linalg.norm(axis)
-    axis = axis/r
+    axis = old_div(axis,r)
     # get values for rotation matrix
     cx, cy, cz = axis
     d = sqrt(cy**2+cz**2)
     # rotation matrices
     if d != 0:
         Rx = np.array([[1,         0,        0,    0],
-                       [0,         cz/d,     cy/d, 0],
-                       [0,         -cy/d,    cz/d, 0],
+                       [0,         old_div(cz,d),     old_div(cy,d), 0],
+                       [0,         old_div(-cy,d),    old_div(cz,d), 0],
                        [0,         0,        0,    1]])
     else:  # special case: rotation axis aligned with x axis
         Rx = np.array([[1,         0,        0,    0],
@@ -1325,7 +1330,7 @@ def _assembleGeometry(domain, BC_class):
         start_facet = shape.start_facet = len(domain.facets)
         if shape.boundaryTags:
             shape.boundaryTags_global = {}
-            for tag, value in shape.boundaryTags.iteritems():
+            for tag, value in shape.boundaryTags.items():
                 new_tag = shape.name+'_'+str(tag)
                 new_flag = value+start_flag
                 domain.boundaryTags[new_tag] = new_flag
@@ -1425,7 +1430,7 @@ def _assembleGeometry(domain, BC_class):
                 if type(facets_again) is np.ndarray:
                     facets_again = facets_again.tolist()
                 for i, facet in enumerate(facets_again):
-                    if i in shape.children.keys():
+                    if i in list(shape.children.keys()):
                         for child in shape.children[i]:
                             child_seg = {}
                             child_facs = deepcopy(child.facets)
@@ -1609,5 +1614,5 @@ def extrude2Dto3D(extrusion, vertices, segments, facets, regions=None):
     regions_extruded = copy.deepcopy(regions)
     if regions is not None:
         for region in regions_extruded:
-            region += extrusion/2.
+            region += old_div(extrusion,2.)
     return vertices, segments, facets, regions_extruded

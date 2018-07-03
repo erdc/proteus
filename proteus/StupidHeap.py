@@ -5,7 +5,11 @@ A stupid implementation of a heap for fast marching methods
    :parts: 1
 """
 from __future__ import print_function
-class StupidHeap:
+from __future__ import division
+from builtins import range
+from builtins import object
+from past.utils import old_div
+class StupidHeap(object):
     """
     Min Heap
 
@@ -90,7 +94,7 @@ class StupidHeap:
         """
         assert pos >= 0 and pos < len(self.heap)
         K = 0; V = 1;
-        Ppos = int((pos-1)/2)
+        Ppos = int(old_div((pos-1),2))
         if Ppos < 0 or self.heap[Ppos][V] < self.heap[pos][V]:
             return
         #switch with parent
@@ -140,7 +144,7 @@ class StupidHeap:
 
     def checkHeap(self):
         K = 0; V=1;
-        for i in range(len(self.heap)/2):
+        for i in range(old_div(len(self.heap),2)):
             assert self.heap[i][V] <= self.heap[2*i+1][V], "failed node %d = %s left child %d =  %s " (i,self.heap[i],
                                                                                                        2*i+1,
                                                                                                        self.heap[2*i+1])

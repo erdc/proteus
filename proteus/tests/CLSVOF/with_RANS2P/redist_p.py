@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 from proteus.default_p import *
 from proteus.mprans import RDLS
 from .multiphase import *
@@ -20,7 +21,7 @@ weakDirichletConditions = {0:RDLS.setZeroLSweakDirichletBCsSimple}
 advectiveFluxBoundaryConditions =  {}
 diffusiveFluxBoundaryConditions = {0:{}}
 
-class PerturbedSurface_phi:       
+class PerturbedSurface_phi(object):       
     def uOfXT(self,x,t):
         return signedDistance(x)
     

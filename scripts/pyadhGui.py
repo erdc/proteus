@@ -13,10 +13,17 @@
 #
 #
 from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import input
+from builtins import range
+from past.utils import old_div
 import os
 import sys
 import socket
-import cPickle
+import pickle
 import numpy as numpy
 print(sys.path)
 from proteus import *
@@ -264,7 +271,7 @@ def proteusRun(runRoutine):
                 runRoutine(pName,p,n,opts,simFlags)
         os.chdir('../../')
     if opts.viewer and (comm.rank()==0):
-        raw_input('\nPress return to close windows and exit... \n')
+        input('\nPress return to close windows and exit... \n')
         if Viewers.viewerType == 'matlab':
             Viewers.viewerPipe.write("quit \n")
         #matlab
@@ -286,7 +293,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
             else:
                 elementQuadratureDict[I] = n.elementQuadrature['default']
         #mwf include nodal quadrature if n file asks for it?
-        if 'NodalQuadrature' in n.elementQuadrature.keys():
+        if 'NodalQuadrature' in list(n.elementQuadrature.keys()):
             elementQuadratureDict['NodalQuadrature'] = n.elementQuadrature['NodalQuadrature']
     else:
         for I in p.coefficients.elementIntegralKeys:
@@ -310,7 +317,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
             else:
                 elementQuadratureDict[('numDiff',ci,ci)] = n.elementQuadrature
     if n.massLumping:
-        for ci in p.coefficients.mass.keys():
+        for ci in list(p.coefficients.mass.keys()):
             elementQuadratureDict[('m',ci)] = Quadrature.SimplexLobattoQuadrature(p.nd,1)
         for I in p.coefficients.elementIntegralKeys:
             elementQuadratureDict[('stab',)+I[1:]] = Quadrature.SimplexLobattoQuadrature(p.nd,1)
@@ -603,7 +610,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
                     mlTransport.modelList[i].viewSolution(titleModifier=': Initial Condition')
                     mlTransport.modelList[i].saveSolution()
                     if opts.wait:
-                        raw_input('\nPress return to close windows and exit... \n')
+                        input('\nPress return to close windows and exit... \n')
                 #mwf undo plots so not in new window?
                 Viewers.windowNumber -= len(mlTransport.modelList)
         if opts.ensight:
@@ -650,13 +657,13 @@ def runProblem(pName,p,n,opts,simFlags=None):
             ctemp=mlTransport.modelList[-1].coefficients.allocateDummyCoefficients(c=mlTransport.modelList[-1].q)
             mlTransport.modelList[-1].coefficients.plotCoefficientFunctions(mlTransport.modelList[-1].T,ctemp)
         timeValues = [tn]
-        dt = p.T/n.nDTout
+        dt = old_div(p.T,n.nDTout)
         #mwf debug
         print("""proteusRun T=%g nDTout= %d dt=%g """ % (p.T,n.nDTout,dt))
         failedFlag=False
         while (tn < p.T and not failedFlag==True):
             if opts.wait:
-                raw_input('\nPress return to continue... \n')
+                input('\nPress return to continue... \n')
 
             #mwf debug
             print("""proteusRun tn=%g dt=%g """ % (tn,dt))

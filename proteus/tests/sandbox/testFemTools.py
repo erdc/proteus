@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from MeshTools import *
 from FemTools import *
 import numpy
@@ -17,7 +20,7 @@ def getEdgeNodesInPhysicalSpace(p0,p1,order):
     if order == 2:
         edgeRefNodes = (0.0,1.0,0.5)
     elif order == 3:
-        edgeRefNodes = (0.0,1.0,1.0/3.0,2.0/3.0)
+        edgeRefNodes = (0.0,1.0,old_div(1.0,3.0),old_div(2.0,3.0))
     elif order == 4:
         edgeRefNodes = (0.0,1.0,0.25,0.5,0.75)
     else: #default is k=1
@@ -226,7 +229,7 @@ if __name__ == '__main__':
 
     if verboseLevel > 0:
         print("DG1 dofMap l2g is ")
-        for i in xrange(dgDofMap.l2g.shape[0]):
+        for i in range(dgDofMap.l2g.shape[0]):
             sn = '\t %d %d %d' % tuple(dgDofMap.l2g[i,:])
             print(sn)
         #end for i

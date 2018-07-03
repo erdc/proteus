@@ -6,8 +6,13 @@ Class hierarchies for working with minimization problems
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
 #John Chrispell, Summer 07
-class ObjectiveFunction_base:
+from builtins import input
+from builtins import range
+from past.utils import old_div
+from builtins import object
+class ObjectiveFunction_base(object):
     def __init__(self,LHS_x,RHS_x):
         self.LHS_x=LHS_x
         self.RHS_x=RHS_x
@@ -15,7 +20,7 @@ class ObjectiveFunction_base:
         F=0.0
         return F
 
-class MinAlgo_base:
+class MinAlgo_base(object):
     """
     This is the base class for the minimization algorthms class,
     and can be used to find the min of a 1-D function.
@@ -147,7 +152,7 @@ if __name__ == '__main__':
     # Test parameters
     LHS_x   = -1.0
     RHS_x   = 2.0
-    Guess_x = (RHS_x + LHS_x)/2.0
+    Guess_x = old_div((RHS_x + LHS_x),2.0)
     Tol     = 1e-6
     RefnVal = 100
 
@@ -162,7 +167,7 @@ if __name__ == '__main__':
 
     # ------ Plotting ------- #
     xLeft=LHS_x
-    dx = (abs(RHS_x-LHS_x))/RefnVal
+    dx = old_div((abs(RHS_x-LHS_x)),RefnVal)
     xVec=[]
     fVec=[]
     for i in range(RefnVal+1):
@@ -180,6 +185,6 @@ if __name__ == '__main__':
     g.xlabel('x')
     g.ylabel('f(x)')
     g.plot(d, dmin)
-    raw_input('Please press return to continue...\n')
+    input('Please press return to continue...\n')
 
     print("Minimum at (x,f(x)) = (",xmin,",",fmin,")")

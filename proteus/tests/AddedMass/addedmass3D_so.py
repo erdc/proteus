@@ -3,12 +3,15 @@ Split operator module for two-phase flow
 """
 from __future__ import absolute_import
 
+from builtins import range
 import os
 from proteus.default_so import *
 from proteus import Context
 from importlib import import_module
-from . import addedmass3D
-
+try:
+    from . import addedmass3D
+except:
+    import addedmass3D
 # Create context from main module
 name_so = os.path.basename(__file__)
 if '_so.py' in name_so[-6:]:

@@ -1,4 +1,8 @@
 from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from . import blockDomain
@@ -71,7 +75,7 @@ def noFlowBCs(x,tag):
     if tag == boundaryTags['left'] and x[1] < L[1]*0.75:
         return lambda x,t: 0.0
 
-class velEx:
+class velEx(object):
     def __init__(self,duex,aex):
         self.duex = duex
         self.aex = aex
@@ -114,7 +118,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                          hamiltonian,
                          useSparseDiffusion=True,
                          sparseDiffusionTensors={0:(numpy.arange(start=0,stop=nd**2+1,step=nd,dtype='i'),
-                                                  numpy.array([range(nd) for row in range(nd)],dtype='i').flatten())})
+                                                  numpy.array([list(range(nd)) for row in range(nd)],dtype='i').flatten())})
     def initializeMesh(self,mesh):
         self.elementMaterialTypes = mesh.elementMaterialTypes
         self.exteriorElementBoundaryTypes =  numpy.zeros((mesh.nExteriorElementBoundaries_global),'i')
@@ -161,7 +165,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                 x = cebq_global['x'][ebN,k];
                                 numer = 2.0*self.a_types[material_left](x,t)[i,j]*self.a_types[material_right](x,t)[i,j]
                                 denom = self.a_types[material_left](x,t)[i,j] + self.a_types[material_right](x,t)[i,j] + 1.0e-20
-                                cebq_global[('a',ci,ci)][eN,k,i*nd+j] = numer/denom
+                                cebq_global[('a',ci,ci)][eN,k,i*nd+j] = old_div(numer,denom)
             for eN in range(cebq['x'].shape[0]):
                 for ebN_local in range(cebq['x'].shape[1]):
                     ebN = self.elementBoundariesArray[eN,ebN_local]
@@ -177,7 +181,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                 for j in range(nd):
                                     numer = 2.0*self.a_types[material_left](x,t)[i,j]*self.a_types[material_right](x,t)[i,j]
                                     denom = self.a_types[material_left](x,t)[i,j] + self.a_types[material_right](x,t)[i,j] + 1.0e-20
-                                    cebq[('a',ci,ci)][eN,ebN_local,k,i*nd+j] = numer/denom
+                                    cebq[('a',ci,ci)][eN,ebN_local,k,i*nd+j] = old_div(numer,denom)
                     #
                 #
             #

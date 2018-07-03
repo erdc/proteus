@@ -1,4 +1,8 @@
 from __future__ import print_function
+from __future__ import division
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import os
 
 from proteus.Domain import InterpolatedBathymetryDomain
@@ -11,7 +15,7 @@ import pytest
 @pytest.mark.MeshTools
 @pytest.mark.Archiver
 @pytest.mark.Domain
-class TestInterpolatedBathy():
+class TestInterpolatedBathy(object):
     """ Runs a set of tests for Interpolated Bathymetry"""
     
     @classmethod
@@ -46,8 +50,8 @@ class TestInterpolatedBathy():
         from math import sin,cos,pi,sqrt,exp
         #set up a fake LiDAR point set
         nPoints_x = nPoints_y = 21
-        delta_x = 2.0/float(nPoints_x-1)
-        delta_y = 2.0/float(nPoints_y-1)
+        delta_x = old_div(2.0,float(nPoints_x-1))
+        delta_y = old_div(2.0,float(nPoints_y-1))
         bathy = np.zeros((nPoints_x*nPoints_y,3),'d')
         for i in range(nPoints_y):
             for j in range(nPoints_x):

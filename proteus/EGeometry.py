@@ -5,6 +5,9 @@ A simple implementation of basic 3D Euclidean Geometry
    :parts: 1
 """
 from __future__ import print_function
+from __future__ import division
+from builtins import zip
+from past.utils import old_div
 import math
 from math import *
 import numpy
@@ -243,10 +246,10 @@ def adj(t):
     return trans(cof(t))
 
 def einv(t):
-    return eadj(t)/edet(t)
+    return old_div(eadj(t),edet(t))
 
 def inv(t):
-    return adj(t)/det(t)
+    return old_div(adj(t),det(t))
 
 def etenten(r,t):
     tt = etrans(t)
@@ -307,8 +310,8 @@ if __name__=='__main__':
     print('u + v = '+repr(u+v))
     print('2.0*u = '+repr(2.0*u))
     print('u*2.0 = '+repr(u*2.0))
-    print('u/2.0 = '+repr(u/2.0))
-    print('2.0/u = '+repr(2.0/u))
+    print('u/2.0 = '+repr(old_div(u,2.0)))
+    print('2.0/u = '+repr(old_div(2.0,u)))
     print('-u = '+repr(-u))
     print('2.0*u + v  = ' + repr(2.0*u+v))
     print('u - v = '+repr(u-v))

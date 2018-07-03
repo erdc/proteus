@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from .rotation2D import *
@@ -19,7 +20,7 @@ coefficients = MCorr.Coefficients(applyCorrection=applyCorrection,
                                   nd=nd,
                                   useMetrics=useMetrics)
 
-class zero_phi:
+class zero_phi(object):
     def __init__(self):
         pass
     def uOfX(self,X):

@@ -10,6 +10,7 @@ This module solves equations of the form
 
 """
 from __future__ import print_function
+from builtins import object
 from proteus.iproteus import *
 import os
 import numpy as np
@@ -19,7 +20,7 @@ from . import re_gl_6_3d_n
 from . import sm_gl_6_3d_p
 from . import sm_gl_6_3d_n
 
-class TestRichards():
+class TestRichards(object):
 
     @classmethod
     def setup_class(cls):

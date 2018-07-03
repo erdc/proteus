@@ -6,6 +6,14 @@ Tools for creating and manipulating 1,2, and 3D meshes.
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import input
+from builtins import zip
+from builtins import next
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from .EGeometry import *
 import numpy as np
 import array
@@ -13,7 +21,7 @@ from .Archiver import *
 from .LinearAlgebraTools import ParVec_petsc4py
 from .Profiling import logEvent,memory
 
-class Node:
+class Node(object):
     """A numbered point in 3D Euclidean space
 
     :ivar N: node number
@@ -71,7 +79,7 @@ class Node:
         return  (self.p[X],self.p[Y],self.p[Z]) >= \
                (other.p[X],other.p[Y],other.p[Z])
 
-class Element:
+class Element(object):
     """An numbered polytope in R^n
 
     :ivar N: element number
@@ -114,23 +122,23 @@ class Edge(Element):
             self.basis = [self.nodes[1].p - self.nodes[0].p,
                           Edge.yUnitVector,
                           Edge.zUnitVector]
-            self.barycenter = (self.nodes[0].p + self.nodes[1].p)/2.0
+            self.barycenter = old_div((self.nodes[0].p + self.nodes[1].p),2.0)
             self.length = enorm(self.basis[0])
             self.normal = EVec(-self.basis[0][Y], self.basis[0][X],0.0)
             norm = enorm(self.normal)
             if  norm:
-                self.unitNormal = self.normal/norm
+                self.unitNormal = old_div(self.normal,norm)
             else:
                 #in 3D edge normals don't make sense in general so above
                 #may divide by zero if edge has zero projection onto x-y plane
                 self.normal = EVec(0.0, -self.basis[0][Z], self.basis[0][Y])
-                self.unitNormal = self.normal/enorm(self.normal)
+                self.unitNormal = old_div(self.normal,enorm(self.normal))
             self.diameter=self.length
             self.innerDiameter = self.length
             self.hasGeometricInfo = True
             self.nodeUnitNormalList=[]
-            self.nodeUnitNormalList.append(-self.basis[0]/self.length)
-            self.nodeUnitNormalList.append(self.basis[0]/self.length)
+            self.nodeUnitNormalList.append(old_div(-self.basis[0],self.length))
+            self.nodeUnitNormalList.append(old_div(self.basis[0],self.length))
             self.elementBoundaryUnitNormalList=self.nodeUnitNormalList
             self.elementBoundaryJacobianList=[Edge.xUnitVector,Edge.xUnitVector]
 def getNodesFromEdges(edges):
@@ -139,7 +147,7 @@ def getNodesFromEdges(edges):
     for e in edges:
         for n in e.nodes:
             nodes[n]=n
-    return nodes.values()
+    return list(nodes.values())
 
 class Polygon(Element):
     """An abstract 2D element--a closed set of Edges connecting a set of Nodes.
@@ -156,7 +164,7 @@ def getEdgesFromPolygons(polygons):
     for p in polygons:
         for e in p.edges:
             edges[e.nodes] = e
-    return edges.values()
+    return list(edges.values())
 
 class Triangle(Polygon):
     """A 2D triangular element"""
@@ -188,22 +196,22 @@ class Triangle(Polygon):
 
     def computeGeometricInfo(self):
         if not self.hasGeometricInfo:
-            self.barycenter = (self.nodes[0].p +
+            self.barycenter = old_div((self.nodes[0].p +
                                self.nodes[1].p +
-                               self.nodes[2].p)/3.0
+                               self.nodes[2].p),3.0)
             self.basis = [ n.p - self.nodes[0].p for n in self.nodes[1:]]
             self.basis.append(Triangle.zUnitVector)
             self.linearMap = ETen(self.basis[0],self.basis[1],self.basis[2])
             self.normal = ecross(self.basis[0],self.basis[1])
             normNormal = enorm(self.normal)
-            self.unitNormal = self.normal/normNormal
+            self.unitNormal = old_div(self.normal,normNormal)
             self.area = 0.5*normNormal
             for e in self.edges: e.computeGeometricInfo()
             self.diameter = max([e.length for e in self.edges])
             self.innerDiameter = 4.0*self.area/sum(
                 [e.length for e in self.edges])
             self.edgeUnitNormalList=[]
-            for nNt,eN in Triangle.edgeMap.iteritems():
+            for nNt,eN in Triangle.edgeMap.items():
                 unitNormal = self.edges[eN].unitNormal
                 if edot(unitNormal,self.nodes[nNt[0]].p - self.nodes[eN].p) < 0:
                     unitNormal*=-1.0
@@ -365,8 +373,8 @@ class Quadrilateral(Polygon):
                         self.ymax = node.p[Y]
                     else:
                         pass
-                self.xmid = (self.xmin+self.xmax)/2.
-                self.ymid = (self.ymin+self.ymax)/2.
+                self.xmid = old_div((self.xmin+self.xmax),2.)
+                self.ymid = old_div((self.ymin+self.ymax),2.)
                 self.zmid = 0.
 
 class Polyhedron(Element):
@@ -443,19 +451,19 @@ class Tetrahedron(Polyhedron):
     def computeGeometricInfo(self):
         if not self.hasGeometricInfo:
             for t in self.triangles: t.computeGeometricInfo()
-            self.barycenter =(self.nodes[0].p +
+            self.barycenter =old_div((self.nodes[0].p +
                               self.nodes[1].p +
                               self.nodes[2].p +
-                              self.nodes[3].p)/4.0
+                              self.nodes[3].p),4.0)
             self.basis = [n.p - self.nodes[0].p for n in self.nodes[1:]]
             self.linearMap = ETen(self.basis[0],self.basis[1],self.basis[2])
-            self.volume = abs(edet(self.linearMap))/6.0
+            self.volume = old_div(abs(edet(self.linearMap)),6.0)
             self.diameter = max([t.diameter for t in self.triangles])
              #Zhang's formula for rho=innerDiameter of a simplex
             self.innerDiameter = 6.0*self.volume/sum([t.area for t in
                                                       self.triangles])
             self.triangleUnitNormalList=[]
-            for nNt,tN in Tetrahedron.triangleMap.iteritems():
+            for nNt,tN in Tetrahedron.triangleMap.items():
                 unitNormal = self.triangles[tN].unitNormal
                 if edot(unitNormal,self.nodes[nNt[0]].p - self.nodes[tN].p) < 0:
                     unitNormal *= -1.0
@@ -480,13 +488,13 @@ class Hexahedron(Polyhedron):
         self.elementBoundaries = self.quadrilaterals
 
 #todo add enum34 and replace with real Python enum
-class MeshParallelPartitioningTypes:
+class MeshParallelPartitioningTypes(object):
     """
     fake an enum for parallel partitioning options
     """
     element = 0 ;  node     = 1
 
-class Mesh:
+class Mesh(object):
     """A partition of a domain in R^n into elements.
 
     This is the base class for meshes. Contains routines for
@@ -1105,13 +1113,13 @@ class Mesh:
         #mwf make a 1d array now
         #self.nodeElementsArray = np.zeros((self.nNodes_global,self.max_nElements_node),'i')
         self.nodeElementOffsets = np.zeros((self.nNodes_global+1,),'i')
-        for nN,elementList in nodeElementsDict.iteritems():
+        for nN,elementList in nodeElementsDict.items():
             self.nElements_node[nN] = len(elementList)
             self.nodeElementOffsets[nN+1] = self.nodeElementOffsets[nN]+self.nElements_node[nN]
             #for eN_element,eN in enumerate(elementList):
             #    self.nodeElementsArray[nN,eN_element]=eN
         self.nodeElementsArray = np.zeros((self.nodeElementOffsets[self.nNodes_global],),'i')
-        for nN,elementList in nodeElementsDict.iteritems():
+        for nN,elementList in nodeElementsDict.items():
             for eN_element,eN in enumerate(elementList):
                 self.nodeElementsArray[self.nodeElementOffsets[nN]+eN_element]=eN
             #
@@ -1394,7 +1402,7 @@ class Mesh:
         yedges=filename+'_y'
         zedges=filename+'_z'
         #the following is for debugging: plot each tet seperately
-        nT = len(self.edgeList)/6
+        nT = old_div(len(self.edgeList),6)
         plotcommand = "-r \"load " + xfile + \
                       ", load " + yfile + \
                       ", load " + zfile
@@ -1513,7 +1521,7 @@ class Mesh:
         gnuplot = popen('gnuplot','w')
         gnuplot.write(cmd+'\n')
         gnuplot.flush()
-        raw_input('Please press return to continue... \n')
+        input('Please press return to continue... \n')
     def viewMeshGnuplotPipePar(self,filenames):
         from os import popen
         gnuplot = popen('gnuplot','w')
@@ -1529,7 +1537,7 @@ class Mesh:
             print('Calling gnuplot to view mesh')
             gnuplot.write(cmd+'\n')
             gnuplot.flush()
-        raw_input('Please press return to continue... \n')
+        input('Please press return to continue... \n')
 
     def convertFromPUMI(self, PUMIMesh, faceList,regList, parallel=False, dim=3):
         from . import cmeshTools
@@ -1651,7 +1659,7 @@ class MultilevelMesh(Mesh):
         for l in range(1,self.nLevels):
             self.elementParentsArrayList.append(self.elementParents[l])
             len_children=0
-            for children in self.elementChildren[l-1].values():
+            for children in list(self.elementChildren[l-1].values()):
                 len_children += len(children)
             self.elementChildrenArrayList.append(np.zeros((len_children,),'i'))
             self.elementChildrenOffsetsList.append(np.zeros((self.meshList[l-1].nElements_global+1,),'i'))
@@ -1709,11 +1717,11 @@ class EdgeGrid(Mesh):
         #dimensions and ranges
         self.nx=nx
         self.ex=nx-1
-        self.nRange_x = range(nx)
-        self.eRange_x = range(self.ex)
+        self.nRange_x = list(range(nx))
+        self.eRange_x = list(range(self.ex))
         #lengths
         self.Lx=Lx
-        self.dx = Lx/self.ex
+        self.dx = old_div(Lx,self.ex)
         #node coordinates
         self.nodeGridArray = np.zeros((self.nx,3),'d')
         for i in self.nRange_x:
@@ -1738,7 +1746,7 @@ class EdgeGrid(Mesh):
             #fine grid index of edge nodes
             for rn,rnii in enumerate(refEdge_nodeIndeces):
                 nii = rnii + ii
-                edgeNodeNumbers[rn]=nii/2
+                edgeNodeNumbers[rn]=old_div(nii,2)
             self.edgeNodesArray[eN,:]=edgeNodeNumbers
         #Mesh interface
         self.nNodes_global=self.nx
@@ -1774,15 +1782,15 @@ class QuadrilateralGrid(Mesh):
         self.qy = ny-1
         self.qxy = self.qx*self.qy
         #ranges
-        self.nRange_x = range(self.nx)
-        self.nRange_y = range(self.ny)
-        self.qRange_x = range(self.qx)
-        self.qRange_y = range(self.qx)
+        self.nRange_x = list(range(self.nx))
+        self.nRange_y = list(range(self.ny))
+        self.qRange_x = list(range(self.qx))
+        self.qRange_y = list(range(self.qx))
         #lengths
         self.Lx=Lx
         self.Ly=Ly
-        self.dx = Lx/self.eXx
-        self.dy = Ly/self.eYy
+        self.dx = old_div(Lx,self.eXx)
+        self.dy = old_div(Ly,self.eYy)
         #node coordinates
         self.nodeGridArray=np.zeros((nx,ny,3),'d')
         for i in self.nRange_x:
@@ -1839,14 +1847,14 @@ class QuadrilateralGrid(Mesh):
                 for rn,rniijj in enumerate(refQuad_NodeIndeces):
                     nii = rniijj[I] + ii
                     njj = rniijj[J] + jj
-                    nN = (nii/2)*self.ny + njj/2
+                    nN = (old_div(nii,2))*self.ny + old_div(njj,2)
                     quadNodeNumbers[rn]=nN
                 self.quadrilateralNodesArray[qN][:]=quadNodeNumbers
                 #edges
                 for re,reiijj in enumerate(refQuad_EdgeIndeces):
                     eii = reiijj[I] + ii
                     ejj = reiijj[J] + jj
-                    eN = (eii/2)*self.eXYy + (eii%2)*self.eYy + ejj/2
+                    eN = (old_div(eii,2))*self.eXYy + (eii%2)*self.eYy + old_div(ejj,2)
                     quadEdgeNumbers[re]=eN
                     #nodes
                     for n,rn in enumerate(refQuad_EdgeNodes[re]):
@@ -1955,15 +1963,15 @@ class RectangularGrid(Mesh):
 
         #dimensions of hexahedra
         if self.nHx>0:
-            hx = float(Lx)/(nx-1)
+            hx = old_div(float(Lx),(nx-1))
         else:
             hx = 1.0
         if self.nHy>0:
-            hy = float(Ly)/(ny-1)
+            hy = old_div(float(Ly),(ny-1))
         else:
             hy=1.0
         if self.nHz>0:
-            hz = float(Lz)/(nz-1)
+            hz = old_div(float(Lz),(nz-1))
         else:
             hz=1.0
         self.nodeDict={}
@@ -2148,7 +2156,7 @@ class RectangularGrid(Mesh):
         RectangularGrid.__init__(self,NX,NY,NZ,
                                  oldMesh.Lx,oldMesh.Ly,oldMesh.Lz)
         childrenDict={}
-        for IJK,e in oldMesh.elementDict.iteritems():
+        for IJK,e in oldMesh.elementDict.items():
             I = IJK[0]
             J = IJK[1]
             K = IJK[2]
@@ -2315,7 +2323,7 @@ class TetrahedralMesh(Mesh):
             T.computeGeometricInfo()
             self.hMax = max(T.diameter,self.hMax)
             self.hMin = min(T.diameter,self.hMin)
-            self.sigmaMax = max(T.diameter/T.innerDiameter,self.sigmaMax)
+            self.sigmaMax = max(old_div(T.diameter,T.innerDiameter),self.sigmaMax)
             self.totalVolume += T.volume
     def buildLists(self):
         self.buildListsNodes()
@@ -2325,17 +2333,17 @@ class TetrahedralMesh(Mesh):
         self.elementList = self.tetrahedronList
         self.elementBoundaryList = self.triangleList
     def buildListsNodes(self):
-        keyList = self.nodeDict.keys()
+        keyList = list(self.nodeDict.keys())
         keyList.sort()
         self.nodeList=[]
-        self.oldToNewNode=range(len(self.nodeDict))
+        self.oldToNewNode=list(range(len(self.nodeDict)))
         for nN,k in enumerate(keyList):
             self.oldToNewNode[self.nodeDict[k].N]=nN
             self.nodeDict[k].N = nN
             self.nodeList.append(self.nodeDict[k])
 
     def buildListsEdges(self):
-        keyList = self.edgeDict.keys()
+        keyList = list(self.edgeDict.keys())
         keyList.sort()
         self.edgeList=[]
         for eN,k in enumerate(keyList):
@@ -2343,7 +2351,7 @@ class TetrahedralMesh(Mesh):
             self.edgeList.append(self.edgeDict[k])
 
     def buildListsTriangles(self):
-        keyList = self.triangleDict.keys()
+        keyList = list(self.triangleDict.keys())
         keyList.sort()
         self.triangleList=[]
         for tN,k in enumerate(keyList):
@@ -2352,7 +2360,7 @@ class TetrahedralMesh(Mesh):
         self.polygonList = self.triangleList
 
     def buildListsTetrahedra(self):
-        keyList = self.tetrahedronDict.keys()
+        keyList = list(self.tetrahedronDict.keys())
         keyList.sort()
         self.tetrahedronList=[]
         for TN,k in enumerate(keyList):
@@ -2643,7 +2651,7 @@ class TetrahedralMesh(Mesh):
     def refineFreudenthalBey(self,oldMesh):
         logEvent("Refining the mesh using Freudenthal-Bey refinement")
         childrenDict={}
-        for T in oldMesh.tetrahedronDict.values():
+        for T in list(oldMesh.tetrahedronDict.values()):
             #deep copy old nodes because we'll renumber
             TNodes = [Node(nN,n.p[X],n.p[Y],n.p[Z]) for nN,n in \
                       enumerate(T.nodes)]
@@ -2651,13 +2659,13 @@ class TetrahedralMesh(Mesh):
             #add new nodes (midpoints of edges)
             #use local edge tuples as keys
             newNodes={}
-            for et,en in T.edgeMap.iteritems():
+            for et,en in T.edgeMap.items():
                 T.edges[en].computeGeometricInfo()
                 p = T.edges[en].barycenter
                 newNodes[et] = Node(en,p[X],p[Y],p[Z])
 
             #set the global node numbers
-            for k,n in newNodes.iteritems(): newNodes[k]=self.registerNode(n)
+            for k,n in newNodes.items(): newNodes[k]=self.registerNode(n)
             #add corner tets
             T1=self.newTetrahedron([TNodes[0],
                                  newNodes[(0,1)],
@@ -2832,7 +2840,7 @@ class HexahedralMesh(Mesh):
             T.computeGeometricInfo()
             self.hMax = max(T.diameter,self.hMax)
             self.hMin = min(T.diameter,self.hMin)
-            self.sigmaMax = max(T.diameter/T.innerDiameter,self.sigmaMax)
+            self.sigmaMax = max(old_div(T.diameter,T.innerDiameter),self.sigmaMax)
             self.totalVolume += T.volume
 
     def buildLists(self):
@@ -2843,17 +2851,17 @@ class HexahedralMesh(Mesh):
         self.elementList = self.elemList
         self.elementBoundaryList = self.faceList
     def buildListsNodes(self):
-        keyList = self.nodeDict.keys()
+        keyList = list(self.nodeDict.keys())
         keyList.sort()
         self.nodeList=[]
-        self.oldToNewNode=range(len(self.nodeDict))
+        self.oldToNewNode=list(range(len(self.nodeDict)))
         for nN,k in enumerate(keyList):
             self.oldToNewNode[self.nodeDict[k].N]=nN
             self.nodeDict[k].N = nN
             self.nodeList.append(self.nodeDict[k])
 
     def buildListsEdges(self):
-        keyList = self.edgeDict.keys()
+        keyList = list(self.edgeDict.keys())
         keyList.sort()
         self.edgeList=[]
         for eN,k in enumerate(keyList):
@@ -2861,7 +2869,7 @@ class HexahedralMesh(Mesh):
             self.edgeList.append(self.edgeDict[k])
 
     def buildListsFaces(self):
-        keyList = self.faceDict.keys()
+        keyList = list(self.faceDict.keys())
         keyList.sort()
         self.triangleList=[]
         for tN,k in enumerate(keyList):
@@ -2870,7 +2878,7 @@ class HexahedralMesh(Mesh):
         self.polygonList = self.faceList
 
     def buildListsElems(self):
-        keyList = self.elemDict.keys()
+        keyList = list(self.elemDict.keys())
         keyList.sort()
         self.elemList=[]
         for TN,k in enumerate(keyList):
@@ -3087,7 +3095,7 @@ class Mesh2DM(Mesh):
         eA = self.edgeArray
         eMA = self.edgeMaterialArray
         tMA = self.triangleMaterialArray
-        for eNodes,tlist in edges_triangles.iteritems():
+        for eNodes,tlist in edges_triangles.items():
             eA[eN,0]=eNodes[0]
             eA[eN,1]=eNodes[1]
             if len(tlist)==2:
@@ -3383,7 +3391,7 @@ class Mesh3DM(Mesh):
         tA = self.triangleArray
         tMA = self.triangleMaterialArray
         TMA = self.tetrahedronMaterialArray
-        for tNodes,Tlist in triangles_tetrahedra.iteritems():
+        for tNodes,Tlist in triangles_tetrahedra.items():
             tA[tN,0]=tNodes[0]
             tA[tN,1]=tNodes[1]
             tA[tN,2]=tNodes[2]
@@ -4059,17 +4067,17 @@ class TriangularMesh(Mesh):
         self.elementBoundaryList = self.edgeList
 
     def buildListsNodes(self):
-        keyList = self.nodeDict.keys()
+        keyList = list(self.nodeDict.keys())
         keyList.sort()
         self.nodeList=[]
-        self.oldToNewNode=range(len(self.nodeDict))
+        self.oldToNewNode=list(range(len(self.nodeDict)))
         for nN,k in enumerate(keyList):
             self.oldToNewNode[self.nodeDict[k].N]=nN
             self.nodeDict[k].N = nN
             self.nodeList.append(self.nodeDict[k])
 
     def buildListsEdges(self):
-        keyList = self.edgeDict.keys()
+        keyList = list(self.edgeDict.keys())
         keyList.sort()
         self.edgeList=[]
         for eN,k in enumerate(keyList):
@@ -4077,7 +4085,7 @@ class TriangularMesh(Mesh):
             self.edgeList.append(self.edgeDict[k])
 
     def buildListsTriangles(self):
-        keyList = self.triangleDict.keys()
+        keyList = list(self.triangleDict.keys())
         keyList.sort()
         self.triangleList=[]
         for tN,k in enumerate(keyList):
@@ -4148,8 +4156,8 @@ class TriangularMesh(Mesh):
                         nodes[newNode] = newNode
                         self.levelSetNodeNumbers.add(nr.N)
                     else:
-                        wr = (value - vl) / (vr - vl)
-                        wl = (value - vr) / (vl - vr)
+                        wr = old_div((value - vl), (vr - vl))
+                        wl = old_div((value - vr), (vl - vr))
                         newPoint = nl.p*wl + nr.p*wr
                         newNode = Node(len(levelSetMesh.nodeDict),
                                        newPoint[X],
@@ -4168,7 +4176,7 @@ class TriangularMesh(Mesh):
                 print("singleton")
             elif len(nodes) == 2:
                 newNodes=[]
-                for n in nodes.values():
+                for n in list(nodes.values()):
                     newNodes.append(levelSetMesh.registerNode(n))
                 levelSetMesh.newEdge(newNodes)
             else:
@@ -4180,7 +4188,7 @@ class TriangularMesh(Mesh):
                         print(n.N)
                         print(n.p)
                 print("level set triangle")
-                for n in nodes.values():
+                for n in list(nodes.values()):
                     print(n.p)
         if len(levelSetMesh.edgeDict) == 0:
             print("level set does not cross any edges")
@@ -4212,7 +4220,7 @@ class TriangularMesh(Mesh):
     def refineFreudenthalBey(self,oldMesh):
         logEvent("Refining the mesh using Freudenthal-Bey refinement")
         childrenDict={}
-        for t in oldMesh.triangleDict.values():
+        for t in list(oldMesh.triangleDict.values()):
             #deep copy old nodes because we'll renumber
             tNodes = [Node(nN,n.p[X],n.p[Y],n.p[Z])
                       for nN,n in enumerate(t.nodes)]
@@ -4220,13 +4228,13 @@ class TriangularMesh(Mesh):
             #add new nodes (midpoints of edges)
             #use local edge tuples as keys
             newNodes={}
-            for et,en in t.edgeMap.iteritems():
+            for et,en in t.edgeMap.items():
                 t.edges[en].computeGeometricInfo()
                 p = t.edges[en].barycenter
                 newNodes[et] = Node(en,p[X],p[Y],p[Z])
 
             #set the global node numbers
-            for k,n in newNodes.iteritems(): newNodes[k]=self.registerNode(n)
+            for k,n in newNodes.items(): newNodes[k]=self.registerNode(n)
             #add corner triangles
             t1=self.newTriangle([tNodes[0],
                               newNodes[(0,1)],
@@ -4395,7 +4403,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
         """
         Write a representation of the triangular mesh in the Asymptote vector graphics language
         """
-        unitsize=4.0/L[0]
+        unitsize=old_div(4.0,L[0])
         f = open(fileprefix+".asy",'w')
         fileString="""
 unitsize(4.0 inches / %(Lx)f);
@@ -4654,7 +4662,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
     def refine(self,oldMesh):
         logEvent("Refining Using Standard Quadrilateral Refinement")
         childrenDict={}
-        for q in oldMesh.quadDict.values():
+        for q in list(oldMesh.quadDict.values()):
             qNodes = [Node(nN,n.p[X],n.p[Y],n.p[Z]) for nN,n in enumerate(q.nodes)]
             for lnN,n in enumerate(qNodes): qNodes[lnN] = self.registerNode(n)
             q.computeGeometricInfo()
@@ -4717,17 +4725,17 @@ Number of nodes : %d\n""" % (self.nElements_global,
         self.elementBoundaryList = self.edgeList
 
     def buildListsNodes(self):
-        keyList = self.nodeDict.keys()
+        keyList = list(self.nodeDict.keys())
         keyList.sort()
         self.nodeList=[]
-        self.oldToNewNode=range(len(self.nodeDict))
+        self.oldToNewNode=list(range(len(self.nodeDict)))
         for nN,k in enumerate(keyList):
             self.oldToNewNode[self.nodeDict[k].N]=nN
             self.nodeDict[k].N = nN
             self.nodeList.append(self.nodeDict[k])
 
     def buildListsEdges(self):
-        keyList = self.edgeDict.keys()
+        keyList = list(self.edgeDict.keys())
         keyList.sort()
         self.edgeList=[]
         for eN,k in enumerate(keyList):
@@ -4735,7 +4743,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
             self.edgeList.append(self.edgeDict[k])
 
     def buildListsQuadrilaterals(self):
-        keyList = self.quadDict.keys()
+        keyList = list(self.quadDict.keys())
         keyList.sort()
         self.quadList = []
         for qN,q in enumerate(keyList):
@@ -5136,7 +5144,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
             eN = self.pointElementsArray[pN]
             if eN >= 0:
                 if mesh.nPoints_element[eN] > 0:
-                    mesh.elementMeanZ[eN] += self.domain.bathy[pN,2]/float(mesh.nPoints_element[eN])
+                    mesh.elementMeanZ[eN] += old_div(self.domain.bathy[pN,2],float(mesh.nPoints_element[eN]))
                     mesh.nodeArray[mesh.elementNodesArray[eN,0],2] = 0.0
                     mesh.nodeArray[mesh.elementNodesArray[eN,1],2] = 0.0
                     mesh.nodeArray[mesh.elementNodesArray[eN,2],2] = 0.0
@@ -5171,9 +5179,9 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                 J = mesh.elementNodesArray[eN,0]
                 inverseJacobian = inv(jacobian)
                 area = 0.5*det(jacobian)
-                sumArray[mesh.elementNodesArray[eN,0]] += area/mesh.nodeSupportArray[mesh.elementNodesArray[eN,0]]
-                sumArray[mesh.elementNodesArray[eN,1]] += area/mesh.nodeSupportArray[mesh.elementNodesArray[eN,1]]
-                sumArray[mesh.elementNodesArray[eN,2]] += area/mesh.nodeSupportArray[mesh.elementNodesArray[eN,2]]
+                sumArray[mesh.elementNodesArray[eN,0]] += old_div(area,mesh.nodeSupportArray[mesh.elementNodesArray[eN,0]])
+                sumArray[mesh.elementNodesArray[eN,1]] += old_div(area,mesh.nodeSupportArray[mesh.elementNodesArray[eN,1]])
+                sumArray[mesh.elementNodesArray[eN,2]] += old_div(area,mesh.nodeSupportArray[mesh.elementNodesArray[eN,2]])
                 mesh.nodeArray[mesh.elementNodesArray[eN,0],2] += area*mesh.elementMeanZ[eN]/mesh.nodeSupportArray[mesh.elementNodesArray[eN,0]]
                 mesh.nodeArray[mesh.elementNodesArray[eN,1],2] += area*mesh.elementMeanZ[eN]/mesh.nodeSupportArray[mesh.elementNodesArray[eN,1]]
                 mesh.nodeArray[mesh.elementNodesArray[eN,2],2] += area*mesh.elementMeanZ[eN]/mesh.nodeSupportArray[mesh.elementNodesArray[eN,2]]
@@ -5414,8 +5422,8 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         mlMeshTemp.elementChildrenOffsetsList = self.elementChildrenOffsetsList[-1:]
         nd=2
         TrialSpaceTypeDict = {0:C0_AffineLinearOnSimplexWithNodalBasis}
-        trialSpaceDictParent = dict([ (cj,TrialSpaceType(mlMeshTemp.meshList[0],nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.iteritems()])
-        trialSpaceDictChild = dict([ (cj,TrialSpaceType(mlMeshTemp.meshList[1],nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.iteritems()])
+        trialSpaceDictParent = dict([ (cj,TrialSpaceType(mlMeshTemp.meshList[0],nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.items()])
+        trialSpaceDictChild = dict([ (cj,TrialSpaceType(mlMeshTemp.meshList[1],nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.items()])
         trialSpaceDictList  = [trialSpaceDictParent,trialSpaceDictChild]
         offsetListList=[[0],[0]]
         strideListList=[[1],[1]]
@@ -5451,10 +5459,10 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                 zInterp = self.pointNodeWeightsArray[pN,0]*mesh.nodeArray[mesh.elementNodesArray[eN,0],2] +  \
                           self.pointNodeWeightsArray[pN,1]*mesh.nodeArray[mesh.elementNodesArray[eN,1],2] +  \
                           self.pointNodeWeightsArray[pN,2]*mesh.nodeArray[mesh.elementNodesArray[eN,2],2]
-                errorPointwise = fabs(zInterp - self.domain.bathy[pN,2]) / (fabs(self.domain.bathy[pN,2])*self.rtol + self.atol)
+                errorPointwise = old_div(fabs(zInterp - self.domain.bathy[pN,2]), (fabs(self.domain.bathy[pN,2])*self.rtol + self.atol))
                 #print "error ",errorPointwise
                 errorInfty = max(errorPointwise,errorInfty)
-                mesh.errorAverage_element[eN] += (errorPointwise/float(mesh.nPoints_element[eN]))
+                mesh.errorAverage_element[eN] += (old_div(errorPointwise,float(mesh.nPoints_element[eN])))
                 #print "error average",mesh.errorAverage_element[eN]
                 if errorPointwise >= 1.0:
                     mesh.elementTags[eN] = 1
@@ -5474,7 +5482,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                 errorL2 += (mesh.errorAverage_element[eN])**2 * mesh.area_element[eN]
                 if mesh.errorAverage_element[eN] >= 1.0:
                     mesh.elementTags[eN] = 1
-            errorL2 = sqrt(errorL2)/self.totalArea#normalize by domain error to make error have units of length
+            errorL2 = old_div(sqrt(errorL2),self.totalArea)#normalize by domain error to make error have units of length
             return errorL2
         else:
             #print "finished"
@@ -5529,17 +5537,17 @@ class EdgeMesh(Mesh):
         self.elementBoundaryList = self.nodeList
 
     def buildListsNodes(self):
-        keyList = self.nodeDict.keys()
+        keyList = list(self.nodeDict.keys())
         keyList.sort()
         self.nodeList=[]
-        self.oldToNewNode=range(len(self.nodeDict))
+        self.oldToNewNode=list(range(len(self.nodeDict)))
         for nN,k in enumerate(keyList):
             self.oldToNewNode[self.nodeDict[k].N]=nN
             self.nodeDict[k].N = nN
             self.nodeList.append(self.nodeDict[k])
 
     def buildListsEdges(self):
-        keyList = self.edgeDict.keys()
+        keyList = list(self.edgeDict.keys())
         keyList.sort()
         self.edgeList=[]
         for eN,k in enumerate(keyList):
@@ -5882,7 +5890,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     topology2nodes = {'Polyline':2,'Triangle':3,'Quadrilateral':4,'Tetrahedron':4,'Wedge':6,'Hexahedron':8}
 
     #for output
-    class BasicMeshInfo:
+    class BasicMeshInfo(object):
         def __init__(self):
             self.nNodes_global     = None
             self.nodeArray         = None
@@ -5929,7 +5937,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     assert MeshInfo.elementTopologyName is not None
 
     logEvent("elementTopologyName= %s " % MeshInfo.elementTopologyName,3)
-    assert MeshInfo.elementTopologyName in topologyid2name.values()
+    assert MeshInfo.elementTopologyName in list(topologyid2name.values())
 
     if MeshInfo.elementTopologyName != 'Mixed':
         MeshInfo.nElements_global, MeshInfo.nNodes_element, \
@@ -6198,7 +6206,7 @@ def intersectEdges(line, edges):
             return None
 
         # two lines are parallel, solve for x
-        x = norm(x_vl_cross_ve)/norm(vl_cross_ve)
+        x = old_div(norm(x_vl_cross_ve),norm(vl_cross_ve))
 
         intersect = a + x*(b-a)
 
@@ -6246,7 +6254,7 @@ def intersectPolyhedron(line, polyhedron):
             else:
                 # the line is in or on the face, ignore this face
                 continue
-        t = ndotba / float(d)
+        t = old_div(ndotba, float(d))
         if d < 0:
             # segment is entering polyhedron across this facet
             t_e = max(t_e, t)
@@ -6361,7 +6369,7 @@ def genMeshWithTetgen(polyfile,
                                 base=nbase)
    return mesh
 
-class MeshOptions:
+class MeshOptions(object):
     """
     Mesh options for the domain
 
@@ -6439,10 +6447,10 @@ class MeshOptions:
             assert self.triangle_string is not None, 'triangle_string must be set before setting triangle options'
             if self.nd == 2:
                 self.triangleOptions = self.triangle_string + '%8.8f' \
-                                       % (self.he**2/2.,)
+                                       % (old_div(self.he**2,2.),)
             elif self.nd == 3:
                 self.triangleOptions = self.triangle_string + '%21.16e' \
-                                       % (self.he**3/6.,)
+                                       % (old_div(self.he**3,6.),)
 
     def setMeshGenerator(self, generator):
         """

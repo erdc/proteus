@@ -3,6 +3,8 @@
 Test module for level set transport
 """
 from __future__ import print_function
+from builtins import range
+from builtins import object
 from proteus.iproteus import *
 import os
 import numpy as np
@@ -17,7 +19,7 @@ from . import (ls_vortex_2d_p,
                ls_consrv_vortex_2d_n,
                ls_vortex_2d_so)
 
-class TestVortex2D():
+class TestVortex2D(object):
 
     @classmethod
     def setup_class(cls):

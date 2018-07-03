@@ -2,6 +2,8 @@
 """
 Test module for surface tension
 """
+from builtins import range
+from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -32,7 +34,7 @@ from . import (parameters,
                pressureInitial_n)
 
 
-class TestSurfaceTension():
+class TestSurfaceTension(object):
 
     @classmethod
     def setup_class(cls):

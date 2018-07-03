@@ -4,6 +4,7 @@ Test module for VOF with EV
 """
 from __future__ import absolute_import
 
+from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -15,7 +16,7 @@ from . import thelper_vof
 from . import thelper_vof_p
 from . import thelper_vof_n
 
-class TestVOF():
+class TestVOF(object):
 
     @classmethod
     def setup_class(cls):

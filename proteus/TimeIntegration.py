@@ -6,13 +6,19 @@ A class hierarchy of time discretizations
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from .LinearAlgebraTools import *
 import sys,math
 from . import Profiling
 from .Profiling import logEvent
 from .flcbdfWrappers import globalMax
 
-class TI_base:
+class TI_base(object):
     """
     The base class for time discretizations of tightly coupled systems
     of transport equations.
@@ -53,7 +59,7 @@ class TI_base:
         self.t  = self.tLast + self.dt
         self.transport = transport
         self.nc = transport.coefficients.nc
-        self.massComponents = transport.coefficients.mass.keys()
+        self.massComponents = list(transport.coefficients.mass.keys())
         self.u ={}
         self.duStar_du = {}
         self.massIsImplicit = {}
@@ -273,7 +279,7 @@ class BackwardEuler(TI_base):
     def calculateGeneralizedInterpolationCoefficients(self,cip):
         if not self.integrateInterpolationPoints:
             return
-        for ci in self.m_ip_last.keys():
+        for ci in list(self.m_ip_last.keys()):
             self.m_ip_tmp[ci][:] = cip[('m',ci)]
             cip[('mt',ci)][:]   = cip[('m',ci)]
             cip[('mt',ci)] -= self.m_ip_last[ci]
@@ -293,20 +299,20 @@ class BackwardEuler(TI_base):
         for ci in self.massComponents:
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
         if self.integrateInterpolationPoints:
-            for ci in self.m_last.keys():
+            for ci in list(self.m_last.keys()):
                 self.m_ip_last[ci].flat[:] = self.m_ip_tmp[ci].flat
     def updateTimeHistory(self,resetFromDOF=False):
         self.tLast = self.t
         for ci in self.massComponents:
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
         if self.integrateInterpolationPoints:
-            for ci in self.m_last.keys():
+            for ci in list(self.m_last.keys()):
                 self.m_ip_last[ci].flat[:] = self.m_ip_tmp[ci].flat
     def calculateCoefs(self):
         #for bdf interface
-        dtInv = 1.0/self.dt
+        dtInv = old_div(1.0,self.dt)
         self.alpha_bdf = dtInv
-        for ci in self.m_last.keys():
+        for ci in list(self.m_last.keys()):
             self.beta_bdf[ci].flat[:] = self.m_last[ci].flat
             self.beta_bdf[ci] *= -dtInv
 
@@ -330,10 +336,10 @@ class BackwardEuler_cfl(BackwardEuler):
             if ci in self.cfl:
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
                 #print "mac cfl component ci",maxCFL,ci
-        self.dt = self.runCFL/maxCFL
+        self.dt = old_div(self.runCFL,maxCFL)
         if self.dtLast is None:
             self.dtLast = self.dt
-        if self.dt/self.dtLast  > self.dtRatioMax:
+        if old_div(self.dt,self.dtLast)  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
     def initialize_dt(self,t0,tOut,q):
@@ -349,7 +355,7 @@ class BackwardEuler_cfl(BackwardEuler):
         self.dtLast = self.dt
         self.tLast = self.t
         if self.integrateInterpolationPoints:
-            for ci in self.m_last.keys():
+            for ci in list(self.m_last.keys()):
                 self.m_ip_last[ci].flat[:] = self.m_ip_tmp[ci].flat
     def setFromOptions(self,nOptions):
         """
@@ -542,7 +548,7 @@ class PsiTCtte(BackwardEuler_cfl):
         self.updateTimeHistory(resetFromDOF)
     def calculateElementCoefficients(self,q):
         BackwardEuler_cfl.calculateElementCoefficients(self,q)
-        for ci in self.m_last.keys():
+        for ci in list(self.m_last.keys()):
             self.mt_tmp[ci].flat[:] = q[('mt',ci)].flat[:]
         self.dt_tmp = self.dt
         #now tmp values are for new time step
@@ -575,7 +581,7 @@ dt_history[0]=%g dt_history[1]=%g nsteps=%d """ %(self.dt_history[0],self.dt_his
         self.dt_history[1] = self.dt_history[0]
         self.dt_history[0] = self.dt_tmp
         self.nsteps += 1
-        for ci in self.m_last.keys():
+        for ci in list(self.m_last.keys()):
             self.mt_history[1][ci].flat[:]= self.mt_history[0][ci].flat[:]
             self.mt_history[0][ci].flat[:]= self.mt_tmp[ci].flat[:]
         #end ci
@@ -609,7 +615,7 @@ class PsiTCtte_new(BackwardEuler):
                 self.mt_history[it][ci] = numpy.array(transport.q[('mt',ci)])
     def calculateElementCoefficients(self,q):
         BackwardEuler.calculateElementCoefficients(self,q)
-        for ci in self.m_last.keys():
+        for ci in list(self.m_last.keys()):
             self.mt_tmp[ci].flat[:] = q[('mt',ci)].flat[:]
         self.dt_tmp = self.dt
     def choose_dt(self):
@@ -686,8 +692,8 @@ class ForwardEuler(TI_base):
                 self.cfl[ci] = transport.q[('cfl',ci)]
         self.isAdaptive=True
     def calculateElementSpatialJacobian(self,elementJacobian):
-        for ci in elementJacobian.keys():
-            for cj in elementJacobian[ci].keys():
+        for ci in list(elementJacobian.keys()):
+            for cj in list(elementJacobian[ci].keys()):
                 elementJacobian[ci][cj].fill(0.0)
     def calculateElementBoundaryCoefficients(self,ebq):
         """
@@ -697,15 +703,15 @@ class ForwardEuler(TI_base):
         """
         pass
     def calculateElementSpatialBoundaryJacobian(self,elementBoundaryJacobian,elementBoundaryJacobian_eb):
-        for ci in elementBoundaryJacobian.keys():
-            for cj in elementBoundaryJacobian[ci].keys():
+        for ci in list(elementBoundaryJacobian.keys()):
+            for cj in list(elementBoundaryJacobian[ci].keys()):
                 elementBoundaryJacobian[ci][cj].fill(0.0)
-        for ci in elementBoundaryJacobian_eb.keys():
-            for cj in elementBoundaryJacobian_eb[ci].keys():
+        for ci in list(elementBoundaryJacobian_eb.keys()):
+            for cj in list(elementBoundaryJacobian_eb[ci].keys()):
                 elementBoundaryJacobian_eb[ci][cj].fill(0.0)
     def calculateExteriorElementSpatialBoundaryJacobian(self,elementBoundaryJacobian):
-        for ci in elementBoundaryJacobian.keys():
-            for cj in elementBoundaryJacobian[ci].keys():
+        for ci in list(elementBoundaryJacobian.keys()):
+            for cj in list(elementBoundaryJacobian[ci].keys()):
                 elementBoundaryJacobian[ci][cj].fill(0.0)
     def calculateElementCoefficients(self,q):
         for ci in self.massComponents:
@@ -720,14 +726,14 @@ class ForwardEuler(TI_base):
                         q[('dmt',ci,cj)] /= self.dt
     def calculateStrongElementSpatialResidual(self,q):
         if self.transport.stabilization is not None:
-            for ci in self.r_tmp.keys():
+            for ci in list(self.r_tmp.keys()):
                 self.strong_r_tmp[ci][:]=q[('pdeResidual',ci)]
                 q[('pdeResidual',ci)][:]=self.strong_r_last[ci]
-                for cj in self.r_tmp.keys():
+                for cj in list(self.r_tmp.keys()):
                     if ('dpdeResidual',ci,cj) in q:
                         q[('dpdeResidual',ci,cj)].fill(0.0)
     def calculateElementSpatialResidual(self,elementResidual):
-        for ci in self.r_tmp.keys():
+        for ci in list(self.r_tmp.keys()):
             self.r_tmp[ci][:]=elementResidual[ci]
             elementResidual[ci][:]=self.r_last[ci]
     def choose_dt(self):
@@ -735,10 +741,10 @@ class ForwardEuler(TI_base):
         for ci in range(self.nc):
             if ci in self.cfl:
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
-        self.dt = self.runCFL/maxCFL
+        self.dt = old_div(self.runCFL,maxCFL)
         if self.dtLast is None:
             self.dtLast = self.dt
-        if self.dt/self.dtLast  > self.dtRatioMax:
+        if old_div(self.dt,self.dtLast)  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
     def initialize_dt(self,t0,tOut,q):
@@ -751,14 +757,14 @@ class ForwardEuler(TI_base):
     def initializeSpaceHistory(self,resetFromDOF=False):
         self.tLast = self.t
         self.dtLast = self.dt
-        for ci in self.m_last.keys():
+        for ci in list(self.m_last.keys()):
             self.r_last[ci].flat[:] = self.r_tmp[ci].flat
             if self.transport.stabilization is not None:
                 self.strong_r_last[ci].flat[:] = self.strong_r_tmp[ci].flat
     def updateTimeHistory(self,resetFromDOF=False):
         self.tLast = self.t
         self.dtLast = self.dt
-        for ci in self.m_last.keys():
+        for ci in list(self.m_last.keys()):
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
             self.r_last[ci].flat[:] = self.r_tmp[ci].flat
             if self.transport.stabilization is not None:
@@ -857,7 +863,7 @@ class ForwardEuler_A(TI_base):
             q[('mt',ci)] /= self.dt
             q[('dmt',ci,ci)][:] = q[('dm',ci,ci)]
             q[('dmt',ci,ci)] /= self.dt
-        for ci in self.f_tmp.keys():
+        for ci in list(self.f_tmp.keys()):
             self.f_tmp[ci][:] = q[('f',ci)]
             q[('f',ci)][:] = self.f_last[ci]
             #for numerical fluxes like Rusanov that need some element information
@@ -867,17 +873,17 @@ class ForwardEuler_A(TI_base):
                     q[('df_advectiveNumericalFlux',ci,cj)][:] = self.q_df_last[(ci,cj)]
                     #zero for jacobian? will get skipped because of advectionIsImplicit?
                     #q[('df',ci,cj)].fill(0.0)
-        for ci in self.q_u_tmp.keys():
+        for ci in list(self.q_u_tmp.keys()):
             self.q_u_tmp[ci][:] = q[('u',ci)]
             if ('u_advectiveNumericalFlux',ci) in q:
                 q[('u_advectiveNumericalFlux',ci)][:] = self.q_u_last[ci]
-        for ci in self.q_cfl_tmp.keys():
+        for ci in list(self.q_cfl_tmp.keys()):
             self.q_cfl_tmp[ci][:] = q[('cfl',ci)]
             if ('cfl_advectiveNumericalFlux',ci) in q:
                 q[('cfl_advectiveNumericalFlux',ci)][:] = self.q_cfl_last[ci]
 
     def calculateElementBoundaryCoefficients(self,ebq):
-        for ci in self.bf_tmp.keys():
+        for ci in list(self.bf_tmp.keys()):
             self.bf_tmp[ci][:] = ebq[('f',ci)]
             ebq[('f',ci)][:] = self.bf_last[ci]
             #
@@ -889,7 +895,7 @@ class ForwardEuler_A(TI_base):
                     self.ebq_df_tmp[(ci,cj)][:] = ebq[('df',ci,cj)]
                     ebq[('df_advectiveNumericalFlux',ci,cj)][:] = self.ebq_df_last[(ci,cj)]
     def calculateExteriorElementBoundaryCoefficients(self,ebqe):
-        for ci in self.ebf_tmp.keys():
+        for ci in list(self.ebf_tmp.keys()):
             self.ebf_tmp[ci][:] = ebqe[('f',ci)]
             ebqe[('f',ci)][:] = self.ebf_last[ci]
             #
@@ -916,10 +922,10 @@ class ForwardEuler_A(TI_base):
         for ci in range(self.nc):
             if ci in self.cfl:
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
-        self.dt = self.runCFL/maxCFL
+        self.dt = old_div(self.runCFL,maxCFL)
         if self.dtLast is None:
             self.dtLast = self.dt
-        if self.dt/self.dtLast  > self.dtRatioMax:
+        if old_div(self.dt,self.dtLast)  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
     def updateStage(self):
@@ -952,28 +958,28 @@ class ForwardEuler_A(TI_base):
         self.dtLast = self.dt
         for ci in self.massComponents:
             self.m_last[ci][:] = self.m_tmp[ci]
-        for ci in self.f_last.keys():
+        for ci in list(self.f_last.keys()):
             self.f_last[ci][:] = self.f_tmp[ci]
             self.ebf_last[ci][:] = self.ebf_tmp[ci]
-        for ci in self.bf_last.keys():
+        for ci in list(self.bf_last.keys()):
             self.bf_last[ci][:] = self.bf_tmp[ci]
         #
-        for ci in self.ebq_u_last.keys():
+        for ci in list(self.ebq_u_last.keys()):
             self.ebq_u_last[ci][:] = self.ebq_u_tmp[ci]
-        for ci in self.ebqe_u_last.keys():
+        for ci in list(self.ebqe_u_last.keys()):
             self.ebqe_u_last[ci][:] = self.ebqe_u_tmp[ci]
-        for k in self.q_df_last.keys():
+        for k in list(self.q_df_last.keys()):
             self.q_df_last[k][:] = self.q_df_tmp[k]
-        for k in self.q_df_last.keys():
+        for k in list(self.q_df_last.keys()):
             self.q_df_last[k][:] = self.q_df_tmp[k]
-        for k in self.ebq_df_last.keys():
+        for k in list(self.ebq_df_last.keys()):
             self.ebq_df_last[k][:] = self.ebq_df_tmp[k]
-        for k in self.ebqe_df_last.keys():
+        for k in list(self.ebqe_df_last.keys()):
             self.ebqe_df_last[k][:] = self.ebqe_df_tmp[k]
         #
-        for ci in self.q_u_last.keys():
+        for ci in list(self.q_u_last.keys()):
             self.q_u_last[ci][:] = self.q_u_tmp[ci]
-        for ci in self.q_cfl_last.keys():
+        for ci in list(self.q_cfl_last.keys()):
             self.q_cfl_last[ci][:] = self.q_cfl_tmp[ci]
     def setFromOptions(self,nOptions):
         """
@@ -1000,28 +1006,28 @@ class ForwardEuler_A(TI_base):
     def initializeSpaceHistory(self,resetFromDOF=True):
         self.tLast = self.t
         self.dtLast = self.dt
-        for ci in self.f_last.keys():
+        for ci in list(self.f_last.keys()):
             self.f_last[ci][:] = self.f_tmp[ci]
             self.ebf_last[ci][:] = self.ebf_tmp[ci]
-        for ci in self.bf_last.keys():
+        for ci in list(self.bf_last.keys()):
             self.bf_last[ci][:] = self.bf_tmp[ci]
         #
-        for ci in self.ebq_u_last.keys():
+        for ci in list(self.ebq_u_last.keys()):
             self.ebq_u_last[ci][:] = self.ebq_u_tmp[ci]
-        for ci in self.ebqe_u_last.keys():
+        for ci in list(self.ebqe_u_last.keys()):
             self.ebqe_u_last[ci][:] = self.ebqe_u_tmp[ci]
-        for k in self.q_df_last.keys():
+        for k in list(self.q_df_last.keys()):
             self.q_df_last[k][:] = self.q_df_tmp[k]
-        for k in self.q_df_last.keys():
+        for k in list(self.q_df_last.keys()):
             self.q_df_last[k][:] = self.q_df_tmp[k]
-        for k in self.ebq_df_last.keys():
+        for k in list(self.ebq_df_last.keys()):
             self.ebq_df_last[k][:] = self.ebq_df_tmp[k]
-        for k in self.ebqe_df_last.keys():
+        for k in list(self.ebqe_df_last.keys()):
             self.ebqe_df_last[k][:] = self.ebqe_df_tmp[k]
         #
-        for ci in self.q_u_last.keys():
+        for ci in list(self.q_u_last.keys()):
             self.q_u_last[ci][:] = self.q_u_tmp[ci]
-        for ci in self.q_cfl_last.keys():
+        for ci in list(self.q_cfl_last.keys()):
             self.q_cfl_last[ci][:] = self.q_cfl_tmp[ci]
     def initializeTimeHistory(self,resetFromDOF=True):
         """
@@ -1029,28 +1035,28 @@ class ForwardEuler_A(TI_base):
         """
         for ci in self.massComponents:
             self.m_last[ci][:] = self.m_tmp[ci]
-        for ci in self.f_last.keys():
+        for ci in list(self.f_last.keys()):
             self.f_last[ci][:] = self.f_tmp[ci]
             self.ebf_last[ci][:] = self.ebf_tmp[ci]
-        for ci in self.bf_last.keys():
+        for ci in list(self.bf_last.keys()):
             self.bf_last[ci][:] = self.bf_tmp[ci]
         #
-        for ci in self.ebq_u_last.keys():
+        for ci in list(self.ebq_u_last.keys()):
             self.ebq_u_last[ci][:] = self.ebq_u_tmp[ci]
-        for ci in self.ebqe_u_last.keys():
+        for ci in list(self.ebqe_u_last.keys()):
             self.ebqe_u_last[ci][:] = self.ebqe_u_tmp[ci]
-        for k in self.q_df_last.keys():
+        for k in list(self.q_df_last.keys()):
             self.q_df_last[k][:] = self.q_df_tmp[k]
-        for k in self.q_df_last.keys():
+        for k in list(self.q_df_last.keys()):
             self.q_df_last[k][:] = self.q_df_tmp[k]
-        for k in self.ebq_df_last.keys():
+        for k in list(self.ebq_df_last.keys()):
             self.ebq_df_last[k][:] = self.ebq_df_tmp[k]
-        for k in self.ebqe_df_last.keys():
+        for k in list(self.ebqe_df_last.keys()):
             self.ebqe_df_last[k][:] = self.ebqe_df_tmp[k]
         #
-        for ci in self.q_u_last.keys():
+        for ci in list(self.q_u_last.keys()):
             self.q_u_last[ci][:] = self.q_u_tmp[ci]
-        for ci in self.q_cfl_last.keys():
+        for ci in list(self.q_cfl_last.keys()):
             self.q_cfl_last[ci][:] = self.q_cfl_tmp[ci]
 
 
@@ -1115,10 +1121,10 @@ class ForwardEuler_H(TI_base):
             if ci in self.cfl:
                 maxCFL=globalMax(self.cfl[ci].max())
             #end has key
-        self.dt = self.runCFL/maxCFL
+        self.dt = old_div(self.runCFL,maxCFL)
         if self.dtLast is None:
             self.dtLast = self.dt
-        if self.dt/self.dtLast  > self.dtRatioMax:
+        if old_div(self.dt,self.dtLast)  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
     def updateTimeHistory(self,resetFromDOF=False):
@@ -1183,82 +1189,82 @@ class OuterTheta(TI_base):
             self.q_last[('m',ci)] = numpy.array(transport.q[('m',ci)])
             self.q_tmp[('m',ci)] = numpy.array(transport.q[('m',ci)])
             self.m_last[ci] = self.q_last[('m',ci)]
-        for ci in transport.coefficients.advection.keys():
+        for ci in list(transport.coefficients.advection.keys()):
             self.advectionIsImplicit[ci] = True
             self.q_last[('f',ci)] = numpy.array(transport.q[('f',ci)])
             self.q_tmp[('f',ci)] = numpy.array(transport.q[('f',ci)])
-        for ci in transport.coefficients.reaction.keys():
+        for ci in list(transport.coefficients.reaction.keys()):
             self.reactionIsImplicit[ci] = True
             self.q_last[('r',ci)] = numpy.array(transport.q[('r',ci)])
             self.q_tmp[('r',ci)] = numpy.array(transport.q[('r',ci)])
-        for ci in transport.coefficients.hamiltonian.keys():
+        for ci in list(transport.coefficients.hamiltonian.keys()):
             self.q_last[('H',ci)] = numpy.array(transport.q[('H',ci)])
             self.q_tmp[('H',ci)] = numpy.array(transport.q[('H',ci)])
-        for ci,ckDict in transport.coefficients.diffusion.iteritems():
+        for ci,ckDict in transport.coefficients.diffusion.items():
             self.diffusionIsImplicit[ci] = True
-            for ck in ckDict.keys():
+            for ck in list(ckDict.keys()):
                 self.q_last[('a',ci,ck)] = numpy.array(transport.q[('a',ci,ck)])
                 self.q_tmp[('a',ci,ck)] = numpy.array(transport.q[('a',ci,ck)])
         self.ebq_last={}
         self.ebq_tmp={}
-        for ci in transport.coefficients.advection.keys():
+        for ci in list(transport.coefficients.advection.keys()):
             if ('f',ci) in transport.ebq:
                 self.ebq_last[('f',ci)] = numpy.array(transport.ebq[('f',ci)])
                 self.ebq_tmp[('f',ci)] = numpy.array(transport.ebq[('f',ci)])
-        for ci,ckDict in transport.coefficients.diffusion.iteritems():
-            for ck in ckDict.keys():
+        for ci,ckDict in transport.coefficients.diffusion.items():
+            for ck in list(ckDict.keys()):
                 if ('a',ci,ck) in transport.ebq:
                     self.ebq_last[('a',ci,ck)] = numpy.array(transport.ebq[('a',ci,ck)])
                     self.ebq_tmp[('a',ci,ck)] = numpy.array(transport.ebq[('a',ci,ck)])
     def calculateU(self,u):
         self.u = u
     def calculateElementCoefficients(self,q):
-        for ci,cjDict in self.transport.coefficients.mass.iteritems():
+        for ci,cjDict in self.transport.coefficients.mass.items():
             self.q_tmp[('m',ci)][:] = q[('m',ci)]
             q[('mt',ci)][:] = q[('m',ci)]
             q[('mt',ci)] -= self.q_last[('m',ci)]
             q[('mt',ci)] /= self.dt
-            for cj in cjDict.keys():
+            for cj in list(cjDict.keys()):
                 q[('dmt',ci,cj)][:] = q[('dm',ci,cj)]
                 q[('dmt',ci,cj)] /= self.dt
-        for ci,cjDict in self.transport.coefficients.advection.iteritems():
+        for ci,cjDict in self.transport.coefficients.advection.items():
             self.q_tmp[('f',ci)][:] = q[('f',ci)]
             q[('f',ci)] *= self.thetaAdvection
             q[('f',ci)] += self.q_last[('f',ci)]
-            for  cj in cjDict.keys():
+            for  cj in list(cjDict.keys()):
                 q[('df',ci,cj)] *= self.thetaAdvection
-        for ci,cjDict in self.transport.coefficients.reaction.iteritems():
+        for ci,cjDict in self.transport.coefficients.reaction.items():
             self.q_tmp[('r',ci)][:] = q[('r',ci)]
             q[('r',ci)] *= self.thetaReaction
             q[('r',ci)] += self.q_last[('r',ci)]
-            for cj in cjDict.keys():
+            for cj in list(cjDict.keys()):
                 q[('dr',ci,cj)] *= self.thetaReaction
-        for ci,cj in self.transport.coefficients.hamiltonian.iteritems():
+        for ci,cj in self.transport.coefficients.hamiltonian.items():
             self.q_tmp[('H',ci)][:] = q[('H',ci)]
             q[('H',ci)] *= self.thetaHamiltonian
             q[('H',ci)] += self.q_last[('H',ci)]
-            for cj in cjDict.keys():
+            for cj in list(cjDict.keys()):
                 q[('dH',ci,cj)] *= self.thetaHamiltonian
-        for ci,ckDict in self.transport.coefficients.diffusion.iteritems():
-            for ck,cjDict in ckDict.iteritems():
+        for ci,ckDict in self.transport.coefficients.diffusion.items():
+            for ck,cjDict in ckDict.items():
                 self.q_tmp[('a',ci,ck)][:] = q[('a',ci,ck)]
                 q[('a',ci,ck)] *= self.thetaDiffusion
                 q[('a',ci,ck)] += self.q_last[('a',ci,ck)]
-                for cj in cjDict.keys():
+                for cj in list(cjDict.keys()):
                     q[('da',ci,ck,cj)] *= self.thetaDiffusion
     def calculateElementBoundaryCoefficients(self,ebq):
-        for ci,cjDict in self.transport.coefficients.advection.iteritems():
+        for ci,cjDict in self.transport.coefficients.advection.items():
             self.ebq_tmp[('f',ci)][:] = ebq[('f',ci)]
             ebq[('f',ci)] *= self.thetaAdvection
             ebq[('f',ci)] += self.ebq_last[('f',ci)]
-            for  cj in cjDict.keys():
+            for  cj in list(cjDict.keys()):
                 ebq[('df',ci,cj)] *= self.thetaAdvection
-        for ci,ckDict in self.transport.coefficients.diffusion.iteritems():
-            for ck,cjDict in ckDict.iteritems():
+        for ci,ckDict in self.transport.coefficients.diffusion.items():
+            for ck,cjDict in ckDict.items():
                 self.ebq_tmp[('a',ci,ck)][:] = ebq[('a',ci,ck)]
                 ebq[('a',ci,ck)] *= self.thetaDiffusion
                 ebq[('a',ci,ck)] += self.ebq_last[('a',ci,ck)]
-                for cj in cjDict.keys():
+                for cj in list(cjDict.keys()):
                     ebq[('da',ci,ck,cj)] *= self.thetaDiffusion
     def choose_dt(self):
         """
@@ -1269,10 +1275,10 @@ class OuterTheta(TI_base):
         for ci in range(self.nc):
             if ci in self.cfl:
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
-        self.dt = self.runCFL/maxCFL
+        self.dt = old_div(self.runCFL,maxCFL)
         if self.dtLast is None:
             self.dtLast = self.dt
-        if self.dt/self.dtLast  > self.dtRatioMax:
+        if old_div(self.dt,self.dtLast)  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
     def updateTimeHistory(self,resetFromDOF=False):
@@ -1280,50 +1286,50 @@ class OuterTheta(TI_base):
         self.dtLast = self.dt
         for ci in self.self.massComponents:
             self.q_last[('m',ci)][:] = self.q_tmp[('m',ci)]
-        for ci in self.transport.coefficients.advection.keys():
+        for ci in list(self.transport.coefficients.advection.keys()):
             self.q_last[('f',ci)][:] = self.q_tmp[('f',ci)]
             self.q_last[('f',ci)] *= (1.0-self.thetaAdvection)
-        for ci in self.transport.coefficients.reaction.keys():
+        for ci in list(self.transport.coefficients.reaction.keys()):
             self.q_last[('r',ci)][:] = self.q_tmp[('r',ci)]
             self.q_last[('r',ci)] *= (1.0-self.thetaReaction)
-        for ci in self.transport.coefficients.hamiltonian.keys():
+        for ci in list(self.transport.coefficients.hamiltonian.keys()):
             self.q_last[('H',ci)][:] = self.q_tmp[('H',ci)]
             self.q_last[('H',ci)] *= (1.0-self.thetaHamiltonian)
-        for ci,ckDict in self.transport.coefficients.diffusion.iteritems():
-            for ck in ckDict.keys():
+        for ci,ckDict in self.transport.coefficients.diffusion.items():
+            for ck in list(ckDict.keys()):
                 self.q_last[('a',ci,ck)][:] = self.q_tmp[('a',ci,ck)]
                 self.q_last[('a',ci,ck)] *= (1.0-self.thetaDiffusion)
-        for ci in self.transport.coefficients.advection.keys():
+        for ci in list(self.transport.coefficients.advection.keys()):
             if ('f',ci) in self.ebq_last:
                 self.ebq_last[('f',ci)][:] = self.ebq_tmp[('f',ci)]
                 self.ebq_last[('f',ci)] *= (1.0-self.thetaAdvection)
-        for ci,ckDict in self.transport.coefficients.diffusion.iteritems():
-            for ck,cjDict in ckDict.iteritems():
+        for ci,ckDict in self.transport.coefficients.diffusion.items():
+            for ck,cjDict in ckDict.items():
                 if ('a',ci,ck) in self.ebq_last:
                     self.ebq_last[('a',ci,ck)][:]  = self.ebq_tmp[('a',ci,ck)]
                     self.ebq_last[('a',ci,ck)] *= (1.0-self.thetaDiffusion)
     def initializeSpaceHistory(self,resetFromDOF=False):
         self.tLast = self.t
         self.dtLast = self.dt
-        for ci in self.transport.coefficients.advection.keys():
+        for ci in list(self.transport.coefficients.advection.keys()):
             self.q_last[('f',ci)][:] = self.q_tmp[('f',ci)]
             self.q_last[('f',ci)] *= (1.0-self.thetaAdvection)
-        for ci in self.transport.coefficients.reaction.keys():
+        for ci in list(self.transport.coefficients.reaction.keys()):
             self.q_last[('r',ci)][:] = self.q_tmp[('r',ci)]
             self.q_last[('r',ci)] *= (1.0-self.thetaReaction)
-        for ci in self.transport.coefficients.hamiltonian.keys():
+        for ci in list(self.transport.coefficients.hamiltonian.keys()):
             self.q_last[('H',ci)][:] = self.q_tmp[('H',ci)]
             self.q_last[('H',ci)] *= (1.0-self.thetaHamiltonian)
-        for ci,ckDict in self.transport.coefficients.diffusion.iteritems():
-            for ck in ckDict.keys():
+        for ci,ckDict in self.transport.coefficients.diffusion.items():
+            for ck in list(ckDict.keys()):
                 self.q_last[('a',ci,ck)][:] = self.q_tmp[('a',ci,ck)]
                 self.q_last[('a',ci,ck)] *= (1.0-self.thetaDiffusion)
-        for ci in self.transport.coefficients.advection.keys():
+        for ci in list(self.transport.coefficients.advection.keys()):
             if ('f',ci) in self.ebq_last:
                 self.ebq_last[('f',ci)][:] = self.ebq_tmp[('f',ci)]
                 self.ebq_last[('f',ci)] *= (1.0-self.thetaAdvection)
-        for ci,ckDict in self.transport.coefficients.diffusion.iteritems():
-            for ck,cjDict in ckDict.iteritems():
+        for ci,ckDict in self.transport.coefficients.diffusion.items():
+            for ck,cjDict in ckDict.items():
                 if ('a',ci,ck) in self.ebq_last:
                     self.ebq_last[('a',ci,ck)][:]  = self.ebq_tmp[('a',ci,ck)]
                     self.ebq_last[('a',ci,ck)] *= (1.0-self.thetaDiffusion)
@@ -1505,18 +1511,18 @@ class VBDF(TI_base):
         #import pdb
         #pdb.set_trace()
         if self.timeOrder == 2:
-            r = self.dt/self.dt_history[0]
-            for ci in self.mt_tmp.keys():
+            r = old_div(self.dt,self.dt_history[0])
+            for ci in list(self.mt_tmp.keys()):
                 self.error_estimate[ci].flat[:] = self.m_history[1][ci].flat
                 self.error_estimate[ci]   *= r
                 self.work[ci].flat[:]           = self.m_history[0][ci].flat
                 self.work[ci]             *= -(1.0+r)
                 self.error_estimate[ci]   += self.work[ci]
                 self.error_estimate[ci]   += self.m_tmp[ci]
-                self.error_estimate[ci]   *= r/(1.0+r)
+                self.error_estimate[ci]   *= old_div(r,(1.0+r))
             #
         else:
-            for ci in self.mt_tmp.keys():
+            for ci in list(self.mt_tmp.keys()):
                 self.error_estimate[ci].flat[:] = self.m_tmp[ci].flat
                 self.error_estimate[ci]   -= self.m_pred[ci]
                 self.error_estimate[ci]   *= 0.5
@@ -1534,9 +1540,9 @@ class VBDF(TI_base):
 
     def calculateCoefs(self):
         if self.needToCalculateBDFCoefs:
-            dtInv = 1.0/self.dt
+            dtInv = old_div(1.0,self.dt)
             if self.timeOrder == 2:
-                r         = self.dt/self.dt_history[0]
+                r         = old_div(self.dt,self.dt_history[0])
                 self.alpha_bdf = (1.0+2.0*r)/(1.0+r)*dtInv
 
                 b0        =-(1.0+r)*dtInv
@@ -1855,7 +1861,7 @@ class ExplicitRK_base(TI_base):
         """
         if self.usingDTinMass == False:
             return self.calculateElementSpatialResidualNoDtInMass(elementResidual)
-        for ci in self.stageValues['res'].keys():
+        for ci in list(self.stageValues['res'].keys()):
             self.stageValues['res'][ci][self.lstage+1].flat[:]=elementResidual[ci].flat[:]
             #start at bottom
             elementResidual[ci].flat[:] = self.stageValues['res'][ci][0].flat[:]
@@ -1873,7 +1879,7 @@ class ExplicitRK_base(TI_base):
 
 
         """
-        for ci in self.stageValues['res'].keys():
+        for ci in list(self.stageValues['res'].keys()):
             self.stageValues['res'][ci][self.lstage+1].flat[:]=elementResidual[ci].flat[:]
             #start at bottom
             elementResidual[ci].flat[:] = self.stageValues['res'][ci][0].flat[:]
@@ -1891,8 +1897,8 @@ class ExplicitRK_base(TI_base):
         #pass
         #mwf debug
         #print "Explicit RK zeroing  jacobian"
-        for ci in elementJacobian.keys():
-            for cj in elementJacobian[ci].keys():
+        for ci in list(elementJacobian.keys()):
+            for cj in list(elementJacobian[ci].keys()):
                 elementJacobian[ci][cj].flat[:] = 0.0
             #end cj
         #end ci
@@ -1914,19 +1920,19 @@ class ExplicitRK_base(TI_base):
         #pass
         #mwf debug
         #print "Explicit RK zeroing boundary jacobian"
-        for ci in elementBoundaryJacobian.keys():
-            for cj in elementBoundaryJacobian[ci].keys():
+        for ci in list(elementBoundaryJacobian.keys()):
+            for cj in list(elementBoundaryJacobian[ci].keys()):
                 elementBoundaryJacobian[ci][cj].fill(0.0)
             #end cj
         #end ci
-        for ci in elementBoundaryJacobian_eb.keys():
-            for cj in elementBoundaryJacobian_eb[ci].keys():
+        for ci in list(elementBoundaryJacobian_eb.keys()):
+            for cj in list(elementBoundaryJacobian_eb[ci].keys()):
                 elementBoundaryJacobian_eb[ci][cj].fill(0.0)
             #end cj
         #end ci
     def calculateExteriorElementSpatialBoundaryJacobian(self,elementBoundaryJacobian):
-        for ci in elementBoundaryJacobian.keys():
-            for cj in elementBoundaryJacobian[ci].keys():
+        for ci in list(elementBoundaryJacobian.keys()):
+            for cj in list(elementBoundaryJacobian[ci].keys()):
                 elementBoundaryJacobian[ci][cj].fill(0.0)
     def initialize_dt(self,t0,tOut,q):
         self.tLast = t0
@@ -1986,10 +1992,10 @@ class ExplicitRK_base(TI_base):
                                                       self.transport.q[('dH',ci,ci)],
                                                       self.transport.q[('cfl',ci)])
                     maxCFL=max(globalMax(self.cfl[ci].max()),maxCFL)
-        self.dt = self.runCFL/maxCFL
+        self.dt = old_div(self.runCFL,maxCFL)
         if self.dtLast is None:
             self.dtLast = self.dt
-        if self.dt/self.dtLast  > self.dtRatioMax:
+        if old_div(self.dt,self.dtLast)  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.generateSubsteps([self.tLast+self.dt])
         self.t = self.substeps[0]
@@ -2022,7 +2028,7 @@ class ExplicitRK_base(TI_base):
         has been loaded into lstage+1
         """
         for term in self.eqTerms:
-            for ci in self.stageValues[term].keys():
+            for ci in list(self.stageValues[term].keys()):
                 for i in range(self.nStages+1):
                     if i != self.lstage+1:
                         self.stageValues[term][ci][i].flat[:] = self.stageValues[term][ci][self.lstage+1].flat[:]
@@ -2034,7 +2040,7 @@ class ExplicitRK_base(TI_base):
     #end setInitialStageValues
     def initializeTimeHistory(self,resetFromDOF=True):
         for term in self.eqTerms:
-            for ci in self.stageValues[term].keys():
+            for ci in list(self.stageValues[term].keys()):
                 if resetFromDOF:
                     assert self.transport is not None, "Must supply transport to reset from DOF"
                     if term == 'res':
@@ -2050,7 +2056,7 @@ class ExplicitRK_base(TI_base):
         """
         self.tLast = self.t
         for term in self.eqTerms:
-            for ci in self.stageValues[term].keys():
+            for ci in list(self.stageValues[term].keys()):
                 if resetFromDOF:
                     assert self.transport is not None, "Must supply transport to reset from DOF"
                     if term == 'res':
@@ -2148,13 +2154,13 @@ class LinearSSPRKintegration(ExplicitRK_base):
         elif stages == 2:
             self.alpha[1,0] = 0.5;     self.alpha[1,1] = 0.5
         elif stages == 3:
-            self.alpha[2,0] = 1./3.;   self.alpha[2,1] = 1./2.; self.alpha[2,2] = 1./6.
+            self.alpha[2,0] = old_div(1.,3.);   self.alpha[2,1] = old_div(1.,2.); self.alpha[2,2] = old_div(1.,6.)
         elif stages == 4:
-            self.alpha[3,0] = 3./8.;   self.alpha[3,1] = 1./3.; self.alpha[3,2] = 1./4.;
-            self.alpha[3,3] = 1./24.;
+            self.alpha[3,0] = old_div(3.,8.);   self.alpha[3,1] = old_div(1.,3.); self.alpha[3,2] = old_div(1.,4.);
+            self.alpha[3,3] = old_div(1.,24.);
         elif stages == 5:
-            self.alpha[4,0] = 11./30.; self.alpha[4,1] = 3./8.; self.alpha[4,2] = 1./6.;
-            self.alpha[4,3] = 1./12.;  self.alpha[4,4] = 1./120.
+            self.alpha[4,0] = old_div(11.,30.); self.alpha[4,1] = old_div(3.,8.); self.alpha[4,2] = old_div(1.,6.);
+            self.alpha[4,3] = old_div(1.,12.);  self.alpha[4,4] = old_div(1.,120.)
         #
         self.beta = numpy.zeros((stages,stages),'d')
         for l in range(stages-1):
@@ -2260,7 +2266,7 @@ class SSPRKPIintegration(ExplicitRK_base):
             self.alpha[0,0] = 1.0;   self.alpha[1,0] = 0.5;  self.alpha[1,1] = 0.5
         elif order == 3:
             self.alpha[0,0] = 1.0;   self.alpha[1,0] = 0.75; self.alpha[1,1] = 0.25;
-            self.alpha[2,0] = 1./3.; self.alpha[2,1] = 0.0;  self.alpha[2,2] = 2./3.
+            self.alpha[2,0] = old_div(1.,3.); self.alpha[2,1] = 0.0;  self.alpha[2,2] = old_div(2.,3.)
         self.beta = numpy.zeros((stages,stages),'d')
 
         if order == 1:
@@ -2268,7 +2274,7 @@ class SSPRKPIintegration(ExplicitRK_base):
         elif order == 2:
             self.beta[0,0] = 1.0; self.beta[1,1] = 0.5
         elif order == 3:
-            self.beta[0,0] = 1.0; self.beta[1,1] = 0.25; self.beta[2,2] = 2.0/3.0
+            self.beta[0,0] = 1.0; self.beta[1,1] = 0.25; self.beta[2,2] = old_div(2.0,3.0)
         #
         #1st order t = [t^{n+1}]
         #2nd order t = [t^{n+1},t^{n+1}]
@@ -2436,7 +2442,7 @@ class LinearSSPRKPIintegration(LinearSSPRKintegration):
 #they go along with SSPRKPI time integration
 ########################################################################
 from . import FemTools
-class DGlimiterP1Lagrange1d:
+class DGlimiterP1Lagrange1d(object):
     """
     canonical (I hope) 1d DG limiting procedure when original
     local approximation space has P1 Lagrange basis
@@ -2484,7 +2490,7 @@ class DGlimiterP1Lagrange1d:
     #
 #DG P1 Lagrange 1d
 
-class DGlimiterP2Lagrange1d:
+class DGlimiterP2Lagrange1d(object):
     """
     canonical (I hope) 1d DG limiting procedure when original
     local approximation space has P2 Lagrange basis
@@ -2533,8 +2539,8 @@ class DGlimiterP2Lagrange1d:
             x0   = self.mesh.nodeArray[self.mesh.elementNodesArray[eN,0],0]
             x1   = self.mesh.nodeArray[self.mesh.elementNodesArray[eN,1],0]
             dx   = x1-x0; du = solndofs[self.l2gSolution[ci][eN,1]]-solndofs[self.l2gSolution[ci][eN,0]]
-            uBar = (solndofs[self.l2gSolution[ci][eN,0]] + solndofs[self.l2gSolution[ci][eN,1]] +
-                    4.0*solndofs[self.l2gSolution[ci][eN,2]])/6.0 #simpson's rule
+            uBar = old_div((solndofs[self.l2gSolution[ci][eN,0]] + solndofs[self.l2gSolution[ci][eN,1]] +
+                    4.0*solndofs[self.l2gSolution[ci][eN,2]]),6.0) #simpson's rule
             xbar = self.mesh.elementBarycentersArray[eN,0]
             self.ulim[ci].dof[self.l2gLimiting[ci][eN,0]] = uBar + (x0-xbar)*du/dx
             self.ulim[ci].dof[self.l2gLimiting[ci][eN,1]] = uBar + (x1-xbar)*du/dx
@@ -2578,7 +2584,7 @@ class DGlimiterP2Lagrange1d:
     #
 #DG P2 Lagrange 1d
 
-class DGlimiterPkMonomial1d:
+class DGlimiterPkMonomial1d(object):
     """
     canonical (I hope) 1d DG limiting procedure when original
     local approximation space has Pk monomial basis
@@ -2714,7 +2720,7 @@ class DGlimiterPkMonomial1d:
 #DG Pk Lagrange 1d
 
 ########## 2d limiters ##########
-class UnstructuredLimiter_base:
+class UnstructuredLimiter_base(object):
     from .ctimeIntegration import computeElementNeighborShapeGradients
     def __init__(self,mesh,nSpace):
         self.mesh  = mesh
@@ -2777,10 +2783,10 @@ class UnstructuredLimiter_base:
                     #try each local interpolant
                     for ebN in range(self.mesh.nElementBoundaries_element):
                         ebN_1 = int(fmod(ebN+1,self.mesh.nElementBoundaries_element))
-                        xbar_ebN = (self.mesh.elementBarycentersArray[eN].flat+xbar[ebN].flat+xbar[ebN_1].flat)/3.0
+                        xbar_ebN = old_div((self.mesh.elementBarycentersArray[eN].flat+xbar[ebN].flat+xbar[ebN_1].flat),3.0)
                         gradU.flat[:] = uEn*self.elementNeighborShapeGradients[eN,ebN,0,:]+ubar[ebN]*self.elementNeighborShapeGradients[eN,ebN,1,:]\
                                         +ubar[ebN_1]*self.elementNeighborShapeGradients[eN,ebN,2,:]
-                        uout = (uEn+ubar[ebN]+ubar[ebN_1])/3.0 + gradU[0]*(x[0]-xbar_ebN[0])+gradU[1]*(x[1]-xbar_ebN[1])
+                        uout = old_div((uEn+ubar[ebN]+ubar[ebN_1]),3.0) + gradU[0]*(x[0]-xbar_ebN[0])+gradU[1]*(x[1]-xbar_ebN[1])
                         uex  = 3.0*x[0] + 2.0*x[1]
                         assert abs(uout-uex) < 1.0e-4, "mistake eN=%d nN=%d ebN=%d uout=%s uex=%g " % (eN,nN,ebN,uout,uex)
                     #ebN
@@ -2939,7 +2945,7 @@ class DGlimiterP1Lagrange2d(CockburnNotesLimiter2d_base):
                 #for debugging
                 uavIn = 0.0; uavgOut = 0.0
                 for eN in range(self.mesh.nElements_global):
-                    uBar = (uDofIn[l2g[eN,0]]+uDofIn[l2g[eN,1]]+uDofIn[l2g[eN,2]])/3.0 #P1 2d
+                    uBar = old_div((uDofIn[l2g[eN,0]]+uDofIn[l2g[eN,1]]+uDofIn[l2g[eN,2]]),3.0) #P1 2d
                     uavgIn = uBar
                     deltaU.fill(0.0)
                     tdeltaU.fill(0.0)
@@ -2951,8 +2957,8 @@ class DGlimiterP1Lagrange2d(CockburnNotesLimiter2d_base):
                             ip2= int(fmod(i+2,self.mesh.nElementBoundaries_element))
                             uM[i] = 0.5*(uDofIn[l2g[eN,ip1]]+uDofIn[l2g[eN,ip2]])
                             eN1   = self.alphaNeighbors[eN,i,0]; eN2 = self.alphaNeighbors[eN,i,1]
-                            uBar1 = (uDofIn[l2g[eN1,0]]+uDofIn[l2g[eN1,1]]+uDofIn[l2g[eN1,2]])/3.0 #P1 2d
-                            uBar2 = (uDofIn[l2g[eN2,0]]+uDofIn[l2g[eN2,1]]+uDofIn[l2g[eN2,2]])/3.0 #P1 2d
+                            uBar1 = old_div((uDofIn[l2g[eN1,0]]+uDofIn[l2g[eN1,1]]+uDofIn[l2g[eN1,2]]),3.0) #P1 2d
+                            uBar2 = old_div((uDofIn[l2g[eN2,0]]+uDofIn[l2g[eN2,1]]+uDofIn[l2g[eN2,2]]),3.0) #P1 2d
                             dUi = self.alphas[eN,i,0]*(uBar1-uBar)+self.alphas[eN,i,1]*(uBar2-uBar)
                             deltaU[i],tag_eN[i] = self.limiter(uM[i]-uBar,self.nu*dUi)
                             tdeltaU[i]  = deltaU[i]
@@ -2963,7 +2969,7 @@ class DGlimiterP1Lagrange2d(CockburnNotesLimiter2d_base):
                         posi = [max(0.0,deltaU[i]) for i in range(self.mesh.nElementBoundaries_element)]
                         negi = [max(0.0,-deltaU[i]) for i in range(self.mesh.nElementBoundaries_element)]
                         pos = sum(posi); neg = sum(negi)
-                        thp= min(1.,neg/(pos+1.0e-8)); thm = min(1.0,pos/(neg+1.0e-8))
+                        thp= min(1.,old_div(neg,(pos+1.0e-8))); thm = min(1.0,old_div(pos,(neg+1.0e-8)))
                         for i in range(self.mesh.nElementBoundaries_element):
                             tdeltaU[i] = thp*posi[i] - thm*negi[i]
                             tag_eN[i]=1
@@ -2979,7 +2985,7 @@ class DGlimiterP1Lagrange2d(CockburnNotesLimiter2d_base):
                         uDofOut[ci][l2g[eN,i]] = uMlim[ip1]+uMlim[ip2]-uMlim[i]
                     #i
                     #for debugging
-                    uavgOut = (uDofOut[ci][l2g[eN,0]]+uDofOut[ci][l2g[eN,1]]+uDofOut[ci][l2g[eN,2]])/3.0
+                    uavgOut = old_div((uDofOut[ci][l2g[eN,0]]+uDofOut[ci][l2g[eN,1]]+uDofOut[ci][l2g[eN,2]]),3.0)
                     assert abs(uavgOut-uavgIn) < 1.0e-6, "eN=%d uavgOut=%s uavgIn=%s" % (eN,uavgOut,uavgIn)
                 #eN
         #end else
@@ -3610,7 +3616,7 @@ class DGlimiterDurlofskyP1Lagrange2d_Sw(DGlimiterDurlofskyP1Lagrange2d):
 #
 #cek planning on cutting these
 #
-class ForwardIntegrator:
+class ForwardIntegrator(object):
     """
     class that is responsible for basic process of integrating a problem
     forward in time given a VectorTranport Problem, Nonlinear Solver,
@@ -3775,7 +3781,7 @@ class SteadyStateIntegrator(ForwardIntegrator):
         #self.nestedPsiTC=True
         self.nestedPsiTC=False
         self.u_dof_save=[]
-        for u_j in mlvtran.modelList[-1].u.values():
+        for u_j in list(mlvtran.modelList[-1].u.values()):
             self.u_dof_save.append(numpy.zeros(u_j.dof.shape,'d'))
     #end init
     def initialize(self,DTSET=None,t0=0.0,T=1.0):
@@ -3811,7 +3817,7 @@ PsiTCtte!""" % self.dtMeth)
         t = tIn
         failedFlag = False
         converged = False
-        for uj_dof_save,uj in zip(self.u_dof_save,self.mlvTran.modelList[-1].u.values()):
+        for uj_dof_save,uj in zip(self.u_dof_save,list(self.mlvTran.modelList[-1].u.values())):
             uj_dof_save[:]=uj.dof
         if self.dtMeth == NoIntegration:
             self.mlvTran.choose_dt(self.dtSET,tOut)
@@ -3829,7 +3835,7 @@ PsiTCtte!""" % self.dtMeth)
             for solver,model,u,r,par_u,par_r,l in zip(self.mlNL.solverList,self.mlvTran.modelList,
                                                       self.mlvTran.uList,self.mlvTran.rList,
                                                       self.mlvTran.par_uList,self.mlvTran.par_rList,
-                                                      range(nLevels)):
+                                                      list(range(nLevels))):
                 model.initializeTimeIntegration(tIn,tOut,u,r,DTSET=self.dtSET)
                 #until get residual figured out
                 nssteps = 0; res0 = None; res = None ; ssError= 1.e20
@@ -3851,7 +3857,7 @@ PsiTCtte!""" % self.dtMeth)
                     if nssteps == 0:
                         res0 = solver.norm_r
                     res = solver.norm_r
-                    ssError = res/(res0*self.steadyStateRtol + self.steadyStateAtol)
+                    ssError = old_div(res,(res0*self.steadyStateRtol + self.steadyStateAtol))
                     converged = ssError < 1.0
                     #mwf hack
                     #converged = False
@@ -3896,7 +3902,7 @@ PsiTCtte!""" % self.dtMeth)
                 if nssteps == 0:
                     res0 = self.mlNL.solverList[-1].norm_r
                 res = self.mlNL.solverList[-1].norm_r
-                ssError = res/(res0*self.steadyStateRtol + self.steadyStateAtol)
+                ssError = old_div(res,(res0*self.steadyStateRtol + self.steadyStateAtol))
                 converged = ssError < 1.0
                 #mwf hack
                 #converged = False
@@ -3958,7 +3964,7 @@ class SignedDistanceIntegrator(ForwardIntegrator):
         ForwardIntegrator.__init__(self,mlvtran,mlnl,dtMeth,nOptions,stepExact)
         self.nSteps = nSteps
         self.u_dof_save=[]
-        for u_j in mlvtran.modelList[-1].u.values():
+        for u_j in list(mlvtran.modelList[-1].u.values()):
             self.u_dof_save.append(numpy.zeros(u_j.dof.shape,'d'))
     #end init
     def initialize(self,DTSET=None,t0=0.0,T=1.0):
@@ -3971,13 +3977,13 @@ class SignedDistanceIntegrator(ForwardIntegrator):
         """
         failedFlag = False
         converged = False
-        for uj_dof_save,uj in zip(self.u_dof_save,self.mlvTran.modelList[-1].u.values()):
+        for uj_dof_save,uj in zip(self.u_dof_save,list(self.mlvTran.modelList[-1].u.values())):
             uj_dof_save[:]=uj.dof
         nLevels = len(self.mlvTran.modelList)
         for solver,model,u,r,par_u,par_r,l in zip(self.mlNL.solverList,self.mlvTran.modelList,
                                                   self.mlvTran.uList,self.mlvTran.rList,
                                                   self.mlvTran.par_uList,self.mlvTran.par_rList,
-                                                  range(nLevels)):
+                                                  list(range(nLevels))):
             model.timeIntegration.runCFL = 10.0
             model.initializeTimeIntegration(0,10000,u,r,DTSET=self.dtSET)
             #until get residual figured out
@@ -4116,9 +4122,9 @@ class CentralDifference_2ndD(TI_base):
             self.mt1_last[ci].flat[:] = self.mt1_tmp[ci].flat
     def calculateCoefs(self):
         #for bdf interface
-        dtInv = 1.0/self.dt**2
+        dtInv = old_div(1.0,self.dt**2)
         self.alpha_bdf = dtInv
-        for ci in self.m_last.keys():
+        for ci in list(self.m_last.keys()):
             self.beta_bdf[ci].flat[:] = self.m_last[ci].flat
             self.beta_bdf[ci] *= -dtInv
             self.beta_bdf[ci].flat[:] -= self.mt1_last[ci].flat

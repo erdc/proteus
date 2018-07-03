@@ -30,19 +30,19 @@ b=0.92
 c=1.34
 
 def f0(x):
-    return map(lambda y: 1.0, x)
+    return [1.0 for y in x]
 
 def f1(x):
-    return map(lambda y: 1.0 + a*y[X] + b*y[Y] + c*y[Z], x)
+    return [1.0 + a*y[X] + b*y[Y] + c*y[Z] for y in x]
 
 def f2(x):
-    return map(lambda y: 1.0 + a*y[X]**2 + c*y[Y]**2 + b*y[Z]**2, x)
+    return [1.0 + a*y[X]**2 + c*y[Y]**2 + b*y[Z]**2 for y in x]
 
 def f3(x):
-    return map(lambda y: 1.0 + b*y[X]**3 + a*y[Y]**3 + c*y[Z]**3, x)
+    return [1.0 + b*y[X]**3 + a*y[Y]**3 + c*y[Z]**3 for y in x]
 
 def f4(x):
-    return map(lambda y: 1.0 + c*y[X]**4 + b*y[Y]**4 + a*y[Z]**4, x)
+    return [1.0 + c*y[X]**4 + b*y[Y]**4 + a*y[Z]**4 for y in x]
 
 def test_gauss_point():
     gaussPoint.setOrder(1)

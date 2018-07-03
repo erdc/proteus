@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from .cylinder import *
@@ -102,7 +103,7 @@ advectiveFluxBoundaryConditions =  {0:getAFBC_u,
 diffusiveFluxBoundaryConditions = {0:{0:getDFBC_u},
                                    1:{1:getDFBC_v}}
 
-class AtRest:
+class AtRest(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

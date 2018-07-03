@@ -1,11 +1,15 @@
 from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from LinearAlgebra import *
 from TimeIntegrationTools import *
 from NonlinearSolvers import *
 from ScalarTransport import *
 import numpy
 
-class PhiDummy:
+class PhiDummy(object):
     """
     dummy class for passing off FEM potential function to TimeIntegration
     classes
@@ -17,7 +21,7 @@ class PhiDummy:
     #end init
 #end PhiDummy
 
-class dUdtEqMinusLambda:
+class dUdtEqMinusLambda(object):
     """
     test problem for TimeIntegration classes. Integrates the
     canonical test problem
@@ -306,7 +310,7 @@ if __name__ == '__main__':
     ode.timeIntegrator.runCFL = targetCFL
     t = t0
     nsteps = 0
-    dtFix = T/ntMax
+    dtFix = old_div(T,ntMax)
     L2err = 0.0
     LIerr = 0.0
     errT  = 0.0

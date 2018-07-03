@@ -6,13 +6,15 @@ A class hierarchy for shock capturing diffusion methods
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import range
+from builtins import object
 import numpy
 from . import cshockCapturing
-class ShockCapturing_base:
+class ShockCapturing_base(object):
     def __init__(self,coefficients,nd,shockCapturingFactor=0.25,lag=True):
         self.nc = coefficients.nc
         self.nd = nd
-        self.components=range(self.nc)
+        self.components=list(range(self.nc))
         self.shockCapturingFactor=shockCapturingFactor
         self.lag=lag
         #mwf had to put in da_sge, df_sge
@@ -35,11 +37,11 @@ class ShockCapturing_base:
             for cj in range(self.nc):
                 if ('df',ci,cj) in cq and ('df_sge',ci,cj) not in cq:
                     cq[('df_sge',ci,cj)]=cq[('df',ci,cj)]
-        for ci,ckDict in self.coefficients.diffusion.iteritems():
-            for ck,cjDict in ckDict.iteritems():
+        for ci,ckDict in self.coefficients.diffusion.items():
+            for ck,cjDict in ckDict.items():
                 if ('grad(phi)_sge',ck) not in cq:
                     cq[('grad(phi)_sge',ck)]=cq[('grad(phi)',ck)]
-                for cj in cjDict.keys():
+                for cj in list(cjDict.keys()):
                     if ('dphi_sge',ck,cj) not in cq:
                         cq[('dphi_sge',ck,cj)]=cq[('dphi',ck,cj)]
                     if ('da_sge',ci,ck,cj) not in cq:
@@ -201,11 +203,11 @@ class ResGradDelayLag_SC(ResGrad_SC):
             for cj in range(self.nc):
                 if ('df',ci,cj) in cq and ('df_sge',ci,cj) not in cq:
                     cq[('df_sge',ci,cj)]=cq[('df',ci,cj)]
-        for ci,ckDict in self.coefficients.diffusion.iteritems():
-            for ck,cjDict in ckDict.iteritems():
+        for ci,ckDict in self.coefficients.diffusion.items():
+            for ck,cjDict in ckDict.items():
                 if ('grad(phi)_sge',ck) not in cq:
                     cq[('grad(phi)_sge',ck)]=cq[('grad(phi)',ck)]
-                for cj in cjDict.keys():
+                for cj in list(cjDict.keys()):
                     if ('dphi_sge',ck,cj) not in cq:
                         cq[('dphi_sge',ck,cj)]=cq[('dphi',ck,cj)]
                     if ('da_sge',ci,ck,cj) not in cq:

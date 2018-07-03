@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import numpy
 import os
 from xml.etree.ElementTree import *
@@ -74,7 +79,7 @@ def gatherXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nStepsOnly=None,
         nSteps = nStepsOnly
     print("nSteps",nSteps)
     #stepsToGather=[i*stride for i in range(nSteps/stride)]
-    stepsToGather = range(0,nSteps,stride)
+    stepsToGather = list(range(0,nSteps,stride))
     fAll = open(os.path.join(dataDir,filename+addname+str(size)+".xmf"),"w")
     fAll.write(r"""<?xml version="1.0" ?>
 <!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
@@ -125,7 +130,7 @@ def gatherSplitTimeStepXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nSt
     if nStepsOnly != None:
         nSteps = nStepsOnly
     print("nSteps",nSteps)
-    stepsToGather=[i*stride for i in range(nSteps/stride)]
+    stepsToGather=[i*stride for i in range(old_div(nSteps,stride))]
     for tn  in stepsToGather:
         fAll = open(os.path.join(dataDir,filename+"_t"+str(tn) + addname+str(size)+".xmf"),"w")
         fAll.write(r"""<?xml version="1.0" ?>

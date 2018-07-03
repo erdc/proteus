@@ -8,6 +8,9 @@ respects
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import str
+from builtins import range
+from builtins import object
 import os
 import numpy
 from . import triangleWrappers
@@ -15,7 +18,7 @@ from . import TriangleUtils
 from . import TriangleFileUtils
 from .Profiling import logEvent
 
-class TriangleBaseMesh:
+class TriangleBaseMesh(object):
     """A triangulation interface wrapper.
 
     This is a wrapper for the triangulation interface

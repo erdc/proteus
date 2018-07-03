@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
@@ -20,7 +21,7 @@ def getDBC_p(x,flag):
 def getFlux(x,flag):
     return None
 
-class getIBC_p:
+class getIBC_p(object):
     def __init__(self,waterLevel):
         self.waterLevel=waterLevel
     def uOfXT(self,x,t):

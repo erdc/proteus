@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus import Domain
@@ -40,7 +41,7 @@ if (numeric_scheme != "C0Q1C0Q1" and numeric_scheme != "THQuads"):
 
 # TODO - these classes should be renamed as we do not have a true solution for this problem
 
-class uTrue:
+class uTrue(object):
     def __init__(self):
         pass
     def uOfX(self,x):
@@ -48,7 +49,7 @@ class uTrue:
     def uOfXT(self,x,t):
         return self.uOfX(x)
 
-class vTrue:
+class vTrue(object):
     def __init__(self):
         pass
     def uOfX(self,x):

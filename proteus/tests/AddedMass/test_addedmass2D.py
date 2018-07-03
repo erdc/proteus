@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import range
 import os
 from proteus.iproteus import *
 import unittest
@@ -41,17 +42,17 @@ class TestAddedMass2D(unittest.TestCase):
                 pass
 
     def test_AddedMass_2D(self):
-        from proteus import default_so
-        reload(default_so)
-        from . import addedmass2D_so
+        from proteus import defaults
+        so = defaults.load_system('addedmass2D_so')
         pList = []
         nList = []
-        for (p,n) in addedmass2D_so.pnList:
-            pList.append(import_module("."+p,"proteus.tests.AddedMass"))
-            nList.append(import_module("."+n,"proteus.tests.AddedMass"))
+        for (pModule,nModule) in so.pnList:
+            log("Loading p module = "+pModule)
+            pList.append(proteus.defaults.load_physics(pModule))
             if pList[-1].name == None:
-                pList[-1].name = p
-        so = addedmass2D_so
+                pList[-1].name = pModule
+            log("Loading n module = "+nModule)
+            nList.append(proteus.defaults.load_numerics(nModule))
         so.name = "addedmass2D"
         if so.sList == []:
             for i in range(len(so.pnList)):

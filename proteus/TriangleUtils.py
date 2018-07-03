@@ -12,6 +12,8 @@ One is for writing out triangleWrappers data arrays in Triangle's fileformat
 from __future__ import print_function
 from __future__ import absolute_import
 #import standard Python modules
+from builtins import range
+from builtins import object
 import sys,os
 import numpy
 from . import triangleWrappers
@@ -442,7 +444,7 @@ def printNeighborFile(neigs,filebase='mesh',nbase=0):
 #this set of functions is for reading a triangulation in
 ########################################################################
 
-class TriangleInputFileReader:
+class TriangleInputFileReader(object):
     """
     collect format strings, specifiers and routines in a class so that
     I can keep track of them better

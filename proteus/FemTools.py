@@ -6,6 +6,12 @@ Class hierarchies for constructing and working with finite element spaces
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from .EGeometry import *
 from .MeshTools import *
 from .LinearAlgebraTools import *
@@ -15,18 +21,18 @@ from .Profiling import logEvent
 import numpy as np
 
 
-class ReferenceElement:
+class ReferenceElement(object):
     """
     A base class for simple domains on which
     local function spaces will be built
     """
     def __init__(self,dim=0,nNodes=0,nElementBoundaries=0):
         self.dim=dim
-        self.range_dim = range(dim)
+        self.range_dim = list(range(dim))
         self.nNodes = nNodes
-        self.range_nNodes = range(nNodes)
+        self.range_nNodes = list(range(nNodes))
         self.nElementBoundaries = nElementBoundaries
-        self.range_nElementBoundaries = range(nElementBoundaries)
+        self.range_nElementBoundaries = list(range(nElementBoundaries))
         self.nodeList=[]
         self.boundaryMapList=[]
         self.boundaryMapInverseList=[]
@@ -67,8 +73,8 @@ class ReferenceSimplex(ReferenceElement):
             self.boundaryMapInverseList.append(lambda x: numpy.array([x[0]]))
             self.boundaryJacobianList.append(numpy.array([[ 1.0],
                                                             [-1.0]]))
-            self.boundaryUnitNormalList.append(numpy.array([1.0/sqrt(2.0),
-                                                              1.0/sqrt(2.0)]))
+            self.boundaryUnitNormalList.append(numpy.array([old_div(1.0,sqrt(2.0)),
+                                                              old_div(1.0,sqrt(2.0))]))
             #1
             self.boundaryMapList.append(lambda xBar: numpy.array([0.0,
                                                                     xBar[0]]))
@@ -108,9 +114,9 @@ class ReferenceSimplex(ReferenceElement):
             self.boundaryJacobianList.append(numpy.array([[1.0 , 0.0],
                                                             [0.0 , 1.0],
                                                             [-1.0,-1.0]]))
-            self.boundaryUnitNormalList.append(numpy.array([1.0/sqrt(3.0),
-                                                              1.0/sqrt(3.0),
-                                                              1.0/sqrt(3.0)]))
+            self.boundaryUnitNormalList.append(numpy.array([old_div(1.0,sqrt(3.0)),
+                                                              old_div(1.0,sqrt(3.0)),
+                                                              old_div(1.0,sqrt(3.0))]))
             #1
             self.boundaryMapList.append(lambda xBar: numpy.array([0.0,
                                                                     xBar[1],
@@ -275,7 +281,7 @@ class ReferenceCube(ReferenceElement):
     def onElement(self,xi):
         return (xi >= -1.0).all() and (xi <= 1.0).all()
 
-class LocalFunctionSpace:
+class LocalFunctionSpace(object):
     """
     Base class for low-dimensional spaces of functions
     on a reference element.
@@ -284,7 +290,7 @@ class LocalFunctionSpace:
     """
     def __init__(self,dim=0,referenceElement=None):
         self.dim=dim
-        self.range_dim = range(dim)
+        self.range_dim = list(range(dim))
         self.referenceElement = referenceElement
         #the following are lists of functions
         self.basis=[]
@@ -513,8 +519,8 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
                     fun.append(lambda xi, xb=self.nodes[b],fc=fc:  fun[fc](xi)*(xi - xb))
                     den   = den*(self.nodes[a]-self.nodes[b])
                     fc=fc+1
-            self. fun.append(lambda xi,fc=fc, den=den:   fun[fc](xi)/den)
-            self.dfun.append(lambda xi,fc=fc, den=den:  dfun[fc](xi)/den)
+            self. fun.append(lambda xi,fc=fc, den=den:   old_div(fun[fc](xi),den))
+            self.dfun.append(lambda xi,fc=fc, den=den:  old_div(dfun[fc](xi),den))
 
         # Define multi-dimensional stuff
         basis= []
@@ -643,7 +649,7 @@ class BernsteinOnCube(LocalFunctionSpace):
 
         for k in range(order+1):
             self.fun.append(lambda x,n=order,k=k:
-                            self.nChooseK(n,k)*((x+1)/2.)**k*((1-x)/2.)**(n-k))
+                            self.nChooseK(n,k)*(old_div((x+1),2.))**k*(old_div((1-x),2.))**(n-k))
             self.dfun.append(lambda x,n=order,k=k:
                              #-2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
                              # Rule out the cases when 1-x or 1+x = 0. This is to avoid warnings due to division by zero
@@ -789,7 +795,7 @@ class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
         from .RefUtils import p2refNodes
 
         self.referenceElement = ReferenceSimplex(nd)
-        LocalFunctionSpace.__init__(self,fact(nd+2)/(2*fact(nd)),
+        LocalFunctionSpace.__init__(self,old_div(fact(nd+2),(2*fact(nd))),
                                     self.referenceElement)
         self.gradientList=[]
         self.basisHessians=[]
@@ -1075,7 +1081,7 @@ class BernsteinOnSimplex(LocalFunctionSpace):
         from .RefUtils import p2refNodes
 
         self.referenceElement = ReferenceSimplex(nd)
-        LocalFunctionSpace.__init__(self,fact(nd+2)/(2*fact(nd)),
+        LocalFunctionSpace.__init__(self,old_div(fact(nd+2),(2*fact(nd))),
                                     self.referenceElement)
         self.gradientList=[]
         self.basisHessians=[]
@@ -1767,7 +1773,7 @@ class P1P0BubblesWithNodalBasis(LocalFunctionSpace):
 Interpolation conditions.
 """
 
-class InterpolationConditions:
+class InterpolationConditions(object):
     """
     Base class for generalized interpolation conditions
     for function spaces.
@@ -1779,7 +1785,7 @@ class InterpolationConditions:
     """
     def __init__(self,dim=0,referenceElement=None):
         self.dim=dim
-        self.range_dim = range(dim)
+        self.range_dim = list(range(dim))
         self.referenceElement=referenceElement
         self.functionals=[]
         self.functionalsQuadrature=[]
@@ -1864,7 +1870,7 @@ class QuadraticLagrangeNodalInterpolationConditions(InterpolationConditions):
         from .RefUtils import fact
         from .RefUtils import p2refNodes
         sdim  = referenceElement.dim
-        self.nInterpNodes= fact(2+sdim)/(2*fact(sdim))
+        self.nInterpNodes= old_div(fact(2+sdim),(2*fact(sdim)))
         InterpolationConditions.__init__(self,self.nInterpNodes,referenceElement)
         self.quadraturePointArray = numpy.zeros((self.nInterpNodes,3),'d')
         for k in range(self.nInterpNodes):
@@ -1984,7 +1990,7 @@ class FaceBarycenterInterpolationConditions(InterpolationConditions):
         if referenceElement.dim == 2: #2d, interpolation points are edge barycenters
             ebary = EVec(0.5,0.0,0.0)
         elif referenceElement.dim == 3: #3d, interpolation points are face barycenters
-            ebary = EVec(1./3.,1./3.,0.0)
+            ebary = EVec(old_div(1.,3.),old_div(1.,3.),0.0)
         #end
         for k in referenceElement.range_nElementBoundaries:
             for I in range(referenceElement.dim):
@@ -2046,8 +2052,8 @@ class p0InterpolationConditions(InterpolationConditions):
                 self.quadraturePointArray[k,I]=p[I]
         self.nQuadraturePoints = self.quadraturePointArray.shape[0]
         self.vol=sum([w for  w in  self.quadrature.weights])
-        self.functionals.append(lambda f: sum([w*f(p) for  w,p in zip(self.quadrature.weights,self.quadrature.points)])/self.vol)
-        self.functionalsQuadrature.append(lambda fList: sum([w*f for w,f in zip(self.quadrature.weights,fList)])/self.vol)
+        self.functionals.append(lambda f: old_div(sum([w*f(p) for  w,p in zip(self.quadrature.weights,self.quadrature.points)]),self.vol))
+        self.functionalsQuadrature.append(lambda fList: old_div(sum([w*f for w,f in zip(self.quadrature.weights,fList)]),self.vol))
     def quadrature2DOF_element(self,k):
         return 0
     def definedOnLocalElementBoundary(self,k,ebN_local):
@@ -2146,7 +2152,7 @@ class P1BubbleInterpolationConditions(InterpolationConditions):
         if referenceElement.nNodes > 5:
             logEvent("Haven't implemented this many nodes for nodal interpolation conditions",level=1)
         #bubble
-        dp1inv = 1.0/float(self.referenceElement.nNodes)
+        dp1inv = old_div(1.0,float(self.referenceElement.nNodes))
         self.functionals.append(lambda f: f(self.quadraturePointArray[-1,:]) - \
                                     dp1inv * sum([self.functionals[i](self.quadraturePointArray[-1,:]) for i in range(self.referenceElement.nNodes)]))
         self.functionalsQuadrature.append(lambda fList: fList[self.referenceElement.nNodes] - \
@@ -2215,7 +2221,7 @@ class P1P0BubbleInterpolationConditions(InterpolationConditions):
 Finite Elements
 """
 
-class ReferenceFiniteElement:
+class ReferenceFiniteElement(object):
     """
     The geometric element, local function space, and interpolation
     conditions.
@@ -2236,14 +2242,14 @@ class ReferenceFiniteElement:
 Degrees of freedom mappings
 """
 
-class DOFMap:
+class DOFMap(object):
     """
     Base class for integer mappings between local degrees of freedom
     and global degrees of freedom.
     """
     def __init__(self,nDOF=0):
         self.nDOF = nDOF
-        self.range_nDOF = xrange(nDOF)
+        self.range_nDOF = range(nDOF)
         self.l2g=None
         ###for parallel subdomain local dof to global dof mappings
         #array of 'offsets' where owned dof numbers start on each subdomain
@@ -2602,7 +2608,7 @@ class P1BubbleDOFMap(DOFMap):
 Mappings.
 """
 
-class ElementMaps:
+class ElementMaps(object):
     """
     Base class for a set of real number vector fields that map a reference
     element into the physical domain.
@@ -2765,7 +2771,7 @@ class ParametricMaps(ElementMaps):
         self.useC=True
     def getBasisValuesIP(self, interpolationPoints):
         n_xi = interpolationPoints.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         self.psi_ip = numpy.zeros((n_xi,
                                 self.localFunctionSpace.dim),
                                'd')
@@ -2775,7 +2781,7 @@ class ParametricMaps(ElementMaps):
         return self.psi_ip
     def getBasisValuesRef(self,xiArray):
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         self.psi = numpy.zeros((n_xi,
                                 self.localFunctionSpace.dim),
                                'd')
@@ -2787,7 +2793,7 @@ class ParametricMaps(ElementMaps):
                   xArray):
         xArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         psi = numpy.zeros((n_xi,
                              self.localFunctionSpace.dim),
                             'd')
@@ -2808,7 +2814,7 @@ class ParametricMaps(ElementMaps):
                             xArray[eN,k,m] += self.mesh.nodeArray[J,m]*psi[k,j]
     def getBasisGradientValuesRef(self,xiArray):
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         self.grad_psi = numpy.zeros((n_xi,
                                      self.localFunctionSpace.dim,
                                      self.referenceElement.dim),
@@ -2823,7 +2829,7 @@ class ParametricMaps(ElementMaps):
                           jacobianDeterminantArray):
         jacobianArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         grad_psi = numpy.zeros((n_xi,
                                   self.localFunctionSpace.dim,
                                   self.referenceElement.dim),
@@ -2847,11 +2853,11 @@ class ParametricMaps(ElementMaps):
                             for n in self.referenceElement.range_dim:
                                 jacobianArray[eN,k,m,n] += self.mesh.nodeArray[J,m]*grad_psi[k,j,n]
                     jacobianDeterminantArray[eN,k] = det(jacobianArray[eN,k])
-                    jacobianInverseArray[eN,k,:,:] = adj(jacobianArray[eN,k])/jacobianDeterminantArray[eN,k]
+                    jacobianInverseArray[eN,k,:,:] = old_div(adj(jacobianArray[eN,k]),jacobianDeterminantArray[eN,k])
     def getBasisValuesTraceRef(self,
                                xiArray):
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         self.psi_trace = numpy.zeros((self.referenceElement.nElementBoundaries,
                                       n_xi,
                                       self.localFunctionSpace.dim),
@@ -2870,7 +2876,7 @@ class ParametricMaps(ElementMaps):
                        xArray):
         xArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         psi = numpy.zeros((self.referenceElement.nElementBoundaries,
                              n_xi,
                              self.localFunctionSpace.dim),
@@ -2896,7 +2902,7 @@ class ParametricMaps(ElementMaps):
     def getBasisGradientValuesTraceRef(self,
                                        xiArray):
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         self.grad_psi_trace = numpy.zeros((self.referenceElement.nElementBoundaries,
                                            n_xi,
                                            self.localFunctionSpace.dim,
@@ -2932,7 +2938,7 @@ class ParametricMaps(ElementMaps):
         unitNormalArray.flat[:]=0.0
         metricTensorArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         grad_psi = numpy.zeros((self.referenceElement.nElementBoundaries,
                                   n_xi,
                                   self.localFunctionSpace.dim,
@@ -3018,7 +3024,7 @@ class ParametricMaps(ElementMaps):
         unitNormalArray.flat[:]=0.0
         metricTensorArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         grad_psi = numpy.zeros((self.referenceElement.nElementBoundaries,
                                   n_xi,
                                   self.localFunctionSpace.dim,
@@ -3062,7 +3068,7 @@ class ParametricMaps(ElementMaps):
         """
         xArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         psi = numpy.zeros((self.referenceElement.nElementBoundaries,
                            n_xi,
                            self.localFunctionSpace.dim),
@@ -3106,7 +3112,7 @@ class ParametricMaps(ElementMaps):
         unitNormalArray.flat[:]=0.0
         metricTensorArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         grad_psi = numpy.zeros((self.referenceElement.nElementBoundaries,
                                   n_xi,
                                   self.localFunctionSpace.dim,
@@ -3208,7 +3214,7 @@ class ParametricMaps(ElementMaps):
         unitNormalArray.flat[:]=0.0
         metricTensorArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         grad_psi = numpy.zeros((self.referenceElement.nElementBoundaries,
                                   n_xi,
                                   self.localFunctionSpace.dim,
@@ -3257,7 +3263,7 @@ class AffineMaps(ParametricMaps):
             # I don't think this code works correctly when self.useC == False...
             xiArray.flat[:]=0.0
             n_x = xArray.shape[1]
-            range_nx = range(n_x)
+            range_nx = list(range(n_x))
             grad_psi = numpy.zeros((self.localFunctionSpace.dim,
                                     self.referenceElement.dim),
                                    'd')
@@ -3331,7 +3337,7 @@ class AffineMaps(ParametricMaps):
         else:
             xiArray.flat[:]=0.0
             n_x = xArray.shape[2]
-            range_nx = range(n_x)
+            range_nx = list(range(n_x))
             grad_psi = numpy.zeros((self.localFunctionSpace.dim,
                                       self.referenceElement.dim),
                                      'd')
@@ -3376,7 +3382,7 @@ class AffineMaps(ParametricMaps):
         else:
             xiArray.flat[:]=0.0
             n_x = xArray.shape[1]
-            range_nx = range(n_x)
+            range_nx = list(range(n_x))
             grad_psi = numpy.zeros((self.localFunctionSpace.dim,
                                     self.referenceElement.dim),
                                    'd')
@@ -3494,7 +3500,7 @@ class AffineMaps(ParametricMaps):
 Finite Element Spaces
 """
 
-class ParametricFiniteElementSpace:
+class ParametricFiniteElementSpace(object):
     """
     Base class for spaces of functions defined by a set of finite
     elements that are each related to the same reference finite element.
@@ -3508,7 +3514,7 @@ class ParametricFiniteElementSpace:
     def __init__(self, referenceFiniteElement, elementMaps, dofMap):
         self.strongDirichletConditions = True
         self.dim=dofMap.nDOF
-        self.range_dim = range(dofMap.nDOF)
+        self.range_dim = list(range(dofMap.nDOF))
         self.referenceFiniteElement=referenceFiniteElement
         self.elementMaps = elementMaps
         self.mesh = elementMaps.mesh
@@ -3525,7 +3531,7 @@ class ParametricFiniteElementSpace:
         self.useC=True
     def getBasisValuesRef(self,xiArray):
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         self.psi = numpy.zeros((n_xi,
                                 self.referenceFiniteElement.localFunctionSpace.dim),
                                'd')
@@ -3538,7 +3544,7 @@ class ParametricFiniteElementSpace:
                        vArray):
         #\todo it isn't really necessarry to load values into array for uniform quadrature and basis functions
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         psi = numpy.zeros((n_xi,
                              self.referenceFiniteElement.localFunctionSpace.dim),
                             'd')
@@ -3556,7 +3562,7 @@ class ParametricFiniteElementSpace:
                               xiArrayArray,
                               vArray):
         n_xi = xiArrayArray.shape[1]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         for eN in range(self.elementMaps.mesh.nElements_global):
             for k in range_n_xi:
                 for j in self.referenceFiniteElement.localFunctionSpace.range_dim:
@@ -3564,7 +3570,7 @@ class ParametricFiniteElementSpace:
     def getBasisGradientValuesRef(self,
                                   xiArray):
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         self.grad_psi = numpy.zeros((n_xi,
                                      self.referenceFiniteElement.localFunctionSpace.dim,
                                      self.referenceFiniteElement.referenceElement.dim),
@@ -3595,7 +3601,7 @@ class ParametricFiniteElementSpace:
         '''
         grad_vArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         grad_psi = numpy.zeros((n_xi,
                                   self.referenceFiniteElement.localFunctionSpace.dim,
                                   self.referenceFiniteElement.referenceElement.dim),
@@ -3617,7 +3623,7 @@ class ParametricFiniteElementSpace:
     def getBasisHessianValuesRef(self,
                                  xiArray):
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         self.Hessian_psi = numpy.zeros((n_xi,
                                         self.referenceFiniteElement.localFunctionSpace.dim,
                                         self.referenceFiniteElement.referenceElement.dim,
@@ -3633,7 +3639,7 @@ class ParametricFiniteElementSpace:
                               Hessian_vArray):
         Hessian_vArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         Hessian_psi = numpy.zeros((n_xi,
                                    self.referenceFiniteElement.localFunctionSpace.dim,
                                    self.referenceFiniteElement.referenceElement.dim,
@@ -3652,7 +3658,7 @@ class ParametricFiniteElementSpace:
                                       grad_vArray):
         grad_vArray.flat[:]=0.0
         n_xi = xiArrayArray.shape[1]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         for eN in range(self.elementMaps.mesh.nElements_global):
             for k in range_n_xi:
                 for j in self.referenceFiniteElement.localFunctionSpace.range_dim:
@@ -3671,7 +3677,7 @@ class ParametricFiniteElementSpace:
         vArray (output)         - the vector to store the basis function trace values on the reference triangle
         '''
         n_xi = xiArray.shape[2]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         psi = numpy.zeros((self.referenceFiniteElement.referenceElement.nElementBoundaries*n_xi,
                              self.referenceFiniteElement.localFunctionSpace.dim),
                             'd')
@@ -3693,7 +3699,7 @@ class ParametricFiniteElementSpace:
                                    xiArrayArray,
                                    vArray):
         n_xi = xiArrayArray.shape[2]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         for eN in range(self.elementMaps.mesh.nElements_global):
             for ebN in self.referenceFiniteElement.referenceElement.range_nElementBoundaries:
                 for k in range_n_xi:
@@ -3710,7 +3716,7 @@ class ParametricFiniteElementSpace:
                                     grad_vArray):
         grad_vArray.flat[:]=0.0
         n_xi = xiArray.shape[2]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         grad_psi = numpy.zeros((self.referenceFiniteElement.referenceElement.nElementBoundaries*n_xi,
                                   self.referenceFiniteElement.localFunctionSpace.dim,
                                   self.referenceFiniteElement.referenceElement.dim),
@@ -3738,7 +3744,7 @@ class ParametricFiniteElementSpace:
                                            grad_vArray):
         grad_vArray.flat[:]=0.0
         n_xi = xiArrayArray.shape[2]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         for eN in range(self.elementMaps.mesh.nElements_global):
             for ebN in self.referenceFiniteElement.referenceElement.range_nElementBoundaries:
                 for k in range_n_xi:
@@ -3754,7 +3760,7 @@ class ParametricFiniteElementSpace:
 
     def getBasisValuesTraceRef(self,xiArray):
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         self.psi_trace = numpy.zeros((self.referenceFiniteElement.referenceElement.nElementBoundaries,
                            n_xi,
                            self.referenceFiniteElement.localFunctionSpace.dim),
@@ -3772,7 +3778,7 @@ class ParametricFiniteElementSpace:
                                           xiArray,
                                           vArray):
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         psi = numpy.zeros((self.referenceFiniteElement.referenceElement.nElementBoundaries,
                            n_xi,
                            self.referenceFiniteElement.localFunctionSpace.dim),
@@ -3805,7 +3811,7 @@ class ParametricFiniteElementSpace:
                                                  xiArrayArray,
                                                  vArray):
         n_xi = xiArrayArray.shape[1]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         for ebNE in range(self.elementMaps.mesh.nExteriorElementBoundaries_global):
             ebN = self.elementMaps.mesh.exteriorElementBoundariesArray[ebNE]
             ebN_local = self.elementMaps.elementBoundayLocalElementBoundariesArray[ebN,0]
@@ -3819,7 +3825,7 @@ class ParametricFiniteElementSpace:
     def getBasisGradientValuesTraceRef(self,
                                        xiArray):
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         self.grad_psi_trace = numpy.zeros((self.referenceFiniteElement.referenceElement.nElementBoundaries,
                                            n_xi,
                                            self.referenceFiniteElement.localFunctionSpace.dim,
@@ -3836,7 +3842,7 @@ class ParametricFiniteElementSpace:
                                                   grad_vArray):
         grad_vArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         grad_psi = numpy.zeros((self.referenceFiniteElement.referenceElement.nElementBoundaries,
                                 n_xi,
                                 self.referenceFiniteElement.localFunctionSpace.dim,
@@ -3874,7 +3880,7 @@ class ParametricFiniteElementSpace:
                                                          grad_vArray):
         grad_vArray.flat[:]=0.0
         n_xi = xiArrayArray.shape[1]
-        range_n_xi = range(n_xi)
+        range_n_xi = list(range(n_xi))
         for ebNE in range(self.elementMaps.mesh.nExteriorElementBoundaries_global):
             ebN = self.elementMaps.mesh.exteriorElementBoundariesArray[ebNE]
             eN  = self.elementMaps.mesh.elementBoundaryElementsArray[ebN,0]
@@ -3957,8 +3963,8 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 #self.viewer("set terminal x11")
             nx = sqrt(self.elementMaps.mesh.nNodes_global)
             ny = nx
-            x = numpy.arange(nx,dtype='i')/float(nx-1)
-            y = numpy.arange(nx,dtype='i')/float(nx-1)
+            x = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
+            y = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
             nSol = numpy.reshape(u.dof,(nx,ny))
             self.viewer('set parametric')
             self.viewer('set data style lines')
@@ -3984,6 +3990,8 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                     "Dimensions":"%i" % (self.mesh.globalMesh.nNodes_global,)})
             if ar.hdfFile is not None:
                 if ar.has_h5py:
+                    import pdb
+                    pdb.set_trace()
                     values.text = ar.hdfFilename+":/"+u.name+"_t"+str(tCount)
                     comm = Comm.get()
                     ar.create_dataset_sync(u.name+"_t"+str(tCount),
@@ -4922,8 +4930,8 @@ class DG_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             elif self.referenceFiniteElement.referenceElement.dim == 2:
                 nx = sqrt(self.elementMaps.mesh.nNodes_global)
                 ny = nx
-                x = numpy.arange(nx,dtype='i')/float(nx-1)
-                y = numpy.arange(nx,dtype='i')/float(nx-1)
+                x = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
+                y = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
                 nSol = numpy.reshape(nodal_average,(nx,ny))
                 self.viewer('set parametric')
                 self.viewer('set data style lines')
@@ -5160,8 +5168,8 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             elif self.referenceFiniteElement.referenceElement.dim == 2:
                 nx = sqrt(self.elementMaps.mesh.nNodes_global)
                 ny = nx
-                x = numpy.arange(nx,dtype='i')/float(nx-1)
-                y = numpy.arange(nx,dtype='i')/float(nx-1)
+                x = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
+                y = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
                 nSol = numpy.reshape(nodal_average,(nx,ny))
                 self.viewer('set parametric')
                 self.viewer('set data style lines')
@@ -5773,8 +5781,8 @@ class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             elif self.referenceFiniteElement.referenceElement.dim == 2:
                 nx = sqrt(self.elementMaps.mesh.nNodes_global)
                 ny = nx
-                x = numpy.arange(nx,dtype='i')/float(nx-1)
-                y = numpy.arange(nx,dtype='i')/float(nx-1)
+                x = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
+                y = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
                 nSol = numpy.reshape(nodal_average,(nx,ny))
                 self.viewer('set parametric')
                 self.viewer('set data style lines')
@@ -6490,7 +6498,7 @@ Members of the finite element space.
 from .LinearAlgebraTools import ParVec
 from . import Comm
 
-class FiniteElementFunction:
+class FiniteElementFunction(object):
     """A member of a finite element space of scalar functions.
 
     This class manages the calculation of function, gradient, tensor,
@@ -6526,7 +6534,7 @@ class FiniteElementFunction:
         self.nDOF_global = self.femSpace.dim
         #: dimension of the degree of freedom
         self.dim_dof = dim_dof
-        self.range_dim_dof = range(self.dim_dof)
+        self.range_dim_dof = list(range(self.dim_dof))
         if dof is not None:
             #: numpy array of degree-of-freedom values used to
             #: calculate the finite element function.
@@ -6587,7 +6595,7 @@ class FiniteElementFunction:
                                                                u)
         else:
             u.flat[:]=0.0
-            range_n_xi = range(n_xi)
+            range_n_xi = list(range(n_xi))
             for eN in range(self.femSpace.elementMaps.mesh.nElements_global):
                 for k in range_n_xi:
                     for j in self.femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
@@ -6605,7 +6613,7 @@ class FiniteElementFunction:
                                                                        grad_v,
                                                                        grad_u)
         else:
-            range_n_xi = range(n_xi)
+            range_n_xi = list(range(n_xi))
             grad_u.flat[:]=0.0
             for eN in range(self.femSpace.elementMaps.mesh.nElements_global):
                 for k in range_n_xi:
@@ -6643,7 +6651,7 @@ class FiniteElementFunction:
                                                                    u)
         else:
             u.flat[:]=0.0
-            range_n_xi = range(n_xi)
+            range_n_xi = list(range(n_xi))
             for eN in range(self.femSpace.elementMaps.mesh.nElements_global):
                 for ebN in self.femSpace.referenceFiniteElement.referenceElement.range_nElementBoundaries:
                     for k in range_n_xi:
@@ -6663,7 +6671,7 @@ class FiniteElementFunction:
                                                                            grad_u)
         else:
             grad_u.flat[:]=0.0
-            range_n_xi = range(n_xi)
+            range_n_xi = list(range(n_xi))
             for eN in range(self.femSpace.elementMaps.mesh.nElements_global):
                 for ebN in self.femSpace.referenceFiniteElement.referenceElement.range_nElementBoundaries:
                     for k in range_n_xi:
@@ -6686,7 +6694,7 @@ class FiniteElementFunction:
                                                                                   u)
         else:
             u.flat[:]=0.0
-            range_n_xi = range(n_xi)
+            range_n_xi = list(range(n_xi))
             for ebNE in range(self.femSpace.elementMaps.mesh.nExteriorElementBoundaries_global):
                 ebN = self.femSpace.elementMaps.mesh.exteriorElementBoundariesArray[ebNE]
                 eN  = self.femSpace.elementMaps.mesh.elementBoundaryElementsArray[ebN,0]
@@ -6711,7 +6719,7 @@ class FiniteElementFunction:
                                                                                           grad_u)
         else:
             grad_u.flat[:]=0.0
-            range_n_xi = range(n_xi)
+            range_n_xi = list(range(n_xi))
             for ebNE in range(self.femSpace.elementMaps.mesh.nExteriorElementBoundaries_global):
                 ebN = self.femSpace.elementMaps.mesh.exteriorElementBoundariesArray[ebNE]
                 eN  = self.femSpace.elementMaps.mesh.elementBoundariesArray[ebN,0]
@@ -6758,7 +6766,7 @@ class FiniteElementFunction:
 Boundary Conditions
 """
 
-class DOFBoundaryConditions:
+class DOFBoundaryConditions(object):
     """
     A class for generating the set of DOF that are replaced by
     Dirichlet conditions and the values that are to be assigned to
@@ -6792,7 +6800,7 @@ class DOFBoundaryConditions:
         self.DOFBoundaryMaterialFlag={}
         self.freeDOFSet=set()
         self.periodicDOFDict={}
-        class ptuple:
+        class ptuple(object):
             """
             define a dictionary key that defines points as equal if they're "close"
             """
@@ -6847,12 +6855,12 @@ class DOFBoundaryConditions:
                                     self.DOFBoundaryMaterialFlag[dofN] = materialFlag
                                     self.freeDOFSet.discard(dofN)
                                 else:
-                                    if dofN not in self.DOFBoundaryConditionsDict.keys():
+                                    if dofN not in list(self.DOFBoundaryConditionsDict.keys()):
                                         self.freeDOFSet.add(dofN)
                                 #has Dirichlet bc set or not
                             #on ebN_element
                         #local faces
-                        if interiorInterpolationPoint and dofN not in self.DOFBoundaryConditionsDict.keys():
+                        if interiorInterpolationPoint and dofN not in list(self.DOFBoundaryConditionsDict.keys()):
                             self.freeDOFSet.add(dofN)
                     except TypeError:
                         logEvent("""WARNING DOFBoundaryCondition Pointwise conditions should take arguments (x,flag) now trying without flag""")
@@ -6885,7 +6893,7 @@ class DOFBoundaryConditions:
                             self.DOFBoundaryPointDict[dofN]=x
                             self.freeDOFSet.discard(dofN)
                         else:
-                            if dofN not in self.DOFBoundaryConditionsDict.keys():
+                            if dofN not in list(self.DOFBoundaryConditionsDict.keys()):
                                 self.freeDOFSet.add(dofN)
                     #exception on argument list for getPointWiseBoundaryConditions
                     #now also try setting Dirichlet boundary conditions using nodal id tags
@@ -6915,7 +6923,7 @@ class DOFBoundaryConditions:
                                 self.DOFBoundaryMaterialFlag[dofN] = materialFlag
                                 self.freeDOFSet.discard(dofN)
                             else:
-                                if dofN not in self.DOFBoundaryConditionsDict.keys():
+                                if dofN not in list(self.DOFBoundaryConditionsDict.keys()):
                                     self.freeDOFSet.add(dofN)
                             #has Dirichlet bc set or not
                         except TypeError:
@@ -6927,7 +6935,7 @@ class DOFBoundaryConditions:
         else:
             self.freeDOFSet = set(range(femSpace.dim))
         #
-        for nodeSet in self.periodicDOFDict.values():
+        for nodeSet in list(self.periodicDOFDict.values()):
             nodeList = list(nodeSet)
             nodeList.sort()
             self.freeDOFSet.add(nodeList[0])
@@ -6939,7 +6947,7 @@ class DOFBoundaryConditions:
         for free_dofN, dofN in enumerate(self.freeDOFSet):
             self.global2freeGlobal[dofN] = free_dofN
             self.myFreeDOF[dofN] = dofN
-        for nodeSet in self.periodicDOFDict.values():
+        for nodeSet in list(self.periodicDOFDict.values()):
             nodeList = list(nodeSet)
             nodeList.sort()
             free_dofN = self.global2freeGlobal[nodeList[0]]
@@ -6953,13 +6961,13 @@ class DOFBoundaryConditions:
         nfree = len(self.global2freeGlobal)
         self.global2freeGlobal_global_dofs = numpy.zeros((nfree,),'i')
         self.global2freeGlobal_free_dofs = numpy.zeros((nfree,),'i')
-        test = numpy.array(range(nfree),dtype='i')
+        test = numpy.array(list(range(nfree)),dtype='i')
         for i,dofN in enumerate(self.global2freeGlobal.keys()):
             self.global2freeGlobal_global_dofs[i] = dofN#map each of the unknown DOF's to the original node number
             self.global2freeGlobal_free_dofs[i] = self.global2freeGlobal[dofN]#map each of the unknown DOF's to the free unknown number
 
 
-class DOFBoundaryConditions_alt:
+class DOFBoundaryConditions_alt(object):
     """
     A class for generating the set of DOF that are replaced by
     Dirichlet conditions and the values that are to be assigned to
@@ -6993,7 +7001,7 @@ class DOFBoundaryConditions_alt:
         self.DOFBoundaryPointDict={}
         self.DOFBoundaryMaterialFlag={}
         self.periodicDOFDict={}
-        class ptuple:
+        class ptuple(object):
             """
             define a dictionary key that defines points as equal if they're "close"
             """
@@ -7053,7 +7061,7 @@ class DOFBoundaryConditions_alt:
                 #k
             #eN
         self.freeDOFSet = set(range(femSpace.dim))
-        for nodeSet in self.periodicDOFDict.values():
+        for nodeSet in list(self.periodicDOFDict.values()):
             nodeList = list(nodeSet)
             nodeList.sort()
             self.freeDOFSet.add(nodeList[0])
@@ -7065,7 +7073,7 @@ class DOFBoundaryConditions_alt:
         for free_dofN, dofN in enumerate(self.freeDOFSet):
             self.global2freeGlobal[dofN] = free_dofN
             self.myFreeDOF[dofN] = dofN
-        for nodeSet in self.periodicDOFDict.values():
+        for nodeSet in list(self.periodicDOFDict.values()):
             nodeList = list(nodeSet)
             nodeList.sort()
             free_dofN = self.global2freeGlobal[nodeList[0]]
@@ -7079,7 +7087,7 @@ class DOFBoundaryConditions_alt:
         nfree = len(self.global2freeGlobal)
         self.global2freeGlobal_global_dofs = numpy.zeros((nfree,),'i')
         self.global2freeGlobal_free_dofs = numpy.zeros((nfree,),'i')
-        test = numpy.array(range(nfree),dtype='i')
+        test = numpy.array(list(range(nfree)),dtype='i')
         for i,dofN in enumerate(self.global2freeGlobal.keys()):
             self.global2freeGlobal_global_dofs[i] = dofN#map each of the unknown DOF's to the original node number
             self.global2freeGlobal_free_dofs[i] = self.global2freeGlobal[dofN]#map each of the unknown DOF's to the free unknown number
@@ -7115,7 +7123,7 @@ class FluxBoundaryConditions(object):
                  getStressFluxBoundaryConditions=None):
         self.advectiveFluxBoundaryConditionsDict={}
         self.stressFluxBoundaryConditionsDict={}
-        self.diffusiveFluxBoundaryConditionsDictDict=dict([(ck,{}) for ck in getDiffusiveFluxBoundaryConditions.keys()])
+        self.diffusiveFluxBoundaryConditionsDictDict=dict([(ck,{}) for ck in list(getDiffusiveFluxBoundaryConditions.keys())])
         for ebNE in range(mesh.nExteriorElementBoundaries_global):
             ebN = mesh.exteriorElementBoundariesArray[ebNE]
             materialFlag = mesh.elementBoundaryMaterialTypes[ebN]
@@ -7129,7 +7137,7 @@ class FluxBoundaryConditions(object):
                         g = getStressFluxBoundaryConditions(x[ebNE,k],materialFlag)
                         if g:
                             self.stressFluxBoundaryConditionsDict[(ebNE,k)] = g
-                    for ck in getDiffusiveFluxBoundaryConditions.keys():
+                    for ck in list(getDiffusiveFluxBoundaryConditions.keys()):
                         g = getDiffusiveFluxBoundaryConditions[ck](x[ebNE,k],materialFlag)
                         if g:
                             self.diffusiveFluxBoundaryConditionsDictDict[ck][(ebNE,k)] = g
@@ -7138,13 +7146,13 @@ class FluxBoundaryConditions(object):
                     g = getAdvectiveFluxBoundaryConditions(x[ebNE,k])
                     if g:
                         self.advectiveFluxBoundaryConditionsDict[(ebNE,k)] = g
-                    for ck in getDiffusiveFluxBoundaryConditions.keys():
+                    for ck in list(getDiffusiveFluxBoundaryConditions.keys()):
                         g = getDiffusiveFluxBoundaryConditions[ck](x[ebNE,k])
                         if g:
                             self.diffusiveFluxBoundaryConditionsDictDict[ck][(ebNE,k)] = g
             #k
         #ebNE
-class FluxBoundaryConditionsGlobalElementBoundaries:
+class FluxBoundaryConditionsGlobalElementBoundaries(object):
     """
     mwf original version that sets indeces based on all element boundaries
     A class for generating the list of element boundaries
@@ -7152,7 +7160,7 @@ class FluxBoundaryConditionsGlobalElementBoundaries:
     """
     def __init__(self,mesh,nElementBoundaryQuadraturePoints_elementBoundary,x,getAdvectiveFluxBoundaryConditions=None,getDiffusiveFluxBoundaryConditions={}):
         self.advectiveFluxBoundaryConditionsDict={}
-        self.diffusiveFluxBoundaryConditionsDictDict=dict([(ck,{}) for ck in getDiffusiveFluxBoundaryConditions.keys()])
+        self.diffusiveFluxBoundaryConditionsDictDict=dict([(ck,{}) for ck in list(getDiffusiveFluxBoundaryConditions.keys())])
         for ebNE in range(mesh.nExteriorElementBoundaries_global):
             ebN = mesh.exteriorElementBoundariesArray[ebNE]
             eN_global   = mesh.elementBoundaryElementsArray[ebN,0]
@@ -7165,7 +7173,7 @@ class FluxBoundaryConditionsGlobalElementBoundaries:
                         g = getAdvectiveFluxBoundaryConditions(x[ebN,k],materialFlag)
                     if g:
                         self.advectiveFluxBoundaryConditionsDict[(ebN,k)] = g
-                    for ck in getDiffusiveFluxBoundaryConditions.keys():
+                    for ck in list(getDiffusiveFluxBoundaryConditions.keys()):
                         g = getDiffusiveFluxBoundaryConditions[ck](x[ebN,k],materialFlag)
                         if g:
                             self.diffusiveFluxBoundaryConditionsDictDict[ck][(ebN,k)] = g
@@ -7176,11 +7184,11 @@ class FluxBoundaryConditionsGlobalElementBoundaries:
                         g = getAdvectiveFluxBoundaryConditions(x[ebN,k])
                     if g:
                         self.advectiveFluxBoundaryConditionsDict[(ebN,k)] = g
-                    for ck in getDiffusiveFluxBoundaryConditions.keys():
+                    for ck in list(getDiffusiveFluxBoundaryConditions.keys()):
                         g = getDiffusiveFluxBoundaryConditions[ck](x[ebN,k])
                         if g:
                             self.diffusiveFluxBoundaryConditionsDictDict[ck][(ebN,k)] = g
-class StressBoundaryConditions:
+class StressBoundaryConditions(object):
     """
     A class for generating the list of element boundaries
     where values are specified.
@@ -7202,7 +7210,7 @@ class StressBoundaryConditions:
                         self.stressTraceBoundaryConditionsDict[(ebNE,k)] = g
             #k
         #ebNE
-class MultilevelProjectionOperators:
+class MultilevelProjectionOperators(object):
     """
     A class that takes a hierarchical (multiLevel) mesh and generates
     the interpolation and restriction operators.
@@ -7291,7 +7299,7 @@ class MultilevelProjectionOperators:
                 fineSpaceInterpolationFunctionals = fineSpace.referenceFiniteElement.interpolationConditions.functionalsQuadrature
                 #interpolationPointsOnFineElement_reference = fineSpace.referenceFiniteElement.interpolationConditions.quadraturePointArray
                 nInterpolationPoints = fineSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints
-                range_nInterpolationPoints = range(nInterpolationPoints)
+                range_nInterpolationPoints = list(range(nInterpolationPoints))
                 referenceElement = fineSpace.referenceFiniteElement.referenceElement
                 rbcSum = Vec(coarseSpace.dim)
                 rbcColumnIndeces=[set() for row in range(coarseSpace.dim)]
@@ -7453,7 +7461,7 @@ class MultilevelProjectionOperators:
                         if rbc[(I,J)] > 0.0 - 1.0e-8 and rbc[(I,J)] < 0.0 + 1.0e-8:
                             scaled_rbc[(I,J)] = 0.0
                         else:
-                            scaled_rbc[(I,J)] = rbc[(I,J)]/rbcSum[I]
+                            scaled_rbc[(I,J)] = old_div(rbc[(I,J)],rbcSum[I])
                 #now make real sparse matrices
                 (rbc,rbczval) = SparseMatFromDict(coarseSpace.dim,fineSpace.dim,rbc)
                 (scaled_rbc,scaled_rbczval) = SparseMatFromDict(coarseSpace.dim,fineSpace.dim,scaled_rbc)

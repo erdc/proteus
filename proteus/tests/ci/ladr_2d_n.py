@@ -1,4 +1,7 @@
 from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from proteus import *
 from proteus.default_n import *
 try:
@@ -18,7 +21,7 @@ shockCapturing = ResGradQuad_SC(coefficients,nd,
                                lag=True)
 numericalFluxType = Advection_DiagonalUpwind_Diffusion_SIPG_exterior
 nnx=41; nny=41
-tnList=[float(i)/40.0 for i in range(11)]
+tnList=[old_div(float(i),40.0) for i in range(11)]
 matrix = SparseMatrix
 multilevelLinearSolver = LU
 linearSmoother = None

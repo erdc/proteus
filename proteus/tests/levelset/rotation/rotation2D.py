@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
 from proteus import Domain
 #if True uses PETSc solvers
 parallel = False
@@ -42,7 +44,7 @@ lRefinement=1
 #soname="rotationcgp2_bdf2_mc"+`lRefinement`
 nn=nnx=nny=(2**lRefinement)*5+1
 nnz=1
-he=1.0/(nnx-1.0)
+he=old_div(1.0,(nnx-1.0))
 L=[1.0,1.0]
 
 unstructured=True#True for tetgen, false for tet or hex from rectangular grid

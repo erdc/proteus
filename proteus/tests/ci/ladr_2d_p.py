@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 try:
@@ -27,7 +28,7 @@ dirichletConditions = {0:getDBC}
 advectiveFluxBoundaryConditions = {}
 diffusiveFluxBoundaryConditions = {0:{}}
 
-class IC:
+class IC(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

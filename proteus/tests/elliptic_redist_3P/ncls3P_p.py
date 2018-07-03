@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from math import *
@@ -37,7 +38,7 @@ velocityField={0:velx,
 #####################
 # INITIAL CONDITION #
 #####################
-class init_cond:
+class init_cond(object):
     def __init__(self,L,scaling=0.75):
         self.radius=0.15
         self.xc=0.5
@@ -47,7 +48,7 @@ class init_cond:
         import numpy as np
         return self.scaling*(self.radius - math.sqrt((x[0]-self.xc)**2 + (x[1]-self.yc)**2))
 
-class zalesak_disk:
+class zalesak_disk(object):
     def __init__(self,L,scaling=0.75):
         self.radius=0.15
         self.xc=0.5

@@ -1,6 +1,12 @@
 """ Helper functions commonly used in tests. """
 from __future__ import print_function
+from __future__ import division
 
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import os
 import sys
 import csv
@@ -66,7 +72,7 @@ def addSubFolders(currentframe):
     if cmd_subfolder not in sys.path:
         sys.path.insert(0,cmd_subfolder)
 
-class NumericResults:
+class NumericResults(object):
     """Parse and stores numerical data from a Proteus log file.
 
     Attributes
@@ -223,13 +229,13 @@ class NumericResults:
     def print_info(self):
         """ Output a variety of information about the data-structure """
         print(" **** HEADER INFORMATION ****")
-        for key in self.data_dictionary_header.keys():
+        for key in list(self.data_dictionary_header.keys()):
             if key == 'Petsc':
                 self._print_petsc_info()
             else:
                 print(repr(key) + '   :   ' + repr(self.data_dictionary_header[key]))
         print(" *** VALID KEYS ***")
-        for key in self.data_dictionary.keys():
+        for key in list(self.data_dictionary.keys()):
             print(repr(key))
 
     def _print_petsc_info(self):
@@ -268,7 +274,7 @@ class NumericResults:
             if plot_relative == True:
                 max_term = max(data_set)
                 for i,term in enumerate(data_set):
-                    data_set[i] = data_set[i] / max_term
+                    data_set[i] = old_div(data_set[i], max_term)
             plt.plot(data_set)
         plt.yscale("log")
         plt.legend(legend_lst)
@@ -297,9 +303,9 @@ class NumericResults:
         axis_inline = axis
         
         for data_set in time_level:
-            if data_set[0] in self.data_dictionary.keys():
-                if data_set[1] in self.data_dictionary[data_set[0]].keys():
-                    if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
+            if data_set[0] in list(self.data_dictionary.keys()):
+                if data_set[1] in list(self.data_dictionary[data_set[0]].keys()):
+                    if data_set[2] in list(self.data_dictionary[data_set[0]][data_set[1]][1].keys()):
                         plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0])
                         legend.append((data_set[0],data_set[1]))
                     else:
@@ -333,9 +339,9 @@ class NumericResults:
         return_data = []
         
         for data_set in time_level:
-            if data_set[0] in self.data_dictionary.keys():
-                if data_set[1] in self.data_dictionary[data_set[0]].keys():
-                    if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
+            if data_set[0] in list(self.data_dictionary.keys()):
+                if data_set[1] in list(self.data_dictionary[data_set[0]].keys()):
+                    if data_set[2] in list(self.data_dictionary[data_set[0]][data_set[1]][1].keys()):
                         result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0]))
                         return_data.append(result)
                     else:
@@ -365,10 +371,10 @@ class NumericResults:
         axis_inline = axis
 
         for data_set in time_level_it:
-            if data_set[0] in self.data_dictionary.keys():
-                if data_set[1] in self.data_dictionary[data_set[0]].keys():
-                    if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
-                        if data_set[3] in self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys():
+            if data_set[0] in list(self.data_dictionary.keys()):
+                if data_set[1] in list(self.data_dictionary[data_set[0]].keys()):
+                    if data_set[2] in list(self.data_dictionary[data_set[0]][data_set[1]][1].keys()):
+                        if data_set[3] in list(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys()):
                             plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]][0])
                             legend.append((data_set[0],data_set[1],data_set[2]))
                         else:
@@ -405,10 +411,10 @@ class NumericResults:
         return_data = []
         
         for data_set in time_level:
-            if data_set[0] in self.data_dictionary.keys():
-                if data_set[1] in self.data_dictionary[data_set[0]].keys():
-                    if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
-                        if data_set[3] in self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys():
+            if data_set[0] in list(self.data_dictionary.keys()):
+                if data_set[1] in list(self.data_dictionary[data_set[0]].keys()):
+                    if data_set[2] in list(self.data_dictionary[data_set[0]][data_set[1]][1].keys()):
+                        if data_set[3] in list(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys()):
                             result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]][0]))
                             return_data.append(result)
                         else:
@@ -436,10 +442,10 @@ class NumericResults:
         """
         return_data = []
         data_set = data_set[0]
-        if data_set[0] in self.data_dictionary.keys():
-            if data_set[1] in self.data_dictionary[data_set[0]].keys():
-                if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
-                    if data_set[3] in self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys():
+        if data_set[0] in list(self.data_dictionary.keys()):
+            if data_set[1] in list(self.data_dictionary[data_set[0]].keys()):
+                if data_set[2] in list(self.data_dictionary[data_set[0]][data_set[1]][1].keys()):
+                    if data_set[3] in list(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys()):
                         return_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]][0])
                     else:
                         print('The fourth key ' + repr(data_set[3]) + ' is not valid.')
@@ -464,10 +470,10 @@ class NumericResults:
         axis_inline = axis
 
         for data_set in time_level_it:
-            if data_set[0] in self.data_dictionary.keys():
-                if data_set[1] in self.data_dictionary[data_set[0]].keys():
-                    if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
-                        if data_set[3] in self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys():
+            if data_set[0] in list(self.data_dictionary.keys()):
+                if data_set[1] in list(self.data_dictionary[data_set[0]].keys()):
+                    if data_set[2] in list(self.data_dictionary[data_set[0]][data_set[1]][1].keys()):
+                        if data_set[3] in list(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys()):
                             plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]])
                             legend.append((data_set[0],data_set[1],data_set[2],data_set[3]))
                     else:
@@ -525,7 +531,7 @@ class NumericResults:
             for item in data:
                 filewriter.writerow([item])
             
-class NumericResults_Comparison_Tools():
+class NumericResults_Comparison_Tools(object):
             
     @staticmethod
     def compareResidualVectors(x,y,instance):
@@ -549,7 +555,7 @@ class NumericResults_Comparison_Tools():
         return c
 
             
-class BasicTest():
+class BasicTest(object):
     """ A base class for tests. """
     @classmethod
     def setup_class(cls):

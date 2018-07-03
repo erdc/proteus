@@ -1,10 +1,18 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import input
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 import os
 import sys
 import socket
-import cPickle
+import pickle
 import numpy as numpy
 from proteus import *
 from warnings import *
@@ -252,7 +260,7 @@ def proteusRun(runRoutines):
                 runRoutines(pNameAll,pNameList,pList,nList,opts,simFlagsList)
         os.chdir('../../')
     if opts.viewer:
-        raw_input('\nPress return to close windows and exit... \n')
+        input('\nPress return to close windows and exit... \n')
         if Viewers.viewerType == 'matlab':
             Viewers.viewerPipe.write("quit \n")
         #matlab
@@ -412,7 +420,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     mList=[]
     lsList=[]
     nlsList=[]
-    for mi,p,n in zip(range(len(pList)),pList,nList):
+    for mi,p,n in zip(list(range(len(pList))),pList,nList):
         #cek moved tol calculations inside so each model gets it's own
         tolList=[]
         linTolList=[]
@@ -630,7 +638,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     timeValues = [tnList[opts.masterModel]]
     failedFlag=False
     mM = mList[opts.masterModel]
-    dt = pList[opts.masterModel].T/nList[opts.masterModel].nDTout
+    dt = old_div(pList[opts.masterModel].T,nList[opts.masterModel].nDTout)
     dtInit=1.0e-5
     print("master T",pList[opts.masterModel].T)
     print("master nDTout",nList[opts.masterModel].nDTout)
@@ -649,7 +657,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     firstStep = True
     while (tnList[opts.masterModel] < pM.T and not failedFlag==True):
         if opts.wait:
-            raw_input('\nPress return to continue... \n')
+            input('\nPress return to continue... \n')
         failedStep = [False for m in mList]
         #mwf debug repeat initialization if cross coupling?
         #if firstStep == True:
@@ -663,13 +671,13 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                 if preCopy != None and ('copy_uList') in preCopy and preCopy['copy_uList'] == True:
                     #cek have to use dof here because models might have different strong Dirichlet conditions.
                     #mList[it].uList[l].flat[:] = mList[preCopy['uList_model']].uList[l].flat[:]
-                    for u_ci_lhs,u_ci_rhs in zip(mList[it].modelList[l].u.values(),mList[preCopy['uList_model']].modelList[l].u.values()):
+                    for u_ci_lhs,u_ci_rhs in zip(list(mList[it].modelList[l].u.values()),list(mList[preCopy['uList_model']].modelList[l].u.values())):
                         u_ci_lhs.dof[:] = u_ci_rhs.dof
                     mList[it].modelList[l].setFreeDOF(mList[it].uList[l])
                 if preCopy != None and ('clear_uList') in preCopy and preCopy['clear_uList'] == True:
                     #cek have to use dof here because models might have different strong Dirichlet conditions.
                     #mList[it].uList[l].flat[:] = mList[preCopy['uList_model']].uList[l].flat[:]
-                    for u_ci_lhs in mList[it].modelList[l].u.values():
+                    for u_ci_lhs in list(mList[it].modelList[l].u.values()):
                         u_ci_lhs.dof[:] = 0.0
                     mList[it].modelList[l].setFreeDOF(mList[it].uList[l])
             if pList[it].weakDirichletConditions != None:
@@ -706,7 +714,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                 if postCopy != None and ('copy_uList') in postCopy and postCopy['copy_uList'] == True:
                     #cek have to use dof here because models might have different strong Dirichlet conditions.
                     #mList[postCopy['uList_model']].uList[l].flat[:] = mList[it].uList[l].flat[:]
-                    for u_ci_lhs,u_ci_rhs in zip(mList[postCopy['uList_model']].modelList[l].u.values(),mList[it].modelList[l].u.values()):
+                    for u_ci_lhs,u_ci_rhs in zip(list(mList[postCopy['uList_model']].modelList[l].u.values()),list(mList[it].modelList[l].u.values())):
                         u_ci_lhs.dof[:] = u_ci_rhs.dof
                     mList[it].modelList[l].setFreeDOF(mList[it].uList[l])
             #postcopy loop
@@ -720,7 +728,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
             print("""proteusRunSSO tn=%g dt=%g failedStep= %s""" % (tnList[opts.masterModel],dt,failedStep))
         plotOffSet=0
         if opts.viewer and viewSolutionOrig:
-            for m,p,tn,pName,mi in zip(mList,pList,tnList,pNameList,range(len(mList))):
+            for m,p,tn,pName,mi in zip(mList,pList,tnList,pNameList,list(range(len(mList)))):
                 m.modelList[l].viewSolution(plotOffSet,': t=%12.5e' % tn)
                 m.modelList[l].saveSolution()
                 plotOffSet+=m.modelList[-1].coefficients.nc

@@ -6,6 +6,10 @@ Fast marching and fast sweeping solvers
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import numpy
 import math
 import sys,atexit
@@ -15,7 +19,7 @@ from . import StupidHeap as SHeap
 ########################################################################
 #solvers
 ########################################################################
-class FMMEikonalSolver:
+class FMMEikonalSolver(object):
     """Encapsulate naive implementation of Fast Marching Methods on
 unstructured grids for
 
@@ -115,7 +119,7 @@ unstructured grids for
 #class
 
 
-class FSWEikonalSolver:
+class FSWEikonalSolver(object):
     """Encapsulate naive implementation of Fast Marching Methods on unstructured grids
       for
 
@@ -442,7 +446,7 @@ def test3dLocalSolver(verbose=0):
     N_A = 1; N_B=0; N_C=2; N_D=3
     #generic node numbering
     N = [0,1,2];
-    T[N_A]=0; T[N_B]=sqrt3/3.0; T[N_C]=2.0*sqrt3/3.0
+    T[N_A]=0; T[N_B]=old_div(sqrt3,3.0); T[N_C]=2.0*sqrt3/3.0
 
     print("calling qianZhangLocalSolver\n\t nodes=%s \n N=%s \n\t T=%s " % (nodes,N,T))
     T_D = qianZhangLocalSolver3d(eN,N_D,N[0],N[1],N[2],nodes,T,eikSpeed,verbose=verbose)
@@ -669,7 +673,7 @@ if __name__ == "__main__":
         r0 = 0.25; a = 40; b = 4;
         tx = x-0.5; ty = y-0.5
         r = math.sqrt(tx**2 + ty**2); th = math.atan2(tx,ty)
-        pr = 0.5*(r0 + math.cos(b*th)/(a*r0))
+        pr = 0.5*(r0 + old_div(math.cos(b*th),(a*r0)))
         return r**2 - pr**2
     def twoCircle2d(x,y):
         r0 = 0.15; r1 = 0.15; c0 = (0.25,0.25); c1=(0.75,0.75)

@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
@@ -22,7 +23,7 @@ name="clsvof"
 #####################
 # INITIAL CONDITION #
 #####################
-class init_cond:
+class init_cond(object):
     def uOfXT(self,x,t):
         return signedDistance(x)
 initialConditions  = {0:init_cond()}

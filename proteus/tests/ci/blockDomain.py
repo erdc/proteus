@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import numpy
 
 def genPoly(polyfileBase="blockDomain",
@@ -9,7 +12,7 @@ def genPoly(polyfileBase="blockDomain",
     """
     create a simple block domain in 2d
     """
-    dx=Lx/nx; dy = Ly/ny
+    dx=old_div(Lx,nx); dy = old_div(Ly,ny)
 
     vertices = []
     for j in range(ny+1):

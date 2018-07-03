@@ -1,4 +1,7 @@
 from __future__ import absolute_import
+from builtins import zip
+from builtins import range
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
@@ -154,7 +157,7 @@ exactSolution={0:exact_solution}
 #####################
 # INITIAL CONDITION #
 #####################
-class init_cond:
+class init_cond(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

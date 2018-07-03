@@ -1,10 +1,12 @@
 from __future__ import print_function
 #import sys
 #from proteus import Comm
+from future import standard_library
+standard_library.install_aliases()
 import os
 import sys
 import socket
-import cPickle
+import pickle
 import numpy
 import proteus
 #remove blankent import statements until after Comm initialized for petsc4py

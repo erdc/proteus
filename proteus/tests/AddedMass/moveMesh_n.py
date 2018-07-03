@@ -6,7 +6,10 @@ from proteus import (FemTools,
                      NumericalFlux,
                      NonlinearSolvers,
                      LinearSolvers)
-from . import moveMesh_p as physics
+try:
+    from . import moveMesh_p as physics
+except:
+    import moveMesh_p as physics
 from proteus import Context
 ct = Context.get()
 domain = ct.domain

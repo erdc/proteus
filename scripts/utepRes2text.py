@@ -29,8 +29,8 @@ def printFinalSolutionToFile(resFileName,outputFileName,
                                                                    meshLevel,
                                                                    key))
         if verbose > 0:
-            print("""results.keys() = %s """ % results.keys())
-            print("""results['solutionData'].keys() = %s """ % results['solutionData'].keys())
+            print("""results.keys() = %s """ % list(results.keys()))
+            print("""results['solutionData'].keys() = %s """ % list(results['solutionData'].keys()))
         return True
     return True
 

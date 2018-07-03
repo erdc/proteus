@@ -17,7 +17,7 @@ for pf1 in pFiles:
 for pf in pFiles:
     print(pf)
     print(caseDict[pf])
-for p,nList in caseDict.iteritems():
+for p,nList in caseDict.items():
     if len(nList) == 0:
         sys.stdout.write("\n----------------Skipping "+p+".  No n file----------------------\n")
         sys.stdout.flush()

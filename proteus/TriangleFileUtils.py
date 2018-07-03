@@ -8,6 +8,7 @@ can try to read and write files in the format that Triangle expects
    :parts: 1
 """
 from __future__ import print_function
+from builtins import range
 import sys,os
 import numpy
 

@@ -4,6 +4,14 @@ Tools for high level profiling and event logging
 .. inheritance-diagram:: proteus.Profiling
    :parts: 1
 """
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import gc
 import inspect
 import pstats
@@ -166,7 +174,7 @@ def memorySummary():
                 logEvent(repr(pair[0])+"  %"+repr(100.0*pair[1]/memMax))
 
 
-class Dispatcher():
+class Dispatcher(object):
     """
     Profiles function calls.  Must be enabled like so:
 
@@ -211,8 +219,8 @@ class Dispatcher():
         comm.barrier()#ensure files are ready for master
         if comm.isMaster():
             import copy
-            import StringIO
-            profilingLog = StringIO.StringIO()
+            import io
+            profilingLog = io.StringIO()
             stats = pstats.Stats(profile_rank_name, stream=profilingLog)
             stats.__dict__['files']=['Maximum times across MPI tasks for',
                                      stats.__dict__['files'][0]]
@@ -221,7 +229,7 @@ class Dispatcher():
                 pstatsi = pstats.Stats(profile_name+str(i))
                 statsi = pstatsi.stats
                 stats.__dict__['files'].append(pstatsi.__dict__['files'][0])
-                for f,c in statsi.iteritems():
+                for f,c in statsi.items():
                     if f in statsm:
                         if c[2] > statsm[f][2]:
                             statsm[f] = c
@@ -242,8 +250,8 @@ Wall clock percentage of top 20 calls
                     fname=f[-1].strip("<").strip(">")
                 else:
                     fname="function '{2:s}' at {0:s}:{1:d}".format(*f)
-                msg+=("{0:11.1%} {1:s}\n".format(statsm[f][2]/stats.__dict__['total_tt'],str(fname)))
-                total += statsm[f][2]/stats.__dict__['total_tt']
+                msg+=("{0:11.1%} {1:s}\n".format(old_div(statsm[f][2],stats.__dict__['total_tt']),str(fname)))
+                total += old_div(statsm[f][2],stats.__dict__['total_tt'])
             logEvent(msg)
             logEvent("Representing "+repr(total*100.)+"%")
         return func_return

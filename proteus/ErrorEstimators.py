@@ -5,9 +5,11 @@ Classes for a posteriori error estimation
    :parts: 1
 """
 from __future__ import absolute_import
+from builtins import range
+from builtins import object
 from .Profiling import logEvent
 
-class HierarchicalMeshEstimator:
+class HierarchicalMeshEstimator(object):
     def __init__(self,mlTransport):
         self.mlTransport = mlTransport
     def calculate(self):
@@ -33,7 +35,7 @@ class HierarchicalMeshEstimator:
             self.mlTransport.meshTransfers.prolong_bcListDict[ci][-1].matvec(uCoarse[ci].dof,
                                                                              proj_uCoarse[ci].dof)
             #load Dirichlet conditions in
-            for dofN,g in mFine.dirichletConditions[ci].DOFBoundaryConditionsDict.iteritems():
+            for dofN,g in mFine.dirichletConditions[ci].DOFBoundaryConditionsDict.items():
                 proj_uCoarse[ci].dof[dofN] = g(mFine.dirichletConditions[ci].DOFBoundaryPointDict[dofN],t)
             proj_uCoarse[ci].getValues(mFine.q['v',ci],proj_uCoarse_q[ci])
             error += Norms.L2errorSFEM_local(mFine.q[('dV_u',ci)],

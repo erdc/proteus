@@ -8,6 +8,11 @@ Collect classes and routines for postprocessing solution to get
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import numpy
 from . import FemTools
 from . import LinearSolvers
@@ -31,7 +36,7 @@ def VelocityPostProcessingChooser(transport):
           exit()
         ppcomps = []
         pptypes = {}
-        for ci in transport.conservativeFlux.keys():
+        for ci in list(transport.conservativeFlux.keys()):
             if (transport.conservativeFlux[ci] == 'p1-nc' and
                 isinstance(transport.u[ci].femSpace,FemTools.NC_AffineLinearOnSimplexWithNodalBasis)):
                 ppcomps.append(ci)
@@ -70,7 +75,7 @@ def VelocityPostProcessingChooser(transport):
 #begin pulling out different velocity cases into separate classes to make this more manageable
 #####################################################################################################
 
-class VelocityPostProcessingAlgorithmBase:
+class VelocityPostProcessingAlgorithmBase(object):
     """ Base class for velocity post processing algorithms
     
     Applies same algorithm to all components in vtComponents
@@ -180,13 +185,13 @@ class VelocityPostProcessingAlgorithmBase:
             else:
                 self.fluxElementBoundaries[ci] = numpy.zeros((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
 
-            for cj,fbcObject  in self.vt.fluxBoundaryConditionsObjectsDict.iteritems():
-                for t,g in fbcObject.advectiveFluxBoundaryConditionsDict.iteritems():
+            for cj,fbcObject  in self.vt.fluxBoundaryConditionsObjectsDict.items():
+                for t,g in fbcObject.advectiveFluxBoundaryConditionsDict.items():
                     if cj == ci:
                         self.fluxElementBoundaries[cj][t[0]] = 1
                 #repeat for diffusive flux boundary conditions too
-                for ck,diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.iteritems():
-                    for t,g in diffusiveFluxBoundaryConditionsDict.iteritems():
+                for ck,diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.items():
+                    for t,g in diffusiveFluxBoundaryConditionsDict.items():
                         if ck == ci:
                             self.fluxElementBoundaries[ck][t[0]]=1
                         #diag
@@ -361,7 +366,7 @@ class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
                 self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.vt.mesh.nElementBoundaries_element),dtype='i').reshape((self.vt.mesh.nElements_global,self.vt.mesh.nElementBoundaries_element))
             #determine what terms are in equation
             self.potentials[ci] = []
-            for cj in self.vt.coefficients.diffusion[ci].keys():
+            for cj in list(self.vt.coefficients.diffusion[ci].keys()):
                 self.potentials[ci].append(cj)
                 assert cj in self.vt.coefficients.potential, "ci=%s cj=%s diffusion but no potential" % (ci,cj)
             assert len(self.potentials[ci]) > 0, "ci=%s no diffusion coefficient found" % ci
@@ -1464,7 +1469,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
             self.interior_dim = self.dim - self.boundary_dim
 
         elif self.vt.nSpace_global == 3:
-            self.dim = (degree+1)*(degree+2)*(degree+3) / 2
+            self.dim = (degree+1)*(degree+2)*(degree+3) // 2
             self.boundary_dim_per_edge = degree*(degree+1)
             self.boundary_dim = 4 * self.boundary_dim_per_edge
             self.interior_dim = self.dim - self.boundary_dim
@@ -1605,7 +1610,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                             self.weightedInteriorDivFreeElement[eN,k,j,i] += self.interiorDivFreeElement[eN,k,h,i]*self.q['J'][eN][k][j][h]
                     for i in range(self.get_num_sigmaBasisElements()):
                         # scale by Jacobian
-                        self.weightedInteriorDivFreeElement[eN,k,j,i] *= 1./self.vt.q['abs(det(J))'][eN][k]
+                        self.weightedInteriorDivFreeElement[eN,k,j,i] *= old_div(1.,self.vt.q['abs(det(J))'][eN][k])
                         # scale with quadrature weight
                         self.weightedInteriorDivFreeElement[eN,k,j,i] *= self.vt.q['dV'][eN][k]
 
@@ -1617,7 +1622,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
 
         for eN in range(self.vt.mesh.nElements_global):
             for k in range(self.vt.nQuadraturePoints_element):
-                for i in range(self.dim / self.vt.nSpace_global):
+                for i in range(old_div(self.dim, self.vt.nSpace_global)):
                     for j in range(self.vt.nSpace_global):
                         self.piola_trial_function[eN,k,i*self.vt.nSpace_global+j,j] = self.q[('w',self.BDMcomponent)][eN][k][i]
 
@@ -1737,7 +1742,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                            self.vt.ebq[('velocity',ci)][element][local_edge_num][pt][comp] )
         for edge in range(num_edges):
             if edge in self.vt.mesh.interiorElementBoundariesArray:
-                self.flux_average[edge] = (flux_array[edge][0] + flux_array[edge][1]) / 2.0
+                self.flux_average[edge] = old_div((flux_array[edge][0] + flux_array[edge][1]), 2.0)
             else:
                 self.flux_average[edge] = flux_array[edge][0]
 
@@ -2169,21 +2174,21 @@ class VPP_PWC_RT0(VelocityPostProcessingAlgorithmBase):
         if self.vt.nSpace_global == 2:
             volFact = 0.5
         if self.vt.nSpace_global == 3:
-            volFact = 1.0/6.0; areaFact = 0.5
+            volFact = old_div(1.0,6.0); areaFact = 0.5
         for ebNI in range(self.vt.mesh.nInteriorElementBoundaries_global):
             ebN = self.vt.mesh.interiorElementBoundariesArray[ebNI]
             eN_left = self.vt.mesh.elementBoundaryElementsArray[ebN,0]
             eN_right= self.vt.mesh.elementBoundaryElementsArray[ebN,1]
             ebN_element_left = self.vt.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
             area_face= areaFact*self.vt.ebq['sqrt(det(g))'][eN_left,ebN_element_left,0]
-            self.ebq_global['pwc-corr'][ebN,0] = 1.0/area_face
-            self.ebq_global['pwc-corr'][ebN,1] =-1.0/area_face
+            self.ebq_global['pwc-corr'][ebN,0] = old_div(1.0,area_face)
+            self.ebq_global['pwc-corr'][ebN,1] =old_div(-1.0,area_face)
         for ebNE in range(self.vt.mesh.nExteriorElementBoundaries_global):
             ebN = self.vt.mesh.exteriorElementBoundariesArray[ebNE]
             eN_left = self.vt.mesh.elementBoundaryElementsArray[ebN,0]
             ebN_element_left = self.vt.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
             area_face= areaFact*self.vt.ebq['sqrt(det(g))'][eN_left,ebN_element_left,0]
-            self.ebq_global['pwc-corr'][ebN,0] = 1.0/area_face
+            self.ebq_global['pwc-corr'][ebN,0] = old_div(1.0,area_face)
         #end ebNE
 
         for ci in self.vtComponents:
@@ -2389,7 +2394,7 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
         if self.vt.nSpace_global == 2:
             volFact = 0.5
         if self.vt.nSpace_global == 3:
-            volFact = 1.0/6.0; areaFact = 0.5
+            volFact = old_div(1.0,6.0); areaFact = 0.5
 
         for ebNI in range(self.vt.mesh.nInteriorElementBoundaries_global):
             ebN = self.vt.mesh.interiorElementBoundariesArray[ebNI]
@@ -2401,8 +2406,8 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
             area_face= areaFact*self.vt.ebq['sqrt(det(g))'][eN_left,ebN_element_left,0]
             #this is valid for
             # w_e = -\frac{|\Omega_e|}{|\gamma|_f}\vec n_f \cdot \vec n_e
-            self.ebq_global['sun-glob-corr'][ebN,0] = -vol_left/area_face
-            self.ebq_global['sun-glob-corr'][ebN,1] =  vol_right/area_face
+            self.ebq_global['sun-glob-corr'][ebN,0] = old_div(-vol_left,area_face)
+            self.ebq_global['sun-glob-corr'][ebN,1] =  old_div(vol_right,area_face)
         for ebNE in range(self.vt.mesh.nExteriorElementBoundaries_global):
             ebN = self.vt.mesh.exteriorElementBoundariesArray[ebNE]
             eN_left = self.vt.mesh.elementBoundaryElementsArray[ebN,0]
@@ -2411,7 +2416,7 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
             area_face= areaFact*self.vt.ebq['sqrt(det(g))'][eN_left,ebN_element_left,0]
             #this is valid for
             # w_e = -\frac{|\Omega_e|}{|\gamma|_f}\vec n_f \cdot \vec n_e
-            self.ebq_global['sun-glob-corr'][ebN,0] = -vol_left/area_face
+            self.ebq_global['sun-glob-corr'][ebN,0] = old_div(-vol_left,area_face)
         #end ebNE
 
         for ci in self.vtComponents:
@@ -2474,7 +2479,7 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
                 #try to build connection list manually, doesn't really need if
                 #sparse mat used? move outside ci loop
                 self.sunWheelerConnectionList[ci] = [[] for I in range(mesh.nElements_global)]
-                for IJ in sunWheelerGlobalDict.keys():
+                for IJ in list(sunWheelerGlobalDict.keys()):
                     self.sunWheelerConnectionList[ci][IJ[0]].append(IJ[1])
 
                 self.sunWheelerLS[ci] = LinearSolvers.GaussSeidel(connectionList=self.sunWheelerConnectionList[ci],
@@ -2646,7 +2651,7 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
         if self.vt.nSpace_global == 2:
             volFact = 0.5
         if self.vt.nSpace_global == 3:
-            volFact = 1.0/6.0; areaFact = 0.5
+            volFact = old_div(1.0,6.0); areaFact = 0.5
         for ebNI in range(self.vt.mesh.nInteriorElementBoundaries_global):
             ebN = self.vt.mesh.interiorElementBoundariesArray[ebNI]
             eN_left = self.vt.mesh.elementBoundaryElementsArray[ebN,0]
@@ -2659,8 +2664,8 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
             #weighted harmonic average, should be what Sun-Wheeler use but doesn't seem to work as well as
             # the weighted arithmetic average does
             #note signs are opposite of our paper formulation
-            self.ebq_global['sun-gs-alpha'][ebN,0]=  vol_right/(area_face*(vol_left+vol_right))
-            self.ebq_global['sun-gs-alpha'][ebN,1]= -vol_left/(area_face*(vol_left+vol_right))
+            self.ebq_global['sun-gs-alpha'][ebN,0]=  old_div(vol_right,(area_face*(vol_left+vol_right)))
+            self.ebq_global['sun-gs-alpha'][ebN,1]= old_div(-vol_left,(area_face*(vol_left+vol_right)))
             #weighted arithmetic average basically
             #self.ebq_global['sun-gs-alpha'][ebN,0]=  vol_left/(area_face*(vol_left+vol_right))
             #self.ebq_global['sun-gs-alpha'][ebN,1]= -vol_right/(area_face*(vol_left+vol_right))
@@ -3567,7 +3572,7 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
 ####################################################
 #class to wrap different algorithms
 #all the types need to be defined for vpp_types declaration
-class AggregateVelocityPostProcessor:
+class AggregateVelocityPostProcessor(object):
     """
     collect different velocity postprocessing algorithms for a (possibly) multicomponent system
     """
@@ -3596,13 +3601,13 @@ class AggregateVelocityPostProcessor:
         if self.postProcessingTypes is not None:
             assert self.vt is not None, "must pass in vectorTransport if doing velocity postprocessing"
             #collect components that share an algorithm
-            for ci in transport.conservativeFlux.keys():
-                assert transport.conservativeFlux[ci] in self.vpp_types.keys(), "invalid postprocessing string"
+            for ci in list(transport.conservativeFlux.keys()):
+                assert transport.conservativeFlux[ci] in list(self.vpp_types.keys()), "invalid postprocessing string"
                 if transport.conservativeFlux[ci] in self.vpp_components:
                     self.vpp_components[transport.conservativeFlux[ci]].append(ci)
                 else:
                     self.vpp_components[transport.conservativeFlux[ci]] = [ci]
-            for algs in self.vpp_components.keys():
+            for algs in list(self.vpp_components.keys()):
                 self.vpp_algorithms.append(self.vpp_types[algs](transport,self.vpp_components[algs]))
 
     def postprocess(self,verbose=0):
@@ -3642,7 +3647,7 @@ class AggregateVelocityPostProcessor:
 import sys,os,copy,timeit
 TESTVPPTIMES = False #True
 
-class VelocityPostProcessor_Original:
+class VelocityPostProcessor_Original(object):
     """accumulate basic functionality for post-processing velocity vields
     from scalar potentials
 
@@ -3721,13 +3726,13 @@ class VelocityPostProcessor_Original:
                     else:
                         self.fluxElementBoundaries[ci] = numpy.zeros((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
 
-                    for cj,fbcObject  in self.vt.fluxBoundaryConditionsObjectsDict.iteritems():
-                        for t,g in fbcObject.advectiveFluxBoundaryConditionsDict.iteritems():
+                    for cj,fbcObject  in self.vt.fluxBoundaryConditionsObjectsDict.items():
+                        for t,g in fbcObject.advectiveFluxBoundaryConditionsDict.items():
                             if cj == ci:
                                 self.fluxElementBoundaries[cj][t[0]] = 1
                         #repeat for diffusive flux boundary conditions too
-                        for ck,diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.iteritems():
-                            for t,g in diffusiveFluxBoundaryConditionsDict.iteritems():
+                        for ck,diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.items():
+                            for t,g in diffusiveFluxBoundaryConditionsDict.items():
                                 if ck == ci:
                                     self.fluxElementBoundaries[ck][t[0]]=1
                                 #diag
@@ -3832,7 +3837,7 @@ class VelocityPostProcessor_Original:
                                                                       'd')
                     #determine what terms are in equation
                     self.potentials[ci] = []
-                    for cj in self.vt.coefficients.diffusion[ci].keys():
+                    for cj in list(self.vt.coefficients.diffusion[ci].keys()):
                         self.potentials[ci].append(cj)
                         assert cj in self.vt.coefficients.potential, "ci=%s cj=%s diffusion but no potential" % (ci,cj)
                     assert len(self.potentials[ci]) > 0, "ci=%s no diffusion coefficient found" % ci
@@ -4241,7 +4246,7 @@ class VelocityPostProcessor_Original:
                 if self.vt.nSpace_global == 2:
                     volFact = 0.5
                 if self.vt.nSpace_global == 3:
-                    volFact = 1.0/6.0; areaFact = 0.5
+                    volFact = old_div(1.0,6.0); areaFact = 0.5
                 for ebNI in range(self.vt.mesh.nInteriorElementBoundaries_global):
                     ebN = self.vt.mesh.interiorElementBoundariesArray[ebNI]
                     eN_left = self.vt.mesh.elementBoundaryElementsArray[ebN,0]
@@ -4254,8 +4259,8 @@ class VelocityPostProcessor_Original:
                     #weighted harmonic average, should be what Sun-Wheeler use but doesn't seem to work as well as
                     # the weighted arithmetic average does
                     #note signs are opposite of our paper formulation
-                    self.ebq_global['sun-gs-alpha'][ebN,0]=  vol_right/(area_face*(vol_left+vol_right))
-                    self.ebq_global['sun-gs-alpha'][ebN,1]= -vol_left/(area_face*(vol_left+vol_right))
+                    self.ebq_global['sun-gs-alpha'][ebN,0]=  old_div(vol_right,(area_face*(vol_left+vol_right)))
+                    self.ebq_global['sun-gs-alpha'][ebN,1]= old_div(-vol_left,(area_face*(vol_left+vol_right)))
                     #weighted arithmetic average basically
                     #self.ebq_global['sun-gs-alpha'][ebN,0]=  vol_left/(area_face*(vol_left+vol_right))
                     #self.ebq_global['sun-gs-alpha'][ebN,1]= -vol_right/(area_face*(vol_left+vol_right))
@@ -4270,7 +4275,7 @@ class VelocityPostProcessor_Original:
                 if self.vt.nSpace_global == 2:
                     volFact = 0.5
                 if self.vt.nSpace_global == 3:
-                    volFact = 1.0/6.0; areaFact = 0.5
+                    volFact = old_div(1.0,6.0); areaFact = 0.5
                 #use same correction everywhere since just going to overwrite Neumann boundaries
                 self.ebq_global['sun-glob-corr'] = numpy.zeros((self.vt.mesh.nElementBoundaries_global,
                                                                  2),'d')
@@ -4286,8 +4291,8 @@ class VelocityPostProcessor_Original:
                     area_face= areaFact*self.vt.ebq['sqrt(det(g))'][eN_left,ebN_element_left,0]
                     #this is valid for
                     # w_e = -\frac{|\Omega_e|}{|\gamma|_f}\vec n_f \cdot \vec n_e
-                    self.ebq_global['sun-glob-corr'][ebN,0] = -vol_left/area_face
-                    self.ebq_global['sun-glob-corr'][ebN,1] =  vol_right/area_face
+                    self.ebq_global['sun-glob-corr'][ebN,0] = old_div(-vol_left,area_face)
+                    self.ebq_global['sun-glob-corr'][ebN,1] =  old_div(vol_right,area_face)
                 for ebNE in range(self.vt.mesh.nExteriorElementBoundaries_global):
                     ebN = mesh.exteriorElementBoundariesArray[ebNE]
                     eN_left = mesh.elementBoundaryElementsArray[ebN,0]
@@ -4296,7 +4301,7 @@ class VelocityPostProcessor_Original:
                     area_face= areaFact*self.vt.ebq['sqrt(det(g))'][eN_left,ebN_element_left,0]
                     #this is valid for
                     # w_e = -\frac{|\Omega_e|}{|\gamma|_f}\vec n_f \cdot \vec n_e
-                    self.ebq_global['sun-glob-corr'][ebN,0] = -vol_left/area_face
+                    self.ebq_global['sun-glob-corr'][ebN,0] = old_div(-vol_left,area_face)
                 #end ebNE
                 for ci in sunWheelerGlobalComponents:
                     sunWheelerGlobalDict = {}
@@ -4351,7 +4356,7 @@ class VelocityPostProcessor_Original:
                         #try to build connection list manually, doesn't really need if
                         #sparse mat used? move outside ci loop
                         self.sunWheelerConnectionList[ci] = [[] for I in range(mesh.nElements_global)]
-                        for IJ in sunWheelerGlobalDict.keys():
+                        for IJ in list(sunWheelerGlobalDict.keys()):
                             self.sunWheelerConnectionList[ci][IJ[0]].append(IJ[1])
 
                         self.sunWheelerLS[ci] = LinearSolvers.GaussSeidel(connectionList=self.sunWheelerConnectionList[ci],
@@ -4380,21 +4385,21 @@ class VelocityPostProcessor_Original:
                 if self.vt.nSpace_global == 2:
                     volFact = 0.5
                 if self.vt.nSpace_global == 3:
-                    volFact = 1.0/6.0; areaFact = 0.5
+                    volFact = old_div(1.0,6.0); areaFact = 0.5
                 for ebNI in range(self.vt.mesh.nInteriorElementBoundaries_global):
                     ebN = mesh.interiorElementBoundariesArray[ebNI]
                     eN_left = mesh.elementBoundaryElementsArray[ebN,0]
                     eN_right= mesh.elementBoundaryElementsArray[ebN,1]
                     ebN_element_left = mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
                     area_face= areaFact*self.vt.ebq['sqrt(det(g))'][eN_left,ebN_element_left,0]
-                    self.ebq_global['pwc-corr'][ebN,0] = 1.0/area_face
-                    self.ebq_global['pwc-corr'][ebN,1] =-1.0/area_face
+                    self.ebq_global['pwc-corr'][ebN,0] = old_div(1.0,area_face)
+                    self.ebq_global['pwc-corr'][ebN,1] =old_div(-1.0,area_face)
                 for ebNE in range(self.vt.mesh.nExteriorElementBoundaries_global):
                     ebN = mesh.exteriorElementBoundariesArray[ebNE]
                     eN_left = mesh.elementBoundaryElementsArray[ebN,0]
                     ebN_element_left = mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
                     area_face= areaFact*self.vt.ebq['sqrt(det(g))'][eN_left,ebN_element_left,0]
-                    self.ebq_global['pwc-corr'][ebN,0] = 1.0/area_face
+                    self.ebq_global['pwc-corr'][ebN,0] = old_div(1.0,area_face)
                 #end ebNE
                 for ci in pwcComponents:
                     pwcMatGlobalDict = {}

@@ -11,6 +11,8 @@ This module solves equations of the form
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import range
+from builtins import object
 import os
 import numpy as np
 import numpy.testing as npt
@@ -21,7 +23,7 @@ from . import sp_gw_p
 from . import sp_gw_c0p1_n
 from . import sp_gw_ncp1_n
 
-class TestSinglePhaseGW():
+class TestSinglePhaseGW(object):
 
     @classmethod
     def setup_class(cls):

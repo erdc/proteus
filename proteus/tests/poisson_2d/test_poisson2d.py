@@ -11,13 +11,15 @@ This module solves equations of the form
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import zip
+from builtins import object
 from proteus.iproteus import *
 import os
 import numpy as np
 from . import poisson_het_2d_p
 from . import poisson_het_2d_c0pk_n
 
-class TestPoisson2D():
+class TestPoisson2D(object):
 
     @classmethod
     def setup_class(cls):

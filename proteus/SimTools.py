@@ -6,6 +6,11 @@ Collect higher level tools for running simulation, processing results, etc
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import input
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from . import Norms
 import numpy
 from . import FemTools
@@ -15,12 +20,12 @@ from proteus import Comm
 comm = Comm.get()
 
 #dummy classes for computing exact solution norms with error functions
-class zeroFunction:
+class zeroFunction(object):
     def uOfX(self,x):
         return 0.0
     def uOfXT(self,x,t):
         return 0.0
-class zeroVectorFunction:
+class zeroVectorFunction(object):
     def __init__(self,shape):
         self.shape=shape
     def uOfX(self,x):
@@ -28,7 +33,7 @@ class zeroVectorFunction:
     def uOfXT(self,x,t):
         return numpy.zeros(self.shape,'d')
 
-class SimulationProcessor:
+class SimulationProcessor(object):
     """
     Collect some functionality for doing something with simulation results like
     calculating error, saving it to disk, etc.
@@ -106,15 +111,15 @@ class SimulationProcessor:
         self.plotWindowStart= {}
         self.nLevels    = nLevels
         self.flags = {}#force a deep copy?
-        for key,val in SimulationProcessor.defaultFlags.iteritems():
+        for key,val in SimulationProcessor.defaultFlags.items():
             self.flags[key] = val
         #mwf for postprocessing nodal values of coefficients etc
         self.nodalQuadratureInfo  = None
         #store p and n files now
         self.pFile = pFile; self.nFile = nFile
         if flags is not None:
-            for key in self.flags.keys():
-                if key in flags.keys():
+            for key in list(self.flags.keys()):
+                if key in list(flags.keys()):
                     self.flags[key]=flags[key]
                 #end key found
             #end for all keys
@@ -283,7 +288,7 @@ class SimulationProcessor:
             #q
         #end velocity key fix
         ### set options for various output types ...
-        for plotter in SimulationProcessor.defaultFlags['plotOptions'].keys():
+        for plotter in list(SimulationProcessor.defaultFlags['plotOptions'].keys()):
             if plotter not in self.flags['plotOptions']:
                 self.flags['plotOptions'][plotter] = {'on':False}
         #mwf debug
@@ -291,7 +296,7 @@ class SimulationProcessor:
         #pdb.set_trace()
         #set on flags based on viewer
         if 'viewerType' in dir(Viewers):
-            for plotter in self.flags['plotOptions'].keys():
+            for plotter in list(self.flags['plotOptions'].keys()):
                 if plotter == Viewers.viewerType:
                     self.flags['plotOptions'][plotter]['on']=True
         if (self.flags['plotOptions']['gnuplot']['on'] and
@@ -686,7 +691,7 @@ class SimulationProcessor:
                                                  ci in p.analyticalSolutionVelocity and
                                                  p.analyticalSolutionVelocity[ci] is not None)
         #ci
-        class gradWrapper:
+        class gradWrapper(object):
             def __init__(self,ex):
                 self.ex = ex
             def  uOfX(self,X):
@@ -723,7 +728,7 @@ class SimulationProcessor:
                     pressureAnalyticalSolution = m.analyticalPressureSolution[0]
                     x = m.q['x'][0:m.mesh.subdomainMesh.nElements_owned]                        
                     abs_det_J = m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned]
-                    quad_weight = m.elementQuadratureWeights.values()[0]
+                    quad_weight = list(m.elementQuadratureWeights.values())[0]
                     pressureNumericalSolution = m.q['p'][0:m.mesh.subdomainMesh.nElements_owned]
                     # compute mean values
                     mean_value_exact_p = 0.0
@@ -763,14 +768,14 @@ class SimulationProcessor:
                                 err = Norms.L2errorSFEMvsAF2(self.analyticalSolution[ci],
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             m.elementQuadratureWeights.values()[0],
+                                                             list(m.elementQuadratureWeights.values())[0],
                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                              T=tsim)
 
                                 exa = Norms.L2errorSFEMvsAF2(zeroFunction(),
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             m.elementQuadratureWeights.values()[0],
+                                                             list(m.elementQuadratureWeights.values())[0],
                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                              T=tsim)
                             else:
@@ -783,7 +788,7 @@ class SimulationProcessor:
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                                 #end if
@@ -797,13 +802,13 @@ class SimulationProcessor:
                                 err = Norms.L1errorSFEMvsAF2(self.analyticalSolution[ci],
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             m.elementQuadratureWeights.values()[0],
+                                                             list(m.elementQuadratureWeights.values())[0],
                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                              T=tsim)
                                 exa = Norms.L1errorSFEMvsAF2(zeroFunction(),
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             m.elementQuadratureWeights.values()[0],
+                                                             list(m.elementQuadratureWeights.values())[0],
                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                              T=tsim)
                             else:
@@ -816,7 +821,7 @@ class SimulationProcessor:
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)                                
                             #end if
@@ -846,7 +851,7 @@ class SimulationProcessor:
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -862,14 +867,14 @@ class SimulationProcessor:
                                 err0 = Norms.L2errorSFEMvsAF2(self.analyticalSolution[ci],
                                                               m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                              m.elementQuadratureWeights.values()[0],
+                                                              list(m.elementQuadratureWeights.values())[0],
                                                               m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                               T=tsim)
 
                                 exa0 = Norms.L2errorSFEMvsAF2(zeroFunction(),
                                                               m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                              m.elementQuadratureWeights.values()[0],
+                                                              list(m.elementQuadratureWeights.values())[0],
                                                               m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                               T=tsim)
                             else:
@@ -906,7 +911,7 @@ class SimulationProcessor:
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -943,7 +948,7 @@ class SimulationProcessor:
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -958,14 +963,14 @@ class SimulationProcessor:
                                 err0 = Norms.L1errorSFEMvsAF2(self.analyticalSolution[ci],
                                                               m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                              m.elementQuadratureWeights.values()[0],
+                                                              list(m.elementQuadratureWeights.values())[0],
                                                               m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                               T=tsim)
 
                                 exa0 = Norms.L1errorSFEMvsAF2(zeroFunction(),
                                                               m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                              m.elementQuadratureWeights.values()[0],
+                                                              list(m.elementQuadratureWeights.values())[0],
                                                               m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                               T=tsim)
                             else:
@@ -1001,7 +1006,7 @@ class SimulationProcessor:
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1037,7 +1042,7 @@ class SimulationProcessor:
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1077,7 +1082,7 @@ class SimulationProcessor:
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1117,7 +1122,7 @@ class SimulationProcessor:
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1154,7 +1159,7 @@ class SimulationProcessor:
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1189,7 +1194,7 @@ class SimulationProcessor:
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1212,7 +1217,7 @@ class SimulationProcessor:
                         self.elementResidual[il] = numpy.array(m.elementResidual[ci],'d')
                     else:
                         self.elementResidual[il].flat[:] = m.elementResidual[ci].flat[:]
-                    if n.conservativeFlux is None or ci not in n.conservativeFlux.keys() or 'dg' in n.conservativeFlux[ci]:#have to adjust residual appropriately for different methods
+                    if n.conservativeFlux is None or ci not in list(n.conservativeFlux.keys()) or 'dg' in n.conservativeFlux[ci]:#have to adjust residual appropriately for different methods
                         pass
                     else:
                         flux = -1.0*m.ebq_global[('totalFlux',ci)]
@@ -1223,7 +1228,7 @@ class SimulationProcessor:
                                                                         m.ebq[('w*dS_u',ci)],
                                                                         self.elementResidual[il])
                     #removing boundary flux from
-                    if n.conservativeFlux is None or ci not in n.conservativeFlux.keys() or 'dg' in n.conservativeFlux[ci]:
+                    if n.conservativeFlux is None or ci not in list(n.conservativeFlux.keys()) or 'dg' in n.conservativeFlux[ci]:
                         cfemIntegrals.calculateConservationResidualDG(self.elementResidual[il],self.conservationResidual[il])
                     else:
                         cfemIntegrals.calculateConservationResidual(m.ebq['n'],
@@ -1282,7 +1287,7 @@ class SimulationProcessor:
         need to be stored
         """
         scalarElementStorageKeys = []
-        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
+        for quant in [a for a in self.flags['storeQuantities'] if a is not None]:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1296,7 +1301,7 @@ class SimulationProcessor:
         need to be stored
         """
         vectorElementStorageKeys = []
-        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
+        for quant in [a for a in self.flags['storeQuantities'] if a is not None]:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1310,7 +1315,7 @@ class SimulationProcessor:
         need to be stored
         """
         tensorElementStorageKeys = []
-        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
+        for quant in [a for a in self.flags['storeQuantities'] if a is not None]:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1324,7 +1329,7 @@ class SimulationProcessor:
         need to be stored
         """
         scalarElementStorageKeys = []
-        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
+        for quant in [a for a in self.flags['storeQuantities'] if a is not None]:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebq_global': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1338,7 +1343,7 @@ class SimulationProcessor:
         need to be stored
         """
         vectorElementStorageKeys = []
-        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
+        for quant in [a for a in self.flags['storeQuantities'] if a is not None]:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebq_global': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1352,7 +1357,7 @@ class SimulationProcessor:
         need to be stored
         """
         tensorElementStorageKeys = []
-        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
+        for quant in [a for a in self.flags['storeQuantities'] if a is not None]:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebq_global': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1366,7 +1371,7 @@ class SimulationProcessor:
         need to be stored
         """
         scalarElementStorageKeys = []
-        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
+        for quant in [a for a in self.flags['storeQuantities'] if a is not None]:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebqe': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1380,7 +1385,7 @@ class SimulationProcessor:
         need to be stored
         """
         vectorElementStorageKeys = []
-        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
+        for quant in [a for a in self.flags['storeQuantities'] if a is not None]:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebqe': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1394,7 +1399,7 @@ class SimulationProcessor:
         need to be stored
         """
         tensorElementStorageKeys = []
-        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
+        for quant in [a for a in self.flags['storeQuantities'] if a is not None]:
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebqe': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1568,8 +1573,8 @@ class SimulationProcessor:
         #cj
 
         #wasteful
-        for key in vt.q.keys():
-            if key not in self.nodalQuadratureInfo.keys():
+        for key in list(vt.q.keys()):
+            if key not in list(self.nodalQuadratureInfo.keys()):
                 tmp = list(vt.q[key].shape)
                 if len(tmp) > 1:
                     tmp[1] = nd+1
@@ -1761,7 +1766,7 @@ class SimulationProcessor:
         for eN in range(mlvt.levelModelList[-1].mesh.nElements_global):
             for k in range(mlvt.levelModelList[-1].nQuadraturePoints_element):
                 for i in range(mlvt.levelModelList[-1].q[ckey].shape[-1]):
-                    uOut.write('%12.5e' % (mlvt.levelModelList[-1].q[ckey][eN,k,i]/vmax))
+                    uOut.write('%12.5e' % (old_div(mlvt.levelModelList[-1].q[ckey][eN,k,i],vmax)))
                 for i in range(mlvt.levelModelList[-1].q[ckey].shape[-1],3):
                     uOut.write('%12.5e' % (0.0))
                 if n%2==1:
@@ -1843,7 +1848,7 @@ class SimulationProcessor:
         for ebN in range(mlvt.levelModelList[-1].mesh.nElementBoundaries_global):
             for k in range(mlvt.levelModelList[-1].nElementBoundaryQuadraturePoints_elementBoundary):
                 for i in range(mlvt.levelModelList[-1].ebq_global[ckey].shape[-1]):
-                    uOut.write('%12.5e' % (mlvt.levelModelList[-1].ebq_global[ckey][ebN,k,i]/vmax))
+                    uOut.write('%12.5e' % (old_div(mlvt.levelModelList[-1].ebq_global[ckey][ebN,k,i],vmax)))
                 for i in range(mlvt.levelModelList[-1].ebq_global[ckey].shape[-1],3):
                     uOut.write('%12.5e' % (0.0))
                 if n%2==1:
@@ -1893,7 +1898,7 @@ def projectToFinestLevel(mlTransport,level,tsim=0.0,verbose=0):
                 mlTransport.meshTransfers.prolong_bcListDict[ci][lf+1].matvec(uproj[ci][lf].dof,
                                                                               uproj[ci][lf+1].dof)
                 #load Dirichlet conditions in
-                for dofN,g in mlTransport.levelModelList[lf+1].dirichletConditions[ci].DOFBoundaryConditionsDict.iteritems():
+                for dofN,g in mlTransport.levelModelList[lf+1].dirichletConditions[ci].DOFBoundaryConditionsDict.items():
                     uproj[ci][lf+1].dof[dofN] = g(mlTransport.levelModelList[lf+1].dirichletConditions[ci].DOFBoundaryPointDict[dofN],tsim)
                 #dirichlet conditions
             #lf up to fine
@@ -1930,7 +1935,7 @@ def projectToFinestLevel(mlTransport,level,tsim=0.0,verbose=0):
                 Viewers.viewerPipe.write(cmd)
                 Viewers.newPlot()
                 Viewers.newWindow()
-                raw_input('press return to continue')
+                input('press return to continue')
             #end ci
         #end viewer typ
     return uqprojFine,graduqProjFine
@@ -2032,7 +2037,7 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
         xArray  = numpy.zeros((nEc,nqc,3),'d')
         for ec in range(nEc):
             iqc = 0
-            for k,x in xc[ec].iteritems():
+            for k,x in xc[ec].items():
                 #mwf debug
                 #print "ec=%d iqc=%d x=%s " % (ec,iqc,x)
                 xArray[ec,iqc,:] = x
@@ -2068,7 +2073,7 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
             velci0 = mCoarse.velocityPostProcessor.evaluateElementVelocityField(xArray,ci)
             for ec in range(nEc):
                 iqc = 0
-                for k,x in xc[ec].iteritems():
+                for k,x in xc[ec].items():
                     ef = k[0]; iqf = k[1]
                     velciprojFine[ef,iqf,:] = velci0[ec,iqc,:]
                     iqc += 1
@@ -2092,8 +2097,8 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
                     x = mFine.q['x'][eN,iq,:]
                     v = velciprojFine[eN,iq,:]
                     Viewers.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (x[0],x[1],
-                                                                              v[0]/scale,
-                                                                              v[1]/scale))
+                                                                              old_div(v[0],scale),
+                                                                              old_div(v[1],scale)))
             Viewers.datFile.write("\n \n#end velciproj ci=%d level=%d" % (ci,level))
             title = "velciproj ci=%d level=%d " % (ci,level)
             cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (Viewers.windowNumber,
@@ -2104,7 +2109,7 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
             Viewers.viewerPipe.write(cmd)
             Viewers.newPlot()
             Viewers.newWindow()
-            raw_input('press return to continue')
+            input('press return to continue')
 
             #now try just coarse grid velocity
             max_u=max(numpy.absolute(numpy.take(mCoarse.q[('velocity',ci)],[0],2).flat))
@@ -2116,8 +2121,8 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
                     x = mCoarse.q['x'][eN,iq,:]
                     v = mCoarse.q[('velocity',ci)][eN,iq,:]
                     Viewers.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (x[0],x[1],
-                                                                              v[0]/scale,
-                                                                              v[1]/scale))
+                                                                              old_div(v[0],scale),
+                                                                              old_div(v[1],scale)))
             Viewers.datFile.write("\n \n#end coarse velocity ci=%d level=%d" % (ci,level))
             title = "coarse velocity ci=%d level=%d " % (ci,level)
             cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (Viewers.windowNumber,
@@ -2128,7 +2133,7 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
             Viewers.viewerPipe.write(cmd)
             Viewers.newPlot()
             Viewers.newWindow()
-            raw_input('press return to continue')
+            input('press return to continue')
 
         #end gnuplot
     #end verbose

@@ -7,6 +7,11 @@ TransportCoefficients for flow and transport in porous media
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from math import *
 from .TransportCoefficients import TC_base
 import numpy
@@ -19,7 +24,7 @@ from . import subsurfaceTransportFunctions as stfuncs
 #Utility classes for dealing with common aspects of flow and transport
 ######################################################################
 
-class BlockHeterogeneousCoefficients:
+class BlockHeterogeneousCoefficients(object):
     """Basic data structures and functionality for keeping track of a
     block heterogeneity
 
@@ -63,7 +68,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
         self.source_types = source_types
         if S_s_types is None:
             self.S_s_types = {}
-            for mat in self.K_types.keys():
+            for mat in list(self.K_types.keys()):
                 self.S_s_types[mat] = lambda x,t: 0.0
         else:
             self.S_s_types = S_s_types
@@ -77,11 +82,11 @@ class SinglePhaseDarcyCoefficients(TC_base):
         if self.materialValuesLocallyConstant:
             self.K_types_const = {}; self.source_types_const= {}; self.S_s_types_const = {}
             x = numpy.zeros((3,),'d'); t0 = 0.0
-            for mat in self.K_types.keys():
+            for mat in list(self.K_types.keys()):
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
-            for mat in self.source_types.keys():
+            for mat in list(self.source_types.keys()):
                 self.source_types_const[mat]=self.source_types[mat](x,t0)
-            for mat in self.S_s_types.keys():
+            for mat in list(self.S_s_types.keys()):
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
         #for matching shapes of quadrature arrays
         self.q_x_shape = None;  self.ebqe_x_shape=None
@@ -102,7 +107,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
         sparseDiffusionTensors = {}
         for ci in range(nc):
             sparseDiffusionTensors[(ci,ci)]=(numpy.arange(start=0,stop=nd**2+1,step=nd,dtype='i'),
-                                             numpy.array([range(nd) for row in range(nd)],dtype='i'))
+                                             numpy.array([list(range(nd)) for row in range(nd)],dtype='i'))
         TC_base.__init__(self,
                          nc,
                          mass,
@@ -132,11 +137,11 @@ class SinglePhaseDarcyCoefficients(TC_base):
     def evaluateHeterogeneity_element(self,t,cq):
         if self.materialValuesLocallyConstant:
             x = numpy.zeros((3,),'d'); t0 = 0.0
-            for mat in self.K_types.keys():
+            for mat in list(self.K_types.keys()):
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
-            for mat in self.source_types.keys():
+            for mat in list(self.source_types.keys()):
                 self.source_types_const[mat]=self.source_types[mat](x,t0)
-            for mat in self.S_s_types.keys():
+            for mat in list(self.S_s_types.keys()):
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
 
             for ci in range(self.nc):
@@ -182,11 +187,11 @@ class SinglePhaseDarcyCoefficients(TC_base):
         #use harmonic average for a, arith average for f
         if self.materialValuesLocallyConstant:
             x = numpy.zeros((3,),'d'); t0 = 0.0
-            for mat in self.K_types.keys():
+            for mat in list(self.K_types.keys()):
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
-            for mat in self.source_types.keys():
+            for mat in list(self.source_types.keys()):
                 self.source_types_const[mat]=self.source_types[mat](x,t0)
-            for mat in self.S_s_types.keys():
+            for mat in list(self.S_s_types.keys()):
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
             for ci in range(self.nc):
                 if ('f',ci) in cebq: cebq[('f',ci)].flat[:] = 0.0
@@ -245,11 +250,11 @@ class SinglePhaseDarcyCoefficients(TC_base):
         #use harmonic average for a, arith average for f
         if self.materialValuesLocallyConstant:
             x = numpy.zeros((3,),'d'); t0 = 0.0
-            for mat in self.K_types.keys():
+            for mat in list(self.K_types.keys()):
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
-            for mat in self.source_types.keys():
+            for mat in list(self.source_types.keys()):
                 self.source_types_const[mat]=self.source_types[mat](x,t0)
-            for mat in self.S_s_types.keys():
+            for mat in list(self.S_s_types.keys()):
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
             for ci in range(self.nc):
                 if ('f',ci) in cebq_global: cebq_global[('f',ci)].flat[:] = 0.0
@@ -305,11 +310,11 @@ class SinglePhaseDarcyCoefficients(TC_base):
     def evaluateHeterogeneity_exteriorElementBoundary(self,t,cebqe):
         if self.materialValuesLocallyConstant:
             x = numpy.zeros((3,),'d'); t0 = 0.0
-            for mat in self.K_types.keys():
+            for mat in list(self.K_types.keys()):
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
-            for mat in self.source_types.keys():
+            for mat in list(self.source_types.keys()):
                 self.source_types_const[mat]=self.source_types[mat](x,t0)
-            for mat in self.S_s_types.keys():
+            for mat in list(self.S_s_types.keys()):
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
             for ci in range(self.nc):
                 cebqe[('f',ci)].flat[:] = 0.0
@@ -431,7 +436,7 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
                 self.Ksw_types = Ksw_types
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
             assert len(Ksw_types.shape) in [1,2], "if full tensor conductivity true then Ksw_types scalar or 'flattened' row-major representation of entries"
             if len(Ksw_types.shape)==1:
                 self.Ksw_types = numpy.zeros((self.nMaterialTypes,self.nd**2),'d')
@@ -1012,12 +1017,12 @@ class TwophaseDarcyFlow_base(TC_base):
         self.g  = dimensionless_gravity
         ##fluid properties
         #normalized density terms
-        self.rhon = density_n/density_w
-        self.rhow = density_w/density_w
-        self.b  = density_n/density_w
+        self.rhon = old_div(density_n,density_w)
+        self.rhow = old_div(density_w,density_w)
+        self.b  = old_div(density_n,density_w)
         #normalized viscosities
-        self.muw= viscosity_w/viscosity_w
-        self.mun= viscosity_n/viscosity_w
+        self.muw= old_div(viscosity_w,viscosity_w)
+        self.mun= old_div(viscosity_n,viscosity_w)
         #density eos options
         self.density_types={'Exponential':1,
                             'IdealGas':2}
@@ -1031,15 +1036,15 @@ class TwophaseDarcyFlow_base(TC_base):
                                 ['rwork_density_w','rwork_density_n']):
             if params is not None:
                 if params['model'] == 'Exponential':
-                    setattr(self,rwork,numpy.array([params['rho_0']/params['rho_0'],#normalize by phase density
+                    setattr(self,rwork,numpy.array([old_div(params['rho_0'],params['rho_0']),#normalize by phase density
                                                     params['psi_0'],
                                                     params['beta']],dtype='d'))
                 elif params['model'] == 'IdealGas':
                     setattr(self,rwork,numpy.array([params['T'],
-                                                    params['W']/params['rho_0'],#normalize by phase density
+                                                    old_div(params['W'],params['rho_0']),#normalize by phase density
                                                     params['R'],
                                                     params['headToPressure'],
-                                                    params['rho_0']/params['rho_0'],#normalize by phase density
+                                                    old_div(params['rho_0'],params['rho_0']),#normalize by phase density
                                                     params['psi_0']],dtype='d'))
                 else:
                     assert False, 'TwophaseDarcy_base density params= %s not found ' % params
@@ -1059,7 +1064,7 @@ class TwophaseDarcyFlow_base(TC_base):
             if psk_model_id not in self.psk_tolerances:
                 self.psk_tolerances[psk_model_id] = self.psk_tolerances['default']
         self.nPskTolerances=1
-        assert(self.psk_model in self.psk_types.keys())
+        assert(self.psk_model in list(self.psk_types.keys()))
         self.nMaterialTypes = nMaterialTypes
         #psk rwork array lengths
         self.nPSKsplineKnots = nPSKsplineKnots
@@ -1150,14 +1155,14 @@ class TwophaseDarcyFlow_base(TC_base):
         if self.psk_model == 'simp':
             assert self.nPskParams == 2
             self.rwork_psk = numpy.zeros((self.nMaterialTypes,self.nPskParams),'d')
-            for Sw_min,Sw_max,i in zip(Sw_min_types,Sw_max_types,range(self.nMaterialTypes)):
+            for Sw_min,Sw_max,i in zip(Sw_min_types,Sw_max_types,list(range(self.nMaterialTypes))):
                 self.rwork_psk[i,0] = Sw_min
                 self.rwork_psk[i,1] = Sw_max
         elif self.psk_model in ['VGM','VGB']:
             assert(vg_alpha_types is not None and vg_m_types  is not None)
             assert self.nPskParams == 4
             self.rwork_psk = numpy.zeros((self.nMaterialTypes,self.nPskParams),'d')
-            for Sw_min,Sw_max,vg_alpha,vg_m,i in zip(Sw_min_types,Sw_max_types,vg_alpha_types,vg_m_types,range(self.nMaterialTypes)):
+            for Sw_min,Sw_max,vg_alpha,vg_m,i in zip(Sw_min_types,Sw_max_types,vg_alpha_types,vg_m_types,list(range(self.nMaterialTypes))):
                 self.rwork_psk[i,0] = Sw_min
                 self.rwork_psk[i,1] = Sw_max
                 self.rwork_psk[i,2] = vg_alpha
@@ -1166,7 +1171,7 @@ class TwophaseDarcyFlow_base(TC_base):
             assert(bc_lambda_types is not None and bc_lambda_types  is not None)
             assert self.nPskParams == 4
             self.rwork_psk = numpy.zeros((self.nMaterialTypes,self.nPskParams),'d')
-            for Sw_min,Sw_max,bc_pd,bc_lambda,i in zip(Sw_min_types,Sw_max_types,bc_pd_types,bc_lambda_types,range(self.nMaterialTypes)):
+            for Sw_min,Sw_max,bc_pd,bc_lambda,i in zip(Sw_min_types,Sw_max_types,bc_pd_types,bc_lambda_types,list(range(self.nMaterialTypes))):
                 self.rwork_psk[i,0] = Sw_min
                 self.rwork_psk[i,1] = Sw_max
                 self.rwork_psk[i,2] = bc_pd
@@ -1330,9 +1335,9 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i')),
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i')),
                                       (1,1):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -1483,10 +1488,10 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         self.psk_tolerances['VGM']['eps_small']=vgm_small_eps
         self.psk_tolerances['VGM']['ns_del']   =vgm_ns_del
         if self.use_spline:
@@ -1581,7 +1586,7 @@ class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
 
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         self.setMaterialTypes(Ksw_types=Ksw_types,
                               omega_types=thetaS_types,
                               Sw_max_types=Sw_max_types,
@@ -1709,9 +1714,9 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i')),
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i')),
                                       (1,1):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -1889,10 +1894,10 @@ class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         self.psk_tolerances['VGM']['eps_small']=vgm_small_eps
         self.psk_tolerances['VGM']['ns_del']   =vgm_ns_del
         if self.use_spline:
@@ -1993,7 +1998,7 @@ class FullyCoupledPressurePressureSimplePSKs(TwophaseDarcy_fc_pp):
 
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         self.setMaterialTypes(Ksw_types=Ksw_types,
                               omega_types=thetaS_types,
                               Sw_max_types=Sw_max_types,
@@ -2344,7 +2349,7 @@ class TwophaseDarcy_incompressible_split_pressure(TwophaseDarcy_split_pressure_b
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -2582,7 +2587,7 @@ class TwophaseDarcy_incompressible_split_saturation(TwophaseDarcy_split_saturati
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -2838,7 +2843,7 @@ class TwophaseDarcy_compressible_split_pressure(TwophaseDarcy_split_pressure_bas
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -3113,7 +3118,7 @@ class TwophaseDarcy_compressible_split_saturation(TwophaseDarcy_split_saturation
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -3313,7 +3318,7 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
         #set up dummy values in case we're not running the other model
         self.q_s_w   = numpy.zeros(cq[('u',0)].shape,'d')
         self.q_s_w[:] = self.swConstant
-        for i in range(len(self.q_s_w.flat)/2,len(self.q_s_w.flat)):
+        for i in range(old_div(len(self.q_s_w.flat),2),len(self.q_s_w.flat)):
             self.q_s_w.flat[i] = 1.0e-4
         self.q_grad_psic   = numpy.zeros(cq[('f',0)].shape,'d')
         self.q_psic        = numpy.zeros(cq[('u',0)].shape,'d')
@@ -3570,7 +3575,7 @@ class TwophaseDarcy_incompressible_split_pp_pressure(TwophaseDarcy_split_pp_pres
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -3803,7 +3808,7 @@ class TwophaseDarcy_incompressible_split_pp_saturation(TwophaseDarcy_split_pp_sa
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -3925,10 +3930,10 @@ class IncompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_incom
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -3985,10 +3990,10 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_inc
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4167,10 +4172,10 @@ class CompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_compres
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4234,10 +4239,10 @@ class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compr
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4290,7 +4295,7 @@ class IncompressibleFractionalFlowPressureSimplePSKs(TwophaseDarcy_incompressibl
 
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4340,10 +4345,10 @@ class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressi
         for input in [thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4396,10 +4401,10 @@ class PressurePressureIncompressibleFractionalFlowPressureMualemVanGenuchten(Two
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4456,10 +4461,10 @@ class PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten(T
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4513,7 +4518,7 @@ class GroundwaterTransportCoefficients(TC_base):
         sparseDiffusionTensors = {}
         for ci in range(nc):
             sparseDiffusionTensors[(ci,ci)]=(numpy.arange(start=0,stop=nd**2+1,step=nd,dtype='i'),
-                                             numpy.array([range(nd) for row in range(nd)],dtype='i'))
+                                             numpy.array([list(range(nd)) for row in range(nd)],dtype='i'))
         names = ['C_%s' % ci for ci in range(nc)]
         TC_base.__init__(self,
                          nc,
@@ -4653,7 +4658,7 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
         sparseDiffusionTensors = {}
         for ci in range(nc):
             sparseDiffusionTensors[(ci,ci)]=(numpy.arange(start=0,stop=nd**2+1,step=nd,dtype='i'),
-                                             numpy.array([range(nd) for row in range(nd)],dtype='i'))
+                                             numpy.array([list(range(nd)) for row in range(nd)],dtype='i'))
         names = ['C_%s' % ci for ci in range(nc)]
         TC_base.__init__(self,
                          nc,

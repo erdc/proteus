@@ -6,7 +6,14 @@ A hierarchy of classes for managing complete numerical solution implementations
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
 
+from builtins import zip
+from builtins import str
+from builtins import input
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import os
 import numpy
 from subprocess import check_call
@@ -28,7 +35,7 @@ from .Profiling import logEvent
 # Global to control whether the kernel starting is active.
 embed_ok = True
 
-class NS_base:  # (HasTraits):
+class NS_base(object):  # (HasTraits):
     r"""
     The base class for managing the numerical solution of  PDE's.
 
@@ -108,7 +115,7 @@ class NS_base:  # (HasTraits):
             assert len(simFlagsList) == len(self.pList), "len(simFlagsList) = %s should be %s " % (len(simFlagsList),len(self.pList))
             for index in range(len(self.pList)):
                 if 'storeQuantities' in simFlagsList[index]:
-                    for quant in filter(lambda a: a is not None,simFlagsList[index]['storeQuantities']):
+                    for quant in [a for a in simFlagsList[index]['storeQuantities'] if a is not None]:
                         recType = quant.split(':')
                         if len(recType) > 1 and recType[0] == 'q':
                             self.archive_q[index] = True
@@ -135,7 +142,6 @@ class NS_base:  # (HasTraits):
             logEvent("Building seperate meshes for each model")
             nListForMeshGeneration=nList
             pListForMeshGeneration=pList
-
         for p,n in zip(pListForMeshGeneration,nListForMeshGeneration):
             if opts.hotStart:
                 p.genMesh = False
@@ -580,11 +586,11 @@ class NS_base:  # (HasTraits):
         for p in pList:
             p.coefficients.opts = self.opts
             if p.coefficients.sdInfo == {}:
-                for ci,ckDict in p.coefficients.diffusion.iteritems():
-                    for ck in ckDict.keys():
+                for ci,ckDict in p.coefficients.diffusion.items():
+                    for ck in list(ckDict.keys()):
                         if (ci,ck) not in p.coefficients.sdInfo:
                             p.coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=p.nd**2+1,step=p.nd,dtype='i'),
-                                                              numpy.array([range(p.nd) for row in range(p.nd)],dtype='i').flatten())
+                                                              numpy.array([list(range(p.nd)) for row in range(p.nd)],dtype='i').flatten())
                             logEvent("Numerical Solution Sparse diffusion information key "+repr((ci,ck))+' = '+repr(p.coefficients.sdInfo[(ci,ck)]))
         self.sList = sList
         self.mlMesh_nList = mlMesh_nList
@@ -603,19 +609,19 @@ class NS_base:  # (HasTraits):
         self.simOutputList = []
         self.auxiliaryVariables = {}
         if self.simFlagsList is not None:
-            for p,n,simFlags,model,index in zip(pList,nList,simFlagsList,self.modelList,range(len(pList))):
+            for p,n,simFlags,model,index in zip(pList,nList,simFlagsList,self.modelList,list(range(len(pList)))):
                 self.simOutputList.append(SimTools.SimulationProcessor(flags=simFlags,nLevels=n.nLevels,
                                                                        pFile=p,nFile=n,
                                                                        analyticalSolution=p.analyticalSolution))
                 model.simTools = self.simOutputList[-1]
                 self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
         else:
-            for p,n,s,model,index in zip(pList,nList,sList,self.modelList,range(len(pList))):
+            for p,n,s,model,index in zip(pList,nList,sList,self.modelList,list(range(len(pList)))):
                 self.simOutputList.append(SimTools.SimulationProcessor(pFile=p,nFile=n))
                 model.simTools = self.simOutputList[-1]
                 model.viewer = Viewers.V_base(p,n,s)
                 self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
-        for avList in self.auxiliaryVariables.values():
+        for avList in list(self.auxiliaryVariables.values()):
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
         logEvent(Profiling.memory("NumericalSolution memory",className='NumericalSolution',memSaved=memBase))
@@ -639,7 +645,7 @@ class NS_base:  # (HasTraits):
         self.nlsList=[]
 
         for p,n,s,mlMesh,index \
-            in zip(self.pList,self.nList,self.sList,self.mlMesh_nList,range(len(self.pList))):
+            in zip(self.pList,self.nList,self.sList,self.mlMesh_nList,list(range(len(self.pList)))):
 
             if self.so.needEBQ_GLOBAL:
                 n.needEBQ_GLOBAL = True
@@ -802,7 +808,7 @@ class NS_base:  # (HasTraits):
                     self.nList,
                     self.simFlagsList,
                     self.modelList,
-                    range(len(self.pList))):
+                    list(range(len(self.pList)))):
                 self.simOutputList.append(
                     SimTools.SimulationProcessor(
                         flags=simFlags,
@@ -820,7 +826,7 @@ class NS_base:  # (HasTraits):
                 for av in n.auxiliaryVariables:
                   if hasattr(av,'adapted'):
                     av.adapted=True
-                    for point, l_d in av.points.iteritems():
+                    for point, l_d in av.points.items():
                       if 'nearest_node' in l_d:
                         l_d.pop('nearest_node')
                     if(av.isLineGauge or av.isLineIntegralGauge): #if line gauges, need to remove all points
@@ -848,12 +854,12 @@ class NS_base:  # (HasTraits):
                     self.nList,
                     self.sList,
                     self.modelList,
-                    range(len(self.pList))):
+                    list(range(len(self.pList)))):
                 self.simOutputList.append(SimTools.SimulationProcessor(pFile=p,nFile=n))
                 model.simTools = self.simOutputList[-1]
                 model.viewer = Viewers.V_base(p,n,s)
                 self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
-        for avList in self.auxiliaryVariables.values():
+        for avList in list(self.auxiliaryVariables.values()):
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
         logEvent("Transfering fields from PUMI to Proteus")
@@ -1045,7 +1051,7 @@ class NS_base:  # (HasTraits):
                 #For a given vertex, the i-th size_scale is roughly the desired edge length along the i-th direction specified by the size_frame
                 for i in range(len(self.modelList[0].levelModelList[0].mesh.size_scale)):
                   self.modelList[0].levelModelList[0].mesh.size_scale[i,0] =  1e-1
-                  self.modelList[0].levelModelList[0].mesh.size_scale[i,1] =  (self.modelList[0].levelModelList[0].mesh.nodeArray[i,1]/0.584)*1e-1
+                  self.modelList[0].levelModelList[0].mesh.size_scale[i,1] =  (old_div(self.modelList[0].levelModelList[0].mesh.nodeArray[i,1],0.584))*1e-1
                   for j in range(3):
                     for k in range(3):
                       if(j==k):
@@ -1239,8 +1245,10 @@ class NS_base:  # (HasTraits):
         #exit()
 
         logEvent("Setting initial conditions",level=0)
-        for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
+        for index,p,n,m,simOutput in zip(list(range(len(self.modelList))),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
+                import pdb
+                pdb.set_trace()
                 logEvent("Setting initial conditions from hot start file for "+p.name)
                 tCount = int(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Name'])
                 offset=0
@@ -1295,7 +1303,7 @@ class NS_base:  # (HasTraits):
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         spinup = []
         if (not self.opts.hotStart) or (not self.so.skipSpinupOnHotstart):
-            for index,m in self.modelSpinUp.iteritems():
+            for index,m in self.modelSpinUp.items():
                 spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
             logEvent("Attaching models to model "+m.name)
@@ -1312,7 +1320,7 @@ class NS_base:  # (HasTraits):
         for p,n,m,simOutput in spinup:
             logEvent("Attaching models to model "+p.name)
             m.attachModels(self.modelList)
-            if m in self.modelSpinUp.values():
+            if m in list(self.modelSpinUp.values()):
                 logEvent("Spin-Up Estimating initial time derivative and initializing time history for model "+p.name)
                 #now the models are attached so we can calculate the coefficients
                 for lm,lu,lr in zip(m.levelModelList,
@@ -1362,7 +1370,7 @@ class NS_base:  # (HasTraits):
                     logEvent("Spin-Up Step Taken, Model step t=%12.5e, dt=%12.5e for model %s" % (m.stepController.t_model,
                                                                                              m.stepController.dt_model,
                                                                                              m.name))
-        for p,n,m,simOutput,index in zip(self.pList,self.nList,self.modelList,self.simOutputList,range(len(self.pList))):
+        for p,n,m,simOutput,index in zip(self.pList,self.nList,self.modelList,self.simOutputList,list(range(len(self.pList)))):
             if not self.opts.hotStart:
                 logEvent("Archiving initial conditions")
                 self.archiveInitialSolution(m,index)
@@ -1503,7 +1511,7 @@ class NS_base:  # (HasTraits):
                                                                             par_rList=model.par_rList)
                                 Profiling.memory("solver.solveMultilevel")
                                 if self.opts.wait:
-                                    raw_input("Hit any key to continue")
+                                    input("Hit any key to continue")
                                 if solverFailed:
                                     break
                                 else:
@@ -1651,11 +1659,11 @@ class NS_base:  # (HasTraits):
         for level,levelModel in enumerate(model.levelModelList):
             preCopy = levelModel.coefficients.preStep(model.stepController.t_model,firstStep=self.firstStep)
             if (preCopy is not None and ('copy_uList') in preCopy and preCopy['copy_uList'] == True):
-                for u_ci_lhs,u_ci_rhs in zip(levelModel.u.values(),self.modelList[preCopy['uList_model']].levelModelList[level].u.values()):
+                for u_ci_lhs,u_ci_rhs in zip(list(levelModel.u.values()),list(self.modelList[preCopy['uList_model']].levelModelList[level].u.values())):
                     u_ci_lhs.dof[:] = u_ci_rhs.dof
                 levelModel.setFreeDOF(model.uList[level])
             if preCopy is not None and ('clear_uList') in preCopy and preCopy['clear_uList'] == True:
-                for u_ci_lhs in levelModel.u.values():
+                for u_ci_lhs in list(levelModel.u.values()):
                     u_ci_lhs.dof[:] = 0.0
                 levelModel.setFreeDOF(model.uList[level])
             if preCopy is not None and ('reset_uList') in preCopy and preCopy['reset_uList'] == True:
@@ -1667,7 +1675,7 @@ class NS_base:  # (HasTraits):
         for level,levelModel in enumerate(model.levelModelList):
             postCopy = levelModel.coefficients.postStep(model.stepController.t_model,firstStep=self.firstStep)
             if postCopy is not None and ('copy_uList') in postCopy and postCopy['copy_uList'] == True:
-                for u_ci_lhs,u_ci_rhs in zip(self.modelList[postCopy['uList_model']].levelModelList[level].u.values(),model.levelModelList[level].u.values()):
+                for u_ci_lhs,u_ci_rhs in zip(list(self.modelList[postCopy['uList_model']].levelModelList[level].u.values()),list(model.levelModelList[level].u.values())):
                     u_ci_lhs.dof[:] = u_ci_rhs.dof
                 self.modelList[postCopy['uList_model']].levelModelList[level].setFreeDOF(self.modelList[postCopy['uList_model']].uList[level])
 

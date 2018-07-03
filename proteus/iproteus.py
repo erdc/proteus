@@ -14,6 +14,9 @@
 #
 
 from __future__ import print_function
+from builtins import zip
+from builtins import str
+from builtins import range
 import os
 import proteus
 
@@ -493,14 +496,14 @@ if __name__ == '__main__':
             try:
                 if vtkViewers.hasQt:
                     vtkViewers.g.app.exec_()
-                for w in vtkViewers.windowDict.values():
+                for w in list(vtkViewers.windowDict.values()):
                     w.compManager.StopServices()
                 sys.exit()
             except:
                 pass
         else:
             try:
-                for w in vtkViewers.windowDict.values():
+                for w in list(vtkViewers.windowDict.values()):
                     w.compManager.StartServices()
                 sys.exit()
             except:

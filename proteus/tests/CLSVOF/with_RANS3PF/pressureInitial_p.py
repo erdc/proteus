@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
@@ -26,7 +27,7 @@ def getDiffusiveFlux_pInit(x,flag):
     if flag != boundaryTags['top']:
         return lambda x,t: 0.0
 
-class getIBC_pInit:
+class getIBC_pInit(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

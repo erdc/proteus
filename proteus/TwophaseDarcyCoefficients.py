@@ -6,6 +6,10 @@ An extension of the TransportCoefficients module for two-phase flow in porous me
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 from math import *
 from .TransportCoefficients import TC_base
 import numpy
@@ -23,7 +27,7 @@ class TwophaseDarcyFlow_base(TC_base):
                  psk_model='VGM',
                  vg_alpha = 5.0,
                  vg_m  = 0.75,
-                 bc_pd  = 1.0/5.47,
+                 bc_pd  = old_div(1.0,5.47),
                  bc_lambda = 0.5,
                  omega  = 1.0,
                  Sw_max = 1.0,
@@ -37,7 +41,7 @@ class TwophaseDarcyFlow_base(TC_base):
                         'VGB':2,
                         'BCM':3,
                         'BCB':4}
-        assert(self.psk_model in self.psk_types.keys())
+        assert(self.psk_model in list(self.psk_types.keys()))
         self.vg_alpha=vg_alpha
         self.vg_m = vg_m
         self.bc_pd = bc_pd
@@ -57,11 +61,11 @@ class TwophaseDarcyFlow_base(TC_base):
         self.Sw_min = Sw_min
         self.Sw_max = Sw_max
         #set fluid properies
-        self.b = rhon/rhow         #normalize density
-        self.rhon=rhon/rhon
-        self.rhow=rhow/rhow
-        self.muw=muw/muw
-        self.mun=mun/muw
+        self.b = old_div(rhon,rhow)         #normalize density
+        self.rhon=old_div(rhon,rhon)
+        self.rhow=old_div(rhow,rhow)
+        self.muw=old_div(muw,muw)
+        self.mun=old_div(mun,muw)
         #setup rwork arrays for homogeneous media, make heterogeneity later
         if self.psk_model == 'simp':
             self.len_rwork_psk=2
@@ -102,13 +106,13 @@ class TwophaseDarcyFlow_base(TC_base):
             self.isHomogeneous=False
         if self.psk_model == 'simp':
             self.rwork_psk = numpy.zeros((self.nTypesAvailable,2),'d')
-            for Sw_min,Sw_max,i in zip(Sw_min_types,Sw_max_types,range(self.nTypesAvailable)):
+            for Sw_min,Sw_max,i in zip(Sw_min_types,Sw_max_types,list(range(self.nTypesAvailable))):
                 self.rwork_psk[i,0] = Sw_min
                 self.rwork_psk[i,1] = Sw_max
         elif self.psk_model in ['VGM','VGB']:
             assert(vg_alpha_types is not None and vg_m_types  is not None)
             self.rwork_psk = numpy.zeros((self.nTypesAvailable,4),'d')
-            for Sw_min,Sw_max,vg_alpha,vg_m,i in zip(Sw_min_types,Sw_max_types,vg_alpha_types,vg_m_types,range(self.nTypesAvailable)):
+            for Sw_min,Sw_max,vg_alpha,vg_m,i in zip(Sw_min_types,Sw_max_types,vg_alpha_types,vg_m_types,list(range(self.nTypesAvailable))):
                 self.rwork_psk[i,0] = Sw_min
                 self.rwork_psk[i,1] = Sw_max
                 self.rwork_psk[i,2] = vg_alpha
@@ -116,7 +120,7 @@ class TwophaseDarcyFlow_base(TC_base):
         elif self.psk_model in ['BCM','BCB']:
             assert(bc_lambda_types is not None and bc_lambda_types  is not None)
             self.rwork_psk = numpy.zeros((self.nTypesAvailable,4),'d')
-            for Sw_min,Sw_max,bc_pd,bc_lambda,i in zip(Sw_min_types,Sw_max_types,bc_pd_types,bc_lambda_types,range(self.nTypesAvailable)):
+            for Sw_min,Sw_max,bc_pd,bc_lambda,i in zip(Sw_min_types,Sw_max_types,bc_pd_types,bc_lambda_types,list(range(self.nTypesAvailable))):
                 self.rwork_psk[i,0] = Sw_min
                 self.rwork_psk[i,1] = Sw_max
                 self.rwork_psk[i,2] = bc_pd
@@ -224,7 +228,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                  psk_model='VGM',
                  vg_alpha = 5.0,
                  vg_m  = 0.75,
-                 bc_pd  = 1.0/5.47,
+                 bc_pd  = old_div(1.0,5.47),
                  bc_lambda = 0.5,
                  omega  = 1.0,
                  Sw_max = 1.0,
@@ -304,15 +308,15 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                                 ['rwork_density_w','rwork_density_n']):
             if params is not None:
                 if params['model'] == 'Exponential':
-                    setattr(self,rwork,numpy.array([params['rho_0']/params['rho_0'],#normalize by phase density
+                    setattr(self,rwork,numpy.array([old_div(params['rho_0'],params['rho_0']),#normalize by phase density
                                                     params['psi_0'],
                                                     params['beta']],dtype='d'))
                 elif params['model'] == 'IdealGas':
                     setattr(self,rwork,numpy.array([params['T'],
-                                                    params['W']/params['rho_0'],#normalize by phase density
+                                                    old_div(params['W'],params['rho_0']),#normalize by phase density
                                                     params['R'],
                                                     params['headToPressure'],
-                                                    params['rho_0']/params['rho_0'],#normalize by phase density
+                                                    old_div(params['rho_0'],params['rho_0']),#normalize by phase density
                                                     params['psi_0']],dtype='d'))
                 else:
                     assert False, 'TwophaseDarcy_fc density params= %s not found ' % params
@@ -522,7 +526,7 @@ class TwophaseDarcy_fc_ff(TwophaseDarcyFlow_base):
                  psk_model='VGM',
                  vg_alpha = 5.0,
                  vg_m  = 0.75,
-                 bc_pd  = 1.0/5.47,
+                 bc_pd  = old_div(1.0,5.47),
                  bc_lambda = 0.5,
                  omega  = 1.0,
                  Sw_max = 1.0,
@@ -755,7 +759,7 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
                  psk_model='VGM',
                  vg_alpha = 5.0,
                  vg_m  = 0.75,
-                 bc_pd  = 1.0/5.47,
+                 bc_pd  = old_div(1.0,5.47),
                  bc_lambda = 0.5,
                  omega  = 1.0,
                  Sw_max = 1.0,
@@ -854,7 +858,7 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
         #set up dummy values in case we're not running the other model
         self.q_s_w   = numpy.zeros(cq[('u',0)].shape,'d')
         self.q_s_w[:] = self.swConstant
-        for i in range(len(self.q_s_w.flat)/2,len(self.q_s_w.flat)):
+        for i in range(old_div(len(self.q_s_w.flat),2),len(self.q_s_w.flat)):
             self.q_s_w.flat[i] = 1.0e-4
         self.q_grad_psic   = numpy.zeros(cq[('f',0)].shape,'d')
         self.q_psic        = numpy.zeros(cq[('u',0)].shape,'d')
@@ -867,7 +871,7 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
         #set up dummy values in case we're not running the other model
         self.ebq_s_w = numpy.zeros(cebq[('u',0)].shape,'d')
         self.ebq_s_w[:]=self.swConstant
-        for i in range(len(self.ebq_s_w.flat)/2,len(self.ebq_s_w.flat)):
+        for i in range(old_div(len(self.ebq_s_w.flat),2),len(self.ebq_s_w.flat)):
             self.ebq_s_w.flat[i] = 1.0e-4
         self.ebq_grad_psic = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_psic = numpy.zeros(cebq[('u',0)].shape,'d')
@@ -882,7 +886,7 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
         #set up dummy values in case we're not running the other model
         self.ebqe_s_w = numpy.zeros(cebqe[('u',0)].shape,'d')
         self.ebqe_s_w[:]=self.swConstant
-        for i in range(len(self.ebqe_s_w.flat)/2,len(self.ebqe_s_w.flat)):
+        for i in range(old_div(len(self.ebqe_s_w.flat),2),len(self.ebqe_s_w.flat)):
             self.ebqe_s_w.flat[i] = 1.0e-4
         self.ebqe_grad_psic = numpy.zeros(cebqe[('f',0)].shape,'d')
         self.ebqe_psic = numpy.zeros(cebqe[('u',0)].shape,'d')
@@ -893,7 +897,7 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
         #set up dummy values in case we're not running the other model
         self.ip_s_w = numpy.zeros(cip[('u',0)].shape,'d')
         self.ip_s_w[:]=self.swConstant
-        for i in range(len(self.ip_s_w.flat)/2,len(self.ip_s_w.flat)):
+        for i in range(old_div(len(self.ip_s_w.flat),2),len(self.ip_s_w.flat)):
             self.ip_s_w.flat[i] = 1.0e-4
         self.ip_grad_psic = numpy.zeros(cip[('f',0)].shape,'d')
         self.ip_psic = numpy.zeros(cip[('u',0)].shape,'d')
@@ -1054,7 +1058,7 @@ class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
                  psk_model='VGM',
                  vg_alpha = 5.0,
                  vg_m  = 0.75,
-                 bc_pd  = 1.0/5.47,
+                 bc_pd  = old_div(1.0,5.47),
                  bc_lambda = 0.5,
                  omega  = 1.0,
                  Sw_max = 1.0,

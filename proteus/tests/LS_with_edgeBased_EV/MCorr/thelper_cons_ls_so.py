@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import range
 from proteus.default_so import *
 from . import thelper_cons_ls
 from .thelper_cons_ls import *

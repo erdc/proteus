@@ -7,7 +7,10 @@ from proteus import (StepControl,
                      LinearAlgebraTools,
                      NumericalFlux)
 from proteus.mprans import RDLS
-from . import redist_p as physics
+try:
+    from . import redist_p as physics
+except:
+    import redist_p as physics
 from proteus import Context
 
 ct = Context.get()

@@ -1,4 +1,7 @@
 from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -90,7 +93,7 @@ elif pspaceOrder == 2:
 # Domain and mesh
 #L = (0.584,0.350)
 L = (2.2, 0.41)
-he = L[0]/float(4*Refinement-1)
+he = old_div(L[0],float(4*Refinement-1))
 he*=0.5
 he*=0.5
 #he*=0.5
@@ -179,7 +182,7 @@ else:
 
         regions = [[0.95*L[0], 0.2],[0.2-0.15,0.2],[0.2,0.2]]
         regionFlags = [1,2,3]
-        regionConstraints=[0.5*he**2,0.5*(he/2.0)**2,0.5*(he/6.0)**2]
+        regionConstraints=[0.5*he**2,0.5*(old_div(he,2.0))**2,0.5*(old_div(he,6.0))**2]
         #        for gaugeName,gaugeCoordinates in pointGauges.locations.iteritems():
         #            vertices.append(gaugeCoordinates)
         #            vertexFlags.append(pointGauges.flags[gaugeName])
@@ -209,7 +212,7 @@ T=ct.T
 dt_fixed = 0.01#0.03
 dt_init = 0.005#min(0.1*dt_fixed,0.001)
 runCFL=0.33
-nDTout = int(round(T/dt_fixed))
+nDTout = int(round(old_div(T,dt_fixed)))
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)]
 
 if ct.onlySaveFinalSolution == True:
@@ -334,13 +337,13 @@ def velRamp(t):
 
 
 def signedDistance(x):
-    return x[1]-L[1]/2
+    return x[1]-old_div(L[1],2)
 
 def particle_sdf(t, x):
     cx = 0.2
     cy = 0.2
     r = math.sqrt( (x[0]-cx)**2 + (x[1]-cy)**2)
-    n = ((x[0]-cx)/r,(x[1]-cy)/r)
+    n = (old_div((x[0]-cx),r),old_div((x[1]-cy),r))
     return  r - 0.05,n
 
 def particle_vel(t, x):

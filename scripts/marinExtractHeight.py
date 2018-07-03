@@ -2,6 +2,10 @@
 
 # for use with pvpython versions at least 4.4
 from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 from paraview import servermanager
 from paraview.simple import *
 from optparse import OptionParser
@@ -71,7 +75,7 @@ for time in timesteps:
             phi = pdata.GetArray("phid").GetTuple1(i)
 
             if (phi > 0.0) and (phi_old < 0.0):
-                height = (float(i-1) + (phi_old/(phi_old-phi)))/float(opts.resolution)
+                height = old_div((float(i-1) + (old_div(phi_old,(phi_old-phi)))),float(opts.resolution))
             phi_old=phi
 
         if (height > 0.0):

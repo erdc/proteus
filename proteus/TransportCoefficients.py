@@ -9,6 +9,11 @@ this module define common PDE's.
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from math import *
 from warnings import warn
 import numpy
@@ -38,7 +43,7 @@ from warnings import warn
 #the equations and the diffusion tensor may be provided as a sparse
 #matrix.
 #
-class TC_base:
+class TC_base(object):
     """
     This is the base class for coefficients of the vector transport
     equation with nc components. The coefficients and their derivative
@@ -127,7 +132,7 @@ class TC_base:
         self.elementBoundaryIntegralKeys=[]
         self.stencil=[set() for ci in range(self.nc)]
         self.integrals={}
-        for ci,cjDict in self.mass.iteritems():
+        for ci,cjDict in self.mass.items():
             self.elementIntegralKeys.append(('m',ci))
             for cj in cjDict:
                 self.stencil[ci].add(cj)
@@ -144,13 +149,13 @@ class TC_base:
                             self.advection[ci][cj] == self.mass[ci][cj]
                     else:
                         self.advection[ci] = {cj:self.mass[ci][cj]}
-        for ci,cjDict in self.advection.iteritems():
+        for ci,cjDict in self.advection.items():
             self.elementIntegralKeys.append(('f',ci))
             self.elementBoundaryIntegralKeys.append(('f',ci))
             for cj in cjDict:
                 self.stencil[ci].add(cj)
-        for ci,ckDict in self.diffusion.iteritems():
-            for ck,cjDict in ckDict.iteritems():
+        for ci,ckDict in self.diffusion.items():
+            for ck,cjDict in ckDict.items():
                 self.elementIntegralKeys.append(('a',ci,ck))
                 self.elementBoundaryIntegralKeys.append(('a',ci,ck))
                 if ck not in self.potential:
@@ -158,22 +163,22 @@ class TC_base:
                     phi[ck=%d]=u[ck=%d], the potential definition
                     should be corrected in the future\n""" % (ci,ck,ck,ck,ck))
                     self.potential[ck]='u'
-                for cj in cjDict.keys():
+                for cj in list(cjDict.keys()):
                     self.stencil[ci].add(cj)
                     self.stencil[ci].add(ck)
-        for ci,cjDict in self.potential.iteritems():
-            for cj in cjDict.keys():
+        for ci,cjDict in self.potential.items():
+            for cj in list(cjDict.keys()):
                 self.stencil[ci].add(cj)
-        for ci,cjDict in self.reaction.iteritems():
+        for ci,cjDict in self.reaction.items():
             self.elementIntegralKeys.append(('r',ci))
             for cj in cjDict:
                 self.stencil[ci].add(cj)
-        for ci,cjDict in self.hamiltonian.iteritems():
+        for ci,cjDict in self.hamiltonian.items():
             self.elementIntegralKeys.append(('H',ci))
             self.elementBoundaryIntegralKeys.append(('H',ci))
             for cj in cjDict:
                 self.stencil[ci].add(cj)
-        for ci,cjDict in self.stress.iteritems():
+        for ci,cjDict in self.stress.items():
             self.elementIntegralKeys.append(('sigma',ci))
             self.elementBoundaryIntegralKeys.append(('sigma',ci))
             for cj in cjDict:
@@ -253,32 +258,32 @@ class TC_base:
             ctemp = {}
             for ci in range(self.nc):
                 ctemp[('u',ci)] = numpy.zeros(nPoints,'d')
-                delta_u = (uMax-uMin)/float(nPoints-1)
+                delta_u = old_div((uMax-uMin),float(nPoints-1))
                 for i in range(nPoints):
                     ctemp[('u',ci)] = i*delta_u + uMin
-            for ci,cjDict in self.mass.iteritems():
+            for ci,cjDict in self.mass.items():
                 for cj in cjDict:
                     ctemp[('m',ci)] = numpy.zeros(nPoints,'d')
                     ctemp[('dm',ci,cj)] = numpy.zeros(nPoints,'d')
-            for ci,cjDict in self.advection.iteritems():
-                for cj in cjDict.keys():
+            for ci,cjDict in self.advection.items():
+                for cj in list(cjDict.keys()):
                     ctemp[('f',ci)] = numpy.zeros((nPoints,nSpace),'d')
                     ctemp[('df',ci,cj)] = numpy.zeros((nPoints,nSpace),'d')
-            for ci,ckDict in self.diffusion.iteritems():
-                for ck,cjDict in ckDict.iteritems():
-                    for cj in cjDict.keys():
+            for ci,ckDict in self.diffusion.items():
+                for ck,cjDict in ckDict.items():
+                    for cj in list(cjDict.keys()):
                         ctemp[('a',ci,ck)] = numpy.zeros((nPoints,nSpace,nSpace),'d')
                         ctemp[('da',ci,ck,cj)] = numpy.zeros((nPoints,nSpace,nSpace),'d')
-            for ci,cjDict in self.potential.iteritems():
-                for cj,flag in cjDict.iteritems():
+            for ci,cjDict in self.potential.items():
+                for cj,flag in cjDict.items():
                     ctemp[('phi',ci)] = numpy.zeros(nPoints,'d')
                     ctemp[('dphi',ci,cj)] = numpy.zeros(nPoints,'d')
-            for ci,cjDict in self.reaction.iteritems():
-                for cj in cjDict.keys():
+            for ci,cjDict in self.reaction.items():
+                for cj in list(cjDict.keys()):
                     ctemp[('r',ci)] = numpy.zeros(nPoints,'d')
                     ctemp[('dr',ci,cj)] = numpy.zeros(nPoints,'d')
-            for ci,cjDict in self.hamiltonian.iteritems():
-                for cj in cjDict.keys():
+            for ci,cjDict in self.hamiltonian.items():
+                for cj in list(cjDict.keys()):
                     ctemp[('H',ci)] = numpy.zeros(nPoints,'d')
                     ctemp[('dH',ci,cj)] = numpy.zeros((nPoints,nSpace),'d')
         else:
@@ -287,7 +292,7 @@ class TC_base:
             for ci in range(self.nc):
                 uMin = min(c[('u',ci)].flat)
                 uMax = max(c[('u',ci)].flat)
-                delta_u = (uMax-uMin)/float(nPoints-1)
+                delta_u = old_div((uMax-uMin),float(nPoints-1))
                 for i in range(nPoints):
                     ctemp[('u',ci)].flat[i]=i*delta_u+uMin
         return ctemp
@@ -312,35 +317,35 @@ class TC_base:
                 Viewers.viewerPipe.write(cmd)
                 Viewers.newPlot()
                 Viewers.newWindow()
-            for ci,cjDict in self.mass.iteritems():
+            for ci,cjDict in self.mass.items():
                 for cj in cjDict:
                     linePlot(ctemp[('u',cj)],ctemp[('m',ci)],'m_%i vs. u_%i' % (ci,cj) )
                     linePlot(ctemp[('u',cj)],ctemp[('dm',ci,cj)],'dm/du_%i vs. u_%i' % (ci,cj))
-            for ci,cjDict in self.advection.iteritems():
-                for cj in cjDict.keys():
+            for ci,cjDict in self.advection.items():
+                for cj in list(cjDict.keys()):
                     nSpace = ctemp[('f',ci)].shape[-1]
                     for I in range(nSpace):
                         linePlot(ctemp[('u',cj)],ctemp[('f',ci)],'f_%i vs. u_%i' % (ci,cj),start=I,stride=nSpace)
                         linePlot(ctemp[('u',cj)],ctemp[('df',ci,cj)],'df/du_%i vs. u_%i' % (ci,cj),start=I,stride=nSpace)
-            for ci,ckDict in self.diffusion.iteritems():
-                for ck,cjDict in ckDict.iteritems():
-                    for cj in cjDict.keys():
+            for ci,ckDict in self.diffusion.items():
+                for ck,cjDict in ckDict.items():
+                    for cj in list(cjDict.keys()):
                         nSpace = ctemp[('a',ci,ck)].shape[-1]
                         for I in range(nSpace):
                             for J in range(nSpace):
                                 linePlot(ctemp[('u',cj)],ctemp[('a',ci,ck)],'a_%i,%i vs. u_%i' % (ci,ck,cj),start=I*nSpace+J,stride=nSpace*nSpace)
                                 linePlot(ctemp[('u',cj)],ctemp[('da',ci,ck,cj)],'da/du_%i,%i vs. u_%i' % (ci,ck,cj),start=I*nSpace+J,stride=nSpace*nSpace)
-            for ci,cjDict in self.potential.iteritems():
-                for cj,flag in cjDict.iteritems():
+            for ci,cjDict in self.potential.items():
+                for cj,flag in cjDict.items():
                     if flag == 'nonlinear':
                         linePlot(ctemp[('u',cj)],ctemp[('phi',ci)],'phi_%i vs. u_%i' % (ci,cj) )
                         linePlot(ctemp[('u',cj)],ctemp[('dphi',ci,cj)],'dphi/du_%i vs. u_%i' % (ci,cj))
-            for ci,cjDict in self.reaction.iteritems():
-                for cj in cjDict.keys():
+            for ci,cjDict in self.reaction.items():
+                for cj in list(cjDict.keys()):
                     linePlot(ctemp[('u',cj)],ctemp[('r',ci)],'r_%i vs. u_%i' % (ci,cj) )
                     linePlot(ctemp[('u',cj)],ctemp[('dr',ci,cj)],'dr/du_%i vs. u_%i' % (ci,cj))
-            for ci,cjDict in self.hamiltonian.iteritems():
-                for cj in cjDict.keys():
+            for ci,cjDict in self.hamiltonian.items():
+                for cj in list(cjDict.keys()):
                     linePlot(ctemp[('u',cj)],ctemp[('H',ci)],'H_%i vs. u_%i' % (ci,cj) )
                     linePlot(ctemp[('u',cj)],ctemp[('dH',ci,cj)],'dH/dgrad_u_%i vs. u_%i' % (ci,cj))
 
@@ -670,7 +675,7 @@ class LinearVADR_ConstantCoefficients_full(TC_base):
                                                         c[('f',i)],c[('df',i,i)],
                                                         c[('a',i,i)],
                                                         c[('r',i)],c[('dr',i,i)])
-            for j in range(0,i)+range(i+1,self.nc):
+            for j in list(range(0,i))+list(range(i+1,self.nc)):
                 self.linearADR_ConstantCoefficientsEvaluate(self.eps*self.M[j],
                                                             self.eps*self.A[j],
                                                             self.eps*self.B[j],
@@ -851,7 +856,7 @@ class NonlinearVADR_pqrst_full(TC_base):
                                             c[('a',i,i)],c[('da',i,i,i)],
                                             phitmp,phitmp,
                                             c[('r',i)],c[('dr',i,i)])
-            for j in range(0,i)+range(i+1,self.nc):
+            for j in list(range(0,i))+list(range(i+1,self.nc)):
                 self.nonlinearADR_pqrstEvaluate(self.eps*self.M[j],
                                                 self.eps*self.A[j],
                                                 self.eps*self.B[j],
@@ -2735,9 +2740,9 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     y = cq['x'].flat[i*3+1]
                     u =x-0.5
                     v =y-0.5
-                    self.q_phi_s.flat[i] = math.sqrt(u**2 + v**2) - 0.25/2.0
-                    self.q_n_s.flat[2*i+0] = u/math.sqrt(u**2 + v**2)
-                    self.q_n_s.flat[2*i+1] = v/math.sqrt(u**2 + v**2)
+                    self.q_phi_s.flat[i] = math.sqrt(u**2 + v**2) - old_div(0.25,2.0)
+                    self.q_n_s.flat[2*i+0] = old_div(u,math.sqrt(u**2 + v**2))
+                    self.q_n_s.flat[2*i+1] = old_div(v,math.sqrt(u**2 + v**2))
         else:
             try:
                 self.defaultSolidProfile(t,cq['x'],self.q_phi_s,self.q_n_s)
@@ -2768,9 +2773,9 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     y = cebq['x'].flat[i*3+1]
                     u =x-0.5
                     v =y-0.5
-                    self.ebq_phi_s.flat[i] = math.sqrt(u**2 + v**2) - 0.25/2.0
-                    self.ebq_n_s.flat[2*i+0] = u/math.sqrt(u**2 + v**2)
-                    self.ebq_n_s.flat[2*i+1] = v/math.sqrt(u**2 + v**2)
+                    self.ebq_phi_s.flat[i] = math.sqrt(u**2 + v**2) - old_div(0.25,2.0)
+                    self.ebq_n_s.flat[2*i+0] = old_div(u,math.sqrt(u**2 + v**2))
+                    self.ebq_n_s.flat[2*i+1] = old_div(v,math.sqrt(u**2 + v**2))
         else:
             try:
                 self.defaultSolidProfile(t,cebq['x'],self.ebq_phi_s,self.ebq_n_s)
@@ -2801,9 +2806,9 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     y = cebqe['x'].flat[i*3+1]
                     u =x-0.5
                     v =y-0.5
-                    self.ebqe_phi_s.flat[i] = math.sqrt(u**2 + v**2) - 0.25/2.0
-                    self.ebqe_n_s.flat[2*i+0] = u/math.sqrt(u**2 + v**2)
-                    self.ebqe_n_s.flat[2*i+1] = v/math.sqrt(u**2 + v**2)
+                    self.ebqe_phi_s.flat[i] = math.sqrt(u**2 + v**2) - old_div(0.25,2.0)
+                    self.ebqe_n_s.flat[2*i+0] = old_div(u,math.sqrt(u**2 + v**2))
+                    self.ebqe_n_s.flat[2*i+1] = old_div(v,math.sqrt(u**2 + v**2))
         else:
             try:
                 self.defaultSolidProfile(t,cebqe['x'],self.ebqe_phi_s,self.ebqe_n_s)
@@ -4532,7 +4537,7 @@ class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
             if c[('f',0)].shape[2] == 2:
                 volFact =0.5
             elif c[('f',0)].shape[2] == 3:
-                volFact = 1./6.
+                volFact = old_div(1.,6.)
             for eN in range(c[('dV_u',0)].shape[0]):
                 vol = 0.0;
                 for k in range(c[('dV_u',0)].shape[1]):
@@ -4890,27 +4895,27 @@ class ConservativeTotalHeadRichardsMualemVanGenuchten(TC_base):
 
 def VGM_to_BCB_Simple(vgm_alpha,vgm_n):
     bcb_lambda = vgm_n-1
-    bcb_pd = 1.0/vgm_alpha
+    bcb_pd = old_div(1.0,vgm_alpha)
     return (bcb_lambda,bcb_pd)
 def BCB_to_VGM_Simple(bcb_pd,bcb_lambda):
     vgm_n = bcb_lambda + 1
-    vgm_alpha = 1.0/bcb_pd
+    vgm_alpha = old_div(1.0,bcb_pd)
     return (vgm_alpha,vgm_n)
 
 def VGM_to_BCB_Johns(vgm_alpha,vgm_n):
-    vgm_m = 1.0 - 1.0/vgm_n
-    bcb_lambda = vgm_m/(1.0-vgm_m)*(1.0-(0.5)**(1.0/vgm_m))
+    vgm_m = 1.0 - old_div(1.0,vgm_n)
+    bcb_lambda = vgm_m/(1.0-vgm_m)*(1.0-(0.5)**(old_div(1.0,vgm_m)))
     thetaStar=0.72-0.35*exp(-vgm_n**4);
-    bcb_pd = (thetaStar**(1.0/bcb_lambda))/vgm_alpha*(thetaStar**(-1.0/vgm_m)-1.0)**( 1.0-vgm_m)
+    bcb_pd = (thetaStar**(old_div(1.0,bcb_lambda)))/vgm_alpha*(thetaStar**(old_div(-1.0,vgm_m))-1.0)**( 1.0-vgm_m)
     return (bcb_lambda,bcb_pd)
 
 def VGM_to_BCB_MorelSeytoux(vgm_alpha,vgm_n):
-    vgm_m = 1.0 - 1.0/vgm_n
-    p = 1.0 + 2.0/vgm_m
-    bcb_pd = ((1.0/vgm_alpha)*
-              ((p+3.0)/((2.0*p)*(p-1.0)))*
-              ((147.8 + 8.1*p + 0.092*p**2)/(55.6+7.4*p+p**2)))
-    bcb_lambda = 2.0/(p-3.0)
+    vgm_m = 1.0 - old_div(1.0,vgm_n)
+    p = 1.0 + old_div(2.0,vgm_m)
+    bcb_pd = ((old_div(1.0,vgm_alpha))*
+              (old_div((p+3.0),((2.0*p)*(p-1.0))))*
+              (old_div((147.8 + 8.1*p + 0.092*p**2),(55.6+7.4*p+p**2))))
+    bcb_lambda = old_div(2.0,(p-3.0))
     return (bcb_lambda,bcb_pd)
 
 class ConservativeHeadRichardsBrooksCoreyBurdine(TC_base):
@@ -5884,7 +5889,7 @@ class RotatingVelocityLevelSet(TC_base):
                                                 c[('dH',0,0)]);
 
         #make sure r gets set to zero if using general HJ form
-        if ('r',0) in c.keys():
+        if ('r',0) in list(c.keys()):
             c[('r',0)].flat[:] = 0.0
     #end def
 class EikonalEquationCoefficients(TC_base):
@@ -6123,7 +6128,7 @@ class RedistanceLevelSet(TC_base):
                     vt.dirichletValues[0][(eN,j0)]=float(vt.u[0].dof[J0])
                     vt.dirichletGlobalNodeSet[0].add(J0)
                 if signU != 0:
-                    for j in (range(0,j0)+range(j0+1,vt.nDOF_trial_element[0])):
+                    for j in (list(range(0,j0))+list(range(j0+1,vt.nDOF_trial_element[0]))):
                         J = vt.u[0].femSpace.dofMap.l2g[eN,j]
                         if (((vt.u[0].dof[J] < -eps) and
                              (signU == 1)) or
@@ -8670,7 +8675,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                              2:{1:'nonlinear',2:'nonlinear',3:'nonlinear'},
                              3:{1:'nonlinear',2:'nonlinear',3:'nonlinear'}}
 
-        for ci,cjDict in self.reaction.iteritems():
+        for ci,cjDict in self.reaction.items():
             self.elementIntegralKeys.append(('r',ci))
             for cj in cjDict:
                 self.stencil[ci].add(cj)
@@ -9852,7 +9857,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
         #for holding element averages of coefficients
         #
         avgs = {('f',0):[self.nd],('df',0,0):[self.nd],('a',0,0):[self.nd,self.nd],('da',0,0,0):[self.nd,self.nd]}
-        for key in avgs.keys():
+        for key in list(avgs.keys()):
             dims = [self.q_shape[0]]; dims.extend(avgs[key])
             self.q_avg[key] = numpy.zeros(tuple(dims),'d')
         #map from quadrature points to element boundary
@@ -9876,7 +9881,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
             self.materialTypes_ebq[eN,:] = self.elementMaterialTypes[eN]
         #for holding element averages of coefficients
         avgs = {('f',0):[self.nd],('df',0,0):[self.nd],('a',0,0):[self.nd,self.nd],('da',0,0,0):[self.nd,self.nd]}
-        for key in avgs.keys():
+        for key in list(avgs.keys()):
             dims = [self.ebq_shape[0],self.ebq_shape[1]]; dims.extend(avgs[key])
             self.ebq_avg[key] = numpy.zeros(tuple(dims),'d')
             dims = [self.ebq_global_shape[0]]; dims.extend(avgs[key])
@@ -9898,7 +9903,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
             self.materialTypes_ebqe[ebNE] = self.exteriorElementBoundaryTypes[ebNE]
         #for holding element averages of coefficients
         avgs = {('f',0):[self.nd],('df',0,0):[self.nd],('a',0,0):[self.nd,self.nd],('da',0,0,0):[self.nd,self.nd]}
-        for key in avgs.keys():
+        for key in list(avgs.keys()):
             dims = [self.ebqe_shape[0]]; dims.extend(avgs[key])
             self.ebqe_avg[key] = numpy.zeros(tuple(dims),'d')
         #
@@ -10077,7 +10082,7 @@ class DiffusiveWave_1D(TC_base):
 
     This implements the regularized formulation in M. Santillana's thesis (ref).
     """
-    def __init__(self,alpha=5.0/3.0,gamma=0.5,epsilon=1.0e-6,bathymetryFunc=None, reactionFunc=None, analyticalSoln=None):
+    def __init__(self,alpha=old_div(5.0,3.0),gamma=0.5,epsilon=1.0e-6,bathymetryFunc=None, reactionFunc=None, analyticalSoln=None):
         """
         Construct a coefficients object given the parameters of the Manning/Chezy formula and the regularization parameter.
 
@@ -10184,7 +10189,7 @@ class DiffusiveWave_2D(TC_base):
 
     This implements the regularized formulation in M. Santillana's thesis (ref).
     """
-    def __init__(self,nd=2,alpha=5.0/3.0,gamma=0.5,epsilon=1.0e-6,bathymetryFunc=None, bathymetryGradientFunc=None):
+    def __init__(self,nd=2,alpha=old_div(5.0,3.0),gamma=0.5,epsilon=1.0e-6,bathymetryFunc=None, bathymetryGradientFunc=None):
         """
         Construct a coefficients object given the parameters of the Manning/Chezy formula and the regularization parameter.
 
@@ -10477,7 +10482,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                 x = cebq_global['x'][ebN,k];
                                 numer = 2.0*self.a_types[material_left](x,t)[i,j]*self.a_types[material_right](x,t)[i,j]
                                 denom = self.a_types[material_left](x,t)[i,j] + self.a_types[material_right](x,t)[i,j] + 1.0e-20
-                                cebq_global[('a',ci,ci)][eN,k,i*nd+j] = numer/denom
+                                cebq_global[('a',ci,ci)][eN,k,i*nd+j] = old_div(numer,denom)
             for eN in range(cebq['x'].shape[0]):
                 for ebN_local in range(cebq['x'].shape[1]):
                     ebN = self.elementBoundariesArray[eN,ebN_local]
@@ -10493,7 +10498,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                 for j in range(nd):
                                     numer = 2.0*self.a_types[material_left](x,t)[i,j]*self.a_types[material_right](x,t)[i,j]
                                     denom = self.a_types[material_left](x,t)[i,j] + self.a_types[material_right](x,t)[i,j] + 1.0e-20
-                                    cebq[('a',ci,ci)][eN,ebN_local,k,i*nd+j] = numer/denom
+                                    cebq[('a',ci,ci)][eN,ebN_local,k,i*nd+j] = old_div(numer,denom)
                     #
                 #
             #

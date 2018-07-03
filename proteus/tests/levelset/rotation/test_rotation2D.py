@@ -3,12 +3,14 @@
 Test module for level set transport
 """
 from __future__ import print_function
+from builtins import range
+from builtins import object
 from proteus.iproteus import *
 import os
 import numpy as np
 import tables
 
-class TestRotation2D():
+class TestRotation2D(object):
 
     @classmethod
     def setup_class(cls):

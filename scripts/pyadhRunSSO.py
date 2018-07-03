@@ -2,6 +2,12 @@ from __future__ import print_function
 ## Automatically adapted for numpy.oldnumeric Apr 14, 2008 by -c
 
 #! /usr/bin/env python
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import input
+from builtins import zip
+from builtins import range
 import os
 
 ## need to insert more comments
@@ -13,7 +19,7 @@ import os
 #
 
 import sys
-import cPickle
+import pickle
 import numpy as numpy
 from proteus import *
 from warnings import *
@@ -165,7 +171,7 @@ def proteusRun(runRoutines):
                 runRoutines(pNameAll,pNameList,pList,nList,opts)
         os.chdir('../../')
     if opts.viewer:
-        raw_input('\nPress return to close windows and exit... \n')
+        input('\nPress return to close windows and exit... \n')
         if Viewers.viewerType == 'matlab':
             Viewers.viewerPipe.write("quit \n")
         #matlab
@@ -188,7 +194,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts):
             for ci in n.shockCapturing.components:
                 elementQuadratureDict[('numDiff',ci,ci)] = n.elementQuadrature
         if n.massLumping:
-            for ci in p.coefficients.mass.keys():
+            for ci in list(p.coefficients.mass.keys()):
                 elementQuadratureDict[('m',ci)] = Quadrature.SimplexLobattoQuadrature(p.nd,1)
             for I in p.coefficients.elementIntegralKeys:
                 elementQuadratureDict[('stab',)+I[1:]] = Quadrature.SimplexLobattoQuadrature(p.nd,1)
@@ -242,7 +248,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts):
             mlMesh = MeshTools.MultilevelTetrahedralMesh(nM.nn,nM.nn,nM.nn,
                                                          pM.L[0],pM.L[1],pM.L[2],
                                                          refinementLevels=nM.nLevels)
-        cPickle.dump(mlMesh,mlMeshFile,protocol=cPickle.HIGHEST_PROTOCOL)
+        pickle.dump(mlMesh,mlMeshFile,protocol=pickle.HIGHEST_PROTOCOL)
     Profiling.memory("mesh")
     Profiling.logEvent("Setting up MultilevelTransport",level=1)
     tolList=[]
@@ -254,7 +260,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts):
     mList=[]
     lsList=[]
     nlsList=[]
-    for mi,p,n in zip(range(len(pList)),pList,nList):
+    for mi,p,n in zip(list(range(len(pList))),pList,nList):
         mlTransport = Transport.MultilevelTransport(
             p.nd,
             mlMesh,
@@ -365,7 +371,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts):
     firstStep=True
     while (tn < pM.T and not failedFlag==True):
         if opts.wait:
-            raw_input('\nPress return to continue... \n')
+            input('\nPress return to continue... \n')
         failedStep = [False for m in mList]
         if nM.timeIntegration != TimeIntegration.NoIntegration:
             mM.chooseDT(DTSET)

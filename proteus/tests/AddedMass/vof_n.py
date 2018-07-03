@@ -5,7 +5,10 @@ from proteus import (StepControl,
                      NonlinearSolvers,
                      LinearSolvers,
                      LinearAlgebraTools)
-from . import vof_p as physics
+try:
+    from . import vof_p as physics
+except:
+    import vof_p as physics
 from proteus.mprans import VOF
 from proteus import Context
 

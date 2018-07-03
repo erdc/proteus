@@ -5,10 +5,16 @@ Classes for taking input in other formats
    :parts: 1
 """
 from __future__ import print_function
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from proteus.EGeometry import *
 from .Profiling import logEvent
 
-class GF:
+class GF(object):
     """
     Read a file from the vessel database an set up in a domain.
     """
@@ -148,8 +154,8 @@ class GF:
                         section_right['vertexList'].append((vertexDict[fvertex],fvertex))
                 if section_right['vertexList'][0] != section_right['vertexList'][-1]:
                     section_right['vertexList'].append(section_right['vertexList'][0])
-            vertexList = vertexDict.keys()
-            for v,vN in vertexDict.iteritems():
+            vertexList = list(vertexDict.keys())
+            for v,vN in vertexDict.items():
                 vertexList[vN] = v
             #shell thickness
             if "PROP" not in lines[nl]:
@@ -180,14 +186,14 @@ class GF:
             else:
                 fList.append([p[0] for p in pList])
                 ftList.append(self.facetTypes['solid'])
-        for shape in shapes.values():
+        for shape in list(shapes.values()):
             #front and back facet
             if sN_restrict == -1:
                 appendEndFacets(shape['sections'][0]['vertexList'],facets,facetFlags)
                 appendEndFacets(shape['sections'][shape['nSections']-1]['vertexList'],facets,facetFlags)
-                sectionsToInclude = range(shape['nSections']-1)
+                sectionsToInclude = list(range(shape['nSections']-1))
             else:
-                if shape == shapes.values()[0]:
+                if shape == list(shapes.values())[0]:
                     appendEndFacets(shape['sections'][sN_restrict]['vertexList'],facets,facetFlags)
                     appendEndFacets(shape['sections'][sN_restrict+1]['vertexList'],facets,facetFlags)
                     sectionsToInclude = [sN_restrict]
@@ -485,12 +491,12 @@ class GF:
         if sN_restrict == -1:
             pN0=0
             pf.write(str(len(vertexDict))+' 3 0 1\n')
-            vertexList = [(pN+1,p[0],p[1],p[2],0) for p,pN in vertexDict.iteritems()]
+            vertexList = [(pN+1,p[0],p[1],p[2],0) for p,pN in vertexDict.items()]
             vertexList.sort()
             for p in vertexList:
                 pf.write('%d %e %e %e %d\n' % p)
         else:
-            shapeList=shapes.values()
+            shapeList=list(shapes.values())
             vertexSet=set()
             for sN in sectionsToInclude:
                 vertexSet |= set(shapeList[-1]['sections'][sN]['vertexList'])
@@ -522,7 +528,7 @@ class GF:
         pf.close()
 
 
-class Ipars:
+class Ipars(object):
     """
     Extract as much as possible from and IPARS input file
     """
@@ -572,7 +578,7 @@ class Ipars:
                                     values[key].append(eval(val))
                             except:
                                 values[key].append(val)
-        for key,value in values.iteritems():
+        for key,value in values.items():
             logEvent(key+":"+str(value))
         #
         #MESH. Write a poly file matching the grid
@@ -691,7 +697,7 @@ class Ipars:
         self.L=(Lx*0.3048,Ly*0.3048,Lz*0.3048)
 
 
-class ADH_metfile:
+class ADH_metfile(object):
     """
     read an ADH met file for boundary conditions etc
     """
@@ -721,22 +727,22 @@ class ADH_metfile:
         self.entries = {'day':0,'hour':1,'min':2}
         for  i,label in enumerate(self.full_file[3].split()[2:]):
             self.entries[label] = i+3
-        for entry in self.entries.keys():
+        for entry in list(self.entries.keys()):
             self.data[entry] = numpy.zeros((self.npoints),'d')
 
         for i,line in enumerate(self.full_file[5:]):
-            for entry,column in self.entries.iteritems():
+            for entry,column in self.entries.items():
                 self.data[entry][i] = float(line.split()[column])
 
         #generate a time entry out of hours days minutes
         self.time_unit = 'day' #hour, sec
         self.data['time'] = numpy.zeros((self.npoints),'d')
-        self.data['time'] = self.data['day']+self.data['hour']/24.0 + self.data['min']/(24.*60.)
+        self.data['time'] = self.data['day']+old_div(self.data['hour'],24.0) + old_div(self.data['min'],(24.*60.))
     def getValue(self,entry,t):
         """
         lookup value of entry at time t
         """
-        if entry not in self.data.keys():
+        if entry not in list(self.data.keys()):
             print("ADH_metfile entry= %s not found " % entry)
             return None
         if entry in ['latitude','longitude','zone']:

@@ -6,6 +6,12 @@ Classes for calculating auxiliary variables based on the numerical solution.
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import numpy
 from . import Viewers
 from . import Archiver
@@ -23,7 +29,7 @@ from . import cfemIntegrals
 import math
 import os
 
-class AV_base:
+class AV_base(object):
     def __init__(self):
         pass
     def attachModel(self,model,ar):
@@ -89,7 +95,7 @@ class GatherDOF(AV_base):
         comm.endSequential()
 class BoundaryForce(AV_base):
     def __init__(self,D=1.0,Ubar=1.0,rho=1.0):
-        self.C_fact = 2.0/(rho*D*Ubar**2)
+        self.C_fact = old_div(2.0,(rho*D*Ubar**2))
     def attachModel(self,model,ar):
         self.model=model
         self.ar=ar
@@ -204,7 +210,7 @@ class PressureProfile(AV_base):
                 for nN in range(m.mesh.nNodes_global):
                     if m.mesh.nodeMaterialTypes[nN] == self.flag:
                         p.append(m.u[0].dof[nN])
-                        theta.append((180.0/math.pi)*math.atan2(m.mesh.nodeArray[nN][1]-self.center[1],
+                        theta.append((old_div(180.0,math.pi))*math.atan2(m.mesh.nodeArray[nN][1]-self.center[1],
                                                                 m.mesh.nodeArray[nN][0]-self.center[0]))
             elif self.nd == 3:
                 pass
@@ -304,7 +310,7 @@ class RecirculationLength(AV_base):
                             if x > self.maxX:
                                 self.maxX = x
                             #check to see if 0 contour is further to right
-                            for nN_neigh in range(0,nN)+range(nN+1,m.mesh.nNodes_element):
+                            for nN_neigh in list(range(0,nN))+list(range(nN+1,m.mesh.nNodes_element)):
                                 u2 = m.u[1].dof[m.mesh.elementNodesArray[eN,nN_neigh]]
                                 x2 = m.mesh.nodeArray[m.mesh.elementNodesArray[eN,nN_neigh]][0]
                                 if x2 > x:
@@ -317,7 +323,7 @@ class RecirculationLength(AV_base):
                             if x < self.minX:
                                 self.minX = x
                             #check to see if 0 contour is further to right
-                            for nN_neigh in range(0,nN)+range(nN+1,m.mesh.nNodes_element):
+                            for nN_neigh in list(range(0,nN))+list(range(nN+1,m.mesh.nNodes_element)):
                                 u2 = m.u[1].dof[m.mesh.elementNodesArray[eN,nN_neigh]]
                                 x2 = m.mesh.nodeArray[m.mesh.elementNodesArray[eN,nN_neigh]][0]
                                 if x2 < x:

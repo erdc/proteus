@@ -9,6 +9,7 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
+from builtins import object
 import os, pytest
 from proteus.iproteus import *
 from proteus import Comm, defaults
@@ -17,7 +18,7 @@ modulepath = os.path.dirname(os.path.abspath(__file__))
 
 @pytest.mark.modelTest
 @pytest.mark.poissonTest
-class TestPoissonTetgen():
+class TestPoissonTetgen(object):
 
     @classmethod
     def setup_class(cls):

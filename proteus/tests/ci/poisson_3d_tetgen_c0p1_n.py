@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
 from proteus import *
 from proteus.default_n import *
 try:
@@ -17,7 +19,7 @@ femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
 elementQuadrature = SimplexGaussQuadrature(nd,3)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
-triangleOptions="VApq1.35q12feena%e" % ((he**3)/6.0,)
+triangleOptions="VApq1.35q12feena%e" % (old_div((he**3),6.0),)
 logEvent("""Mesh generated using: tetgen -%s %s"""  % (triangleOptions,domain.polyfile+".poly"))
 
 #number of levels in mesh

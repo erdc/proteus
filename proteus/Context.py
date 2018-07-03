@@ -51,15 +51,15 @@ def setFromModule(moduleIn,mutable=False):
     """Construct the global context object from a module"""
     global context
     fields = {}
-    for key, value in moduleIn.__dict__.iteritems():
+    for key, value in moduleIn.__dict__.items():
         if  key[:2] != "__":
             fields[key]=value
     if mutable:
-        Context = recordtype(moduleIn.__name__.split('.')[-1], fields.iteritems())
+        Context = recordtype(moduleIn.__name__.split('.')[-1], iter(fields.items()))
         context = Context()
     else:
-        Context = namedtuple(moduleIn.__name__.split('.')[-1], fields.keys())
-        context = Context._make(fields.values())
+        Context = namedtuple(moduleIn.__name__.split('.')[-1], list(fields.keys()))
+        context = Context._make(list(fields.values()))
 
 def Options(optionsList=None,mutable=False):
     """Construct an o
@@ -105,8 +105,8 @@ def Options(optionsList=None,mutable=False):
                 logEvent("IGNORING CONTEXT OPTION; DECLARE "+lvalue+" IF YOU WANT TO SET IT")
     #now set named tuple merging optionsList and opts_cli_dihelpct
     if mutable:
-        ContextOptions = recordtype("ContextOptions", contextOptionsDict.iteritems())
+        ContextOptions = recordtype("ContextOptions", iter(contextOptionsDict.items()))
         return ContextOptions()
     else:
-        ContextOptions = namedtuple("ContextOptions", contextOptionsDict.keys())
-        return ContextOptions._make(contextOptionsDict.values())
+        ContextOptions = namedtuple("ContextOptions", list(contextOptionsDict.keys()))
+        return ContextOptions._make(list(contextOptionsDict.values()))

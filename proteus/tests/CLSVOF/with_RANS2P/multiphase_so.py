@@ -2,6 +2,7 @@
 Split operator module for multiphase: CLSVOF with RANS2P
 """
 from __future__ import absolute_import
+from builtins import range
 import os
 from proteus.default_so import *
 from . import multiphase

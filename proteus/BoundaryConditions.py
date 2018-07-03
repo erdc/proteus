@@ -1,3 +1,4 @@
+#from builtins import object
 import cython
 """
 Module for creating boundary conditions. Imported in SpatialTools.py
@@ -6,7 +7,7 @@ Module for creating boundary conditions. Imported in SpatialTools.py
    :parts: 1
 """
 
-class BC_Base():
+class BC_Base(object):
     """
     Generic class regrouping boundary conditions
     """
@@ -54,7 +55,7 @@ class BC_Base():
             self.ct = context
 
 
-class BoundaryCondition():
+class BoundaryCondition(object):
     """
     Boundary condition class
 

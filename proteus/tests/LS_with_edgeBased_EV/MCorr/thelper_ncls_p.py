@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
@@ -64,7 +65,7 @@ velocityField={0:velx,
 #####################
 # INITIAL CONDITION #
 #####################
-class init_cond:
+class init_cond(object):
     def __init__(self,L,scaling=0.25):
         self.radius=0.15
         self.xc=0.5

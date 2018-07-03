@@ -1,10 +1,18 @@
 from __future__ import print_function
+from __future__ import division
 ## Automatically adapted for numpy.oldnumeric Apr 14, 2008 by -c
 
 #! /usr/bin/env python
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import input
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 import os
 import sys
-import cPickle
+import pickle
 import numpy as numpy
 from proteus import *
 from warnings import *
@@ -238,7 +246,7 @@ def proteusRun(runRoutines):
                 runRoutines(pNameAll,pNameList,pList,nList,opts,simFlagsList)
         os.chdir('../../')
     if opts.viewer:
-        raw_input('\nPress return to close windows and exit... \n')
+        input('\nPress return to close windows and exit... \n')
         if Viewers.viewerType == 'matlab':
             Viewers.viewerPipe.write("quit \n")
         #matlab
@@ -284,12 +292,12 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                 else:
                     elementQuadratureDict[('numDiff',ci,ci)] = n.elementQuadrature
         if n.massLumping:
-            for ci in p.coefficients.mass.keys():
+            for ci in list(p.coefficients.mass.keys()):
                 elementQuadratureDict[('m',ci)] = Quadrature.SimplexLobattoQuadrature(p.nd,1)
             for I in p.coefficients.elementIntegralKeys:
                 elementQuadratureDict[('stab',)+I[1:]] = Quadrature.SimplexLobattoQuadrature(p.nd,1)
         if n.reactionLumping:
-            for ci in p.coefficients.mass.keys():
+            for ci in list(p.coefficients.mass.keys()):
                 elementQuadratureDict[('r',ci)] = Quadrature.SimplexLobattoQuadrature(p.nd,1)
             for I in p.coefficients.elementIntegralKeys:
                 elementQuadratureDict[('stab',)+I[1:]] = Quadrature.SimplexLobattoQuadrature(p.nd,1)
@@ -350,7 +358,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
             mlMesh = MeshTools.MultilevelTetrahedralMesh(nM.nn,nM.nn,nM.nn,
                                                          pM.L[0],pM.L[1],pM.L[2],
                                                          refinementLevels=nM.nLevels)
-        cPickle.dump(mlMesh,mlMeshFile,protocol=cPickle.HIGHEST_PROTOCOL)
+        pickle.dump(mlMesh,mlMeshFile,protocol=pickle.HIGHEST_PROTOCOL)
     #mwf debug
     for l in range(n.nLevels):
         print("""proteusRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
@@ -368,7 +376,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     mList=[]
     lsList=[]
     nlsList=[]
-    for mi,p,n in zip(range(len(pList)),pList,nList):
+    for mi,p,n in zip(list(range(len(pList))),pList,nList):
         mlTransport = Transport.MultilevelTransport(
             p.nd,
             mlMesh,
@@ -515,7 +523,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     timeValues = [tnList[opts.masterModel]]
     failedFlag=False
     mM = mList[opts.masterModel]
-    dt = pList[opts.masterModel].T/nList[opts.masterModel].nDTout
+    dt = old_div(pList[opts.masterModel].T,nList[opts.masterModel].nDTout)
     print("dt",dt)
     firstStep=True
     for n,ti,tn in zip(nList,timeIntegratorList,tnList):
@@ -532,7 +540,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     while (tnList[opts.masterModel] < pM.T and not failedFlag==True):
         plotOffSet = 0
         if opts.wait:
-            raw_input('\nPress return to continue... \n')
+            input('\nPress return to continue... \n')
         failedStep = [False for m in mList]
 
         for it in range(len(mList)):
@@ -542,7 +550,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                 if preCopy != None and ('copy_uList') in preCopy and preCopy['copy_uList'] == True:
                     #cek have to use dof here because models might have different strong Dirichlet conditions.
                     #mList[it].uList[l].flat[:] = mList[preCopy['uList_model']].uList[l].flat[:]
-                    for u_ci_lhs,u_ci_rhs in zip(mList[it].modelList[l].u.values(),mList[preCopy['uList_model']].modelList[l].u.values()):
+                    for u_ci_lhs,u_ci_rhs in zip(list(mList[it].modelList[l].u.values()),list(mList[preCopy['uList_model']].modelList[l].u.values())):
                         u_ci_lhs.dof[:] = u_ci_rhs.dof
                     mList[it].modelList[l].setFreeDOF(mList[it].uList[l])
             if pList[it].weakDirichletConditions != None:
@@ -578,7 +586,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                 if postCopy != None and ('copy_uList') in postCopy and postCopy['copy_uList'] == True:
                     #cek have to use dof here because models might have different strong Dirichlet conditions.
                     #mList[postCopy['uList_model']].uList[l].flat[:] = mList[it].uList[l].flat[:]
-                    for u_ci_lhs,u_ci_rhs in zip(mList[postCopy['uList_model']].modelList[l].u.values(),mList[it].modelList[l].u.values()):
+                    for u_ci_lhs,u_ci_rhs in zip(list(mList[postCopy['uList_model']].modelList[l].u.values()),list(mList[it].modelList[l].u.values())):
                         u_ci_lhs.dof[:] = u_ci_rhs.dof
                     mList[it].modelList[l].setFreeDOF(mList[it].uList[l])
             #postcopy loop

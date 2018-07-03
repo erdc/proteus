@@ -6,6 +6,8 @@ Module for controlling MPI
 """
 from __future__ import absolute_import
 
+from builtins import range
+from builtins import object
 import ctypes
 import sys
 
@@ -52,7 +54,7 @@ def get():
         return init()
     return comm
 
-class Comm():
+class Comm(object):
     """Proteus wrapper around PETSc/MPI communicators
 
     This is a very simple class that provides compatibility with older Proteus comm objects.

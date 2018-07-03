@@ -4,6 +4,8 @@ Test module for the conservative LS with EV
 """
 from __future__ import absolute_import
 
+from builtins import range
+from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -22,7 +24,7 @@ from . import thelper_redist_n
 from . import thelper_MCorr_p
 from . import thelper_MCorr_n
 
-class TestMCorr():
+class TestMCorr(object):
 
     @classmethod
     def setup_class(cls):
