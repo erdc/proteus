@@ -476,7 +476,6 @@ cdef class cDissipation2D_base:
                           double rho_0,
                           double rho_1,
                           int dissipation_model_flag,
-                          # end diffusion
                           double useMetrics,
                           double alphaBDF,
                           int lag_shockCapturing,
