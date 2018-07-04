@@ -96,8 +96,6 @@ class NumericalFlux(
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import VOFCoefficientsEvaluate
-    from proteus.UnstructuredFMMandFSWsolvers import FMMEikonalSolver, FSWEikonalSolver
-    from proteus.NonlinearSolvers import EikonalSolver
     from proteus.ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
     from proteus.cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
 
@@ -109,7 +107,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             ME_model=1,
             VOF_model=2,
             SED_model=4,
-            EikonalSolverFlag=0,
             checkMass=True,
             epsFact=0.0,
             useMetrics=0.0,
@@ -147,10 +144,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.LS_modelIndex = LS_model
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
-        # mwf added
-        self.eikonalSolverFlag = EikonalSolverFlag
-        if self.eikonalSolverFlag >= 1:  # FMM
-            assert self.RD_modelIndex < 0, "no redistance with eikonal solver too"
         self.checkMass = checkMass
         # VRANS
         self.q_porosity = None
@@ -221,39 +214,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             else:
                 if ('f', 0) in modelList[self.flowModelIndex].ebq:
                     self.ebq_v = modelList[self.flowModelIndex].ebq[('f', 0)]
-        #
-        if self.eikonalSolverFlag == 2:  # FSW
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape, 'd')
-            eikonalSolverType = self.FSWEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    relativeTolerance=0.0, absoluteTolerance=1.0e-12,
-                                                    frontTolerance=1.0e-4,  # default 1.0e-4
-                                                    frontInitType='frontIntersection',  # 'frontIntersection',#or 'magnitudeOnly'
-                                                    useLocalPWLreconstruction=False)
-        elif self.eikonalSolverFlag == 1:  # FMM
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape, 'd')
-            eikonalSolverType = self.FMMEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    frontTolerance=1.0e-4,  # default 1.0e-4
-                                                    frontInitType='frontIntersection',  # 'frontIntersection',#or 'magnitudeOnly'
-                                                    useLocalPWLreconstruction=False)
-        # if self.checkMass:
-        #     self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
-        #                                              self.model.q[('m',0)],
-        #                                              self.model.mesh.nElements_owned)
-        #     log("Attach Models VOS: Phase  0 mass after VOS step = %12.5e" % (self.m_pre,),level=2)
-        #     self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
-        #                                              self.model.q[('m',0)],
-        #                                              self.model.mesh.nElements_owned)
-        #     log("Attach Models VOS: Phase  0 mass after VOS step = %12.5e" % (self.m_post,),level=2)
-        #     if self.model.ebqe.has_key(('advectiveFlux',0)):
-        #         self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
-        #                                                              self.model.ebqe[('advectiveFlux',0)],
-        #                                                              self.model.mesh)
-        #         log("Attach Models VOS: Phase  0 mass conservation after VOS step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
-        # VRANS
         self.flowCoefficients = modelList[self.flowModelIndex].coefficients
         if hasattr(self.flowCoefficients, 'q_porosity'):
             self.q_porosity = self.flowCoefficients.q_porosity

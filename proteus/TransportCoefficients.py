@@ -3639,14 +3639,11 @@ class TwophaseStokes_VOF_SO(TC_base):
 #
 class NCLevelSetCoefficients(TC_base):
     from .ctransportCoefficients import ncLevelSetCoefficientsEvaluate
-    from .UnstructuredFMMandFSWsolvers import FMMEikonalSolver,FSWEikonalSolver
-    from .NonlinearSolvers import EikonalSolver
 
     def __init__(self,
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
-                 EikonalSolverFlag=0,
                  checkMass=True,epsFact=1.5):
         self.epsFact=epsFact
         self.variableNames=['phi']
@@ -3669,10 +3666,6 @@ class NCLevelSetCoefficients(TC_base):
         self.flowModelIndex=V_model
         self.modelIndex=ME_model
         self.RD_modelIndex=RD_model
-        #mwf added
-        self.eikonalSolverFlag = EikonalSolverFlag
-        if self.eikonalSolverFlag >= 1: #FMM
-            assert self.RD_modelIndex is None, "no redistance with eikonal solver too"
         self.checkMass = checkMass
     def attachModels(self,modelList):
         #the level set model
@@ -3695,23 +3688,6 @@ class NCLevelSetCoefficients(TC_base):
         if self.RD_modelIndex is not None:
             #print self.RD_modelIndex,len(modelList)
             self.rdModel = modelList[self.RD_modelIndex]
-        if self.eikonalSolverFlag == 2: #FSW
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
-            eikonalSolverType = self.FSWEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    relativeTolerance=0.0,absoluteTolerance=1.0e-12,
-                                                    frontTolerance=1.0e-8,#default 1.0e-4
-                                                    frontInitType='frontIntersection')
-#,#'frontIntersection',#or 'magnitudeOnly'
-        elif self.eikonalSolverFlag == 1: #FMM
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
-            eikonalSolverType = self.FMMEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    frontTolerance=1.0e-8,#default 1.0e-4
-                                                    frontInitType='frontIntersection')
-#,#'frontIntersection',#or 'magnitudeOnly'
         if self.checkMass:
             self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
                                                                      self.model.mesh.elementDiametersArray,
@@ -3806,9 +3782,7 @@ class NCLevelSetCoefficients(TC_base):
 
 class CLevelSetCoefficients(TC_base):
     from .ctransportCoefficients import cLevelSetCoefficientsEvaluate
-    from .UnstructuredFMMandFSWsolvers import FMMEikonalSolver,FSWEikonalSolver
-    from .NonlinearSolvers import EikonalSolver
-    def __init__(self,V_model=0,RD_model=-1,ME_model=1,EikonalSolverFlag=0,checkMass=True):
+    def __init__(self,V_model=0,RD_model=-1,ME_model=1,checkMass=True):
         self.variableNames=['vof']
         nc=1
         mass={0:{0:'linear'}}
@@ -3829,10 +3803,6 @@ class CLevelSetCoefficients(TC_base):
         self.flowModelIndex=V_model
         self.modelIndex=ME_model
         self.RD_modelIndex=RD_model
-        #mwf added
-        self.eikonalSolverFlag = EikonalSolverFlag
-        if self.eikonalSolverFlag >= 1: #FMM
-            assert self.RD_modelIndex < 0, "no redistance with eikonal solver too"
         self.checkMass = checkMass
     def attachModels(self,modelList):
         self.model = modelList[self.modelIndex]
@@ -3843,24 +3813,6 @@ class CLevelSetCoefficients(TC_base):
         self.ebq_v = None
         if ('velocity',0) in modelList[self.flowModelIndex].ebq:
             self.ebq_v = modelList[self.flowModelIndex].ebq[('velocity',0)]
-        if self.eikonalSolverFlag == 2: #FSW
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
-            eikonalSolverType = self.FSWEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    relativeTolerance=0.0,absoluteTolerance=1.0e-12,
-                                                    frontTolerance=1.0e-4,#default 1.0e-4
-                                                    frontInitType='frontIntersection',#'frontIntersection',#or 'magnitudeOnly'
-                                                    useLocalPWLreconstruction = False)
-        elif self.eikonalSolverFlag == 1: #FMM
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
-            eikonalSolverType = self.FMMEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    frontTolerance=1.0e-4,#default 1.0e-4
-                                                    frontInitType='frontIntersection',#'frontIntersection',#or 'magnitudeOnly'
-                                                    useLocalPWLreconstruction = False)
-
     def initializeElementQuadrature(self,t,cq):
         if self.flowModelIndex is None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
@@ -3916,23 +3868,6 @@ class CLevelSetCoefficients(TC_base):
                     if self.model.q[('u',0)][eN,iq] >= 0.0:
                         heavisideMassPre += self.model.q[('dV_u',0)][eN,iq]
             #print """CLevel postStep t=%s u massIn =%s """ % (t,heavisideMassPre)
-        if self.eikonalSolverFlag > 0:
-            heavisideMassPost = 0.0;
-            #check to see if q[('u',0)] is getting updated
-            #qU_in = numpy.array(self.model.q[('u',0)])
-            #maxDiff=0.0;
-            failed = self.eikonalSolver.solve(self.model.u[0].dof,self.resDummy)
-            #cek letting step controller handle time history
-            #self.model.updateTimeHistory(t)
-            if self.checkMass:
-                for eN in range(self.model.mesh.nElements_global):
-                    for iq in range(self.model.nQuadraturePoints_element):
-                        #maxDiff = max(maxDiff,abs(self.model.q[('u',0)][eN,iq]-qU_in[eN,iq]))
-                        if self.model.q[('u',0)][eN,iq] >= 0.0:
-                            heavisideMassPost += self.model.q[('dV_u',0)][eN,iq]
-
-                #mwf debug
-                #print """CLevel postStep t=%s after Eikonal solve massOut=%s """ % (t,heavisideMassPost)
     def evaluate(self,t,c):
         if c[('f',0)].shape == self.q_v.shape:
             v = self.q_v
@@ -3948,9 +3883,7 @@ class CLevelSetCoefficients(TC_base):
                                            c[('df',0,0)])
 class VOFCoefficients(TC_base):
     from .ctransportCoefficients import VOFCoefficientsEvaluate
-    from .UnstructuredFMMandFSWsolvers import FMMEikonalSolver,FSWEikonalSolver
-    from .NonlinearSolvers import EikonalSolver
-    def __init__(self,LS_model=-1,V_model=0,RD_model=-1,ME_model=1,EikonalSolverFlag=0,checkMass=True,epsFact=0.0):
+    def __init__(self,LS_model=-1,V_model=0,RD_model=-1,ME_model=1,checkMass=True,epsFact=0.0):
         self.variableNames=['vof']
         nc=1
         mass={0:{0:'linear'}}
@@ -3973,10 +3906,6 @@ class VOFCoefficients(TC_base):
         self.modelIndex=ME_model
         self.RD_modelIndex=RD_model
         self.LS_modelIndex=LS_model
-        #mwf added
-        self.eikonalSolverFlag = EikonalSolverFlag
-        if self.eikonalSolverFlag >= 1: #FMM
-            assert self.RD_modelIndex < 0, "no redistance with eikonal solver too"
         self.checkMass = checkMass
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
@@ -4008,24 +3937,6 @@ class VOFCoefficients(TC_base):
             else:
                 if ('f',0) in modelList[self.flowModelIndex].ebq:
                     self.ebq_v = modelList[self.flowModelIndex].ebq[('f',0)]
-        #
-        if self.eikonalSolverFlag == 2: #FSW
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
-            eikonalSolverType = self.FSWEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    relativeTolerance=0.0,absoluteTolerance=1.0e-12,
-                                                    frontTolerance=1.0e-4,#default 1.0e-4
-                                                    frontInitType='frontIntersection',#'frontIntersection',#or 'magnitudeOnly'
-                                                    useLocalPWLreconstruction = False)
-        elif self.eikonalSolverFlag == 1: #FMM
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
-            eikonalSolverType = self.FMMEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    frontTolerance=1.0e-4,#default 1.0e-4
-                                                    frontInitType='frontIntersection',#'frontIntersection',#or 'magnitudeOnly'
-                                                    useLocalPWLreconstruction = False)
         if self.checkMass:
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
@@ -9367,14 +9278,13 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
 class VolumeAveragedVOFCoefficients(VOFCoefficients):
     from .ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
     from .cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
-    def __init__(self,LS_model=-1,V_model=0,RD_model=-1,ME_model=1,EikonalSolverFlag=0,checkMass=True,epsFact=0.0,
+    def __init__(self,LS_model=-1,V_model=0,RD_model=-1,ME_model=1,checkMass=True,epsFact=0.0,
                  setParamsFunc=None):
         VOFCoefficients.__init__(self,
                                  LS_model=LS_model,
                                  V_model=V_model,
                                  RD_model=RD_model,
                                  ME_model=ME_model,
-                                 EikonalSolverFlag=EikonalSolverFlag,
                                  checkMass=checkMass,
                                  epsFact=epsFact)
         self.setParamsFunc   = setParamsFunc

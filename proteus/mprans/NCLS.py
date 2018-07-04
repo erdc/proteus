@@ -239,14 +239,10 @@ class RKEV(proteus.TimeIntegration.SSP):
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import ncLevelSetCoefficientsEvaluate
-    from proteus.UnstructuredFMMandFSWsolvers import FMMEikonalSolver, FSWEikonalSolver
-    from proteus.NonlinearSolvers import EikonalSolver
-
     def __init__(self,
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
-                 EikonalSolverFlag=0,
                  checkMass=True,
                  epsFact=1.5,
                  useMetrics=0.0,
@@ -316,10 +312,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.flowModelIndex = V_model
         self.modelIndex = ME_model
         self.RD_modelIndex = RD_model
-        # mwf added
-        self.eikonalSolverFlag = EikonalSolverFlag
-        if self.eikonalSolverFlag >= 1:  # FMM
-            assert self.RD_modelIndex is None, "no redistance with eikonal solver too"
         self.checkMass = checkMass
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
@@ -346,35 +338,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.RD_modelIndex is not None:
             # print self.RD_modelIndex,len(modelList)
             self.rdModel = modelList[self.RD_modelIndex]
-        if self.eikonalSolverFlag == 2:  # FSW
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape, 'd')
-            eikonalSolverType = self.FSWEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    relativeTolerance=0.0, absoluteTolerance=1.0e-12,
-                                                    frontTolerance=1.0e-8,  # default 1.0e-4
-                                                    frontInitType='frontIntersection')
-#,#'frontIntersection',#or 'magnitudeOnly'
-        elif self.eikonalSolverFlag == 1:  # FMM
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape, 'd')
-            eikonalSolverType = self.FMMEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    frontTolerance=1.0e-8,  # default 1.0e-4
-                                                    frontInitType='frontIntersection')
-#,#'frontIntersection',#or 'magnitudeOnly'
-        # if self.checkMass:
-        #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
-        #                                                              self.model.mesh.elementDiametersArray,
-        #                                                              self.model.q['dV'],
-        #                                                              self.model.q[('u',0)],
-        #                                                              self.model.mesh.nElements_owned)
-        #     logEvent("Attach Models NCLS: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
-        #     self.totalFluxGlobal=0.0
-        #     self.lsGlobalMassArray = [self.m_pre]
-        #     self.lsGlobalMassErrorArray = [0.0]
-        #     self.fluxArray = [0.0]
-        #     self.timeArray = [self.model.timeIntegration.t]
 
     def initializeElementQuadrature(self, t, cq):
         if self.flowModelIndex is None:
