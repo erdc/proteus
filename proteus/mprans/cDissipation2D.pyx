@@ -161,7 +161,25 @@ cdef extern from "Dissipation2D.h" namespace "proteus":
                                           int nDOF_trial_elementIn,
                                           int nDOF_test_elementIn,
                                           int nQuadraturePoints_elementBoundaryIn,
-                                          int CompKernelFlag)
+                                          int CompKernelFlag,
+                                          double aDarcy,
+                                          double betaForch,
+                                          double grain,
+                                          double packFraction,
+                                          double packMargin,
+                                          double maxFraction,
+                                                 double frFraction,
+                                                 double sigmaC,
+                                                 double C3e,
+                                                 double C4e,
+                                                 double eR,
+                                                 double fContact,
+                                                 double mContact,
+                                                 double nContact,
+                                                 double angFriction,
+                                     double vos_limiter,
+                                     double mu_fr_limiter)
+
 
 cdef class cDissipation2D_base:
     cdef Dissipation2D_base * thisptr
@@ -173,15 +191,48 @@ cdef class cDissipation2D_base:
                   int nDOF_trial_elementIn,
                   int nDOF_test_elementIn,
                   int nQuadraturePoints_elementBoundaryIn,
-                  int CompKernelFlag):
+                  int CompKernelFlag,
+                  double aDarcy,
+                  double betaForch,
+                  double grain,
+                  double packFraction,
+                  double packMargin,
+                  double maxFraction,
+                  double frFraction,
+                  double sigmaC,
+                  double C3e,
+                  double C4e,
+                  double eR,
+                  double fContact,
+                  double mContact,
+                  double nContact,
+                  double angFriction,
+                  double vos_limiter,
+                  double mu_fr_limiter):
         self.thisptr = newDissipation2D(nSpaceIn,
-                                        nQuadraturePoints_elementIn,
-                                        nDOF_mesh_trial_elementIn,
-                                        nDOF_trial_elementIn,
-                                        nDOF_test_elementIn,
-                                        nQuadraturePoints_elementBoundaryIn,
-                                        CompKernelFlag)
-
+                                  nQuadraturePoints_elementIn,
+                                 nDOF_mesh_trial_elementIn,
+                                nDOF_trial_elementIn,
+                               nDOF_test_elementIn,
+                              nQuadraturePoints_elementBoundaryIn,
+                                        CompKernelFlag,
+                          aDarcy,
+                  betaForch,
+                   grain,
+                   packFraction,
+                   packMargin,
+                   maxFraction,
+                   frFraction,
+                   sigmaC,
+                   C3e,
+                   C4e,
+                   eR,
+                   fContact,
+                   mContact,
+                   nContact,
+                   angFriction,
+                   vos_limiter,
+                   mu_fr_limiter)
     def __dealloc__(self):
         del self.thisptr
 

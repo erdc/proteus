@@ -4,6 +4,7 @@
 #include <iostream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
+#include "SedClosure.h"
 
 namespace proteus
 {
@@ -12,7 +13,24 @@ namespace proteus
     //The base class defining the interface
   public:
     virtual ~Dissipation2D_base(){}
-    virtual void calculateResidual(//element
+     virtual void setSedClosure(double aDarcy,
+                               double betaForch,
+                               double grain,
+                               double packFraction,
+                               double packMargin,
+                               double maxFraction,
+                               double frFraction,
+                               double sigmaC,
+                               double C3e,
+                               double C4e,
+                               double eR,
+                               double fContact,
+                               double mContact,
+                               double nContact,
+                               double angFriction,
+                               double vos_limiter,
+                               double mu_fr_limiter){}
+   virtual void calculateResidual(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
@@ -178,12 +196,68 @@ namespace proteus
   class Dissipation2D : public Dissipation2D_base
   {
   public:
-    const int nDOF_test_X_trial_element;
-    CompKernelType ck;
+        cppHsuSedStress<2> closure;
+      const int nDOF_test_X_trial_element;
+      CompKernelType ck;
     Dissipation2D():
-      nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
-      ck()
-    {}
+      closure(150.0,
+              0.0,
+              0.0102,
+              0.2,
+              0.01,
+              0.635,
+              0.57,
+              1.1,
+              1.2,
+              1.0,
+              0.8,
+              0.02,
+              2.0,
+              5.0,
+              M_PI/6.,
+              0.05,
+              1.00),
+        nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
+        ck()
+          {
+          }
+
+      void setSedClosure(double aDarcy,
+                         double betaForch,
+                         double grain,
+                         double packFraction,
+                         double packMargin,
+                         double maxFraction,
+                         double frFraction,
+                         double sigmaC,
+                         double C3e,
+                         double C4e,
+                         double eR,
+                         double fContact,
+                         double mContact,
+                         double nContact,
+                         double angFriction,
+                       double vos_limiter,
+                       double mu_fr_limiter)
+      {
+        closure = cppHsuSedStress<2>(aDarcy,
+                                     betaForch,
+                                     grain,
+                                     packFraction,
+                                     packMargin,
+                                     maxFraction,
+                                     frFraction,
+                                     sigmaC,
+                                     C3e,
+                                     C4e,
+                                     eR,
+                                     fContact,
+                                     mContact,
+                                     nContact,
+                                     angFriction,
+                                   vos_limiter,
+                                   mu_fr_limiter);
+      }
 
     inline
     void computeK_OmegaCoefficients(const double& div_eps,
@@ -1722,15 +1796,54 @@ namespace proteus
                                 int nDOF_trial_elementIn,
                                 int nDOF_test_elementIn,
                                 int nQuadraturePoints_elementBoundaryIn,
-                                int CompKernelFlag)
+                                int CompKernelFlag,
+                                double aDarcy,
+                                double betaForch,
+                                double grain,
+                                double packFraction,
+                                double packMargin,
+                                double maxFraction,
+                                double frFraction,
+                                double sigmaC,
+                                double C3e,
+                                double C4e,
+                                double eR,
+                                double fContact,
+                                double mContact,
+                                double nContact,
+                                 double angFriction,
+                                     double vos_limiter,
+                                     double mu_fr_limiter)
+
   {
-    return proteus::chooseAndAllocateDiscretization2D<Dissipation2D_base,Dissipation2D,CompKernel>(nSpaceIn,
-                                                                                                   nQuadraturePoints_elementIn,
-                                                                                                   nDOF_mesh_trial_elementIn,
-                                                                                                   nDOF_trial_elementIn,
-                                                                                                   nDOF_test_elementIn,
-                                                                                                   nQuadraturePoints_elementBoundaryIn,
-                                                                                                   CompKernelFlag);
+    Dissipation2D_base* rvalue =
+    proteus::chooseAndAllocateDiscretization2D<Dissipation2D_base,Dissipation2D,CompKernel>
+    (nSpaceIn,
+     nQuadraturePoints_elementIn,
+     nDOF_mesh_trial_elementIn,
+     nDOF_trial_elementIn,
+     nDOF_test_elementIn,
+     nQuadraturePoints_elementBoundaryIn,
+     CompKernelFlag);
+
+                   rvalue->setSedClosure(aDarcy,
+                          betaForch,
+                          grain,
+                          packFraction,
+                          packMargin,
+                          maxFraction,
+                          frFraction,
+                          sigmaC,
+                          C3e,
+                          C4e,
+                          eR,
+                          fContact,
+                          mContact,
+                          nContact,
+                          angFriction,
+                          vos_limiter,
+                          mu_fr_limiter);
+    return rvalue;
   }
 }//proteus
 #endif
