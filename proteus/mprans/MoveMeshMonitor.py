@@ -28,7 +28,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         array of length of all domain material types, with indexes corresponding
         to the material type set as boundaryNormals.
         if e.g., boundaryNormals[2]=[0.,0.,0.], then it will be ignored
-    fixedNodes: int[:]
+    fixedMaterialTypes: int[:]
         array of length of all domain material types, with indexes corresponding
         to the material type set as: 0 -> not fixed, 1 -> fixed.
         e.g. is nodes of material type 3 should be fixed: fixedNodes[3]=1.
@@ -50,7 +50,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                  LS_MODEL=None,
                  nd=2,
                  boundaryNormals=None,
-                 fixedNodes=None,
+                 fixedMaterialTypes=None,
                  nSmoothIn=0,
                  nSmoothOut=0,
                  epsFact_density=3,
@@ -72,7 +72,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         fOfX = [self.uOfX]  # scaled function reciprocal
         self.t = 0
         self.boundaryNormals = boundaryNormals
-        self.fixedNodes = fixedNodes
+        self.fixedMaterialTypes = fixedMaterialTypes
         self.nSmoothIn = nSmoothIn
         self.nSmoothOut = nSmoothOut
         self.dt_last = None
@@ -115,9 +115,13 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                                                           nNodes_owned=self.mesh.nNodes_owned)
         for cn in self.mesh.cornerNodes:
             self.mesh.fixedNodesBoolArray[cn] = 1
+        for node in range(len(self.mesh.nodeMaterialTypes)):
+            if self.fixedMaterialTypes[self.mesh.nodeMaterialTypes[node]] == 1:
+                self.mesh.fixedNodesBoolArray[node] = 1
 
     def attachModels(self,modelList):
         self.model = modelList[self.ME_MODEL]
+        self.model.bdyNullSpace = True
         self.q = self.model.q
         self.model.mesh_array0 = copy.deepcopy(self.mesh.nodeArray)
         self.PHI = np.zeros_like(self.model.mesh.nodeArray)
@@ -153,15 +157,15 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
     def postStep(self, t,firstStep=False):
         # gradient recovery
         logEvent("Gradient recovery at mesh nodes", level=3)
-        self.grads[:] = cmm.gradientRecoveryAtNodes(grads=self.model.q[('grad(u)', 0)],
-                                                    nodeElementsArray=self.mesh.nodeElementsArray,
-                                                    nodeElementOffsets=self.mesh.nodeElementOffsets,
-                                                    nd=self.nd)
-        # self.grads[:] = cmm.gradientRecoveryAtNodesWeighted(grads=self.model.q[('grad(u)', 0)],
-        #                                                     nodeElementsArray=self.mesh.nodeElementsArray,
-        #                                                     nodeElementOffsets=self.mesh.nodeElementOffsets,
-        #                                                     detJ_array=self.model.q[('abs(det(J))')],
-        #                                                     nd=self.nd)
+        # self.grads[:] = cmm.gradientRecoveryAtNodes(grads=self.model.q[('grad(u)', 0)],
+        #                                             nodeElementsArray=self.mesh.nodeElementsArray,
+        #                                             nodeElementOffsets=self.mesh.nodeElementOffsets,
+        #                                             nd=self.nd)
+        self.grads[:] = cmm.gradientRecoveryAtNodesWeighted(grads=self.model.q[('grad(u)', 0)],
+                                                            nodeElementsArray=self.mesh.nodeElementsArray,
+                                                            nodeElementOffsets=self.mesh.nodeElementOffsets,
+                                                            detJ_array=self.model.q[('abs(det(J))')],
+                                                            nd=self.nd)
         self.model.grads = self.grads
         # area recovery
         logEvent("Area recovery at mesh nodes", level=3)
@@ -188,39 +192,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             #     dt = self.dt_last
             # dt = self.model.timeIntegration.dt
             dt = self.dt_last
-            logEvent('Smoothing Mesh with Laplace Smoothing - '+str(self.nSmoothOut))
-            for iS in range(self.nSmoothOut):
-                # elementVolumesArray = self.model.q['abs(det(J))'][:,0]
-                # elementBarycentersArray = self.mesh.elementBarycentersArray
-                # ms.updateElementVolumes(elementVolumesArray_=elementVolumesArray,
-                #                       elementNodesArray=self.mesh.elementNodesArray,
-                #                       nodeArray=self.PHI)
-                # ms.updateElementBarycenters(elementBarycentersArray_=elementBarycentersArray,
-                #                             elementNodesArray=self.mesh.elementNodesArray,
-                #                             nodeArray=self.PHI)
-                simultaneous = True
-                ms.smoothNodesLaplace(nodeArray_=self.PHI,
-                                      nodeStarOffsets=self.mesh.nodeStarOffsets,
-                                      nodeStarArray=self.mesh.nodeStarArray,
-                                      nodeMaterialTypes=self.mesh.nodeMaterialTypes,
-                                      nNodes_owned=self.mesh.nNodes_owned,
-                                      simultaneous=simultaneous,
-                                      smoothBoundaries=True,
-                                      fixedNodesBoolArray=self.mesh.fixedNodesBoolArray,
-                                      alpha=0.)
-                # disp = ms.smoothNodesCentroid(nodeArray=self.PHI,
-                #                               nodeElementOffsets=self.mesh.nodeElementOffsets,
-                #                               nodeElementsArray=self.mesh.nodeElementsArray,
-                #                               nodeMaterialTypes=self.mesh.nodeMaterialTypes,
-                #                               elementBarycentersArray=elementBarycentersArray,
-                #                               elementVolumesArray=elementVolumesArray,
-                #                               elementNodesArray=self.mesh.elementNodesArray,
-                #                               nNodes_owned=self.mesh.nNodes_owned,
-                #                               simultaneous=simultaneous)
-            logEvent('Done smoothing')
             # move nodes
             self.model.mesh.nodeVelocityArray[:] += (self.PHI-self.model.mesh.nodeArray)/dt
-            #self.model.mesh.nodeVelocityArray[:] = disp/dt
             #self.model.mesh.nodeVelocityArray[:] = np.zeros(self.model.mesh.nodeArray.shape)
             self.model.mesh.nodeArray[:] = self.PHI
             # re-initialise nearest nodes
@@ -236,7 +209,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                                                         nodeElementOffsets=self.mesh.nodeElementOffsets,
                                                         nodeElementsArray=self.mesh.nodeElementsArray,
                                                         el_average=False)
-        self.model.u[0].dof[:] = IMR_nodes
+        # self.model.u[0].dof[:] = IMR_nodes
 
     def uOfX(self, x, eN=None):
         """
@@ -354,6 +327,10 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         else:
             f = self.myfunc(x, self.t)
             # f = min(self.he_max, f)
+        if f < self.epsFact_density*self.he_min:
+            f = 0.
+        # f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
+        # f = min(f, self.he_max)
         f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
         return f
 
@@ -367,6 +344,10 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             else:
                 f = self.myfunc(self.mesh.nodeArray[i], self.t)
                 # f = min(self.he_max, f)
+            if f < self.epsFact_density*self.he_min:
+                f = 0.
+            # f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
+            # f = min(f, self.he_max)
             f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
             self.uOfXTatNodes[i] = f
 
@@ -383,6 +364,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                 else:
                     f = self.myfunc(xx[e, k], self.t)
                     # f = min(self.he_max, f)
+                if f < self.epsFact_density*self.he_min:
+                    f = 0.
+                # f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
+                # f = min(f, self.he_max)
+                # print(f)
                 f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
                 self.uOfXTatQuadrature[e, k] = f
 
