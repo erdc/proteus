@@ -75,21 +75,21 @@ class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIP
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """Basic k-epsilon model for incompressible flow from Hutter etal
-Chaper 11 or k-omega (Wilcox 1998).
+    Chaper 11 or k-omega (Wilcox 1998).
 
     """
-#     Solves for just dissipation variable (epsilon, or omega) assuming
-#     kappa (intensity) computed independently and lagged in time
-
-#     \bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
-#     \vec v^{'}   = turbulent fluctuation
-
-#      assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
-
-# Reynolds averaged NS equations
+    #     Solves for just dissipation variable (epsilon, or omega) assuming
+    #     kappa (intensity) computed independently and lagged in time
+    
+    #     \bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
+    #     \vec v^{'}   = turbulent fluctuation
+    
+    #      assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
+    
+    # Reynolds averaged NS equations
 
 # \deld \bar{\vec v} = 0
-1
+
 # \pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
 #                -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
 #                - \frac{1}{rho}\deld \ten{R} = 0
@@ -147,6 +147,7 @@ Chaper 11 or k-omega (Wilcox 1998).
                  RD_model=None,
                  kappa_model=None,
                  ME_model=None,
+                 SED_model=None,
                  dissipation_model_flag=1,  # default K-Epsilon, 2 --> K-Omega 1998, 3 --> K-Omega 1988
                  c_mu=0.09,
                  c_1=0.126,
@@ -177,6 +178,7 @@ Chaper 11 or k-omega (Wilcox 1998).
         self.rho_0 = rho_0
         self.nu_0 = nu_0
         self.rho_1 = rho_1
+        self.rho = rho_0
         self.nu_1 = nu_1
         self.c_mu = c_mu
         self.c_1 = c_1
@@ -184,24 +186,6 @@ Chaper 11 or k-omega (Wilcox 1998).
         self.c_e = c_e
         self.sigma_e = sigma_e
         self.g = g
-
-        self.aDarcy=closure.aDarcy
-        self.betaForch=closure.betaForch
-        self.grain=closure.grain
-        self.packFraction=closure.packFraction
-        self.packMargin=closure.packMargin
-        self.maxFraction=closure.maxFraction
-        self.frFraction=closure.frFraction
-        self.sigmaC=closure.sigmaC
-        self.C3e=closure.C3e
-        self.C4e=closure.C4e
-        self.eR=closure.eR
-        self.fContact=closure.fContact
-        self.mContact=closure.mContact
-        self.nContact=closure.nContact
-        self.angFriction=closure.angFriction
-        self.vos_limiter = closure.vos_limiter
-        self.mu_fr_limiter = closure.mu_fr_limiter
         #
         mass = {0: {0: 'linear'}}
         advection = {0: {0: 'linear'}}
@@ -231,12 +215,54 @@ Chaper 11 or k-omega (Wilcox 1998).
         self.RD_modelIndex = RD_model
         self.LS_modelIndex = LS_model
         self.VOS_modelIndex = VOS_model
+        self.SED_modelIndex = SED_model
         self.kappa_modelIndex = kappa_model
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
         # for debugging model
         self.default_kappa = default_kappa
-
+        try:
+            self.aDarcy=closure.aDarcy
+            self.betaForch=closure.betaForch
+            self.grain=closure.grain
+            self.packFraction=closure.packFraction
+            self.packMargin=closure.packMargin
+            self.maxFraction=closure.maxFraction
+            self.frFraction=closure.frFraction
+            self.sigmaC=closure.sigmaC
+            self.C3e=closure.C3e
+            self.C4e=closure.C4e
+            self.eR=closure.eR
+            self.fContact=closure.fContact
+            self.mContact=closure.mContact
+            self.nContact=closure.nContact
+            self.angFriction=closure.angFriction
+            self.vos_limiter = closure.vos_limiter
+            self.mu_fr_limiter = closure.mu_fr_limiter
+            self.sedFlag = 1
+            logEvent("INFO: Loading parameters for sediment closure",2)
+        except:
+            self.aDarcy=-1.
+            self.betaForch=-1.
+            self.grain=-1.
+            self.packFraction=-1.
+            self.packMargin=-1.
+            self.maxFraction=-1.
+            self.frFraction=-1.
+            self.sigmaC=-1.
+            self.C3e=-1.
+            self.C4e=-1.
+            self.eR=-1.
+            self.fContact=-1.
+            self.mContact=-1.
+            self.nContact=-1.
+            self.angFriction=-1.
+            self.vos_limiter = -1.
+            self.mu_fr_limiter = -1.
+            self.sedFlag=0
+            assert VOS_model == None
+            assert SED_model == None
+            logEvent("Sediment module is off. Loading dummy parameters",2)
     def initializeMesh(self, mesh):
         self.eps = self.epsFact * mesh.h
 
@@ -246,15 +272,7 @@ Chaper 11 or k-omega (Wilcox 1998).
             modelList), "Dissipation: invalid index for self model allowed range: [0,%s]" % len(modelList)
         # self
         self.model = modelList[self.modelIndex]
-
-        #self.u_old_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
-        self.u_old_dof = numpy.copy(self.model.u[0].dof)
-        # VOS model
-        if self.VOS_model is not None:
-            self.vosModel = model[self.VOS_modelIndex ]
-            self.q_vos = modelList[self.VOS_modelIndex].q[('u', 0)]
-            self.grad_vos = modelList[self.VOS_modelIndex].q[('grad(u)', 0)]
-            self.vosCoeff
+           
         # redistanced level set
         if self.RD_modelIndex is not None:
             self.rdModel = modelList[self.RD_modelIndex]
@@ -268,6 +286,8 @@ Chaper 11 or k-omega (Wilcox 1998).
             else:
                 self.ebq_phi = None
         # flow model
+        self.u_old_dof = numpy.copy(self.model.u[0].dof)
+
         assert self.flowModelIndex is not None, "Dissipation: invalid index for flow model allowed range: [0,%s]" % len(modelList)
         # print "flow model index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))
         if self.flowModelIndex is not None:  # keep for debugging for now
@@ -351,6 +371,25 @@ Chaper 11 or k-omega (Wilcox 1998).
                 self.ebq_kappa = numpy.zeros(self.model.ebq[('u', 0)].shape, 'd')
                 self.ebq_kappa.fill(self.default_kappa)
             #
+        if self.VOS_modelIndex is not None:
+            self.vosModel = model[self.VOS_modelIndex ]
+            self.q_vos = modelList[self.VOS_modelIndex].q[('u', 0)]
+            self.grad_vos = modelList[self.VOS_modelIndex].q[('grad(u)', 0)]
+            self.ebqe_vos = modelList[self.VOS_modelIndex].ebqe[('u', 0)]
+            self.ebqe_grad_vos = modelList[self.VOS_modelIndex].ebqe[('grad(u)', 0)]
+        else:
+            self.q_vos = self.model.q[('u', 0)]
+            self.grad_vos = self.model.q[('u', 0)]
+            self.ebqe_vos = self.model.ebqe[('u', 0)]
+            self.ebqe_grad_vos = self.model.ebqe[('u', 0)]
+        if self.SED_modelIndex is not None:
+            self.rho_s=modelList[self.SED_modelIndex].coefficients.rho_s
+            self.vs=modelList[self.SED_modelIndex].q[('u', 0)]
+            self.ebqe_vs=modelList[self.SED_modelIndex].ebqe[('u', 0)]
+        else:
+            self.rho_s=self.rho_0
+            self.vs=self.q_v
+            self.ebqe_vs=self.ebqe_v
         #
 
     def initializeElementQuadrature(self, t, cq):
@@ -970,6 +1009,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.c_e,
             self.coefficients.rho_0,
             self.coefficients.rho_1,
+#Sediment model
+            self.coefficients.sedFlag,
+            self.coefficients.q_vos,
+            self.coefficients.grad_vos,
+            self.coefficients.ebqe_vos,
+            self.coefficients.ebqe_grad_vos,
+            self.coefficients.rho_0,
+            self.coefficients.rho_s,
+            self.coefficients.vs,
+            self.coefficients.ebqe_vs,
+            self.coefficients.g,
+#end Sediment
             self.coefficients.dissipation_model_flag,
             # end diffusion
             self.coefficients.useMetrics,
@@ -991,9 +1042,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.velocity_dof_u,
             self.coefficients.velocity_dof_v,
             self.coefficients.velocity_dof_w,
-            #vos for solid fraction
-            self.coefficients.vos,
-            self.coefficients.closureCoeffs,
             # end velocity dof
             self.timeIntegration.m_tmp[0],
             self.q[('u', 0)],
@@ -1084,6 +1132,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_kappa,  # dissipation rate variable
             self.coefficients.q_grad_kappa,  # dissipation rate variable
             self.coefficients.q_porosity,  # dissipation rate variable
+            #sediment
+            self.coefficients.sedFlag,
+            self.coefficients.q_vos,
+            self.coefficients.grad_vos,
+            self.coefficients.ebqe_vos,
+            self.coefficients.ebqe_grad_vos,
+            self.coefficients.rho_0,
+            self.coefficients.rho_s,
+            self.coefficients.vs,
+            self.coefficients.ebqe_vs,
+            self.coefficients.g,
+            #sediment end
             # velocity dof
             self.coefficients.velocity_dof_u,
             self.coefficients.velocity_dof_v,
@@ -1107,7 +1167,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('diffusiveFlux_bc_flag', 0, 0)],
             self.ebqe[('diffusiveFlux_bc', 0, 0)],
             self.csrColumnOffsets_eb[(0, 0)],
-            self.coefficients.ebqe_phi, self.coefficients.epsFact,
+            self.coefficients.ebqe_phi,
+            self.coefficients.epsFact,
             self.coefficients.ebqe_kappa,  # dissipation rate variable on boundary
             self.coefficients.ebqe_porosity)  # VRANS
 
