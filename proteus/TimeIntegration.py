@@ -221,6 +221,11 @@ class TI_base:
         allow classes to set various numerical parameters
         """
         pass
+    def postAdaptUpdate(self,oldTime):
+        """
+        ensure array histories are properly set after adapt. This should only work for backwards euler and vbdf at the moment.
+        """
+        pass
 
 NoIntegration = TI_base
 
@@ -1478,6 +1483,28 @@ class VBDF(TI_base):
         #decide where this goes
         self.chooseOrder()
     #
+    def postAdaptUpdate(self,oldTime):
+        """This looks exactly like updateTimeHistory with the exeption of setting self.tLast=self.t"""
+        self.nUpdatesTimeHistoryCalled  += 1
+        for n in range(self.max_order-1):
+            for ci in self.massComponents:
+                self.m_history[n+1][ci].flat[:] =self.m_history[n][ci].flat
+                self.mt_history[n+1][ci].flat[:]=self.mt_history[n][ci].flat
+            #
+            self.dt_history[n+1]   = self.dt_history[n]
+        #
+        self.dt_history[0] = self.dt
+        for ci in self.massComponents:
+            self.m_history[0][ci].flat[:] = self.m_tmp[ci].flat
+            self.mt_history[0][ci].flat[:]= self.mt_tmp[ci].flat
+
+        self.needToCalculateBDFCoefs = True
+        #decide where this goes
+        self.chooseOrder()
+
+        #unclear why this is needed; a change of machine precision in these values yield larger deviations in the gauges
+        self.dt_history[:] = oldTime.dt_history[:]
+
     def computeErrorEstimate(self):
         """calculate :math:`\vec{e}^{n+1}`
 
