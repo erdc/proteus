@@ -89,7 +89,7 @@ Chaper 11 or k-omega (Wilcox 1998).
 # Reynolds averaged NS equations
 
 # \deld \bar{\vec v} = 0
-
+1
 # \pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
 #                -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
 #                - \frac{1}{rho}\deld \ten{R} = 0

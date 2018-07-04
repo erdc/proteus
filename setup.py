@@ -41,21 +41,7 @@ for arg in sys.argv:
         proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
         break
 
-EXTENSIONS_TO_BUILD = [Extension("MeshAdaptPUMI.MeshAdaptPUMI",
-                        sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
-                                   'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
-                                   'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
-                                   'proteus/MeshAdaptPUMI/DumpMesh.cpp',
-                                   'proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp','proteus/MeshAdaptPUMI/VMS.cpp'],
-                        define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
-                        language='c++',
-                        include_dirs=[numpy.get_include(),'include',
-                                      'proteus']+
-                        PROTEUS_SCOREC_INCLUDE_DIRS,
-                        library_dirs=PROTEUS_SCOREC_LIB_DIRS,
-                        libraries=PROTEUS_SCOREC_LIBS,
-                        extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
-                        extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS),
+EXTENSIONS_TO_BUILD = [
               Extension("mprans.cPres",['proteus/mprans/cPres.pyx'],
                         depends=['proteus/mprans/Pres.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
                         language='c++',
@@ -604,8 +590,7 @@ def setup_given_extensions(extensions):
                        ['proteus/tests/hex_cube_3x3.xmf',
                         'proteus/tests/hex_cube_3x3.h5']),
                       (os.path.join(proteus_install_path,'tests','linalgebra_tests'),
-                       ['proteus/tests/linalgebra_tests/sparse_mat_1.txt',
-                        'proteus/tests/linalgebra_tests/jac.bin']),
+                       ['proteus/tests/linalgebra_tests/sparse_mat_1.txt']),
                       (os.path.join(proteus_install_path,'tests','griffiths_lane_6'),
                        ['proteus/tests/griffiths_lane_6/richards_expected.h5',
                         'proteus/tests/griffiths_lane_6/elastoplastic_expected.h5']),
