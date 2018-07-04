@@ -3990,11 +3990,9 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                     "Dimensions":"%i" % (self.mesh.globalMesh.nNodes_global,)})
             if ar.hdfFile is not None:
                 if ar.has_h5py:
-                    import pdb
-                    pdb.set_trace()
-                    values.text = ar.hdfFilename+":/"+u.name+"_t"+str(tCount)
+                    values.text = ar.hdfFilename+":/"+u.name+"_t{0:d}".format(tCount)
                     comm = Comm.get()
-                    ar.create_dataset_sync(u.name+"_t"+str(tCount),
+                    ar.create_dataset_sync(u.name+"_t{0:d}".format(tCount),
                                            offsets=self.dofMap.dof_offsets_subdomain_owned,
                                            data = u.dof[:(self.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -self.dofMap.dof_offsets_subdomain_owned[comm.rank()])])
                 else:
@@ -4012,19 +4010,19 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                     "Dimensions":"%i" % (self.mesh.nNodes_global,)})
             if ar.hdfFile is not None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+u.name+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
-                    ar.create_dataset_async(u.name+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data = u.dof)
+                    values.text = ar.hdfFilename+":/"+u.name+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount)
+                    ar.create_dataset_async(u.name+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount), data = u.dof)
                 else:
-                    values.text = ar.hdfFilename+":/"+u.name+str(tCount)
-                    ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
+                    values.text = ar.hdfFilename+":/{0:s}{1:d}".format(u.name, tCount)
+                    ar.hdfFile.createArray("/","{0:s}{0:d}".format(u.name, tCount),u.dof)
             else:
-                numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
-                SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
+                numpy.savetxt(ar.textDataDir+"/"+"{0:s}{0:d}".format(u.name, tCount)+".txt",u.dof)
+                SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"{0:s}{0:d}".format(u.name, tCount)+".txt"})
     def readFunctionXdmf(self,ar,u,tCount=0):
         if ar.hdfFile is not None:
             if ar.hdfFileGlb is not None:
                 map = self.mesh.globalMesh.nodeNumbering_subdomain2global
-                array=ar.hdfFileGlb.get_node("/",u.name+str(tCount))
+                array=ar.hdfFileGlb.get_node("/","{0:s}{0:d}".format(u.name, tCount))
                 for i in range(len(map)):
                     u.dof[i] = array[map[i]]
                 del array
@@ -4035,17 +4033,17 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                         #respect to memory (as opposed to the faster
                         #approach of pulling in the entire array)
                         permute = np.argsort(self.mesh.globalMesh.nodeNumbering_subdomain2global)
-                        u.dof[permute] = ar.hdfFile["/"+u.name+"_t"+str(tCount)][self.mesh.globalMesh.nodeNumbering_subdomain2global[permute].tolist()]
+                        u.dof[permute] = ar.hdfFile["/"+u.name+"_t{0:d}".format(tCount)][self.mesh.globalMesh.nodeNumbering_subdomain2global[permute].tolist()]
                         #faster way
-                        #u.dof[:] = ar.hdfFile["/"+u.name+"_t"+str(tCount)].value[self.mesh.globalMesh.nodeNumbering_subdomain2global]                        
+                        #u.dof[:] = ar.hdfFile["/"+u.name+"_t{0:d}".format(tCount)].value[self.mesh.globalMesh.nodeNumbering_subdomain2global]                        
                     else:
-                        u.dof[:]=ar.hdfFile["/"+u.name+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)]
+                        u.dof[:]=ar.hdfFile["/"+u.name+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount)]
                 else:
-                    u.dof[:]=ar.hdfFile.get_node("/",u.name+str(tCount))
+                    u.dof[:]=ar.hdfFile.get_node("/","{0:s}{0:d}".format(u.name, tCount))
         else:
             assert(False)
-            #numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
-            #SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
+            #numpy.savetxt(ar.textDataDir+"/"+"{0:s}{0:d}".format(u.name, tCount)+".txt",u.dof)
+            #SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"{0:s}{0:d}".format(u.name, tCount)+".txt"})
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         concatNow=True
         if concatNow:
@@ -4070,13 +4068,13 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        values.text = ar.hdfFilename+":/"+vectorName+"_t"+str(tCount)
-                        ar.create_dataset_sync(vectorName+"_t"+str(tCount),
+                        values.text = ar.hdfFilename+":/"+vectorName+"_t{0:d}".format(tCount)
+                        ar.create_dataset_sync(vectorName+"_t{0:d}".format(tCount),
                                                offsets=self.mesh.globalMesh.nodeOffsets_subdomain_owned,
                                                data = velocity[:self.mesh.nNodes_owned,:])
                     else:
-                        values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
-                        ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
+                        values.text = ar.hdfFilename+":/{0:s}{1:d}".format(vectorName, tCount)
+                        ar.hdfFile.createArray("/","{0:s}{1:d}".format(vectorName, tCount),velocity)
             else:
                 attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":vectorName,
                                                                      "AttributeType":"Vector",
@@ -4098,11 +4096,11 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
-                        ar.create_dataset_async(vectorName+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data = velocity)
+                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount)
+                        ar.create_dataset_async(vectorName+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount), data = velocity)
                     else:
-                        values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
-                        ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
+                        values.text = ar.hdfFilename+":/{0:s}{1:d}".format(vectorName, tCount)
+                        ar.hdfFile.createArray("/","{0:s}{1:d}".format(vectorName, tCount),velocity)
         else:
             attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":vectorName,
                                                         "AttributeType":"Vector",
@@ -4318,8 +4316,8 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                     "Dimensions":"%i" % (self.mesh.globalMesh.nNodes_global,)})
             if ar.hdfFile is not None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+u.name+"_t"+str(tCount)
-                    ar.create_dataset_sync(u.name+"_t"+str(tCount),
+                    values.text = ar.hdfFilename+":/"+u.name+"_t{0:d}".format(tCount)
+                    ar.create_dataset_sync(u.name+"_t{0:d}".format(tCount),
                                            offsets = self.dofMap.dof_offsets_subdomain_owned,
                                            data = u.dof[:(self.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] - self.dofMap.dof_offsets_subdomain_owned[comm.rank()])])
                 else:
@@ -4337,14 +4335,14 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                     "Dimensions":"%i" % (self.mesh.nNodes_global,)})
             if ar.hdfFile is not None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+u.name+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
-                    ar.create_dataset_async(u.name+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data = u.dof)
+                    values.text = ar.hdfFilename+":/"+u.name+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount)
+                    ar.create_dataset_async(u.name+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount), data = u.dof)
                 else:
-                    values.text = ar.hdfFilename+":/"+u.name+str(tCount)
-                    ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
+                    values.text = ar.hdfFilename+":/{0:s}{1:d}".format(u.name, tCount)
+                    ar.hdfFile.createArray("/","{0:s}{1:d}".format(u.name, tCount),u.dof)
             else:
-                numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
-                SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
+                numpy.savetxt(ar.textDataDir+"/"+"{0:s}{1:d}".format(u.name, tCount)+".txt",u.dof)
+                SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"{0:s}{1:d}".format(u.name, tCount)+".txt"})
 
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         concatNow=True
@@ -4370,8 +4368,8 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        values.text = ar.hdfFilename+":/"+vectorName+"_t"+str(tCount)
-                        ar.create_dataset_sync(vectorName+"_t"+str(tCount),
+                        values.text = ar.hdfFilename+":/"+vectorName+"_t{0:d}".format(tCount)
+                        ar.create_dataset_sync(vectorName+"_t{0:d}".format(tCount),
                                                offsets =self.mesh.globalMesh.nodeOffsets_subdomain_owned,
                                                data = velocity[:self.mesh.nNodes_owned,:])
                     else:
@@ -4397,11 +4395,11 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
-                        ar.create_dataset_async(vectorName+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data = velocity)
+                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount)
+                        ar.create_dataset_async(vectorName+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount), data = velocity)
                     else:
-                        values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
-                        ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
+                        values.text = ar.hdfFilename+":/{0:s}{1:d}".format(vectorName, tCount)
+                        ar.hdfFile.createArray("/","{0:s}{1:d}".format(vectorName, tCount),velocity)
 
         else:
             if ar.global_sync:
@@ -5412,9 +5410,9 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
         if ar.has_h5py:
             if ar.global_sync:
                 permute = np.argsort(u.femSpace.dofMap.subdomain2global)
-                u.dof[permute] = ar.hdfFile["/"+u.name+"_t"+str(tCount)][u.femSpace.dofMap.subdomain2global[permute].tolist()]
+                u.dof[permute] = ar.hdfFile["/"+u.name+"_t{0:d}".format(tCount)][u.femSpace.dofMap.subdomain2global[permute].tolist()]
             else:
-                u.dof[:]=ar.hdfFile["/"+u.name+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)].value
+                u.dof[:]=ar.hdfFile["/"+u.name+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount)].value
         else:
             assert False,"to read data on P2-FE use h5 file"
 

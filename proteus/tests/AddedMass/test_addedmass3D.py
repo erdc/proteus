@@ -9,6 +9,8 @@ import numpy.testing as npt
 from importlib import import_module
 from petsc4py import PETSc
 
+modulepath = os.path.dirname(os.path.abspath(__file__))
+
 class TestAddedMass3D(unittest.TestCase):
 
     def teardown_method(self, method):
@@ -35,24 +37,24 @@ class TestAddedMass3D(unittest.TestCase):
                     'addedmass2D_so.log'
                     'addedmass3D_so.log'
                     ]
-        for file in FileList:
-            if os.path.isfile(file):
-                os.remove(file)
-            else:
-                pass
+        #for file in FileList:
+        #    if os.path.isfile(file):
+        #        os.remove(file)
+        #    else:
+        #        pass
 
     def test_AddedMass_3D(self):
         from proteus import defaults
-        so = defaults.load_system('addedmass3D_so')
+        so = defaults.load_system('addedmass3D_so', modulepath)
         pList = []
         nList = []
         for (pModule,nModule) in so.pnList:
             log("Loading p module = "+pModule)
-            pList.append(proteus.defaults.load_physics(pModule))
+            pList.append(proteus.defaults.load_physics(pModule, modulepath))
             if pList[-1].name == None:
                 pList[-1].name = pModule
             log("Loading n module = "+nModule)
-            nList.append(proteus.defaults.load_numerics(nModule))
+            nList.append(proteus.defaults.load_numerics(nModule, modulepath))
         so.name = "addedmass3D"
         if so.sList == []:
             for i in range(len(so.pnList)):

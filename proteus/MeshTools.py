@@ -316,7 +316,7 @@ class Quadrilateral(Polygon):
 
         for i,item in enumerate(newList):
             if not newList[i]:
-                assert 0,'Quadrialteral Mesh Generation Error '+repr(newList)+" i = "+repr(i)
+                assert 0,'Quadrialteral Mesh Generation Error '+str(newList)+" i = "+str(i)
         return newList
 
     def computeGeometricInfo(self):
@@ -738,10 +738,10 @@ class Mesh(object):
             #
             if ar.global_sync:
                 self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-                self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":"%e" % (t,),"Name":"%i" % (tCount,)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(self.globalMesh.nElements_global)})
+                                       "NumberOfElements":"%i" % (self.globalMesh.nElements_global,)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
@@ -754,13 +754,13 @@ class Mesh(object):
                                        "Dimensions":"%i %i" % (self.globalMesh.nNodes_global,3)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+name+repr(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+repr(tCount)
+                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_sync('elements'+name+repr(tCount),
+                            ar.create_dataset_sync('elements'+name+str(tCount),
                                                     offsets=self.globalMesh.elementOffsets_subdomain_owned,
                                                     data=self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
-                            ar.create_dataset_sync('nodes'+name+repr(tCount),
+                            ar.create_dataset_sync('nodes'+name+str(tCount),
                                                    offsets=self.globalMesh.nodeOffsets_subdomain_owned,
                                                    data=self.nodeArray[:self.nNodes_owned])
                     else:
@@ -769,10 +769,10 @@ class Mesh(object):
                     assert False, "global_sync not  supported with text heavy data"
             else:
                 self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-                self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":"%e" % (t,),"Name":"%i" % (tCount,)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(self.nElements_owned)})
+                                       "NumberOfElements":"%i" % (self.nElements_owned,)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
@@ -785,17 +785,17 @@ class Mesh(object):
                                        "Dimensions":"%i %i" % (self.nNodes_global,3)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+repr(ar.comm.rank())+name+repr(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+repr(ar.comm.rank())+name+repr(tCount)
+                        elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_async('elements'+repr(ar.comm.rank())+name+repr(tCount),data=self.elementNodesArray[:self.nElements_owned])
-                            ar.create_dataset_async('nodes'+repr(ar.comm.rank())+name+repr(tCount),data=self.nodeArray)
+                            ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount),data=self.elementNodesArray[:self.nElements_owned])
+                            ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount),data=self.nodeArray)
                     else:
-                        elements.text = ar.hdfFilename+":/elements"+name+repr(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+repr(tCount)
+                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'elements'+name+repr(tCount),self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.createArray("/",'nodes'+name+repr(tCount),self.nodeArray)
+                            ar.hdfFile.createArray("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
+                            ar.hdfFile.createArray("/",'nodes'+name+str(tCount),self.nodeArray)
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                     SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -807,11 +807,11 @@ class Mesh(object):
             #
             if EB:
                 self.arEBGrid = SubElement(self.arEBGridCollection,"Grid",{"GridType":"Uniform"})
-                self.arEBTime = SubElement(self.arEBGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+                self.arEBTime = SubElement(self.arEBGrid,"Time",{"Value":"%e" % (t,),"Name":"%i" % (tCount,)})
                 Xdmf_ElementEBTopology = "Triangle" #cek hack
                 ebtopology = SubElement(self.arEBGrid,"Topology",
                                     {"Type":Xdmf_ElementEBTopology,
-                                     "NumberOfElements":str(self.nElementBoundaries_global)})
+                                     "NumberOfElements":"%i" % (self.nElementBoundaries_global,)})
                 ebelements = SubElement(ebtopology,"DataItem",
                                     {"Format":ar.dataItemFormat,
                                      "DataType":"Int",
@@ -824,16 +824,16 @@ class Mesh(object):
                                      "Dimensions":"%i %i" % (self.nNodes_global,3)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+repr(ar.comm.rank())+name+repr(tCount)
-                        ebnodes.text = ar.hdfFilename+":/nodes"+repr(ar.comm.rank())+name+repr(tCount)
+                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+str(ar.comm.rank())+name+str(tCount)
+                        ebnodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_async('elementBoundaries'+repr(ar.comm.rank())+name+repr(tCount), data = self.elementBoundaryNodesArray)
+                            ar.create_dataset_async('elementBoundaries'+str(ar.comm.rank())+name+str(tCount), data = self.elementBoundaryNodesArray)
                             #ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
                     else:
-                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+name+repr(tCount)
-                        ebnodes.text = ar.hdfFilename+":/nodes"+name+repr(tCount)
+                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+name+str(tCount)
+                        ebnodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'elementBoundaries'+name+repr(tCount),self.elementBoundaryNodesArray)
+                            ar.hdfFile.createArray("/",'elementBoundaries'+name+str(tCount),self.elementBoundaryNodesArray)
                             #ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
                 else:
                     SubElement(ebelements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elementBoundaries"+name+".txt"})
@@ -852,7 +852,7 @@ class Mesh(object):
                                      {"Format":ar.dataItemFormat,
                                       "DataType":"Int",
                                       "Precision":"4",
-                                      "Dimensions":str(self.nNodes_global)})
+                                      "Dimensions":"%i" % (self.nNodes_global,)})
                 elemMapAtt = SubElement(self.arGrid,"Attribute",
                                         {"Name":"CellMapL2G",
                                          "AttributeType":"Scalar",
@@ -861,21 +861,21 @@ class Mesh(object):
                                      {"Format":ar.dataItemFormat,
                                       "DataType":"Int",
                                       "Precision":"4",
-                                      "Dimensions":str(self.nElements_owned)})
+                                      "Dimensions":"%i" % (self.nElements_owned,)})
 
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+repr(ar.comm.rank())+name+repr(tCount)
-                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+repr(ar.comm.rank())+name+repr(tCount)
+                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+str(ar.comm.rank())+name+str(tCount)
+                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+str(ar.comm.rank())+name+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_async('nodeMapL2G'+repr(ar.comm.rank())+name+repr(tCount), data=self.globalMesh.nodeNumbering_subdomain2global)
-                            ar.create_dataset_async('cellMapL2G'+repr(ar.comm.rank())+name+repr(tCount), data=self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
+                            ar.create_dataset_async('nodeMapL2G'+str(ar.comm.rank())+name+str(tCount), data=self.globalMesh.nodeNumbering_subdomain2global)
+                            ar.create_dataset_async('cellMapL2G'+str(ar.comm.rank())+name+str(tCount), data=self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
                     else:
-                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+name+repr(tCount)
-                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+name+repr(tCount)
+                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+name+str(tCount)
+                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+name+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'nodeMapL2G'+name+repr(tCount),self.globalMesh.nodeNumbering_subdomain2global)
-                            ar.hdfFile.createArray("/",'cellMapL2G'+name+repr(tCount),self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
+                            ar.hdfFile.createArray("/",'nodeMapL2G'+name+str(tCount),self.globalMesh.nodeNumbering_subdomain2global)
+                            ar.hdfFile.createArray("/",'cellMapL2G'+name+str(tCount),self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
                 else:
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodeMapL2G"+name+".txt"})
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/cellMapL2G"+name+".txt"})
@@ -961,14 +961,14 @@ class Mesh(object):
                                                            "Dimensions":"%i" % (self.nElementBoundaries_global,)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
-                        ar.create_dataset_async("nodeMaterialTypes"+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data=self.nodeMaterialTypes)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
-                        ar.create_dataset_async("elementMaterialTypes"+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data=self.elementMaterialTypes[:self.nElements_owned])
+                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                        ar.create_dataset_async("nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.nodeMaterialTypes)
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                        ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementMaterialTypes[:self.nElements_owned])
                         if EB:
-                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
-                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
-                            ar.create_dataset_async("elementBoundaryMaterialTypes"+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data=self.elementBoundaryMaterialTypes)
+                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                            ar.create_dataset_async("elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementBoundaryMaterialTypes)
                     else:
                         nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
                         ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
@@ -1409,11 +1409,11 @@ class Mesh(object):
         plots=''
         for i in range(nT):
             plots = plots + \
-                    ", figure(" +repr(i+1)+")" \
+                    ", figure(" +str(i+1)+")" \
                     ", axis([0 1 0 1 0 1]), plot3("+xedges+\
-                    "(:,"+repr(i)+"*6+1:("+repr(i)+"+1)*6),"+yedges+\
-                    "(:,"+repr(i)+"*6+1:("+repr(i)+"+1)*6),"+zedges+\
-                    "(:,"+repr(i)+"*6+1:("+repr(i)+"+1)*6),\'b-\') "
+                    "(:,"+str(i)+"*6+1:("+str(i)+"+1)*6),"+yedges+\
+                    "(:,"+str(i)+"*6+1:("+str(i)+"+1)*6),"+zedges+\
+                    "(:,"+str(i)+"*6+1:("+str(i)+"+1)*6),\'b-\') "
         plotcommand = plotcommand + plots +'\"'
         cmdOut = open(cmdfile,'w')
         cmdOut.write(plotcommand)
@@ -2455,7 +2455,7 @@ class TetrahedralMesh(Mesh):
         tets = []
         tetEdges=set()
         tetTriangles=set()
-        logEvent("Reading "+repr(filename)+" and building node lists for tetrahedra,triangles, and edges")
+        logEvent("Reading "+str(filename)+" and building node lists for tetrahedra,triangles, and edges")
         #assume test are ordered by tet number
         while (columns[0] == 'E4T'):
             nodeNumbers = [int(c) - adhBase for c in columns[2:6]]
@@ -2484,11 +2484,11 @@ class TetrahedralMesh(Mesh):
             self.nodeDict[newNode]=newNode
             line = meshIn.readline()
             columns = line.split()
-        print("Number of tetrahedra:"+repr(len(tets)))
-        print("Number of triangles :"+repr(len(tetTriangles)))
-        print("Number of edges     :"+repr(len(tetEdges)))
-        print("Number of nodes     :"+repr(len(self.nodeList)))
-        print("Number of objects   :"+repr(len(tetEdges)+len(tetTriangles)+len(tets)+len(self.nodeList)))
+        print("Number of tetrahedra:"+str(len(tets)))
+        print("Number of triangles :"+str(len(tetTriangles)))
+        print("Number of edges     :"+str(len(tetEdges)))
+        print("Number of nodes     :"+str(len(self.nodeList)))
+        print("Number of objects   :"+str(len(tetEdges)+len(tetTriangles)+len(tets)+len(self.nodeList)))
         print("Building edge list")
         self.edgeList =[Edge(edgeNumber=eN,nodes=[self.nodeList[nN[0]],self.nodeList[nN[1]]]) \
                         for eN,nN in enumerate(tetEdges)]
@@ -3005,7 +3005,7 @@ class Mesh2DM(Mesh):
         nx  = array.array('d')
         ny  = array.array('d')
         nz  = array.array('d')
-        print("Reading "+repr(filename))
+        print("Reading "+str(filename))
         #assume tets are ordered by tet number
         while (len(columns) > 0 and (columns[0] == 'E3T' or columns[0] == 'GE3')):
             tn0.append(int(columns[2]))
@@ -3050,8 +3050,8 @@ class Mesh2DM(Mesh):
         self.nElements_global = self.nTriangles_global
         self.elementNodesArray = self.triangleArray
         self.elementMaterialTypes = self.triangleMaterialArray
-        print("Number of triangles:"+repr(self.nElements_global))
-        print("Number of nodes     :"+repr(self.nNodes_global))
+        print("Number of triangles:"+str(self.nElements_global))
+        print("Number of nodes     :"+str(self.nNodes_global))
         #archive with Xdmf
         self.nNodes_element = 3
         self.arGridCollection = None
@@ -3117,10 +3117,10 @@ class Mesh2DM(Mesh):
         for nExtN,nN in enumerate(exteriorNodes):
             self.exteriorNodeArray[nExtN]=nN
             self.globalToExteriorNodeArray[nN]=nExtN
-        print("Number of edges         :"+repr(self.nEdges_global))
-        print("Number on interior      :"+repr(self.nInteriorEdges_global))
-        print("Number on exterior      :"+repr(self.nExteriorEdges_global))
-        print("Number of exterior nodes:"+repr(self.nExteriorNodes_global))
+        print("Number of edges         :"+str(self.nEdges_global))
+        print("Number on interior      :"+str(self.nInteriorEdges_global))
+        print("Number on exterior      :"+str(self.nExteriorEdges_global))
+        print("Number of exterior nodes:"+str(self.nExteriorNodes_global))
         #at this point we can easily build a boundary mesh by renumbering using
         #exteriorNodeArray and exteriorEdgeArray to renumber
         #and the info in nodeArray and edgeArray
@@ -3195,7 +3195,7 @@ class Mesh2DM(Mesh):
                 self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(self.globalMesh.nElements_global)})
+                                       "NumberOfElements":"%i" % (self.globalMesh.nElements_global,)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
@@ -3217,14 +3217,14 @@ class Mesh2DM(Mesh):
                                                          "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+name+repr(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+repr(tCount)
+                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_sync('elements'+name+repr(tCount),
+                            ar.create_dataset_sync('elements'+name+str(tCount),
                                                    offsets = self.globalMesh.elementOffsets_subdomain_owned,
                                                    data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
-                            ar.create_dataset_sync('nodes'+name+repr(tCount),
+                            ar.create_dataset_sync('nodes'+name+str(tCount),
                                                    offsets = self.globalMesh.nodeOffsets_subdomain_owned,
                                                    data = self.nodeArray[:self.nNodes_owned])
                             ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
@@ -3239,7 +3239,7 @@ class Mesh2DM(Mesh):
                 self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(self.nElements_owned)})
+                                       "NumberOfElements":"%i" % (self.nElements_owned,)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
@@ -3260,20 +3260,20 @@ class Mesh2DM(Mesh):
                                                          "Dimensions":"%i" % (self.nElements_owned,)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+repr(ar.comm.rank())+name+repr(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+repr(ar.comm.rank())+name+repr(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
+                        elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_async('elements'+repr(ar.comm.rank())+name+repr(tCount), data = self.elementNodesArray[:self.nElements_owned])
-                            ar.create_dataset_async('nodes'+repr(ar.comm.rank())+name+repr(tCount), data = self.nodeArray)
-                            ar.create_dataset_async("elementMaterialTypes"+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
+                            ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount), data = self.elementNodesArray[:self.nElements_owned])
+                            ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount), data = self.nodeArray)
+                            ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
                     else:
-                        elements.text = ar.hdfFilename+":/elements"+name+repr(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+repr(tCount)
+                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'elements'+name+repr(tCount),self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.createArray("/",'nodes'+name+repr(tCount),self.nodeArray)
+                            ar.hdfFile.createArray("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
+                            ar.hdfFile.createArray("/",'nodes'+name+str(tCount),self.nodeArray)
                             ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
@@ -3305,7 +3305,7 @@ class Mesh3DM(Mesh):
         nx  = array.array('d')
         ny  = array.array('d')
         nz  = array.array('d')
-        print("Reading "+repr(filename))
+        print("Reading "+str(filename))
         #assume tets are ordered by tet number
         while (len(columns) > 0 and (columns[0] == 'E4T' or columns[0] == 'GE4')):
             Tn0.append(int(columns[2]))
@@ -3349,8 +3349,8 @@ class Mesh3DM(Mesh):
         self.elementNodesArray = self.tetrahedronArray
         self.elementMaterialTypes = self.tetrahedronMaterialArray
         self.arGridCollection=None
-        print("Number of tetrahedra:"+repr(self.nElements_global))
-        print("Number of nodes     :"+repr(self.nNodes_global))
+        print("Number of tetrahedra:"+str(self.nElements_global))
+        print("Number of nodes     :"+str(self.nNodes_global))
 
     def buildTriangleArrays(self):
         print("Extracting triangles tetrahedra dictionary")
@@ -3414,10 +3414,10 @@ class Mesh3DM(Mesh):
         for nExtN,nN in enumerate(exteriorNodes):
             self.exteriorNodeArray[nExtN]=nN
             self.globalToExteriorNodeArray[nN]=nExtN
-        print("Number of triangles     :"+repr(self.nTriangles_global))
-        print("Number on interior      :"+repr(self.nInteriorTriangles_global))
-        print("Number on exterior      :"+repr(self.nExteriorTriangles_global))
-        print("Number of exterior nodes:"+repr(self.nExteriorNodes_global))
+        print("Number of triangles     :"+str(self.nTriangles_global))
+        print("Number on interior      :"+str(self.nInteriorTriangles_global))
+        print("Number on exterior      :"+str(self.nExteriorTriangles_global))
+        print("Number of exterior nodes:"+str(self.nExteriorNodes_global))
         #at this point we can easily build a boundary mesh by renumbering using
         #exteriorNodeArray and exteriorTriangleArray to renumber
         #and the info in nodeArray and triangleArray
@@ -3440,7 +3440,7 @@ class Mesh3DM(Mesh):
             self.edgeArray[eN][0] = e[0]
             self.edgeArray[eN][1] = e[1]
         del edges
-        print("Number of edges     :"+repr(self.nEdges_global))
+        print("Number of edges     :"+str(self.nEdges_global))
 
     def writeBoundaryMeshADH(self,filename,adhBase=1):
         #I'll print it using node numbers from the 3D mesh
@@ -3562,7 +3562,7 @@ class Mesh3DM(Mesh):
                 self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(self.globalMesh.nElements_global)})
+                                       "NumberOfElements":"%i" % (self.globalMesh.nElements_global,)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
@@ -3584,14 +3584,14 @@ class Mesh3DM(Mesh):
                                                          "Dimensions":"%i" % (self.globalMesh.nElements_owned,)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+name+repr(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+repr(tCount)
+                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_sync('elements'+name+repr(tCount),
+                            ar.create_dataset_sync('elements'+name+str(tCount),
                                                    offsets = self.globalMesh.elementOffsets_subdomain_owned,
                                                    data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
-                            ar.create_dataset_sync('nodes'+name+repr(tCount),
+                            ar.create_dataset_sync('nodes'+name+str(tCount),
                                                    offsets = self.globalMesh.nodeOffsets_subdomain_owned,
                                                    data = self.nodeArray[:self.nNodes_owned])
                             ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
@@ -3609,7 +3609,7 @@ class Mesh3DM(Mesh):
                 self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(self.nElements_owned)})
+                                       "NumberOfElements":"%i" % (self.nElements_owned,)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
@@ -3630,20 +3630,20 @@ class Mesh3DM(Mesh):
                                                          "Dimensions":"%i" % (self.nElements_owned,)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+repr(ar.comm.rank())+name+repr(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+repr(ar.comm.rank())+name+repr(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+repr(ar.comm.rank())+"_t"+str(tCount)
+                        elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_async('elements'+repr(ar.comm.rank())+name+repr(tCount), data = self.elementNodesArray[:self.nElements_owned])
-                            ar.create_dataset_async('nodes'+repr(ar.comm.rank())+name+repr(tCount), data = self.nodeArray)
-                            ar.create_dataset_async("elementMaterialTypes"+"_p"+repr(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
+                            ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount), data = self.elementNodesArray[:self.nElements_owned])
+                            ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount), data = self.nodeArray)
+                            ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
                     else:
-                        elements.text = ar.hdfFilename+":/elements"+name+repr(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+repr(tCount)
+                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'elements'+name+repr(tCount),self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.createArray("/",'nodes'+name+repr(tCount),self.nodeArray)
+                            ar.hdfFile.createArray("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
+                            ar.hdfFile.createArray("/",'nodes'+name+str(tCount),self.nodeArray)
                             ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
@@ -4282,7 +4282,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
         columns = line.split()
         triangles = []
         triangleEdges=set()
-        logEvent("Reading "+repr(filename)+ \
+        logEvent("Reading "+str(filename)+ \
                 " and building node lists for triangles, and edges")
         #assume triangles are ordered by triangle number
         while (columns[0] == 'E3T'):
@@ -4305,11 +4305,11 @@ Number of nodes : %d\n""" % (self.nElements_global,
             self.nodeDict[newNode]=newNode
             line = meshIn.readline()
             columns = line.split()
-        print("Number of triangles :"+repr(len(triangles)))
-        print("Number of edges     :"+repr(len(triangleEdges)))
-        print("Number of nodes     :"+repr(len(self.nodeList)))
+        print("Number of triangles :"+str(len(triangles)))
+        print("Number of edges     :"+str(len(triangleEdges)))
+        print("Number of nodes     :"+str(len(self.nodeList)))
         print("Number of objects   :"+\
-              repr(len(triangleEdges)+len(triangles)+len(self.nodeList)))
+              str(len(triangleEdges)+len(triangles)+len(self.nodeList)))
         print("Building edge list")
         self.edgeList =[Edge(edgeNumber=eN,nodes=[self.nodeList[nN[0]],
                                                   self.nodeList[nN[1]]])
@@ -4810,9 +4810,9 @@ Number of nodes : %d\n""" % (self.nElements_global,
         hMax = 0.
         element_nodes = self.nodeArray[self.elementNodesArray[i]]
         for j, nN_L in enumerate(element_nodes):
-            print('nN_L = ' + repr(nN_L))
+            print('nN_L = ' + str(nN_L))
             for nN_R in element_nodes[j+1:]:
-                print('nN_R = ' + repr(nN_R))
+                print('nN_R = ' + str(nN_R))
                 hMax = max(hMax,self._calc_pt_distance(nN_L,nN_R))
         return hMax
 

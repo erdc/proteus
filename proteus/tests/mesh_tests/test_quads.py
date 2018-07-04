@@ -106,7 +106,7 @@ class Test2DStokesOnQuads(object):
                     "reference_triangle.poly",
                     "reference_simplex.poly",
                     "proteus.log",
-                    "poiseulleFlow.xmf",
+#                    "poiseulleFlow.xmf",
                     "poiseulleFlow.h5",
                     "poiseulleFlow0.h5"]
         TestTools.removeFiles(Filelist)

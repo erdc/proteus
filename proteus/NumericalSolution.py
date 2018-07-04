@@ -1247,8 +1247,6 @@ class NS_base(object):  # (HasTraits):
         logEvent("Setting initial conditions",level=0)
         for index,p,n,m,simOutput in zip(list(range(len(self.modelList))),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
-                import pdb
-                pdb.set_trace()
                 logEvent("Setting initial conditions from hot start file for "+p.name)
                 tCount = int(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Name'])
                 offset=0

@@ -9,6 +9,8 @@ import numpy.testing as npt
 from importlib import import_module
 from petsc4py import PETSc
 
+modulepath = os.path.dirname(os.path.abspath(__file__))
+
 class TestAddedMass2D(unittest.TestCase):
 
     def teardown_method(self, method):
@@ -43,16 +45,16 @@ class TestAddedMass2D(unittest.TestCase):
 
     def test_AddedMass_2D(self):
         from proteus import defaults
-        so = defaults.load_system('addedmass2D_so')
+        so = defaults.load_system('addedmass2D_so', modulepath)
         pList = []
         nList = []
         for (pModule,nModule) in so.pnList:
             log("Loading p module = "+pModule)
-            pList.append(proteus.defaults.load_physics(pModule))
+            pList.append(proteus.defaults.load_physics(pModule, modulepath))
             if pList[-1].name == None:
                 pList[-1].name = pModule
             log("Loading n module = "+nModule)
-            nList.append(proteus.defaults.load_numerics(nModule))
+            nList.append(proteus.defaults.load_numerics(nModule, modulepath))
         so.name = "addedmass2D"
         if so.sList == []:
             for i in range(len(so.pnList)):
