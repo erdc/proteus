@@ -90,18 +90,6 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                        double kappa_n,
                        double epsilon_n,
                        double nuT_n)
-        double eps_sed(double sedF,
-                       double rhoFluid,
-                       double rhoSolid,
-                       double* uFluid,
-                       double* uSolid,
-                       double* gradC,
-                       double nu,
-                       double theta_n,
-                       double kappa_n,
-                       double epsilon_n,
-                       double epsilon_np1,
-                       double nuT_n)
         double deps_sed_deps(double sedF,
                        double rhoFluid,
                        double rhoSolid,
@@ -436,32 +424,6 @@ cdef class HsuSedStress:
                 epsilon_n,
                 nuT_n)
 
-
-    def eps_sed(self,
-                  sedF,
-                  rhoFluid,
-                  rhoSolid,
-                  numpy.ndarray uFluid,
-                  numpy.ndarray uSolid,
-                  numpy.ndarray gradC,
-                  nu,
-                  theta_n,
-                  kappa_n,
-                  epsilon_n,
-                  epsilon_np1,
-                nuT_n):
-        return self.thisptr.eps_sed(sedF,
-                    rhoFluid,
-                    rhoSolid,
-                  < double *> uFluid.data,
-                  < double *>  uSolid.data,
-                  < double *>  gradC.data,
-                  nu,
-                  theta_n,
-                  kappa_n,
-                  epsilon_n,
-                epsilon_np1,
-                nuT_n)
 
     def deps_sed_deps(self,
                   sedF,

@@ -233,44 +233,9 @@ class TestHsu(unittest.TestCase):
 
         self.assertTrue(round(kappa_sed2,f) ==round( es2,f))
         
-    def testEpsSed(self):
-        gl=GlobalVariables()
-        import random
-        rhoFluid = 1000. + random.random()
-        f = 8
-        uf = np.array([5.,4.],"d")
-        us = np.array([1.,1.],"d") 
-        gradC=np.array([0.1,0.1])
-        rhoS = 2000
-        nu = 1e-4
-        nuT = 1e-2
-        sedF = 0.3
-# Setting 0 t_c
-        theta_n = random.random() + 1e-30
-        kappa_n = random.random() + 1e-30
-        epsilon_n = random.random() + 1e-30
-        epsilon_np1 = random.random() + 1e-30
-
-
-        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
-        t_p =rhoS/ beta
-        l_c = np.sqrt(np.pi)*gl.grain / (24.*sedF * gl.sedSt.gs0(sedF))
-        t_cl = min(l_c/np.sqrt(theta_n),0.165*kappa_n/epsilon_n)
-        aa = 1/( 1. + t_p/t_cl)
-
-       
-        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_n/((1-sedF)*rhoFluid)
-        UgradC = np.dot((uf - us),gradC)
-        es2  = beta * rhoFluid * nuT * UgradC / ((1-sedF)*rhoFluid)
-        eps_sed = gl.sedSt.eps_sed(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n, epsilon_np1,nuT)
-        valid = -gl.C3e*es1*epsilon_np1/kappa_n+gl.C4e*es2*epsilon_np1/kappa_n
-        if(valid!=0.):
-            eps_sed/=valid
-            valid/=valid
-        
-        self.assertTrue(round(eps_sed,f) ==round(valid ,f))
     def test_dEpsSed_dE(self):
         gl=GlobalVariables()
+        g = np.array([0.,9.81])
         import random
         rhoFluid = 1000. + random.random()
         f = 8
@@ -294,18 +259,14 @@ class TestHsu(unittest.TestCase):
         aa = 1/( 1. + t_p/t_cl)
 
        
-        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_n/((1-sedF)*rhoFluid)
+        es1 = 2.*beta *(1-aa)*sedF*kappa_n/((1-sedF)*rhoFluid)
 
-        UgradC = np.dot((uf - us),gradC)
+        UgradC = np.dot(g,gradC)
 
-        es2  = beta * rhoFluid * nuT * UgradC / ((1-sedF)*rhoFluid)
+        es2  =  nuT * UgradC*(rhoS/rhoFluid-1.) / ((1-sedF)*gl.sigmaC)
 
-        eps_sed = gl.sedSt.deps_sed_deps(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
-        valid = -gl.C3e*es1/kappa_n+gl.C4e*es2/kappa_n
-        if(valid!=0.):
-            eps_sed/=valid
-            valid/=valid
-
+        eps_sed = gl.sedSt.deps_sed_deps(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT,g)
+        valid = gl.C3e*es1/kappa_n+gl.C4e*es2/kappa_n
         self.assertTrue(round(eps_sed,f) ==round(valid,f))
 
     def testPsc(self):
