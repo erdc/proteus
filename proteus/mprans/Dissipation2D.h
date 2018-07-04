@@ -64,6 +64,18 @@ namespace proteus
                                    double c_e,
                                    double rho_0,
                                    double rho_1,
+  //                             Argumentlist for sediment
+                                   double sedFlag,
+                                   double* q_vos,
+                                   double *q_vos_gradc,
+                                   double* ebqe_q_vos,
+                                   double *ebqe_q_vos_gradc,
+                                   double rho_f,
+                                   double rho_s,
+                                   double* vs,
+                                   double* ebqe_vs,
+                                   double* g,
+                              //end sediment
                                    int dissipation_model_flag,
                                    //end diffusion
                                    double useMetrics,
@@ -158,6 +170,18 @@ namespace proteus
                                    double* q_kappa, //kinetic energy
                                    double* q_grad_kappa,
                                    double* q_porosity,//VRANS
+  //                             Argumentlist for sediment
+                                   double sedFlag,
+                                   double* q_vos,
+                                   double *q_vos_gradc,
+                                   double* ebqe_q_vos,
+                                   double *ebqe_q_vos_gradc,
+                                   double rho_f,
+                                   double rho_s,
+                                   double* vs,
+                                   double* ebqe_vs,
+                                   double* g,
+                              //end sediment
                                    //velocity dof
                                    double * velocity_dof_u,
                                    double * velocity_dof_v,
@@ -338,7 +362,7 @@ namespace proteus
 
     //Try Lew, Buscaglia approximation
     inline
-    void evaluateCoefficients(const double v[nSpace],
+    void evaluateCoefficients(double v[nSpace],
                               const double eps_mu,
                               const double phi,
                               const double nu_0,
@@ -355,6 +379,15 @@ namespace proteus
                               const double& dissipation_old,
                               const double& k,
                               const double& porosity,
+//                             Argumentlist for sediment
+                              int sedFlag,
+                              double q_vos,
+                              double q_vos_gradc[nSpace],
+                              double rho_f,
+                              double rho_s,
+                              double vs[nSpace],
+                              double g[nSpace],
+                              //end sediment
                               int dissipation_model_flag,
                               const double grad_k[nSpace],
                               const double grad_dissipation_old[nSpace],
@@ -368,6 +401,7 @@ namespace proteus
                               double& dr_de)
     {
       double nu_t=0.0,dnu_t_de=0.0,PiD4=0.0,disp=0.0,ddisp_de=0.0;
+      double Sed=0.,dSed=0.;
       double gamma_e=0.0,F_e=0.0, gamma_production=0.0,sigma_a=sigma_e,
         dgamma_e_d_dissipation=0.0, dF_e_d_dissipation=0.0;
       //either K-Epsilon or K-Omega
@@ -381,7 +415,7 @@ namespace proteus
           df[I] = v[I]*porosity;
         }
       const double H_mu = smoothedHeaviside(eps_mu,phi);
-      const double nu = (1.0-H_mu)*nu_0 + H_mu*nu_1;
+      double nu = (1.0-H_mu)*nu_0 + H_mu*nu_1;
       const double div_eps = 1.0e-2*fmin(nu_0,nu_1);
       //eddy viscosity
       nu_t     = isKEpsilon*c_mu*k*k/(fabs(dissipation_old)+div_eps)
@@ -401,7 +435,32 @@ namespace proteus
                   grad_vy[1]*grad_vy[1])
         +
         (grad_vx[1] + grad_vy[0])*(grad_vx[1] + grad_vy[0]);
+      //Sediment terms
+      double theta = 1e-10; //Granural temperature- currently set to (almost) zero.
+ 	                   //Response time only controled by drag, not collisions
+                           //Switch on when collision stress model is on.
 
+      if (sedFlag == 1 && isKEpsilon > 0)
+	{
+      double kp = k;
+	  dSed = closure.deps_sed_deps(
+		      q_vos, // Sediment fraction
+              rho_f,
+		      rho_s,
+		      v,
+		      vs,
+		      q_vos_gradc,
+		      nu, //Kinematic viscosity
+		      theta,
+		      kp,
+		      dissipation,
+		      nu_t,
+		      g);
+	}		    
+				    
+				    
+				    
+      
       //K-Omega, 1998
       if (dissipation_model_flag==2)
         {
@@ -452,10 +511,10 @@ namespace proteus
         }
       else
         {
-          //K-Epsilon
+          //K-Epsilon (with Sediment if RANS3PSed is on)
           gamma_e = fmax(c_2*dissipation_old/(k+div_eps),0.0);
           dgamma_e_d_dissipation = 0.0;
-          F_e = fmax(c_1*k*PiD4,0.0);
+          F_e = fmax(c_1*PiD4/k,0.0);
           dF_e_d_dissipation=0.0;
           sigma_a = sigma_e;
         }
@@ -463,8 +522,8 @@ namespace proteus
       a = porosity*(nu_t/sigma_a + nu);
       da_de = porosity*dnu_t_de/sigma_a;
 
-      r = -porosity*F_e + porosity*gamma_e*dissipation;
-      dr_de = -porosity*dF_e_d_dissipation + porosity*gamma_e + porosity*dgamma_e_d_dissipation;
+      r = -porosity*(F_e - gamma_e + dSed)*dissipation;
+      dr_de = -porosity*(F_e - gamma_e + dSed);
     }
 
     inline
@@ -718,7 +777,19 @@ namespace proteus
                            double c_e,
                            double rho_0,
                            double rho_1,
-                           int dissipation_model_flag,
+  //                             Argumentlist for sediment
+                                   double sedFlag,
+                                   double* q_vos,
+                                   double *q_vos_gradc,
+                                   double* ebqe_q_vos,
+                                   double *ebqe_q_vos_gradc,
+                                   double rho_f,
+                                   double rho_s,
+                                   double* vs,
+                                   double* ebqe_vs,
+                                   double* g,
+                              //end sediment
+                          int dissipation_model_flag,
                            //end diffusion
                            double useMetrics,
                            double alphaBDF,
@@ -896,6 +967,15 @@ namespace proteus
                                    u_old,
                                    q_kappa[eN_k],
                                    q_porosity[eN_k],
+//                             Argumentlist for sediment
+                                   sedFlag,
+                                   q_vos[eN_k],
+                                   &q_vos_gradc[eN_k_nSpace],
+                                   rho_f,
+                                   rho_s,
+                                   &vs[eN_k_nSpace],
+                                   &g[0],
+                              //end sediment
                                    dissipation_model_flag,
                                    &q_grad_kappa[eN_k_nSpace],
                                    grad_u_old,
@@ -1140,6 +1220,15 @@ namespace proteus
                                    u_old_ext,
                                    ebqe_kappa[ebNE_kb],
                                    ebqe_porosity[ebNE_kb],
+//                             Argumentlist for sediment
+                                   sedFlag,
+                                   ebqe_q_vos[ebNE_kb],
+                                   &ebqe_q_vos_gradc[ebNE_kb_nSpace],
+                                   rho_f,
+                                   rho_s,
+                                   &ebqe_vs[ebNE_kb_nSpace],
+                                   &g[0],
+                              //end sediment
                                    dissipation_model_flag,
                                    grad_kappa_ext_dummy,
                                    grad_u_old_ext,
@@ -1168,7 +1257,16 @@ namespace proteus
                                    bc_u_ext,
                                    ebqe_kappa[ebNE_kb],
                                    ebqe_porosity[ebNE_kb],
-                                   dissipation_model_flag,
+//                             Argumentlist for sediment
+                                   sedFlag,
+                                   ebqe_q_vos[ebNE_kb],
+                                   &ebqe_q_vos_gradc[ebNE_kb_nSpace],
+                                   rho_f,
+                                   rho_s,
+                                   &ebqe_vs[ebNE_kb_nSpace],
+                                   &g[0],
+                              //end sediment
+                                  dissipation_model_flag,
                                    grad_kappa_ext_dummy,
                                    grad_u_old_ext,
                                    bc_m_ext,
@@ -1289,7 +1387,18 @@ namespace proteus
                            double* q_kappa, //kinetic energy
                            double* q_grad_kappa,
                            double* q_porosity,//VRANS
-                           //velocity dof
+  //                             Argumentlist for sediment
+                                   double sedFlag,
+                                   double* q_vos,
+                                   double *q_vos_gradc,
+                                   double* ebqe_q_vos,
+                                   double *ebqe_q_vos_gradc,
+                                   double rho_f,
+                                   double rho_s,
+                                   double* vs,
+                                   double* ebqe_vs,
+                                   double* g,
+                              //end sediment
                            double * velocity_dof_u,
                            double * velocity_dof_v,
                            double * velocity_dof_w,
@@ -1439,6 +1548,15 @@ namespace proteus
                                    u_old,
                                    q_kappa[eN_k],
                                    q_porosity[eN_k],
+//                             Argumentlist for sediment
+                                   sedFlag,
+                                   q_vos[eN_k],
+                                   &q_vos_gradc[eN_k_nSpace],
+                                   rho_f,
+                                   rho_s,
+                                   &vs[eN_k_nSpace],
+                                   g,
+                              //end sediment
                                    dissipation_model_flag,
                                    &q_grad_kappa[eN_k_nSpace],
                                    grad_u_old,
@@ -1694,7 +1812,16 @@ namespace proteus
                                    u_old_ext,
                                    ebqe_kappa[ebNE_kb],
                                    ebqe_porosity[ebNE_kb],
-                                   dissipation_model_flag,
+//                             Argumentlist for sediment
+                                   sedFlag,
+                                   ebqe_q_vos[ebNE_kb],
+                                   &ebqe_q_vos_gradc[ebNE_kb_nSpace],
+                                   rho_f,
+                                   rho_s,
+                                   &ebqe_vs[ebNE_kb_nSpace],
+                                   &g[0],
+                              //end sediment
+                                  dissipation_model_flag,
                                    grad_kappa_ext_dummy,
                                    grad_u_old_ext,
                                    m_ext,
@@ -1722,6 +1849,15 @@ namespace proteus
                                    bc_u_ext,
                                    ebqe_kappa[ebNE_kb],
                                    ebqe_porosity[ebNE_kb],
+//                             Argumentlist for sediment
+                                   sedFlag,
+                                   ebqe_q_vos[ebNE_kb],
+                                   &ebqe_q_vos_gradc[ebNE_kb_nSpace],
+                                   rho_f,
+                                   rho_s,
+                                   &ebqe_vs[ebNE_kb_nSpace],
+                                   &g[0],
+                              //end sediment
                                    dissipation_model_flag,
                                    grad_kappa_ext_dummy,
                                    grad_u_old_ext,
