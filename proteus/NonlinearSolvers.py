@@ -685,175 +685,27 @@ class TwoStageNewton(Newton):
     """Solves a 2 Stage problem via Newton's solve"""
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         r""" Solves a 2 Stage problem via Newton's solve"""
-        import Viewers
-        memory()
-        r=self.solveInitialize(u,r,b)
-        if par_u is not None:
-            #allow linear solver to know what type of assembly to use
-            self.linearSolver.par_fullOverlap = self.par_fullOverlap
-            #no overlap
-            if not self.par_fullOverlap:
-                par_r.scatter_reverse_add()
-            else:
-                #no overlap or overlap (until we compute norms over only owned dof)
-                par_r.scatter_forward_insert()
 
-        self.norm_r0 = self.norm(r)
-        self.norm_r_hist = []
-        self.norm_du_hist = []
-        self.gammaK_max=0.0
-        self.linearSolverFailed = False
-        ###############
-        # FIRST STAGE #
-        ###############
+        #####################################
+        # ********** FIRST STAGE ********** #
+        #####################################
         logEvent(" FIRST STAGE",level=1)        
         hasStage = hasattr(self.F,'stage') and hasattr(self.F,'useTwoStageNewton') and self.F.useTwoStageNewton==True 
         if hasStage==False:            
             logEvent(" WARNING: TwoStageNewton will consider a single stage",level=1)
         else:
             self.F.stage = 1
-        while (not self.converged(r) and
-               not self.failed()):
-            logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-                     %(self.its-1, self.norm_r), level=1)
-            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
-                     % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
-            if self.updateJacobian or self.fullNewton:
-                self.updateJacobian = False
-                self.F.getJacobian(self.J)
-                self.linearSolver.prepare(b=r)
-            self.du[:]=0.0
-            if not self.directSolver:
-                if self.EWtol:
-                    self.setLinearSolverTolerance(r)
-            if not self.linearSolverFailed:
-                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                self.linearSolverFailed = self.linearSolver.failed()
-            u-=self.du
-            if par_u is not None:
-                par_u.scatter_forward_insert()
-            self.computeResidual(u,r,b)
-            if par_r is not None:
-                #no overlap
-                if not self.par_fullOverlap:
-                    par_r.scatter_reverse_add()
-                else:
-                    par_r.scatter_forward_insert()
-            if self.lineSearch:
-                norm_r_cur = self.norm(r)
-                ls_its = 0
-                if norm_r_cur > self.rtol_r*self.norm_r0 + self.atol_r:#make sure hasn't converged already
-                    while ( (norm_r_cur >= 0.9999 * self.norm_r) and
-                            (ls_its < self.maxLSits)):
-                        self.convergingIts = 0
-                        ls_its +=1
-                        self.du *= 0.5
-                        u += self.du
-                        if par_u is not None:
-                            par_u.scatter_forward_insert()
-                        self.computeResidual(u,r,b)
-                        #no overlap
-                        if par_r is not None:
-                            #no overlap
-                            if not self.par_fullOverlap:
-                                par_r.scatter_reverse_add()
-                            else:
-                                par_r.scatter_forward_insert()
-                        norm_r_cur = self.norm(r)
-                        logEvent("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
-                                                                               norm_r_cur,
-                                                                               self.atol_r,
-                                                                               self.rtol_r))
-                    if ls_its > 0:
-                        logEvent("Linesearches = %i" % ls_its,level=3)
-        else: # Newton solver has converged            
-            logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-                %(self.its-1, self.norm_r), level=1)
-            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-            logEvent(memory("Newton","Newton"),level=4)
-        # END OF FIRST STAGE #
-        ################
-        # SECOND STAGE #
-        ################
+        Newton.solve(self,u,r,b,par_u,par_r)
+        ######################################
+        # ********** SECOND STAGE ********** #
+        ######################################
         if hasStage==False:
             return self.failedFlag
         else:
             logEvent(" SECOND STAGE",level=1)
             self.F.stage = 2
-            r=self.solveInitialize(u,r,b)
-            self.norm_r0 = self.norm(r)
-            self.norm_r_hist = []
-            self.norm_du_hist = []
-            self.gammaK_max=0.0
-            self.linearSolverFailed = False        
-            while (not self.converged(r) and
-                   not self.failed()):
-                logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-                         %(self.its-1, self.norm_r), level=1)
-                logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
-                         % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
-                if self.updateJacobian or self.fullNewton:
-                    self.updateJacobian = False
-                    self.F.getJacobian(self.J)
-                    self.linearSolver.prepare(b=r)
-                self.du[:]=0.0
-                if not self.directSolver:
-                    if self.EWtol:
-                        self.setLinearSolverTolerance(r)
-                if not self.linearSolverFailed:
-                    self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                    self.linearSolverFailed = self.linearSolver.failed()
-                u-=self.du
-                if par_u is not None:
-                    par_u.scatter_forward_insert()
-                self.computeResidual(u,r,b)
-                if par_r is not None:
-                    #no overlap
-                    if not self.par_fullOverlap:
-                        par_r.scatter_reverse_add()
-                    else:
-                        par_r.scatter_forward_insert()
-                if self.lineSearch:
-                    norm_r_cur = self.norm(r)
-                    ls_its = 0
-                    if norm_r_cur > self.rtol_r*self.norm_r0 + self.atol_r:#make sure hasn't converged already
-                        while ( (norm_r_cur >= 0.9999 * self.norm_r) and
-                                (ls_its < self.maxLSits)):
-                            self.convergingIts = 0
-                            ls_its +=1
-                            self.du *= 0.5
-                            u += self.du
-                            if par_u is not None:
-                                par_u.scatter_forward_insert()
-                            self.computeResidual(u,r,b)
-                            #no overlap
-                            if par_r is not None:
-                                #no overlap
-                                if not self.par_fullOverlap:
-                                    par_r.scatter_reverse_add()
-                                else:
-                                    par_r.scatter_forward_insert()
-                            norm_r_cur = self.norm(r)
-                            logEvent("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
-                                                                                   norm_r_cur,
-                                                                                   self.atol_r,
-                                                                                   self.rtol_r))
-                        if ls_its > 0:
-                            logEvent("Linesearches = %i" % ls_its,level=3)
-            else: # Newton solver has converged            
-                logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-                         %(self.its-1, self.norm_r), level=1)
-                logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-                         % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-                logEvent(memory("Newton","Newton"),level=4)
-                return self.failedFlag
-        # END OF SECOND STAGE #
-        logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-            %(self.its-1, self.norm_r), level=1)
-        logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-        logEvent(memory("Newton","Newton"),level=4)
+            Newton.solve(self,u,r,b,par_u,par_r)
+            return self.failedFlag
         
 class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
     """
