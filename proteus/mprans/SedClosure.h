@@ -205,44 +205,6 @@ public:
 
     }
 
-       inline double eps_sed(
-		      double sedF, // Sediment fraction
-                     double rhoFluid,
-		     double rhoSolid,
-		      double uFluid[nSpace], //Fluid velocity
-		      double uSolid[nSpace], //Sediment velocity
-		      double gradC[nSpace], //Sediment velocity
-		      double nu, //Kinematic viscosity
-		      double theta_n,
-		      double kappa_n,
-		      double epsilon_n,
-		      double epsilon_np1,
-		     double nuT_n)
-			   
-    {		   
-      
-      double beta = betaCoeff(sedF,rhoFluid,uFluid,uSolid,nu)+small_;
-      double gs = gs0(sedF)+small_;
-      double l_c = sqrt(M_PI)*grain_/(24.*(sedF+small_)*gs);
-      double t_p = rhoSolid/beta;
-      double t_c = l_c/(sqrt(theta_n) + small_);
-      double t_l = 0.165*kappa_n/(epsilon_n + small_);
-      double t_cl = std::min(t_c,t_l);
-      double alpha= t_cl/(t_cl + t_p);
-      double term = beta/(rhoFluid*(1.-sedF));
-      double es_1 = 2.*term*rhoSolid*(1-alpha)*sedF*kappa_n;
-      double U_gradC = 0.;
-      for (int ii=0; ii<nSpace;  ii++)
-	{
-	  U_gradC+= (uFluid[ii] - uSolid[ii])*gradC[ii];
-	}
-
-
-      double es_2 = term *rhoFluid*nuT_n*U_gradC ;
-      
-      return -C3e_ * es_1 * epsilon_np1/kappa_n +C4e_ * es_2 * epsilon_np1/kappa_n;
-
-      }
     inline double deps_sed_deps(
 		      double sedF, // Sediment fraction
               double rhoFluid,
@@ -268,7 +230,7 @@ public:
       double t_cl = std::min(t_c,t_l);
       double alpha= t_cl/(t_cl + t_p);
       double term = beta/(rhoFluid*(1.-sedF));
-      double es_1 = 2.*term*rhoSolid*(1-alpha)*sedF*kappa_n;
+      double es_1 = 2.*term*(1-alpha)*sedF*kappa_n;
       double g_gradC = 0.;
       for (int ii=0; ii<nSpace;  ii++)
 	{
@@ -276,7 +238,7 @@ public:
 	}
 
       double ss = rhoSolid/rhoFluid - 1.;
-      double es_2 = term *rhoFluid*nuT_n*ss*g_gradC/sigmaC_ ;
+      double es_2 = nuT_n*ss*g_gradC/sigmaC_/(1.-sedF) ;
       
       return C3e_ * es_1 / kappa_n +C4e_ * es_2 / kappa_n;
 
