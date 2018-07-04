@@ -112,7 +112,8 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                        double theta_n,
                        double kappa_n,
                        double epsilon_n,
-                       double nuT_n)
+                       double nuT_n,
+		       double* g)
 
         double psc(
 		      double sedF,
@@ -473,7 +474,8 @@ cdef class HsuSedStress:
                   theta_n,
                   kappa_n,
                   epsilon_n,
-                nuT_n):
+                  nuT_n,
+		          numpy.ndarray g):
         return self.thisptr.deps_sed_deps(sedF,
                     rhoFluid,
                     rhoSolid,
@@ -484,7 +486,8 @@ cdef class HsuSedStress:
                   theta_n,
                   kappa_n,
                 epsilon_n,
-                nuT_n)
+                nuT_n,
+		        < double *>  g.data)
 
     def psc(self,
             sedF,
