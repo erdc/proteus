@@ -2002,6 +2002,7 @@ public:
 					const double& q,
 					const double& dV)
   {
+    if (viscosity==0.){ return 0.;}
     return (1./viscosity)*(p-p_avg)*(q-1./3.)*dV;
   }
 

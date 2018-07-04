@@ -5,6 +5,7 @@
 #include <maShape.h>
 #include <apfMDS.h>
 #include <PCU.h>
+#include <apf.h>
 
 #include <iostream>
 #include <fstream>
@@ -29,7 +30,7 @@
  @{ 
 */
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
-    const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount,int reconstructedFlag,double maxAspectRatio)
+    const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount,int reconstructedFlag,double maxAspectRatio, double gradingFact)
 /**
  * MeshAdaptPUMIDrvr is the highest level class that handles the interface between Proteus and the PUMI libraries
  * See MeshAdaptPUMI.h for the list of class variables/functions/objects
@@ -58,6 +59,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   size_scale = 0;
   size_frame = 0;
   err_reg = 0;
+  vmsErrH1 = 0;
   errRho_reg = 0;
   errRel_reg = 0;
   gmi_register_mesh();
@@ -80,6 +82,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   isReconstructed = reconstructedFlag;
   initialReconstructed = 0;
   maxAspect = maxAspectRatio;
+  gradingFactor = gradingFact;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -87,8 +90,8 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
  * Destructor for MeshAdaptPUMIDrvr
  */
 {
-
   freeField(err_reg);
+  freeField(vmsErrH1);
   freeField(errRho_reg);
   freeField(errRel_reg);
   freeField(size_iso);
@@ -343,7 +346,11 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       myfile << t2-t1<<std::endl;
       myfile.close();
     }
-  }  
+  } 
+  else if(size_field_config == "VMS"){
+    assert(vmsErrH1);
+    getERMSizeField(total_error);
+  }
   else if (size_field_config == "meshQuality"){
     size_iso = samSz::isoSize(m);
   }
@@ -358,6 +365,11 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   }
   else if (size_field_config == "test"){
     testIsotropicSizeField();
+  }
+  else if(size_field_config == "uniform"){
+      //special situation where I only care about err_reg
+      freeField(errRho_reg); 
+      freeField(errRel_reg); 
   }
   else {
     std::cerr << "unknown size field config " << size_field_config << '\n';
@@ -399,6 +411,10 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       freeField(errRho_reg); 
       freeField(errRel_reg); 
   }
+  if(size_field_config=="VMS"){
+    freeField(vmsErrH1);
+    if(PCU_Comm_Self()==0) std::cout<<"cleared VMS field\n";
+  }
 
   // These are relics from an attempt to pass BCs from proteus into the error estimator.
   // They maybe useful in the future.
@@ -413,20 +429,27 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   apf::Field* adaptFrame;
 
   /// Adapt the mesh
-  assert(size_iso || (size_scale && size_frame));
+
   ma::Input* in;
-  if(adapt_type_config=="anisotropic" || size_field_config== "interface"){
-    //in = ma::configure(m, size_scale, size_frame);
-    adaptSize  = apf::createFieldOn(m, "adapt_size", apf::VECTOR);
-    adaptFrame = apf::createFieldOn(m, "adapt_frame", apf::MATRIX);
-    apf::copyData(adaptSize, size_scale);
-    apf::copyData(adaptFrame, size_frame);
-    in = ma::configure(m, adaptSize, adaptFrame);
+  if(size_field_config == "uniform"){
+    in = ma::configureUniformRefine(m);
+    in->shouldFixShape=false;
   }
   else{
-    adaptSize  = apf::createFieldOn(m, "adapt_size", apf::SCALAR);
-    apf::copyData(adaptSize, size_iso);
-    in = ma::configure(m, adaptSize);
+    assert(size_iso || (size_scale && size_frame));
+    if(adapt_type_config=="anisotropic" || size_field_config== "interface"){
+     //in = ma::configure(m, size_scale, size_frame);
+      adaptSize  = apf::createFieldOn(m, "adapt_size", apf::VECTOR);
+      adaptFrame = apf::createFieldOn(m, "adapt_frame", apf::MATRIX);
+      apf::copyData(adaptSize, size_scale);
+      apf::copyData(adaptFrame, size_frame);
+      in = ma::configure(m, adaptSize, adaptFrame);
+    }
+    else{
+      adaptSize  = apf::createFieldOn(m, "adapt_size", apf::SCALAR);
+      apf::copyData(adaptSize, size_iso);
+      in = ma::configure(m, adaptSize);
+    }
   }
   ma::validateInput(in);
   in->shouldRunPreZoltan = true;
@@ -435,9 +458,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
   in->shouldSnap = false;
-  in->shouldFixShape = true;
-  in->shouldForceAdaptation = false;
   in->goodQuality = 0.008;
+
   double mass_before = getTotalMass();
   
   double t1 = PCU_Time();
@@ -538,3 +560,10 @@ double MeshAdaptPUMIDrvr::getTotalMass()
   return mass;
 }
 /** @} */
+
+//Save mesh with solution
+
+void MeshAdaptPUMIDrvr::writeMesh(const char* meshFile){
+  m->writeNative(meshFile);
+  apf::writeVtkFiles(meshFile,m);
+}

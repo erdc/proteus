@@ -5,7 +5,9 @@ language: python
 
 env:
   - TEST_PROFILE="proteus"
-  - TEST_PROFILE="air-water-vv"
+  - TEST_PROFILE="1st_set"
+  - TEST_PROFILE="2nd_set"  
+    #- TEST_PROFILE="air-water-vv"
 
 python:
 - 2.7
@@ -67,7 +69,13 @@ cache:
 
 script:
   - if [[ "${TEST_PROFILE}" == "proteus" ]]; then py.test --forked -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus; fi
-  - if [[ "${TEST_PROFILE}" == "air-water-vv" ]]; then py.test --forked -v air-water-vv/Tests; fi
+  
+  - if [[ "${TEST_PROFILE}" == "1st_set" ]]; then py.test --forked -v air-water-vv/Tests/1st_set/; fi
+  
+  - if [[ "${TEST_PROFILE}" == "2nd_set" ]]; then py.test --forked -v air-water-vv/Tests/2nd_set/; fi
+  
+
+  #- if [[ "${TEST_PROFILE}" == "air-water-vv" ]]; then py.test --forked -v air-water-vv/Tests; fi
 
 notifications:
   email:
