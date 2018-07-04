@@ -1470,7 +1470,8 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         self.kspAp_rho.solve(tmp2, tmp1)
         y.axpy(1.,tmp1)
         y.setValues(self.known_dof_is.getIndices(),zero_array)
-        
+        y.assemblyEnd()
+
         assert numpy.isnan(y.norm())==False, "Applying the schur complement \
         resulted in not-a-number."
 
