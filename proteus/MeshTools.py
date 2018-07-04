@@ -4582,6 +4582,7 @@ class QuadrilateralMesh(Mesh):
                 e3 = Edge(nodes=[n3,n0])
                 self.newQuadrilateral([e0,e1,e2,e3])
         self.finalize()
+        self.buildNodeDiameterArray()
 
 
     def generateFromQuadFileIFISS(self,meshfile):
@@ -4608,7 +4609,6 @@ class QuadrilateralMesh(Mesh):
             n0,n1 = self.elementBoundaryNodesArray[ebN]
             self.elementBoundaryMaterialTypes[ebN]=max(self.nodeMaterialTypes[n0],
                                                        self.nodeMaterialTypes[n1])
-
 
     def meshType(self):
         return 'cuboid'
@@ -4751,6 +4751,86 @@ Number of nodes : %d\n""" % (self.nElements_global,
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0,EB=False):
         Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Quadrilateral",tCount,EB=EB)
 
+    def buildNodeDiameterArray(self):
+        nNodes = len(self.nodeArray)
+        self.nodeDiametersArray = np.zeros(nNodes)
+        self.nodeSupportArray = np.zeros(nNodes)
+        self.volume = 0.
+
+        for eN in range(self.nElements_global):
+            area = self._calc_quad_area(eN)
+            self.volume += area
+            hMax = self.elementDiametersArray[eN]
+
+            for nN in range(self.nNodes_element):
+                nodeDiameter = hMax*area
+                idx = self.elementNodesArray[eN][nN]
+                self.nodeDiametersArray[idx]+=nodeDiameter
+                self.nodeSupportArray[idx]+=area
+
+        for nN in range(nNodes):
+            self.nodeDiametersArray[nN] /= self.nodeSupportArray[nN]
+
+    @staticmethod
+    def _calc_pt_distance(pt1,pt2):
+        """ Calculate the distance between two points.
+
+        Arguments
+        ---------
+        pt1: lst
+            Coordinates of the first point
+        pt2: lst
+            Coordinates of the second point
+
+        Returns
+        -------
+        distance : float
+        """
+        d = 0.
+        for i,j in zip(pt1,pt2):
+            d += (i-j)**2
+        return math.sqrt(d)
+
+    def _calc_hmax(self,i):
+        """ Find the largest edge length of an element.
+
+        Arguments
+        ---------
+        i : int
+            Element number
+
+        Returns
+        -------
+        hmax : float
+            The largest edge length of element i
+        """
+        hMax = 0.
+        element_nodes = self.nodeArray[self.elementNodesArray[i]]
+        for j, nN_L in enumerate(element_nodes):
+            print 'nN_L = ' + `nN_L`
+            for nN_R in element_nodes[j+1:]:
+                print 'nN_R = ' + `nN_R`
+                hMax = max(hMax,self._calc_pt_distance(nN_L,nN_R))
+        return hMax
+
+    def _calc_quad_area(self,i):
+        """ Calculates the area of a quadrilateral.
+
+        Arguments
+        ---------
+        i : int
+            The quadrilateral whose volume is being calculated.
+
+        Returns
+        -------
+        A : float
+            The quadrilateral's area
+        """
+        n = [n0,n1,n2,n3] = self.nodeArray[self.elementNodesArray[0]]
+        d = [self._calc_pt_distance(n0,n[1]),
+             self._calc_pt_distance(n0,n[-1])]
+        A = d[0]*d[1]
+        return A
 
 class MultilevelTriangularMesh(MultilevelMesh):
     """A hierarchical  multilevel mesh of triangular cells"""
