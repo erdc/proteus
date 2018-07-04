@@ -100,7 +100,7 @@ PROTEUS_LAPACK_INCLUDE_DIR, PROTEUS_LAPACK_LIB_DIR = get_flags('lapack')
 if platform_lapack_h:
     PROTEUS_LAPACK_H = platform_lapack_h
 else:
-    PROTEUS_LAPACK_H   = r'"clapack.h"'
+    PROTEUS_LAPACK_H   = r'"proteus_lapack.h"'
 
 if sys.platform == 'darwin':
     PROTEUS_LAPACK_LIB ='m'
