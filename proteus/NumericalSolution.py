@@ -945,27 +945,122 @@ class NS_base:  # (HasTraits):
 
         ##This section is to correct any differences in the quadrature point field from the old model 
 
-        self.modelList[4].levelModelList[0].coefficients.postAdaptStep()
+        #self.modelList[4].levelModelList[0].coefficients.postAdaptStep()
 
         #Shock capturing lagging needs to be matched
 
         import copy
-        self.modelList[1].levelModelList[0].u_store = copy.deepcopy(self.modelList[1].levelModelList[0].u)
-        self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u[0].dof_last
-        self.modelList[1].levelModelList[0].calculateElementResidual()
-        self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
+        #This sections gets beta bdf right
+        #self.modelList[1].levelModelList[0].u_store = copy.deepcopy(self.modelList[1].levelModelList[0].u)
+        #self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u[0].dof_last
+        #self.modelList[1].levelModelList[0].calculateElementResidual()
+        #self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
 
-        self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u_store[0].dof
-        self.modelList[1].levelModelList[0].u[0].dof_last[:] = self.modelList[1].levelModelList[0].u_store[0].dof_last
+        #this section gets numDiff right
+        #self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u_store[0].dof
+        #self.modelList[1].levelModelList[0].u[0].dof_last[:] = self.modelList[1].levelModelList[0].u_store[0].dof_last
 
-        self.modelList[1].levelModelList[0].calculateElementResidual()
-        self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
+        #self.modelList[1].levelModelList[0].calculateElementResidual()
+        #self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
 
-        if(modelListOld[1].levelModelList[0].shockCapturing.nSteps > modelListOld[1].levelModelList[0].shockCapturing.nStepsToDelay):
-            self.modelList[1].levelModelList[0].shockCapturing.nSteps=self.modelList[1].levelModelList[0].shockCapturing.nStepsToDelay
-            self.modelList[1].levelModelList[0].shockCapturing.updateShockCapturingHistory() 
+        #if(modelListOld[1].levelModelList[0].shockCapturing.nStepsToDelay is not None and modelListOld[1].levelModelList[0].shockCapturing.nSteps > modelListOld[1].levelModelList[0].shockCapturing.nStepsToDelay):
+        #    self.modelList[1].levelModelList[0].shockCapturing.nSteps=self.modelList[1].levelModelList[0].shockCapturing.nStepsToDelay
+        #    self.modelList[1].levelModelList[0].shockCapturing.updateShockCapturingHistory() 
 
 
+        #VBDF integration
+        #import pdb; pdb.set_trace()
+        #self.modelList[0].levelModelList[0].timeIntegration.nUpdatesTimeHistoryCalled = modelListOld[0].levelModelList[0].timeIntegration.nUpdatesTimeHistoryCalled
+        #self.modelList[0].levelModelList[0].timeIntegration.timeOrder = modelListOld[0].levelModelList[0].timeIntegration.timeOrder
+        #self.modelList[0].levelModelList[0].timeIntegration.dt_history[0] = modelListOld[0].levelModelList[0].timeIntegration.dt_history[0]
+
+        
+
+        #These are mesh dependent
+
+        #import objgraph
+        #objgraph.show_refs(modelListOld[0].levelModelList[0].timeIntegration.m_tmp,max_depth=3,too_many=10,filename="m_history.png")
+        #objgraph.show_backrefs(modelListOld[0].levelModelList[0].timeIntegration.m_tmp,max_depth=3,too_many=10,filename="m_history_back.png")
+        #import pdb; pdb.set_trace()
+
+        self.modelList[0].levelModelList[0].u_store = copy.deepcopy(self.modelList[0].levelModelList[0].u)
+        self.modelList[0].levelModelList[0].u[0].dof[:] = self.modelList[0].levelModelList[0].u[0].dof_last
+        self.modelList[0].levelModelList[0].u[1].dof[:] = self.modelList[0].levelModelList[0].u[1].dof_last
+        self.modelList[0].levelModelList[0].u[2].dof[:] = self.modelList[0].levelModelList[0].u[2].dof_last
+
+        self.modelList[0].levelModelList[0].setFreeDOF(self.modelList[0].uList[0])
+        self.modelList[0].levelModelList[0].getResidual(self.modelList[0].uList[0],self.modelList[0].rList[0])
+
+        #self.modelList[0].levelModelList[0].q[('m_last',1)][:] = self.modelList[0].levelModelList[0].q[('m_tmp',1)]
+        #self.modelList[0].levelModelList[0].q[('m_last',2)][:] = self.modelList[0].levelModelList[0].q[('m_tmp',2)]
+        #self.modelList[0].levelModelList[0].timeIntegration.updateTimeHistory()
+
+        testTime = self.modelList[0].levelModelList[0].timeIntegration
+        testTime.nUpdatesTimeHistoryCalled  += 1
+        for n in range(testTime.max_order-1):
+            for ci in testTime.massComponents:
+                testTime.m_history[n+1][ci].flat[:] =testTime.m_history[n][ci].flat
+                testTime.mt_history[n+1][ci].flat[:]=testTime.mt_history[n][ci].flat
+            #
+            testTime.dt_history[n+1]   = testTime.dt_history[n]
+        #
+        testTime.dt_history[0] = testTime.dt
+        for ci in testTime.massComponents:
+            testTime.m_history[0][ci].flat[:] = testTime.m_tmp[ci].flat
+            testTime.mt_history[0][ci].flat[:]= testTime.mt_tmp[ci].flat
+
+        testTime.needToCalculateBDFCoefs = True
+        #decide where this goes
+        testTime.chooseOrder()
+
+
+        #import pdb; pdb.set_trace()
+        self.modelList[0].levelModelList[0].u[0].dof[:] = self.modelList[0].levelModelList[0].u_store[0].dof
+        self.modelList[0].levelModelList[0].u[1].dof[:] = self.modelList[0].levelModelList[0].u_store[1].dof
+        self.modelList[0].levelModelList[0].u[2].dof[:] = self.modelList[0].levelModelList[0].u_store[2].dof
+        self.modelList[0].levelModelList[0].u[0].dof_last[:] = self.modelList[0].levelModelList[0].u_store[0].dof_last
+        self.modelList[0].levelModelList[0].u[1].dof_last[:] = self.modelList[0].levelModelList[0].u_store[1].dof_last
+        self.modelList[0].levelModelList[0].u[2].dof_last[:] = self.modelList[0].levelModelList[0].u_store[2].dof_last
+
+        self.modelList[0].levelModelList[0].setFreeDOF(self.modelList[0].uList[0])
+        self.modelList[0].levelModelList[0].getResidual(self.modelList[0].uList[0],self.modelList[0].rList[0])
+
+
+        #self.modelList[0].levelModelList[0].q[('m_last',1)][:] = self.modelList[0].levelModelList[0].q[('m_tmp',1)]
+        #self.modelList[0].levelModelList[0].q[('m_last',2)][:] = self.modelList[0].levelModelList[0].q[('m_tmp',2)]
+
+
+        #import pdb; pdb.set_trace()
+        #self.modelList[0].levelModelList[0].timeIntegration.updateTimeHistory()
+
+        testTime = self.modelList[0].levelModelList[0].timeIntegration
+        testTime.nUpdatesTimeHistoryCalled  += 1
+        for n in range(testTime.max_order-1):
+            for ci in testTime.massComponents:
+                testTime.m_history[n+1][ci].flat[:] =testTime.m_history[n][ci].flat
+                testTime.mt_history[n+1][ci].flat[:]=testTime.mt_history[n][ci].flat
+            #
+            testTime.dt_history[n+1]   = testTime.dt_history[n]
+        #
+        testTime.dt_history[0] = testTime.dt
+        for ci in testTime.massComponents:
+            testTime.m_history[0][ci].flat[:] = testTime.m_tmp[ci].flat
+            testTime.mt_history[0][ci].flat[:]= testTime.mt_tmp[ci].flat
+
+        testTime.needToCalculateBDFCoefs = True
+        #decide where this goes
+        testTime.chooseOrder()
+
+        #possibly needed for adaptive stepping
+        self.modelList[0].levelModelList[0].timeIntegration.dt_history[:] = modelListOld[0].levelModelList[0].timeIntegration.dt_history[:]
+
+
+        #self.modelList[0].levelModelList[0].timeIntegration.m_history[0][1][:] = modelListOld[0].levelModelList[0].timeIntegration.m_history[0][1]
+        #self.modelList[0].levelModelList[0].timeIntegration.m_history[0][2][:] = modelListOld[0].levelModelList[0].timeIntegration.m_history[0][2]
+        #self.modelList[0].levelModelList[0].timeIntegration.m_history[1][1][:] = modelListOld[0].levelModelList[0].timeIntegration.m_history[1][1]
+        #self.modelList[0].levelModelList[0].timeIntegration.m_history[1][2][:] = modelListOld[0].levelModelList[0].timeIntegration.m_history[1][2]
+
+        #self.modelList[0].levelModelList[0].timeIntegration.m_history[1][0][:] = modelListOld[0].levelModelList[0].timeIntegration.m_history[1][1]
 
         if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
             #hack for archiving initial solution on adapted mesh
