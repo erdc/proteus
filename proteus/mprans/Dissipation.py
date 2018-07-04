@@ -163,8 +163,9 @@ Chaper 11 or k-omega (Wilcox 1998).
                  useMetrics=0.0,
                  sc_uref=1.0,
                  sc_beta=1.0,
-                 default_kappa=1.0e-3
-                 closure = None):
+                 default_kappa=1.0e-3,
+                 closure=None):
+
         self.useMetrics = useMetrics
         self.dissipation_model_flag = dissipation_model_flag  # default K-Epsilon, 2 ==> K-Omega 1998, 3 --> K-Omega 1988
         self.variableNames = ['epsilon']
@@ -182,8 +183,25 @@ Chaper 11 or k-omega (Wilcox 1998).
         self.c_2 = c_2
         self.c_e = c_e
         self.sigma_e = sigma_e
-
         self.g = g
+
+        self.aDarcy=closure.aDarcy
+        self.betaForch=closure.betaForch
+        self.grain=closure.grain
+        self.packFraction=closure.packFraction
+        self.packMargin=closure.packMargin
+        self.maxFraction=closure.maxFraction
+        self.frFraction=closure.frFraction
+        self.sigmaC=closure.sigmaC
+        self.C3e=closure.C3e
+        self.C4e=closure.C4e
+        self.eR=closure.eR
+        self.fContact=closure.fContact
+        self.mContact=closure.mContact
+        self.nContact=closure.nContact
+        self.angFriction=closure.angFriction
+        self.vos_limiter = closure.vos_limiter
+        self.mu_fr_limiter = closure.mu_fr_limiter
         #
         mass = {0: {0: 'linear'}}
         advection = {0: {0: 'linear'}}
@@ -234,6 +252,9 @@ Chaper 11 or k-omega (Wilcox 1998).
         # VOS model
         if self.VOS_model is not None:
             self.vosModel = model[self.VOS_modelIndex ]
+            self.q_vos = modelList[self.VOS_modelIndex].q[('u', 0)]
+            self.grad_vos = modelList[self.VOS_modelIndex].q[('grad(u)', 0)]
+            self.vosCoeff
         # redistanced level set
         if self.RD_modelIndex is not None:
             self.rdModel = modelList[self.RD_modelIndex]
@@ -830,7 +851,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                    self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                                                    self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                                    self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                   compKernelFlag)
+                                                   compKernelFlag,
+                                                   self.coefficients.aDarcy,
+                                                    self.coefficients.betaForch,
+                                                    self.coefficients.grain,
+                                                    self.coefficients.packFraction,
+                                                    self.coefficients.packMargin,
+                                                    self.coefficients.maxFraction,
+                                                    self.coefficients.frFraction,
+                                                    self.coefficients.sigmaC,
+                                                    self.coefficients.C3e,
+                                                    self.coefficients.C4e,
+                                                    self.coefficients.eR,
+                                                    self.coefficients.fContact,
+                                                    self.coefficients.mContact,
+                                                    self.coefficients.nContact,
+                                                    self.coefficients.angFriction,
+                                                    self.coefficients.vos_limiter,
+                                                    self.coefficients.mu_fr_limiter)
+
         else:
             self.dissipation = cDissipation_base(self.nSpace_global,
                                                  self.nQuadraturePoints_element,
@@ -952,6 +991,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.velocity_dof_u,
             self.coefficients.velocity_dof_v,
             self.coefficients.velocity_dof_w,
+            #vos for solid fraction
+            self.coefficients.vos,
+            self.coefficients.closureCoeffs,
             # end velocity dof
             self.timeIntegration.m_tmp[0],
             self.q[('u', 0)],
