@@ -31,7 +31,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
     fixedMaterialTypes: int[:]
         array of length of all domain material types, with indexes corresponding
         to the material type set as: 0 -> not fixed, 1 -> fixed.
-        e.g. is nodes of material type 3 should be fixed: fixedNodes[3]=1.
+        e.g. is nodes of material type 3 should be fixed: fixedMaterialTypes[3]=1.
         (!) must be integers
     nSmoothIn: int
         number of smoothing steps while pseudo time stepping (during each step)
@@ -118,6 +118,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         for node in range(len(self.mesh.nodeMaterialTypes)):
             if self.fixedMaterialTypes[self.mesh.nodeMaterialTypes[node]] == 1:
                 self.mesh.fixedNodesBoolArray[node] = 1
+        uni, count = np.unique(self.mesh.elementBoundaryElementsArray.flat, return_counts=True)
+        print('count', count)
 
     def attachModels(self,modelList):
         self.model = modelList[self.ME_MODEL]
@@ -157,15 +159,32 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
     def postStep(self, t,firstStep=False):
         # gradient recovery
         logEvent("Gradient recovery at mesh nodes", level=3)
-        # self.grads[:] = cmm.gradientRecoveryAtNodes(grads=self.model.q[('grad(u)', 0)],
-        #                                             nodeElementsArray=self.mesh.nodeElementsArray,
-        #                                             nodeElementOffsets=self.mesh.nodeElementOffsets,
-        #                                             nd=self.nd)
-        self.grads[:] = cmm.gradientRecoveryAtNodesWeighted(grads=self.model.q[('grad(u)', 0)],
-                                                            nodeElementsArray=self.mesh.nodeElementsArray,
-                                                            nodeElementOffsets=self.mesh.nodeElementOffsets,
-                                                            detJ_array=self.model.q[('abs(det(J))')],
-                                                            nd=self.nd)
+        self.grads[:] = cmm.gradientRecoveryAtNodes(grads=self.model.q[('grad(u)', 0)],
+                                                    nodeElementsArray=self.mesh.nodeElementsArray,
+                                                    nodeElementOffsets=self.mesh.nodeElementOffsets,
+                                                    nd=self.nd)
+        # self.grads[:] = cmm.gradientRecoveryAtNodesWeighted(grads=self.model.q[('grad(u)', 0)],
+        #                                                     nodeElementsArray=self.mesh.nodeElementsArray,
+        #                                                     nodeElementOffsets=self.mesh.nodeElementOffsets,
+        #                                                     detJ_array=self.model.q[('abs(det(J))')],
+        #                                                     nd=self.nd)
+        # from proteus import Comm
+        # comm = Comm.get().comm.tompi4py()
+        # rank = comm.rank
+        # if rank == 0:
+        #     node = 2876
+        #     for eOffset in range(self.mesh.nodeElementOffsets[node],
+        #                         self.mesh.nodeElementOffsets[node+1]):
+        #         eN = self.mesh.nodeElementsArray[eOffset]
+        #         print('rank', rank, 'node', node, self.mesh.nodeArray[node], 'grads node', self.grads[node], 'eN', eN, self.mesh.elementBarycentersArray[eN], 'grads_eN', self.model.q[('grad(u)', 0)][eN])
+        # comm.barrier()
+        # if rank == 1:
+        #     node = 3733
+        #     for eOffset in range(self.mesh.nodeElementOffsets[node],
+        #                         self.mesh.nodeElementOffsets[node+1]):
+        #         eN = self.mesh.nodeElementsArray[eOffset]
+        #         print('rank', rank, 'node', node, self.mesh.nodeArray[node], 'grads node', self.grads[node], 'eN', eN, self.mesh.elementBarycentersArray[eN], 'grads_eN', self.model.q[('grad(u)', 0)][eN])
+        # comm.barrier()
         self.model.grads = self.grads
         # area recovery
         logEvent("Area recovery at mesh nodes", level=3)
@@ -182,6 +201,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.gamma = f_over_g_max/f_over_g_min
         self.gamma0 = 10.  # user defined parameter
         self.na = np.log(self.gamma)/np.log(self.gamma0)
+        nNodes_owned = self.mesh.nNodes_owned
         if self.dt_last is not None:
             # pseudo-time step
             self.PHI[:] = self.mesh.nodeArray
@@ -193,9 +213,9 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             # dt = self.model.timeIntegration.dt
             dt = self.dt_last
             # move nodes
-            self.model.mesh.nodeVelocityArray[:] += (self.PHI-self.model.mesh.nodeArray)/dt
+            self.model.mesh.nodeVelocityArray[:] = (self.PHI[:]-self.model.mesh.nodeArray[:])/dt
             #self.model.mesh.nodeVelocityArray[:] = np.zeros(self.model.mesh.nodeArray.shape)
-            self.model.mesh.nodeArray[:] = self.PHI
+            self.model.mesh.nodeArray[:] = self.PHI[:]
             # re-initialise nearest nodes
             self.nearest_nodes[:] = self.nearest_nodes0[:]
             # re-initialise containing element

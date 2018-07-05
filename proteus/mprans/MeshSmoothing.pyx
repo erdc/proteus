@@ -314,7 +314,7 @@ def getLocalNearestElementIntersection(double[:] coords,
                                        double[:,:,:] elementBoundaryNormalsArray,
                                        int[:,:] elementBoundariesArray,
                                        double[:,:] elementBoundaryBarycentersArray,
-                                       int[:,:] elementNeighborsArray,
+                                       int[:,:] elementBoundaryElementsArray,
                                        double[:,:] elementBarycentersArray,
                                        int[:] exteriorElementBoundariesBoolArray,
                                        int eN):
@@ -322,7 +322,7 @@ def getLocalNearestElementIntersection(double[:] coords,
                                            elementBoundaryNormalsArray,
                                            elementBoundariesArray,
                                            elementBoundaryBarycentersArray,
-                                           elementNeighborsArray,
+                                           elementBoundaryElementsArray,
                                            elementBarycentersArray,
                                            exteriorElementBoundariesBoolArray,
                                            eN)
@@ -963,7 +963,7 @@ cdef int pyxGetLocalNearestElementIntersection(double[:] coords,
                                                double[:,:,:] elementBoundaryNormalsArray,
                                                int[:,:] elementBoundariesArray,
                                                double[:,:] elementBoundaryBarycentersArray,
-                                               int[:,:] elementNeighborsArray,
+                                               int[:,:] elementBoundaryElementsArray,
                                                double[:,:] elementBarycentersArray,
                                                int[:] exteriorElementBoundariesBoolArray,
                                                int eN,
@@ -996,6 +996,7 @@ cdef int pyxGetLocalNearestElementIntersection(double[:] coords,
     cdef double dot  # dot product result
     cdef double dot2  # dot product 2 result
     cdef int it = 0
+    from proteus import Comm
     while found_eN is False and it < maxit:
         nearest_eN0 = nearest_eN
         alpha_min = 1e12
@@ -1012,7 +1013,10 @@ cdef int pyxGetLocalNearestElementIntersection(double[:] coords,
                         alpha = dot2/dot
                         if 0. < alpha < alpha_min:
                             alpha_min = alpha
-                            nearest_eN = elementNeighborsArray[nearest_eN0, j]
+                            for eN in elementBoundaryElementsArray[b_i]:
+                                if eN != nearest_eN0:
+                                    nearest_eN = eN
+                            # nearest_eN = elementBoundaryElementsArray[nearest_eN0]
                             b_i_last = b_i
         if nearest_eN != nearest_eN0:
             if min_dist-alpha_min > 0:
@@ -1022,8 +1026,11 @@ cdef int pyxGetLocalNearestElementIntersection(double[:] coords,
                 min_dist -= alpha_min
             else:  # going too far
                 nearest_eN = nearest_eN0
-        if nearest_eN0 == nearest_eN:
+        if nearest_eN0 == nearest_eN or nearest_eN == -1:
             found_eN = True
+        if nearest_eN < 0:
+            print(eN)
+            import pdb; pdb.set_trace()
         i += 1
         it += 1
     if it >= maxit:
