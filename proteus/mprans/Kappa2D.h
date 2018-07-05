@@ -357,7 +357,7 @@ namespace proteus
     }
 //Try Lew, Buscaglia approximation
     inline
-    void evaluateCoefficients(const double v[nSpace],
+    void evaluateCoefficients( double v[nSpace],
                               const double eps_mu,
                               const double phi,
                               const double nu_0,
@@ -368,8 +368,8 @@ namespace proteus
                               const double grad_vy[nSpace], //gradient of x component of velocity
                               //const double grad_vz[nSpace], //gradient of x component of velocity
                               const double& k,
-                              const double& k_old,
-                              const double& dissipation,
+                              double& k_old,
+                              double& dissipation,
                               const double& porosity,
 //                             Argumentlist for sediment
                               int sedFlag,
@@ -394,7 +394,7 @@ namespace proteus
     {
 
       double nu_t=0.0,dnu_t_dk=0.0,PiD4=0.0;
-      double gamma_k=0.0,F_k=0.0,sigma_a=sigma_k,dSed=0.;
+      double gamma_k=0.0,F_k=0.0,sigma_a=sigma_k,kSed=0.,dkSed=0.;
       //either K-Epsilon or K-Omega
       const double isKEpsilon = (dissipation_model_flag>=2) ? 0.0 : 1.0;
       m = k*porosity;
@@ -406,7 +406,7 @@ namespace proteus
           df[I] = v[I]*porosity;
         }
       const double H_mu = smoothedHeaviside(eps_mu,phi);
-      const double nu = (1.0-H_mu)*nu_0 + H_mu*nu_1;
+      double nu = (1.0-H_mu)*nu_0 + H_mu*nu_1;
       const double div_eps = 1.0e-2*fmin(nu_0,nu_1);
       //eddy viscosity
       nu_t     = isKEpsilon*c_mu*k_old*k_old/(fabs(dissipation)+div_eps)
@@ -435,20 +435,33 @@ namespace proteus
       if (sedFlag == 1 && isKEpsilon > 0)
 	{
 
-	  double kp = k;
-	  /*	  dSed = closure.deps_sed_deps(
-		      q_vos, // Sediment fraction
+	  double kp = k_old;
+	  	  kSed = closure.kappa_sed1(
+		      q_vos,
 		      rho_f,
 		      rho_s,
 		      v,
 		      vs,
 		      q_vos_gradc,
-		      nu, //Kinematic viscosity
+		      nu, 
 		      theta,
 		      kp,
 		      dissipation,
 		      nu_t,
-		      g);*/
+		      g);
+	  	  dkSed = closure.dkappa_sed1_dk(
+		      q_vos,
+		      rho_f,
+		      rho_s,
+		      v,
+		      vs,
+		      q_vos_gradc,
+		      nu, 
+		      theta,
+		      kp,
+		      dissipation,
+		      nu_t);
+
 	}
 
 
@@ -494,8 +507,8 @@ namespace proteus
       da_dk = porosity*dnu_t_dk/sigma_a;
 
       F_k =  nu_t*PiD4;
-      r = -porosity*F_k + porosity*gamma_k*k;
-      dr_dk = porosity*gamma_k;
+      r = -porosity*(F_k - gamma_k*k - kSed);
+      dr_dk = porosity*(gamma_k+dkSed);
 
     }
 
