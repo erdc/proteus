@@ -1234,7 +1234,7 @@ class NS_base:  # (HasTraits):
         n0 = self.nList[0].ct
         sfConfig = p0.domain.PUMIMesh.size_field_config()
         logEvent("h-adapt mesh by calling AdaptPUMIMesh")
-        #p0.domain.PUMIMesh.adaptPUMIMesh()
+        p0.domain.PUMIMesh.adaptPUMIMesh()
 
         #code to suggest adapting until error is reduced;
         #not fully baked and can lead to infinite loops of adaptation
@@ -1499,13 +1499,22 @@ class NS_base:  # (HasTraits):
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
 
-        #if (hasattr(self.pList[0].domain, 'PUMIMesh') and
-        #    self.pList[0].domain.PUMIMesh.adaptMesh() and
-        #    self.so.useOneMesh):
+        if (hasattr(self.pList[0].domain, 'PUMIMesh') and
+            self.pList[0].domain.PUMIMesh.adaptMesh() and
+            self.so.useOneMesh):
 
-        #    self.PUMI_transferFields()
-        #    logEvent("Initial Adapt before Solve")
-        #    self.PUMI_adaptMesh()
+            self.PUMI_transferFields()
+            logEvent("Initial Adapt before Solve")
+            self.PUMI_adaptMesh()
+
+            for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
+                if p.initialConditions is not None:
+                    logEvent("Setting initial conditions for "+p.name)
+                    m.setInitialConditions(p.initialConditions,self.tnList[0])
+ 
+            self.PUMI_transferFields()
+            logEvent("Initial Adapt 2 before Solve")
+            self.PUMI_adaptMesh()
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
