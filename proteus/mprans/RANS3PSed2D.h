@@ -5183,14 +5183,16 @@ namespace proteus
                                      double vos_limiter,
                                      double mu_fr_limiter)
   {
-    cppRANS3PSed2D_base* rvalue = proteus::chooseAndAllocateDiscretization2D<cppRANS3PSed2D_base,cppRANS3PSed2D,CompKernel>(nSpaceIn,
-                                                                                                                            nQuadraturePoints_elementIn,
-                                                                                                                            nDOF_mesh_trial_elementIn,
-                                                                                                                            nDOF_trial_elementIn,
-                                                                                                                            nDOF_test_elementIn,
-                                                                                                                            nQuadraturePoints_elementBoundaryIn,
-                                                                                                                            CompKernelFlag);
-    rvalue->setSedClosure(aDarcy,
+    cppRANS3PSed2D_base* rvalue = proteus::chooseAndAllocateDiscretization2D
+    <cppRANS3PSed2D_base,cppRANS3PSed2D,CompKernel>
+    (nSpaceIn,
+     nQuadraturePoints_elementIn,
+     nDOF_mesh_trial_elementIn,
+     nDOF_trial_elementIn,
+     nDOF_test_elementIn,
+     nQuadraturePoints_elementBoundaryIn,
+     CompKernelFlag);
+         rvalue->setSedClosure(aDarcy,
                           betaForch,
                           grain,
                           packFraction,

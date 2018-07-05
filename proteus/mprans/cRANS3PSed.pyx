@@ -423,7 +423,7 @@ cdef class RANS3PSed:
                   double nContact,
                   double angFriction,
                   double vos_limiter,
-                  double mu_fr_limiter,
+                  double mu_fr_limiter
                   ):
         self.thisptr = newRANS3PSed(nSpaceIn,
                                   nQuadraturePoints_elementIn,
@@ -448,7 +448,7 @@ cdef class RANS3PSed:
                                   nContact,
                                   angFriction,
                                   vos_limiter,
-                                  mu_fr_limiter,
+                                  mu_fr_limiter
                                   )
 
 
