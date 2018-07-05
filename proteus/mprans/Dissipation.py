@@ -916,7 +916,24 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                                                  self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                 compKernelFlag)
+                                                 compKernelFlag,
+                                                 self.coefficients.aDarcy,
+                                                 self.coefficients.betaForch,
+                                                 self.coefficients.grain,
+                                                 self.coefficients.packFraction,
+                                                 self.coefficients.packMargin,
+                                                 self.coefficients.maxFraction,
+                                                 self.coefficients.frFraction,
+                                                 self.coefficients.sigmaC,
+                                                 self.coefficients.C3e,
+                                                 self.coefficients.C4e,
+                                                 self.coefficients.eR,
+                                                 self.coefficients.fContact,
+                                                 self.coefficients.mContact,
+                                                 self.coefficients.nContact,
+                                                 self.coefficients.angFriction,
+                                                 self.coefficients.vos_limiter,
+                                                 self.coefficients.mu_fr_limiter)
 
         self.forceStrongConditions = False
         if self.forceStrongConditions:
