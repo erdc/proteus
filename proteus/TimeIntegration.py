@@ -1485,7 +1485,7 @@ class VBDF(TI_base):
     #
     def postAdaptUpdate(self,oldTime):
         """This looks exactly like updateTimeHistory with the exeption of setting self.tLast=self.t"""
-        self.nUpdatesTimeHistoryCalled  += 1
+        self.nUpdatesTimeHistoryCalled  = oldTime.nUpdatesTimeHistoryCalled
         for n in range(self.max_order-1):
             for ci in self.massComponents:
                 self.m_history[n+1][ci].flat[:] =self.m_history[n][ci].flat
