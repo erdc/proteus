@@ -445,7 +445,7 @@ namespace proteus
       double kp = k;
 	  dSed = closure.deps_sed_deps(
 		      q_vos, // Sediment fraction
-              rho_f,
+		      rho_f,
 		      rho_s,
 		      v,
 		      vs,
@@ -522,8 +522,8 @@ namespace proteus
       a = porosity*(nu_t/sigma_a + nu);
       da_de = porosity*dnu_t_de/sigma_a;
 
-      r = -porosity*(F_e - gamma_e + dSed)*dissipation;
-      dr_de = -porosity*(F_e - gamma_e + dSed);
+      r = -porosity*(F_e - gamma_e - dSed)*dissipation;
+      dr_de = -porosity*(F_e - gamma_e - dSed);
     }
 
     inline
