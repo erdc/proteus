@@ -401,7 +401,7 @@ namespace proteus
                               double& dr_de)
     {
       double nu_t=0.0,dnu_t_de=0.0,PiD4=0.0,disp=0.0,ddisp_de=0.0;
-      double Sed=0.,dSed=0.;
+      double dSed=0.;
       double gamma_e=0.0,F_e=0.0, gamma_production=0.0,sigma_a=sigma_e,
         dgamma_e_d_dissipation=0.0, dF_e_d_dissipation=0.0;
       //either K-Epsilon or K-Omega
@@ -435,6 +435,7 @@ namespace proteus
                   grad_vy[1]*grad_vy[1])
         +
         (grad_vx[1] + grad_vy[0])*(grad_vx[1] + grad_vy[0]);
+
       //Sediment terms
       double theta = 1e-10; //Granural temperature- currently set to (almost) zero.
  	                   //Response time only controled by drag, not collisions
@@ -457,10 +458,7 @@ namespace proteus
 		      nu_t,
 		      g);
 	}		    
-				    
-				    
-				    
-      
+
       //K-Omega, 1998
       if (dissipation_model_flag==2)
         {

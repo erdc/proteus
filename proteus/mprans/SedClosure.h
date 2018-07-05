@@ -5,7 +5,6 @@
 #include <iostream>
 namespace proteus
 {  
-  const int nSpace(2);
   template<int nSpace>
   class cppHsuSedStress
 {
