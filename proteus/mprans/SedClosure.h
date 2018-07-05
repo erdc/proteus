@@ -172,9 +172,28 @@ public:
 		      double g[nSpace])
 			   
     {		   
-      double de=deps_sed_deps( sedF, rhoFluid, rhoSolid, uFluid, uSolid, gradC, nu,   theta_n, kappa_n, epsilon_n, nuT_n, g);
 			   
-      return kappa_n*de;
+      
+      double beta = betaCoeff(sedF,rhoFluid,uFluid,uSolid,nu)+small_;
+      double gs = gs0(sedF)+small_;
+      double l_c = sqrt(M_PI)*grain_/(24.*(sedF+small_)*gs);
+      double t_p = rhoSolid/beta;
+      double t_c = l_c/(sqrt(theta_n) + small_);
+      double t_l = 0.165*kappa_n/(epsilon_n + small_);
+      double t_cl = std::min(t_c,t_l);
+      double alpha= t_cl/(t_cl + t_p);
+      double term = beta/(rhoFluid*(1.-sedF));
+      double es_1 = 2.*term*(1-alpha)*sedF*kappa_n;
+      double g_gradC = 0.;
+      for (int ii=0; ii<nSpace;  ii++)
+	{
+	  g_gradC+= g[ii]*gradC[ii];
+	}
+
+      double ss = rhoSolid/rhoFluid - 1.;
+      double es_2 = nuT_n*ss*g_gradC/sigmaC_/(1.-sedF) ;
+      
+      return  es_1  + es_2;
 
     }
     inline double dkappa_sed1_dk(
