@@ -949,12 +949,13 @@ class NS_base:  # (HasTraits):
 
         import copy
         #This sections gets beta bdf right
+        #import pdb; pdb.set_trace()
         #self.modelList[1].levelModelList[0].u_store = copy.deepcopy(self.modelList[1].levelModelList[0].u)
         #self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u[0].dof_last
         #self.modelList[1].levelModelList[0].calculateElementResidual()
         #self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
 
-        #this section gets numDiff right
+        ##this section gets numDiff right
         #self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u_store[0].dof
         #self.modelList[1].levelModelList[0].u[0].dof_last[:] = self.modelList[1].levelModelList[0].u_store[0].dof_last
 
@@ -976,6 +977,8 @@ class NS_base:  # (HasTraits):
                     lm.u[ci].dof[:] = lm.u[ci].dof_last
                 lm.setFreeDOF(lu)
                 lm.getResidual(lu,lr)
+                #if(m.name == "vof_p"):
+                #    lm.q[('m_last',0)][:] = lm.q[('m_tmp',0)]
                 lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
 
         ###This loop reloads the current solution and the previous solution into proper places
@@ -984,8 +987,17 @@ class NS_base:  # (HasTraits):
                     lm.u[ci].dof_last[:] = lm.u_store[ci].dof_last
                 lm.setFreeDOF(lu)
                 lm.getResidual(lu,lr)
+                #if(m.name == "vof_p"):
+                #    lm.q[('m_last',0)][:] = lm.q[('m_tmp',0)]
                 lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
+                
+                #if(lm.shockCapturing and lm.shockCapturing.nStepsToDelay is not None and lmOld.shockCapturing.nSteps > lmOld.shockCapturing.nStepsToDelay):
+                #    lm.shockCapturing.nSteps=lm.shockCapturing.nStepsToDelay
+                #    lm.shockCapturing.updateShockCapturingHistory() 
+
         ###
+        
+
 
         if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
             #hack for archiving initial solution on adapted mesh
