@@ -65,20 +65,9 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                        double nu,
                        double theta_n,
                        double kappa_n,
-                       double kappa_np1,
                        double epsilon_n,
-                       double nuT_n)
-        double kappa_sed2(double sedF,
-                       double rhoFluid,
-                       double rhoSolid,
-                       double* uFluid,
-                       double* uSolid,
-                       double* gradC,
-                       double nu,
-                       double theta_n,
-                       double kappa_n,
-                       double epsilon_n,
-                       double nuT_n)
+                       double nuT_n,
+		       double * g)
         double dkappa_sed1_dk(double sedF,
                        double rhoFluid,
                        double rhoSolid,
@@ -362,9 +351,9 @@ cdef class HsuSedStress:
                   nu,
                   theta_n,
                   kappa_n,
-                  kappa_np1,
                   epsilon_n,
-    nuT_n):
+    		  nuT_n,	  
+    		  numpy.ndarray g):
         return self.thisptr.kappa_sed1(sedF,
                     rhoFluid,
                     rhoSolid,
@@ -374,9 +363,10 @@ cdef class HsuSedStress:
                   nu,
                   theta_n,
                   kappa_n,
-                  kappa_np1,
-                epsilon_n,
-                nuT_n)
+                  epsilon_n,
+                  nuT_n,
+		< double *>  g.data)
+		
     def dkappa_sed1_dk(self,
                   sedF,
                   rhoFluid,
@@ -390,29 +380,6 @@ cdef class HsuSedStress:
                   epsilon_n,
                 nuT_n):
         return self.thisptr.dkappa_sed1_dk(sedF,
-                    rhoFluid,
-                    rhoSolid,
-                  < double *> uFluid.data,
-                  < double *>  uSolid.data,
-                  < double *>  gradC.data,
-                  nu,
-                  theta_n,
-                  kappa_n,
-                epsilon_n,
-                nuT_n)
-    def kappa_sed2(self,
-                  sedF,
-                  rhoFluid,
-                  rhoSolid,
-                  numpy.ndarray uFluid,
-                  numpy.ndarray uSolid,
-                  numpy.ndarray gradC,
-                  nu,
-                  theta_n,
-                  kappa_n,
-                  epsilon_n,
-                nuT_n):
-        return self.thisptr.kappa_sed2(sedF,
                     rhoFluid,
                     rhoSolid,
                   < double *> uFluid.data,
