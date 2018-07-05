@@ -233,6 +233,7 @@ cdef class cDissipation2D_base:
                   double angFriction,
                   double vos_limiter,
                   double mu_fr_limiter):
+
         self.thisptr = newDissipation2D(nSpaceIn,
                                   nQuadraturePoints_elementIn,
                                  nDOF_mesh_trial_elementIn,
