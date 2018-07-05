@@ -7,8 +7,8 @@
 
 #define heaviside(z) (z>0 ? 1. : (z<0 ? 0. : 0.5))
 
-#define SINGLE_POTENTIAL 0
-#define USE_ABS_GRAD_U_RECONSTRUCTION 1
+#define SINGLE_POTENTIAL 1
+#define USE_ABS_GRAD_U_RECONSTRUCTION 0
 
 namespace proteus
 {
@@ -1602,8 +1602,14 @@ namespace proteus
                   norm_grad_u = abs_grad_u;
 
                 // COMPUTE COEFFICIENTS //
+		//double eps = 10.0*elementDiameter[eN];
+		double grad_qx[nSpace], grad_qy[nSpace];
+                ck.gradFromDOF(lumped_qx,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_qx);
+		ck.gradFromDOF(lumped_qy,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_qy);
+		double reg = 0.; //0.01*(grad_qx[0] + grad_qy[1]);
+		
                 if (SINGLE_POTENTIAL == 1)
-                  coeff = 1.0-1.0/norm_grad_u; //single potential
+                  coeff = 1.0-(1.0)/norm_grad_u; //single potential
                 else
                   coeff = 1.0+2*std::pow(norm_grad_u,2)-3*norm_grad_u;
 
@@ -1621,7 +1627,8 @@ namespace proteus
                       int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
 
                       elementResidual_u[i] +=
-                        ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace])
+			-0.5*u*u_test_dV[i] // mass matrix		      			
+                        +ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace])
                         -ck.NumericalDiffusion(1.0,normalReconstruction,&u_grad_test_dV[i_nSpace])
                         //+alpha*(u-phi_ls[eN_k])*delta*u_test_dV[i];
                         +alpha*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i];
@@ -1634,7 +1641,8 @@ namespace proteus
                       int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
 
                       elementResidual_u[i] +=
-                        ck.NumericalDiffusion(coeff,grad_u,&u_grad_test_dV[i_nSpace])
+			-1.0*u*u_test_dV[i] // mass matrix		      
+                        + ck.NumericalDiffusion(coeff,grad_u,&u_grad_test_dV[i_nSpace])
                         //+alpha*(u-phi_ls[eN_k])*delta*u_test_dV[i]; // consistent mass matrix
                         + alpha*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i]; //lump mass matrix
                     }//i
@@ -1820,7 +1828,8 @@ namespace proteus
                       {
                         int j_nSpace = j*nSpace;
                         elementJacobian_u_u[i][j] +=
-                          ck.NumericalDiffusionJacobian(1.0,
+			  -0.5*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i]
+                          + ck.NumericalDiffusionJacobian(1.0,
                                                         &u_grad_trial[j_nSpace],
                                                         &u_grad_test_dV[i_nSpace])
                           + (ELLIPTIC_REDISTANCING == 1 ? 1. : 0.)*
@@ -1947,7 +1956,8 @@ namespace proteus
 
                 for(int i=0;i<nDOF_test_element;i++)
                   {
-                    element_weighted_lumped_mass_matrix[i] += norm_grad_u*u_test_dV[i];
+                    //element_weighted_lumped_mass_matrix[i] += norm_grad_u*u_test_dV[i];
+		    element_weighted_lumped_mass_matrix[i] += u_test_dV[i];
                     element_rhsx_normal_reconstruction[i]  += rhsx*u_test_dV[i];
                     element_rhsy_normal_reconstruction[i]  += rhsy*u_test_dV[i];
                     element_rhsz_normal_reconstruction[i]  += rhsz*u_test_dV[i];
@@ -1974,6 +1984,7 @@ namespace proteus
             lumped_qy[i] /= weighted_mi;
             lumped_qz[i] /= weighted_mi;
           }
+
       }
 
       void absGradUReconstruction(//element

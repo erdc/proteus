@@ -9,6 +9,8 @@
 #define heaviside(z) (z>0 ? 1. : (z<0 ? 0. : 0.5))
 #define sign(z) (z>0 ? 1. : (z<0 ? -1. : 0.))
 
+#define IMPLICIT_BCs 1
+
 namespace proteus
 {
   class CLSVOF_base
@@ -347,7 +349,8 @@ namespace proteus
               }
             else
               {
-                flux = (2*bc_u-1)*flow;
+                //flux = (2*bc_u-1)*flow;
+		flux = bc_u*flow;
               }
           }
         else if (isFluxBoundary_u == 1)
@@ -369,6 +372,42 @@ namespace proteus
           }
       }
 
+      inline
+	void exteriorNumericalAdvectiveFluxDerivative(const int& isDOFBoundary_u,
+						      const int& isFluxBoundary_u,
+						      const double n[nSpace],
+						      const double& du,
+						      const double velocity[nSpace],
+						      double& dflux)
+      {
+	double flow=0.0;
+	for (int I=0; I < nSpace; I++)
+	  flow += n[I]*velocity[I];
+	dflux=0.0;//default to no flux
+	if (isDOFBoundary_u == 1)
+	  {
+	    if (flow >= 0.0)
+	      {
+		dflux = du*flow;
+	      }
+	    else
+	      {
+		dflux = 0.0; //zero since inflow BC is given by data (so independent on soln)
+	      }
+	  }
+	else if (isFluxBoundary_u == 1)
+	  {
+	    dflux = 0.0;
+	  }
+	else
+	  {
+	    if (flow >= 0.0)
+	      {
+		dflux = flow;
+	      }
+	  }
+      }
+      
       inline double smoothedHeaviside(double eps, double u)
       {
         double H;
@@ -406,7 +445,8 @@ namespace proteus
           H=0.5;
         else
           H = 0.5*(1.0 + u/eps + sin(M_PI*u/eps)/M_PI);
-        return 2*H-1;
+        //return 2*H-1;
+	return H;
       }
 
       inline double smoothedDerivativeSign(double eps, double u)
@@ -418,7 +458,8 @@ namespace proteus
           d=0.0;
         else
           d = 0.5*(1.0 + cos(M_PI*u/eps))/eps;
-        return 2*d;
+        //return 2*d;
+	return d;
       }
 
       void calculateResidual(//element
@@ -665,7 +706,7 @@ namespace proteus
 		    //normalReconstruction[0] = grad_un[0]/norm_grad_un;
 		    //normalReconstruction[1] = grad_un[1]/norm_grad_un;
 		    //normalReconstruction[2] = 0.;
-		    
+
                     normalReconstruction[0] = qxn;
                     normalReconstruction[1] = qyn;
                     if (nSpace==3)
@@ -683,6 +724,7 @@ namespace proteus
                     if (timeOrder==1)
                       {
                         elementResidual_u[i] +=
+			  -1.0*u*u_test_dV[i] // mass matrix			  
 			  //(Snp1-Sn)*u_test_dV[i]
 			  //+ lambda*ck.NumericalDiffusion(1.0,
 			  //				 grad_u,
@@ -691,13 +733,13 @@ namespace proteus
 			  //				 normalReconstruction,
 			  //				 &u_grad_test_dV[i_nSpace]);
 			  // TIME DERIVATIVE
-			  time_derivative_residual*u_test_dV[i]
+			  + time_derivative_residual*u_test_dV[i]
 			  // ADVECTION TERM. This is IMPLICIT
 			  + ck.Advection_weak(fnp1,&u_grad_test_dV[i_nSpace])
                           // REGULARIZATION TERM. This is IMPLICIT
                           + lambda*ck.NumericalDiffusion(1.0,
-			  				 grad_u,
-			  				 &u_grad_test_dV[i_nSpace])
+							 grad_u,
+							 &u_grad_test_dV[i_nSpace])
                           // TARGET for PENALIZATION. This is EXPLICIT
                           - lambda*ck.NumericalDiffusion(1.0,
 			  				 normalReconstruction,
@@ -705,8 +747,9 @@ namespace proteus
                       }
                     else // timeOrder=2
                       elementResidual_u[i] +=
+			-1.0*u*u_test_dV[i] // mass matrix
                         // TIME DERIVATIVE
-                        time_derivative_residual*u_test_dV[i]
+                        +time_derivative_residual*u_test_dV[i]
                         // ADVECTION TERM. This is IMPLICIT
                         + ck.Advection_weak(fnHalf,&u_grad_test_dV[i_nSpace])
                         // REGULARIZATION TERM. This is IMPLICIT
@@ -810,18 +853,34 @@ namespace proteus
                                                             metricTensor,
                                                             integralScaling);
                 dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
-		ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+		ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],
+				    jacInv_ext,
+				    u_grad_trial_trace);
                 //solution at quad points
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
-                ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],un_ext);
-		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+		ck.valFromDOF(u_dof,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
+			      u_ext);
+                ck.valFromDOF(u_dof_old,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
+			      un_ext);
+		ck.gradFromDOF(u_dof,
+			       &u_l2g[eN_nDOF_trial_element],
+			       u_grad_trial_trace,
+			       grad_u_ext);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
                 //
                 //load the boundary values
                 //
-                bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*un_ext;
+		// NOTE: ebqe_bc_u_ext are the BCs for the VOF defined by the user. They are either 0 (for water) or 1 (for air)
+		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
+		double Su_ext = smoothedSign(epsHeaviside,un_ext); // explicit 
+		if (IMPLICIT_BCs==1)
+		  Su_ext = smoothedSign(epsHeaviside,u_ext);
+		bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*Su_ext;
                 //VRANS
                 porosity_ext = ebqe_porosity_ext[ebNE_kb];
                 //
@@ -836,14 +895,13 @@ namespace proteus
                                             MOVING_DOMAIN*mesh_velocity[I]);
                 //
                 //calculate the numerical fluxes
-                //
-                double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
+                //                
                 exteriorNumericalAdvectiveFlux(isDOFBoundary_u[ebNE_kb],
                                                isFluxBoundary_u[ebNE_kb],
                                                normal,
-                                               bc_u_ext, //1 or -1
+                                               bc_u_ext, // 0 or 1 (I scale it inside)
                                                ebqe_bc_flux_u_ext[ebNE_kb],
-					       smoothedSign(epsHeaviside,un_ext), //Sign(un_ext)
+					       Su_ext, //Sign(u_ext) or Sign(un_ext)
                                                df_ext, //VRANS includes porosity
                                                flux_ext);
                 ebqe_flux[ebNE_kb] = flux_ext;
@@ -1035,20 +1093,21 @@ namespace proteus
                         int i_nSpace = i*nSpace;
 
                         elementJacobian_u_u[i][j] +=
+			  -1.0*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i]
 			  //dSnp1*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i]
 			  //+ lambda*ck.NumericalDiffusionJacobian(1.0,
 			  //					 &u_grad_trial[j_nSpace],
 			  //					 &u_grad_test_dV[i_nSpace]);
                           // TIME DERIVATIVE
-                          time_derivative_jacobian*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i]
+                          +time_derivative_jacobian*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i]
                           // IMPLICIT TERMS: ADVECTION, DIFFUSION
                           + timeCoeff*
                           (ck.AdvectionJacobian_weak(df,
-						     u_trial_ref[k*nDOF_trial_element+j],
-						     &u_grad_test_dV[i_nSpace])
-			   + lambda*ck.NumericalDiffusionJacobian(1.0,
-								  &u_grad_trial[j_nSpace],
-								  &u_grad_test_dV[i_nSpace]));
+			  			     u_trial_ref[k*nDOF_trial_element+j],
+			  			     &u_grad_test_dV[i_nSpace])
+			  + lambda*ck.NumericalDiffusionJacobian(1.0,
+								 &u_grad_trial[j_nSpace],
+								 &u_grad_test_dV[i_nSpace]));
                       }//j
                   }//i
               }//k
@@ -1071,6 +1130,144 @@ namespace proteus
         // BOUNDARY LOOP //
         ///////////////////
         // No need since I impose the boundary explicitly
+	if (IMPLICIT_BCs==1)
+	for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+	  {
+	    register int ebN = exteriorElementBoundariesArray[ebNE];
+	    register int eN  = elementBoundaryElementsArray[ebN*2+0],
+	      ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+	      eN_nDOF_trial_element = eN*nDOF_trial_element;
+	    for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+	      {
+		register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+		  ebNE_kb_nSpace = ebNE_kb*nSpace,
+		  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+		  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+		register double u_ext=0.0,
+		  grad_u_ext[nSpace],
+		  m_ext=0.0,
+		  dm_ext=0.0,
+		  f_ext[nSpace],
+		  df_ext[nSpace],
+		  dflux_u_u_ext=0.0,
+		  bc_u_ext=0.0,
+		  //bc_grad_u_ext[nSpace],
+		  bc_m_ext=0.0,
+		  bc_dm_ext=0.0,
+		  bc_f_ext[nSpace],
+		  bc_df_ext[nSpace],
+		  fluxJacobian_u_u[nDOF_trial_element],
+		  jac_ext[nSpace*nSpace],
+		  jacDet_ext,
+		  jacInv_ext[nSpace*nSpace],
+		  boundaryJac[nSpace*(nSpace-1)],
+		  metricTensor[(nSpace-1)*(nSpace-1)],
+		  metricTensorDetSqrt,
+		  dS,
+		  u_test_dS[nDOF_test_element],
+		  u_grad_trial_trace[nDOF_trial_element*nSpace],
+		  normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
+		  //VRANS
+		  porosity_ext;
+		ck.calculateMapping_elementBoundary(eN,
+						    ebN_local,
+						    kb,
+						    ebN_local_kb,
+						    mesh_dof,
+						    mesh_l2g,
+						    mesh_trial_trace_ref,
+						    mesh_grad_trial_trace_ref,
+						    boundaryJac_ref,
+						    jac_ext,
+						    jacDet_ext,
+						    jacInv_ext,
+						    boundaryJac,
+						    metricTensor,
+						    metricTensorDetSqrt,
+						    normal_ref,
+						    normal,
+						    x_ext,y_ext,z_ext);
+		ck.calculateMappingVelocity_elementBoundary(eN,
+							    ebN_local,
+							    kb,
+							    ebN_local_kb,
+							    mesh_velocity_dof,
+							    mesh_l2g,
+							    mesh_trial_trace_ref,
+							    xt_ext,yt_ext,zt_ext,
+							    normal,
+							    boundaryJac,
+							    metricTensor,
+							    integralScaling);
+		dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
+		ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],
+				    jacInv_ext,
+				    u_grad_trial_trace);
+		ck.valFromDOF(u_dof,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
+			      u_ext);
+		ck.gradFromDOF(u_dof,
+			       &u_l2g[eN_nDOF_trial_element],
+			       u_grad_trial_trace,
+			       grad_u_ext);
+		//precalculate test function products with integration weights
+		for (int j=0;j<nDOF_trial_element;j++)
+		  u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+		//
+		//load the boundary values
+		//
+		double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/degree_polynomial;
+		double Su_ext = smoothedSign(epsHeaviside,u_ext);		
+		bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*Su_ext;
+		//VRANS
+		porosity_ext = ebqe_porosity_ext[ebNE_kb];
+		//
+		//moving domain
+		//
+		double mesh_velocity[3];
+		mesh_velocity[0] = xt_ext;
+		mesh_velocity[1] = yt_ext;
+		mesh_velocity[2] = zt_ext;
+		for (int I=0;I<nSpace;I++)
+		  df_ext[I] = porosity_ext*(ebqe_velocity_ext[ebNE_kb_nSpace+I] -
+					    MOVING_DOMAIN*mesh_velocity[I]);		    
+		//
+		//calculate the numerical fluxes
+		//
+		exteriorNumericalAdvectiveFluxDerivative(isDOFBoundary_u[ebNE_kb],
+							 isFluxBoundary_u[ebNE_kb],
+							 normal,
+							 smoothedDerivativeSign(epsHeaviside,u_ext),
+							 df_ext,//VRANS holds porosity
+							 dflux_u_u_ext);
+		//
+		//calculate the flux jacobian
+		//
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    //register int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
+		    register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
+		    fluxJacobian_u_u[j]=
+		      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,
+								u_trial_trace_ref[ebN_local_kb_j]);
+		  }//j
+		//
+		//update the global Jacobian from the flux Jacobian
+		//
+		for (int i=0;i<nDOF_test_element;i++)
+		  {
+		    register int eN_i = eN*nDOF_test_element+i;
+		    //register int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
+		    for (int j=0;j<nDOF_trial_element;j++)
+		      {
+			register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
+			globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]]+=
+			  fluxJacobian_u_u[j]*u_test_dS[i];
+		      }//j
+		  }//i
+	      }//kb
+	  }//ebNE	
       }//computeJacobian for MCorr with CLSVOF
 
       void calculateMetricsAtEOS( //EOS=End Of Simulation

@@ -1006,7 +1006,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if self.interface_locator[gi] == 1.0:
                     self.u[0].dof[gi] = self.coefficients.dof_u0[gi]
         # END OF FREEZING INTERFACE #
-        
+
+        #self.getNormalReconstruction()
         self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,

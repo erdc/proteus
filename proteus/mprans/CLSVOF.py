@@ -571,7 +571,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # SOME ASSERTS #
         ################
         assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "Use BackwardEuler_cfl"
-        assert options.levelNonlinearSolver == proteus.NonlinearSolvers.CLSVOFNewton, "Use levelNonlinearSolver=CLSVOFNewton"
+        assert (options.levelNonlinearSolver == proteus.NonlinearSolvers.CLSVOFNewton or
+                options.levelNonlinearSolver == proteus.NonlinearSolvers.NonlinearCLSVOFNewton), "Use levelNonlinearSolver=CLSVOFNewton"
 
         #################
         # GENERAL STUFF #

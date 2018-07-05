@@ -7,7 +7,7 @@ import numpy as np
 import math
 from parameters import *
 
-AUTOMATED_TEST=True
+AUTOMATED_TEST=False
 
 #----- TEST CASE ----- #
 # 1: 2D periodic vortex
@@ -20,7 +20,7 @@ AUTOMATED_TEST=True
 doSpinUpStep=False
 timeOrder=2
 lambdaFact=1.0
-computeMetrics=0 #0: don't compute metrics, 1: compute at EOS, 2: compute at ETS
+computeMetrics=2 #0: don't compute metrics, 1: compute at EOS, 2: compute at ETS
 eps_tolerance_clsvof=True #Set tol on nonlinear solver to machine zero?
 #clsvof_nl_atol_res # see below
 
