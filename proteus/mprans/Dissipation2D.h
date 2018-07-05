@@ -512,7 +512,7 @@ namespace proteus
           //K-Epsilon (with Sediment if RANS3PSed is on)
           gamma_e = fmax(c_2*dissipation_old/(k+div_eps),0.0);
           dgamma_e_d_dissipation = 0.0;
-          F_e = fmax(c_1*PiD4/k,0.0);
+          F_e = fmax(c_1*PiD4*k,0.0);
           dF_e_d_dissipation=0.0;
           sigma_a = sigma_e;
         }
@@ -521,7 +521,7 @@ namespace proteus
       da_de = porosity*dnu_t_de/sigma_a;
 
       r = -porosity*(F_e - gamma_e - dSed)*dissipation;
-      dr_de = -porosity*(F_e - gamma_e - dSed);
+      dr_de = porosity*( gamma_e + dgamma_e_d_dissipation + dSed);
     }
 
     inline
