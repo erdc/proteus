@@ -2,7 +2,7 @@ from __future__ import division
 # cython: wraparound=False
 # cython: boundscheck=False
 # cython: initializedcheck=False
-
+from builtins import str
 from builtins import range
 #from builtins import object
 from past.utils import old_div

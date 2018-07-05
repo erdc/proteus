@@ -23,7 +23,7 @@ st.assembleDomain(domain)
 """
 from __future__ import division
 
-from builtins import str
+#from builtins import str
 from builtins import range
 from past.utils import old_div
 from math import cos, sin, sqrt, atan2, acos, asin
