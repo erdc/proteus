@@ -137,6 +137,7 @@ independently and lagged in time
     from proteus.ctransportCoefficients import kEpsilon_k_2D_Evaluate_sd
 
     def __init__(self,
+                 VOS_mode=None,
                  LS_model=None,
                  V_model=0,
                  RD_model=None,
