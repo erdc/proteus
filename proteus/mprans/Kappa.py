@@ -137,12 +137,13 @@ independently and lagged in time
     from proteus.ctransportCoefficients import kEpsilon_k_2D_Evaluate_sd
 
     def __init__(self,
-                 VOS_model=None,
+                 VOS_model=None, # Solid model
+                 V_model=None, # Fluid model
                  LS_model=None,
-                 V_model=0,
                  RD_model=None,
                  dissipation_model=None,
                  ME_model=6,
+                 SED_model=None,
                  dissipation_model_flag=1,  # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988
                  c_mu=0.09,
                  sigma_k=1.0,  # Prandtl Number
