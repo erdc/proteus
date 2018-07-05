@@ -4,6 +4,7 @@
 #include <iostream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
+#include "SedClosure.h"
 
 namespace proteus
 {
@@ -12,6 +13,23 @@ namespace proteus
     //The base class defining the interface
   public:
     virtual ~Kappa2D_base(){}
+     virtual void setSedClosure(double aDarcy,
+                               double betaForch,
+                               double grain,
+                               double packFraction,
+                               double packMargin,
+                               double maxFraction,
+                               double frFraction,
+                               double sigmaC,
+                               double C3e,
+                               double C4e,
+                               double eR,
+                               double fContact,
+                               double mContact,
+                               double nContact,
+                               double angFriction,
+                               double vos_limiter,
+                               double mu_fr_limiter){}
     virtual void calculateResidual(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -43,6 +61,18 @@ namespace proteus
                                    double c_mu,
                                    double rho_0,
                                    double rho_1,
+  //                             Argumentlist for sediment
+                                   double sedFlag,
+                                   double* q_vos,
+                                   double *q_vos_gradc,
+                                   double* ebqe_q_vos,
+                                   double *ebqe_q_vos_gradc,
+                                   double rho_f,
+                                   double rho_s,
+                                   double* vs,
+                                   double* ebqe_vs,
+                                   double* g,
+                              //end sediment
                                    int dissipation_model_flag,
                                    //end diffusion
                                    double useMetrics,
@@ -134,6 +164,18 @@ namespace proteus
                                    double* q_dissipation, //dissipation rate
                                    double* q_grad_dissipation,
                                    double* q_porosity,//VRANS
+  //                             Argumentlist for sediment
+                                   double sedFlag,
+                                   double* q_vos,
+                                   double *q_vos_gradc,
+                                   double* ebqe_q_vos,
+                                   double *ebqe_q_vos_gradc,
+                                   double rho_f,
+                                   double rho_s,
+                                   double* vs,
+                                   double* ebqe_vs,
+                                   double* g,
+                              //end sediment
                                    //velocity dof
                                    double * velocity_dof_u,
                                    double * velocity_dof_v,
@@ -172,121 +214,70 @@ namespace proteus
   class Kappa2D : public Kappa2D_base
   {
   public:
+        cppHsuSedStress<2> closure;
     const int nDOF_test_X_trial_element;
     CompKernelType ck;
     Kappa2D():
+      closure(150.0,
+              0.0,
+              0.0102,
+              0.2,
+              0.01,
+              0.635,
+              0.57,
+              1.1,
+              1.2,
+              1.0,
+              0.8,
+              0.02,
+              2.0,
+              5.0,
+              M_PI/6.,
+              0.05,
+              1.00),
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
       ck()
-    {}
-   //Try Lew, Buscaglia approximation
-    inline
-    void evaluateCoefficients(const double v[nSpace],
-                              const double eps_mu,
-                              const double phi,
-                              const double nu_0,
-                              const double nu_1,
-                              const double sigma_k,
-                              const double c_mu,
-                              const double grad_vx[nSpace], //gradient of x component of velocity
-                              const double grad_vy[nSpace], //gradient of x component of velocity
-                              //const double grad_vz[nSpace], //gradient of x component of velocity
-                              const double& k,
-                              const double& k_old,
-                              const double& dissipation,
-                              const double& porosity,
-                              int dissipation_model_flag,
-                              const double grad_k_old[nSpace],
-                              const double grad_dissipation[nSpace],
-                              double& m,
-                              double& dm,
-                              double f[nSpace],
-                              double df[nSpace],
-                              double& a,
-                              double& da_dk,
-                              double& r,
-                              double& dr_dk)
     {
-
-      double nu_t=0.0,dnu_t_dk=0.0,PiD4=0.0;
-      double gamma_k=0.0,F_k=0.0,sigma_a=sigma_k;
-      //either K-Epsilon or K-Omega
-      const double isKEpsilon = (dissipation_model_flag>=2) ? 0.0 : 1.0;
-      m = k*porosity;
-      dm = porosity;
-
-      for (int I=0; I < nSpace; I++)
-        {
-          f[I] = v[I]*k*porosity;
-          df[I] = v[I]*porosity;
-        }
-      const double H_mu = smoothedHeaviside(eps_mu,phi);
-      const double nu = (1.0-H_mu)*nu_0 + H_mu*nu_1;
-      const double div_eps = 1.0e-2*fmin(nu_0,nu_1);
-      //eddy viscosity
-      nu_t     = isKEpsilon*c_mu*k_old*k_old/(fabs(dissipation)+div_eps)
-        + (1.0-isKEpsilon)*k_old/(fabs(dissipation)+div_eps);
-
-      //if (nu_t > 1.e6*nu)
-      //{
-      //  std::cout<<"Kappa2D WARNING isKEpsilon = "<<isKEpsilon<<" nu_t = " <<nu_t<<" nu= "<<nu<<" k= "<<k<<" k_old= "<<k_old<<" dissipation= "<<dissipation<<std::endl;
-      //}
-      nu_t     = fmax(nu_t,1.e-4*nu);
-      //mwf hack
-      nu_t     = fmin(nu_t,1.0e6*nu);
-
-      dnu_t_dk = 0.0;
-
-      //Production term
-      PiD4 = 2.0*(grad_vx[0]*grad_vx[0] +
-                  grad_vy[1]*grad_vy[1])
-        +
-        (grad_vx[1] + grad_vy[0])*(grad_vx[1] + grad_vy[0]);
-
-       //K-Omega, 1998
-      if (dissipation_model_flag==2)
-        {
-          //temporaries
-          double sigma_omega=1.,beta_star=1.,beta=1.,gamma=1.;
-          computeK_OmegaCoefficients(div_eps,
-                                     k_old,
-                                     dissipation,
-                                     grad_k_old,
-                                     grad_dissipation,
-                                     grad_vx,
-                                     grad_vy,
-                                     //grad_vz,
-                                     sigma_a,
-                                     sigma_omega,
-                                     beta_star,
-                                     beta,
-                                     gamma);
-          //straight forward lagging
-          gamma_k=fmax(beta_star*dissipation,0.0);
-          //gamma_k = fmax(beta_star*k_old/nu_t,0.0);
-        }
-      else if (dissipation_model_flag==3) //K-Omega 1988
-        {
-          sigma_a=2.0; //1/sigma_k,
-          double beta_star = 0.09;
-          gamma_k=fmax(beta_star*dissipation,0.0);
-        }
-      else
-        {
-          //K-Epsilon
-          gamma_k = fmax(c_mu*k_old/nu_t,0.0);
-          sigma_a = sigma_k;
-        }
-      //note sigma_a is calculated as inverse of what is in Wilcox's standard K-Omega formulation to
-      //match standard K-Epsilon formulation where divide by sigma
-      a = porosity*(nu_t/sigma_a + nu);
-      da_dk = porosity*dnu_t_dk/sigma_a;
-
-      F_k =  nu_t*PiD4;
-      r = -porosity*F_k + porosity*gamma_k*k;
-      dr_dk = porosity*gamma_k;
-
     }
-    inline
+
+      void setSedClosure(double aDarcy,
+                         double betaForch,
+                         double grain,
+                         double packFraction,
+                         double packMargin,
+                         double maxFraction,
+                         double frFraction,
+                         double sigmaC,
+                         double C3e,
+                         double C4e,
+                         double eR,
+                         double fContact,
+                         double mContact,
+                         double nContact,
+                         double angFriction,
+                       double vos_limiter,
+                       double mu_fr_limiter)
+      {
+        closure = cppHsuSedStress<2>(aDarcy,
+                                     betaForch,
+                                     grain,
+                                     packFraction,
+                                     packMargin,
+                                     maxFraction,
+                                     frFraction,
+                                     sigmaC,
+                                     C3e,
+                                     C4e,
+                                     eR,
+                                     fContact,
+                                     mContact,
+                                     nContact,
+                                     angFriction,
+                                   vos_limiter,
+                                   mu_fr_limiter);
+      }
+
+       inline
     void computeK_OmegaCoefficients(const double& div_eps,
                                     const double& k,
                                     const double& omega,
@@ -362,6 +353,149 @@ namespace proteus
       beta_star = fmax(beta0_star,fmin(beta_star,(680.0/400.0)*beta0_star));
       //mwf hack
       //beta = beta0; beta_star = beta0_star; //0.0;
+
+    }
+//Try Lew, Buscaglia approximation
+    inline
+    void evaluateCoefficients(const double v[nSpace],
+                              const double eps_mu,
+                              const double phi,
+                              const double nu_0,
+                              const double nu_1,
+                              const double sigma_k,
+                              const double c_mu,
+                              const double grad_vx[nSpace], //gradient of x component of velocity
+                              const double grad_vy[nSpace], //gradient of x component of velocity
+                              //const double grad_vz[nSpace], //gradient of x component of velocity
+                              const double& k,
+                              const double& k_old,
+                              const double& dissipation,
+                              const double& porosity,
+//                             Argumentlist for sediment
+                              int sedFlag,
+                              double q_vos,
+                              double q_vos_gradc[nSpace],
+                              double rho_f,
+                              double rho_s,
+                              double vs[nSpace],
+                              double g[nSpace],
+                              //end sediment
+                              int dissipation_model_flag,
+                              const double grad_k_old[nSpace],
+                              const double grad_dissipation[nSpace],
+                              double& m,
+                              double& dm,
+                              double f[nSpace],
+                              double df[nSpace],
+                              double& a,
+                              double& da_dk,
+                              double& r,
+                              double& dr_dk)
+    {
+
+      double nu_t=0.0,dnu_t_dk=0.0,PiD4=0.0;
+      double gamma_k=0.0,F_k=0.0,sigma_a=sigma_k,dSed=0.;
+      //either K-Epsilon or K-Omega
+      const double isKEpsilon = (dissipation_model_flag>=2) ? 0.0 : 1.0;
+      m = k*porosity;
+      dm = porosity;
+
+      for (int I=0; I < nSpace; I++)
+        {
+          f[I] = v[I]*k*porosity;
+          df[I] = v[I]*porosity;
+        }
+      const double H_mu = smoothedHeaviside(eps_mu,phi);
+      const double nu = (1.0-H_mu)*nu_0 + H_mu*nu_1;
+      const double div_eps = 1.0e-2*fmin(nu_0,nu_1);
+      //eddy viscosity
+      nu_t     = isKEpsilon*c_mu*k_old*k_old/(fabs(dissipation)+div_eps)
+        + (1.0-isKEpsilon)*k_old/(fabs(dissipation)+div_eps);
+
+      //if (nu_t > 1.e6*nu)
+      //{
+      //  std::cout<<"Kappa2D WARNING isKEpsilon = "<<isKEpsilon<<" nu_t = " <<nu_t<<" nu= "<<nu<<" k= "<<k<<" k_old= "<<k_old<<" dissipation= "<<dissipation<<std::endl;
+      //}
+      nu_t     = fmax(nu_t,1.e-4*nu);
+      //mwf hack
+      nu_t     = fmin(nu_t,1.0e6*nu);
+
+      dnu_t_dk = 0.0;
+
+      //Production term
+      PiD4 = 2.0*(grad_vx[0]*grad_vx[0] +
+                  grad_vy[1]*grad_vy[1])
+        +
+        (grad_vx[1] + grad_vy[0])*(grad_vx[1] + grad_vy[0]);
+      //Sediment terms
+      double theta = 1e-10; //Granural temperature- currently set to (almost) zero.
+ 	                   //Response time only controled by drag, not collisions
+                           //Switch on when collision stress model is on.
+
+      if (sedFlag == 1 && isKEpsilon > 0)
+	{
+
+	  double kp = k;
+	  /*	  dSed = closure.deps_sed_deps(
+		      q_vos, // Sediment fraction
+		      rho_f,
+		      rho_s,
+		      v,
+		      vs,
+		      q_vos_gradc,
+		      nu, //Kinematic viscosity
+		      theta,
+		      kp,
+		      dissipation,
+		      nu_t,
+		      g);*/
+	}
+
+
+
+
+       //K-Omega, 1998
+      if (dissipation_model_flag==2)
+        {
+          //temporaries
+          double sigma_omega=1.,beta_star=1.,beta=1.,gamma=1.;
+          computeK_OmegaCoefficients(div_eps,
+                                     k_old,
+                                     dissipation,
+                                     grad_k_old,
+                                     grad_dissipation,
+                                     grad_vx,
+                                     grad_vy,
+                                     //grad_vz,
+                                     sigma_a,
+                                     sigma_omega,
+                                     beta_star,
+                                     beta,
+                                     gamma);
+          //straight forward lagging
+          gamma_k=fmax(beta_star*dissipation,0.0);
+          //gamma_k = fmax(beta_star*k_old/nu_t,0.0);
+        }
+      else if (dissipation_model_flag==3) //K-Omega 1988
+        {
+          sigma_a=2.0; //1/sigma_k,
+          double beta_star = 0.09;
+          gamma_k=fmax(beta_star*dissipation,0.0);
+        }
+      else
+        {
+          //K-Epsilon
+          gamma_k = fmax(c_mu*k_old/nu_t,0.0);
+          sigma_a = sigma_k;
+        }
+      //note sigma_a is calculated as inverse of what is in Wilcox's standard K-Omega formulation to
+      //match standard K-Epsilon formulation where divide by sigma
+      a = porosity*(nu_t/sigma_a + nu);
+      da_dk = porosity*dnu_t_dk/sigma_a;
+
+      F_k =  nu_t*PiD4;
+      r = -porosity*F_k + porosity*gamma_k*k;
+      dr_dk = porosity*gamma_k;
 
     }
 
@@ -614,6 +748,18 @@ namespace proteus
                            double c_mu,
                            double rho_0,
                            double rho_1,
+  //                             Argumentlist for sediment
+                                   double sedFlag,
+                                   double* q_vos,
+                                   double *q_vos_gradc,
+                                   double* ebqe_q_vos,
+                                   double *ebqe_q_vos_gradc,
+                                   double rho_f,
+                                   double rho_s,
+                                   double* vs,
+                                   double* ebqe_vs,
+                                   double* g,
+                              //end sediment
                            int dissipation_model_flag,
                            //end diffusion
                            double useMetrics,
@@ -788,6 +934,15 @@ namespace proteus
                                    u_old,
                                    q_dissipation[eN_k],
                                    q_porosity[eN_k],
+//                             Argumentlist for sediment
+                                   sedFlag,
+                                   q_vos[eN_k],
+                                   &q_vos_gradc[eN_k_nSpace],
+                                   rho_f,
+                                   rho_s,
+                                   &vs[eN_k_nSpace],
+                                   &g[0],
+                              //end sediment
                                    dissipation_model_flag,
                                    grad_u_old,
                                    &q_grad_dissipation[eN_k_nSpace],
@@ -1030,6 +1185,15 @@ namespace proteus
                                    u_old_ext,
                                    ebqe_dissipation[ebNE_kb],
                                    ebqe_porosity[ebNE_kb],
+//                             Argumentlist for sediment
+                                   sedFlag,
+                                   ebqe_q_vos[ebNE_kb],
+                                   &ebqe_q_vos_gradc[ebNE_kb_nSpace],
+                                   rho_f,
+                                   rho_s,
+                                   &ebqe_vs[ebNE_kb_nSpace],
+                                   &g[0],
+                              //end sediment
                                    dissipation_model_flag,
                                    grad_u_old_ext,
                                    grad_dissipation_ext_dummy,
@@ -1055,6 +1219,15 @@ namespace proteus
                                    bc_u_ext,
                                    ebqe_dissipation[ebNE_kb],
                                    ebqe_porosity[ebNE_kb],
+//                             Argumentlist for sediment
+                                   sedFlag,
+                                   ebqe_q_vos[ebNE_kb],
+                                   &ebqe_q_vos_gradc[ebNE_kb_nSpace],
+                                   rho_f,
+                                   rho_s,
+                                   &ebqe_vs[ebNE_kb_nSpace],
+                                   &g[0],
+                              //end sediment
                                    dissipation_model_flag,
                                    grad_u_old_ext,
                                    grad_dissipation_ext_dummy,
@@ -1173,7 +1346,18 @@ namespace proteus
                            double* q_dissipation, //dissipation rate
                            double* q_grad_dissipation,
                            double* q_porosity,//VRANS
-                           //velocity dof
+  //                             Argumentlist for sediment
+                                   double sedFlag,
+                                   double* q_vos,
+                                   double *q_vos_gradc,
+                                   double* ebqe_q_vos,
+                                   double *ebqe_q_vos_gradc,
+                                   double rho_f,
+                                   double rho_s,
+                                   double* vs,
+                                   double* ebqe_vs,
+                                   double* g,
+                              //end sediment
                            double * velocity_dof_u,
                            double * velocity_dof_v,
                            double * velocity_dof_w,
@@ -1317,6 +1501,15 @@ namespace proteus
                                    u_old,
                                    q_dissipation[eN_k],
                                    q_porosity[eN_k],
+//                             Argumentlist for sediment
+                                   sedFlag,
+                                   q_vos[eN_k],
+                                   &q_vos_gradc[eN_k_nSpace],
+                                   rho_f,
+                                   rho_s,
+                                   &vs[eN_k_nSpace],
+                                   g,
+                              //end sediment
                                    dissipation_model_flag,
                                    grad_u_old,
                                    &q_grad_dissipation[eN_k_nSpace],
@@ -1568,6 +1761,15 @@ namespace proteus
                                    u_old_ext,
                                    ebqe_dissipation[ebNE_kb],
                                    ebqe_porosity[ebNE_kb],
+//                             Argumentlist for sediment
+                                   sedFlag,
+                                   ebqe_q_vos[ebNE_kb],
+                                   &ebqe_q_vos_gradc[ebNE_kb_nSpace],
+                                   rho_f,
+                                   rho_s,
+                                   &ebqe_vs[ebNE_kb_nSpace],
+                                   &g[0],
+                              //end sediment
                                    dissipation_model_flag,
                                    grad_u_old_ext,
                                    grad_dissipation_ext_dummy,
@@ -1593,6 +1795,15 @@ namespace proteus
                                    bc_u_ext,
                                    ebqe_dissipation[ebNE_kb],
                                    ebqe_porosity[ebNE_kb],
+//                             Argumentlist for sediment
+                                   sedFlag,
+                                   ebqe_q_vos[ebNE_kb],
+                                   &ebqe_q_vos_gradc[ebNE_kb_nSpace],
+                                   rho_f,
+                                   rho_s,
+                                   &ebqe_vs[ebNE_kb_nSpace],
+                                   &g[0],
+                              //end sediment
                                    dissipation_model_flag,
                                    grad_u_old_ext,
                                    grad_dissipation_ext_dummy,
@@ -1667,15 +1878,54 @@ namespace proteus
                                 int nDOF_trial_elementIn,
                                 int nDOF_test_elementIn,
                                 int nQuadraturePoints_elementBoundaryIn,
-                                int CompKernelFlag)
+                                int CompKernelFlag,
+                                double aDarcy,
+                                double betaForch,
+                                double grain,
+                                double packFraction,
+                                double packMargin,
+                                double maxFraction,
+                                double frFraction,
+                                double sigmaC,
+                                double C3e,
+                                double C4e,
+                                double eR,
+                                double fContact,
+                                double mContact,
+                                double nContact,
+                                 double angFriction,
+                                     double vos_limiter,
+                                     double mu_fr_limiter)
+
   {
-    return proteus::chooseAndAllocateDiscretization2D<Kappa2D_base,Kappa2D,CompKernel>(nSpaceIn,
-                                                                                       nQuadraturePoints_elementIn,
-                                                                                       nDOF_mesh_trial_elementIn,
-                                                                                       nDOF_trial_elementIn,
-                                                                                       nDOF_test_elementIn,
-                                                                                       nQuadraturePoints_elementBoundaryIn,
-                                                                                       CompKernelFlag);
+    Kappa2D_base* rvalue =
+    proteus::chooseAndAllocateDiscretization2D<Kappa2D_base,Kappa2D,CompKernel>
+    (nSpaceIn,
+     nQuadraturePoints_elementIn,
+     nDOF_mesh_trial_elementIn,
+     nDOF_trial_elementIn,
+     nDOF_test_elementIn,
+     nQuadraturePoints_elementBoundaryIn,
+     CompKernelFlag);
+
+                   rvalue->setSedClosure(aDarcy,
+                          betaForch,
+                          grain,
+                          packFraction,
+                          packMargin,
+                          maxFraction,
+                          frFraction,
+                          sigmaC,
+                          C3e,
+                          C4e,
+                          eR,
+                          fContact,
+                          mContact,
+                          nContact,
+                          angFriction,
+                          vos_limiter,
+                          mu_fr_limiter);
+    return rvalue;
   }
 }//proteus
 #endif
