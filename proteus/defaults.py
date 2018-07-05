@@ -179,7 +179,6 @@ def reset_default_so():
 def load_system(soModule, path='.'):
     reset_default_so()
     sys.path.append(path)
-    logEvent("AAA="+path+soModule)
     so = imp.load_source(soModule, os.path.join(path, soModule+".py"))
     sys.path.remove(path)
     system_object = System_base()
