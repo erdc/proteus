@@ -18,7 +18,7 @@ from past.utils import old_div
 import cython
 import numpy as np
 import cmath as cmat
-from .Profiling import logEvent
+from .Profiling import logEvent, logFile
 from proteus import Comm
 import time as tt
 import sys as sys
@@ -893,7 +893,7 @@ class  MonochromaticWaves(object):
     wavelength : float
              Regular wave lenght, calculated from linear dispersion if set to None
     waveType : string
-             Defines regular wave theory ("Linear", "Fenton", or "Fenton2")
+             Defines regular wave theory ("Linear", "Fenton")
              Fenton: uses BCoeffs/YCoeffs provided by user
     autoFenton: bool
              autoFenton=True: uses waveheight, period, depth, and g to
@@ -943,10 +943,10 @@ class  MonochromaticWaves(object):
                  fast = True):
         
         self.fast = fast
-        knownWaveTypes = ["Linear","Fenton", "Fenton2"]
+        knownWaveTypes = ["Linear","Fenton"]
         self.waveType = waveType
         if waveType not in knownWaveTypes:
-            logEvent("Wrong wavetype given: Valid wavetypes are %s" %(knownWaveTypes), level=0)
+            logEvent("ERROR!!: Wrong wavetype given: Valid wavetypes are %s" %(knownWaveTypes), level=0)
             sys.exit(1)
         self.g = np.array(g)
         self.waveDir =  setDirVector(np.array(waveDir))
