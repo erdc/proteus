@@ -63,6 +63,11 @@ install:
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
+- hash -r
+- which python
+- which py.test
+- python -c "from backports import functools_lru_cache"
+- python -c "import matplotlib"
 
 cache:
   - timeout: 1000
