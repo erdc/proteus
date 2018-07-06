@@ -478,7 +478,6 @@ namespace proteus
             u_grad_trial[nDOF_trial_element*nSpace],
             dV,
             u_test_dV[nDOF_test_element],
-            u_grad_test_dV[nDOF_test_element*nSpace],
             x,y,z,
             G[nSpace*nSpace],G_dd_G,tr_G;
           //
