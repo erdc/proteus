@@ -137,7 +137,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.ws_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
-        self.pInit_diffusive.setConstantBC(0.)
         self.pInc_diffusive.setConstantBC(0.)
 
     def setTank(self, b_or=None):
