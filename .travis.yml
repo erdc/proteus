@@ -64,6 +64,9 @@ install:
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
 - hash -r
+- ls linux2/lib/python2.7/site-packages/
+- ls linux2/lib/python2.7/site-packages/backports
+- ls linux2/lib/python2.7/site-packages/backports/functools_lru_cache
 - which python
 - which py.test
 - python -c "from backports import functools_lru_cache"
