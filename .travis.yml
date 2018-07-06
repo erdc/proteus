@@ -49,6 +49,7 @@ install:
 - ls bld src
 - popd
 - cd stack
+- ../hashdist/bin/hit purge functools_lru_cache/2szcbajxhprs
 - ../hashdist/bin/hit build -j 2 -v default.yaml
 - cd ..
 - git submodule init
