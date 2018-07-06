@@ -1084,6 +1084,66 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
         # Nonlinear solved finished. 
         # L2 projection of corrected VOF solution at quad points 
 
+class CLSVOFNewtonWithPreRedistancing(Newton):
+    def getNormalReconstruction(self,u,r=None,b=None,par_u=None,par_r=None):
+        # Assemble weighted matrix and rhs for consistent projection
+        self.F.getNormalReconstruction(self.J)
+        logEvent("  ... Normal reconstruction via weighted lumped L2-projection ...",level=2)
+        if self.F.timeStage==1:
+            self.F.projected_qx_tn[:] = self.F.rhs_qx/self.F.weighted_lumped_mass_matrix
+            self.F.projected_qy_tn[:] = self.F.rhs_qy/self.F.weighted_lumped_mass_matrix
+            self.F.projected_qz_tn[:] = self.F.rhs_qz/self.F.weighted_lumped_mass_matrix
+            # Update parallel vectors
+            self.F.par_projected_qx_tn.scatter_forward_insert()
+            self.F.par_projected_qy_tn.scatter_forward_insert()
+            self.F.par_projected_qz_tn.scatter_forward_insert()
+        else:
+            self.F.projected_qx_tStar[:] = self.F.rhs_qx/self.F.weighted_lumped_mass_matrix
+            self.F.projected_qy_tStar[:] = self.F.rhs_qy/self.F.weighted_lumped_mass_matrix
+            self.F.projected_qz_tStar[:] = self.F.rhs_qz/self.F.weighted_lumped_mass_matrix
+            # Update parallel vectors
+            self.F.par_projected_qx_tStar.scatter_forward_insert()
+            self.F.par_projected_qy_tStar.scatter_forward_insert()
+            self.F.par_projected_qz_tStar.scatter_forward_insert()
+
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        # Pre-redistance #
+        self.F.calculateResidual = self.F.clsvof.calculateResidualPreRedistancing
+        self.F.calculateJacobian = self.F.clsvof.calculateJacobianPreRedistancing
+        Newton.solve(self,u,r,b,par_u,par_r)
+        
+        # ******************************************* #
+        # *************** FIRST STAGE *************** #
+        # ******************************************* #
+        #logEvent("+++++ First stage of nonlinear solver +++++",level=2)
+        # GET NORMAL RECONSTRUCTION #
+        #self.getNormalReconstruction(u,r,b,par_u,par_r)
+        # SOLVE NON-LINEAR SYSTEM FOR FIRST STAGE #
+        #Newton.solve(self,u,r,b,par_u,par_r)
+        # save number of newton iterations
+        #self.F.newton_iterations_stage1 = self.its
+
+        # ******************************************** #
+        # *************** SECOND STAGE *************** #
+        # ******************************************** #
+        #if self.F.coefficients.timeOrder==2:
+        #    logEvent("+++++ Second stage of nonlinear solver +++++",level=2)
+        #    self.F.timeStage=2
+        #    # GET NORMAL RECONSTRUCTION #
+        #    self.getNormalReconstruction(u,r,b,par_u,par_r)
+        #    # SOLVE NON-LINEAR SYSTEM FOR SECOND STAGE #
+        #    Newton.solve(self,u,r,b,par_u,par_r)
+        #    self.F.timeStage=1
+        #    # save number of newton iterations
+        #    self.F.newton_iterations_stage2 = self.its
+
+        # ******************************************** #
+        # ***** UPDATE VECTORS FOR VISUALIZATION ***** #
+        # ******************************************** #
+        #self.F.par_H_dof.scatter_forward_insert()
+        #self.F.quantDOFs[:] = self.F.H_dof
+
+
 class CLSVOFNewton(Newton):
     def spinUpStep(self,u,r=None,b=None,par_u=None,par_r=None):
         # Assemble residual and Jacobian for spin up step
@@ -1262,7 +1322,7 @@ class CLSVOFNewton(Newton):
         # ***** UPDATE VECTORS FOR VISUALIZATION ***** #
         # ******************************************** #
         self.F.par_H_dof.scatter_forward_insert()
-        self.F.quantDOFs[:] = self.F.H_dof
+        self.F.quantDOFs[:] = self.F.H_dof        
 
 import deim_utils
 class POD_Newton(Newton):
@@ -3354,6 +3414,8 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
         levelNonlinearSolverType = NewtonWithL2ProjectionForMassCorrection
     elif (levelNonlinearSolverType == CLSVOFNewton):
         levelNonlinearSolverType = CLSVOFNewton
+    elif (levelNonlinearSolverType == CLSVOFNewtonWithPreRedistancing):
+        levelNonlinearSolverType = CLSVOFNewtonWithPreRedistancing
     elif (multilevelNonlinearSolverType == Newton or
         multilevelNonlinearSolverType == NLJacobi or
         multilevelNonlinearSolverType == NLGaussSeidel or

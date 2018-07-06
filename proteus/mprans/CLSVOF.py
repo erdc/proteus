@@ -30,7 +30,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  timeOrder=2,
                  epsFactHeaviside=1.5,
                  epsFactDirac=1.5,
-                 lambdaFact=1.0): #lambda parameter in CLSVOF paper
+                 lambdaFact=1.0,
+                 alpha=1.0E9): #lambda parameter in CLSVOF paper
         assert timeOrder==1 or timeOrder==2, "timeOrder must be 1 or 2"
         assert computeMetrics in [0,1,2]
         # 0: don't compute metrics, 1: compute metrics at EOS (end of simulations), 2: compute metrics at ETS (every time step) and EOS
@@ -41,6 +42,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.epsFactHeaviside=epsFactHeaviside
         self.epsFactDirac=epsFactDirac
         self.lambdaFact=lambdaFact
+        self.alpha=alpha
         self.variableNames=['clsvof']
         nc=1
         mass={0:{0:'linear'}}
@@ -555,6 +557,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                              self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                              self.nElementBoundaryQuadraturePoints_elementBoundary,
                              compKernelFlag)
+        self.calculateResidual = self.clsvof.calculateResidual
+        self.calculateJacobian = self.clsvof.calculateJacobian
         # strong Dirichlet boundary conditions
         self.forceStrongConditions=False
         if self.forceStrongConditions:
@@ -571,7 +575,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # SOME ASSERTS #
         ################
         assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "Use BackwardEuler_cfl"
-        assert options.levelNonlinearSolver == proteus.NonlinearSolvers.CLSVOFNewton, "Use levelNonlinearSolver=CLSVOFNewton"
+        assert (options.levelNonlinearSolver == proteus.NonlinearSolvers.CLSVOFNewton or
+                options.levelNonlinearSolver == proteus.NonlinearSolvers.CLSVOFNewtonWithPreRedistancing), "Use levelNonlinearSolver=CLSVOFNewton or CLSVOFNewtonWithPreRedistancing"
 
         #################
         # GENERAL STUFF #
@@ -941,50 +946,27 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def getNormalReconstruction(self,weighted_mass_matrix):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,weighted_mass_matrix)
-        if self.timeStage==1:
-            self.clsvof.normalReconstruction(#element
-                self.u[0].femSpace.elementMaps.psi,
-                self.u[0].femSpace.elementMaps.grad_psi,
-                self.mesh.nodeArray,
-                self.mesh.elementNodesArray,
-                self.elementQuadratureWeights[('u',0)],
-                self.u[0].femSpace.psi,
-                self.u[0].femSpace.grad_psi,
-                self.u[0].femSpace.psi,
-                self.mesh.nElements_global,
-                self.u[0].femSpace.dofMap.l2g,
-                self.mesh.elementDiametersArray,
-                self.u[0].dof,
-                self.offset[0],self.stride[0],
-                self.nFreeDOF_global[0], #numDOFs
-                self.weighted_lumped_mass_matrix,
-                self.rhs_qx,
-                self.rhs_qy,
-                self.rhs_qz,
-                self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-                weighted_mass_matrix)
-        else:
-            self.clsvof.normalReconstruction(#element
-                self.u[0].femSpace.elementMaps.psi,
-                self.u[0].femSpace.elementMaps.grad_psi,
-                self.mesh.nodeArray,
-                self.mesh.elementNodesArray,
-                self.elementQuadratureWeights[('u',0)],
-                self.u[0].femSpace.psi,
-                self.u[0].femSpace.grad_psi,
-                self.u[0].femSpace.psi,
-                self.mesh.nElements_global,
-                self.u[0].femSpace.dofMap.l2g,
-                self.mesh.elementDiametersArray,
-                self.u[0].dof,
-                self.offset[0],self.stride[0],
-                self.nFreeDOF_global[0], #numDOFs
-                self.weighted_lumped_mass_matrix,
-                self.rhs_qx,
-                self.rhs_qy,
-                self.rhs_qz,
-                self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-                weighted_mass_matrix)
+        self.clsvof.normalReconstruction(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.mesh.elementDiametersArray,
+            self.u[0].dof,
+            self.offset[0],self.stride[0],
+            self.nFreeDOF_global[0], #numDOFs
+            self.weighted_lumped_mass_matrix,
+            self.rhs_qx,
+            self.rhs_qy,
+            self.rhs_qz,
+            self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
+            weighted_mass_matrix)
 
     def getLumpedMassMatrix(self):
         self.lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d')
@@ -1042,8 +1024,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         min_distance = numpy.zeros(1)
         max_distance = numpy.zeros(1)
         mean_distance = numpy.zeros(1)
-
-        self.clsvof.calculateResidual(#element
+        
+        self.calculateResidual(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1130,7 +1112,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # To compute H at DOFs
             self.nFreeDOF_global[0], #numDOFs
             self.lumped_mass_matrix,
-            self.H_dof)
+            self.H_dof,
+            # PARAMETERS FOR PRE REDISTANCING
+            self.coefficients.epsFactHeaviside,
+            self.coefficients.alpha,
+            self.u_dof_old)
 
         # Quantities to compute normalization factor
         from proteus.flcbdfWrappers import globalSum, globalMax
@@ -1157,8 +1143,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
-
-        self.clsvof.calculateJacobian(#element
+        self.calculateJacobian(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1216,7 +1201,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.lambdaFact,
-            self.norm_factor_lagged)
+            self.norm_factor_lagged,
+            # PARAMETERS FOR PRE REDISTANCING 
+            self.coefficients.epsFactHeaviside,
+            self.coefficients.alpha,
+            self.u_dof_old)
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
