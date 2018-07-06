@@ -89,7 +89,7 @@ with open(os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','ChronoConfig.cmake'),'r')
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
 PROTEUS_EXTRA_FC_LINK_ARGS=[]
 
-
+PROTEUS_NCURSES_INCLUDE_DIR, PROTEUS_NCURSES_LIB_DIR = get_flags('ncurses')
 
 if platform_blas_h:
     PROTEUS_BLAS_H = platform_blas_h
