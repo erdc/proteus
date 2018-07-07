@@ -4,8 +4,8 @@ from proteus import *
 from proteus.Transport import *
 from proteus.Transport import OneLevelTransport
 
-cdef extern from "TIM.h" namespace "proteus":
-    cdef cppclass TIM_base:
+cdef extern from "EVDiluteTransport.h" namespace "proteus":
+    cdef cppclass EVDiluteTransport_base:
         void FCTStep(int NNZ,
                      int numDOFs,
                      double* lumped_mass_matrix,
@@ -112,7 +112,11 @@ cdef extern from "TIM.h" namespace "proteus":
                                double* quantDOFs,
                                # TCAT Dilute Parameters for Entropy
                                double poro,
-                               double* p_dof)
+                               double perm,
+                               double diff,
+                               double alpha_L,
+                               double* p_dof,
+                               double* entropy)
         void calculateResidual_entropy_viscosity(double dt,
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -205,7 +209,11 @@ cdef extern from "TIM.h" namespace "proteus":
                                double* quantDOFs,
                                # TCAT Dilute Parameters for Entropy
                                double poro,
-                               double* p_dof)
+                               double perm,
+                               double diff,
+                               double alpha_L,
+                               double* p_dof,
+                               double* entropy)
         void calculateJacobian(double dt,
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -312,7 +320,7 @@ cdef extern from "TIM.h" namespace "proteus":
                                double* ebqe_bc_flux_u_ext,
                                int* csrColumnOffsets_eb_u_u,
                                int LUMPED_MASS_MATRIX)
-    TIM_base* newTIM(int nSpaceIn,
+    EVDiluteTransport_base* newEVDiluteTransport(int nSpaceIn,
                        int nQuadraturePoints_elementIn,
                        int nDOF_mesh_trial_elementIn,
                        int nDOF_trial_elementIn,
@@ -320,8 +328,8 @@ cdef extern from "TIM.h" namespace "proteus":
                        int nQuadraturePoints_elementBoundaryIn,
                        int CompKernelFlag)
 
-cdef class cTIM_base:
-   cdef TIM_base* thisptr
+cdef class cEVDiluteTransport_base:
+   cdef EVDiluteTransport_base* thisptr
    def __cinit__(self,
                  int nSpaceIn,
                  int nQuadraturePoints_elementIn,
@@ -330,7 +338,7 @@ cdef class cTIM_base:
                  int nDOF_test_elementIn,
                  int nQuadraturePoints_elementBoundaryIn,
                  int CompKernelFlag):
-       self.thisptr = newTIM(nSpaceIn,
+       self.thisptr = newEVDiluteTransport(nSpaceIn,
                              nQuadraturePoints_elementIn,
                              nDOF_mesh_trial_elementIn,
                              nDOF_trial_elementIn,
@@ -460,7 +468,11 @@ cdef class cTIM_base:
                          numpy.ndarray quantDOFs,
                          # TCAT Dilute Parameters for Entropy
                          double poro,
-                         numpy.ndarray p_dof):
+                         double perm,
+                         double diff,
+                         double alpha_L,
+                         numpy.ndarray p_dof,
+                         numpy.ndarray entropy):
        self.thisptr.calculateResidual(dt,
                                        <double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
@@ -553,7 +565,11 @@ cdef class cTIM_base:
                                        <double*> quantDOFs.data,
                                         # TCAT Dilute Parameters for Entropy
                                         poro,
-                                        <double*> p_dof.data)
+                                        perm,
+                                        diff,
+                                        alpha_L,
+                                        <double*> p_dof.data,
+                                        <double*> entropy.data)
    def calculateResidual_entropy_viscosity(self,
                          double dt,
                          numpy.ndarray mesh_trial_ref,
@@ -646,7 +662,11 @@ cdef class cTIM_base:
                          numpy.ndarray quantDOFs,
                          # TCAT Dilute Parameters for Entropy
                          double poro,
-                         numpy.ndarray p_dof):
+                         double perm,
+                         double diff,
+                         double alpha_L,
+                         numpy.ndarray p_dof,
+                         numpy.ndarray entropy):
        self.thisptr.calculateResidual_entropy_viscosity(dt,
                                        <double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
@@ -739,7 +759,11 @@ cdef class cTIM_base:
                                        <double*> quantDOFs.data,
                                         # TCAT Dilute Parameters for Entropy
                                         poro,
-                                        <double*> p_dof.data)
+                                        perm,
+                                        diff,
+                                        alpha_L,
+                                        <double*> p_dof.data,
+                                        <double*> entropy.data)
    def calculateJacobian(self,
                          double dt,
                          numpy.ndarray mesh_trial_ref,

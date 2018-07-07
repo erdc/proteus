@@ -1,5 +1,5 @@
 import proteus
-from proteus.mprans.cTIM import *
+from proteus.dilutetransport.cEVDiluteTransport import *
 
 class SubgridError(proteus.SubgridError.SGE_base):
     def __init__(self,coefficients,nd):
@@ -17,7 +17,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         self.nStepsToDelay = nStepsToDelay
         self.nSteps=0
         if self.lag:
-            logEvent("TIM.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
+            logEvent("EVDiluteTransport.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
             self.nStepsToDelay=1
             self.lag=False
     def initializeElementQuadrature(self,mesh,t,cq):
@@ -33,12 +33,12 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
         if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
-            logEvent("TIM.ShockCapturing: switched to lagged shock capturing")
+            logEvent("EVDiluteTransport.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
             self.numDiff_last=[]
             for ci in range(self.nc):
                 self.numDiff_last.append(self.numDiff[ci].copy())
-        logEvent("TIM: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
+        logEvent("EVDiluteTransport: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
 
 class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
     def __init__(self,vt,getPointwiseBoundaryConditions,
@@ -181,7 +181,6 @@ class RKEV(proteus.TimeIntegration.SSP):
         """
         assumes successful step has been taken
         """
-
         self.t = self.tLast + self.dt
         for ci in range(self.nc):
             self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
@@ -267,7 +266,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  cK=1.0,
                  # OUTPUT quantDOFs
                  outputQuantDOFs = False,
-                 poro = 1.0):
+                 poro = 1.0,
+                 perm = 1.0,
+                 diff = 1.0,
+                 alpha_L = 1.0):
 
         self.useMetrics = useMetrics
         self.variableNames=['tim']
@@ -318,6 +320,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.cE=cE
         self.outputQuantDOFs=outputQuantDOFs
         self.poro = poro
+        self.perm = perm
+        self.diff = diff
+        self.alpha_L = alpha_L
+        self.entropy = None
 
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
@@ -434,7 +440,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV_last'],
                                                     self.model.q[('m',0)],
                                                     self.model.mesh.nElements_owned)
-            logEvent("Phase  0 mass before TIM step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Phase  0 mass before EVDiluteTransport step = %12.5e" % (self.m_pre,),level=2)
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
@@ -443,7 +449,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
                                                      self.model.mesh.nElements_owned)
-            logEvent("Phase  0 mass after TIM step = %12.5e" % (self.m_post,),level=2)
+            logEvent("Phase  0 mass after EVDiluteTransport step = %12.5e" % (self.m_post,),level=2)
         copyInstructions = {}
         return copyInstructions
     def updateToMovingDomain(self,t,c):
@@ -468,7 +474,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             phi=None
             porosity=None
         if v is not None:
-            # self.TIMCoefficientsEvaluate(self.eps,
+            # self.EVDiluteTransportCoefficientsEvaluate(self.eps,
             #                              v,
             #                              phi,
             #                              c[('u',0)],
@@ -686,22 +692,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nElementBoundaryQuadraturePoints_global = (self.mesh.nElements_global*
                                                         self.mesh.nElementBoundaries_element*
                                                         self.nElementBoundaryQuadraturePoints_elementBoundary)
-#        if isinstance(self.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
-#            print self.nQuadraturePoints_element
-#            if self.nSpace_global == 3:
-#                assert(self.nQuadraturePoints_element == 5)
-#            elif self.nSpace_global == 2:
-#                assert(self.nQuadraturePoints_element == 6)
-#            elif self.nSpace_global == 1:
-#                assert(self.nQuadraturePoints_element == 3)
-#
-#            print self.nElementBoundaryQuadraturePoints_elementBoundary
-#            if self.nSpace_global == 3:
-#                assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 4)
-#            elif self.nSpace_global == 2:
-#                assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 4)
-#            elif self.nSpace_global == 1:
-#                assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 1)
 
         #
         #storage dictionaries
@@ -788,7 +778,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # mql. Some ASSERTS to restrict the combination of the methods
         if self.coefficients.STABILIZATION_TYPE>0:
-            assert self.timeIntegration.isSSP==True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within TIM model"
+            assert self.timeIntegration.isSSP==True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within EVDiluteTransport model"
             cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver==ExplicitLumpedMassMatrix or options.levelNonlinearSolver==ExplicitConsistentMassMatrixForVOF)
             assert cond, "If STABILIZATION_TYPE>0, use levelNonlinearSolver=ExplicitLumpedMassMatrix or ExplicitConsistentMassMatrixForVOF"
         if 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix:
@@ -877,7 +867,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #TODO how to handle redistancing calls for calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         compKernelFlag=0
-        self.tim = cTIM_base(self.nSpace_global,
+        self.evdilutetransport = cEVDiluteTransport_base(self.nSpace_global,
                              self.nQuadraturePoints_element,
                              self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
                              self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
@@ -896,11 +886,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
+        self.entropy = numpy.zeros( len(self.mesh.nodeArray) ,'d')
+
+
+
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         limited_solution = numpy.zeros(self.u[0].dof.shape)
 
-        self.tim.FCTStep(
+        self.evdilutetransport.FCTStep(
                          self.nnz, #number of non zero entries
                          len(rowptr)-1, #number of DOFs
                          self.ML, #Lumped mass matrix
@@ -952,7 +946,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-
         if self.coefficients.porosity_dof is None:
             self.coefficients.porosity_dof = numpy.ones(self.u[0].dof.shape,'d')
         if self.u_dof_old is None:
@@ -1178,11 +1171,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #import pdb; pdb.set_trace()
 
         if (self.coefficients.STABILIZATION_TYPE == 0): #SUPG
-            self.calculateResidual = self.tim.calculateResidual
-            self.calculateJacobian = self.tim.calculateJacobian
+            self.calculateResidual = self.evdilutetransport.calculateResidual
+            self.calculateJacobian = self.evdilutetransport.calculateJacobian
         else:
-            self.calculateResidual = self.tim.calculateResidual_entropy_viscosity
-            self.calculateJacobian = self.tim.calculateMassMatrix
+            self.calculateResidual = self.evdilutetransport.calculateResidual_entropy_viscosity
+            self.calculateJacobian = self.evdilutetransport.calculateMassMatrix
         self.calculateResidual(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1284,7 +1277,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.quantDOFs,
             # TCAT Dilute Parameters for Entropy
             self.coefficients.poro,
-            self.coefficients.mom_Model.u[0].dof)
+            self.coefficients.perm,
+            self.coefficients.diff,
+            self.coefficients.alpha_L,
+            self.coefficients.mom_Model.u[0].dof,
+            self.entropy)
+
+        if self.timeIntegration.t in self.coefficients.tnList:
+        	fileEnt = 'entropy_results/entropy.csv.'+str(int(self.timeIntegration.t))
+        	np.savetxt(fileEnt, np.column_stack((self.mesh.nodeArray[:,0], self.entropy*0.0, self.entropy*0.0, self.entropy)) , delimiter = ',' )
 
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
@@ -1439,3 +1440,137 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
     def updateAfterMeshMotion(self):
         pass
+
+
+class MyCoefficients(Coefficients):
+	def __init__(self,
+                 LS_model=None,
+                 V_model=0,
+                 RD_model=None,
+                 ME_model=1,
+                 EikonalSolverFlag=0,
+                 checkMass=True,
+                 epsFact=0.0,
+                 useMetrics=0.0,
+                 sc_uref=1.0,
+                 sc_beta=1.0,
+                 setParamsFunc=None,
+                 movingDomain=False,
+                 forceStrongConditions=0,
+                 # FOR EDGE BASED EV
+                 STABILIZATION_TYPE=0,
+                 ENTROPY_TYPE=2, #logarithmic
+                 LUMPED_MASS_MATRIX=False,
+                 FCT=True,
+                 # FOR ENTROPY VISCOSITY
+                 cE=1.0,
+                 uL=0.0,
+                 uR=1.0,
+                 # FOR ARTIFICIAL COMPRESSION
+                 cK=1.0,
+                 # OUTPUT quantDOFs
+                 outputQuantDOFs = False,
+                 mom_ModelId = None,
+                 diff_ModelId = None,
+                 adv_ModelId = None,
+                 poro = 1.0,
+                 perm = 1.0e-6,
+                 diff = 1.0,
+                 alpha_L = 1.0,
+                 tnList = None
+                 ):
+
+		self.useMetrics = useMetrics
+		self.variableNames=['tim']
+		nc=1
+		mass={0:{0:'linear'}}
+		advection={0:{0:'linear'}}
+		hamiltonian={}
+		diffusion={}
+		potential={}
+		reaction={}
+		proteus.TransportCoefficients.TC_base.__init__(self,
+                         nc,
+                         mass,
+                         advection,
+                         diffusion,
+                         potential,
+                         reaction,
+                         hamiltonian,
+                         self.variableNames,
+                         movingDomain=movingDomain)
+		self.epsFact=epsFact
+		self.flowModelIndex=V_model
+		self.modelIndex=ME_model
+		self.RD_modelIndex=RD_model
+		self.LS_modelIndex=LS_model
+		self.sc_uref=sc_uref
+		self.sc_beta=sc_beta
+		#mwf added
+		self.eikonalSolverFlag = EikonalSolverFlag
+		if self.eikonalSolverFlag >= 1: #FMM
+			assert self.RD_modelIndex < 0, "no redistance with eikonal solver too"
+		self.checkMass = checkMass
+        #VRANS
+		self.q_porosity = None; self.ebq_porosity = None; self.ebqe_porosity = None
+		self.porosity_dof = None
+		self.setParamsFunc   = setParamsFunc
+		self.flowCoefficients=None
+		self.movingDomain=movingDomain
+        # EDGE BASED (AND ENTROPY) VISCOSITY
+		self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
+		self.STABILIZATION_TYPE=STABILIZATION_TYPE
+		self.ENTROPY_TYPE=ENTROPY_TYPE
+		self.FCT=FCT
+		self.uL=uL
+		self.uR=uR
+		self.cK=cK
+		self.forceStrongConditions=forceStrongConditions
+		self.cE=cE
+		self.outputQuantDOFs=outputQuantDOFs
+		#EVDiluteTransport
+		self.mom_ModelId  = mom_ModelId
+		self.adv_ModelId  = adv_ModelId
+		self.diff_ModelId = diff_ModelId
+		self.poro = poro
+		self.perm = perm
+		self.diff = diff
+		self.alpha_L = alpha_L
+		self.tnList = tnList
+		self.entropy = None
+
+	def attachModels(self,modelList):
+		self.mom_Model = modelList[self.mom_ModelId]
+		self.adv_Model = modelList[self.adv_ModelId]
+		self.diff_Model = modelList[self.diff_ModelId]  
+		self.q_v = np.zeros(self.adv_Model.q[('grad(u)',0)].shape,'d')
+		self.ebqe_v = np.zeros(self.adv_Model.ebqe[('grad(u)',0)].shape,'d')
+		self.ebqe_phi = np.zeros(self.adv_Model.ebqe[('u',0)].shape,'d')
+		if self.mom_Model.q.has_key(('velocity',0)):
+			self.q_v = self.mom_Model.q[('velocity',0)]/self.poro
+			self.ebqe_v = self.mom_Model.ebqe[('velocity',0)]/self.poro
+		else:
+			self.q_v = self.mom_Model.q[('f',0)]/self.poro
+			self.ebqe_v = self.mom_Model.ebqe[('f',0)]/self.poro
+		if self.mom_Model.ebq.has_key(('velocity',0)):
+			self.ebq_v = self.mom_Model.ebq[('velocity',0)]/self.poro
+		else:
+			if self.mom_Model.ebq.has_key(('f',0)):
+				self.ebq_v = self.mom_Model.ebq[('f',0)]/self.poro
+
+	def preStep(self,t,firstStep=False):
+		#import pdb; pdb.set_trace()
+		print "Advection Pre",t,self.adv_Model.u[0].dof[0]
+		self.adv_Model.u_dof_old[:] = self.adv_Model.u[0].dof
+		self.adv_Model.timeIntegration.m_last = self.diff_Model.timeIntegration.m_last
+		copyInstructions = {'copy_uList':True,'uList_model':self.diff_ModelId}
+		copyInstructions = {'reset_uList':True}
+		print "Advection Pre_2",t,self.adv_Model.u[0].dof[0]
+		return copyInstructions
+
+	def postStep(self,t,firstStep=False):
+		#import pdb; pdb.set_trace()
+		print "Advection Post",t,self.adv_Model.u[0].dof[0]
+		self.adv_Model.q['dV_last'][:] = self.adv_Model.q['dV']
+
+

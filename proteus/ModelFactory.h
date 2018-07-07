@@ -345,17 +345,38 @@ namespace proteus
 						  int nQuadraturePoints_elementBoundaryIn,
 						  int CompKernelFlag)//0=Parametric
     {
-      if (CompKernelFlag == 0)	  
-	{
-	  if (nSpaceIn == 1)
-	    { return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<1,2,2,2>,1,3,2,2,2,1>());
-		}	  		      
-	}
-      else
-        {
-          NO_INSTANCE
-        }
-      return NULL;
+	if (CompKernelFlag == 0){
+		if (nSpaceIn == 1){ 
+			if (nDOF_mesh_trial_elementIn == nDOF_trial_elementIn){
+				if (nQuadraturePoints_elementIn == 3){
+					if (nQuadraturePoints_elementBoundaryIn == 1){
+						return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<1,2,2,2>,1,3,2,2,2,1>());
+					}
+					else{
+						NO_INSTANCE
+					}
+				}
+				else if (nQuadraturePoints_elementIn == 4){
+					if (nQuadraturePoints_elementBoundaryIn == 1){
+						return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<1,2,2,2>,1,4,2,2,2,1>());
+					}
+					else{
+						NO_INSTANCE
+					}
+				}
+				else{
+					NO_INSTANCE
+				}
+			}
+			else{
+				NO_INSTANCE
+			}	
+		}
+	}	  		      
+    else{
+    	NO_INSTANCE
+    }
+    return NULL;
     }
 }
 #endif

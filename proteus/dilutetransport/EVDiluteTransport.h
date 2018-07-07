@@ -1,10 +1,10 @@
-#ifndef TIM_H
-#define TIM_H
+#ifndef EVDiluteTransport_H
+#define EVDiluteTransport_H
 #include <cmath>
 #include <iostream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
-#include "gw_transport/TCAT_ND.h"
+#include "dilutetransport/TCAT_ND.h"
 
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define IS_BETAij_ONE 0
@@ -23,14 +23,13 @@
 #define DENTROPY_LOG(phi,phiL,phiR) (phiL+phiR-2*phi)*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(fabs((phi-phiL)*(phiR-phi))+1E-14)
 
 
-
 namespace proteus
 {
-  class TIM_base
+  class EVDiluteTransport_base
   {
     //The base class defining the interface
   public:
-    virtual ~TIM_base(){}
+    virtual ~EVDiluteTransport_base(){}
     virtual void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
                          int numDOFs, //number of DOFs
                          double* lumped_mass_matrix, //lumped mass matrix (as vector)
@@ -147,7 +146,11 @@ namespace proteus
                                    double* quantDOFs,
                                    // TCAT Dilute Parameters for Entropy
                                    double poro,
-								   double* p_dof)=0;
+                                   double perm,
+                                   double diff,
+                                   double alpha_L,
+								   double* p_dof,
+								   double* entropy)=0;
     virtual void calculateResidual_entropy_viscosity(//element
                                                      double dt,
                                                      double* mesh_trial_ref,
@@ -250,7 +253,11 @@ namespace proteus
                                                      double* quantDOFs,
                                                      // TCAT Dilute Parameters for Entropy
                                                      double poro,
-                                                     double* p_dof)=0;
+                                                     double perm,
+                                                     double diff,
+                                                     double alpha_L,
+                                                     double* p_dof,
+                                                     double* entropy)=0;
     virtual void calculateJacobian(//element
                                    double dt,
                                    double* mesh_trial_ref,
@@ -372,12 +379,12 @@ namespace proteus
            int nDOF_trial_element,
            int nDOF_test_element,
            int nQuadraturePoints_elementBoundary>
-  class TIM : public TIM_base
+  class EVDiluteTransport : public EVDiluteTransport_base
   {
   public:
     const int nDOF_test_X_trial_element;
     CompKernelType ck;
-    TIM():
+    EVDiluteTransport():
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
       ck()
     {}
@@ -513,7 +520,7 @@ namespace proteus
             }
           else
             {
-              std::cout<<"warning: TIM open boundary with no external trace, setting to zero for inflow"<<std::endl;
+              std::cout<<"warning: EVDiluteTransport open boundary with no external trace, setting to zero for inflow"<<std::endl;
               flux = 0.0;
             }
 
@@ -763,7 +770,11 @@ namespace proteus
                            double* quantDOFs,
                            // TCAT Dilute Parameters for Entropy
                            double poro,
-                           double* p_dof)
+                           double perm,
+                           double diff,
+                           double alpha_L,
+                           double* p_dof,
+                           double* entropy)
     {
       double Ct_sge = 4.0;
       //
@@ -811,25 +822,7 @@ namespace proteus
                 porosity,
                 //
                 G[nSpace*nSpace],G_dd_G,tr_G;//norm_Rv;
-              // //
-              // //compute solution and gradients at quadrature points
-              // //
-              // u=0.0;
-              // for (int I=0;I<nSpace;I++)
-              //   {
-              //     grad_u[I]=0.0;
-              //   }
-              // for (int j=0;j<nDOF_trial_element;j++)
-              //   {
-              //     int eN_j=eN*nDOF_trial_element+j;
-              //     int eN_k_j=eN_k*nDOF_trial_element+j;
-              //     int eN_k_j_nSpace = eN_k_j*nSpace;
-              //     u += valFromDOF_c(u_dof[u_l2g[eN_j]],u_trial[eN_k_j]);
-              //     for (int I=0;I<nSpace;I++)
-              //       {
-              //         grad_u[I] += gradFromDOF_c(u_dof[u_l2g[eN_j]],u_grad_trial[eN_k_j_nSpace+I]);
-              //       }
-              //   }
+ 
               ck.calculateMapping_element(eN,
                                           k,
                                           mesh_dof,
@@ -1261,11 +1254,14 @@ namespace proteus
                                              double* quantDOFs,
                                   			 // TCAT Dilute Parameters for Entropy
                                 			 double poro,
-                                			 double* p_dof)
+                                			 double perm,
+                                			 double diff,
+                                			 double alpha_L,
+                                			 double* p_dof,
+                                			 double* entropy)
     {
-      // NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
-      // Allocate space for the transport matrices
-      // This is used for first order KUZMIN'S METHOD
+
+
       register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
       for (int i=0; i<NNZ; i++)
         {
@@ -1277,21 +1273,21 @@ namespace proteus
      // Load in TCAT Entropy Variables into Struct
      struct TCAT_var TCAT_v;
 	 TCAT_v.poro = poro;
-	 TCAT_v.perm = 5.04e-6;
-	 TCAT_v.diff = 2.23e-5;
-	 TCAT_v.alpha_L = 1.545653e-01;
-     
+	 TCAT_v.perm = perm;
+	 TCAT_v.diff = diff;
+	 TCAT_v.alpha_L = alpha_L;
 
      // Get Gradients at DOF using lumped L2 Projection 
 	 int ijT = 0;
-     register double grad_w_TCAT[numDOFs], grad_p_TCAT[numDOFs];
+     register double grad_w_TCAT[numDOFs], grad_p_TCAT[numDOFs], den_dof[numDOFs];
 	 for (int i=0; i<numDOFs; i++){
+		den_dof[i] = den(u_dof_old[i]);
 		grad_w_TCAT[i] = 0.0;
 		grad_p_TCAT[i] = 0.0;
 		double mi = ML[i];
 		for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++){ // First loop in j (sparsity pattern)
         	int j = csrColumnOffsets_DofLoops[offset];
-			grad_w_TCAT[i] = grad_w_TCAT[i] + Cx[ijT]*u_dof_old[j];
+			grad_w_TCAT[i] = grad_w_TCAT[i] + Cx[ijT]*u_dof_old[j]; 
 			grad_p_TCAT[i] = grad_p_TCAT[i] + Cx[ijT]*p_dof[j];
             ijT+=1; 
         }
@@ -1300,6 +1296,8 @@ namespace proteus
 	  }
 
 
+     
+
       // compute entropy and init global_entropy_residual and boundary_integral
       register double psi[numDOFs], eta[numDOFs], global_entropy_residual[numDOFs], boundary_integral[numDOFs];
       for (int i=0; i<numDOFs; i++)
@@ -1307,15 +1305,18 @@ namespace proteus
           // NODAL ENTROPY //
           if (STABILIZATION_TYPE==1) //EV stab
             {
-              double porosity_times_solni = porosity_dof[i]*u_dof_old[i];
+              double porosity_times_solni = den_dof[i]*u_dof_old[i];
               if (ENTROPY_TYPE == 1){
 				eta[i] = ENTROPY(porosity_times_solni,uL,uR);
+				entropy[i] = eta[i];
               }
               else if(ENTROPY_TYPE == 2){
                  eta[i] = ENTROPY_LOG(porosity_times_solni,uL,uR);
+				 entropy[i] = eta[i];
               }
               else if(ENTROPY_TYPE == 3){
-                 eta[i] = ENTROPY_TCAT(porosity_times_solni,grad_w_TCAT[i],grad_p_TCAT[i],TCAT_v);
+                 eta[i] = ENTROPY_TCAT(u_dof_old[i],grad_w_TCAT[i],grad_p_TCAT[i],TCAT_v);
+				 entropy[i] = eta[i];
               }
               global_entropy_residual[i]=0.;
             }
@@ -1330,6 +1331,7 @@ namespace proteus
       //    * cell based CFL (for reference)
       //    * Entropy residual
       //    * Transport matrices
+
       for(int eN=0;eN<nElements_global;eN++)
         {
           //declare local storage for local contributions and initialize
@@ -1367,7 +1369,9 @@ namespace proteus
                 jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
                 dV,x,y,z,xt,yt,zt,
                 //VRANS
-                porosity;
+                porosity,
+                //TCAT
+                den_u,den_un;
               //get the physical integration weight
               ck.calculateMapping_element(eN,
                                           k,
@@ -1393,6 +1397,10 @@ namespace proteus
               //get the solution gradients at tn for entropy viscosity
               ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
               ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
+
+              //TCAT
+              den_u = den(u);
+              den_un = den(un);
 			  ck.gradFromDOF(p_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_p);
 
               //precalculate test function products with integration weights for mass matrix terms
@@ -1400,15 +1408,13 @@ namespace proteus
                 {
                   u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
                   for (int I=0;I<nSpace;I++)
-                    u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+                    u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
                 }
 
               //calculate time derivative at quadrature points
               if (q_dV_last[eN_k] <= -100)
                 q_dV_last[eN_k] = dV;
               q_dV[eN_k] = dV;
-              //VRANS
-              porosity = q_porosity[eN_k];
               //
               //moving mesh
               //
@@ -1418,8 +1424,7 @@ namespace proteus
               mesh_velocity[2] = zt;
               //relative velocity at tn
               for (int I=0;I<nSpace;I++)
-                porosity_times_velocity[I] = porosity*(velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
-
+                porosity_times_velocity[I] = den_un*(velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
               //////////////////////////////
               // CALCULATE CELL BASED CFL //
               //////////////////////////////
@@ -1433,13 +1438,13 @@ namespace proteus
                   for (int I=0;I<nSpace;I++)
                     aux_entropy_residual += porosity_times_velocity[I]*grad_un[I];
                     if (ENTROPY_TYPE==1){
-						DENTROPY_un = DENTROPY(porosity*un,uL,uR);
+						DENTROPY_un = DENTROPY(poro*den_un*un,uL,uR);
 					}
 					else if (ENTROPY_TYPE==2){
-						DENTROPY_un = DENTROPY_LOG(porosity*un,uL,uR);
+						DENTROPY_un = DENTROPY_LOG(poro*den_un*un,uL,uR);
 					}
-					else if (ENTROPY_TYPE==3){ //printf("vel %e \n",velocity[0]);
-						DENTROPY_un = DENTROPY_TCAT(porosity*un,grad_un[0],grad_p[0],TCAT_v);
+					else if (ENTROPY_TYPE==3){ 
+						DENTROPY_un = DENTROPY_TCAT(un,grad_un[0],grad_p[0],TCAT_v);
 					}
                 }
               //////////////
@@ -1452,19 +1457,20 @@ namespace proteus
                   if (STABILIZATION_TYPE==1) // EV stab
                     {
                       int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
-                      double porosity_times_uni = porosity_dof[gi]*u_dof_old[gi];
+                      double porosity_times_uni = den_dof[gi]*u_dof_old[gi];
                 	  if (ENTROPY_TYPE==1){
 						DENTROPY_uni = DENTROPY(porosity_times_uni,uL,uR);
 					  }
 					  else if (ENTROPY_TYPE==2){
 						DENTROPY_uni = DENTROPY_LOG(porosity_times_uni,uL,uR);
 					  }
-					  else if (ENTROPY_TYPE==3){
-						DENTROPY_uni = DENTROPY_TCAT(porosity_times_uni,grad_w_TCAT[eN_i],grad_p_TCAT[eN_i],TCAT_v);
+					  else if (ENTROPY_TYPE==3){ 
+						DENTROPY_uni = DENTROPY_TCAT(u_dof_old[gi],grad_w_TCAT[gi],grad_p_TCAT[gi],TCAT_v);
 					  }
                       element_entropy_residual[i] += (DENTROPY_un - DENTROPY_uni)*aux_entropy_residual*u_test_dV[i];
+//printf("%e %e %e %e %e %e \n",element_entropy_residual[i],DENTROPY_un,DENTROPY_uni,aux_entropy_residual,u_test_dV[i],u_dof_old[gi]);
                     }
-                  elementResidual_u[i] += porosity*(u-un)*u_test_dV[i];
+                  elementResidual_u[i] += poro*(u-un)*u_test_dV[i];
                   ///////////////
                   // j-th LOOP // To construct transport matrices
                   ///////////////
@@ -1482,7 +1488,7 @@ namespace proteus
                 }//i
               //save solution for other models
               q_u[eN_k] = u;
-              q_m[eN_k] = porosity*u;
+              q_m[eN_k] = poro*u;
             }
           /////////////////
           // DISTRIBUTE // load cell based element into global residual
@@ -1582,8 +1588,6 @@ namespace proteus
               //precalculate test function products with integration weights
               for (int j=0;j<nDOF_trial_element;j++)
                 u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
-              //VRANS
-              porosity_ext = ebqe_porosity_ext[ebNE_kb];
               //
               //moving mesh
               //
@@ -1593,7 +1597,7 @@ namespace proteus
               mesh_velocity[2] = zt_ext;
               //std::cout<<"mesh_velocity ext"<<std::endl;
               for (int I=0;I<nSpace;I++)
-                porosity_times_velocity[I] = porosity_ext*(ebqe_velocity_ext[ebNE_kb_nSpace+I] - MOVING_DOMAIN*mesh_velocity[I]);
+                porosity_times_velocity[I] = den(u_ext)*(ebqe_velocity_ext[ebNE_kb_nSpace+I] - MOVING_DOMAIN*mesh_velocity[I]);
               //
               //calculate the fluxes
               //
@@ -1619,7 +1623,7 @@ namespace proteus
                     flux_ext = ebqe_bc_flux_u_ext[ebNE_kb];
                   else
                     {
-                      std::cout<<"warning: TIM open boundary with no external trace, setting to zero for inflow"<<std::endl;
+                      std::cout<<"warning: EVDiluteTransport open boundary with no external trace, setting to zero for inflow"<<std::endl;
                       flux_ext = 0.0;
                     }
                 }
@@ -1678,7 +1682,7 @@ namespace proteus
               etaMaxi = fabs(eta[i]);
               etaMini = fabs(eta[i]);
             }
-          double porosity_times_solni = porosity_dof[i]*u_dof_old[i];
+          double porosity_times_solni = den_dof[i]*u_dof_old[i];
           // initialize gi and compute xi
           for (int I=0; I < nSpace; I++)
             {
@@ -1696,7 +1700,7 @@ namespace proteus
                   etaMaxi = fmax(etaMaxi,fabs(eta[j]));
                   etaMini = fmin(etaMini,fabs(eta[j]));
                 }
-              double porosity_times_solnj = porosity_dof[j]*u_dof_old[j];
+              double porosity_times_solnj = den_dof[j]*u_dof_old[j];
               // Update Cij matrices
               Cij[0] = Cx[ij];
 			if (nSpace == 2) Cij[1] = Cy[ij];
@@ -1774,7 +1778,7 @@ namespace proteus
         {
           // NOTE: Transport matrices already have the porosity considered. ---> Dissipation matrices as well.
           double solni = u_dof_old[i]; // solution at time tn for the ith DOF
-          double porosityi = porosity_dof[i];
+          double den_solni = den(solni); 
           double ith_dissipative_term = 0;
           double ith_low_order_dissipative_term = 0;
           double ith_flux_term = 0;
@@ -1785,19 +1789,17 @@ namespace proteus
             {
               int j = csrColumnOffsets_DofLoops[offset];
               double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
-              double porosityj = porosity_dof[j];
+              double den_solnj = den(solnj);
               double dLowij, dLij, dEVij, dHij;
 
               ith_flux_term += TransportMatrix[ij]*solnj;
               if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term)
                 {
                   // artificial compression
-                  double solij = 0.5*(porosityi*solni+porosityj*solnj);
-                  double Compij = cK*fmax(solij*(1.0-solij),0.0)/(fabs(porosityi*solni-porosityj*solnj)+1E-14);
+                  double solij = 0.5*(den_solni*solni+den_solnj*solnj);
+                  double Compij = cK*fmax(solij*(1.0-solij),0.0)/(fabs(den_solni*solni-den_solnj*solnj)+1E-14);
                   // first-order dissipative operator
                   dLowij = fmax(fabs(TransportMatrix[ij]),fabs(TransposeTransportMatrix[ij]));
-                  //dLij = fmax(0.,fmax(psi[i]*TransportMatrix[ij], // Approach by S. Badia
-                  //              psi[j]*TransposeTransportMatrix[ij]));
                   dLij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
                   if (STABILIZATION_TYPE==1) //EV Stab
                     {
@@ -1828,14 +1830,14 @@ namespace proteus
           double mi = ML[i];
           // compute edge_based_cfl
           edge_based_cfl[i] = 2.*fabs(dLii)/mi;
-          low_order_solution[i] = u_dof_old[i] - dt/mi*(ith_flux_term
+          low_order_solution[i] = u_dof_old[i] - dt/mi/(u_dof_old[i]*d_den(u_dof_old[i]) + den_dof[i])*(ith_flux_term
                                                         + boundary_integral[i]
                                                         - ith_low_order_dissipative_term);
           // update residual
           if (LUMPED_MASS_MATRIX==1)
-            globalResidual[i] = u_dof_old[i] - dt/mi*(ith_flux_term + boundary_integral[i] - ith_dissipative_term);
+            globalResidual[i] = u_dof_old[i] - dt/mi/(u_dof_old[i]*d_den(u_dof_old[i]) + den_dof[i])*(ith_flux_term + boundary_integral[i] - ith_dissipative_term);
           else
-            globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term);
+            globalResidual[i] += dt/(u_dof_old[i]*d_den(u_dof_old[i]) + den_dof[i])*(ith_flux_term - ith_dissipative_term);
         }
     }
 
@@ -2535,9 +2537,9 @@ namespace proteus
             }//i
         }//elements
     }//computeJacobian
-  };//TIM
+  };//EVDiluteTransport
 
-  inline TIM_base* newTIM(int nSpaceIn,
+  inline EVDiluteTransport_base* newEVDiluteTransport(int nSpaceIn,
                                 int nQuadraturePoints_elementIn,
                                 int nDOF_mesh_trial_elementIn,
                                 int nDOF_trial_elementIn,
@@ -2548,7 +2550,7 @@ namespace proteus
 
 
     if (nSpaceIn == 2)
-      return proteus::chooseAndAllocateDiscretization2D<TIM_base,TIM,CompKernel>(nSpaceIn,
+      return proteus::chooseAndAllocateDiscretization2D<EVDiluteTransport_base,EVDiluteTransport,CompKernel>(nSpaceIn,
                                                                                  nQuadraturePoints_elementIn,
                                                                                  nDOF_mesh_trial_elementIn,
                                                                                  nDOF_trial_elementIn,
@@ -2556,7 +2558,7 @@ namespace proteus
                                                                                  nQuadraturePoints_elementBoundaryIn,
                                                                                  CompKernelFlag);
     else if (nSpaceIn == 1)
-      return proteus::chooseAndAllocateDiscretization1D<TIM_base,TIM,CompKernel>(nSpaceIn,
+      return proteus::chooseAndAllocateDiscretization1D<EVDiluteTransport_base,EVDiluteTransport,CompKernel>(nSpaceIn,
                                                                                  nQuadraturePoints_elementIn,
                                                                                  nDOF_mesh_trial_elementIn,
                                                                                  nDOF_trial_elementIn,
@@ -2564,7 +2566,7 @@ namespace proteus
                                                                                  nQuadraturePoints_elementBoundaryIn,
                                                                                  CompKernelFlag);
     else
-      return proteus::chooseAndAllocateDiscretization<TIM_base,TIM,CompKernel>(nSpaceIn,
+      return proteus::chooseAndAllocateDiscretization<EVDiluteTransport_base,EVDiluteTransport,CompKernel>(nSpaceIn,
                                                                                nQuadraturePoints_elementIn,
                                                                                nDOF_mesh_trial_elementIn,
                                                                                nDOF_trial_elementIn,
