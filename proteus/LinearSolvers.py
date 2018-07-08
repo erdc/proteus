@@ -703,7 +703,9 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == SimpleNavierStokes3D:
                 logEvent("NAHeader Preconditioner SimpleNavierStokes" )
-                self.preconditioner = SimpleNavierStokes3D(par_L,prefix)
+                self.preconditioner = SimpleNavierStokes3D(par_L,
+                                                           prefix,
+                                                           velocity_block_preconditioner=self.preconditionerOptions[0])
                 self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleNavierStokes2D:
                 logEvent("NAHeader Preconditioner SimpleNavierStokes" )
@@ -1429,14 +1431,14 @@ class VelocityInterlacedDofOrderType(DofOrderInfo):
         comm = Comm.get()
         vel_comp_DOF = []
         vel_comp_DOF_vel=[]
-        scaled_ownership_range = ownership_range[0] * 2 / 3
+        scaled_ownership_range = ownership_range[0] * (num_components-1) / num_components
         for i in range(1,num_components):
             vel_comp_DOF.append(numpy.arange(start=ownership_range[0] + i,
                                              stop=ownership_range[0] + num_equations,
                                              step=num_components,
                                              dtype="i"))
             vel_comp_DOF_vel.append(numpy.arange(start=scaled_ownership_range + i - 1,
-                                                 stop=scaled_ownership_range + int(2./num_components*num_equations),
+                                                 stop=scaled_ownership_range + int( num_equations * (num_components-1) / num_components ),
                                                  step=num_components-1,
                                                  dtype="i"))
         return vel_comp_DOF, vel_comp_DOF_vel
@@ -1552,6 +1554,7 @@ class SchurPrecon(KSP_Preconditioner):
         self._initializeIS()
         self.bdyNullSpace = bdyNullSpace
         self.pc.setFromOptions()
+        self.set_velocity_var_names()
 
     def _initialize_without_solver_info(self):
         """
@@ -1565,6 +1568,17 @@ class SchurPrecon(KSP_Preconditioner):
             self.model_info = ModelInfo(nc,
                                         'blocked',
                                         self.L.pde.u[0].dof.size)
+
+    def get_num_components(self):
+        return self.L.pde.nc
+
+    def set_velocity_var_names(self):
+        nc = self.get_num_components()
+        var_names = ('u','v','w')
+        self._var_names = [var_names[i] for i in range(nc-1)]
+
+    def get_velocity_var_names(self):
+        return self._var_names
 
     def setUp(self,global_ksp):
         """
@@ -1802,13 +1816,12 @@ class NavierStokesSchur(SchurPrecon):
 
     def _initialize_velocity_idx(self):
         """
-        This function creates four index sets for use when a block
-        preconditioner is used for the velocity solve.  The first two
-        (e.g. is_vel_u and is_vel_v) describe the global dof
-        associated with the u and v component of the velocity.
-        (TODO - This clear needs to be extended into 3D).  The second
-        two (e.g. isu_local and isv_local) describe the local dof
-        indexes relative to the velocity block itself.
+        This function creates index sets so that a block
+        preconditioner ca be used for the velocity solve. One index
+        set (e.g. is_vel_*) describes the global dof associated
+        with the * component of the velocity.  The second
+        is (e.g. is*_local) describes the local dof
+        indexes relative to the velocity block.
         """
         L_range = self.L.getOwnershipRange()
         neqns = self.L.getSizes()[0][0]
@@ -1817,24 +1830,28 @@ class NavierStokesSchur(SchurPrecon):
         velocity_DOF_full, velocity_DOF_local = velocity_dof_calculator.create_DOF_lists(L_range,
                                                                                          neqns,
                                                                                          self.model_info.nc)
-        self.is_vel_u = p4pyPETSc.IS()
-        self.is_vel_u.createGeneral(velocity_DOF_full[0],comm=p4pyPETSc.COMM_WORLD)
-        self.is_vel_v = p4pyPETSc.IS()
-        self.is_vel_v.createGeneral(velocity_DOF_full[1],comm=p4pyPETSc.COMM_WORLD)
-        self.isu_local = p4pyPETSc.IS()
-        self.isu_local.createGeneral(velocity_DOF_local[0],comm=p4pyPETSc.COMM_WORLD)
-        self.isv_local = p4pyPETSc.IS()
-        self.isv_local.createGeneral(velocity_DOF_local[1],comm=p4pyPETSc.COMM_WORLD)
+
+        for i, var in enumerate(self.get_velocity_var_names()):
+            name_1 = "is_vel_" + var
+            name_2 = "is"+var+"_local"
+            setattr(self,name_1, p4pyPETSc.IS())
+            getattr(self,name_1).createGeneral(velocity_DOF_full[i],comm=p4pyPETSc.COMM_WORLD)
+            setattr(self,name_2, p4pyPETSc.IS())
+            getattr(self,name_2).createGeneral(velocity_DOF_local[i],comm=p4pyPETSc.COMM_WORLD)
 
     def _initialize_velocity_block_preconditioner(self,global_ksp):
         r""" Initialize the velocity block preconditioner.
 
         """
         global_ksp.pc.getFieldSplitSubKSP()[0].pc.setType('fieldsplit')
+        is_lst = []
+        for var in self.get_velocity_var_names():
+            is_local_name = "is" + var + "_local"
+            is_local = getattr(self,is_local_name)
+            is_lst.append((var,is_local))
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitIS(*is_lst)
         # ARB - need to run some tests to see what the best option is here
 #        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitType(1)  # This is for additive (e.g. Jacobi)
-        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitIS(('v1',self.isu_local),
-                                                                  ('v2',self.isv_local))
 
     def _setup_velocity_block_preconditioner(self,global_ksp):
         r"""To improve the effiency of the velocity-block solve in the
@@ -1852,18 +1869,19 @@ class NavierStokesSchur(SchurPrecon):
         This is currently only set up for interlaced DOF ordering.
         """
         self.velocity_sub_matrix = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
-        self.velocity_u_sub_matrix = global_ksp.getOperators()[0].getSubMatrix(self.is_vel_u,self.is_vel_u)
-        self.velocity_v_sub_matrix = global_ksp.getOperators()[0].getSubMatrix(self.is_vel_v,self.is_vel_v)
 
-        global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[0].setOperators(self.velocity_u_sub_matrix,
-                                                                                        self.velocity_u_sub_matrix)
-        global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[1].setOperators(self.velocity_v_sub_matrix,
-                                                                                        self.velocity_v_sub_matrix)
+        for i, var in enumerate(self.get_velocity_var_names()):
+            name_str = "is_vel_" + var
+            name_str_mat = "velocity_" + var + "_sub_matrix"
+            is_set = getattr(self, name_str)
+            setattr(self,name_str_mat, global_ksp.getOperators()[0].getSubMatrix(is_set,
+                                                                                 is_set))
+            global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setOperators(getattr(self,name_str_mat),
+                                                                                            getattr(self,name_str_mat))
+            global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setFromOptions()
+            global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setUp()
 
-        global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[0].setFromOptions()
-        global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[1].setFromOptions()
-        global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[0].setUp()
-        global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[1].setUp()        
+
         global_ksp.pc.getFieldSplitSubKSP()[0].setUp()
         global_ksp.pc.setUp()
 
@@ -2086,49 +2104,29 @@ class Schur_LSC(SchurPrecon):
         self._setSchurApproximation(global_ksp)
         self._setSchurlog(global_ksp)
 
-class NavierStokes3D:
-    def __init__(self,L,prefix=None):
-        self.L = L
-        self.PCD=False
-        L_sizes = L.getSizes()
-        L_range = L.getOwnershipRange()
-        neqns = L_sizes[0][0]
-        rank = p4pyPETSc.COMM_WORLD.rank
-        if self.L.pde.stride[0] == 1:#assume end to end
-            pSpace = self.L.pde.u[0].femSpace
-            pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
-            nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
-            self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+nDOF_pressure,
-                                            dtype="i")
-            self.velocityDOF = numpy.arange(start=L_range[0]+nDOF_pressure,
-                                            stop=L_range[0]+neqns,
-                                            step=1,
-                                            dtype="i")
-        else: #assume blocked
-            self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+neqns,
-                                            step=4,
-                                            dtype="i")
-            velocityDOF = []
-            for start in range(1,4):
-                velocityDOF.append(numpy.arange(start=L_range[0]+start,
-                                                stop=L_range[0]+neqns,
-                                                step=4,
-                                                dtype="i"))
-            self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
-        self.pc = p4pyPETSc.PC().create()
-        if prefix:
-            self.pc.setOptionsPrefix(prefix)
-        self.pc.setType('fieldsplit')
-        self.isp = p4pyPETSc.IS()
-        self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
-        self.isv = p4pyPETSc.IS()
-        self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
-        self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
-        self.pc.setFromOptions()
+class NavierStokes3D(NavierStokesSchur):
+    def __init__(self,
+                 L,
+                 prefix=None,
+                 velocity_block_preconditioner=False):
+        NavierStokesSchur.__init__(self,
+                                   L,
+                                   prefix,
+                                   velocity_block_preconditioner=velocity_block_preconditioner)
+        if self.velocity_block_preconditioner:
+            self.velocity_block_preconditioner_set = False
 
-    def setUp(self, global_ksp=None):
+    def setUp(self, global_ksp=None, newton_it=None):
+        try:
+            if self.velocity_block_preconditioner_set is False:
+                self._initialize_velocity_block_preconditioner(global_ksp)
+                self.velocity_block_preconditioner_set = True
+        except AttributeError:
+            pass
+
+        if self.velocity_block_preconditioner:
+            self._setup_velocity_block_preconditioner(global_ksp)
+
         try:
             if self.L.pde.pp_hasConstantNullSpace:
                 if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
@@ -2137,110 +2135,6 @@ class NavierStokes3D:
                     self.kspList[1].setNullSpace(self.nsp)
         except:
             pass
-        if self.PCD:
-            #modify the mass term in the continuity equation so the p-p block is Q
-            rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
-            self.Qsys_rowptr = rowptr.copy()
-            self.Qsys_colind = colind.copy()
-            self.Qsys_nzval = nzval.copy()
-            nr = rowptr.shape[0] - 1
-            nc = nr
-            self.Qsys =SparseMat(nr,nc,
-                                 self.Qsys_nzval.shape[0],
-                                 self.Qsys_nzval,
-                                 self.Qsys_colind,
-                                 self.Qsys_rowptr)
-            self.L.pde.q[('dm',0,0)][:] = 1.0
-            self.L.pde.getMassJacobian(self.Qsys)
-            self.Qsys_petsc4py = self.L.duplicate()
-            L_sizes = self.L.getSizes()
-            Q_csr_rep_local = self.Qsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
-            self.Qsys_petsc4py.setValuesLocalCSR(Q_csr_rep_local[0],
-                                                 Q_csr_rep_local[1],
-                                                 Q_csr_rep_local[2],
-                                                 p4pyPETSc.InsertMode.INSERT_VALUES)
-            self.Qsys_petsc4py.assemblyBegin()
-            self.Qsys_petsc4py.assemblyEnd()
-            self.Qp = self.Qsys_petsc4py.getSubMatrix(self.isp,self.isp)
-            from LinearAlgebraTools import _petsc_view
-            _petsc_view(self.Qp, "Qp")#write to Qp.m
-            #running Qp.m will load into matlab  sparse matrix
-            #runnig Qpf = full(Mat_...) will get the full matrix
-            #
-            #modify the diffusion term in the mass equation so the p-p block is Ap
-            rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
-            self.Asys_rowptr = rowptr.copy()
-            self.Asys_colind = colind.copy()
-            self.Asys_nzval = nzval.copy()
-            L_sizes = self.L.getSizes()
-            nr = L_sizes[0][0]
-            nc = L_sizes[1][0]
-            self.Asys =SparseMat(nr,nc,
-                                 self.Asys_nzval.shape[0],
-                                 self.Asys_nzval,
-                                 self.Asys_colind,
-                                 self.Asys_rowptr)
-            self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
-            self.L.pde.q[('df',0,0)][:] = 0.0
-            self.L.pde.q[('df',0,1)][:] = 0.0
-            self.L.pde.q[('df',0,2)][:] = 0.0
-            self.L.pde.q[('df',0,3)][:] = 0.0
-            self.L.pde.getSpatialJacobian(self.Asys)#notice switched to  Spatial
-            self.Asys_petsc4py = self.L.duplicate()
-            A_csr_rep_local = self.Asys.getSubMatCSRrepresentation(0,L_sizes[0][0])
-            self.Asys_petsc4py.setValuesLocalCSR(A_csr_rep_local[0],
-                                                 A_csr_rep_local[1],
-                                                 A_csr_rep_local[2],
-                                                 p4pyPETSc.InsertMode.INSERT_VALUES)
-            self.Asys_petsc4py.assemblyBegin()
-            self.Asys_petsc4py.assemblyEnd()
-            self.Ap = self.Asys_petsc4py.getSubMatrix(self.isp,self.isp)
-            _petsc_view(self.Ap,"Ap")#write to A.m
-            #running A.m will load into matlab  sparse matrix
-            #runnig Af = full(Mat_...) will get the full matrix
-            #Af(1:np,1:np) whould be Ap, the pressure diffusion matrix
-            #modify the diffusion term in the mass equation so the p-p block is Ap
-            #modify the diffusion term in the mass equation so the p-p block is Fp
-            rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
-            self.Fsys_rowptr = rowptr.copy()
-            self.Fsys_colind = colind.copy()
-            self.Fsys_nzval = nzval.copy()
-            L_sizes = self.L.getSizes()
-            nr = L_sizes[0][0]
-            nc = L_sizes[1][0]
-            self.Fsys =SparseMat(nr,nc,
-                                 self.Fsys_nzval.shape[0],
-                                 self.Fsys_nzval,
-                                 self.Fsys_colind,
-                                 self.Fsys_rowptr)
-            self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
-            self.L.pde.q[('df',0,0)][...,0] = self.L.pde.q[('u',1)]
-            self.L.pde.q[('df',0,0)][...,1] = self.L.pde.q[('u',2)]
-            self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
-            self.L.pde.getSpatialJacobian(self.Fsys)#notice, switched  to spatial
-            self.Fsys_petsc4py = self.L.duplicate()
-            F_csr_rep_local = self.Fsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
-            self.Fsys_petsc4py.setValuesLocalCSR(F_csr_rep_local[0],
-                                                 F_csr_rep_local[1],
-                                                 F_csr_rep_local[2],
-                                                 p4pyPETSc.InsertMode.INSERT_VALUES)
-            self.Fsys_petsc4py.assemblyBegin()
-            self.Fsys_petsc4py.assemblyEnd()
-            self.Fp = self.Fsys_petsc4py.getSubMatrix(self.isp,self.isp)
-            _petsc_view(self.Fp, "Fp")#write to F.m
-            #running F.m will load into matlab  sparse matrix
-            #runnig Ff = full(Mat_...) will get the full matrix
-            #Ff(1:np,1:np) whould be Fp, the pressure convection-diffusion matrix
-            #
-            #now zero all the dummy coefficents
-            #
-            self.L.pde.q[('dm',0,0)][:] = 0.0
-            self.L.pde.q[('df',0,0)][:] = 0.0
-            self.L.pde.q[('a',0,0)][:] = 0.0
-            #
-            # I think the next step is to setup something that does
-            #  p = ksp(Qp, Fp*ksp(Ap,b)) for some input b
-            # where p represents the approximate solution of S p = b
 SimpleNavierStokes3D = NavierStokes3D
 
 class SimpleDarcyFC:
