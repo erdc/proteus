@@ -456,7 +456,7 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.atol = atol
         logEvent("KSP atol %e rtol %e" % (self.ksp.atol,self.ksp.rtol))
 
-    def prepare(self,b=None,newton_it=0):
+    def prepare(self,b=None):
         pc_setup_stage = p4pyPETSc.Log.Stage('pc_setup_stage')
         pc_setup_stage.push()
         self.petsc_L.zeroEntries()
@@ -479,7 +479,7 @@ class KSP_petsc4py(LinearSolver):
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
             if self.preconditioner:
-                self.preconditioner.setUp(self.ksp,newton_it=newton_it)
+                self.preconditioner.setUp(self.ksp)
         self.ksp.setUp()
         self.ksp.pc.setUp()
         pc_setup_stage.pop()
@@ -1977,7 +1977,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         if self.velocity_block_preconditioner:
             self.velocity_block_preconditioner_set = False
 
-    def setUp(self, global_ksp, newton_it=0):
+    def setUp(self, global_ksp):
         import Comm
         comm = Comm.get()
 
@@ -1985,25 +1985,20 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.operator_constructor.updateInvScaledAp()
         self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
                                                        lumped = self.lumped)
-        if newton_it==0:
-            self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
-            self.operator_constructor.updateInvScaledAp()
-            self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
-                                                           lumped = self.lumped)
-            self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
-                                                                     lumped = self.lumped)
-            self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                  self.operator_constructor.linear_smoother.isp)
-            self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                                    self.operator_constructor.linear_smoother.isp)
-            self.Qp_rho = self.Q_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                  self.operator_constructor.linear_smoother.isp)
-            self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                                    self.operator_constructor.linear_smoother.isp)
-        elif newton_it>0:
-            self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
-            self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                  self.operator_constructor.linear_smoother.isp)
+        self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
+        self.operator_constructor.updateInvScaledAp()
+        self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
+                                                       lumped = self.lumped)
+        self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
+                                                                 lumped = self.lumped)
+        self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                              self.operator_constructor.linear_smoother.isp)
+        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                                self.operator_constructor.linear_smoother.isp)
+        self.Qp_rho = self.Q_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                              self.operator_constructor.linear_smoother.isp)
+        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                                self.operator_constructor.linear_smoother.isp)
 
         # ****** Sp for Ap *******
         # TODO - This is included for a possible extension which exchanges Ap with Sp for short
@@ -2116,7 +2111,7 @@ class NavierStokes3D(NavierStokesSchur):
         if self.velocity_block_preconditioner:
             self.velocity_block_preconditioner_set = False
 
-    def setUp(self, global_ksp=None, newton_it=None):
+    def setUp(self, global_ksp=None):
         try:
             if self.velocity_block_preconditioner_set is False:
                 self._initialize_velocity_block_preconditioner(global_ksp)
@@ -2171,7 +2166,7 @@ class NavierStokes2D(NavierStokesSchur):
         if self.velocity_block_preconditioner:
             self.velocity_block_preconditioner_set = False
 
-    def setUp(self, global_ksp=None,newton_it=None):
+    def setUp(self, global_ksp=None):
         try:
             if self.velocity_block_preconditioner_set is False:
                 self._initialize_velocity_block_preconditioner(global_ksp)
