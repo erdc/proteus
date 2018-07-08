@@ -135,10 +135,17 @@ class NonlinearSolver:
         self.failedFlag = False
 
     def norm(self,u):
-        return self.norm_function(u[self.F.owned_local])
+        try:
+            return self.norm_function(u[self.F.owned_local])
+        except ValueError:
+            logEvent("ERROR: F.owned local is not initialised in Transport.MultilevelTranspot.initialize. Make sure that useSuperlu option is set to False") 
+
 
     def unorm(self,u):
-        return self.unorm_function(u[self.F.owned_local])
+        try:
+            return self.unorm_function(u[self.F.owned_local])
+        except ValueError:
+            logEvent("ERROR!: F.owned local is not initialised in Transport.MultilevelTranspot.initialize. Make sure that useSuperlu option is set to False") 
 
     def fullNewtonOff(self):
         self.fullNewton=False
