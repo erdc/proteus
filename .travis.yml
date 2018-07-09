@@ -68,7 +68,6 @@ install:
 - ls linux2/lib/python2.7/site-packages/backports
 - which python
 - which py.test
-- python -c "from backports import functools_lru_cache"
 - python -c "import matplotlib"
 
 cache:
