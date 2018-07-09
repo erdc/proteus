@@ -999,7 +999,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             ##### SPARSITY PATTERN FOR C MATRICES #####
             ###########################################
             # construct nnz_cMatrix, czval_cMatrix, rowptr_cMatrix, colind_cMatrix C matrix
-            nnz_cMatrix = nnz / 3 / 3  # This is always true for the SWEs in 2D
+            nnz_cMatrix = nnz // 3 // 3  # This is always true for the SWEs in 2D
             nzval_cMatrix = numpy.zeros(nnz_cMatrix)  # This is enough since the values are filled later
             rowptr_cMatrix = numpy.zeros(self.u[0].dof.size + 1, 'i')  # NOTE that in particular rowptr_cMatrix[0]=0
             colind_cMatrix = numpy.zeros(nnz_cMatrix, 'i')
@@ -1095,7 +1095,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.l2g[0]['nFreeDOF'],
                                                                       self.l2g[0]['freeLocal'],
-                                                                      self.csrRowIndeces[(0, 0)] / 3 / 3,
+                                                                      self.csrRowIndeces[(0, 0)] // 3 // 3,
                                                                       old_div(self.csrColumnOffsets[(0, 0)], 3),
                                                                       elementMassMatrix,
                                                                       self.MC_global)
@@ -1131,7 +1131,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                           self.l2g[0]['freeLocal'],
                                                                           self.l2g[0]['nFreeDOF'],
                                                                           self.l2g[0]['freeLocal'],
-                                                                          self.csrRowIndeces[(0, 0)] / 3 / 3,
+                                                                          self.csrRowIndeces[(0, 0)] // 3 // 3,
                                                                           old_div(self.csrColumnOffsets[(0, 0)], 3),
                                                                           self.cterm[d],
                                                                           self.cterm_global[d])
@@ -1157,7 +1157,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                           self.l2g[0]['freeLocal'],
                                                                           self.l2g[0]['nFreeDOF'],
                                                                           self.l2g[0]['freeLocal'],
-                                                                          self.csrRowIndeces[(0, 0)] / 3 / 3,
+                                                                          self.csrRowIndeces[(0, 0)] // 3 // 3,
                                                                           old_div(self.csrColumnOffsets[(0, 0)], 3),
                                                                           self.cterm_transpose[d],
                                                                           self.cterm_global_transpose[d])
