@@ -233,6 +233,36 @@ def petsc4py_mat_has_pressure_null_space(A):
     else:
         return False
 
+def petsc4py_mat_has_constant_null_space(A):
+    """
+    Checks whether a PETSc4Py sparse matrix has a constant
+    null space.
+
+    Parameters
+    ----------
+    A : :class:`p4pyPETSc.Mat`
+
+    Returns
+    -------
+    does : bool
+       Boolean variable indicating whether the pressure term
+       creates a null space.
+
+    Notes
+    -----
+    This function was written mainly for debugging purposes and should
+    not be used for large matrices.
+    """
+    x = numpy.ones(A.getSize()[1])
+    y = numpy.zeros(A.getSize()[0])
+    x_petsc = p4pyPETSc.Vec().createWithArray(x)
+    y_petsc = p4pyPETSc.Vec().createWithArray(y)
+    A.mult(x_petsc,y_petsc)
+    if y_petsc.norm() < 1e-15:
+        return True
+    else:
+        return False
+
 def superlu_sparse_2_dense(sparse_matrix,output=False):
     """ Converts a sparse superluWrapper into a dense matrix.
 
