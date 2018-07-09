@@ -1130,18 +1130,11 @@ class LSCInv_shell(InvOperatorShell):
             self._create_constant_nullspace()
             self.BQinvBt.setNullSpace(self.const_null_space)
 
-        self.kspBQinvBt = p4pyPETSc.KSP().create()
-        self.kspBQinvBt.setOperators(self.BQinvBt,self.BQinvBt)
-        self.kspBQinvBt.setOptionsPrefix('innerLSCsolver_BTinvBt_')
-        self.kspBQinvBt.pc.setUp()
-        self.kspBQinvBt.setFromOptions()
-        self.kspBQinvBt.setUp()
+        self.kspBQinvBt = self.create_petsc_ksp_obj('innerLSCsolver_BTinvBt_',
+                                                    self.BQinvBt)
 
-        # initialize solver for Qv
-        self.kspQv = p4pyPETSc.KSP().create()
-        self.kspQv.setOperators(self.Qv,self.Qv)
-        self.kspQv.setOptionsPrefix('innerLSCsolver_T_')
-        self.kspQv.setFromOptions()
+        self.kspQv = self.create_petsc_ksp_obj('innerLSCsolver_T_',
+                                               self.Qv)
 
         convergenceTest = 'r-true'
         if convergenceTest == 'r-true':
@@ -1150,7 +1143,6 @@ class LSCInv_shell(InvOperatorShell):
             self.kspBQinvBt.setConvergenceTest(self._converged_trueRes)
         else:
             self.r_work = None
-        self.kspBQinvBt.setUp()
 
     def apply(self,A,x,y):
         """ Apply the LSC inverse operator
@@ -1180,8 +1172,10 @@ class LSCInv_shell(InvOperatorShell):
         self.kspBQinvBt.solve(x_tmp,tmp1)
         self.B.multTranspose(tmp1,tmp2)
         self.kspQv.solve(tmp2,tmp3)
+        tmp3.pointwiseDivide(tmp2,self.kspQv.getOperators()[0].getDiagonal())
         self.F.mult(tmp3,tmp2)
         self.kspQv.solve(tmp2,tmp3)
+        tmp3.pointwiseDivide(tmp2,self.kspQv.getOperators()[0].getDiagonal())
         self.B.mult(tmp3,tmp1)
         if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
             self.const_null_space.remove(tmp1)
@@ -1534,31 +1528,6 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         self.options = p4pyPETSc.Options()
         self._create_constant_nullspace()
         self._set_dirichlet_idx_set()
-
-        # Initialize operators for apply function
-        # self.kspAp_rho = self.create_petsc_ksp_obj('innerTPPCDsolver_Ap_rho_',
-        #                                             self.Ap_rho.getSubMatrix(self.unknown_dof_is,
-        #                                                                      self.unknown_dof_is))
-
-
-        # self.Np_rho_reduced = self.Np_rho.getSubMatrix(self.unknown_dof_is,
-        #                                                self.unknown_dof_is)
-        # if self.num_chebyshev_its:
-        #     self.Qp_visc = LS.ChebyshevSemiIteration(self.Qp_visc.getSubMatrix(self.unknown_dof_is,
-        #                                                                        self.unknown_dof_is),
-        #                                              0.5,
-        #                                              2.0)
-        #     self.Qp_dens = LS.ChebyshevSemiIteration(self.Qp_dens.getSubMatrix(self.unknown_dof_is,
-        #                                                                        self.unknown_dof_is),
-        #                                              0.5,
-        #                                              2.0)
-        # else:
-        #     self.kspQp_visc = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_visc_',
-        #                                                 self.Qp_visc.getSubMatrix(self.unknown_dof_is,
-        #                                                                           self.unknown_dof_is))
-        #     self.kspQp_dens = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_dens_',
-        #                                                 self.Qp_dens.getSubMatrix(self.unknown_dof_is,
-        #                                                                           self.unknown_dof_is))
 
         self.kspAp_rho = self.create_petsc_ksp_obj('innerTPPCDsolver_Ap_rho_',
                                                    self.Ap_rho,
