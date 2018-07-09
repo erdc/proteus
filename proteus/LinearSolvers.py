@@ -1570,7 +1570,8 @@ class SchurPrecon(KSP_Preconditioner):
                                         self.L.pde.u[0].dof.size)
 
     def get_num_components(self):
-        return self.L.pde.nc
+        val = int(self.isv.size / self.isp.size + 1)
+        return val
 
     def set_velocity_var_names(self):
         nc = self.get_num_components()
