@@ -311,21 +311,49 @@ def getLocalNearestElementAroundNode(double[:] coords,
                                                node=node)
 
 def getLocalNearestElementIntersection(double[:] coords,
+                                       double[:] starting_coords,
                                        double[:,:,:] elementBoundaryNormalsArray,
                                        int[:,:] elementBoundariesArray,
                                        double[:,:] elementBoundaryBarycentersArray,
                                        int[:,:] elementBoundaryElementsArray,
-                                       double[:,:] elementBarycentersArray,
                                        int[:] exteriorElementBoundariesBoolArray,
                                        int eN):
-    return pyxGetLocalNearestElementIntersection(coords,
-                                           elementBoundaryNormalsArray,
-                                           elementBoundariesArray,
-                                           elementBoundaryBarycentersArray,
-                                           elementBoundaryElementsArray,
-                                           elementBarycentersArray,
-                                           exteriorElementBoundariesBoolArray,
-                                           eN)
+    """Find element nearest or containing coords through element boundary intersection
+
+    Parameters
+    ----------
+    coords: double[:]
+        coordinates of point for which a containing element must be found
+    starting_coords: double[:]
+        starting coords to look for coords
+    elementBoundaryNormals: double[:,:,:]
+        normals of the element boundaries
+    elementBoundariesArray: int[:,:]
+        index of boundaries per elements
+    elementBoundaryBarycentersArray: int[:,:]
+        barycenters of element boundaries
+    elementBoundaryElementsArray: int[:,:]
+        array of elements shared by boundaries
+    exteriorElementBoundariesBoolArray: int[:]
+        boolean array of exterior element boundaries (1: is exterior boundary)
+        must be same length as the number of element boundaries
+    eN: first guess of element
+
+    Returns
+    -------
+    nearest_eN: int
+        nearest element to coords (-1 if element at border)
+    b_i_last: int
+        last element boundary crossed
+    """
+    return pyxGetLocalNearestElementIntersection(coords=coords,
+                                                 starting_coords=starting_coords,
+                                                 elementBoundaryNormalsArray=elementBoundaryNormalsArray,
+                                                 elementBoundariesArray=elementBoundariesArray,
+                                                 elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                                 elementBoundaryElementsArray=elementBoundaryElementsArray,
+                                                 exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
+                                                 eN=eN)
 
 def getLocalElement(femSpace,
                     coords,
@@ -523,7 +551,6 @@ cdef void cySmoothNodesLaplace(double[:,:] nodeArray_,
                     sum_star[2] += nodeArray_[nodeStarArray[nOffset], 2]
                 nNodes += 1
         elif smoothBoundaries is True:
-            # tridelat todo: works only in 2D here
             # smooth on boundary only unless it is a corner node
             fixed_node = False
             if fixedNodesBoolArray is not None:
@@ -959,15 +986,15 @@ cdef int pyxGetLocalNearestElement(double[:] coords,
         i += 1
     return nearest_eN
 
-cdef int pyxGetLocalNearestElementIntersection(double[:] coords,
-                                               double[:,:,:] elementBoundaryNormalsArray,
-                                               int[:,:] elementBoundariesArray,
-                                               double[:,:] elementBoundaryBarycentersArray,
-                                               int[:,:] elementBoundaryElementsArray,
-                                               double[:,:] elementBarycentersArray,
-                                               int[:] exteriorElementBoundariesBoolArray,
-                                               int eN,
-                                               double tol=1e-10):
+cdef tuple pyxGetLocalNearestElementIntersection(double[:] coords,
+                                                 double[:] starting_coords,
+                                                 double[:,:,:] elementBoundaryNormalsArray,
+                                                 int[:,:] elementBoundariesArray,
+                                                 double[:,:] elementBoundaryBarycentersArray,
+                                                 int[:,:] elementBoundaryElementsArray,
+                                                 int[:] exteriorElementBoundariesBoolArray,
+                                                 int eN,
+                                                 double tol=1e-10):
     # determine local nearest node distance
     cdef int nearest_eN = eN
     cdef int nearest_eN0 = eN
@@ -975,10 +1002,10 @@ cdef int pyxGetLocalNearestElementIntersection(double[:] coords,
     cdef double dist
     cdef double min_dist
     cdef double[:] eN_coords = np.zeros(3)
-    cdef int maxit = 2*len(elementBoundaryNormalsArray)
-    eN_coords[0] = elementBarycentersArray[eN, 0]
-    eN_coords[1] = elementBarycentersArray[eN, 1]
-    eN_coords[2] = elementBarycentersArray[eN, 2]
+    cdef int maxit = 5*len(elementBoundaryNormalsArray)
+    eN_coords[0] = starting_coords[0]
+    eN_coords[1] = starting_coords[1]
+    eN_coords[2] = starting_coords[2]
     min_dist = np.sqrt((eN_coords[0]-coords[0])*(eN_coords[0]-coords[0])+\
                        (eN_coords[1]-coords[1])*(eN_coords[1]-coords[1])+\
                        (eN_coords[2]-coords[2])*(eN_coords[2]-coords[2]))
@@ -991,35 +1018,38 @@ cdef int pyxGetLocalNearestElementIntersection(double[:] coords,
     cdef double[:] bound_bar  # barycenter of boundary
     cdef double alpha  # distance
     cdef int b_i  # boundary index element
-    cdef int b_i_last = -999
-    cdef double[:] normal = np.zeros(3)  # element boundary normal
+    cdef int b_i_last = -1
+    cdef double[:] normal  # element boundary normal
     cdef double dot  # dot product result
     cdef double dot2  # dot product 2 result
     cdef int it = 0
+    cdef int eN_
+    cdef bool found
     from proteus import Comm
+    cdef reachedBoundary = False
+    cdef bool debug = False
+    debug = False
     while found_eN is False and it < maxit:
         nearest_eN0 = nearest_eN
         alpha_min = 1e12
         for j, b_i in enumerate(elementBoundariesArray[nearest_eN0]):
-            if b_i != b_i_last and exteriorElementBoundariesBoolArray[b_i] == 0.:
-                normal[0] = elementBoundaryNormalsArray[nearest_eN0, j, 0]
-                normal[1] = elementBoundaryNormalsArray[nearest_eN0, j, 1]
-                normal[2] = elementBoundaryNormalsArray[nearest_eN0, j, 2]
-                bound_bar = elementBoundaryBarycentersArray[b_i]
-                dot = normal[0]*direction[0]+normal[1]*direction[1]+normal[2]*direction[2]
-                if dot > 0.:
-                    dot2 = (bound_bar[0]-eN_coords[0])*normal[0]+(bound_bar[1]-eN_coords[1])*normal[1]+(bound_bar[2]-eN_coords[2])*normal[2]
-                    if dot2 >= 0.:
-                        alpha = dot2/dot
-                        if 0. < alpha < alpha_min:
-                            alpha_min = alpha
-                            for eN in elementBoundaryElementsArray[b_i]:
-                                if eN != nearest_eN0:
-                                    nearest_eN = eN
-                            # nearest_eN = elementBoundaryElementsArray[nearest_eN0]
-                            b_i_last = b_i
+            # if b_i != b_i_last:
+            normal = elementBoundaryNormalsArray[nearest_eN0, j]
+            bound_bar = elementBoundaryBarycentersArray[b_i]
+            dot = normal[0]*direction[0]+normal[1]*direction[1]+normal[2]*direction[2]
+            if dot > 0.:
+                dot2 = (bound_bar[0]-eN_coords[0])*normal[0]+(bound_bar[1]-eN_coords[1])*normal[1]+(bound_bar[2]-eN_coords[2])*normal[2]
+                if dot2 >= 0.:
+                    alpha = dot2/dot
+                    if 0. <= alpha < alpha_min:
+                        alpha_min = alpha
+                        for eN_ in elementBoundaryElementsArray[b_i]:
+                            if eN_ != nearest_eN0:
+                                nearest_eN = eN_
+                        # nearest_eN = elementBoundaryElementsArray[nearest_eN0]
+                        b_i_last = b_i
         if nearest_eN != nearest_eN0:
-            if min_dist-alpha_min > 0:
+            if min_dist-alpha_min >= 0:
                 eN_coords[0] += alpha_min*direction[0]
                 eN_coords[1] += alpha_min*direction[1]
                 eN_coords[2] += alpha_min*direction[2]
@@ -1028,14 +1058,18 @@ cdef int pyxGetLocalNearestElementIntersection(double[:] coords,
                 nearest_eN = nearest_eN0
         if nearest_eN0 == nearest_eN or nearest_eN == -1:
             found_eN = True
-        if nearest_eN < 0:
-            print(eN)
-            import pdb; pdb.set_trace()
         i += 1
         it += 1
     if it >= maxit:
-        assert 1>2, 'could not find element! (element: '+str(eN)+')'
-    return nearest_eN
+        assert 1>2, 'could not find element! (element {eN}: {x}, {y}, {z}), nearest_eN {nearest_eN}: closest coords: {x2}, {y2}, {z2}'.format(eN=eN,
+                                                                                                                                              x=coords[0],
+                                                                                                                                              y=coords[1],
+                                                                                                                                              z=coords[2],
+                                                                                                                                              nearest_eN=nearest_eN,
+                                                                                                                                              x2=eN_coords[0],
+                                                                                                                                              y2=eN_coords[1],
+                                                                                                                                              z2=eN_coords[2])
+    return nearest_eN, b_i_last
 
 cdef int pyxGetLocalNearestElementAroundNode(double[:] coords,
                                              int[:] nodeElementOffsets,
