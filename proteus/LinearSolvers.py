@@ -2002,17 +2002,21 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
                                                                  lumped = self.lumped)
 
+        isp = self.operator_constructor.linear_smoother.isp
+        isv = self.operator_constructor.linear_smoother.isv
+
         # ****** Sp for Ap *******
         # TODO - This is included for a possible extension which exchanges Ap with Sp for short
         #        time steps.
-        # self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
-        #                                                      self.operator_constructor.linear_smoother.isv)
-        # self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
-        #                                                      self.operator_constructor.linear_smoother.isp)
-        # self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
-        #                                                      self.operator_constructor.linear_smoother.isv)
-        # self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
-        #                                                      self.operator_constructor.linear_smoother.isp)
+        # A_mat = global_ksp.getOperators()[0]
+        # self.A00 = A_mat.getSubMatrix(isv,
+        #                               isv)
+        # self.A01 = A_mat.getSubMatrix(isv,
+        #                               isp)
+        # self.A10 = A_mat.getSubMatrix(isp,
+        #                               isv)
+        # self.A11 = A_mat.getSubMatrix(isp,
+        #                               isp)
 
         # dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
         # self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
@@ -2023,17 +2027,17 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
 
         # End ******** Sp for Ap ***********
 
-        self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                              self.operator_constructor.linear_smoother.isp)
+        self.Np_rho = self.N_rho.getSubMatrix(isp,
+                                              isp)
 
-        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                                self.operator_constructor.linear_smoother.isp)
+        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(isp,
+                                                                isp)
 
-        self.Qp_rho = self.Q_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                              self.operator_constructor.linear_smoother.isp)
+        self.Qp_rho = self.Q_rho.getSubMatrix(isp,
+                                              isp)
 
-        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                                self.operator_constructor.linear_smoother.isp)
+        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(isp,
+                                                                isp)
 
         L_sizes = self.Qp_rho.size
         L_range = self.Qp_rho.owner_range
