@@ -1683,10 +1683,6 @@ class SchurPrecon(KSP_Preconditioner):
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
         return False
 
-    def _setConstantPressureNullSpace(self,global_ksp):
-        nsp = global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].getNullSpace()
-        global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
-
 class Schur_Sp(SchurPrecon):
     """
     Implements the SIMPLE Schur complement approximation proposed
@@ -1827,7 +1823,7 @@ class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
                  bdyNullSpace = False,
                  numerical_viscosity = True,
                  lumped = True,
-                 infsup_fe = False):
+                 infsup_fe = True):
         """
         Initialize the two-phase LSC preconditioning class.
 
@@ -1856,25 +1852,25 @@ class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
     def setUp(self, global_ksp):
         import Comm
         comm = Comm.get()
+
+        isv = self.operator_constructor.linear_smoother.isv
+        isp = self.operator_constructor.linear_smoother.isp
+        A_mat = global_ksp.getOperators()[0]
+
         self.operator_constructor.updateTwoPhaseQ_visc(viscosity_scaling=True,
                                                        numerical_viscosity = self.numerical_viscosity,
                                                        lumped = self.lumped)
-
-        self.Qv_scaledVisc = self.Q_scaledVisc.getSubMatrix(self.operator_constructor.linear_smoother.isv,
-                                                           self.operator_constructor.linear_smoother.isv)
-
-        self.F = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
-                                                           self.operator_constructor.linear_smoother.isv)
-
-        self.Bt = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
-                                                            self.operator_constructor.linear_smoother.isp)
-
-        self.B = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                           self.operator_constructor.linear_smoother.isv)
-
+        self.Qv_scaledVisc = self.Q_scaledVisc.getSubMatrix(isv,
+                                                            isv)
+        self.F = A_mat.getSubMatrix(isv,
+                                    isv)
+        self.Bt = A_mat.getSubMatrix(isv,
+                                     isp)
+        self.B = A_mat.getSubMatrix(isp,
+                                    isv)
         if self.infsup_fe is False:
-            self.C = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                               self.operator_constructor.linear_smoother.isp)
+            self.C = A_mat.getSubMatrix(isp,
+                                        isp)
 
         L_sizes = self.B.getSizes()[0][0]
         self.TP_LSCInv_shell = p4pyPETSc.Mat().create()
@@ -1903,9 +1899,6 @@ class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
                                                constant = True)
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
-        self._setSchurlog(global_ksp)
-        if self.bdyNullSpace == True:
-            self._setConstantPressureNullSpace(global_ksp)
 
 class NavierStokes_TwoPhasePCD(NavierStokesSchur):
     r""" Two-phase PCD Schur complement approximation class.
