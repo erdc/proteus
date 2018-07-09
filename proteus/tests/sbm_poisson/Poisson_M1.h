@@ -6,13 +6,18 @@
 #include <vector>
 #include <set>
 #include <cstring>
-#include <cassert>
-#include <boost/assert.hpp>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
 #define GAMMA 1.4
 #define Sign(z) (z >= 0.0 ? 1.0 : -1.0)
+#define ASSERT_WITH_MSG(cond, msg) do \
+        { if (!(cond)) { std::ostringstream str; str << msg; std::cerr << str.str();        std::abort(); } \
+        } while(0)
+#define USE_H_PERP 0
+
+
+
 
 
 namespace proteus
@@ -441,6 +446,113 @@ namespace proteus
                           eN_nDOF_trial_element = eN*nDOF_trial_element;
 
 //                  if (ebN >= nElementBoundaries_owned) continue;
+                  ///////////////////////////////////////////////////////////////////////////////////////////////////////get h_perp
+                  double h_perp = 1.0e10;
+                  if(USE_H_PERP)
+                  for (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+                  {
+                      register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
+                        ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                        ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+                      register double
+                        u_ext=0.0,
+                        bc_u_ext=0.0,
+                        bc_v_ext=0.0,
+                        grad_u_ext[nSpace],
+                        grad_ux_ext[nSpace]={0.0},
+                        grad_uy_ext[nSpace]={0.0},
+                        jac_ext[nSpace*nSpace]={0.0},
+                        jacDet_ext,
+                        jacInv_ext[nSpace*nSpace]={0.0},
+                        boundaryJac[nSpace*(nSpace-1)]={0.0},
+                        metricTensor[(nSpace-1)*(nSpace-1)]={0.0},
+                        metricTensorDetSqrt,
+                        dS,
+                        u_test_dS[nDOF_test_element]={0.0},
+                        u_grad_test_dS[nDOF_trial_element*nSpace]={0.0},
+                        u_grad_trial_trace[nDOF_trial_element*nSpace]={0.0},
+                        normal[2],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
+                        G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty;
+                      //compute information about mapping from reference element to physical element
+                      ck.calculateMapping_elementBoundary(eN,
+                                                          ebN_local,
+                                                          kb,
+                                                          ebN_local_kb,
+                                                          mesh_dof,
+                                                          mesh_l2g,
+                                                          mesh_trial_trace_ref,
+                                                          mesh_grad_trial_trace_ref,
+                                                          boundaryJac_ref,
+                                                          jac_ext,
+                                                          jacDet_ext,
+                                                          jacInv_ext,
+                                                          boundaryJac,
+                                                          metricTensor,
+                                                          metricTensorDetSqrt,
+                                                          normal_ref,
+                                                          normal,
+                                                          x_ext,y_ext,z_ext);
+//                      ck.calculateMappingVelocity_elementBoundary(eN,
+//                                                                  ebN_local,
+//                                                                  kb,
+//                                                                  ebN_local_kb,
+//                                                                  mesh_velocity_dof,
+//                                                                  mesh_l2g,
+//                                                                  mesh_trial_trace_ref,
+//                                                                  xt_ext,yt_ext,zt_ext,
+//                                                                  normal,
+//                                                                  boundaryJac,
+//                                                                  metricTensor,
+//                                                                  integralScaling);
+                      dS = metricTensorDetSqrt*dS_ref[kb];
+                      //get the metric tensor
+                      ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+                      //compute shape and solution information
+                      //shape
+                      ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+                      //solution and gradients
+                      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+
+                      ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+                      //precalculate test function products with integration weights
+                      for (int j=0;j<nDOF_trial_element;j++)
+                      {
+                          u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+                          for (int I=0;I<nSpace;I++)
+                            u_grad_test_dS[j*nSpace+I] = u_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
+                      }
+
+                      double dist = 0.0;
+
+                      if(use_ball_as_particle==1)
+                      {
+                          get_distance_to_ball(nParticles,ball_center,ball_radius,
+                                               x_ext,y_ext,z_ext,
+                                               dist);
+                      }
+                      else
+                      {
+                          ASSERT_WITH_MSG(0,"should use ball as particle");
+                      }
+
+                      ck.calculateGScale(G,normal,h_penalty);////////YY: should use elementDiameter????
+                      //
+                      //update h_perp
+                      //
+
+                      assert(dist>0.0);
+                      assert(h_penalty>0.0);
+
+                      if (h_penalty < dist)
+                      {
+                          h_penalty = dist;
+                      }
+                      if(h_penalty<h_perp)
+                      {
+                          h_perp = h_penalty;
+                      }
+                  }//end-kb
+                  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                   for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
                   {
                       register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
@@ -483,18 +595,18 @@ namespace proteus
                               normal_ref,
                               normal,
                               x_ext,y_ext,z_ext);
-                      ck.calculateMappingVelocity_elementBoundary(eN,
-                              ebN_local,
-                              kb,
-                              ebN_local_kb,
-                              mesh_velocity_dof,
-                              mesh_l2g,
-                              mesh_trial_trace_ref,
-                              xt_ext,yt_ext,zt_ext,
-                              normal,
-                              boundaryJac,
-                              metricTensor,
-                              integralScaling);
+//                      ck.calculateMappingVelocity_elementBoundary(eN,
+//                              ebN_local,
+//                              kb,
+//                              ebN_local_kb,
+//                              mesh_velocity_dof,
+//                              mesh_l2g,
+//                              mesh_trial_trace_ref,
+//                              xt_ext,yt_ext,zt_ext,
+//                              normal,
+//                              boundaryJac,
+//                              metricTensor,
+//                              integralScaling);
                       dS = metricTensorDetSqrt*dS_ref[kb];
                       ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
                       //compute shape and solution information
@@ -562,7 +674,11 @@ namespace proteus
                           h_penalty = dist;
                       double C_adim = C_sbm/h_penalty;
                       double beta_adim = beta_sbm/h_penalty;
-
+                      if(USE_H_PERP)
+                      {
+                          C_adim = C_sbm/h_perp;
+                          beta_adim = beta_sbm/h_perp;
+                      }
                       for (int i=0;i<nDOF_test_element;i++)
                       {
                           register int eN_i = eN*nDOF_test_element+i;
@@ -573,7 +689,7 @@ namespace proteus
 
                           for (int j=0;j<nDOF_trial_element;j++)
                           {
-                              assert(surrogate_boundary_elements[ebN_s]==0);///////YY: ??It does not work
+//                              assert(surrogate_boundary_elements[ebN_s]==0);//////YY: some values are 1
                               register int ebN_i_j = (ebN*4
                                                       +surrogate_boundary_elements[ebN_s]*3/////////YY: bug
                                                       )*nDOF_test_X_trial_element
@@ -605,17 +721,7 @@ namespace proteus
           return;
       }//computeJacobian
 
-      double get_max_wave_speed(double ul, double ur, std::complex<double> w, std::complex<double> n)
-      {
-          return fmax(fabs(1.0-std::real(w*n)), fabs(-1.0-std::real(w*n)));
-      }
-
-      double get_sound_speed(double rho, double Mx, double My, double E)
-      {
-          double e = (E-(0.5*Mx*Mx+0.5*My*My)/(rho+1.0e-10))/(rho+1.0e-10);
-          double p = (GAMMA-1.0)*rho*e;
-          return std::sqrt(GAMMA*p/(rho+1.0e-10));
-      }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       double get_rhs(double x, double y, double z)
       {
           return 2.0;//2*(1+x)*(1-x)+2*(1+y)*(1-y);
@@ -939,6 +1045,9 @@ namespace proteus
                       elementResidual_u[i]=0.0;
                   }
 
+                  ///////////////////////////////////////////////////////////////////////////////////////////////////////get h_perp
+                  double h_perp = 1.0e10;
+                  if(USE_H_PERP)
                   for (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
                   {
                       register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
@@ -982,18 +1091,122 @@ namespace proteus
                                                           normal_ref,
                                                           normal,
                                                           x_ext,y_ext,z_ext);
-                      ck.calculateMappingVelocity_elementBoundary(eN,
-                                                                  ebN_local,
-                                                                  kb,
-                                                                  ebN_local_kb,
-                                                                  mesh_velocity_dof,
-                                                                  mesh_l2g,
-                                                                  mesh_trial_trace_ref,
-                                                                  xt_ext,yt_ext,zt_ext,
-                                                                  normal,
-                                                                  boundaryJac,
-                                                                  metricTensor,
-                                                                  integralScaling);
+//                      ck.calculateMappingVelocity_elementBoundary(eN,
+//                                                                  ebN_local,
+//                                                                  kb,
+//                                                                  ebN_local_kb,
+//                                                                  mesh_velocity_dof,
+//                                                                  mesh_l2g,
+//                                                                  mesh_trial_trace_ref,
+//                                                                  xt_ext,yt_ext,zt_ext,
+//                                                                  normal,
+//                                                                  boundaryJac,
+//                                                                  metricTensor,
+//                                                                  integralScaling);
+                      dS = metricTensorDetSqrt*dS_ref[kb];
+                      //get the metric tensor
+                      ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+                      //compute shape and solution information
+                      //shape
+                      ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+                      //solution and gradients
+                      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+
+                      ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+                      //precalculate test function products with integration weights
+                      for (int j=0;j<nDOF_trial_element;j++)
+                      {
+                          u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+                          for (int I=0;I<nSpace;I++)
+                            u_grad_test_dS[j*nSpace+I] = u_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
+                      }
+
+                      double dist = 0.0;
+
+                      if(use_ball_as_particle==1)
+                      {
+                          get_distance_to_ball(nParticles,ball_center,ball_radius,
+                                               x_ext,y_ext,z_ext,
+                                               dist);
+                      }
+                      else
+                      {
+                          ASSERT_WITH_MSG(0,"should use ball as particle");
+                      }
+
+                      ck.calculateGScale(G,normal,h_penalty);////////YY: should use elementDiameter????
+                      //
+                      //update h_perp
+                      //
+
+                      assert(dist>0.0);
+                      assert(h_penalty>0.0);
+
+                      if (h_penalty < dist)
+                      {
+                          h_penalty = dist;
+                      }
+                      if(h_penalty<h_perp)
+                      {
+                          h_perp = h_penalty;
+                      }
+                  }//end-kb
+                  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+                  for (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+                  {
+                      register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
+                        ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                        ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+                      register double
+                        u_ext=0.0,
+                        bc_u_ext=0.0,
+                        bc_v_ext=0.0,
+                        grad_u_ext[nSpace],
+                        grad_ux_ext[nSpace]={0.0},
+                        grad_uy_ext[nSpace]={0.0},
+                        jac_ext[nSpace*nSpace]={0.0},
+                        jacDet_ext,
+                        jacInv_ext[nSpace*nSpace]={0.0},
+                        boundaryJac[nSpace*(nSpace-1)]={0.0},
+                        metricTensor[(nSpace-1)*(nSpace-1)]={0.0},
+                        metricTensorDetSqrt,
+                        dS,
+                        u_test_dS[nDOF_test_element]={0.0},
+                        u_grad_test_dS[nDOF_trial_element*nSpace]={0.0},
+                        u_grad_trial_trace[nDOF_trial_element*nSpace]={0.0},
+                        normal[2],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
+                        G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty;
+                      //compute information about mapping from reference element to physical element
+                      ck.calculateMapping_elementBoundary(eN,
+                                                          ebN_local,
+                                                          kb,
+                                                          ebN_local_kb,
+                                                          mesh_dof,
+                                                          mesh_l2g,
+                                                          mesh_trial_trace_ref,
+                                                          mesh_grad_trial_trace_ref,
+                                                          boundaryJac_ref,
+                                                          jac_ext,
+                                                          jacDet_ext,
+                                                          jacInv_ext,
+                                                          boundaryJac,
+                                                          metricTensor,
+                                                          metricTensorDetSqrt,
+                                                          normal_ref,
+                                                          normal,
+                                                          x_ext,y_ext,z_ext);
+//                      ck.calculateMappingVelocity_elementBoundary(eN,
+//                                                                  ebN_local,
+//                                                                  kb,
+//                                                                  ebN_local_kb,
+//                                                                  mesh_velocity_dof,
+//                                                                  mesh_l2g,
+//                                                                  mesh_trial_trace_ref,
+//                                                                  xt_ext,yt_ext,zt_ext,
+//                                                                  normal,
+//                                                                  boundaryJac,
+//                                                                  metricTensor,
+//                                                                  integralScaling);
                       dS = metricTensorDetSqrt*dS_ref[kb];
                       //get the metric tensor
                       ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
@@ -1049,7 +1262,9 @@ namespace proteus
                       assert(dist>0.0);
                       assert(h_penalty>0.0);
                       if (h_penalty < dist)
-                          h_penalty = dist;
+                      {
+                          h_penalty = dist;////////use h_perp instead
+                      }
                       distance[0] = -P_normal[0]*dist;
                       distance[1] = -P_normal[1]*dist;
                       P_tangent[0] = -P_normal[1];
@@ -1057,18 +1272,57 @@ namespace proteus
                       normal_Omega[0] = -P_normal[0];
                       normal_Omega[1] = -P_normal[1];
 
-                      const double C_adim = C_sbm/h_penalty;
+                      double C_adim = C_sbm/h_penalty;
                       double beta_adim = beta_sbm/h_penalty;
+                      if(USE_H_PERP)////////use h_perp instead
+                      {
+                          C_adim = C_sbm/h_perp;
+                          beta_adim = beta_sbm/h_perp;
+                      }
 
                       const double grad_u_d = get_dot_product(distance,grad_u_ext);
 
                       double res;
                       const double u_m_uD = u_ext - bc_u_ext;
                       const double grad_u_t = get_dot_product(P_tangent,grad_u_ext);
+                      if(0)
+                      {
+                          double x1 = mesh_dof[3*mesh_l2g[eN*3+0]+0], y1 = mesh_dof[3*mesh_l2g[eN*3+0]+1];
+                          double x2 = mesh_dof[3*mesh_l2g[eN*3+1]+0], y2 = mesh_dof[3*mesh_l2g[eN*3+1]+1];
+                          double x3 = mesh_dof[3*mesh_l2g[eN*3+2]+0], y3 = mesh_dof[3*mesh_l2g[eN*3+2]+1];
+                          std::cout<<"yyPDB-Surrogate bc: ";
+                          if(ebN_local==0)
+                          {
+                              std::cout<<x2<<"\t"
+                                       <<y2<<"\t"
+                                       <<x3<<"\t"
+                                       <<y3<<"\t";
+                          }else if(ebN_local==1){
 
+                              std::cout<<x3<<"\t"
+                                       <<y3<<"\t"
+                                       <<x1<<"\t"
+                                       <<y1<<"\t";
+                          }else if(ebN_local==2){
+
+                              std::cout<<x1<<"\t"
+                                       <<y1<<"\t"
+                                       <<x2<<"\t"
+                                       <<y2<<"\t";
+                          }
+                          std::cout<<distance[0]<<"\t"
+                                  <<distance[1]<<"\t"
+                                  <<P_normal[0]<<"\t"
+                                  <<P_normal[1]<<"\t"
+                                  <<normal[0]<<"\t"
+                                  <<normal[1]<<"\t"
+                                  <<x_ext<<"\t"
+                                  <<y_ext<<"\t"
+                                  <<"\n";
+                      }
                       for (int i=0;i<nDOF_test_element;i++)
-                        {
-                          int eN_i = eN*nDOF_test_element+i;
+                      {
+                          int eN_i = eN*nDOF_test_element+i;/////use eN to get index of dofs
 
                           int GlobPos_u = u_offset+u_stride*u_l2g[eN_i];
 
@@ -1083,11 +1337,11 @@ namespace proteus
                           r[GlobPos_u] += C_adim*(phi_i+grad_phi_i_dot_d)*(u_m_uD+grad_u_d);
 
                           // (2)
-                          r[GlobPos_u] -= phi_i* get_dot_product(grad_u_ext,normal);////YY: not normal_Omega
+                          r[GlobPos_u] -= phi_i* get_dot_product(grad_u_ext,normal);////YY: for consistency; not normal_Omega
 
                           // (3)
-                          r[GlobPos_u] -= get_dot_product(grad_phi_i,normal)*(u_m_uD+grad_u_d);////YY: not normal_Omega
-                        }//i
+                          r[GlobPos_u] -= get_dot_product(grad_phi_i,normal)*(u_m_uD+grad_u_d);////YY: for consistency; not normal_Omega
+                      }//i
 
                     }//kb
 

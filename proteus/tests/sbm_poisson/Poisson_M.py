@@ -1296,8 +1296,8 @@ class LevelModel(OneLevelTransport):
 #             pass
         
         print "**"*10,"dt= ",self.timeIntegration.dt
-        import pdb
-        pdb.set_trace()
+#         import pdb
+#         pdb.set_trace()
         self.isActiveDOF = np.ones_like(r);#####YY:Used for sbm
         self.Poisson.calculateResidual(  # element
 #         self.coefficients.calculateResidual(#YY
