@@ -63,8 +63,9 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
 //Implementation of banded interface, edge intersection algorithm
 //If mesh edge intersects the 0 level-set, then the adjacent edges need to be refined 
 {
-  freeField(size_iso);
-  size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
+  //freeField(size_iso);
+  //size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
+  apf::Field* interfaceBand = apf::createLagrangeField(m, "interfaceBand", apf::SCALAR, 1);
   apf::Field *phif = m->findField("phi");
   assert(phif);
 
@@ -93,20 +94,20 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
 
     if(caseNumber==1 || caseNumber == 2)
     {
-      setSizeField(m,vertex1,hPhi,vertexMarker,size_iso);
-      setSizeField(m,vertex2,hPhi,vertexMarker,size_iso);
+      setSizeField(m,vertex1,hPhi,vertexMarker,interfaceBand);
+      setSizeField(m,vertex2,hPhi,vertexMarker,interfaceBand);
     }
     else
     {
       if (phi1*phi2 <0)
       {
-        setSizeField(m,vertex1,hPhi,vertexMarker,size_iso);
-        setSizeField(m,vertex2,hPhi,vertexMarker,size_iso);
+        setSizeField(m,vertex1,hPhi,vertexMarker,interfaceBand);
+        setSizeField(m,vertex2,hPhi,vertexMarker,interfaceBand);
       }
       else
       {
-        setSizeField(m,vertex1,hmax,vertexMarker,size_iso);
-        setSizeField(m,vertex2,hmax,vertexMarker,size_iso);
+        setSizeField(m,vertex1,hmax,vertexMarker,interfaceBand);
+        setSizeField(m,vertex2,hmax,vertexMarker,interfaceBand);
       }
     }
 
@@ -123,20 +124,52 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
     PCU_COMM_UNPACK(ent);
     PCU_COMM_UNPACK(h_received);
     //take minimum of received values
-    double h_current = apf::getScalar(size_iso,ent,0);
+    double h_current = apf::getScalar(interfaceBand,ent,0);
     double h_final = std::min(h_current,h_received);
-    apf::setScalar(size_iso,ent,0,h_final);
+    apf::setScalar(interfaceBand,ent,0,h_final);
   }
 
   //Synchronization has all remote copies track the owning copy value
-  apf::synchronize(size_iso);
+  apf::synchronize(interfaceBand);
   m->end(it);
 
   //Grade the Mesh
-  gradeMesh();
+  //gradeMesh();
   
   m->destroyTag(vertexMarker);
+
+  //add to queue
+  sizeFieldList.push(interfaceBand);
   return 0;
+}
+
+void MeshAdaptPUMIDrvr::isotropicIntersect()
+{
+  freeField(size_iso);
+  size_iso = apf::createFieldOn(m, "proteus_size", apf::SCALAR);
+
+  apf::MeshEntity *vert;
+  apf::MeshIterator *it = m->begin(0);
+  
+  apf::Field *field = sizeFieldList.front();
+  std::cout<<"Field is "<< apf::getName(field)<<std::endl;
+  apf::copyData(size_iso,field);
+  sizeFieldList.pop();
+  apf::destroyField(field);
+  while(!sizeFieldList.empty())
+  {
+    field = sizeFieldList.front();
+    while(vert = m->iterate(it))
+    {
+      double value1 = apf::getScalar(size_iso,vert,0);
+      double value2 = apf::getScalar(field,vert,0);
+      double minValue = std::min(value1,value2);
+      apf::setScalar(size_iso,vert,0,minValue);
+    } 
+    sizeFieldList.pop();
+    apf::destroyField(field);
+  }
+  gradeMesh();
 }
 
 //taken from Dan's superconvergent patch recovery code
