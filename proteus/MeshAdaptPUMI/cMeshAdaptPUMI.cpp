@@ -376,6 +376,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
   }
+
+  isotropicIntersect();
+
   if(logging_config=="on"){
     char namebuffer[50];
     sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
