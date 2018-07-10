@@ -24,15 +24,16 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         surface
     nd: int
         number of dimensions
-    boundaryNormals: double[:,:]
-        array of length of all domain material types, with indexes corresponding
-        to the material type set as boundaryNormals.
-        if e.g., boundaryNormals[2]=[0.,0.,0.], then it will be ignored
-    fixedMaterialTypes: int[:]
-        array of length of all domain material types, with indexes corresponding
-        to the material type set as: 0 -> not fixed, 1 -> fixed.
-        e.g. is nodes of material type 3 should be fixed: fixedMaterialTypes[3]=1.
-        (!) must be integers
+    fixedNodeMaterialTypes: int[:]
+        array of length of all domain node material types, with indexes
+        corresponding to the material type set as: 0 -> not fixed, 1 -> fixed.
+        e.g. if nodes of material type 3 should be fixed:
+        fixedNodeMaterialTypes[3]=1   (!) must be integers
+    fixedElementMaterialTypes: int[:]
+        array of length of all domain element material types, with indexes
+        corresponding to the material type set as: 0 -> not fixed, 1 -> fixed.
+        all nodes that have at least one element with fixed material type around
+        them will be fixed
     nSmoothIn: int
         number of smoothing steps while pseudo time stepping (during each step)
     nSmoothOut: int
@@ -49,13 +50,13 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                  ME_MODEL,
                  LS_MODEL=None,
                  nd=2,
-                 boundaryNormals=None,
-                 fixedMaterialTypes=None,
+                 fixedNodeMaterialTypes=None,
+                 fixedElementMaterialTypes=None,
                  nSmoothIn=0,
                  nSmoothOut=0,
                  epsFact_density=3,
                  epsTimeStep=1.,
-                 grading=1.1):
+                 grading=0.):
         self.myfunc = func
         self.LS_MODEL = LS_MODEL
         self.ME_MODEL = ME_MODEL
@@ -71,8 +72,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         aOfX = [lambda x: np.array([[1., 0.], [0., 1.]])]
         fOfX = [self.uOfX]  # scaled function reciprocal
         self.t = 0
-        self.boundaryNormals = boundaryNormals
-        self.fixedMaterialTypes = fixedMaterialTypes
+        self.fixedNodeMaterialTypes = fixedNodeMaterialTypes
+        self.fixedElementMaterialTypes = fixedElementMaterialTypes
         self.nSmoothIn = nSmoothIn
         self.nSmoothOut = nSmoothOut
         self.dt_last = None
@@ -115,10 +116,17 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                                                           nNodes_owned=self.mesh.nNodes_owned)
         for cn in self.mesh.cornerNodes:
             self.mesh.fixedNodesBoolArray[cn] = 1
-        for node in range(len(self.mesh.nodeMaterialTypes)):
-            if self.fixedMaterialTypes[self.mesh.nodeMaterialTypes[node]] == 1:
-                self.mesh.fixedNodesBoolArray[node] = 1
-        uni, count = np.unique(self.mesh.elementBoundaryElementsArray.flat, return_counts=True)
+        if self.fixedNodeMaterialTypes is not None:
+            for node in range(len(self.mesh.nodeMaterialTypes)):
+                if self.fixedNodeMaterialTypes[self.mesh.nodeMaterialTypes[node]] == 1:
+                    self.mesh.fixedNodesBoolArray[node] = 1
+        if self.fixedElementMaterialTypes is not None:
+            # if node has a fixed element material type around them, fix the node
+            for node in range(len(self.mesh.nodeArray)):
+                for eOffset in range(self.mesh.nodeElementOffsets[node], self.mesh.nodeElementOffsets[node+1]):
+                    eN = self.mesh.nodeElementsArray[eOffset]
+                    if self.fixedElementMaterialTypes[self.mesh.elementMaterialTypes[eN]] == 1:
+                        self.mesh.fixedNodesBoolArray[node] = 1
 
     def attachModels(self,modelList):
         self.model = modelList[self.ME_MODEL]
@@ -166,114 +174,20 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.areas_nodes[:] = cmm.recoveryAtNodes(variable=self.areas,
                                                   nodeElementsArray=self.mesh.nodeElementsArray,
                                                   nodeElementOffsets=self.mesh.nodeElementOffsets)
-
         nNodes_owned = self.mesh.nNodes_owned
         nNodes_global = self.mesh.nNodes_global
-        from proteus import Comm
-        comm = Comm.get().comm.tompi4py()
-        comm_size = comm.size
-        my_rank = comm.rank
-        grads_2rank = {}
-        nodes0_2rank = {}
-        rank0_2rank = {}
-        nearestN_2rank = {}
-        areas_2rank = {}
-        if comm_size > 1:
-            logEvent("Sharing recovered value to non-owned nodes", level=3)
-            comm.barrier()
-            for rank in range(comm_size):
-                grads_2rank[rank] = np.zeros(0, dtype=np.int32)
-                nodes0_2rank[rank] = np.zeros(0, dtype=np.int32)
-                nearestN_2rank[rank] = np.zeros(0, dtype=np.int32)
-                rank0_2rank[rank] = np.zeros(0, dtype=np.int32)
-                areas_2rank[rank] = np.zeros(0)
-            for node in range(nNodes_owned, nNodes_global):
-                node_new_rank, new_rank = cmm.pyCheckOwnedVariable(variable_nb_local=node,
-                                                             rank=my_rank,
-                                                             nVariables_owned=nNodes_owned,
-                                                             variableNumbering_subdomain2global=self.mesh.globalMesh.nodeNumbering_subdomain2global,
-                                                             variableOffsets_subdomain_owned=np.array([ss for ss in self.mesh.globalMesh.nodeOffsets_subdomain_owned], dtype=np.int32))
-                nodes0_2rank[new_rank] = np.append(nodes0_2rank[new_rank], node)
-                nearestN_2rank[new_rank] = np.append(nearestN_2rank[new_rank], node_new_rank)
-                rank0_2rank[new_rank] = np.append(rank0_2rank[new_rank], my_rank)
-            # SEND THOSE NODES TO RELEVANT PROCESSORS
-            nodes0_2doArray = np.zeros(0, dtype=np.int32)
-            rank0_2doArray = np.zeros(0, dtype=np.int32)
-            nearestN_2doArray = np.zeros(0, dtype=np.int32)
-            for rank_recv in range(comm.size):
-                for rank_send in range(comm.size):
-                    if rank_send != rank_recv and rank_send == my_rank:
-                        comm.send(nodes0_2rank[rank_recv].size, dest=rank_recv, tag=0)
-                        if nodes0_2rank[rank_recv].size > 0:
-                            # original nodes
-                            comm.send(nodes0_2rank[rank_recv],  dest=rank_recv, tag=1)
-                            # nodes on other processor
-                            comm.send(nearestN_2rank[rank_recv], dest=rank_recv, tag=2)
-                            # rank for original nodes (to send back final solution)
-                            comm.send(rank0_2rank[rank_recv], dest=rank_recv, tag=3)
-                    elif rank_send!= rank_recv and rank_recv == my_rank:
-                        size = comm.recv(source=rank_send, tag=0)
-                        if size > 0:
-                            # coords
-                            nodes0_2do = comm.recv(source=rank_send, tag=1)
-                            nodes0_2doArray = np.append(nodes0_2doArray, nodes0_2do, axis=0)
-                            # original nodes
-                            nearestN_2do = comm.recv(source=rank_send, tag=2)
-                            nearestN_2doArray = np.append(nearestN_2doArray, nearestN_2do)
-                            # original ranks
-                            rank0_2do = comm.recv(source=rank_send, tag=3)
-                            rank0_2doArray = np.append(rank0_2doArray, rank0_2do)
-                    comm.barrier()
-            # SEND VALUE BACK TO ORIGINAL PROCESSORS
-            for rank in range(comm.size):
-                grads_2rank[rank] = np.zeros((0, 3))
-                nodes0_2rank[rank] = np.zeros(0, dtype=np.int32)
-                areas_2rank[rank] = np.zeros(0)
-            for iN in range(len(nodes0_2doArray)):
-                node = nodes0_2doArray[iN]
-                nearestN = nearestN_2doArray[iN]
-                grad = np.zeros(3)
-                for ind in range(self.nd):
-                    grad[ind] = self.grads[nearestN_2doArray[iN], ind]
-                grads_2rank[rank0_2doArray[iN]] = np.append(grads_2rank[rank0_2doArray[iN]], [grad], axis=0)
-                nodes0_2rank[rank0_2doArray[iN]] = np.append(nodes0_2rank[rank0_2doArray[iN]], nodes0_2doArray[iN])
-                areas_2rank[rank0_2doArray[iN]] = np.append(areas_2rank[rank0_2doArray[iN]], self.areas_nodes[nearestN])
-            # retrieve solution
-            nodes0_2doArray = np.zeros(0)
-            grads_2doArray = np.zeros((0, 3))
-            areas_2doArray = np.zeros(0)
-            for rank_recv in range(comm.size):
-                for rank_send in range(comm.size):
-                    if rank_send != rank_recv and rank_send == my_rank:
-                        comm.send(nodes0_2rank[rank_recv].size, dest=rank_recv, tag=0)
-                        if nodes0_2rank[rank_recv].size > 0:
-                            # original nodes
-                            comm.send(nodes0_2rank[rank_recv],  dest=rank_recv, tag=1)
-                            # grads to other processor
-                            comm.send(grads_2rank[rank_recv], dest=rank_recv, tag=2)
-                            # areas to other processors
-                            comm.send(areas_2rank[rank_recv], dest=rank_recv, tag=3)
-                    elif rank_send!= rank_recv and rank_recv == my_rank:
-                        size = comm.recv(source=rank_send, tag=0)
-                        if size > 0:
-                            # original nodes
-                            nodes0_2do = comm.recv(source=rank_send, tag=1)
-                            nodes0_2doArray = np.append(nodes0_2doArray, nodes0_2do)
-                            # grads
-                            grads_2do = comm.recv(source=rank_send, tag=2)
-                            grads_2doArray = np.append(grads_2doArray, grads_2do, axis=0)
-                            # areas
-                            areas_2do = comm.recv(source=rank_send, tag=3)
-                            areas_2doArray = np.append(areas_2doArray, areas_2do, axis=0)
-                    comm.barrier()
-            # FINALLY APPLY FINAL POSITION OF NON-OWNED NODES
-            for iN in range(len(nodes0_2doArray)):
-                node = int(nodes0_2doArray[iN])
-                grad = grads_2doArray[iN]
-                area = areas_2doArray[iN]
-                self.areas_nodes[node] = area
-                for ndi in range(self.nd):
-                    self.grads[node, ndi] = grad[ndi]
+        nodeNumbering_subdomain2global = self.mesh.globalMesh.nodeNumbering_subdomain2global
+        nodeOffsets_subdomain_owned = self.mesh.globalMesh.nodeOffsets_subdomain_owned
+        ms.getNonOwnedNodeValues(self.grads,
+                                 nNodes_owned,
+                                 nNodes_global,
+                                 nodeNumbering_subdomain2global,
+                                 nodeOffsets_subdomain_owned)
+        ms.getNonOwnedNodeValues(self.areas_nodes,
+                                 nNodes_owned,
+                                 nNodes_global,
+                                 nodeNumbering_subdomain2global,
+                                 nodeOffsets_subdomain_owned)
         self.model.grads = self.grads
         self.model.areas_nodes = self.areas_nodes
         # evaluate f at nodes
@@ -417,9 +331,10 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             # f = min(self.he_max, f)
         if f < self.epsFact_density*self.he_min:
             f = 0.
-        f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
-        f = min(f, self.he_max)
-        # f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
+        if self.grading > 0.:
+            # f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
+            # f = min(f, self.he_max)
+            f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
         return f
 
     def evaluateFunAtNodes(self):
@@ -434,9 +349,10 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                 # f = min(self.he_max, f)
             if f < self.epsFact_density*self.he_min:
                 f = 0.
-            f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
-            f = min(f, self.he_max)
-            # f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
+            if self.grading > 0.:
+                # f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
+                # f = min(f, self.he_max)
+                f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
             self.uOfXTatNodes[i] = f
 
     def evaluateFunAtQuadraturePoints(self):
@@ -454,9 +370,10 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                     # f = min(self.he_max, f)
                 if f < self.epsFact_density*self.he_min:
                     f = 0.
-                f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
-                f = min(f, self.he_max)
-                # f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
+                if self.grading > 0.:
+                    # f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
+                    # f = min(f, self.he_max)
+                    f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
                 self.uOfXTatQuadrature[e, k] = f
 
     def getLevelSetValue(self, eN, xi):
@@ -466,12 +383,23 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
     def getGradientValue(self, eN, xi):
         femSpace = self.model.u[0].femSpace
         value = 0.0
-        # #  tridelat hack: the following 3 lines do not work in parallel
-        # for i,psi in zip(femSpace.dofMap.l2g[eN],
-        #                  femSpace.elementMaps.localFunctionSpace.basis):
-        #     value+=self.grads[i]*psi(xi)
-        # # reverting to grad value within element
-        value = self.model.q[('grad(u)', 0)][eN, 0]
+        #  tridelat hack: the following 3 lines do not work in parallel
+        for i,psi in zip(femSpace.dofMap.l2g[eN],
+                         femSpace.elementMaps.localFunctionSpace.basis):
+            value+=self.grads[i]*psi(xi)
+        # reverting to grad value within element
+        # value = self.model.q[('grad(u)', 0)][eN, 0]
+        return value
+
+    def getAreaValue(self, eN, xi):
+        femSpace = self.model.u[0].femSpace
+        value = 0.0
+        #  tridelat hack: the following 3 lines do not work in parallel
+        for i,psi in zip(femSpace.dofMap.l2g[eN],
+                         femSpace.elementMaps.localFunctionSpace.basis):
+            value+=self.areas_nodes[i]*psi(xi)
+        # reverting to grad value within element
+        # value = self.model.q[('grad(u)', 0)][eN, 0]
         return value
 
 def calculate_areas(x, detJ, weights):
