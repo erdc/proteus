@@ -128,11 +128,16 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.reset()
         self.BC_type = 'NonMaterial'
         self.vof_advective.setConstantBC(0.)
+        self.vos_advective.setConstantBC(0.)
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
+        self.us_diffusive.setConstantBC(0.)
+        self.vs_diffusive.setConstantBC(0.)
+        self.ws_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
+        self.pInc_diffusive.setConstantBC(0.)
 
     def setTank(self, b_or=None):
         if b_or is None:
@@ -200,7 +205,8 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.k_dirichlet.setConstantBC(0.) 
         # advective        
         self.p_advective.setConstantBC(0.)
-        self.pInit_advective.setConstantBC(0.)          
+        self.pInit_advective.setConstantBC(0.)
+        self.pInc_advective.setConstantBC(0.)
         self.u_advective.setConstantBC(0.)
         self.v_advective.setConstantBC(0.)
         self.w_advective.setConstantBC(0.)
@@ -237,16 +243,25 @@ class BC_RANS(BoundaryConditions.BC_Base):
             orientation = self._b_or
         self.reset()
         self.p_dirichlet.setConstantBC(0.)
+        self.pInc_dirichlet.setConstantBC(0.)
+        self.pInit_dirichlet.setConstantBC(0.)
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
+        self.us_dirichlet.setConstantBC(0.)
+        self.vs_dirichlet.setConstantBC(0.)
+        self.ws_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.setConstantBC(vof_air)  # air
+        self.vos_dirichlet.setConstantBC(0.)  # air
         if self._b_or[0] == 1. or self._b_or[0] == -1.:
             self.u_diffusive.setConstantBC(0.)
+            self.us_diffusive.setConstantBC(0.)
         if self._b_or[1] == 1. or self._b_or[1] == -1.:
             self.v_diffusive.setConstantBC(0.)
+            self.vs_diffusive.setConstantBC(0.)
         if self._b_or[2] == 1. or self._b_or[2] == -1.:
             self.w_diffusive.setConstantBC(0.)
+            self.ws_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
 
@@ -448,6 +463,9 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.w_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
         self.vof_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(x, t)
         self.p_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
+        self.pInc_advective.uOfXT = lambda x,t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
+        self.pInit_advective.setConstantBC(0.0)
+        
 
     def __cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(self, x, t):
         cython.declare(xx=cython.double[3])
@@ -679,8 +697,14 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
+        self.us_dirichlet.setConstantBC(0.)
+        self.vs_dirichlet.setConstantBC(0.)
+        self.ws_dirichlet.setConstantBC(0.)
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
+        self.pInit_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
+        self.pInc_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
+        self.vos_dirichlet.setConstantBC(0.)
         self.u_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)

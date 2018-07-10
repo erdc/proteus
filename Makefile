@@ -354,7 +354,7 @@ jupyter:
 	printf "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.MPIEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
-	#jupyter labextension install @jupyter-widgets/jupyterlab-manager
+	jupyter labextension install @jupyter-widgets/jupyterlab-manager@0.34.0
 
 lfs:
 	pip install pyliblzma

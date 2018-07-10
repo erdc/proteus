@@ -1020,7 +1020,7 @@ namespace proteus
         duc_du = u/(uc+1.0e-12);
         duc_dv = v/(uc+1.0e-12);
         duc_dw = w/(uc+1.0e-12);
-        double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
+        double fluid_velocity[2]={u,v}, solid_velocity[2]={u_s,v_s};
         double new_beta = closure.betaCoeff(1.0-phi_s,
 					    rho,
 					    fluid_velocity,
@@ -2640,10 +2640,7 @@ namespace proteus
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not?
-                updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
-                                                  /* nonlinearDragFactor, */
-                                                  /* porosity, */
-                                                  /* meanGrainSize, */
+                updateDarcyForchheimerTerms_Ergun(
                                                   q_dragAlpha[eN_k],
                                                   q_dragBeta[eN_k],
                                                   eps_rho,

@@ -1,5 +1,6 @@
 
 
+
 from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
@@ -130,7 +131,12 @@ class TestHsu(unittest.TestCase):
         sedF = 0.65
         gs0 = gl.sedSt.gs0(sedF)
         self.assertTrue(round(gs0,f) == round(0.5*(2-0.49)/(1-0.49)**3 * (0.64-0.49)/(0.64-0.635),f))
+
+
+
+        
     def testTkeSed(self):
+        g = np.array([0.,9.81])
         gl=GlobalVariables()
         import random
         rhoFluid = 10. + random.random()
@@ -145,26 +151,24 @@ class TestHsu(unittest.TestCase):
 # Setting 0 t_c
         theta_n = 0.25 + 0.25*random.random() + 1e-30
         kappa_n = 0.1 + 0.1*random.random() + 1e-30
-        kappa_np1 = 0.1  + 0.1 * random.random() + 1e-30
         epsilon_n = 0.1  + 0.1 * random.random() + 1e-30
 
 
-        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
         beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
         t_p =rhoS/ beta
         l_c = np.sqrt(np.pi)*gl.grain / (24.*sedF * gl.sedSt.gs0(sedF))
         t_cl = min(l_c/np.sqrt(theta_n) , 0.165*kappa_n/epsilon_n)
         aa = 1/( 1. + t_p/t_cl)
-      
-        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_np1/((1-sedF)*rhoFluid)
+        gc = g[:]*gradC[:]
+        gc = sum(gc)
+        ss = (rhoS/rhoFluid-1)
+        es = 2.*beta * (1-aa)*sedF/((1-sedF)*rhoFluid)*kappa_n+ss*gc*nuT/gl.sigmaC/(1.-sedF)
 
 
-        kappa_sed = gl.sedSt.kappa_sed1(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,kappa_np1,epsilon_n,nuT)
-        if es1!=0:
-            kappa_sed/=es1
-            es1/=es1
+        kappa_sed = gl.sedSt.kappa_sed1(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT,g)
+        self.assertTrue(round(kappa_sed,f) ==round( es,f))
 
-        self.assertTrue(round(kappa_sed,f) ==round( -es1,f))
+        
     def test_dTkeSed_dk(self):
         gl=GlobalVariables()
         import random
@@ -194,83 +198,13 @@ class TestHsu(unittest.TestCase):
 
 
         kappa_sed = gl.sedSt.dkappa_sed1_dk(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
-        if es1!=0:
-            kappa_sed/=es1
-            es1/=es1
-        self.assertTrue(round(kappa_sed,f) ==round( -es1,f))
+
+        self.assertTrue(round(kappa_sed,f) ==round( es1,f))
 
 
-    def testTkeSed2(self):
-        gl=GlobalVariables()
-        import random
-        rhoFluid = 1. + random.random()
-        f = 10
-        uf = np.array([5.,4.],"d")
-        us = np.array([1.,1.],"d") 
-        gradC=np.array([0.1,0.1])
-        rhoS = 2000
-        nu = 1e-4
-        nuT = 1e-2
-        sedF = 0.3
-# Setting 0 t_c
-        theta_n = random.random() + 1e-30
-        kappa_n = random.random() + 1e-30
-        kappa_np1 = random.random() + 1e-30
-        epsilon_n = random.random() + 1e-30
-
-
-        beta = gl.sedSt.betaCoeff(sedF,rhoFluid, uf, us, nu)      
-
-        UgradC = np.dot((uf - us),gradC)
-
-        es2  = beta * rhoFluid * nuT * UgradC / ((1-sedF)*rhoFluid)
-       
-
-        kappa_sed2 = gl.sedSt.kappa_sed2(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
-        if es2!=0:
-            kappa_sed2/=es2
-            es2/=es2
-
-        self.assertTrue(round(kappa_sed2,f) ==round( es2,f))
-        
-    def testEpsSed(self):
-        gl=GlobalVariables()
-        import random
-        rhoFluid = 1000. + random.random()
-        f = 8
-        uf = np.array([5.,4.],"d")
-        us = np.array([1.,1.],"d") 
-        gradC=np.array([0.1,0.1])
-        rhoS = 2000
-        nu = 1e-4
-        nuT = 1e-2
-        sedF = 0.3
-# Setting 0 t_c
-        theta_n = random.random() + 1e-30
-        kappa_n = random.random() + 1e-30
-        epsilon_n = random.random() + 1e-30
-        epsilon_np1 = random.random() + 1e-30
-
-
-        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
-        t_p =rhoS/ beta
-        l_c = np.sqrt(np.pi)*gl.grain / (24.*sedF * gl.sedSt.gs0(sedF))
-        t_cl = min(l_c/np.sqrt(theta_n),0.165*kappa_n/epsilon_n)
-        aa = 1/( 1. + t_p/t_cl)
-
-       
-        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_n/((1-sedF)*rhoFluid)
-        UgradC = np.dot((uf - us),gradC)
-        es2  = beta * rhoFluid * nuT * UgradC / ((1-sedF)*rhoFluid)
-        eps_sed = gl.sedSt.eps_sed(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n, epsilon_np1,nuT)
-        valid = -gl.C3e*es1*epsilon_np1/kappa_n+gl.C4e*es2*epsilon_np1/kappa_n
-        if(valid!=0.):
-            eps_sed/=valid
-            valid/=valid
-        
-        self.assertTrue(round(eps_sed,f) ==round(valid ,f))
     def test_dEpsSed_dE(self):
         gl=GlobalVariables()
+        g = np.array([0.,9.81])
         import random
         rhoFluid = 1000. + random.random()
         f = 8
@@ -294,18 +228,14 @@ class TestHsu(unittest.TestCase):
         aa = 1/( 1. + t_p/t_cl)
 
        
-        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_n/((1-sedF)*rhoFluid)
+        es1 = 2.*beta *(1-aa)*sedF*kappa_n/((1-sedF)*rhoFluid)
 
-        UgradC = np.dot((uf - us),gradC)
+        UgradC = np.dot(g,gradC)
 
-        es2  = beta * rhoFluid * nuT * UgradC / ((1-sedF)*rhoFluid)
+        es2  =  nuT * UgradC*(rhoS/rhoFluid-1.) / ((1-sedF)*gl.sigmaC)
 
-        eps_sed = gl.sedSt.deps_sed_deps(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
-        valid = -gl.C3e*es1/kappa_n+gl.C4e*es2/kappa_n
-        if(valid!=0.):
-            eps_sed/=valid
-            valid/=valid
-
+        eps_sed = gl.sedSt.deps_sed_deps(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT,g)
+        valid = gl.C3e*es1/kappa_n+gl.C4e*es2/kappa_n
         self.assertTrue(round(eps_sed,f) ==round(valid,f))
 
     def testPsc(self):
@@ -617,7 +547,7 @@ class TestHsu(unittest.TestCase):
         
         
         
-    def test_mu_fr(self):
+    def test_mu_fr2D(self):
         gl=GlobalVariables()
         import random
         sqrt = np.sqrt
@@ -635,9 +565,10 @@ class TestHsu(unittest.TestCase):
         dwdz = random.random() + 1e-30
         rhoS = 2000
         divU = dudx + dvdy + dwdz
-        s_tensor = 0.5* np.array([ [ 2.*dudx  -(2./3.)*divU ,  dudy+dvdx,               dudz+dwdx],
-                                [ dudy+dvdx,                   2.*dvdy-(2./3.)*divU,    dvdz+dwdy],
-                                [ dudz+dwdx,                   dvdz+dwdy,               2.*dwdz-(2./3.)*divU]])
+        
+        s_tensor = 0.5* np.array([ [ 2.*dudx  -divU ,  dudy+dvdx,               dudz+dwdx],
+                                [ dudy+dvdx,                   2.*dvdy-divU,    dvdz+dwdy],
+                                [ dudz+dwdx,                   dvdz+dwdy,               2.*dwdz-divU]])
 
         product = s_tensor * s_tensor
         magn = sum(product)
