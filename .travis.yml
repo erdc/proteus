@@ -49,9 +49,6 @@ install:
 - ls bld src
 - popd
 - cd stack
-- ../hashdist/bin/hit purge functools_lru_cache/2szcbajxhprs
-- ../hashdist/bin/hit purge matplotlib/e6tymgm4a2ku
-- ../hashdist/bin/hit purge matplotlib/pt4efwghz4pp
 - ../hashdist/bin/hit build -j 2 -v default.yaml
 - cd ..
 - git submodule init
@@ -63,12 +60,6 @@ install:
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
-- hash -r
-- ls linux2/lib/python2.7/site-packages/
-- ls linux2/lib/python2.7/site-packages/backports
-- which python
-- which py.test
-- python -c "import matplotlib"
 
 cache:
   - timeout: 1000
