@@ -37,7 +37,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int transferModelInfo(int*,int*,int*,int*,int*,int*,int)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
         int transferBCsToProteus()
-        int adaptPUMIMesh()
+        int adaptPUMIMesh(char*)
         int dumpMesh(Mesh&)
         int willAdapt()
         int getERMSizeField(double)
@@ -132,8 +132,8 @@ cdef class MeshAdaptPUMI:
     #    return self.thisptr.transferBCtagsToProteus(&tagArray[0,0],idx,&ebN[0],&eN_global[0,0],&fluxBC[0,0])
     #def transferBCsToProteus(self):
     #    return self.thisptr.transferBCsToProteus()
-    def adaptPUMIMesh(self):
-        return self.thisptr.adaptPUMIMesh()
+    def adaptPUMIMesh(self,inputString=""):
+        return self.thisptr.adaptPUMIMesh(inputString)
     def dumpMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.dumpMesh(cmesh_ptr.mesh)
