@@ -131,7 +131,8 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
 
   //Grade the Mesh
   gradeMesh();
-
+  
+  m->destroyTag(vertexMarker);
   return 0;
 }
 
