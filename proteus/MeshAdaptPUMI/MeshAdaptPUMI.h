@@ -3,6 +3,7 @@
 #include <apf.h>
 #include <apfMesh2.h>
 #include <apfNumbering.h>
+#include <queue>
 
 /**
    \file MeshAdaptPUMI.h
@@ -141,6 +142,10 @@ class MeshAdaptPUMIDrvr{
   /* these fields store anisotropic size and metric tensor */
   apf::Field* size_scale;
   apf::Field* size_frame;
+
+  //queue for size fields
+  std::queue<apf::Field*> sizeFieldList;
+  void isotropicIntersect();
 
   int constructGlobalNumbering(Mesh& mesh);
   int constructGlobalStructures(Mesh& mesh);
