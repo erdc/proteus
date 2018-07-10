@@ -50,7 +50,7 @@ inline void getProps(double*rho,double*nu,double deltaT)
   return;
 }
 
-void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error) 
+void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out) 
 {
   if(PCU_Comm_Self()==0)
     std::cout<<"The beginning of the VMS\n";
@@ -322,6 +322,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     if(PCU_Comm_Self()==0)
       std::cout<<std::scientific<<std::setprecision(15)<<"Total Error L2 "<<sqrt(VMSerrTotalL2)<<" H1 "<<sqrt(VMSerrTotalH1)<<std::endl;
     total_error = sqrt(VMSerrTotalH1);
+    total_error_out = sqrt(VMSerrTotalH1);
     apf::destroyField(vmsErr);
     apf::destroyField(visc);
 } //end function
