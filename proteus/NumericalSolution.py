@@ -1210,7 +1210,7 @@ class NS_base:  # (HasTraits):
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
-            elif(sfConfig=="VMS"):
+            elif(sfConfig=="VMS" or sfConfig=="combined"):
               errorTotal = p0.domain.PUMIMesh.get_VMS_error()
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
@@ -1230,7 +1230,7 @@ class NS_base:  # (HasTraits):
         return adaptMeshNow
 
 
-    def PUMI_adaptMesh(self):
+    def PUMI_adaptMesh(self,inputString=""):
         """
         Uses a computed error field to construct a size field and adapts
         the mesh using SCOREC tools (a.k.a. MeshAdapt)
@@ -1263,7 +1263,7 @@ class NS_base:  # (HasTraits):
         if(sfConfig=="pseudo"):
             print "Testing solution transfer and restart feature of adaptation. No actual mesh adaptation!"
         else:
-            p0.domain.PUMIMesh.adaptPUMIMesh()
+            p0.domain.PUMIMesh.adaptPUMIMesh(inputString)
 
         #code to suggest adapting until error is reduced;
         #not fully baked and can lead to infinite loops of adaptation
@@ -1535,7 +1535,7 @@ class NS_base:  # (HasTraits):
 
             self.PUMI_transferFields()
             logEvent("Initial Adapt before Solve")
-            self.PUMI_adaptMesh()
+            self.PUMI_adaptMesh("interface")
 
             for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
                 if p.initialConditions is not None:
@@ -1544,7 +1544,7 @@ class NS_base:  # (HasTraits):
  
             self.PUMI_transferFields()
             logEvent("Initial Adapt 2 before Solve")
-            self.PUMI_adaptMesh()
+            self.PUMI_adaptMesh("interface")
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The

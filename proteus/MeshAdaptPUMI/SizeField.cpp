@@ -152,7 +152,6 @@ void MeshAdaptPUMIDrvr::isotropicIntersect()
   apf::MeshIterator *it = m->begin(0);
   
   apf::Field *field = sizeFieldList.front();
-  std::cout<<"Field is "<< apf::getName(field)<<std::endl;
   apf::copyData(size_iso,field);
   sizeFieldList.pop();
   apf::destroyField(field);
@@ -834,7 +833,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   //apf::Mesh* m;
   if(size_field_config=="ERM")
     errField = m->findField("ErrorRegion");
-  else if(size_field_config=="VMS")
+  else if(size_field_config=="VMS" || size_field_config=="combined")
     errField = m->findField("VMSH1");
   assert(errField); 
   //apf::Mesh *m = apf::getMesh(vmsErrH1);
@@ -843,12 +842,14 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   apf::MeshEntity *v;
   apf::MeshElement *element;
   apf::MeshEntity *reg;
-  size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
+  //size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
+  apf::Field *errorSize = apf::createLagrangeField(m, "errorSize", apf::SCALAR, 1);
+
   if (adapt_type_config == "anisotropic"){
     size_scale = apf::createLagrangeField(m, "proteus_size_scale", apf::VECTOR, 1);
     size_frame = apf::createLagrangeField(m, "proteus_size_frame", apf::MATRIX, 1);
   }
-  apf::Field *size_iso_reg = apf::createField(m, "iso_size", apf::SCALAR, apf::getConstant(nsd));
+  apf::Field *errorSize_reg = apf::createField(m, "iso_size", apf::SCALAR, apf::getConstant(nsd));
   apf::Field *clipped_vtx = apf::createLagrangeField(m, "iso_clipped", apf::SCALAR, 1);
   
   //Get total number of elements
@@ -913,7 +914,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     else //isotropic
       h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
 
-    apf::setScalar(size_iso_reg, reg, 0, h_new);
+    apf::setScalar(errorSize_reg, reg, 0, h_new);
     apf::destroyMeshElement(element);
   }
   m->end(it);
@@ -922,10 +923,10 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   it = m->begin(0);
   while ((v = m->iterate(it)))
   {
-    //averageToEntity(size_iso_reg, size_iso, v);
-    //volumeAverageToEntity(size_iso_reg, size_iso, v);
-    errorAverageToEntity(size_iso_reg, size_iso,errField, v);
-    //minToEntity(size_iso_reg, size_iso, v);
+    //averageToEntity(errorSize_reg, errorSize, v);
+    //volumeAverageToEntity(errorSize_reg, errorSize, v);
+    errorAverageToEntity(errorSize_reg, errorSize,errField, v);
+    //minToEntity(errorSize_reg, errorSize, v);
   }
   m->end(it);
 
@@ -946,8 +947,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     apf::Field *grad2Speed = apf::recoverGradientByVolume(gradSpeed);
     //apf::Field *hess = computeHessianField(grad2phi);
     //apf::Field *curves = getCurves(hess, gradphi);
-    //apf::Field* metricf = computeMetricField(gradphi,grad2phi,size_iso,eps_u);
-    apf::Field *metricf = computeMetricField(gradSpeed, grad2Speed, size_iso, eps_u);
+    //apf::Field* metricf = computeMetricField(gradphi,grad2phi,errorSize,eps_u);
+    apf::Field *metricf = computeMetricField(gradSpeed, grad2Speed, errorSize, eps_u);
     apf::Field *frame_comps[3] = {apf::createLagrangeField(m, "frame_0", apf::VECTOR, 1), apf::createLagrangeField(m, "frame_1", apf::VECTOR, 1), apf::createLagrangeField(m, "frame_2", apf::VECTOR, 1)};
     //getERMSizeFrames(metricf, gradSpeed, frame_comps);
 
@@ -956,7 +957,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     apf::Vector3 scale;
     while ((v = m->iterate(it)))
     {
-      double tempScale = apf::getScalar(size_iso, v, 0);
+      double tempScale = apf::getScalar(errorSize, v, 0);
       if (tempScale < hmin)
         apf::setScalar(clipped_vtx, v, 0, -1);
       else if (tempScale > hmax)
@@ -964,7 +965,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       else
         apf::setScalar(clipped_vtx, v, 0, 0);
       clamp(tempScale, hmin, hmax);
-      apf::setScalar(size_iso,v,0,tempScale);
+      apf::setScalar(errorSize,v,0,tempScale);
     }
     it = m->begin(0);
     while( (v = m->iterate(it)) ){
@@ -994,7 +995,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
       double lambda[3] = {ssa[2].wm, ssa[1].wm, ssa[0].wm};
 
-      scaleFormulaERM(phi, hmin, hmax, apf::getScalar(size_iso, v, 0), curve, lambda, eps_u, scale,nsd,maxAspect);
+      scaleFormulaERM(phi, hmin, hmax, apf::getScalar(errorSize, v, 0), curve, lambda, eps_u, scale,nsd,maxAspect);
       apf::setVector(size_scale, v, 0, scale);
       //get frames
 
@@ -1053,7 +1054,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     it = m->begin(0);
     while ((v = m->iterate(it)))
     {
-      double tempScale = apf::getScalar(size_iso, v, 0);
+      double tempScale = apf::getScalar(errorSize, v, 0);
       if (tempScale < hmin)
         apf::setScalar(clipped_vtx, v, 0, -1);
       else if (tempScale > hmax)
@@ -1061,22 +1062,23 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       else
         apf::setScalar(clipped_vtx, v, 0, 0);
       clamp(tempScale, hmin, hmax);
-      apf::setScalar(size_iso, v, 0, tempScale);
+      apf::setScalar(errorSize, v, 0, tempScale);
     }
-    gradeMesh();
-    apf::synchronize(size_iso);
+    //gradeMesh();
+    apf::synchronize(errorSize);
     m->end(it);
     if (target_element_count != 0)
     {
-      sam::scaleIsoSizeField(size_iso, target_element_count);
-      clampField(size_iso, hmin, hmax);
-      gradeMesh();
-      //SmoothField(size_iso);
+      sam::scaleIsoSizeField(errorSize, target_element_count);
+      clampField(errorSize, hmin, hmax);
+      //gradeMesh();
+      //SmoothField(errorSize);
     }
+    sizeFieldList.push(errorSize);
   } 
 
   //Destroy locally required fields
-  apf::destroyField(size_iso_reg);
+  apf::destroyField(errorSize_reg);
   apf::destroyField(clipped_vtx);
   if(comm_rank==0)
     std::cout<<"Finished Size Field\n";
