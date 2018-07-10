@@ -858,7 +858,7 @@ namespace proteus
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
-      double solid_velocity[3]={uStar,vStar,wStar}, fluid_velocity[3]={u_f,v_f,w_f};
+      double solid_velocity[3]={u,v,w}, fluid_velocity[3]={u_f,v_f,w_f};
       double new_beta =    closure.betaCoeff(vos,
                                           rhoFluid,
                                           fluid_velocity,
