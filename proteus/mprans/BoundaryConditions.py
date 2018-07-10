@@ -703,7 +703,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.ws_dirichlet.setConstantBC(0.)
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.pInit_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
-        self.pInc_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
+        self.pInc_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
         self.vos_dirichlet.setConstantBC(0.)
         self.u_diffusive.setConstantBC(0.)
