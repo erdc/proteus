@@ -54,7 +54,7 @@ class MeshAdaptPUMIDrvr{
 
   //MeshAdapt functions
   int willAdapt();
-  int adaptPUMIMesh();
+  int adaptPUMIMesh(const char* input);
   int calculateSizeField();
   int calculateAnisoSizeField();
   int testIsotropicSizeField();
@@ -96,7 +96,7 @@ class MeshAdaptPUMIDrvr{
   char* modelFileName; 
   
   //VMS
-  void get_VMS_error(double& total_error);
+  void get_VMS_error(double& total_error_out);
   
   //tags used to identify types of BC
   apf::MeshTag* BCtag;
