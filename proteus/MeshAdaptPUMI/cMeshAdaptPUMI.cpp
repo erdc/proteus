@@ -320,7 +320,7 @@ int MeshAdaptPUMIDrvr::willAdapt()
 #include <sam.h>
 #include <samSz.h>
 
-int MeshAdaptPUMIDrvr::adaptPUMIMesh()
+int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
 /**
  * @brief Function used to trigger adaptation
  *
@@ -355,7 +355,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   else if (size_field_config == "meshQuality"){
     size_iso = samSz::isoSize(m);
   }
-  else if (size_field_config == "isotropic")
+  else if (size_field_config == "isotropic" || std::string(inputString)=="interface")
     calculateSizeField();
   else if (size_field_config == "isotropicProteus")
     size_iso = m->findField("proteus_size");
@@ -371,6 +371,11 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       //special situation where I only care about err_reg
       freeField(errRho_reg); 
       freeField(errRel_reg); 
+  }
+  else if(size_field_config == "combined" && std::string(inputString)==""){
+    assert(vmsErrH1);
+    calculateSizeField();
+    getERMSizeField(total_error);
   }
   else {
     std::cerr << "unknown size field config " << size_field_config << '\n';
