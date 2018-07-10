@@ -1,10 +1,10 @@
-
-import numpy as np
+cimport cython
 import numpy as np
 cimport numpy as np
 from libcpp cimport bool
 from proteus.Profiling import logEvent
 from proteus.mprans import MeshSmoothing as ms
+from proteus.mprans cimport MeshSmoothing as ms
 from proteus import Comm
 from mpi4py import MPI
 
@@ -134,25 +134,11 @@ cdef class cCoefficients:
                            eps=1.):
         pc = self.pyCoefficients
         return self.cppPseudoTimeSteppingParallel(xx=xx,
-                                                  eps=eps,
-                                                  grads=pc.grads,
-                                                  areas_nodes=pc.areas_nodes,
-                                                  areas=pc.areas,
-                                                  nd=int(pc.nd),
-                                                  u_phi=pc.u_phi,
-                                                  bNs=pc.boundaryNormals,
-                                                  fixedNodes=pc.fixedMaterialTypes)
+                                                  eps=eps)
 
     cdef cppPseudoTimeSteppingParallel(self,
                                        double[:,:] xx,
-                                       double eps,
-                                       double[:,:] grads,
-                                       double[:] areas_nodes,
-                                       double[:] areas,
-                                       int nd,
-                                       double[:] u_phi=None,
-                                       double[:,:] bNs=None,
-                                       int[:] fixedNodes=None):
+                                       double eps):
         logEvent("Pseudo-time stepping with dt={eps} (0<t<1)".format(eps=eps),
                  level=3)
         pc = self.pyCoefficients
@@ -168,8 +154,14 @@ cdef class cCoefficients:
         cdef double ls_phi
         cdef double f
         cdef double Ccoeff = pc.C
+        cdef int nd = pc.nd
         cdef double[:] dphi = np.zeros(nd)
+        cdef double[:,:] grads = pc.grads
         cdef double[:] v_grad = np.zeros(nd)
+        cdef double[:] areas_nodes = pc.areas_nodes,
+        cdef double[:] areas = pc.areas
+        cdef object u_phi = pc.u_phi
+
         cdef object femSpace = pc.model.u[0].femSpace
         cdef bool find_nearest_node
         # initialise mesh memoryview before loop
@@ -188,8 +180,8 @@ cdef class cCoefficients:
         for bb_i in pc.mesh.exteriorElementBoundariesArray:
             exteriorElementBoundariesBoolArray[bb_i] = 1
         cdef double[:,:,:] elementBoundaryNormalsArray = pc.mesh.elementBoundaryNormalsArray
-        cdef double[:,:] boundaryNormals = pc.boundaryNormals
         cdef int nNodes_owned = pc.mesh.nNodes_owned
+        cdef int nNodes_global = pc.mesh.nNodes_global
         cdef int nElements_owned = pc.mesh.nElements_owned
         cdef int nElements_global = pc.mesh.nElements_global
         cdef int[:] nodeNumbering_subdomain2global = pc.mesh.globalMesh.nodeNumbering_subdomain2global
@@ -202,6 +194,7 @@ cdef class cCoefficients:
         cdef int[:] elementBoundaryNumbering_subdomain2global = pc.mesh.globalMesh.elementBoundaryNumbering_subdomain2global
         cdef int[:] elementBoundaryOffsets_subdomain_owned = pc.mesh.globalMesh.elementBoundaryOffsets_subdomain_owned
         cdef int[:,:] elementBoundaryNodesArray = pc.mesh.elementBoundaryNodesArray
+        cdef int[:] fixedNodesBoolArray = pc.mesh.fixedNodesBoolArray
         cdef int nSmoothIn = pc.nSmoothIn
         cdef int nSmoothOut = pc.nSmoothOut
         cdef bool inside_eN = False
@@ -292,8 +285,8 @@ cdef class cCoefficients:
                     if flag != 0:
                         fixed = True
                         fixed_dir[:] = 0
-                        if fixedNodes is not None:
-                            if fixedNodes[flag] == 1:
+                        if fixedNodesBoolArray is not None:
+                            if fixedNodesBoolArray[node] == 1:
                                 fixed = True
                         # smooth on boundary only unless it is a corner node
                         if fixed is False:
@@ -341,7 +334,7 @@ cdef class cCoefficients:
                             if u_phi is not None:
                                 ls_phi = u_phi[node]
                             else:
-                                ls_phi = None
+                                ls_phi = 1e12
                             f = pc.evaluateFunAtX(x=coords, ls_phi=ls_phi)
                             for ndi in range(nd):
                                 dphi[ndi] = v_grad[ndi]/(t*1./(f*Ccoeff)+(1-t)*1./area)
@@ -361,12 +354,11 @@ cdef class cCoefficients:
                                                               node=nearest_nodes[node])
                             nearest_nodes[i] = nearestN
                             if nearestN >= nNodes_owned:
-                                nearestN, new_rank = checkOwnedVariable(variable_nb_local=nearestN,
-                                                                        rank=my_rank,
-                                                                        nVariables_owned=nNodes_owned,
-                                                                        variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
-                                                                        variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
-                                pending = True
+                                nearestN, new_rank = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
+                                                                             rank=my_rank,
+                                                                             nVariables_owned=nNodes_owned,
+                                                                             variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
+                                                                             variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
                             else:
                                 typeN = 1
                                 nearestN = ms.getLocalNearestElementAroundNode(coords=coords,
@@ -374,7 +366,7 @@ cdef class cCoefficients:
                                                                                nodeElementsArray=nodeElementsArray,
                                                                                elementBarycentersArray=elementBarycentersArray,
                                                                                node=nearestN)
-                            if pending is False:
+                            if typeN == 1:
                                 starting_coords = np.zeros(3)
                                 starting_coords[0] = elementBarycentersArray[nearestN, 0]
                                 starting_coords[1] = elementBarycentersArray[nearestN, 1]
@@ -387,6 +379,12 @@ cdef class cCoefficients:
                                                                                       elementBoundaryElementsArray=elementBoundaryElementsArray,
                                                                                       exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
                                                                                       eN=nearestN)
+                                if nearestN >= nElements_owned:
+                                    nearestN, new_rank = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
+                                                                                 rank=my_rank,
+                                                                                 nVariables_owned=nElements_owned,
+                                                                                 variableNumbering_subdomain2global=elementNumbering_subdomain2global,
+                                                                                 variableOffsets_subdomain_owned=elementOffsets_subdomain_owned)
                                 if nearestN == -1:
                                     b_i_global, new_rank = getGlobalVariable(variable_nb_local=b_i,
                                                                              nVariables_owned=nElementBoundaries_owned,
@@ -397,8 +395,11 @@ cdef class cCoefficients:
                                     for nodeEl in elementNodesArray[nearestN]:
                                         if nodeMaterialTypes[nodeEl] != 0:
                                             # tridelat hack: node is probably on exterior boundary
-                                            pending = False
                                             new_rank = my_rank
+                            if new_rank != my_rank:
+                                pending = True
+                            else:
+                                pending = False
                             if pending is False:  # found an element
                                 inside_eN = True
                                 for j, bb_i in enumerate(elementBoundariesArray[nearestN]):
@@ -413,12 +414,12 @@ cdef class cCoefficients:
                                     xi = femSpace.elementMaps.getInverseValue(nearestN, coords)
                                     # line below needs optimisation:
                                     v_grad = pc.getGradientValue(nearestN, xi)
-                                    area = areas[nearestN]
+                                    area = pc.getAreaValue(nearestN, xi)
                                     if u_phi is not None:
                                         # line below needs optimisation:
                                         ls_phi = pc.getLevelSetValue(nearestN, coords)
                                     else:
-                                        ls_phi = None
+                                        ls_phi = 1e12
                                     f = pc.evaluateFunAtX(x=coords, ls_phi=ls_phi)
                                     for ndi in range(nd):
                                         dphi[ndi] = v_grad[ndi]/(t*1./(f*Ccoeff)+(1-t)*1./area)
@@ -427,20 +428,16 @@ cdef class cCoefficients:
                                 else:
                                     for nodeEl in elementNodesArray[nearestN]:
                                         if nodeEl > nNodes_owned:
-                                            nearestN, new_rank = checkOwnedVariable(variable_nb_local=nodeEl,
-                                                                                    rank=my_rank,
-                                                                                    nVariables_owned=nNodes_owned,
-                                                                                    variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
-                                                                                    variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
+                                            nearestN, new_rank = ms.cyCheckOwnedVariable(variable_nb_local=nodeEl,
+                                                                                         rank=my_rank,
+                                                                                         nVariables_owned=nNodes_owned,
+                                                                                         variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
+                                                                                         variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
                                             typeN = 0
                                             pending = True
                                 if inside_eN is False and pending is False:
                                     print('outside!!', nearestN,  coords[0], coords[1], elementBarycentersArray[nearestN,0], elementBarycentersArray[nearestN,1])
                                     print('neighbours', elementNeighborsArray[nearestN, 0], elementNeighborsArray[nearestN, 1], elementNeighborsArray[nearestN, 2])
-                                    if my_rank == 1:
-                                        for inn, nnn in enumerate(elementNodesArray[nearestN]):
-                                            print('node', inn, nnn, nodeArray[nnn, 0], nodeArray[nnn, 1])
-                                    import pdb; pdb.set_trace()
                             if pending is True:  # info to send to other processor
                                 nodesSentBoolArray[node] = 1
                                 coords_2rank[new_rank] = np.append(coords_2rank[new_rank], [coords], axis=0)
@@ -554,11 +551,11 @@ cdef class cCoefficients:
                                                                   nodeStarArray=nodeStarArray,
                                                                   node=nearestN)
                                 if nearestN >= nNodes_owned:
-                                    nearestN, new_rank = checkOwnedVariable(variable_nb_local=nearestN,
-                                                                            rank=my_rank,
-                                                                            nVariables_owned=nNodes_owned,
-                                                                            variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
-                                                                            variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
+                                    nearestN, new_rank = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
+                                                                               rank=my_rank,
+                                                                               nVariables_owned=nNodes_owned,
+                                                                               variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
+                                                                               variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
                                 else:
                                     typeN = 1
                                     nearestN = ms.getLocalNearestElementAroundNode(coords=coords,
@@ -568,6 +565,8 @@ cdef class cCoefficients:
                                                                                    node=nearestN)
                             if typeN == 1:
                                 if nearestN == -1:
+                                    if b_i == -1:
+                                        import pdb; pdb.set_trace()
                                     b_i = getLocalVariable(variable_nb_global=b_i_global,
                                                            rank=my_rank,
                                                            nVariables_owned=nElementBoundaries_owned,
@@ -576,7 +575,9 @@ cdef class cCoefficients:
                                     for ii, eeN in enumerate(elementBoundaryElementsArray[b_i]):
                                         if eeN == -1:
                                             nearestN = elementBoundaryElementsArray[b_i, ii-1]
-                                    assert nearestN != -1, 'did not find nearestN!'
+                                    if nearestN == -1:
+                                        nearestN = eeN
+                                    assert nearestN != -1, 'did not find nearestN! {x}, {y}'.format(x=coords[0], y=coords[1])
                                 starting_coords = np.zeros(3)
                                 starting_coords[0] = elementBarycentersArray[nearestN, 0]
                                 starting_coords[1] = elementBarycentersArray[nearestN, 1]
@@ -589,6 +590,12 @@ cdef class cCoefficients:
                                                                                       elementBoundaryElementsArray=elementBoundaryElementsArray,
                                                                                       exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
                                                                                       eN=nearestN)
+                                if nearestN >= nElements_owned:
+                                    nearestN, new_rank = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
+                                                                                 rank=my_rank,
+                                                                                 nVariables_owned=nElements_owned,
+                                                                                 variableNumbering_subdomain2global=elementNumbering_subdomain2global,
+                                                                                 variableOffsets_subdomain_owned=elementOffsets_subdomain_owned)
                                 if nearestN == -1:
                                     b_i_global, new_rank = getGlobalVariable(variable_nb_local=b_i,
                                                                              nVariables_owned=nElementBoundaries_owned,
@@ -619,12 +626,12 @@ cdef class cCoefficients:
                                     xi = femSpace.elementMaps.getInverseValue(nearestN, coords)
                                     # line below needs optimisation:
                                     v_grad = pc.getGradientValue(nearestN, xi)
-                                    area = areas[nearestN]
+                                    area = pc.getAreaValue(nearestN, xi)
                                     if u_phi is not None:
                                         # line below needs optimisation:
                                         ls_phi = pc.getLevelSetValue(nearestN, coords)
                                     else:
-                                        ls_phi = None
+                                        ls_phi = 1e12
                                         f = pc.evaluateFunAtX(x=coords, ls_phi=ls_phi)
                                     for ndi in range(nd):
                                         dphi[ndi] = v_grad[ndi]/(t*1./(f*Ccoeff)+(1-t)*1./area)
@@ -643,6 +650,9 @@ cdef class cCoefficients:
 
         # SEND NODES POSITION SOLUTION BACK TO ORIGINAL PROCESSORS
         if sendBack is True:
+            coords_2doArray = coords_2rank[my_rank]
+            nodes0_2doArray = nodes0_2rank[my_rank]
+            rank0_2doArray = rank0_2rank[my_rank]
             for rank in range(comm.size):
                 # things to send to other processors to get solution
                 coords_2rank[rank] = np.zeros((0, 3))
@@ -680,89 +690,11 @@ cdef class cCoefficients:
 
         # FINAL STEP: GET NON-OWNED NODES POSITION FOR CONSISTENCY
         # BUILD NON OWNED NODES ARRAY TO RETRIEVE SOLUTION
-        if comm_size > 1:
-            logEvent('Final MPI communication for shared nodes')
-            comm.barrier()
-            for rank in range(comm.size):
-                nodes0_2rank[rank] = np.zeros(0, dtype=np.int32)
-                nearestN_2rank[rank] = np.zeros(0, dtype=np.int32)
-                rank0_2rank[rank] = np.zeros(0, dtype=np.int32)
-            for node in range(nNodes_owned, len(xx)):
-                node_new_rank, new_rank = checkOwnedVariable(variable_nb_local=node,
-                                                             rank=my_rank,
-                                                             nVariables_owned=nNodes_owned,
-                                                             variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
-                                                             variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
-                nodes0_2rank[new_rank] = np.append(nodes0_2rank[new_rank], node)
-                nearestN_2rank[new_rank] = np.append(nearestN_2rank[new_rank], node_new_rank)
-                rank0_2rank[new_rank] = np.append(rank0_2rank[new_rank], my_rank)
-            # SEND THOSE NODES TO RELEVANT PROCESSORS
-            coords_2doArray = np.zeros((0, 3))
-            nodes0_2doArray = np.zeros(0, dtype=np.int32)
-            rank0_2doArray = np.zeros(0, dtype=np.int32)
-            nearestN_2doArray = np.zeros(0, dtype=np.int32)
-            for rank_recv in range(comm.size):
-                for rank_send in range(comm.size):
-                    if rank_send != rank_recv and rank_send == my_rank:
-                        comm.send(nodes0_2rank[rank_recv].size, dest=rank_recv, tag=0)
-                        if nodes0_2rank[rank_recv].size > 0:
-                            # original nodes
-                            comm.send(nodes0_2rank[rank_recv],  dest=rank_recv, tag=1)
-                            # nodes on other processor
-                            comm.send(nearestN_2rank[rank_recv], dest=rank_recv, tag=2)
-                            # rank for original nodes (to send back final solution)
-                            comm.send(rank0_2rank[rank_recv], dest=rank_recv, tag=3)
-                    elif rank_send!= rank_recv and rank_recv == my_rank:
-                        size = comm.recv(source=rank_send, tag=0)
-                        if size > 0:
-                            # coords
-                            nodes0_2do = comm.recv(source=rank_send, tag=1)
-                            nodes0_2doArray = np.append(nodes0_2doArray, nodes0_2do, axis=0)
-                            # original nodes
-                            nearestN_2do = comm.recv(source=rank_send, tag=2)
-                            nearestN_2doArray = np.append(nearestN_2doArray, nearestN_2do)
-                            # original ranks
-                            rank0_2do = comm.recv(source=rank_send, tag=3)
-                            rank0_2doArray = np.append(rank0_2doArray, rank0_2do)
-                    comm.barrier()
-            # SEND VALUE BACK TO ORIGINAL PROCESSORS
-            for rank in range(comm.size):
-                coords_2rank[rank] = np.zeros((0, 3))
-                nodes0_2rank[rank] = np.zeros(0, dtype=np.int32)
-            for iN in range(len(nodes0_2doArray)):
-                coords[0] = xx[nearestN_2doArray[iN], 0]
-                coords[1] = xx[nearestN_2doArray[iN], 1]
-                coords[2] = xx[nearestN_2doArray[iN], 2]
-                coords_2rank[rank0_2doArray[iN]] = np.append(coords_2rank[rank0_2doArray[iN]], [coords], axis=0)
-                nodes0_2rank[rank0_2doArray[iN]] = np.append(nodes0_2rank[rank0_2doArray[iN]], nodes0_2doArray[iN])
-            # retrieve solution
-            nodes0_2doArray = np.zeros(0)
-            coords_2doArray = np.zeros((0, 3))
-            for rank_recv in range(comm.size):
-                for rank_send in range(comm.size):
-                    if rank_send != rank_recv and rank_send == my_rank:
-                        comm.send(nodes0_2rank[rank_recv].size, dest=rank_recv, tag=0)
-                        if nodes0_2rank[rank_recv].size > 0:
-                            # original nodes
-                            comm.send(nodes0_2rank[rank_recv],  dest=rank_recv, tag=1)
-                            # coords on other processor
-                            comm.send(coords_2rank[rank_recv], dest=rank_recv, tag=2)
-                    elif rank_send!= rank_recv and rank_recv == my_rank:
-                        size = comm.recv(source=rank_send, tag=0)
-                        if size > 0:
-                            # coords
-                            nodes0_2do = comm.recv(source=rank_send, tag=1)
-                            nodes0_2doArray = np.append(nodes0_2doArray, nodes0_2do)
-                            # original nodes
-                            coords_2do = comm.recv(source=rank_send, tag=2)
-                            coords_2doArray = np.append(coords_2doArray, coords_2do, axis=0)
-                    comm.barrier()
-            # FINALLY APPLY FINAL POSITION OF NON-OWNED NODES
-            for iN in range(len(nodes0_2doArray)):
-                node = int(nodes0_2doArray[iN])
-                coords = coords_2doArray[iN]
-                for ndi in range(nd):
-                    xx[node, ndi] = coords[ndi]
+        ms.getNonOwnedNodeValues(xx,
+                                 nNodes_owned,
+                                 nNodes_global,
+                                 nodeNumbering_subdomain2global,
+                                 nodeOffsets_subdomain_owned)
 
         if nSmoothOut > 0:
             comm.barrier()
@@ -784,89 +716,16 @@ cdef class cCoefficients:
                                       nNodes_owned=nNodes_owned,
                                       simultaneous=simultaneous,
                                       smoothBoundaries=True,
-                                      fixedNodesBoolArray=pc.mesh.fixedNodesBoolArray,
+                                      fixedNodesBoolArray=fixedNodesBoolArray,
                                       alpha=0.)
             comm.barrier()
             logEvent('Done smoothing')
 
-            # FINAL STEP: GET NON-OWNED NODES POSITION FOR CONSISTENCY AFTER SMOOTHING
-            # BUILD NON OWNED NODES ARRAY TO RETRIEVE SOLUTION
-            if comm_size > 1:
-                logEvent('Final MPI communication for shared nodes after smoothing')
-                comm.barrier()
-                for rank in range(comm.size):
-                    nodes0_2rank[rank] = np.zeros(0, dtype=np.int32)
-                    nearestN_2rank[rank] = np.zeros(0, dtype=np.int32)
-                for node in range(nNodes_owned, len(xx)):
-                    node_new_rank, new_rank = checkOwnedVariable(variable_nb_local=node,
-                                                                 rank=my_rank,
-                                                                 nVariables_owned=nNodes_owned,
-                                                                 variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
-                                                                 variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
-                    nodes0_2rank[new_rank] = np.append(nodes0_2rank[new_rank], node)
-                    nearestN_2rank[new_rank] = np.append(nearestN_2rank[new_rank], node_new_rank)
-                # SEND THOSE NODES TO RELEVANT PROCESSORS
-                coords_2doArray = np.zeros((0, 3))
-                nodes0_2doArray = np.zeros(0, dtype=np.int32)
-                rank0_2doArray = np.zeros(0, dtype=np.int32)
-                nearestN_2doArray = np.zeros(0, dtype=np.int32)
-                for rank_recv in range(comm.size):
-                    for rank_send in range(comm.size):
-                        if rank_send != rank_recv and rank_send == my_rank:
-                            comm.send(nodes0_2rank[rank_recv].size, dest=rank_recv, tag=0)
-                            if nodes0_2rank[rank_recv].size > 0:
-                                # original nodes
-                                comm.send(nodes0_2rank[rank_recv],  dest=rank_recv, tag=1)
-                                # nodes on other processor
-                                comm.send(nearestN_2rank[rank_recv], dest=rank_recv, tag=2)
-                        elif rank_send!= rank_recv and rank_recv == my_rank:
-                            size = comm.recv(source=rank_send, tag=0)
-                            if size > 0:
-                                # coords
-                                nodes0_2do = comm.recv(source=rank_send, tag=1)
-                                nodes0_2doArray = np.append(nodes0_2doArray, nodes0_2do, axis=0)
-                                # original nodes
-                                nearestN_2do = comm.recv(source=rank_send, tag=2)
-                                nearestN_2doArray = np.append(nearestN_2doArray, nearestN_2do)
-                                # original ranks
-                                rank0_2do = np.array([rank_send for ii in range(len(nodes0_2do))])
-                                rank0_2doArray = np.append(rank0_2doArray, rank0_2do)
-                        comm.barrier()
-                # SEND VALUE BACK TO ORIGINAL PROCESSORS
-                for rank in range(comm.size):
-                    coords_2rank[rank] = np.zeros((0, 3))
-                    nodes0_2rank[rank] = np.zeros(0, dtype=np.int32)
-                for iN in range(len(nodes0_2doArray)):
-                    coords_2rank[rank0_2doArray[iN]] = np.append(coords_2rank[rank0_2doArray[iN]], [xx[nearestN_2doArray[iN]]], axis=0)
-                    nodes0_2rank[rank0_2doArray[iN]] = np.append(nodes0_2rank[rank0_2doArray[iN]], nodes0_2doArray[iN])
-                # retrieve solution
-                nodes0_2doArray = np.zeros(0)
-                coords_2doArray = np.zeros((0, 3))
-                for rank_recv in range(comm.size):
-                    for rank_send in range(comm.size):
-                        if rank_send != rank_recv and rank_send == my_rank:
-                            comm.send(nodes0_2rank[rank_recv].size, dest=rank_recv, tag=0)
-                            if nodes0_2rank[rank_recv].size > 0:
-                                # original nodes
-                                comm.send(nodes0_2rank[rank_recv],  dest=rank_recv, tag=1)
-                                # coords on other processor
-                                comm.send(coords_2rank[rank_recv], dest=rank_recv, tag=2)
-                        elif rank_send!= rank_recv and rank_recv == my_rank:
-                            size = comm.recv(source=rank_send, tag=0)
-                            if size > 0:
-                                # coords
-                                nodes0_2do = comm.recv(source=rank_send, tag=1)
-                                nodes0_2doArray = np.append(nodes0_2doArray, nodes0_2do)
-                                # original nodes
-                                coords_2do = comm.recv(source=rank_send, tag=2)
-                                coords_2doArray = np.append(coords_2doArray, coords_2do, axis=0)
-                        comm.barrier()
-                # FINALLY APPLY FINAL POSITION OF NON-OWNED NODES
-                for iN in range(len(nodes0_2doArray)):
-                    node = int(nodes0_2doArray[iN])
-                    coords = coords_2doArray[iN]
-                    for ndi in range(nd):
-                        xx[node, ndi] = coords[ndi]
+            ms.getNonOwnedNodeValues(xx,
+                                     nNodes_owned,
+                                     nNodes_global,
+                                     nodeNumbering_subdomain2global,
+                                     nodeOffsets_subdomain_owned)
 
         logEvent('Done pseudo-timestepping')
 

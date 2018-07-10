@@ -512,6 +512,117 @@ def getCornerNodesTriangle(double[:,:] nodeArray,
                                     nodeMaterialTypes=nodeMaterialTypes,
                                     nNodes_owned=nNodes_owned)
 
+def getNonOwnedNodeValues(args_,
+                          nNodes_owned,
+                          nNodes_global,
+                          nodeNumbering_subdomain2global,
+                          nodeOffsets_subdomain_owned):
+        nodeNumbering_subdomain2global = np.array(nodeNumbering_subdomain2global, dtype=np.int32)
+        nodeOffsets_subdomain_owned = np.array(nodeOffsets_subdomain_owned, dtype=np.int32)
+        from proteus import Comm
+        comm = Comm.get().comm.tompi4py()
+        comm_size = comm.size
+        my_rank = comm.rank
+        arg_2rank = {}
+        nodes0_2rank = {}
+        rank0_2rank = {}
+        nodesNewRank_2rank = {}
+        if comm_size > 1:
+            comm.barrier()
+            for rank in range(comm_size):
+                nodes0_2rank[rank] = np.zeros(0, dtype=np.int32)
+                nodesNewRank_2rank[rank] = np.zeros(0, dtype=np.int32)
+                rank0_2rank[rank] = np.zeros(0, dtype=np.int32)
+            for node in range(nNodes_owned, nNodes_global):
+                node_new_rank, new_rank = cyCheckOwnedVariable(variable_nb_local=node,
+                                                               rank=my_rank,
+                                                               nVariables_owned=nNodes_owned,
+                                                               variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
+                                                               variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
+                nodes0_2rank[new_rank] = np.append(nodes0_2rank[new_rank], node)
+                nodesNewRank_2rank[new_rank] = np.append(nodesNewRank_2rank[new_rank], node_new_rank)
+                rank0_2rank[new_rank] = np.append(rank0_2rank[new_rank], my_rank)
+            # SEND THOSE NODES TO RELEVANT PROCESSORS
+            nodes0_2doArray = np.zeros(0, dtype=np.int32)
+            rank0_2doArray = np.zeros(0, dtype=np.int32)
+            nodesNewRank_2doArray = np.zeros(0, dtype=np.int32)
+            for rank_recv in range(comm.size):
+                for rank_send in range(comm.size):
+                    if rank_send != rank_recv and rank_send == my_rank:
+                        comm.send(nodes0_2rank[rank_recv].size, dest=rank_recv, tag=0)
+                        if nodes0_2rank[rank_recv].size > 0:
+                            # original nodes
+                            comm.send(nodes0_2rank[rank_recv],  dest=rank_recv, tag=1)
+                            # nodes on other processor
+                            comm.send(nodesNewRank_2rank[rank_recv], dest=rank_recv, tag=2)
+                            # rank for original nodes (to send back final solution)
+                            comm.send(rank0_2rank[rank_recv], dest=rank_recv, tag=3)
+                    elif rank_send!= rank_recv and rank_recv == my_rank:
+                        size = comm.recv(source=rank_send, tag=0)
+                        if size > 0:
+                            # arg
+                            nodes0_2do = comm.recv(source=rank_send, tag=1)
+                            nodes0_2doArray = np.append(nodes0_2doArray, nodes0_2do, axis=0)
+                            # original nodes
+                            nodesNewRank_2do = comm.recv(source=rank_send, tag=2)
+                            nodesNewRank_2doArray = np.append(nodesNewRank_2doArray, nodesNewRank_2do)
+                            # original ranks
+                            rank0_2do = comm.recv(source=rank_send, tag=3)
+                            rank0_2doArray = np.append(rank0_2doArray, rank0_2do)
+                    comm.barrier()
+            # SEND VALUE BACK TO ORIGINAL PROCESSORS
+            shape = args_.shape
+            shape = [ii for ii in shape]
+            shape[0] = 0
+            shape = tuple(shape)
+            for rank in range(comm.size):
+                arg_2rank[rank] = np.zeros(shape)
+                nodes0_2rank[rank] = np.zeros(0, dtype=np.int32)
+            for iN in range(len(nodes0_2doArray)):
+                arg = args_[nodesNewRank_2doArray[iN]]
+                arg_2rank[rank0_2doArray[iN]] = np.append(arg_2rank[rank0_2doArray[iN]], [arg], axis=0)
+                nodes0_2rank[rank0_2doArray[iN]] = np.append(nodes0_2rank[rank0_2doArray[iN]], nodes0_2doArray[iN])
+            # retrieve solution
+            nodes0_2doArray = np.zeros(0)
+            arg_2doArray = np.zeros(shape)
+            for rank_recv in range(comm.size):
+                for rank_send in range(comm.size):
+                    if rank_send != rank_recv and rank_send == my_rank:
+                        comm.send(nodes0_2rank[rank_recv].size, dest=rank_recv, tag=0)
+                        if nodes0_2rank[rank_recv].size > 0:
+                            # original nodes
+                            comm.send(nodes0_2rank[rank_recv],  dest=rank_recv, tag=1)
+                            # arg on other processor
+                            comm.send(arg_2rank[rank_recv], dest=rank_recv, tag=2)
+                    elif rank_send!= rank_recv and rank_recv == my_rank:
+                        size = comm.recv(source=rank_send, tag=0)
+                        if size > 0:
+                            # arg
+                            nodes0_2do = comm.recv(source=rank_send, tag=1)
+                            nodes0_2doArray = np.append(nodes0_2doArray, nodes0_2do)
+                            # original nodes
+                            arg_2do = comm.recv(source=rank_send, tag=2)
+                            arg_2doArray = np.append(arg_2doArray, arg_2do, axis=0)
+                    comm.barrier()
+            # FINALLY APPLY FINAL POSITION OF NON-OWNED NODES
+            for iN in range(len(nodes0_2doArray)):
+                node = int(nodes0_2doArray[iN])
+                arg = arg_2doArray[iN]
+                args_[node] = arg
+
+def checkOwnedVariable(int variable_nb_local,
+                       int rank,
+                       int nVariables_owned,
+                       int[:] variableNumbering_subdomain2global,
+                       int[:] variableOffsets_subdomain_owned):
+    return cyCheckOwnedVariable(variable_nb_local=variable_nb_local,
+                                rank=rank,
+                                nVariables_owned=nVariables_owned,
+                                variableNumbering_subdomain2global=variableNumbering_subdomain2global,
+                                variableOffsets_subdomain_owned=variableOffsets_subdomain_owned)
+
+
+
 ### Cython implementation of functions above
 
 cdef void cySmoothNodesLaplace(double[:,:] nodeArray_,
@@ -993,8 +1104,7 @@ cdef tuple pyxGetLocalNearestElementIntersection(double[:] coords,
                                                  double[:,:] elementBoundaryBarycentersArray,
                                                  int[:,:] elementBoundaryElementsArray,
                                                  int[:] exteriorElementBoundariesBoolArray,
-                                                 int eN,
-                                                 double tol=1e-10):
+                                                 int eN):
     # determine local nearest node distance
     cdef int nearest_eN = eN
     cdef int nearest_eN0 = eN
@@ -1266,3 +1376,29 @@ cdef np.ndarray cyGetCornerNodesTriangle(double[:,:] nodeArray,
                         else:
                             cornerNodesArray = np.append(cornerNodesArray, node)
     return cornerNodesArray
+
+cdef tuple cyCheckOwnedVariable(int variable_nb_local,
+                                int rank,
+                                int nVariables_owned,
+                                int[:] variableNumbering_subdomain2global,
+                                int[:] variableOffsets_subdomain_owned):
+    cdef int nSubdomains = len(variableOffsets_subdomain_owned)-1
+    cdef int variable_nb_global
+    cdef int new_variable_nb_local
+    cdef int new_rank = -2  # initialised as fake rank
+    if variable_nb_local >= nVariables_owned:
+        # change rank ownership
+        variable_nb_global = variableNumbering_subdomain2global[variable_nb_local]
+        if not variableOffsets_subdomain_owned[rank] <= variable_nb_global < variableOffsets_subdomain_owned[rank+1]:
+            for i in range(nSubdomains+1):
+                if variableOffsets_subdomain_owned[i] > variable_nb_global:
+                    # changing processor
+                    if new_rank == -2:
+                        new_rank = i-1
+    # getting nearest variable number on new rank
+    if new_rank >= 0:
+        new_variable_nb_local = variable_nb_global-variableOffsets_subdomain_owned[new_rank]
+    else:
+        new_rank = rank
+        new_variable_nb_local = variable_nb_local
+    return new_variable_nb_local, new_rank
