@@ -1848,6 +1848,13 @@ class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
         self.numerical_viscosity = numerical_viscosity
         self.lumped = lumped
         self.infsup_fe = infsup_fe
+        dof_info = L.pde.dirichletConditionsForceDOF
+        try:
+            self.strong_u_DOF = dof_info[1].DOFBoundaryPointDict.keys()
+            self.strong_v_DOF = dof_info[2].DOFBoundaryPointDict.keys()
+        except KeyError:
+            self.strong_u_DOF = []
+            self.strong_v_DOF = []
 
     def setUp(self, global_ksp):
         import Comm
