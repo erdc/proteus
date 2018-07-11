@@ -703,9 +703,14 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == SimpleNavierStokes3D:
                 logEvent("NAHeader Preconditioner SimpleNavierStokes" )
-                self.preconditioner = SimpleNavierStokes3D(par_L,
-                                                           prefix,
-                                                           velocity_block_preconditioner=self.preconditionerOptions[0])
+                try:
+                    self.preconditioner = SimpleNavierStokes3D(par_L,
+                                                               prefix,
+                                                               velocity_block_preconditioner=self.preconditionerOptions[0])
+                except IndexError:
+                    logEvent("Preconditioner options not specified, using defaults")
+                    self.preconditioner = SimpleNavierStokes3D(par_L,
+                                                               prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleNavierStokes2D:
                 logEvent("NAHeader Preconditioner SimpleNavierStokes" )
@@ -1508,6 +1513,7 @@ class ModelInfo(object):
                  dof_order_type,
                  n_DOF_pressure=None):
         self.nc = num_components
+        self.set_dof_order_type_name(dof_order_type)
         if dof_order_type=='blocked':
             assert n_DOF_pressure!=None #ARB - add an error message
             self.dof_order_type = BlockedDofOrderType(n_DOF_pressure)
@@ -1516,6 +1522,12 @@ class ModelInfo(object):
 
     def set_dof_order_type(self, dof_order_type):
         self.dof_order_type = dof_order_type
+
+    def set_dof_order_type_name(self, dof_order_type):
+        self._dof_order_type_name = dof_order_type
+
+    def get_dof_order_type_name(self):
+        return self._dof_order_type_name
 
     def set_nc(self,nc):
         self.nc = nc
@@ -1554,7 +1566,9 @@ class SchurPrecon(KSP_Preconditioner):
         self._initializeIS()
         self.bdyNullSpace = bdyNullSpace
         self.pc.setFromOptions()
-        self.set_velocity_var_names()
+        if self.model_info.get_dof_order_type_name() == 'interlaced':
+            ## TODO: ARB - this should be extended to blocked types
+            self.set_velocity_var_names()
 
     def _initialize_without_solver_info(self):
         """
