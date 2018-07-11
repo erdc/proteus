@@ -825,6 +825,7 @@ namespace proteus
 					   const double nu_0,
 					   const double rho_1,
 					   const double nu_1,
+					   double nu_t,
 					   const double useVF,
 					   const double vf,
 					   const double phi,
@@ -844,7 +845,11 @@ namespace proteus
 					   double& mom_w_source,
 					   double dmom_u_source[nSpace],
 					   double dmom_v_source[nSpace],
-					   double dmom_w_source[nSpace])
+					   double dmom_w_source[nSpace],
+					   double gradC_x,
+					   double gradC_y,
+					   double gradC_z)
+
     {
       double rhoFluid, muFluid,nuFluid,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
@@ -865,9 +870,9 @@ namespace proteus
                                           solid_velocity,
                                           viscosity);
       //new_beta/=rhoFluid;
-      mom_u_source +=  (vos)*new_beta*(u-u_f);
-      mom_v_source +=  (vos)*new_beta*(v-v_f);
-      mom_w_source +=  (vos)*new_beta*(w-w_f);
+      mom_u_source +=  (vos)*new_beta*((u-u_f) + nu_t*gradC_x/closure.sigmaC_);
+      mom_v_source +=  (vos)*new_beta*((v-v_f) + nu_t*gradC_y/closure.sigmaC_);
+      mom_w_source +=  (vos)*new_beta*((w-w_f) + nu_t*gradC_z/closure.sigmaC_);
 
       dmom_u_source[0] = (vos)*new_beta;
       dmom_u_source[1] = 0.0;
@@ -881,6 +886,35 @@ namespace proteus
       dmom_w_source[1] = 0.0;
       dmom_w_source[2] = (vos)*new_beta;
     }
+
+
+    inline void updatePenaltyForPacking(const double vos,
+				   const double u,
+				   const double v,
+				   const double w,
+				   double& mom_u_source,
+				   double& mom_v_source,
+				   double& mom_w_source,
+				   double dmom_u_source[nSpace],
+				   double dmom_v_source[nSpace],
+				   double dmom_w_source[nSpace])
+
+    {
+      double meanPack = (closure.maxFraction_ + closure.frFraction_)/2.;
+      double epsPack = (closure.maxFraction_ - closure.frFraction_)/2.;
+      double dVos = vos - meanPack;
+      double sigma = smoothedHeaviside( epsPack, dVos);
+      double packPenalty = 1e6;
+      mom_u_source += sigma * packPenalty*u;
+      mom_v_source += sigma * packPenalty*v;
+      mom_w_source += sigma * packPenalty*v;
+      dmom_u_source[0] += sigma * packPenalty;
+      dmom_v_source[1] += sigma * packPenalty;
+      dmom_w_source[2] += sigma * packPenalty;
+
+    }
+
+
 
     inline
       void updateFrictionalPressure(const double vos,
@@ -1889,6 +1923,7 @@ namespace proteus
                                                 nu_0,
                                                 rho_1,
                                                 nu_1,
+						  q_eddy_viscosity[eN_k],
                                                 useVF,
                                                 vf[eN_k],
                                                 phi[eN_k],
@@ -1908,7 +1943,23 @@ namespace proteus
 						mom_w_source,
 						dmom_u_source,
 						dmom_v_source,
-						dmom_w_source);
+                        dmom_w_source,
+                        q_grad_vos[eN_k_nSpace+0],
+                        q_grad_vos[eN_k_nSpace+1],
+                        q_grad_vos[eN_k_nSpace+2]);
+
+		updatePenaltyForPacking(vos,
+					u,
+					v,
+					w,
+					mom_u_source,
+					mom_v_source,
+					mom_w_source,
+					dmom_u_source,
+					dmom_v_source,
+					dmom_w_source);
+
+
           updateFrictionalPressure(vos,
                         grad_vos,
 						mom_u_source,
@@ -3484,6 +3535,7 @@ namespace proteus
                                                 nu_0,
                                                 rho_1,
                                                 nu_1,
+						                        eddy_viscosity,
                                                 useVF,
                                                 vf[eN_k],
                                                 phi[eN_k],
@@ -3493,9 +3545,9 @@ namespace proteus
                                                 q_velocity_sge[eN_k_nSpace+0],
                                                 q_velocity_sge[eN_k_nSpace+1],
                                                 q_velocity_sge[eN_k_nSpace+2],
-						eps_solid[elementFlags[eN]],
-						vos,
-						q_velocity_fluid[eN_k_nSpace+0],
+						                        eps_solid[elementFlags[eN]],
+						                        vos,
+						                       q_velocity_fluid[eN_k_nSpace+0],
 						q_velocity_fluid[eN_k_nSpace+1],
 						q_velocity_fluid[eN_k_nSpace+2],
 						mom_u_source,
@@ -3503,7 +3555,22 @@ namespace proteus
 						mom_w_source,
 						dmom_u_source,
 						dmom_v_source,
-						dmom_w_source);
+                                                  dmom_w_source,
+                                                  q_grad_vos[eN_k_nSpace+0],
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  q_grad_vos[eN_k_nSpace+2]);
+
+		updatePenaltyForPacking(vos,
+					u,
+					v,
+					w,
+					mom_u_source,
+					mom_v_source,
+					mom_w_source,
+					dmom_u_source,
+					dmom_v_source,
+					dmom_w_source);
+
           updateFrictionalPressure(vos,
                         grad_vos,
 						mom_u_source,
