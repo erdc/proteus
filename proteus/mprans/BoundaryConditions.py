@@ -226,7 +226,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)  
 
-    def setAtmosphere(self, orientation=None, vof_air=1.):
+    def setAtmosphere(self, orientation=None, vof_air=1.,kInflow = 1e-9):
         """
         Sets atmosphere boundary conditions (water can come out)
         (!) pressure dirichlet set to 0 for this BC
@@ -253,6 +253,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.ws_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.setConstantBC(vof_air)  # air
         self.vos_dirichlet.setConstantBC(0.)  # air
+        self.k_dirichlet.setConstantBC(kInflow)
         if self._b_or[0] == 1. or self._b_or[0] == -1.:
             self.u_diffusive.setConstantBC(0.)
             self.us_diffusive.setConstantBC(0.)
@@ -262,7 +263,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
         if self._b_or[2] == 1. or self._b_or[2] == -1.:
             self.w_diffusive.setConstantBC(0.)
             self.ws_diffusive.setConstantBC(0.)
-        self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
 
     def setRigidBodyMoveMesh(self, body):
@@ -426,7 +426,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         return self.__cpp_MoveMesh_h(x, t)[2]
 
     def setUnsteadyTwoPhaseVelocityInlet(self, wave, smoothing, vert_axis=None,
-                                         wind_speed=None, vof_air=1., vof_water=0.):
+                                         wind_speed=None, vof_air=1., vof_water=0.,kInflow=1e-9):
         """
         Imposes a velocity profile on the fluid with input wave and wind
         conditions.
@@ -465,7 +465,12 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.p_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
         self.pInc_advective.uOfXT = lambda x,t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
         self.pInit_advective.setConstantBC(0.0)
-        
+        self.vos_dirichlet.setConstantBC(0.0)
+        self.us_dirichlet.setConstantBC(0.0)
+        self.vs_dirichlet.setConstantBC(0.0)
+        self.ws_dirichlet.setConstantBC(0.0)
+        self.k_dirichlet.setConstantBC(kInflow)
+        self.dissipation_diffusive.setConstantBC(0.)
 
     def __cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(self, x, t):
         cython.declare(xx=cython.double[3])
