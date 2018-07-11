@@ -1726,6 +1726,13 @@ namespace proteus
         //
         //loop over elements to compute volume integrals and load them into element and global residual
         //
+	int nMeshNodes;
+	if (nDOF_test_element % 3 == 0)
+	    nMeshNodes = 3;
+	else
+	    nMeshNodes = 4;
+	// ARB - Note:: this will only work for lagrangian polynomial type elements
+	
         double mesh_volume_conservation=0.0,
           mesh_volume_conservation_weak=0.0,
           mesh_volume_conservation_err_max=0.0,
@@ -2292,9 +2299,14 @@ namespace proteus
                       //VRANS
                       ck.Reaction_weak(mass_source,p_test_dV[i])   + //VRANS source term for wave maker
                       //
-		      PRESSURE_PROJECTION_STABILIZATION * ck.pressureProjection_weak(mom_uu_diff_ten[1], p, p_element_avg, p_test_ref[k*nDOF_test_element+i], dV) +
-		      (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_u,Lstar_u_p[i]) +
-                      (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_v,Lstar_v_p[i]);
+		      PRESSURE_PROJECTION_STABILIZATION * ck.pressureProjection_weak(mom_uu_diff_ten[1],
+										     p,
+										     p_element_avg,
+										     p_test_ref[k*nDOF_test_element+i],
+										     nMeshNodes,
+										     dV) +
+		      (1 - PRESSURE_PROJECTION_STABILIZATION) * VELOCITY_SGE * ck.SubgridError(subgridError_u,Lstar_u_p[i]) +
+                      (1 - PRESSURE_PROJECTION_STABILIZATION) * VELOCITY_SGE * ck.SubgridError(subgridError_v,Lstar_v_p[i]);
 
 		    if (PRESSURE_PROJECTION_STABILIZATION==1. && mom_uu_diff_ten[1]==0.){
 			printf("Warning the Bochev-Dohrnmann-Gunzburger stabilization cannot be applied to inviscid fluids.");
@@ -3277,6 +3289,13 @@ namespace proteus
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
         //
+	int nMeshNodes;
+	if (nDOF_test_element % 3 == 0)
+	    nMeshNodes = 3;
+	else
+	  nMeshNodes = 4;
+	// ARB - Note:: this will only work for lagrangian polynomial type elements
+
         for(int eN=0;eN<nElements_global;eN++)
           {
             register double eps_rho,eps_mu;
@@ -3873,14 +3892,19 @@ namespace proteus
                     for(int j=0;j<nDOF_trial_element;j++)
                       {
                         register int j_nSpace = j*nSpace;
-                        elementJacobian_p_p[i][j] += (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) +
-                                                     (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]) +
-			  PRESSURE_PROJECTION_STABILIZATION*ck.pressureProjection_weak(mom_uu_diff_ten[1], p_trial_ref[k*nDOF_trial_element+j], 1./3., p_test_ref[k*nDOF_test_element +i],dV);
+                        elementJacobian_p_p[i][j] += (1-PRESSURE_PROJECTION_STABILIZATION)* VELOCITY_SGE * ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) +
+                                                     (1-PRESSURE_PROJECTION_STABILIZATION)* VELOCITY_SGE * ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]) +
+			  PRESSURE_PROJECTION_STABILIZATION*ck.pressureProjection_weak(mom_uu_diff_ten[1],
+										       p_trial_ref[k*nDOF_trial_element+j],
+										       1./nMeshNodes,
+										       p_test_ref[k*nDOF_test_element +i],
+										       nMeshNodes,
+										       dV);
 
                         elementJacobian_p_u[i][j] += ck.AdvectionJacobian_weak(dmass_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) +
-                          (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]);
+                          (1-PRESSURE_PROJECTION_STABILIZATION)* VELOCITY_SGE * ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]);
                         elementJacobian_p_v[i][j] += ck.AdvectionJacobian_weak(dmass_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) +
-                          (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]);
+                          (1-PRESSURE_PROJECTION_STABILIZATION)* VELOCITY_SGE * ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]);
 
                         elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) +
                           MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]);

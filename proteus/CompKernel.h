@@ -2000,10 +2000,13 @@ public:
 					const double& p,
 					const double& p_avg,
 					const double& q,
+					const double& nMeshNodes,
 					const double& dV)
   {
+    double q_avg;
+    q_avg = 1./ nMeshNodes;
     if (viscosity==0.){ return 0.;}
-    return (1./viscosity)*(p-p_avg)*(q-1./3.)*dV;
+    return (1./viscosity)*(p-p_avg)*(q-q_avg)*dV;
   }
 
   inline double Advection_weak(const double  f[2],
