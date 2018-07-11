@@ -174,7 +174,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.variableNames = ['omega']
         nc = 1
         self.nd = nd
-        assert self.nd == 3, "Dissipation only implements 3d for now"  # assume 3d for now
         self.rho_0 = rho_0
         self.nu_0 = nu_0
         self.rho_1 = rho_1
@@ -340,7 +339,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             if hasattr(modelList[self.flowModelIndex].coefficients, 'ebqe_porosity'):
                 self.ebqe_porosity = modelList[self.flowModelIndex].coefficients.ebqe_porosity
             else:
-                self.ebqe_porosity = numpy.ones(self.ebqe[('u', 0)].shape, 'd')
+                self.ebqe_porosity = numpy.ones( modelList[self.flowModelIndex].ebqe[('velocity', 0)].shape, 'd')
         else:
             self.velocity_dof_u = numpy.zeros(self.model.u[0].dof.shape, 'd')
             self.velocity_dof_v = numpy.zeros(self.model.u[0].dof.shape, 'd')
