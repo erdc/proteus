@@ -171,9 +171,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.lsModel.q[('u', 0)] += self.massCorrModel.q[('u', 0)]
             self.lsModel.ebqe[('u', 0)] += self.massCorrModel.ebqe[('u', 0)]
             self.lsModel.q[('grad(u)', 0)] += self.massCorrModel.q[('grad(u)', 0)]
-            #self.lsModel.ebqe[('grad(u)', 0)] += self.massCorrModel.ebqe[('grad(u)', 0)]
-            self.lsModel.ebqe[('grad(u)', 0)][:] = self.massCorrModel.ebqe[('grad(u)', 0)]
-
+            self.lsModel.ebqe[('grad(u)', 0)] += self.massCorrModel.ebqe[('grad(u)', 0)]
 
             # vof
             if self.edgeBasedStabilizationMethods == False:
@@ -193,17 +191,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                                                                                                  self.massCorrModel.mesh.nElements_owned),), level=2)
             logEvent("Phase 0 mass (consistent) after mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)
         copyInstructions = {}
-        copyInstructions = {'reset_uList_other': True,
-                            'uList_model': (self.levelSetModelIndex,self.VOFModelIndex)}
 
         # get the waterline on the obstacle if option set in NCLS (boundary==7)
         self.lsModel.computeWaterline(t)
         return copyInstructions
-
-    def postAdaptStep(self):
-        if self.applyCorrection:
-            # ls
-            self.lsModel.ebqe[('grad(u)', 0)][:] = self.massCorrModel.ebqe[('grad(u)', 0)]
 
     def evaluate(self, t, c):
         import math

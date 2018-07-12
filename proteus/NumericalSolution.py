@@ -1785,13 +1785,6 @@ class NS_base:  # (HasTraits):
                 for u_ci_lhs,u_ci_rhs in zip(self.modelList[postCopy['uList_model']].levelModelList[level].u.values(),model.levelModelList[level].u.values()):
                     u_ci_lhs.dof[:] = u_ci_rhs.dof
                 self.modelList[postCopy['uList_model']].levelModelList[level].setFreeDOF(self.modelList[postCopy['uList_model']].uList[level])
-            if postCopy is not None and postCopy.has_key(('reset_uList_other')) and postCopy['reset_uList_other'] == True:
-                for idx in postCopy['uList_model']:
-                    model_other = self.modelList[idx]
-                    for level_other, levelModel_other in enumerate(model_other.levelModelList):
-                        levelModel_other.setFreeDOF(model_other.uList[level_other])
-                        levelModel_other.getResidual(model_other.uList[level_other],model_other.rList[level_other])
-                        levelModel_other.shockCapturing.updateShockCapturingHistory() #make sure numDiff is computed based on corrected values
 
     def setWeakDirichletConditions(self,model):
         if model.weakDirichletConditions is not None:
