@@ -42,6 +42,15 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         epsFact*he_min where refinement is the same
     epsTimeStep: double
         pseudo time step size (0 < epsTimeStep <= 1)
+    grading: double
+        grading of mesh with distance function. 1.-> no grading, 1.1->10% increase
+        (!) if using grading, func must be a distance function
+            otherwise func is an area function
+    grading_type: int
+        type of grading:
+        0 -> no grading
+        1 -> hyperbolic
+        2 -> log
     """
     def __init__(self,
                  func,
@@ -56,13 +65,15 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                  nSmoothOut=0,
                  epsFact_density=3,
                  epsTimeStep=1.,
-                 grading=0.):
+                 grading=1.1,
+                 grading_type=0):
         self.myfunc = func
         self.LS_MODEL = LS_MODEL
         self.ME_MODEL = ME_MODEL
         self.he_min = he_min
         self.he_max = he_max
         self.grading = grading
+        self.grading_type = grading_type
         self.C = 1.  # scaling coefficient for f (computed in preStep)
         self.integral_area = 1.
         self.nd = nd
@@ -98,14 +109,23 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                                                     self.mesh.elementBoundariesArray,
                                                     self.mesh.elementBoundaryNodesArray,
                                                     self.mesh.elementBoundaryBarycentersArray,
-                                                    self.mesh.elementBarycentersArray)
+                                                    self.mesh.elementBarycentersArray,
+                                                    self.mesh.nElements_global)
+            # ms.updateElementBoundaryNormalsTriangle(elementBoundaryNormalsArray=self.mesh.elementBoundaryNormalsArray,
+            #                                         nodeArray=self.mesh.nodeArray,
+            #                                         elementBoundariesArray=self.mesh.elementBoundariesArray,
+            #                                         elementBoundaryNodesArray=self.mesh.elementBoundaryNodesArray,
+            #                                         elementBoundaryBarycentersArray=self.mesh.elementBoundaryBarycentersArray,
+            #                                         elementBarycentersArray=self.mesh.elementBarycentersArray,
+            #                                         nElements=self.mesh.nElements_global)
         elif self.nd == 3:
-            ms.updateElementBoundaryNormalsTetra(self.mesh.elementBoundaryNormalsArray,
-                                                 self.mesh.nodeArray,
-                                                 self.mesh.elementBoundariesArray,
-                                                 self.mesh.elementBoundaryNodesArray,
-                                                 self.mesh.elementBoundaryBarycentersArray,
-                                                 self.mesh.elementBarycentersArray)
+            ms.updateElementBoundaryNormalsTetra(elementBoundaryNormalsArray=self.mesh.elementBoundaryNormalsArray,
+                                                 nodeArray=self.mesh.nodeArray,
+                                                 elementBoundariesArray=self.mesh.elementBoundariesArray,
+                                                 elementBoundaryNodesArray=self.mesh.elementBoundaryNodesArray,
+                                                 elementBoundaryBarycentersArray=self.mesh.elementBoundaryBarycentersArray,
+                                                 elementBarycentersArray=self.mesh.elementBarycentersArray,
+                                                 nElements=self.mesh.nElements_global)
         # nodes to keep fixed
         self.mesh.fixedNodesBoolArray = np.zeros(len(self.mesh.nodeArray), dtype=np.int32)
         # find corner nodes
@@ -113,7 +133,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                                                           nodeStarArray=self.mesh.nodeStarArray,
                                                           nodeStarOffsets=self.mesh.nodeStarOffsets,
                                                           nodeMaterialTypes=self.mesh.nodeMaterialTypes,
-                                                          nNodes_owned=self.mesh.nNodes_owned)
+                                                          nNodes=self.mesh.nNodes_owned)
         for cn in self.mesh.cornerNodes:
             self.mesh.fixedNodesBoolArray[cn] = 1
         if self.fixedNodeMaterialTypes is not None:
@@ -176,6 +196,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                                                   nodeElementOffsets=self.mesh.nodeElementOffsets)
         nNodes_owned = self.mesh.nNodes_owned
         nNodes_global = self.mesh.nNodes_global
+        nElements_owned = self.mesh.nElements_owned
+        nElements_global = self.mesh.nElements_global
         nodeNumbering_subdomain2global = self.mesh.globalMesh.nodeNumbering_subdomain2global
         nodeOffsets_subdomain_owned = self.mesh.globalMesh.nodeOffsets_subdomain_owned
         ms.getNonOwnedNodeValues(self.grads,
@@ -188,6 +210,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                                  nNodes_global,
                                  nodeNumbering_subdomain2global,
                                  nodeOffsets_subdomain_owned)
+        # ms.getNonOwnedNodeValues(self.u_phi,
+        #                          nNodes_owned,
+        #                          nNodes_global,
+        #                          nodeNumbering_subdomain2global,
+        #                          nodeOffsets_subdomain_owned)
         self.model.grads = self.grads
         self.model.areas_nodes = self.areas_nodes
         # evaluate f at nodes
@@ -222,11 +249,13 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.cCoefficients.postStep()
         # copyInstructions = {'clear_uList': True}
         # return copyInstructions
-        IMR_nodes = ms.getInverseMeanRatioTriangleNodes(nodeArray=self.mesh.nodeArray,
-                                                        elementNodesArray=self.mesh.elementNodesArray,
-                                                        nodeElementOffsets=self.mesh.nodeElementOffsets,
-                                                        nodeElementsArray=self.mesh.nodeElementsArray,
-                                                        el_average=False)
+        # IMR_nodes = ms.getInverseMeanRatioTriangleNodes(nodeArray=self.mesh.nodeArray,
+        #                                                 elementNodesArray=self.mesh.elementNodesArray,
+        #                                                 nodeElementOffsets=self.mesh.nodeElementOffsets,
+        #                                                 nodeElementsArray=self.mesh.nodeElementsArray,
+        #                                                 el_average=False,
+        #                                                 nElements=nElements_global,
+        #                                                 nNodes=nNodes_global)
         # self.model.u[0].dof[:] = IMR_nodes
 
     def uOfX(self, x, eN=None):
@@ -316,7 +345,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             element = -1
         return element, nearest_node, xi
 
-    def evaluateFunAtX(self, x, ls_phi=None):
+    def evaluateFunAtX(self, x, ls_phi=None, debug=False):
         """
         reaction term
         """
@@ -331,10 +360,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             # f = min(self.he_max, f)
         if f < self.epsFact_density*self.he_min:
             f = 0.
-        if self.grading > 0.:
-            # f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
-            # f = min(f, self.he_max)
-            f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
+        if self.grading_type == 1:
+            f = self.he_min*self.grading**(f/self.he_min)
+        if self.grading_type == 2:
+            f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
+        f = min(self.he_max, f)
         return f
 
     def evaluateFunAtNodes(self):
@@ -349,10 +379,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                 # f = min(self.he_max, f)
             if f < self.epsFact_density*self.he_min:
                 f = 0.
-            if self.grading > 0.:
-                # f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
-                # f = min(f, self.he_max)
-                f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
+            if self.grading_type == 1:
+                f = self.he_min*self.grading**(f/self.he_min)
+            if self.grading_type == 2:
+                f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
+            f = min(self.he_max, f)
             self.uOfXTatNodes[i] = f
 
     def evaluateFunAtQuadraturePoints(self):
@@ -370,10 +401,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                     # f = min(self.he_max, f)
                 if f < self.epsFact_density*self.he_min:
                     f = 0.
-                if self.grading > 0.:
-                    # f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
-                    # f = min(f, self.he_max)
-                    f = min(self.he_max, self.he_min*self.grading**(f/self.he_min))
+                if self.grading_type == 1:
+                    f = self.he_min*self.grading**(f/self.he_min)
+                if self.grading_type == 2:
+                    f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
+                f = min(self.he_max, f)
                 self.uOfXTatQuadrature[e, k] = f
 
     def getLevelSetValue(self, eN, xi):
@@ -398,6 +430,17 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         for i,psi in zip(femSpace.dofMap.l2g[eN],
                          femSpace.elementMaps.localFunctionSpace.basis):
             value+=self.areas_nodes[i]*psi(xi)
+        # reverting to grad value within element
+        # value = self.model.q[('grad(u)', 0)][eN, 0]
+        return value
+
+    def getLevelSetValue(self, eN, xi):
+        femSpace = self.model.u[0].femSpace
+        value = 0.0
+        #  tridelat hack: the following 3 lines do not work in parallel
+        for i,psi in zip(femSpace.dofMap.l2g[eN],
+                         femSpace.elementMaps.localFunctionSpace.basis):
+            value+=self.u_phi[i]*psi(xi)
         # reverting to grad value within element
         # value = self.model.q[('grad(u)', 0)][eN, 0]
         return value
