@@ -1593,7 +1593,6 @@ class VerifyTimeSeries(unittest.TestCase):
         norm = max(etaRef)
         err = (etaInt - etaTest)**2
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
-        from matplotlib import pyplot as plt
         self.assertTrue(err<1e-2 )
 
 # Testing class while getting a timeseries from an array
@@ -1784,6 +1783,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
         self.assertTrue(round(abs(old_div(aRF.u(x,t)[2],aT.u(x,t)[2])),8) == 1.)
 
         """
+        from matplotlib import pyplot as plt
         for ii in range(len(series)):
             tt = series[ii,0]
             eta0[ii] = aR.eta(x,tt)
