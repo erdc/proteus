@@ -296,7 +296,7 @@ int MeshAdaptPUMIDrvr::willAdapt()
   int adaptFlag=0;
   int assertFlag;
 
-  if(total_error >= THRESHOLD){
+  if(total_error >= THRESHOLD || size_field_config=="combined"){
     adaptFlag = 1;
   }
 /*
@@ -419,7 +419,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
       freeField(errRho_reg); 
       freeField(errRel_reg); 
   }
-  if(size_field_config=="VMS"){
+  if(size_field_config=="VMS" || size_field_config=="combined"){
     freeField(vmsErrH1);
     if(PCU_Comm_Self()==0) std::cout<<"cleared VMS field\n";
   }
