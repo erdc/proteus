@@ -260,6 +260,13 @@ if opts.dataDir != '':
         comm.comm.tompi4py().Abort()
     from proteus import Profiling
     Profiling.logDir = opts.dataDir
+# Initialise datafile
+Profiling.procID=comm.rank()
+if opts.logLevel > 0:
+    if len(args[0].split(' ')) == 1:
+        Profiling.openLog(args[0].split('.')[0]+".log",opts.logLevel,logLocation=logDir)
+    else:
+        Profiling.openLog(args[0][-3:]+".log",opts.logLevel,logLocation=logDir)
 
 #blanket import statements can go below here now that petsc4py should be initialized
 from proteus import *
@@ -340,15 +347,9 @@ elif len(args) == 2: #p and n modules provided
         pass
 else:
     raise RuntimeError("Too many input files specified")
-Profiling.procID=comm.rank()
 if sList[0].logAllProcesses or opts.logAllProcesses:
     Profiling.logAllProcesses = True
 Profiling.flushBuffer=sList[0].flushBuffer
-if opts.logLevel > 0:
-    if len(args[0].split(' ')) == 1:
-        Profiling.openLog(args[0].split('.')[0]+".log",opts.logLevel,logLocation=logDir)
-    else:
-        Profiling.openLog(args[0][-3:]+".log",opts.logLevel,logLocation=logDir)
 if opts.batchFileName != "":
     log("Attaching input stream to batch file = "+opts.batchFileName)
     inputStream = open(opts.batchFileName,'r')

@@ -29,6 +29,24 @@ def test_interlaced_dof_order(ownership_range,
     assert np.array_equal(idx_range[velocity_mask],
                           velocity)
 
+@pytest.mark.parametrize("ownership_range,num_components,bdy_nodes",[
+    ((0,45),3,[0,1,2,3,5,6,8,9,11,12,13,14]),
+    ])
+def test_interlaced_vel_bdy_dof_order(ownership_range,
+                                      num_components,
+                                      bdy_nodes):
+    interlaced = LS.InterlacedDofOrderType()
+
+    num_equations = ownership_range[1] - ownership_range[0] + 1
+    bdy_nodes = [bdy_nodes, bdy_nodes]
+    strong_vel_is = interlaced.create_no_dirichlet_bdy_nodes_is(ownership_range,
+                                                                num_equations,
+                                                                num_components,
+                                                                bdy_nodes)
+
+    test_array = strong_vel_is.array - np.array([13,14,22,23,31,32])
+    assert np.linalg.norm(test_array) < 1.0E-12
+
 @pytest.mark.parametrize("ownership_range,num_components,n_DOF_pressure",[
     ((5,25), 3, 7),
     ((6,17), 4, 3),
