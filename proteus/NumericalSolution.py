@@ -945,27 +945,7 @@ class NS_base:  # (HasTraits):
 
         ##This section is to correct any differences in the quadrature point field from the old model 
 
-        #Shock capturing lagging needs to be matched
-
         import copy
-        #This sections gets beta bdf right
-        #import pdb; pdb.set_trace()
-        #self.modelList[1].levelModelList[0].u_store = copy.deepcopy(self.modelList[1].levelModelList[0].u)
-        #self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u[0].dof_last
-        #self.modelList[1].levelModelList[0].calculateElementResidual()
-        #self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
-
-        ##this section gets numDiff right
-        #self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u_store[0].dof
-        #self.modelList[1].levelModelList[0].u[0].dof_last[:] = self.modelList[1].levelModelList[0].u_store[0].dof_last
-
-        #self.modelList[1].levelModelList[0].calculateElementResidual()
-        #self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
-
-        #if(modelListOld[1].levelModelList[0].shockCapturing.nStepsToDelay is not None and modelListOld[1].levelModelList[0].shockCapturing.nSteps > modelListOld[1].levelModelList[0].shockCapturing.nStepsToDelay):
-        #    self.modelList[1].levelModelList[0].shockCapturing.nSteps=self.modelList[1].levelModelList[0].shockCapturing.nStepsToDelay
-        #    self.modelList[1].levelModelList[0].shockCapturing.updateShockCapturingHistory() 
-
 
         #This gets the subgrid error history correct
         if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
@@ -975,7 +955,6 @@ class NS_base:  # (HasTraits):
         ###The getResidual computation is used to populate the m_tmp array for each model which just depends on the model's solution variable so no need to worry about stagger behavior
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-                lm.coefficients.postAdaptStep() #MCorr needs this at the moment
                 lm.u_store = copy.deepcopy(lm.u)
                 for ci in range(0,lm.coefficients.nc):
                     lm.u[ci].dof[:] = lm.u[ci].dof_last
