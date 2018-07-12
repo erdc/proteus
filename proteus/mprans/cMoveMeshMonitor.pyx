@@ -1,10 +1,13 @@
+#!python
+#cython: wraparound=True, boundscheck=False, initializedcheck=False, cdivision=True
+
 cimport cython
 import numpy as np
 cimport numpy as np
 from libcpp cimport bool
 from proteus.Profiling import logEvent
-from proteus.mprans import MeshSmoothing as ms
 from proteus.mprans cimport MeshSmoothing as ms
+from proteus.mprans import MeshSmoothing as ms
 from proteus import Comm
 from mpi4py import MPI
 
@@ -68,6 +71,65 @@ cdef class cCoefficients:
                 q_fci[eN, k, :] = 0.0
                 q_rci[eN, k] = -(1./(q_uOfX[eN, k]*C)-1./areas_[eN])
 
+        # update other element values
+        cdef object pc = self.pyCoefficients
+        cdef object mesh = pc.mesh
+        cdef int nd = pc.nd
+        cdef double[:,:] elementBoundaryBarycentersArray = mesh.elementBoundaryBarycentersArray
+        cdef double[:,:] elementBarycentersArray = mesh.elementBarycentersArray
+        cdef double[:,:] nodeArray = mesh.nodeArray
+        cdef int[:,:] elementBoundaryNodesArray = mesh.elementBoundaryNodesArray
+        cdef int[:,:] elementNodesArray = mesh.elementNodesArray
+        cdef int[:,:] elementBoundariesArray = mesh.elementBoundariesArray
+        cdef int nElementBoundaries_global = mesh.nElementBoundaries_global
+        cdef int nNodes_elementBoundary = mesh.nNodes_elementBoundary
+        cdef int nElements_global = mesh.nElements_global
+        cdef int nNodes_element = mesh.nNodes_element
+        cdef double[:,:,:] elementBoundaryNormalsArray = pc.mesh.elementBoundaryNormalsArray
+        # update element boundary barycenters
+        for ebN in range(nElementBoundaries_global):
+            elementBoundaryBarycentersArray[ebN, 0] = 0.
+            elementBoundaryBarycentersArray[ebN, 1] = 0.
+            elementBoundaryBarycentersArray[ebN, 2] = 0.
+            for nN in range(nNodes_elementBoundary):
+                elementBoundaryBarycentersArray[ebN, 0] += nodeArray[elementBoundaryNodesArray[ebN, nN], 0]
+                elementBoundaryBarycentersArray[ebN, 1] += nodeArray[elementBoundaryNodesArray[ebN, nN], 1]
+                elementBoundaryBarycentersArray[ebN, 2] += nodeArray[elementBoundaryNodesArray[ebN, nN], 2]
+            elementBoundaryBarycentersArray[ebN, 0] /= nNodes_elementBoundary
+            elementBoundaryBarycentersArray[ebN, 1] /= nNodes_elementBoundary
+            elementBoundaryBarycentersArray[ebN, 2] /= nNodes_elementBoundary
+        # update element barycenters
+        for eN in range(nElements_global):
+            elementBarycentersArray[eN, 0] = 0.
+            elementBarycentersArray[eN, 1] = 0.
+            elementBarycentersArray[eN, 2] = 0.
+            for ebN in range(nNodes_element):
+                elementBarycentersArray[eN, 0] += nodeArray[elementNodesArray[eN, ebN], 0]
+                elementBarycentersArray[eN, 1] += nodeArray[elementNodesArray[eN, ebN], 1]
+                elementBarycentersArray[eN, 2] += nodeArray[elementNodesArray[eN, ebN], 2]
+            elementBarycentersArray[eN, 0] /= nNodes_element
+            elementBarycentersArray[eN, 1] /= nNodes_element
+            elementBarycentersArray[eN, 2] /= nNodes_element
+        # update normals
+        if nd == 2:
+            # triangle
+            ms.pyxUpdateElementBoundaryNormalsTriangle(elementBoundaryNormalsArray_=elementBoundaryNormalsArray,
+                                                       nodeArray=nodeArray,
+                                                       elementBoundariesArray=elementBoundariesArray,
+                                                       elementBoundaryNodesArray=elementBoundaryNodesArray,
+                                                       elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                                       elementBarycentersArray=elementBarycentersArray,
+                                                       nElements=nElements_global)
+        elif nd == 3:
+            # tetra
+            ms.pyxUpdateElementBoundaryNormalsTetra(elementBoundaryNormalsArray_=elementBoundaryNormalsArray,
+                                                    nodeArray=nodeArray,
+                                                    elementBoundariesArray=elementBoundariesArray,
+                                                    elementBoundaryNodesArray=elementBoundaryNodesArray,
+                                                    elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                                    elementBarycentersArray=elementBarycentersArray,
+                                                    nElements=nElements_global)
+
     def postStep(self):
         pc = self.pyCoefficients
         self.cppPostStep()
@@ -114,20 +176,22 @@ cdef class cCoefficients:
         # update normals
         if nd == 2:
             # triangle
-            ms.updateElementBoundaryNormalsTriangle(elementBoundaryNormalsArray,
-                                                    nodeArray,
-                                                    elementBoundariesArray,
-                                                    elementBoundaryNodesArray,
-                                                    elementBoundaryBarycentersArray,
-                                                    elementBarycentersArray)
+            ms.pyxUpdateElementBoundaryNormalsTriangle(elementBoundaryNormalsArray_=elementBoundaryNormalsArray,
+                                                       nodeArray=nodeArray,
+                                                       elementBoundariesArray=elementBoundariesArray,
+                                                       elementBoundaryNodesArray=elementBoundaryNodesArray,
+                                                       elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                                       elementBarycentersArray=elementBarycentersArray,
+                                                       nElements=nElements_global)
         elif nd == 3:
             # tetra
-            ms.updateElementBoundaryNormalsTetra(elementBoundaryNormalsArray,
-                                                 nodeArray,
-                                                 elementBoundariesArray,
-                                                 elementBoundaryNodesArray,
-                                                 elementBoundaryBarycentersArray,
-                                                 elementBarycentersArray)
+            ms.pyxUpdateElementBoundaryNormalsTetra(elementBoundaryNormalsArray_=elementBoundaryNormalsArray,
+                                                    nodeArray=nodeArray,
+                                                    elementBoundariesArray=elementBoundariesArray,
+                                                    elementBoundaryNodesArray=elementBoundaryNodesArray,
+                                                    elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                                    elementBarycentersArray=elementBarycentersArray,
+                                                    nElements=nElements_global)
 
     def pseudoTimeStepping(self,
                            xx,
@@ -143,6 +207,7 @@ cdef class cCoefficients:
                  level=3)
         pc = self.pyCoefficients
         cdef double[:] t_range = np.linspace(0., 1., int(1./eps+1))[1:]
+        cdef int ntimesteps = len(t_range)
         cdef int[:] eN_phi = np.zeros(len(xx), dtype=np.int32)
         cdef double[:] normal = np.zeros(3)
         cdef double t_last = 0
@@ -150,7 +215,7 @@ cdef class cCoefficients:
         cdef int flag
         cdef bool fixed
         cdef double area = 0
-        cdef int eN
+        cdef int eN, eeN
         cdef double ls_phi
         cdef double f
         cdef double Ccoeff = pc.C
@@ -160,8 +225,9 @@ cdef class cCoefficients:
         cdef double[:] v_grad = np.zeros(nd)
         cdef double[:] areas_nodes = pc.areas_nodes,
         cdef double[:] areas = pc.areas
-        cdef object u_phi = pc.u_phi
-
+        cdef double[:] u_phi = pc.u_phi
+        cdef int i, ii
+        cdef int iN
         cdef object femSpace = pc.model.u[0].femSpace
         cdef bool find_nearest_node
         # initialise mesh memoryview before loop
@@ -177,6 +243,7 @@ cdef class cCoefficients:
         cdef int[:,:] elementNodesArray = pc.mesh.elementNodesArray
         cdef double[:,:] elementBoundaryBarycentersArray = pc.mesh.elementBoundaryBarycentersArray
         cdef int[:] exteriorElementBoundariesBoolArray = np.zeros(pc.mesh.nElementBoundaries_global, dtype=np.int32)
+        cdef int bb_i
         for bb_i in pc.mesh.exteriorElementBoundariesArray:
             exteriorElementBoundariesBoolArray[bb_i] = 1
         cdef double[:,:,:] elementBoundaryNormalsArray = pc.mesh.elementBoundaryNormalsArray
@@ -188,7 +255,8 @@ cdef class cCoefficients:
         cdef int[:] elementNumbering_subdomain2global = pc.mesh.globalMesh.elementNumbering_subdomain2global
         cdef int[:] nodeOffsets_subdomain_owned = pc.mesh.globalMesh.nodeOffsets_subdomain_owned
         cdef int[:] elementOffsets_subdomain_owned = pc.mesh.globalMesh.elementOffsets_subdomain_owned
-        cdef int[:] nearest_nodes = np.array([i for i in range(len(xx))], dtype=np.int32)
+        cdef int[:] nearestNArray = np.array([i for i in range(len(xx))], dtype=np.int32)
+        cdef int[:] typeNArray = np.zeros(nNodes_global, dtype=np.int32)
         cdef int[:,:] elementNeighborsArray = pc.mesh.elementNeighborsArray
         cdef int nElementBoundaries_owned = pc.mesh.nElementBoundaries_owned
         cdef int[:] elementBoundaryNumbering_subdomain2global = pc.mesh.globalMesh.elementBoundaryNumbering_subdomain2global
@@ -228,14 +296,20 @@ cdef class cCoefficients:
         cdef int nPending_disp_total = 0  # number of pending solutions from other ranks
         # declare variables for speed up
         cdef int node
+        cdef int node0
+        cdef int nNodes
         cdef int nOffset
         cdef double dot
         cdef double t
         cdef int j
         cdef int i_time
         cdef int parallel_steps
+        cdef int new_rank
+        cdef int nodeEl
         cdef double[:] coords = np.zeros(3)
         cdef int b_i, b_i_global
+        cdef double[:] bound_bar
+        cdef int[:] result
         cdef bool found
         if comm_size > 1:
             for rank in range(comm_size):
@@ -247,14 +321,37 @@ cdef class cCoefficients:
                 rank0_2rank[rank] = np.zeros(0, dtype=np.int32)
                 nearestN_2rank[rank] = np.zeros(0, dtype=np.int32)
                 typeN_2rank[rank] = np.zeros(0, dtype=np.int32)
-        cdef np.ndarray coords_2doArray
-        # cdef int[:] rank0_2doArray = np.array([], dtype=np.int32)
-        # cdef int[:] nearestN_2doArray = np.array([], dtype=np.int32)
-        # cdef int[:] typeN_2doArray = np.array([], dtype=np.int32)
+        # cdef double[:,:] coords_2do
+        # cdef double[:,:] coords_2doArray
+        # cdef int[:] nodes0_2do
+        # cdef int[:] nodes0_2doArray
+        # cdef int[:] rank0_2do
+        # cdef int[:] rank0_2doArray
+        # cdef int[:] nearestN_2do
+        # cdef int[:] nearestN_2doArray
+        # cdef int[:] typeN_2do
+        # cdef int[:] typeN_2doArray
+        # cdef double[:,:] dir_2do
+        # cdef double[:,:] dir_2doArray
+        # cdef int[:] b_i_2do
+        # cdef int[:] b_i_2doArray
+        # cdef int[:] solFound_2do
+        # cdef int[:] solFound_2doArray
         cdef double[:] nodesSentBoolArray = np.zeros(len(xx))
         cdef bool pending = False
         cdef double[:] starting_coords = np.zeros(3)
-        for i_time, t in enumerate(t_range):
+        cdef int nEbn  # number of boundaries per elements
+        if nd == 2:
+            nEbn = 3
+        elif nd == 3:
+            nEbn = 4
+        cdef int nNel  # number of nodes per elements
+        if nd == 2:
+            nNel = 3
+        elif nd == 3:
+            nNel = 4
+        for i_time in range(ntimesteps):
+            t = t_range[i_time]
             logEvent("Pseudo-time stepping t={t}".format(t=t), level=3)
             nPending_disp = 0
             dt = t-t_last
@@ -275,6 +372,8 @@ cdef class cCoefficients:
                 fixed_dir[1] = 1.
                 fixed_dir[2] = 1.
                 b_i_global = -1
+                nearestN = nearestNArray[node]
+                typeN = typeNArray[node]
                 for ndi in range(nd):
                     v_grad[ndi] = 0.
                     dphi[ndi] = 0.
@@ -283,8 +382,8 @@ cdef class cCoefficients:
                     nPending_disp += 1
                 elif nodesSentBoolArray[node] == 0:
                     if flag != 0:
-                        fixed = True
                         fixed_dir[:] = 0
+                        fixed = True
                         if fixedNodesBoolArray is not None:
                             if fixedNodesBoolArray[node] == 1:
                                 fixed = True
@@ -295,7 +394,7 @@ cdef class cCoefficients:
                                 vec[:] = 0.
                                 vec2[:] = 0.
                                 for nOffset in range(nodeStarOffsets[node],
-                                                    nodeStarOffsets[node+1]):
+                                                     nodeStarOffsets[node+1]):
                                     if nodeMaterialTypes[nodeStarArray[nOffset]] != 0:
                                         if vec[0] == 0. and vec[1] == 0. and vec[2] == 0.:
                                             vec[0] = nodeArray[node, 0]-nodeArray[nodeStarArray[nOffset], 0]
@@ -342,57 +441,64 @@ cdef class cCoefficients:
                                 xx[node, ndi] = coords[ndi]
                         else:  # find node that moved already (search)
                             # line below needs optimisation:
-                            if i_time > 1:
-                                find_nearest_node = True#False
-                            else:
-                                find_nearest_node = True
-                            typeN = 0
-                            nearestN = ms.getLocalNearestNode(coords=coords,
-                                                              nodeArray=nodeArray,
-                                                              nodeStarOffsets=nodeStarOffsets,
-                                                              nodeStarArray=nodeStarArray,
-                                                              node=nearest_nodes[node])
-                            nearest_nodes[i] = nearestN
-                            if nearestN >= nNodes_owned:
-                                nearestN, new_rank = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
-                                                                             rank=my_rank,
-                                                                             nVariables_owned=nNodes_owned,
-                                                                             variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
-                                                                             variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
-                            else:
-                                typeN = 1
-                                nearestN = ms.getLocalNearestElementAroundNode(coords=coords,
-                                                                               nodeElementOffsets=nodeElementOffsets,
-                                                                               nodeElementsArray=nodeElementsArray,
-                                                                               elementBarycentersArray=elementBarycentersArray,
-                                                                               node=nearestN)
+                            # if i_time > 1:
+                            #     find_nearest_node = True#False
+                            # else:
+                            #     find_nearest_node = True
+                            if typeN == 0:
+                                nearestN = ms.pyxGetLocalNearestNode(coords=coords,
+                                                                     nodeArray=nodeArray,
+                                                                     nodeStarOffsets=nodeStarOffsets,
+                                                                     nodeStarArray=nodeStarArray,
+                                                                     node=nearestN)
+                                if nearestN >= nNodes_owned:
+                                    result = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
+                                                                     rank=my_rank,
+                                                                     nVariables_owned=nNodes_owned,
+                                                                     variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
+                                                                     variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
+                                    nearestN = result[0]
+                                    new_rank = result[1]
+                                else:
+                                    nearestN = ms.pyxGetLocalNearestElementAroundNode(coords=coords,
+                                                                                      nodeElementOffsets=nodeElementOffsets,
+                                                                                      nodeElementsArray=nodeElementsArray,
+                                                                                      elementBarycentersArray=elementBarycentersArray,
+                                                                                      node=nearestN)
+                                    typeN = 1
                             if typeN == 1:
-                                starting_coords = np.zeros(3)
                                 starting_coords[0] = elementBarycentersArray[nearestN, 0]
                                 starting_coords[1] = elementBarycentersArray[nearestN, 1]
                                 starting_coords[2] = elementBarycentersArray[nearestN, 2]
-                                nearestN, b_i = ms.getLocalNearestElementIntersection(coords=coords,
-                                                                                      starting_coords=starting_coords,
-                                                                                      elementBoundaryNormalsArray=elementBoundaryNormalsArray,
-                                                                                      elementBoundariesArray=elementBoundariesArray,
-                                                                                      elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
-                                                                                      elementBoundaryElementsArray=elementBoundaryElementsArray,
-                                                                                      exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
-                                                                                      eN=nearestN)
+                                result = ms.pyxGetLocalNearestElementIntersection(coords=coords,
+                                                                                  starting_coords=starting_coords,
+                                                                                  elementBoundaryNormalsArray=elementBoundaryNormalsArray,
+                                                                                  elementBoundariesArray=elementBoundariesArray,
+                                                                                  elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                                                                  elementBoundaryElementsArray=elementBoundaryElementsArray,
+                                                                                  exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
+                                                                                  eN=nearestN)
+                                nearestN = result[0]
+                                b_i = result[1]
+                                nearestNArray[i] = nearestN
                                 if nearestN >= nElements_owned:
-                                    nearestN, new_rank = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
-                                                                                 rank=my_rank,
-                                                                                 nVariables_owned=nElements_owned,
-                                                                                 variableNumbering_subdomain2global=elementNumbering_subdomain2global,
-                                                                                 variableOffsets_subdomain_owned=elementOffsets_subdomain_owned)
+                                    result = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
+                                                                     rank=my_rank,
+                                                                     nVariables_owned=nElements_owned,
+                                                                     variableNumbering_subdomain2global=elementNumbering_subdomain2global,
+                                                                     variableOffsets_subdomain_owned=elementOffsets_subdomain_owned)
+                                    nearestN = result[0]
+                                    new_rank = result[1]
                                 if nearestN == -1:
-                                    b_i_global, new_rank = getGlobalVariable(variable_nb_local=b_i,
-                                                                             nVariables_owned=nElementBoundaries_owned,
-                                                                             variableNumbering_subdomain2global=elementBoundaryNumbering_subdomain2global,
-                                                                             variableOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned)
-                                    typeN = 1
+                                    result = ms.cyGetGlobalVariable(variable_nb_local=b_i,
+                                                                    nVariables_owned=nElementBoundaries_owned,
+                                                                    variableNumbering_subdomain2global=elementBoundaryNumbering_subdomain2global,
+                                                                    variableOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned)
+                                    b_i_global = result[0]
+                                    new_rank = result[1]
                                     pending = True
-                                    for nodeEl in elementNodesArray[nearestN]:
+                                    for ii in range(nNel):
+                                        nodeEl = elementNodesArray[nearestN, ii]
                                         if nodeMaterialTypes[nodeEl] != 0:
                                             # tridelat hack: node is probably on exterior boundary
                                             new_rank = my_rank
@@ -402,7 +508,10 @@ cdef class cCoefficients:
                                 pending = False
                             if pending is False:  # found an element
                                 inside_eN = True
-                                for j, bb_i in enumerate(elementBoundariesArray[nearestN]):
+                                nearestNArray[node] = nearestN
+                                typeNArray[node] = typeN
+                                for j in range(nEbn):
+                                    bb_i = elementBoundariesArray[nearestN, j]
                                     normal[0] = elementBoundaryNormalsArray[nearestN, j, 0]
                                     normal[1] = elementBoundaryNormalsArray[nearestN, j, 1]
                                     normal[2] = elementBoundaryNormalsArray[nearestN, j, 2]
@@ -425,18 +534,8 @@ cdef class cCoefficients:
                                         dphi[ndi] = v_grad[ndi]/(t*1./(f*Ccoeff)+(1-t)*1./area)
                                         coords[ndi] += dphi[ndi]*fixed_dir[ndi]*dt
                                         xx[node, ndi] = coords[ndi]
-                                else:
-                                    for nodeEl in elementNodesArray[nearestN]:
-                                        if nodeEl > nNodes_owned:
-                                            nearestN, new_rank = ms.cyCheckOwnedVariable(variable_nb_local=nodeEl,
-                                                                                         rank=my_rank,
-                                                                                         nVariables_owned=nNodes_owned,
-                                                                                         variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
-                                                                                         variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
-                                            typeN = 0
-                                            pending = True
                                 if inside_eN is False and pending is False:
-                                    print('outside!!', nearestN,  coords[0], coords[1], elementBarycentersArray[nearestN,0], elementBarycentersArray[nearestN,1])
+                                    print('outside!!', node, nearestN,  coords[0], coords[1], elementBarycentersArray[nearestN,0], elementBarycentersArray[nearestN,1])
                                     print('neighbours', elementNeighborsArray[nearestN, 0], elementNeighborsArray[nearestN, 1], elementNeighborsArray[nearestN, 2])
                             if pending is True:  # info to send to other processor
                                 nodesSentBoolArray[node] = 1
@@ -530,8 +629,8 @@ cdef class cCoefficients:
                                     # sent information means solution was not found
                                     solFound_2doArray = np.append(solFound_2doArray, np.zeros(len(coords_2do), dtype=np.int32))
                             comm.barrier()
-                    comm.barrier()
-                    for iN in range(nearestN_2doArray.size):
+                    nNodes = len(nearestN_2doArray)
+                    for iN in range(nNodes):
                         coords = np.zeros(3)
                         coords[0] = coords_2doArray[iN, 0]
                         coords[1] = coords_2doArray[iN, 1]
@@ -543,64 +642,73 @@ cdef class cCoefficients:
                         fixed_dir[1] = dir_2doArray[iN, 1]
                         fixed_dir[2] = dir_2doArray[iN, 2]
                         b_i_global = b_i_2doArray[iN]
+                        node0 = nodes0_2doArray[iN]
                         if solFound_2doArray[iN] == 0:
                             if typeN == 0:
-                                nearestN = ms.getLocalNearestNode(coords=coords,
-                                                                  nodeArray=nodeArray,
-                                                                  nodeStarOffsets=nodeStarOffsets,
-                                                                  nodeStarArray=nodeStarArray,
-                                                                  node=nearestN)
+                                nearestN = ms.pyxGetLocalNearestNode(coords=coords,
+                                                                     nodeArray=nodeArray,
+                                                                     nodeStarOffsets=nodeStarOffsets,
+                                                                     nodeStarArray=nodeStarArray,
+                                                                     node=nearestN)
                                 if nearestN >= nNodes_owned:
-                                    nearestN, new_rank = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
-                                                                               rank=my_rank,
-                                                                               nVariables_owned=nNodes_owned,
-                                                                               variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
-                                                                               variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
+                                    result = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
+                                                                     rank=my_rank,
+                                                                     nVariables_owned=nNodes_owned,
+                                                                     variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
+                                                                     variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
+                                    nearestN = result[0]
+                                    new_rank = result[1]
                                 else:
                                     typeN = 1
-                                    nearestN = ms.getLocalNearestElementAroundNode(coords=coords,
-                                                                                   nodeElementOffsets=nodeElementOffsets,
-                                                                                   nodeElementsArray=nodeElementsArray,
-                                                                                   elementBarycentersArray=elementBarycentersArray,
-                                                                                   node=nearestN)
+                                    nearestN = ms.pyxGetLocalNearestElementAroundNode(coords=coords,
+                                                                                      nodeElementOffsets=nodeElementOffsets,
+                                                                                      nodeElementsArray=nodeElementsArray,
+                                                                                      elementBarycentersArray=elementBarycentersArray,
+                                                                                      node=nearestN)
                             if typeN == 1:
                                 if nearestN == -1:
                                     if b_i == -1:
                                         import pdb; pdb.set_trace()
-                                    b_i = getLocalVariable(variable_nb_global=b_i_global,
-                                                           rank=my_rank,
-                                                           nVariables_owned=nElementBoundaries_owned,
-                                                           variableNumbering_subdomain2global=elementBoundaryNumbering_subdomain2global,
-                                                           variableOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned)
-                                    for ii, eeN in enumerate(elementBoundaryElementsArray[b_i]):
+                                    b_i = ms.cyGetLocalVariable(variable_nb_global=b_i_global,
+                                                                rank=my_rank,
+                                                                nVariables_owned=nElementBoundaries_owned,
+                                                                variableNumbering_subdomain2global=elementBoundaryNumbering_subdomain2global,
+                                                                variableOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned)
+                                    for ii in range(2):
+                                        eeN = elementBoundaryElementsArray[b_i, ii]
                                         if eeN == -1:
                                             nearestN = elementBoundaryElementsArray[b_i, ii-1]
                                     if nearestN == -1:
                                         nearestN = eeN
                                     assert nearestN != -1, 'did not find nearestN! {x}, {y}'.format(x=coords[0], y=coords[1])
-                                starting_coords = np.zeros(3)
                                 starting_coords[0] = elementBarycentersArray[nearestN, 0]
                                 starting_coords[1] = elementBarycentersArray[nearestN, 1]
                                 starting_coords[2] = elementBarycentersArray[nearestN, 2]
-                                nearestN, b_i = ms.getLocalNearestElementIntersection(coords=coords,
-                                                                                      starting_coords=starting_coords,
-                                                                                      elementBoundaryNormalsArray=elementBoundaryNormalsArray,
-                                                                                      elementBoundariesArray=elementBoundariesArray,
-                                                                                      elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
-                                                                                      elementBoundaryElementsArray=elementBoundaryElementsArray,
-                                                                                      exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
-                                                                                      eN=nearestN)
+                                result = ms.pyxGetLocalNearestElementIntersection(coords=coords,
+                                                                                  starting_coords=starting_coords,
+                                                                                  elementBoundaryNormalsArray=elementBoundaryNormalsArray,
+                                                                                  elementBoundariesArray=elementBoundariesArray,
+                                                                                  elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                                                                  elementBoundaryElementsArray=elementBoundaryElementsArray,
+                                                                                  exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
+                                                                                  eN=nearestN)
+                                nearestN = result[0]
+                                b_i = result[1]
                                 if nearestN >= nElements_owned:
-                                    nearestN, new_rank = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
-                                                                                 rank=my_rank,
-                                                                                 nVariables_owned=nElements_owned,
-                                                                                 variableNumbering_subdomain2global=elementNumbering_subdomain2global,
-                                                                                 variableOffsets_subdomain_owned=elementOffsets_subdomain_owned)
+                                    result = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
+                                                                     rank=my_rank,
+                                                                     nVariables_owned=nElements_owned,
+                                                                     variableNumbering_subdomain2global=elementNumbering_subdomain2global,
+                                                                     variableOffsets_subdomain_owned=elementOffsets_subdomain_owned)
+                                    nearestN = result[0]
+                                    new_rank = result[1]
                                 if nearestN == -1:
-                                    b_i_global, new_rank = getGlobalVariable(variable_nb_local=b_i,
-                                                                             nVariables_owned=nElementBoundaries_owned,
-                                                                             variableNumbering_subdomain2global=elementBoundaryNumbering_subdomain2global,
-                                                                             variableOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned)
+                                    result = ms.cyGetGlobalVariable(variable_nb_local=b_i,
+                                                                    nVariables_owned=nElementBoundaries_owned,
+                                                                    variableNumbering_subdomain2global=elementBoundaryNumbering_subdomain2global,
+                                                                    variableOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned)
+                                    b_i_global = result[0]
+                                    new_rank = result[1]
                                 else:
                                     # directly using nearestN for next time
                                     # (no need for b_i_global)
@@ -614,7 +722,8 @@ cdef class cCoefficients:
                             else:
                                 solFound_2doArray[iN] += 1
                                 inside_eN = True  # checking if actually true
-                                for ii, bb_i in enumerate(elementBoundariesArray[nearestN]):
+                                for ii in range(nEbn):
+                                    bb_i = elementBoundariesArray[nearestN, ii]
                                     normal[0] = elementBoundaryNormalsArray[nearestN, ii, 0]
                                     normal[1] = elementBoundaryNormalsArray[nearestN, ii, 1]
                                     normal[2] = elementBoundaryNormalsArray[nearestN, ii, 2]
@@ -632,7 +741,9 @@ cdef class cCoefficients:
                                         ls_phi = pc.getLevelSetValue(nearestN, coords)
                                     else:
                                         ls_phi = 1e12
-                                        f = pc.evaluateFunAtX(x=coords, ls_phi=ls_phi)
+                                    f = pc.evaluateFunAtX(x=coords, ls_phi=ls_phi)
+                                    if node0 == 672:
+                                        f = pc.evaluateFunAtX(x=coords, ls_phi=ls_phi, debug=True)
                                     for ndi in range(nd):
                                         dphi[ndi] = v_grad[ndi]/(t*1./(f*Ccoeff)+(1-t)*1./area)
                                         coords[ndi] += dphi[ndi]*fixed_dir[ndi]*dt
@@ -714,8 +825,9 @@ cdef class cCoefficients:
                                       nodeStarArray=nodeStarArray,
                                       nodeMaterialTypes=nodeMaterialTypes,
                                       nNodes_owned=nNodes_owned,
+                                      nd=nd,
                                       simultaneous=simultaneous,
-                                      smoothBoundaries=True,
+                                      smoothBoundaries=False,
                                       fixedNodesBoolArray=fixedNodesBoolArray,
                                       alpha=0.)
             comm.barrier()
@@ -918,87 +1030,87 @@ cdef double[:,:] cppGradientRecoveryAtNodesWeighted(double[:,:,:] grads,
             recovered_grads[node, ndi] = grad_sum[ndi]/detJ_patch
     return recovered_grads
 
-cdef tuple pyxSearchNearestNodeElementFromMeshObject(object mesh,
-                                                     double[:] x,
-                                                     int[:] exteriorElementBoundariesBoolArray,
-                                                     double[:,:,:] elementBoundaryNormalsArray,
-                                                     int nearest_node,
-                                                     int eN):
-    nearest_node = ms.getLocalNearestNode(coords=x,
-                                          nodeArray=mesh.nodeArray,
-                                          nodeStarOffsets=mesh.nodeStarOffsets,
-                                          nodeStarArray=mesh.nodeStarArray,
-                                          node=nearest_node)
-    eN = ms.getLocalNearestElementAroundNode(coords=x,
-                                             nodeElementOffsets=mesh.nodeElementOffsets,
-                                             nodeElementsArray=mesh.nodeElementsArray,
-                                             elementBarycenterArray=mesh.elementBarycentersArray,
-                                             node=nearest_node)
-    eN = ms.getLocalNearestElementIntersection(coords=x,
-                                               elementBoundaryNormalsArray=elementBoundaryNormalsArray,
-                                               elementBoundariesArray=mesh.elementBoundariesArray,
-                                               elementBarycentersArray=mesh.elementBoundaryBarycentersArray,
-                                               elementBoundaryElementsArray=mesh.elementBoundaryElementsArray,
-                                               elementBarycentersArray=mesh.elementBarycentersArray,
-                                               exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
-                                               eN=eN)
-    # check if actually inside eN
-    inside_eN = True
-    for j, b_i in enumerate(mesh.elementBoundariesArray[eN]):
-        normal = mesh.elementBoundaryNormalsArray[eN, j]
-        bound_bar = mesh.elementBoundaryBarycentersArray[b_i]
-        dot = (bound_bar[0]-x[0])*normal[0]+(bound_bar[1]-x[1])*normal[1]+(bound_bar[2]-x[2])*normal[2]
-        if dot < 0:
-            inside_eN = False
-    return eN, nearest_node, inside_eN
+# cdef tuple pyxSearchNearestNodeElementFromMeshObject(object mesh,
+#                                                      double[:] x,
+#                                                      int[:] exteriorElementBoundariesBoolArray,
+#                                                      double[:,:,:] elementBoundaryNormalsArray,
+#                                                      int nearest_node,
+#                                                      int eN):
+#     nearest_node = ms.pyxGetLocalNearestNode(coords=x,
+#                                              nodeArray=mesh.nodeArray,
+#                                              nodeStarOffsets=mesh.nodeStarOffsets,
+#                                              nodeStarArray=mesh.nodeStarArray,
+#                                              node=nearest_node)
+#     eN = ms.pyxGetLocalNearestElementAroundNode(coords=x,
+#                                                 nodeElementOffsets=mesh.nodeElementOffsets,
+#                                                 nodeElementsArray=mesh.nodeElementsArray,
+#                                                 elementBarycenterArray=mesh.elementBarycentersArray,
+#                                                 node=nearest_node)
+#     eN = ms.pyxGetLocalNearestElementIntersection(coords=x,
+#                                                   elementBoundaryNormalsArray=elementBoundaryNormalsArray,
+#                                                   elementBoundariesArray=mesh.elementBoundariesArray,
+#                                                   elementBarycentersArray=mesh.elementBoundaryBarycentersArray,
+#                                                   elementBoundaryElementsArray=mesh.elementBoundaryElementsArray,
+#                                                   elementBarycentersArray=mesh.elementBarycentersArray,
+#                                                   exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
+#                                                   eN=eN)
+#     # check if actually inside eN
+#     inside_eN = True
+#     for j, b_i in enumerate(mesh.elementBoundariesArray[eN]):
+#         normal = mesh.elementBoundaryNormalsArray[eN, j]
+#         bound_bar = mesh.elementBoundaryBarycentersArray[b_i]
+#         dot = (bound_bar[0]-x[0])*normal[0]+(bound_bar[1]-x[1])*normal[1]+(bound_bar[2]-x[2])*normal[2]
+#         if dot < 0:
+#             inside_eN = False
+#     return eN, nearest_node, inside_eN
 
 
-cdef tuple pyxSearchNearestNodeElement(double[:] x,
-                                       double[:,:] nodeArray,
-                                       int[:] nodeStarOffsets,
-                                       int[:] nodeStarArray,
-                                       int[:] nodeElementOffsets,
-                                       int[:] nodeElementsArray,
-                                       double[:,:] elementBarycentersArray,
-                                       int[:,:] elementBoundaryElementsArray,
-                                       int[:,:] elementBoundariesArray,
-                                       double[:,:] elementBoundaryBarycentersArray,
-                                       int[:] exteriorElementBoundariesBoolArray,
-                                       double[:,:,:] elementBoundaryNormalsArray,
-                                       int nearest_node,
-                                       int eN,
-                                       bool find_nearest_node=True):
-    if find_nearest_node is True:
-        nearest_node = ms.getLocalNearestNode(coords=x,
-                                              nodeArray=nodeArray,
-                                              nodeStarOffsets=nodeStarOffsets,
-                                              nodeStarArray=nodeStarArray,
-                                              node=nearest_node)
-        eN = ms.getLocalNearestElementAroundNode(coords=x,
-                                                 nodeElementOffsets=nodeElementOffsets,
-                                                 nodeElementsArray=nodeElementsArray,
-                                                 elementBarycentersArray=elementBarycentersArray,
-                                                 node=nearest_node)
-    eN = ms.getLocalNearestElementIntersection(coords=x,
-                                               elementBoundaryNormalsArray=elementBoundaryNormalsArray,
-                                               elementBoundariesArray=elementBoundariesArray,
-                                               elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
-                                               elementBoundaryElementsArray=elementBoundaryElementsArray,
-                                               elementBarycentersArray=elementBarycentersArray,
-                                               exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
-                                               eN=eN)
-    # check if actually inside eN
-    cdef bool inside_eN = True
-    cdef double[:] normal = np.zeros(3)
-    for j, b_i in enumerate(elementBoundariesArray[eN]):
-        normal[0] = elementBoundaryNormalsArray[eN, j, 0]
-        normal[1] = elementBoundaryNormalsArray[eN, j, 1]
-        normal[2] = elementBoundaryNormalsArray[eN, j, 2]
-        bound_bar = elementBoundaryBarycentersArray[b_i]
-        dot = (bound_bar[0]-x[0])*normal[0]+(bound_bar[1]-x[1])*normal[1]+(bound_bar[2]-x[2])*normal[2]
-        if dot < 0:
-            inside_eN = False
-    return eN, nearest_node, inside_eN
+# cdef tuple pyxSearchNearestNodeElement(double[:] x,
+#                                        double[:,:] nodeArray,
+#                                        int[:] nodeStarOffsets,
+#                                        int[:] nodeStarArray,
+#                                        int[:] nodeElementOffsets,
+#                                        int[:] nodeElementsArray,
+#                                        double[:,:] elementBarycentersArray,
+#                                        int[:,:] elementBoundaryElementsArray,
+#                                        int[:,:] elementBoundariesArray,
+#                                        double[:,:] elementBoundaryBarycentersArray,
+#                                        int[:] exteriorElementBoundariesBoolArray,
+#                                        double[:,:,:] elementBoundaryNormalsArray,
+#                                        int nearest_node,
+#                                        int eN,
+#                                        bool find_nearest_node=True):
+#     if find_nearest_node is True:
+#         nearest_node = ms.pyxGetLocalNearestNode(coords=x,
+#                                                  nodeArray=nodeArray,
+#                                                 nodeStarOffsets=nodeStarOffsets,
+#                                                  nodeStarArray=nodeStarArray,
+#                                                  node=nearest_node)
+#         eN = ms.pyxGetLocalNearestElementAroundNode(coords=x,
+#                                                     nodeElementOffsets=nodeElementOffsets,
+#                                                     nodeElementsArray=nodeElementsArray,
+#                                                     elementBarycentersArray=elementBarycentersArray,
+#                                                     node=nearest_node)
+#         eN = ms.pyxGetLocalNearestElementIntersection(coords=x,
+#                                                       elementBoundaryNormalsArray=elementBoundaryNormalsArray,
+#                                                       elementBoundariesArray=elementBoundariesArray,
+#                                                       elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+#                                                       elementBoundaryElementsArray=elementBoundaryElementsArray,
+#                                                       elementBarycentersArray=elementBarycentersArray,
+#                                                       exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
+#                                                       eN=eN)
+#     # check if actually inside eN
+#     cdef bool inside_eN = True
+#     cdef double[:] normal = np.zeros(3)
+#     for j, b_i in enumerate(elementBoundariesArray[eN]):
+#         normal[0] = elementBoundaryNormalsArray[eN, j, 0]
+#         normal[1] = elementBoundaryNormalsArray[eN, j, 1]
+#         normal[2] = elementBoundaryNormalsArray[eN, j, 2]
+#         bound_bar = elementBoundaryBarycentersArray[b_i]
+#         dot = (bound_bar[0]-x[0])*normal[0]+(bound_bar[1]-x[1])*normal[1]+(bound_bar[2]-x[2])*normal[2]
+#         if dot < 0:
+#             inside_eN = False
+#     return eN, nearest_node, inside_eN
 
 
 def pyCheckOwnedVariable(int variable_nb_local,
@@ -1037,36 +1149,6 @@ cdef tuple checkOwnedVariable(int variable_nb_local,
         new_rank = rank
         new_variable_nb_local = variable_nb_local
     return new_variable_nb_local, new_rank
-
-cdef tuple getGlobalVariable(int variable_nb_local,
-                             int nVariables_owned,
-                             int[:] variableNumbering_subdomain2global,
-                             int[:] variableOffsets_subdomain_owned):
-    cdef int nSubdomains = len(variableOffsets_subdomain_owned)-1
-    cdef int variable_nb_global
-    cdef int new_rank = -2  # initialised as fake rank
-    # change rank ownership
-    variable_nb_global = variableNumbering_subdomain2global[variable_nb_local]
-    for i in range(nSubdomains+1):
-        if variableOffsets_subdomain_owned[i] > variable_nb_global:
-            # changing processor
-            if new_rank == -2:
-                new_rank = i-1
-    variable_nb_global = variableNumbering_subdomain2global[variable_nb_local]
-    return variable_nb_global, new_rank
-
-cdef int getLocalVariable(int variable_nb_global,
-                          int rank,
-                          int nVariables_owned,
-                          int[:] variableNumbering_subdomain2global,
-                          int[:] variableOffsets_subdomain_owned):
-    cdef int new_variable_nb_local
-    if not variableOffsets_subdomain_owned[rank] <= variable_nb_global < variableOffsets_subdomain_owned[rank+1]:
-        print('wrong global varibale nb', rank, variable_nb_global, variableOffsets_subdomain_owned[rank])
-        import pdb; pdb.set_trace()
-    else:
-        new_variable_nb_local = variable_nb_global-variableOffsets_subdomain_owned[rank]
-    return new_variable_nb_local
 
 # cdef retrieveSolution(double[:]x,
 #                       double[:,:] nodeArray,

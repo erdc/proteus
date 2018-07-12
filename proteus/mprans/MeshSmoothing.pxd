@@ -8,6 +8,7 @@ cdef void cySmoothNodesLaplace(double[:,:] nodeArray_,
                                int[:] nodeStarArray,
                                int[:] nodeMaterialTypes,
                                int nNodes_owned,
+                               int nd,
                                bool simultaneous=*,
                                bool smoothBoundaries=*,
                                int[:] fixedNodesBoolArray=*,
@@ -28,23 +29,28 @@ cdef void cySmoothNodesCentroid(double[:,:] nodeArray_,
 
 cdef void cyUpdateDilationElements(double[:] elementDilationArray_,
                                    double[:] elementVolumeArray,
-                                   double[:] elementVolumeTargetArray)
+                                   double[:] elementVolumeTargetArray,
+                                   int nElements)
 
 cdef void cyUpdateDistortionElements(double[:] elementDistortionArray_,
                                      double[:,:,:,:] J_array,
                                      double[:,:] detJ_array,
-                                     int nd)
+                                     int nd,
+                                     int nElements)
 
 cdef void cyUpdateInverseMeanRatioTriangleNodes(double[:] IMRNodesArray_,
                                                 double[:,:] nodeArray,
                                                 int[:,:] elementNodesArray,
                                                 int[:] nodeElementOffsets,
                                                 int[:] nodeElementsArray,
+                                                int nElements,
+                                                int nNodes,
                                                 bool el_average=*)
 
 cdef void cyUpdateInverseMeanRatioTriangleElements(double[:] IMRElementsArray_,
                                                    double[:,:] nodeArray,
-                                                   int[:,:] elementNodesArray)
+                                                   int[:,:] elementNodesArray,
+                                                   int nElements)
 
 cdef double cyGetInverseMeanRatioSingleTriangle(int node0,
                                                 double[:,:] nodeArray,
@@ -78,14 +84,14 @@ cdef int pyxGetLocalNearestElement(double[:] coords,
                                    int[:,:] elementNeighborsArray,
                                    int eN)
 
-cdef tuple pyxGetLocalNearestElementIntersection(double[:] coords,
-                                                 double[:] starting_coords,
-                                                 double[:,:,:] elementBoundaryNormalsArray,
-                                                 int[:,:] elementBoundariesArray,
-                                                 double[:,:] elementBoundaryBarycentersArray,
-                                                 int[:,:] elementBoundaryElementsArray,
-                                                 int[:] exteriorElementBoundariesBoolArray,
-                                                 int eN)
+cdef int[:] pyxGetLocalNearestElementIntersection(double[:] coords,
+                                                  double[:] starting_coords,
+                                                  double[:,:,:] elementBoundaryNormalsArray,
+                                                  int[:,:] elementBoundariesArray,
+                                                  double[:,:] elementBoundaryBarycentersArray,
+                                                  int[:,:] elementBoundaryElementsArray,
+                                                  int[:] exteriorElementBoundariesBoolArray,
+                                                  int eN)
 
 cdef int pyxGetLocalNearestElementAroundNode(double[:] coords,
                                              int[:] nodeElementOffsets,
@@ -98,35 +104,51 @@ cdef void pyxUpdateElementBoundaryNormalsTetra(double[:,:,:] elementBoundaryNorm
                                                int[:,:] elementBoundariesArray,
                                                int[:,:] elementBoundaryNodesArray,
                                                double[:,:] elementBoundaryBarycentersArray,
-                                               double[:,:] elementBarycentersArray)
+                                               double[:,:] elementBarycentersArray,
+                                               int nElements)
 
 cdef void pyxUpdateElementBoundaryNormalsTriangle(double[:,:,:] elementBoundaryNormalsArray_,
                                                   double[:,:] nodeArray,
                                                   int[:,:] elementBoundariesArray,
                                                   int[:,:] elementBoundaryNodesArray,
                                                   double[:,:] elementBoundaryBarycentersArray,
-                                                  double[:,:] elementBarycentersArray)
+                                                  double[:,:] elementBarycentersArray,
+                                                  int nElements)
 
 cdef void cyUpdateElementVolumesTriangle(double[:] elementVolumesArray_,
                                          int[:,:] elementNodesArray,
-                                         double[:,:] nodeArray)
+                                         double[:,:] nodeArray,
+                                         int nElements)
 
 cdef void cyUpdateElementVolumesTetra(double[:] elementVolumesArray_,
                                       int[:,:] elementNodesArray,
-                                      double[:,:] nodeArray)
+                                      double[:,:] nodeArray,
+                                      int nElements)
 
 cdef void cyUpdateElementBarycenters(double[:,:] elementBarycentersArray_,
                                      int[:,:] elementNodesArray,
-                                     double[:,:] nodeArray)
+                                     double[:,:] nodeArray,
+                                     int nElements)
 
 cdef np.ndarray cyGetCornerNodesTriangle(double[:,:] nodeArray,
                                          int[:] nodeStarArray,
                                          int[:] nodeStarOffsets,
                                          int[:] nodeMaterialTypes,
-                                         int nNodes_owned)
+                                         int nNodes)
 
-cdef tuple cyCheckOwnedVariable(int variable_nb_local,
-                                int rank,
+cdef int[:] cyCheckOwnedVariable(int variable_nb_local,
+                                 int rank,
+                                 int nVariables_owned,
+                                 int[:] variableNumbering_subdomain2global,
+                                 int[:] variableOffsets_subdomain_owned)
+
+cdef int[:] cyGetGlobalVariable(int variable_nb_local,
                                 int nVariables_owned,
                                 int[:] variableNumbering_subdomain2global,
                                 int[:] variableOffsets_subdomain_owned)
+
+cdef int cyGetLocalVariable(int variable_nb_global,
+                            int rank,
+                            int nVariables_owned,
+                            int[:] variableNumbering_subdomain2global,
+                            int[:] variableOffsets_subdomain_owned)

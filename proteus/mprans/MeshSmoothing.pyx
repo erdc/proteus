@@ -1,3 +1,6 @@
+#!python
+#cython: wraparound=True, boundscheck=False, initializedcheck=False, cdivision=True
+
 import numpy as np
 cimport numpy as np
 from libcpp cimport bool
@@ -7,6 +10,7 @@ def smoothNodesLaplace(double[:,:] nodeArray_,
                        int[:] nodeStarArray,
                        int[:] nodeMaterialTypes,
                        int nNodes_owned,
+                       int nd,
                        bool simultaneous=False,
                        bool smoothBoundaries=True,
                        int[:] fixedNodesBoolArray=None,
@@ -28,6 +32,8 @@ def smoothNodesLaplace(double[:,:] nodeArray_,
         array to know which node is interior node (materialType=0)
     nNodes_owned: int
         number of nodes owned
+    nd: int
+        number of dimensions (needed to find direction to smooth boundaries)
     simultaneous: bool
         if True: simultaneous smoothing
         if False: sequential smoothing
@@ -46,6 +52,7 @@ def smoothNodesLaplace(double[:,:] nodeArray_,
                          nodeStarArray=nodeStarArray,
                          nodeMaterialTypes=nodeMaterialTypes,
                          nNodes_owned=nNodes_owned,
+                         nd=nd,
                          simultaneous=simultaneous,
                          smoothBoundaries=smoothBoundaries,
                          fixedNodesBoolArray=fixedNodesBoolArray,
@@ -116,51 +123,63 @@ def smoothNodesCentroid(double[:,:] nodeArray_,
 
 def updateDilationElements(double[:] elementDilationArray_,
                            double[:] elementVolumeArray,
-                           double[:] elementVolumeTargetArray):
+                           double[:] elementVolumeTargetArray,
+                           int nElements):
     cyUpdateDilationElements(elementDilationArray_=elementDilationArray_,
                              elementVolumeArray=elementVolumeArray,
-                             elementVolumeTargetArray=elementVolumeTargetArray)
+                             elementVolumeTargetArray=elementVolumeTargetArray,
+                             nElements=nElements)
 
 def getDilationElements(double[:] elementVolumeArray,
                         double[:] elementVolumeTargetArray):
-    elementDilationArray_ = np.zeros(len(elementVolumeArray))
+    cdef int nElements = len(elementVolumeArray)
+    elementDilationArray_ = np.zeros(nElements)
     cyUpdateDilationElements(elementDilationArray_=elementDilationArray_,
                              elementVolumeArray=elementVolumeArray,
-                             elementVolumeTargetArray=elementVolumeTargetArray)
+                             elementVolumeTargetArray=elementVolumeTargetArray,
+                             nElements=nElements)
     return elementDilationArray_
 
 def updateDistortionElements(double[:] elementDistortionArray_,
                              double[:,:,:,:] J_array,
                              double[:,:] detJ_array,
-                             int nd):
+                             int nd,
+                             int nElements):
     cyUpdateDistortionElements(elementDistortionArray_=elementDistortionArray_,
                                J_array=J_array,
                                detJ_array=detJ_array,
-                               nd=nd)
+                               nd=nd,
+                               nElements=nElements)
 
 def getDistortionElements(double[:,:,:,:] J_array,
                           double[:,:] detJ_array,
                           int nd):
-    elementDistortionArray_ = np.zeros(len(detJ_array))
+    nElements = len(detJ_array)
+    elementDistortionArray_ = np.zeros(nElements)
     cyUpdateDistortionElements(elementDistortionArray_=elementDistortionArray_,
                                J_array=J_array,
                                detJ_array=detJ_array,
-                               nd=nd)
+                               nd=nd,
+                               nElements=nElements)
     return elementDistortionArray_
 
 def updateInverseMeanRatioTriangleElements(double[:] IMRElementsArray_,
                                            double[:,:] nodeArray,
-                                           int[:,:] elementNodesArray):
+                                           int[:,:] elementNodesArray,
+                                           int nElements):
     cyUpdateInverseMeanRatioTriangleElements(IMRElementsArray_=IMRElementsArray_,
                                              nodeArray=nodeArray,
-                                             elementNodesArray=elementNodesArray)
+                                             elementNodesArray=elementNodesArray,
+                                             nElements=nElements)
 
 def getInverseMeanRatioTriangleElements(double[:,:] nodeArray,
                                         int[:,:] elementNodesArray):
-    IMRElementsArray_ = np.zeros(len(elementNodesArray))
+    cdef int nElements = len(elementNodesArray)
+    IMRElementsArray_ = np.zeros(nElements)
     cyUpdateInverseMeanRatioTriangleElements(IMRElementsArray_=IMRElementsArray_,
                                              nodeArray=nodeArray,
-                                             elementNodesArray=elementNodesArray)
+                                             elementNodesArray=elementNodesArray,
+                                             nElements=nElements)
     return IMRElementsArray_
 
 def updateInverseMeanRatioTriangleNodes(double[:] IMRNodesArray_,
@@ -168,26 +187,34 @@ def updateInverseMeanRatioTriangleNodes(double[:] IMRNodesArray_,
                                         int[:,:] elementNodesArray,
                                         int[:] nodeElementOffsets,
                                         int[:] nodeElementsArray,
+                                        int nNodes,
+                                        int nElements,
                                         bool el_average=False):
     cyUpdateInverseMeanRatioTriangleNodes(IMRNodesArray_=IMRNodesArray_,
                                           nodeArray=nodeArray,
                                           elementNodesArray=elementNodesArray,
                                           nodeElementOffsets=nodeElementOffsets,
                                           nodeElementsArray=nodeElementsArray,
-                                          el_average=el_average)
+                                          el_average=el_average,
+                                          nNodes=nNodes,
+                                          nElements=nElements)
 
 def getInverseMeanRatioTriangleNodes(double[:,:] nodeArray,
                                      int[:,:] elementNodesArray,
                                      int[:] nodeElementOffsets,
                                      int[:] nodeElementsArray,
                                      bool el_average=False):
-    IMRNodesArray_ = np.zeros(len(nodeArray))
+    cdef int nNodes = len(nodeArray)
+    cdef int nElements = len(elementNodesArray)
+    IMRNodesArray_ = np.zeros(nNodes)
     cyUpdateInverseMeanRatioTriangleNodes(IMRNodesArray_=IMRNodesArray_,
                                           nodeArray=nodeArray,
                                           elementNodesArray=elementNodesArray,
                                           nodeElementOffsets=nodeElementOffsets,
                                           nodeElementsArray=nodeElementsArray,
-                                          el_average=el_average)
+                                          el_average=el_average,
+                                          nNodes=nNodes,
+                                          nElements=nElements)
     return IMRNodesArray_
 
 def getInverseMeanRatioSingleTriangle(int node0,
@@ -424,13 +451,15 @@ def updateElementBoundaryNormalsTriangle(double[:,:,:] elementBoundaryNormalsArr
                                          int[:,:] elementBoundariesArray,
                                          int[:,:] elementBoundaryNodesArray,
                                          double[:,:] elementBoundaryBarycentersArray,
-                                         double[:,:] elementBarycentersArray):
+                                         double[:,:] elementBarycentersArray,
+                                         int nElements):
     pyxUpdateElementBoundaryNormalsTriangle(elementBoundaryNormalsArray_=elementBoundaryNormalsArray_,
-                                              nodeArray=nodeArray,
-                                              elementBoundariesArray=elementBoundariesArray,
-                                              elementBoundaryNodesArray=elementBoundaryNodesArray,
-                                              elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
-                                              elementBarycentersArray=elementBarycentersArray)
+                                            nodeArray=nodeArray,
+                                            elementBoundariesArray=elementBoundariesArray,
+                                            elementBoundaryNodesArray=elementBoundaryNodesArray,
+                                            elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                            elementBarycentersArray=elementBarycentersArray,
+                                            nElements=nElements)
 
 def getElementBoundaryNormalsTriangle(double[:,:] nodeArray,
                                       int[:,:] elementBoundariesArray,
@@ -438,12 +467,14 @@ def getElementBoundaryNormalsTriangle(double[:,:] nodeArray,
                                       double[:,:] elementBoundaryBarycentersArray,
                                       double[:,:] elementBarycentersArray):
     elementBoundaryNormalsArray_ = np.zeros(elementBoundariesArray.shape[0], 3, 3)
+    cdef int nElements = len(elementBoundaryNormalsArray_)
     pyxUpdateElementBoundaryNormalsTriangle(elementBoundaryNormalsArray_=elementBoundaryNormalsArray_,
-                                              nodeArray=nodeArray,
-                                              elementBoundariesArray=elementBoundariesArray,
-                                              elementBoundaryNodesArray=elementBoundaryNodesArray,
-                                              elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
-                                              elementBarycentersArray=elementBarycentersArray)
+                                            nodeArray=nodeArray,
+                                            elementBoundariesArray=elementBoundariesArray,
+                                            elementBoundaryNodesArray=elementBoundaryNodesArray,
+                                            elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+                                            elementBarycentersArray=elementBarycentersArray,
+                                            nElements=nElements)
     return elementBoundaryNormalsArray_
 
 def updateElementBoundaryNormalsTetra(double[:,:,:] elementBoundaryNormalsArray_,
@@ -451,13 +482,15 @@ def updateElementBoundaryNormalsTetra(double[:,:,:] elementBoundaryNormalsArray_
                                       int[:,:] elementBoundariesArray,
                                       int[:,:] elementBoundaryNodesArray,
                                       double[:,:] elementBoundaryBarycentersArray,
-                                      double[:,:] elementBarycentersArray):
+                                      double[:,:] elementBarycentersArray,
+                                      int nElements):
     pyxUpdateElementBoundaryNormalsTetra(elementBoundaryNormalsArray_=elementBoundaryNormalsArray_,
                                          nodeArray=nodeArray,
                                          elementBoundariesArray=elementBoundariesArray,
                                          elementBoundaryNodesArray=elementBoundaryNodesArray,
                                          elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
-                                         elementBarycentersArray=elementBarycentersArray)
+                                         elementBarycentersArray=elementBarycentersArray,
+                                         nElements=nElements)
 
 def getElementBoundaryNormalsTetra(double[:,:] nodeArray,
                                    int[:,:] elementBoundariesArray,
@@ -465,20 +498,24 @@ def getElementBoundaryNormalsTetra(double[:,:] nodeArray,
                                    double[:,:] elementBoundaryBarycentersArray,
                                    double[:,:] elementBarycentersArray):
     elementBoundaryNormalsArray_ = np.zeros(elementBoundariesArray.shape[0], 4, 3)
+    cdef int nElements = len(elementBoundaryNormalsArray_)
     pyxUpdateElementBoundaryNormalsTetra(elementBoundaryNormalsArray_=elementBoundaryNormalsArray_,
                                          nodeArray=nodeArray,
                                          elementBoundariesArray=elementBoundariesArray,
                                          elementBoundaryNodesArray=elementBoundaryNodesArray,
                                          elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
-                                         elementBarycentersArray=elementBarycentersArray)
+                                         elementBarycentersArray=elementBarycentersArray,
+                                         nElements=nElements)
     return elementBoundaryNormalsArray_
 
 def updateElementVolumesTriangle(double[:] elementVolumesArray_,
                                  int[:,:] elementNodesArray,
-                                 double[:,:] nodeArray):
+                                 double[:,:] nodeArray,
+                                 int nElements):
     cyUpdateElementVolumesTriangle(elementVolumesArray_=elementVolumesArray_,
                                    elementNodesArray=elementNodesArray,
-                                   nodeArray=nodeArray)
+                                   nodeArray=nodeArray,
+                                   nElements=nElements)
 
 def getElementVolumeTriangle(double[:] nA,
                              double[:] nB,
@@ -489,28 +526,32 @@ def getElementVolumeTriangle(double[:] nA,
 
 def updateElementVolumesTetra(double[:] elementVolumesArray_,
                               int[:,:] elementNodesArray,
-                              double[:,:] nodeArray):
+                              double[:,:] nodeArray,
+                              int nElements):
     cyUpdateElementVolumesTetra(elementVolumesArray_=elementVolumesArray_,
                                 elementNodesArray=elementNodesArray,
-                                nodeArray=nodeArray)
+                                nodeArray=nodeArray,
+                                nElements=nElements)
 
 def updateElementBarycenters(double[:,:] elementBarycentersArray_,
                              int[:,:] elementNodesArray,
-                             double[:,:] nodeArray):
+                             double[:,:] nodeArray,
+                             int nElements):
     cyUpdateElementBarycenters(elementBarycentersArray_=elementBarycentersArray_,
                                elementNodesArray=elementNodesArray,
-                               nodeArray=nodeArray)
+                               nodeArray=nodeArray,
+                               nElements=nElements)
 
 def getCornerNodesTriangle(double[:,:] nodeArray,
                            int[:] nodeStarArray,
                            int[:] nodeStarOffsets,
                            int[:] nodeMaterialTypes,
-                           int nNodes_owned):
+                           int nNodes):
     return cyGetCornerNodesTriangle(nodeArray=nodeArray,
                                     nodeStarArray=nodeStarArray,
                                     nodeStarOffsets=nodeStarOffsets,
                                     nodeMaterialTypes=nodeMaterialTypes,
-                                    nNodes_owned=nNodes_owned)
+                                    nNodes=nNodes)
 
 def getNonOwnedNodeValues(args_,
                           nNodes_owned,
@@ -630,6 +671,7 @@ cdef void cySmoothNodesLaplace(double[:,:] nodeArray_,
                                int[:] nodeStarArray,
                                int[:] nodeMaterialTypes,
                                int nNodes_owned,
+                               int nd,
                                bool simultaneous=False,
                                bool smoothBoundaries=True,
                                int[:] fixedNodesBoolArray=None,
@@ -646,6 +688,10 @@ cdef void cySmoothNodesLaplace(double[:,:] nodeArray_,
     cdef int nNodeInStar
     cdef int nNodes = 0
     cdef bool fixed_node = False
+    cdef double[:] fixed_dir = np.zeros(3)
+    cdef double fixed_dir_dist
+    cdef int nOffset
+    cdef int node
     for node in range(nNodes_owned):
         sum_star[:] = 0.
         nNodes = 0
@@ -661,29 +707,59 @@ cdef void cySmoothNodesLaplace(double[:,:] nodeArray_,
                     sum_star[1] += nodeArray_[nodeStarArray[nOffset], 1]
                     sum_star[2] += nodeArray_[nodeStarArray[nOffset], 2]
                 nNodes += 1
-        elif smoothBoundaries is True:
-            # smooth on boundary only unless it is a corner node
-            fixed_node = False
-            if fixedNodesBoolArray is not None:
-                if fixedNodesBoolArray[node] == 1:
-                    sum_star[0] = nodeArray0[node, 0]
-                    sum_star[1] = nodeArray0[node, 1]
-                    sum_star[2] = nodeArray0[node, 2]
-                    nNodes = 1
-                    fixed_node = True
-            if fixed_node is False:
-                for nOffset in range(nodeStarOffsets[node],
-                                    nodeStarOffsets[node+1]):
-                    if nodeMaterialTypes[nodeStarArray[nOffset]] != 0:
-                        if simultaneous is True:
-                            sum_star[0] += nodeArray0[nodeStarArray[nOffset], 0]
-                            sum_star[1] += nodeArray0[nodeStarArray[nOffset], 1]
-                            sum_star[2] += nodeArray0[nodeStarArray[nOffset], 2]
-                        else:
-                            sum_star[0] += nodeArray_[nodeStarArray[nOffset], 0]
-                            sum_star[1] += nodeArray_[nodeStarArray[nOffset], 1]
-                            sum_star[2] += nodeArray_[nodeStarArray[nOffset], 2]
-                        nNodes += 1
+        else:
+            sum_star[0] = nodeArray0[node, 0]
+            sum_star[1] = nodeArray0[node, 1]
+            sum_star[2] = nodeArray0[node, 2]
+            nNodes = 1
+            fixed_node = True
+        # # boundary smoothing not ready yet
+        # elif smoothBoundaries is True:
+        #     # smooth on boundary only
+        #     fixed_node = False
+        #     fixed_dir[:] = 0.
+        #     if fixedNodesBoolArray is not None:
+        #         if fixedNodesBoolArray[node] == 1:
+        #             sum_star[0] = nodeArray0[node, 0]
+        #             sum_star[1] = nodeArray0[node, 1]
+        #             sum_star[2] = nodeArray0[node, 2]
+        #             nNodes = 1
+        #             fixed_node = True
+        #     if fixed_node is False:
+        #         if nd == 2:
+        #             fixed_dir =  cyFindBoundaryDirectionTriangle(node=node,
+        #                                                          nodeArray=nodeArray_,
+        #                                                          nodeStarOffsets=nodeStarOffsets,
+        #                                                          nodeStarArray=nodeStarArray,
+        #                                                          nodeMaterialTypes=nodeMaterialTypes)
+        #         if nd == 3:
+        #             fixed_dir =  cyFindBoundaryDirectionTetra(node=node,
+        #                                                       nodeArray=nodeArray_,
+        #                                                       nodeStarOffsets=nodeStarOffsets,
+        #                                                       nodeStarArray=nodeStarArray,
+        #                                                       nodeMaterialTypes=nodeMaterialTypes)
+        #         for nOffset in range(nodeStarOffsets[node],
+        #                             nodeStarOffsets[node+1]):
+        #             if nodeMaterialTypes[nodeStarArray[nOffset]] != 0:
+        #                 if simultaneous is True:
+        #                     sum_star[0] += nodeArray0[nodeStarArray[nOffset], 0]
+        #                     sum_star[1] += nodeArray0[nodeStarArray[nOffset], 1]
+        #                     sum_star[2] += nodeArray0[nodeStarArray[nOffset], 2]
+        #                 else:
+        #                     sum_star[0] += nodeArray_[nodeStarArray[nOffset], 0]
+        #                     sum_star[1] += nodeArray_[nodeStarArray[nOffset], 1]
+        #                     sum_star[2] += nodeArray_[nodeStarArray[nOffset], 2]
+        #                 nNodes += 1
+        #             else:
+        #                 if simultaneous is True:
+        #                     sum_star[0] += nodeArray0[nodeStarArray[nOffset], 0]*fixed_dir[0]
+        #                     sum_star[1] += nodeArray0[nodeStarArray[nOffset], 1]*fixed_dir[1]
+        #                     sum_star[2] += nodeArray0[nodeStarArray[nOffset], 2]*fixed_dir[2]
+        #                 else:
+        #                     sum_star[0] += nodeArray_[nodeStarArray[nOffset], 0]*fixed_dir[0]
+        #                     sum_star[1] += nodeArray_[nodeStarArray[nOffset], 1]*fixed_dir[1]
+        #                     sum_star[2] += nodeArray_[nodeStarArray[nOffset], 2]*fixed_dir[2]
+        #                     nNodes += 1
         if alpha != 0:
             nodeArray_[node, 0] = alpha*nodeArray0[node, 0]+(1-alpha)*sum_star[0]/nNodes
             nodeArray_[node, 1] = alpha*nodeArray0[node, 0]+(1-alpha)*sum_star[1]/nNodes
@@ -717,7 +793,6 @@ cdef void cySmoothNodesCentroid(double[:,:] nodeArray_,
     cdef double[:] nodeOffset0
     cdef double[:] nodeOffset1
     cdef double var = 0.
-    cdef int eN
     cdef double[:] centroid_cell
     cdef double[:] nA
     cdef double[:] nB
@@ -726,6 +801,9 @@ cdef void cySmoothNodesCentroid(double[:,:] nodeArray_,
     cdef double[:] vec2 = np.zeros(3)
     cdef double dot
     cdef double vec_dist
+    cdef int node
+    cdef int eOffset
+    cdef int eN
     for node in range(nNodes_owned):
         sum_star[:] = 0.
         areas = 0.
@@ -752,7 +830,7 @@ cdef void cySmoothNodesCentroid(double[:,:] nodeArray_,
                     nA = nodeArray_[elementNodesArray[eN, 0]]
                     nB = nodeArray_[elementNodesArray[eN, 1]]
                     nC = nodeArray_[elementNodesArray[eN, 2]]
-                    elementVolumesArray[eN] = getElementVolumeTriangle(nA, nB, nC)
+                    elementVolumesArray[eN] = cyGetElementVolumeTriangle(nA, nB, nC)
                     elementBarycentersArray[eN, 0] = (nA[0]+nB[0]+nC[0])/3.
                     elementBarycentersArray[eN, 1] = (nA[1]+nB[1]+nC[1])/3.
                     elementBarycentersArray[eN, 2] = (nA[2]+nB[2]+nC[2])/3.
@@ -793,9 +871,11 @@ cdef void cySmoothNodesCentroid(double[:,:] nodeArray_,
 
 cdef void cyUpdateDilationElements(double[:] elementDilationArray_,
                                    double[:] elementVolumeArray,
-                                   double[:] elementVolumeTargetArray):
+                                   double[:] elementVolumeTargetArray,
+                                   int nElements):
     cdef double dilation
-    for eN in range(len(elementDilationArray_)):
+    cdef int eN
+    for eN in range(nElements):
         dilation = elementVolumeArray[eN]/elementVolumeTargetArray[eN]
         if dilation < 1.:
             dilation = 1/dilation
@@ -804,21 +884,24 @@ cdef void cyUpdateDilationElements(double[:] elementDilationArray_,
 cdef void cyUpdateDistortionElements(double[:] elementDistortionArray_,
                                      double[:,:,:,:] J_array,
                                      double[:,:] detJ_array,
-                                     int nd):
+                                     int nd,
+                                     int nElements):
     cdef double[:,:] J
     cdef double[:,:] JT
     cdef double detJ
     cdef double trJTJ
     cdef double[:,:] JTJ
-    for eN in range(len(elementDistortionArray_)):
+    cdef int eN
+    cdef int iJ
+    for eN in range(len(nElements)):
         detJ = detJ_array[eN, 0]  # index 0 as it is the same for all quadrature points
         J = J_array[eN][0]
         JT = np.transpose(J)
         JTJ = np.zeros_like(J)
         JTJ = np.dot(J, JT)
         trJTJ = 0.
-        for i in range(len(J)):
-            trJTJ += JTJ[i,i]
+        for iJ in range(len(J)):
+            trJTJ += JTJ[iJ,iJ]
         elementDistortionArray_[eN] = (1./nd*trJTJ)**(nd/2.)/detJ
 
 cdef void cyUpdateInverseMeanRatioTriangleNodes(double[:] IMRNodesArray_,
@@ -826,22 +909,29 @@ cdef void cyUpdateInverseMeanRatioTriangleNodes(double[:] IMRNodesArray_,
                                                 int[:,:] elementNodesArray,
                                                 int[:] nodeElementOffsets,
                                                 int[:] nodeElementsArray,
+                                                int nElements,
+                                                int nNodes,
                                                 bool el_average=False):
     cdef double[:,:] W = np.array([[1., 0.5],
                                    [0., np.sqrt(3)/2.]])
     cdef double[:,:] A = np.zeros((2,2))
     cdef double[:,:] AW = np.zeros((2,2))
+    cdef int[:] nElementsArray = np.zeros(nElements)
     cdef double[:] IMR_elements
     if el_average:
-        IMR_elements = np.zeros(len(elementNodesArray))
-    cdef int[:] nElements = np.zeros(len(nodeArray), dtype=np.int32)
+        IMR_elements = np.zeros(nNodes)
     cdef double[:] vec_a
     cdef double[:] vec_b
     cdef double[:] vec_c
     cdef double IMR
     cdef int nEl = 0
-    for eN in range(len(elementNodesArray)):
-        for iN, node in enumerate(elementNodesArray[eN]):
+    cdef int iN
+    cdef int eN
+    cdef int node
+    for eN in range(nElements):
+        iN = -1
+        for node in elementNodesArray[eN]:
+            iN += 1
             vec_a = nodeArray[elementNodesArray[eN, iN]]
             vec_b = nodeArray[elementNodesArray[eN, iN-1]]
             vec_c = nodeArray[elementNodesArray[eN, iN-2]]
@@ -852,14 +942,14 @@ cdef void cyUpdateInverseMeanRatioTriangleNodes(double[:] IMRNodesArray_,
             AW = np.dot(A, np.linalg.inv(W))
             IMR = (AW[0,0]**2+AW[0,1]**2+AW[1,0]**2+AW[1,1]**2)/(2*np.abs(AW[0,0]*AW[1,1]-AW[0,1]*AW[1,0]))
             IMRNodesArray_[node] += IMR
-            nElements[node] += 1
+            nElementsArray[node] += 1
             if el_average:
                 IMR_elements[eN] += IMR
         if el_average:
             IMR_elements[eN] = IMR_elements[eN]/3.
-    for node in range(len(IMRNodesArray_)):
+    for node in range(nNodes):
         if not el_average:
-            IMRNodesArray_[node] = IMRNodesArray_[node]/nElements[node]
+            IMRNodesArray_[node] = IMRNodesArray_[node]/nElementsArray[node]
         else:
             nEl = 0
             IMRNodesArray_[node] = 0.
@@ -872,7 +962,8 @@ cdef void cyUpdateInverseMeanRatioTriangleNodes(double[:] IMRNodesArray_,
 
 cdef void cyUpdateInverseMeanRatioTriangleElements(double[:] IMRElementsArray_,
                                                    double[:,:] nodeArray,
-                                                   int[:,:] elementNodesArray):
+                                                   int[:,:] elementNodesArray,
+                                                   int nElements):
     cdef double[:,:] W = np.array([[1., 0.5],
                                    [0., np.sqrt(3)/2.]])
     cdef double[:,:] A = np.zeros((2,2))
@@ -882,7 +973,10 @@ cdef void cyUpdateInverseMeanRatioTriangleElements(double[:] IMRElementsArray_,
     cdef double[:] vec_c
     cdef double IMR
     cdef int nEl = 0
-    for eN in range(len(elementNodesArray)):
+    cdef int eN
+    cdef int iN
+    cdef int node
+    for eN in range(nElements):
         for iN, node in enumerate(elementNodesArray[eN]):
             vec_a = nodeArray[elementNodesArray[eN, iN]]
             vec_b = nodeArray[elementNodesArray[eN, iN-1]]
@@ -912,6 +1006,9 @@ cdef double cyGetInverseMeanRatioSingleTriangle(int node0,
     cdef double[:] vec_b
     cdef double[:] vec_c
     cdef double IMR
+    cdef int eOffset
+    cdef int iN
+    cdef int node
     for eOffset in range(nodeElementOffsets[node0],
                          nodeElementOffsets[node0+1]):
         eN = nodeElementsArray[eOffset]
@@ -964,6 +1061,10 @@ cdef double[:,:] cySmoothNodesQuality(double[:] distortion,
     cdef double[:] weighted_pos = np.zeros(3)
     cdef double weight = 0
     cdef double weights = 0
+    cdef int node
+    cdef int eOffset
+    cdef int eNode
+    cdef int eN
     for node in range(nNodes_owned):
         if nodeMaterialTypes[node] == 0:
             weights = 0
@@ -998,6 +1099,7 @@ cdef double[:] recoveryAtNodes(double[:] variable,
     cdef double[:] recovered_variable = np.zeros(len(nodeElementOffsets))
     cdef int nb_el
     cdef double var_av
+    cdef int node
     for node in range(len(nodeElementOffsets)):
         nb_el = 0
         grad_av = 0.
@@ -1037,7 +1139,6 @@ cdef int pyxGetLocalNearestNode(double[:] coords,
     # determine local nearest node distance
     cdef int nearest_node = node
     cdef int nearest_node0 = node
-    cdef int nOffsets
     cdef double dist
     cdef double min_dist
     cdef double[:] node_coords
@@ -1047,6 +1148,7 @@ cdef int pyxGetLocalNearestNode(double[:] coords,
                (node_coords[1]-coords[1])*(node_coords[1]-coords[1])+\
                (node_coords[2]-coords[2])*(node_coords[2]-coords[2])
     cdef int i = 0
+    cdef int nOffset
     while found_node is False:
         nearest_node0 = nearest_node
         for nOffset in range(nodeStarOffsets[nearest_node0],
@@ -1072,11 +1174,12 @@ cdef int pyxGetLocalNearestElement(double[:] coords,
     # determine local nearest node distance
     cdef int nearest_eN = eN
     cdef int nearest_eN0 = eN
-    cdef int nOffsets
     cdef double dist
     cdef double min_dist
     cdef double[:] eN_coords
     cdef bool found_eN = False
+    cdef int nOffset
+    cdef int eN_
     eN_coords = elementBarycentersArray[eN]
     min_dist = (eN_coords[0]-coords[0])*(eN_coords[0]-coords[0])+\
                (eN_coords[1]-coords[1])*(eN_coords[1]-coords[1])+\
@@ -1084,28 +1187,29 @@ cdef int pyxGetLocalNearestElement(double[:] coords,
     cdef int i = 0
     while found_eN is False:
         nearest_eN0 = nearest_eN
-        for eN in elementNeighborsArray[nearest_eN0]:
-            eN_coords = elementBarycentersArray[eN]
+        for eN_ in elementNeighborsArray[nearest_eN0]:
+            eN_coords = elementBarycentersArray[eN_]
             dist = (eN_coords[0]-coords[0])*(eN_coords[0]-coords[0])+\
                    (eN_coords[1]-coords[1])*(eN_coords[1]-coords[1])+\
                    (eN_coords[2]-coords[2])*(eN_coords[2]-coords[2])
             if dist < min_dist:
                 min_dist = dist
-                nearest_eN = eN
+                nearest_eN = eN_
         if nearest_eN0 == nearest_eN:
             found_eN = True
         i += 1
     return nearest_eN
 
-cdef tuple pyxGetLocalNearestElementIntersection(double[:] coords,
-                                                 double[:] starting_coords,
-                                                 double[:,:,:] elementBoundaryNormalsArray,
-                                                 int[:,:] elementBoundariesArray,
-                                                 double[:,:] elementBoundaryBarycentersArray,
-                                                 int[:,:] elementBoundaryElementsArray,
-                                                 int[:] exteriorElementBoundariesBoolArray,
-                                                 int eN):
+cdef int[:] pyxGetLocalNearestElementIntersection(double[:] coords,
+                                                  double[:] starting_coords,
+                                                  double[:,:,:] elementBoundaryNormalsArray,
+                                                  int[:,:] elementBoundariesArray,
+                                                  double[:,:] elementBoundaryBarycentersArray,
+                                                  int[:,:] elementBoundaryElementsArray,
+                                                  int[:] exteriorElementBoundariesBoolArray,
+                                                  int eN):
     # determine local nearest node distance
+    cdef result = np.array([-1, -1], dtype=np.int32)
     cdef int nearest_eN = eN
     cdef int nearest_eN0 = eN
     cdef int nOffsets
@@ -1139,6 +1243,7 @@ cdef tuple pyxGetLocalNearestElementIntersection(double[:] coords,
     cdef reachedBoundary = False
     cdef bool debug = False
     debug = False
+    cdef int j
     while found_eN is False and it < maxit:
         nearest_eN0 = nearest_eN
         alpha_min = 1e12
@@ -1179,7 +1284,9 @@ cdef tuple pyxGetLocalNearestElementIntersection(double[:] coords,
                                                                                                                                               x2=eN_coords[0],
                                                                                                                                               y2=eN_coords[1],
                                                                                                                                               z2=eN_coords[2])
-    return nearest_eN, b_i_last
+    result[0] = nearest_eN
+    result[1] = b_i_last
+    return result
 
 cdef int pyxGetLocalNearestElementAroundNode(double[:] coords,
                                              int[:] nodeElementOffsets,
@@ -1190,6 +1297,7 @@ cdef int pyxGetLocalNearestElementAroundNode(double[:] coords,
     cdef double min_dist
     cdef double[:] eN_coords
     cdef int i = 0
+    cdef int eN
     for eN in nodeElementsArray[nodeElementOffsets[node]:nodeElementOffsets[node+1]]:
         eN_coords = elementBarycentersArray[eN]
         dist = (eN_coords[0]-coords[0])*(eN_coords[0]-coords[0])+\
@@ -1207,7 +1315,8 @@ cdef void pyxUpdateElementBoundaryNormalsTetra(double[:,:,:] elementBoundaryNorm
                                                int[:,:] elementBoundariesArray,
                                                int[:,:] elementBoundaryNodesArray,
                                                double[:,:] elementBoundaryBarycentersArray,
-                                               double[:,:] elementBarycentersArray):
+                                               double[:,:] elementBarycentersArray,
+                                               int nElements):
     cdef double[:] normal_check = np.zeros(3)
     cdef double[:] U = np.zeros(3)
     cdef double[:] V = np.zeros(3)
@@ -1216,8 +1325,10 @@ cdef void pyxUpdateElementBoundaryNormalsTetra(double[:,:,:] elementBoundaryNorm
     cdef double[:] node0
     cdef double[:] node1
     cdef double[:] node2
-    for i in range(len(elementBoundaryNormalsArray_)):
-        for j in range(len(elementBoundaryNormalsArray_[i])):
+    cdef int i
+    cdef int j
+    for i in range(nElements):
+        for j in range(4):
             b_i = elementBoundariesArray[i, j]
             node0 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],0]]
             node1 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],1]]
@@ -1248,15 +1359,18 @@ cdef void pyxUpdateElementBoundaryNormalsTriangle(double[:,:,:] elementBoundaryN
                                                   int[:,:] elementBoundariesArray,
                                                   int[:,:] elementBoundaryNodesArray,
                                                   double[:,:] elementBoundaryBarycentersArray,
-                                                  double[:,:] elementBarycentersArray):
+                                                  double[:,:] elementBarycentersArray,
+                                                  int nElements):
     cdef double[:] normal_check = np.zeros(3)
     cdef double[:] U = np.zeros(3)
     cdef double lengthn
     cdef int b_i
     cdef double[:] node0
     cdef double[:] node1
-    for i in range(len(elementBoundaryNormalsArray_)):
-        for j in range(len(elementBoundaryNormalsArray_[i])):
+    cdef int i
+    cdef int j
+    for i in range(nElements):
+        for j in range(3):
             b_i = elementBoundariesArray[i, j]
             node0 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],0]]
             node1 = nodeArray[elementBoundaryNodesArray[elementBoundariesArray[i, j],1]]
@@ -1275,15 +1389,15 @@ cdef void pyxUpdateElementBoundaryNormalsTriangle(double[:,:,:] elementBoundaryN
 
 cdef void cyUpdateElementVolumesTriangle(double[:] elementVolumesArray_,
                                          int[:,:] elementNodesArray,
-                                         double[:,:] nodeArray):
+                                         double[:,:] nodeArray,
+                                         int nElements):
     cdef double[:] nA
     cdef double[:] nB
     cdef double[:] nC
     cdef double base
     cdef double height
-    cdef int nEl = len(elementVolumesArray_)
     cdef int eN
-    for eN in range(nEl):
+    for eN in range(nElements):
         nA = nodeArray[elementNodesArray[eN, 0]]
         nB = nodeArray[elementNodesArray[eN, 1]]
         nC = nodeArray[elementNodesArray[eN, 2]]
@@ -1300,7 +1414,8 @@ cdef double cyGetElementVolumeTriangle(double[:] nA,
 
 cdef void cyUpdateElementVolumesTetra(double[:] elementVolumesArray_,
                                       int[:,:] elementNodesArray,
-                                      double[:,:] nodeArray):
+                                      double[:,:] nodeArray,
+                                      int nElements):
     cdef double[:] nA
     cdef double[:] nB
     cdef double[:] nC
@@ -1309,9 +1424,8 @@ cdef void cyUpdateElementVolumesTetra(double[:] elementVolumesArray_,
     cdef double height_tri
     cdef double area_tri
     cdef double height_tetra
-    cdef int nEl = len(elementVolumesArray_)
     cdef int eN
-    for eN in range(nEl):
+    for eN in range(nElements):
         nA = nodeArray[elementNodesArray[eN, 0]]
         nB = nodeArray[elementNodesArray[eN, 1]]
         nC = nodeArray[elementNodesArray[eN, 2]]
@@ -1324,10 +1438,12 @@ cdef void cyUpdateElementVolumesTetra(double[:] elementVolumesArray_,
 
 cdef void cyUpdateElementBarycenters(double[:,:] elementBarycentersArray_,
                                      int[:,:] elementNodesArray,
-                                     double[:,:] nodeArray):
-    cdef int nEl = len(elementBarycentersArray_)
+                                     double[:,:] nodeArray,
+                                     int nElements):
     cdef int eN
-    for eN in range(nEl):
+    cdef int iN
+    cdef int node
+    for eN in range(nElements):
         elementBarycentersArray_[eN, :] = 0.
         for iN, node in enumerate(elementNodesArray[eN]):
             elementBarycentersArray_[eN, 0] += nodeArray[node, 0]
@@ -1341,13 +1457,15 @@ cdef np.ndarray cyGetCornerNodesTriangle(double[:,:] nodeArray,
                                          int[:] nodeStarArray,
                                          int[:] nodeStarOffsets,
                                          int[:] nodeMaterialTypes,
-                                         int nNodes_owned):
+                                         int nNodes):
     cdef np.ndarray cornerNodesArray = np.array([], dtype=np.int32)
     cdef double[:] vec = np.zeros(3)
     cdef double[:] vec2 = np.zeros(3)
     cdef double vec_dist
     cdef double dot
-    for node in range(nNodes_owned):
+    cdef int node
+    cdef int nOffset
+    for node in range(nNodes):
         if nodeMaterialTypes[node] != 0:
             vec[:] = 0.
             for nOffset in range(nodeStarOffsets[node],
@@ -1377,7 +1495,7 @@ cdef np.ndarray cyGetCornerNodesTriangle(double[:,:] nodeArray,
                             cornerNodesArray = np.append(cornerNodesArray, node)
     return cornerNodesArray
 
-cdef tuple cyCheckOwnedVariable(int variable_nb_local,
+cdef int[:] cyCheckOwnedVariable(int variable_nb_local,
                                 int rank,
                                 int nVariables_owned,
                                 int[:] variableNumbering_subdomain2global,
@@ -1386,6 +1504,8 @@ cdef tuple cyCheckOwnedVariable(int variable_nb_local,
     cdef int variable_nb_global
     cdef int new_variable_nb_local
     cdef int new_rank = -2  # initialised as fake rank
+    cdef int i
+    cdef int[:] result = np.array([variable_nb_local, new_rank], dtype=np.int32)
     if variable_nb_local >= nVariables_owned:
         # change rank ownership
         variable_nb_global = variableNumbering_subdomain2global[variable_nb_local]
@@ -1401,4 +1521,109 @@ cdef tuple cyCheckOwnedVariable(int variable_nb_local,
     else:
         new_rank = rank
         new_variable_nb_local = variable_nb_local
-    return new_variable_nb_local, new_rank
+    result[0] = new_variable_nb_local
+    result[1] = new_rank
+    return result
+
+cdef double[:] cyFindBoundaryDirectionTriangle(int node,
+                                               double[:,:] nodeArray,
+                                               int[:] nodeStarOffsets,
+                                               int[:] nodeStarArray,
+                                               int[:] nodeMaterialTypes):
+    cdef double[:] fixed_dir = np.zeros(3)
+    cdef double fixed_dir_dist
+    cdef int nOffset
+    for nOffset in range(nodeStarOffsets[node],
+                            nodeStarOffsets[node+1]):
+        if nodeMaterialTypes[nodeStarArray[nOffset]] != 0:
+            fixed_dir[0] = nodeArray[node, 0]-nodeArray[nodeStarArray[nOffset], 0]
+            fixed_dir[1] = nodeArray[node, 1]-nodeArray[nodeStarArray[nOffset], 1]
+            fixed_dir[2] = nodeArray[node, 2]-nodeArray[nodeStarArray[nOffset], 2]
+            fixed_dir_dist = np.sqrt(fixed_dir[0]**2+fixed_dir[1]**2+fixed_dir[2]**2)
+            fixed_dir[0] = fixed_dir[0]/fixed_dir_dist
+            fixed_dir[1] = fixed_dir[1]/fixed_dir_dist
+            fixed_dir[2] = fixed_dir[2]/fixed_dir_dist
+            fixed_dir[0] = abs(fixed_dir[0])
+            fixed_dir[1] = abs(fixed_dir[1])
+            fixed_dir[2] = abs(fixed_dir[2])
+    return fixed_dir
+
+cdef double[:] cyFindBoundaryDirectionTetra(int node,
+                                            double[:,:] nodeArray,
+                                            int[:] nodeStarOffsets,
+                                            int[:] nodeStarArray,
+                                            int[:] nodeMaterialTypes):
+    cdef double[:] normal_check = np.zeros(3)
+    cdef double[:] U = np.zeros(3)
+    cdef double[:] V = np.zeros(3)
+    cdef double lengthn
+    cdef int b_i
+    cdef double[:] node0 = np.zeros(3)
+    cdef double[:] node1 = np.zeros(3)
+    cdef double[:] node2 = np.zeros(3)
+    cdef double[:] fixed_dir = np.zeros(3)
+    cdef double nNode = 0
+    cdef int nOffset
+    from proteus.mprans import MeshSmoothing as ms
+    # get normal
+    for nOffset in range(nodeStarOffsets[node],
+                         nodeStarOffsets[node+1]):
+        if nodeMaterialTypes[nodeStarArray[nOffset]] != 0:
+            nNode += 1
+            if nNode == 1:
+                node0 = nodeArray[nodeStarArray[nOffset]]
+            elif nNode == 2:
+                node1 = nodeArray[nodeStarArray[nOffset]]
+            elif nNode == 3:
+                node3 = nodeArray[nodeStarArray[nOffset]]
+    assert nNode > 3, 'error looking for fixed_dir'
+    U[0] = node1[0]-node0[0]
+    U[1] = node1[1]-node0[1]
+    U[2] = node1[2]-node0[2]
+    V[0] = node2[0]-node0[0]
+    V[1] = node2[1]-node0[1]
+    V[2] = node2[2]-node0[2]
+    fixed_dir[0] = U[1]*V[2]-U[2]*V[1]
+    fixed_dir[1] = U[2]*V[0]-U[0]*V[2]
+    fixed_dir[2] = U[0]*V[1]-U[1]*V[0]
+    fixed_dir_dist = np.sqrt(fixed_dir[0]**2+fixed_dir[1]**2+fixed_dir[2]**2)
+    fixed_dir[0] /= fixed_dir_dist
+    fixed_dir[1] /= fixed_dir_dist
+    fixed_dir[2] /= fixed_dir_dist
+    fixed_dir[0] = abs(1-fixed_dir[0])
+    fixed_dir[1] = abs(1-fixed_dir[1])
+    fixed_dir[2] = abs(1-fixed_dir[2])
+    return fixed_dir
+
+cdef int[:] cyGetGlobalVariable(int variable_nb_local,
+                                int nVariables_owned,
+                                int[:] variableNumbering_subdomain2global,
+                                int[:] variableOffsets_subdomain_owned):
+    cdef int nSubdomains = len(variableOffsets_subdomain_owned)-1
+    cdef int variable_nb_global
+    cdef int new_rank = -2  # initialised as fake rank
+    # change rank ownership
+    variable_nb_global = variableNumbering_subdomain2global[variable_nb_local]
+    cdef int[:] result = np.array([variable_nb_global, new_rank], dtype=np.int32)
+    for i in range(nSubdomains+1):
+        if variableOffsets_subdomain_owned[i] > variable_nb_global:
+            # changing processor
+            if new_rank == -2:
+                new_rank = i-1
+    variable_nb_global = variableNumbering_subdomain2global[variable_nb_local]
+    result[0] = variable_nb_global
+    result[1] = new_rank
+    return result
+
+cdef int cyGetLocalVariable(int variable_nb_global,
+                            int rank,
+                            int nVariables_owned,
+                            int[:] variableNumbering_subdomain2global,
+                            int[:] variableOffsets_subdomain_owned):
+    cdef int new_variable_nb_local
+    if not variableOffsets_subdomain_owned[rank] <= variable_nb_global < variableOffsets_subdomain_owned[rank+1]:
+        print('wrong global varibale nb', rank, variable_nb_global, variableOffsets_subdomain_owned[rank])
+        import pdb; pdb.set_trace()
+    else:
+        new_variable_nb_local = variable_nb_global-variableOffsets_subdomain_owned[rank]
+    return new_variable_nb_local
