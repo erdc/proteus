@@ -15,8 +15,7 @@ elif '_so.pyc' in name_so[-7:]:
 else:
     raise NameError, 'Split operator module must end with "_so.py"'
 
-case = __import__(name)
-Context.setFromModule(case)
+Context.setFromModule(movemesh_monitor)
 ct = Context.get()
 
 # List of p/n files
