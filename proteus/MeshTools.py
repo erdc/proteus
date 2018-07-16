@@ -4785,6 +4785,18 @@ Number of nodes : %d\n""" % (self.nElements_global,
         for nN in range(nNodes):
             self.nodeDiametersArray[nN] /= self.nodeSupportArray[nN]
 
+    def set_area_array(self):
+        self.area_array = np.zeros(self.nElements_global)
+        for eN in range(self.nElements_global):
+            self.area_array[eN] = self._calc_quad_area(eN)
+            
+    def get_area_array(self):
+        try:
+            return self.area_array
+        except AttributeError:
+            self.set_area_array()
+            return self.area_array
+        
     @staticmethod
     def _calc_pt_distance(pt1,pt2):
         """ Calculate the distance between two points.
