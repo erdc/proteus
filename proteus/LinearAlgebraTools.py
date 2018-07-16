@@ -233,6 +233,36 @@ def petsc4py_mat_has_pressure_null_space(A):
     else:
         return False
 
+def petsc4py_mat_has_constant_null_space(A):
+    """
+    Checks whether a PETSc4Py sparse matrix has a constant
+    null space.
+
+    Parameters
+    ----------
+    A : :class:`p4pyPETSc.Mat`
+
+    Returns
+    -------
+    does : bool
+       Boolean variable indicating whether the pressure term
+       creates a null space.
+
+    Notes
+    -----
+    This function was written mainly for debugging purposes and should
+    not be used for large matrices.
+    """
+    x = numpy.ones(A.getSize()[1])
+    y = numpy.zeros(A.getSize()[0])
+    x_petsc = p4pyPETSc.Vec().createWithArray(x)
+    y_petsc = p4pyPETSc.Vec().createWithArray(y)
+    A.mult(x_petsc,y_petsc)
+    if y_petsc.norm() < 1e-12:
+        return True
+    else:
+        return False
+
 def superlu_sparse_2_dense(sparse_matrix,output=False):
     """ Converts a sparse superluWrapper into a dense matrix.
 
@@ -996,13 +1026,15 @@ class InvOperatorShell(OperatorShell):
         """
         comm = Comm.get()
         # Assign number of unknowns
+        num_dof = self.getSize()
+        self.strong_dirichlet_DOF = [i for i in self.strong_dirichlet_DOF if i< num_dof]
         try:
             num_known_dof = len(self.strong_dirichlet_DOF)
         except AttributeError:
             print "ERROR - strong_dirichlet_DOF have not been " \
                   " assigned for this inverse operator object."
             exit()
-        num_dof = self.getSize()
+
         num_unknown_dof = num_dof - num_known_dof
         # Use boolean mask to collect unknown DOF indices
         self.dof_indices = numpy.arange(num_dof,
@@ -1100,18 +1132,11 @@ class LSCInv_shell(InvOperatorShell):
             self._create_constant_nullspace()
             self.BQinvBt.setNullSpace(self.const_null_space)
 
-        self.kspBQinvBt = p4pyPETSc.KSP().create()
-        self.kspBQinvBt.setOperators(self.BQinvBt,self.BQinvBt)
-        self.kspBQinvBt.setOptionsPrefix('innerLSCsolver_BTinvBt_')
-        self.kspBQinvBt.pc.setUp()
-        self.kspBQinvBt.setFromOptions()
-        self.kspBQinvBt.setUp()
+        self.kspBQinvBt = self.create_petsc_ksp_obj('innerLSCsolver_BTinvBt_',
+                                                    self.BQinvBt)
 
-        # initialize solver for Qv
-        self.kspQv = p4pyPETSc.KSP().create()
-        self.kspQv.setOperators(self.Qv,self.Qv)
-        self.kspQv.setOptionsPrefix('innerLSCsolver_T_')
-        self.kspQv.setFromOptions()
+        self.kspQv = self.create_petsc_ksp_obj('innerLSCsolver_T_',
+                                               self.Qv)
 
         convergenceTest = 'r-true'
         if convergenceTest == 'r-true':
@@ -1120,7 +1145,6 @@ class LSCInv_shell(InvOperatorShell):
             self.kspBQinvBt.setConvergenceTest(self._converged_trueRes)
         else:
             self.r_work = None
-        self.kspBQinvBt.setUp()
 
     def apply(self,A,x,y):
         """ Apply the LSC inverse operator
@@ -1150,14 +1174,16 @@ class LSCInv_shell(InvOperatorShell):
         self.kspBQinvBt.solve(x_tmp,tmp1)
         self.B.multTranspose(tmp1,tmp2)
         self.kspQv.solve(tmp2,tmp3)
+        tmp3.pointwiseDivide(tmp2,self.kspQv.getOperators()[0].getDiagonal())
         self.F.mult(tmp3,tmp2)
         self.kspQv.solve(tmp2,tmp3)
+        tmp3.pointwiseDivide(tmp2,self.kspQv.getOperators()[0].getDiagonal())
         self.B.mult(tmp3,tmp1)
         if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
-            self.const_null_space.remove(x_tmp)
+            self.const_null_space.remove(tmp1)
         self.kspBQinvBt.solve(tmp1,y)
-        assert numpy.isnan(y.norm())==False, "Applying the schur complement \
-resulted in not-a-number."
+        assert numpy.isnan(y.norm())==False, "Applying the LSC schur complement \
+        resulted in not-a-number."
 
     def _constructBQinvBt(self):
         """ Private method repsonsible for building BQinvBt """
@@ -1165,6 +1191,122 @@ resulted in not-a-number."
         QinvBt = self.Qv_inv.matMult(self.Bt)
         self.BQinvBt = self.B.matMult(QinvBt)
 
+class LSC_stabilized_Inv_shell(InvOperatorShell):
+    """ Shell class for the LSC Inverse Preconditioner
+
+    This class creates a shell for the least-squares commutator (LSC)
+    preconditioner, where
+    :math:`M_{s}= (B \hat{Q^{-1}_{v}} B^{'}) (B \hat{Q^{-1}_{v}} F
+    \hat{Q^{-1}_{v}} B^{'})^{-1} (B \hat{Q^{-1}_{v}} B^{'})`
+    is used to approximate the Schur complement.
+    *** ARB - update documentation and add source ***
+    """
+    def __init__(self, Qv, B, Bt, F, C1, C2):
+        """Initializes the LSC inverse operator.
+
+        Parameters
+        ----------
+        Qv : petsc4py matrix object
+            The diagonal elements of the velocity mass matrix.
+        B : petsc4py matrix object
+            The discrete divergence operator.
+        Bt : petsc4py matrix object
+            The discrete gradient operator.
+        F : petsc4py matrix object
+            The A-block of the linear system.
+        C : petsc4py matrix object
+            The stabilization block of the matrix
+        """
+        # TODO - Find a good way to assert that Qv is diagonal
+
+        self.Qv = Qv
+        self.B = B
+        self.Bt = Bt
+        self.F = F
+        self.C1 = C1
+        self.C2 = C2
+
+        # calculate alpha and gamma
+        self._constructBQinvBt_C()
+        self._options = p4pyPETSc.Options()
+
+        if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
+            self._create_constant_nullspace()
+
+        self.kspBQinvBt_C = p4pyPETSc.KSP().create()
+        self.kspBQinvBt_C.setOperators(self.BQinvBt_C,self.BQinvBt_C)
+        self.kspBQinvBt_C.setOptionsPrefix('innerLSCsolver_BTinvBt_')
+        self.kspBQinvBt_C.pc.setUp()
+        self.kspBQinvBt_C.setFromOptions()
+        self.kspBQinvBt_C.setUp()
+
+        # initialize solver for Qv
+        self.kspQv = p4pyPETSc.KSP().create()
+        self.kspQv.setOperators(self.Qv,self.Qv)
+        self.kspQv.setOptionsPrefix('innerLSCsolver_T_')
+        self.kspQv.setFromOptions()
+
+        convergenceTest = 'r-true'
+        if convergenceTest == 'r-true':
+            self.r_work = self.BQinvBt_C.getVecLeft()
+            self.rnorm0 = None
+            self.kspBQinvBt_C.setConvergenceTest(self._converged_trueRes)
+        else:
+            self.r_work = None
+        self.kspBQinvBt_C.setUp()
+
+    def apply(self,A,x,y):
+        """ Apply the LSC inverse operator
+
+        Parameters
+        ----------
+        A : NULL
+            A placeholder for internal function PETSc functions.
+        x : :class:`p4pyPETSc.Vec`
+            Vector which LSC operator is being applied to.
+
+        Returns
+        --------
+        y : :class:`p4pyPETSc.Vec`
+            Result of LSC acting on x.
+        """
+        # create temporary vectors
+        B_sizes = self.B.getSizes()
+        x_tmp = p4pyPETSc.Vec().create()
+        x_tmp = x.copy()
+        tmp1 = self._create_tmp_vec(B_sizes[0])
+        tmp4 = self._create_tmp_vec(B_sizes[0])        
+        tmp2 = self._create_tmp_vec(B_sizes[1])
+        tmp3 = self._create_tmp_vec(B_sizes[1])
+#        import pdb ; pdb.set_trace()
+
+        if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
+            self.const_null_space.remove(x_tmp)
+        self.kspBQinvBt_C.solve(x_tmp,tmp1)
+
+#        import pdb ; pdb.set_trace()
+        self.B.multTranspose(tmp1,tmp2)
+        self.C2.mult(tmp1,tmp4)
+        self.kspQv.solve(tmp2,tmp3)
+        self.F.mult(tmp3,tmp2)
+        self.kspQv.solve(tmp2,tmp3)
+        self.B.mult(tmp3,tmp1)
+        tmp1.axpy(1.0, tmp4)
+
+        if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
+            self.const_null_space.remove(tmp1)
+        self.kspBQinvBt_C.solve(tmp1,y)
+        assert numpy.isnan(y.norm())==False, "Applying the LSC schur complement \
+        resulted in not-a-number."
+
+    def _constructBQinvBt_C(self):
+        self.Qv_inv = petsc_create_diagonal_inv_matrix(self.Qv)
+#        import pdb ; pdb.set_trace()
+        QinvBt = self.Qv_inv.matMult(self.Bt)
+        self.BQinvBt_C = self.B.matMult(QinvBt)
+#        import pdb ; pdb.set_trace()
+        self.BQinvBt_C.axpy(-1., self.C1)
+        
 class MatrixShell(ProductOperatorShell):
     """ A shell class for a matrix. """
     def __init__(self,A):

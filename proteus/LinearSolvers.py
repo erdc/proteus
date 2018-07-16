@@ -1,4 +1,4 @@
-"""
+r"""
 A hierarchy of classes for linear algebraic system solvers.
 
 .. inheritance-diagram:: proteus.LinearSolvers
@@ -457,6 +457,8 @@ class KSP_petsc4py(LinearSolver):
         logEvent("KSP atol %e rtol %e" % (self.ksp.atol,self.ksp.rtol))
 
     def prepare(self,b=None):
+        pc_setup_stage = p4pyPETSc.Log.Stage('pc_setup_stage')
+        pc_setup_stage.push()
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
         if self.petsc_L.proteus_jacobian is not None:
@@ -480,8 +482,11 @@ class KSP_petsc4py(LinearSolver):
                 self.preconditioner.setUp(self.ksp)
         self.ksp.setUp()
         self.ksp.pc.setUp()
+        pc_setup_stage.pop()
 
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
+        solve_stage = p4pyPETSc.Log.Stage('lin_solve')
+        solve_stage.push()
         if par_b.proteus2petsc_subdomain is not None:
             par_b.proteus_array[:] = par_b.proteus_array[par_b.petsc2proteus_subdomain]
             par_u.proteus_array[:] = par_u.proteus_array[par_u.petsc2proteus_subdomain]
@@ -511,6 +516,7 @@ class KSP_petsc4py(LinearSolver):
             except:
                 pass
 
+#        import pdb ; pdb.set_trace()
         self.ksp.solve(par_b,par_u)
 
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
@@ -525,6 +531,8 @@ class KSP_petsc4py(LinearSolver):
         if par_b.proteus2petsc_subdomain is not None:
             par_b.proteus_array[:] = par_b.proteus_array[par_b.proteus2petsc_subdomain]
             par_u.proteus_array[:] = par_u.proteus_array[par_u.proteus2petsc_subdomain]
+        solve_stage.pop()
+
     def converged(self,r):
         """
         decide on convention to match norms, convergence criteria
@@ -696,11 +704,25 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == SimpleNavierStokes3D:
                 logEvent("NAHeader Preconditioner SimpleNavierStokes" )
-                self.preconditioner = SimpleNavierStokes3D(par_L,prefix)
+                try:
+                    self.preconditioner = SimpleNavierStokes3D(par_L,
+                                                               prefix,
+                                                               velocity_block_preconditioner=self.preconditionerOptions[0])
+                except IndexError:
+                    logEvent("Preconditioner options not specified, using defaults")
+                    self.preconditioner = SimpleNavierStokes3D(par_L,
+                                                               prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleNavierStokes2D:
                 logEvent("NAHeader Preconditioner SimpleNavierStokes" )
-                self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
+                try:
+                    self.preconditioner = SimpleNavierStokes2D(par_L,
+                                                               prefix,
+                                                               velocity_block_preconditioner=self.preconditionerOptions[0])
+                except IndexError:
+                    logEvent("Preconditioner options not specified, using defaults")
+                    self.preconditioner = SimpleNavierStokes2D(par_L,
+                                                               prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Sp:
                 logEvent("NAHeader Preconditioner selfp" )
@@ -720,12 +742,19 @@ class KSP_petsc4py(LinearSolver):
                                                                    numerical_viscosity=self.preconditionerOptions[1],
                                                                    lumped=self.preconditionerOptions[2],
                                                                    num_chebyshev_its=self.preconditionerOptions[3],
-                                                                   laplace_null_space=self.preconditionerOptions[4])
+                                                                   laplace_null_space=self.preconditionerOptions[4],
+                                                                   velocity_block_preconditioner=self.preconditionerOptions[5])
                 except IndexError:
                     logEvent("Preconditioner options not specified, using defaults")
                     self.preconditioner = NavierStokes_TwoPhasePCD(par_L,
                                                                    prefix,
                                                                    self.bdyNullSpace)
+                self.pc = self.preconditioner.pc
+            elif Preconditioner == NavierStokes_TwoPhaseLSC:
+                logEvent("NA Head Preconditioner TwoPhaseLSC")
+                self.preconditioner = NavierStokes_TwoPhaseLSC(par_L,
+                                                               prefix,
+                                                               self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_LSC:
                 logEvent("NAHeader Preconditioner LSC")
@@ -810,6 +839,101 @@ class SchurOperatorConstructor:
             for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],range(rowptr_petsc[i],rowptr_petsc[i+1])):
                 nzval_petsc[k] = petsc_a[i,j]
         return SparseMat(transport.dim,transport.dim,nzval_petsc.shape[0], nzval_petsc, colind_petsc, rowptr_petsc)
+
+    def initializeLSCStab_C1(self):
+        """ Initialize a discreate operator.
+
+        Input
+        -----
+        SparseMat : superlu mat
+
+        Returns
+        -------
+        discrete_op : matrix
+        """
+        import Comm
+        comm = Comm.get()
+        self.opBuilder.attachLSCStabilizationC1()
+        par_info = self.linear_smoother.L.pde.par_info
+        if comm.size() == 1:
+            self.two_phase_LSC_stabC1 = ParMat_petsc4py(self.opBuilder.LSC_stab_c1,
+                                                        par_info.par_bs,
+                                                        par_info.par_n,
+                                                        par_info.par_N,
+                                                        par_info.par_nghost,
+                                                        par_info.subdomain2global)
+        else:
+            mixed = False
+            if mixed == True:
+                self.petsc_two_phase_LSC_stabC1 = self._initializeMat(self.opBuilder.LSC_stab_c1)
+                self.two_phase_LSC_stabC1 = ParMat_petsc4py(self.petsc_two_phase_LSC_stabC1,
+                                                        par_info.par_bs,
+                                                        par_info.par_n,
+                                                        par_info.par_N,
+                                                        par_info.par_nghost,
+                                                        par_info.petsc_subdomain2global_petsc,
+                                                        pde=self.L.pde,
+                                                        proteus_jacobian=self.opBuilder.LSC_stab_c1,
+                                                        nzval_proteus2petsc=par_info.nzval_proteus2petsc)
+            else:
+                self.two_phase_LSC_stabC1 = ParMat_petsc4py(self.opBuilder.LSC_stab_c1,
+                                                        par_info.par_bs,
+                                                        par_info.par_n,
+                                                        par_info.par_N,
+                                                        par_info.par_nghost,
+                                                        par_info.subdomain2global,
+                                                        pde=self.L.pde)
+        self.two_phase_LSC_stabC1_csr_rep = self.two_phase_LSC_stabC1.csr_rep
+        self.two_phase_LSC_stabC1_csr_rep_local = self.two_phase_LSC_stabC1.csr_rep_local
+        return self.two_phase_LSC_stabC1
+
+    def initializeLSCStab_C2(self):
+        """ Initialize a discreate operator.
+
+        Input
+        -----
+        SparseMat : superlu mat
+
+        Returns
+        -------
+        discrete_op : matrix
+        """
+        import Comm
+        comm = Comm.get()
+        self.opBuilder.attachLSCStabilizationC2()
+        par_info = self.linear_smoother.L.pde.par_info
+        if comm.size() == 1:
+            self.two_phase_LSC_stabC2 = ParMat_petsc4py(self.opBuilder.LSC_stab_c2,
+                                                        par_info.par_bs,
+                                                        par_info.par_n,
+                                                        par_info.par_N,
+                                                        par_info.par_nghost,
+                                                        par_info.subdomain2global)
+        else:
+            mixed = False
+            if mixed == True:
+                self.petsc_two_phase_LSC_stabC2 = self._initializeMat(self.opBuilder.LSC_stab_c2)
+                self.two_phase_LSC_stabC2 = ParMat_petsc4py(self.petsc_two_phase_LSC_stabC2,
+                                                        par_info.par_bs,
+                                                        par_info.par_n,
+                                                        par_info.par_N,
+                                                        par_info.par_nghost,
+                                                        par_info.petsc_subdomain2global_petsc,
+                                                        pde=self.L.pde,
+                                                        proteus_jacobian=self.opBuilder.LSC_stab_c2,
+                                                        nzval_proteus2petsc=par_info.nzval_proteus2petsc)
+            else:
+                self.two_phase_LSC_stabC2 = ParMat_petsc4py(self.opBuilder.LSC_stab_c2,
+                                                        par_info.par_bs,
+                                                        par_info.par_n,
+                                                        par_info.par_N,
+                                                        par_info.par_nghost,
+                                                        par_info.subdomain2global,
+                                                        pde=self.L.pde)
+        self.two_phase_LSC_stabC2_csr_rep = self.two_phase_LSC_stabC2.csr_rep
+        self.two_phase_LSC_stabC2_csr_rep_local = self.two_phase_LSC_stabC2.csr_rep_local
+        return self.two_phase_LSC_stabC2
+    
 
     def initializeTwoPhaseCp_rho(self):
         """Initialize a two phase scaled advection operator Cp.
@@ -897,8 +1021,50 @@ class SchurOperatorConstructor:
         self.two_phase_Ap_inv_csr_rep_local = self.two_phase_Ap_inv.csr_rep_local
         return self.two_phase_Ap_inv
 
+    def initializeTwoPhaseQ_visc(self):
+        """ Initialize a two phase viscosity mass matrix.
+
+        Returns
+        -------
+        two_phase_Qp_visc :
+        """
+        import Comm
+        comm = Comm.get()
+        self.opBuilder.attachViscosityScaledMassOperator()
+        par_info = self.linear_smoother.L.pde.par_info
+        if comm.size() == 1:
+            self.two_phase_Q_viscosity_scaled = ParMat_petsc4py(self.opBuilder.TPViscosityScaledMassOperator,
+                                                                par_info.par_bs,
+                                                                par_info.par_n,
+                                                                par_info.par_N,
+                                                                par_info.par_nghost,
+                                                                par_info.subdomain2global)
+        else:
+            mixed = False
+            if mixed == True:
+                self.petsc_two_phase_Q_viscosity_scaled = self._initializeMat(self.opBuilder.TPViscosityScaledMassOperator)
+                self.two_phase_Q_viscosity_scaled = ParMat_petsc4py(self.petsc_two_phase_Q_viscosity_scaled,
+                                                                    par_info.par_bs,
+                                                                    par_info.par_n,
+                                                                    par_info.par_N,
+                                                                    par_info.par_nghost,
+                                                                    par_info.petsc_subdomain2global_petsc,
+                                                                    pde=self.L.pde,
+                                                                    proteus_jacobian=self.opBuilder.TPViscosityScaledMassOperator,
+                                                                    nzval_proteus2petsc=par_info.nzval_proteus2petsc)
+            else:
+                self.two_phase_Q_viscosity_scaled = ParMat_petsc4py(self.opBuilder.TPViscosityScaledMassOperator,
+                                                                    par_info.par_bs,
+                                                                    par_info.par_n,
+                                                                    par_info.par_N,
+                                                                    par_info.par_nghost,
+                                                                    par_info.subdomain2global)
+        self.two_phase_Q_viscosity_scaled_csr_rep = self.two_phase_Q_viscosity_scaled.csr_rep
+        self.two_phase_Q_viscosity_scaled_csr_rep_local = self.two_phase_Q_viscosity_scaled.csr_rep_local
+        return self.two_phase_Q_viscosity_scaled
+
     def initializeTwoPhaseQp_rho(self):
-        """Initialize a two phase scaled laplace operator Ap.
+        """Initialize a two phase scaled mass matrix.
 
         Returns
         -------
@@ -940,7 +1106,7 @@ class SchurOperatorConstructor:
         return self.two_phase_Qp_scaled
 
     def initializeTwoPhaseInvScaledQp(self):
-        """Initialize a two phase scaled laplace operator Ap.
+        """Initialize a two phase scaled mass operator Qp.
 
         Returns
         -------
@@ -1123,7 +1289,7 @@ class SchurOperatorConstructor:
             calculated as a lumped matrix (True) or as a full
             matrix (False).
         output_matrix : bool
-            Save updated laplace operator.
+            Save updated mass operator.
         """
         self.opBuilder.updateTwoPhaseMassOperator_rho(density_scaling = density_scaling,
                                                       lumped = lumped)
@@ -1138,6 +1304,72 @@ class SchurOperatorConstructor:
         self.two_phase_Qp_scaled.assemblyEnd()
         if output_matrix is True:
             self._exportMatrix(self.two_phase_Qp_scaled,'Qp_scaled')
+
+    def updateTwoPhaseLSC_StabC1(self,
+                                 output_matrix=False):
+        self.opBuilder.updateLSCStabilizationC1()
+        self.two_phase_LSC_stabC1.zeroEntries()
+        if self.two_phase_LSC_stabC1.proteus_jacobian != None:
+            self.two_phase_LSC_stabC1[2][self.two_phase_LSC_stabC1.nzval_proteus2petsc] = self.two_phase_LSC_stabC1.proteus_csr_rep[2][:]
+        self.two_phase_LSC_stabC1.setValuesLocalCSR(self.two_phase_LSC_stabC1_csr_rep_local[0],
+                                                    self.two_phase_LSC_stabC1_csr_rep_local[1],
+                                                    self.two_phase_LSC_stabC1_csr_rep_local[2],
+                                                    p4pyPETSc.InsertMode.INSERT_VALUES)
+        self.two_phase_LSC_stabC1.assemblyBegin()
+        self.two_phase_LSC_stabC1.assemblyEnd()
+        if output_matrix is True:
+            self._exportMatrix(self.two_phase_LSC_stabC1,'LSC_stabC1')
+
+    def updateTwoPhaseLSC_StabC2(self,
+                                 output_matrix=False):
+        self.opBuilder.updateLSCStabilizationC2()
+        self.two_phase_LSC_stabC2.zeroEntries()
+        if self.two_phase_LSC_stabC2.proteus_jacobian != None:
+            self.two_phase_LSC_stabC2[2][self.two_phase_LSC_stabC2.nzval_proteus2petsc] = self.two_phase_LSC_stabC2.proteus_csr_rep[2][:]
+        self.two_phase_LSC_stabC2.setValuesLocalCSR(self.two_phase_LSC_stabC2_csr_rep_local[0],
+                                                    self.two_phase_LSC_stabC2_csr_rep_local[1],
+                                                    self.two_phase_LSC_stabC2_csr_rep_local[2],
+                                                    p4pyPETSc.InsertMode.INSERT_VALUES)
+        self.two_phase_LSC_stabC2.assemblyBegin()
+        self.two_phase_LSC_stabC2.assemblyEnd()
+        if output_matrix is True:
+            self._exportMatrix(self.two_phase_LSC_stabC2,'LSC_stabC2')
+
+        
+    def updateTwoPhaseQ_visc(self,
+                             viscosity_scaling = True,
+                             numerical_viscosity = True,
+                             lumped = True,
+                             output_matrix=False):
+        """Update the two-phase inverse viscosity scaled mass matrix.
+
+        Parameters
+        ----------
+        density : bool
+            Indicates whether the density mass matrix should
+            be scaled with viscosity (True) or 1 (False).
+        lumped : bool
+            Flag indicating whether the mass operator should be
+            calculated as a lumped matrix (True) or as a full
+            matrix (False).
+        output_matrix : bool
+            Save updated Mass operator.
+        """
+        self.opBuilder.updateTwoPhaseMassOperator_visc(viscosity_scaling = viscosity_scaling,
+                                                       numerical_viscosity = numerical_viscosity,
+                                                       lumped = lumped)
+        self.two_phase_Q_viscosity_scaled.zeroEntries()
+        if self.two_phase_Q_viscosity_scaled.proteus_jacobian != None:
+            self.two_phase_Q_viscosity_scaled_csr_rep[2][self.two_phase_Qp_scaled.nzval_proteus2petsc] = self.two_phase_Q_viscosity_scaled.proteus_csr_rep[2][:]
+        self.two_phase_Q_viscosity_scaled.setValuesLocalCSR(self.two_phase_Q_viscosity_scaled_csr_rep_local[0],
+                                                            self.two_phase_Q_viscosity_scaled_csr_rep_local[1],
+                                                            self.two_phase_Q_viscosity_scaled_csr_rep_local[2],
+                                                            p4pyPETSc.InsertMode.INSERT_VALUES)
+        self.two_phase_Q_viscosity_scaled.assemblyBegin()
+        self.two_phase_Q_viscosity_scaled.assemblyEnd()
+        if output_matrix is True:
+            self._exportMatrix(self.two_phase_Q_viscosity_scaled,'Qp_scaled')
+
 
     def updateTwoPhaseInvScaledQp_visc(self,
                                        numerical_viscosity = True,
@@ -1305,9 +1537,19 @@ class petsc_LU(KSP_Preconditioner):
         pass
 
 class DofOrderInfo(object):
-    """Base class for managing DOF ordering information"""
-    def __init__(self, dof_order_type):
+    """Base class for managing DOF ordering information
+
+    Parameters
+    dof_order_type : str
+        This describes the type of dof ordering that will
+        be constructed.  Currently supports: 'blocked'
+        and 'interlaced'.
+    """
+    def __init__(self,
+                 dof_order_type,
+                 model_info = 'no model info set'):
         self.dof_order_type = dof_order_type
+        self.set_model_info(model_info)
 
     def create_DOF_lists(self,
                          ownership_range,
@@ -1315,6 +1557,18 @@ class DofOrderInfo(object):
                          num_components):
         """Virtual function with no implementation"""
         raise NotImplementedError()
+
+    def set_model_info(self, model_info):
+        self._model_info = model_info
+
+    def get_model_info(self, model_info):
+        return self._model_info
+
+    def create_IS(self,
+                  dof_array):
+        idx_set = p4pyPETSc.IS()
+        idx_set.createGeneral(dof_array,comm=p4pyPETSc.COMM_WORLD)
+        return idx_set
 
 class BlockedDofOrderType(DofOrderInfo):
     """Manages the DOF for blocked velocity and pressure ordering.
@@ -1330,8 +1584,12 @@ class BlockedDofOrderType(DofOrderInfo):
     unknowns appear first, followed by all the u-components of the
     velocity and then all the v-components of the velocity etc.
     """
-    def __init__(self, n_DOF_pressure):
-        DofOrderInfo.__init__(self,'blocked')
+    def __init__(self,
+                 n_DOF_pressure,
+                 model_info = 'no model info set'):
+        DofOrderInfo.__init__(self,
+                              'blocked',
+                              model_info = 'no model info set')
         self.n_DOF_pressure = n_DOF_pressure
 
     def create_DOF_lists(self,
@@ -1364,6 +1622,63 @@ class BlockedDofOrderType(DofOrderInfo):
                                    dtype="i")
         return [velocityDOF, pressureDOF]
 
+class VelocityInterlacedDofOrderType(DofOrderInfo):
+    """Manages the DOF for blocked velocity and pressure ordering.
+
+    Parameters
+    ----------
+    n_DOF_pressure : int
+        Number of pressure degrees of freedom.
+
+    Notes
+    -----
+    Blocked degree of freedom ordering occurs when all the pressure
+    unknowns appear first, followed by all the u-components of the
+    velocity and then all the v-components of the velocity etc.
+    """
+    def __init__(self):
+        DofOrderInfo.__init__(self,
+                              'interlaced_velocity',
+                              model_info='model info not set')
+
+    def create_DOF_lists(self,
+                         ownership_range,
+                         num_equations,
+                         num_components):
+        """
+        Build interlaced DOF arrays for the components of the velocity.
+
+        Parameters
+        ----------
+        ownership_range: tuple
+            Local ownership range of DOF
+        num_equations: int
+            Number of local equations
+        num_components: int
+            Number of pressure and velocity components
+
+        Returns
+        -------
+        DOF_output : lst of arrays
+            Each element of this list corresponds to a component of
+            the velocity.  E.g. for u, v, w : [vel_u,vel_v,vel_w].
+        """
+        import Comm
+        comm = Comm.get()
+        vel_comp_DOF = []
+        vel_comp_DOF_vel=[]
+        scaled_ownership_range = ownership_range[0] * (num_components-1) / num_components
+        for i in range(1,num_components):
+            vel_comp_DOF.append(numpy.arange(start=ownership_range[0] + i,
+                                             stop=ownership_range[0] + num_equations,
+                                             step=num_components,
+                                             dtype="i"))
+            vel_comp_DOF_vel.append(numpy.arange(start=scaled_ownership_range + i - 1,
+                                                 stop=scaled_ownership_range + int( num_equations * (num_components-1) / num_components ),
+                                                 step=num_components-1,
+                                                 dtype="i"))
+        return vel_comp_DOF, vel_comp_DOF_vel
+
 class InterlacedDofOrderType(DofOrderInfo):
     """Manages the DOF for interlaced velocity and pressure ordering.
 
@@ -1372,8 +1687,12 @@ class InterlacedDofOrderType(DofOrderInfo):
     Interlaced degrees of occur when the degrees of freedom are
     ordered as (p[0], u[0], v[0], p[1], u[1], ..., p[n], u[n], v[n]).
     """
-    def __init__(self):
-        DofOrderInfo.__init__(self,'interlaced')
+    def __init__(self,
+                 model_info = 'no model info set'):
+        DofOrderInfo.__init__(self,
+                              'interlaced',
+                              model_info = model_info)
+
     def create_DOF_lists(self,
                          ownership_range,
                          num_equations,
@@ -1408,6 +1727,73 @@ class InterlacedDofOrderType(DofOrderInfo):
         velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
         return [velocityDOF, pressureDOF]
 
+    def create_vel_DOF_lists(self,
+                             ownership_range,
+                             num_equations,
+                             num_components):
+        """
+        Build interlaced DOF arrays for the components of the velocity.
+
+        Parameters
+        ----------
+        ownership_range: tuple
+            Local ownership range of DOF
+        num_equations: int
+            Number of local equations
+        num_components: int
+            Number of pressure and velocity components
+
+        Returns
+        -------
+        DOF_output : lst of arrays
+            Each element of this list corresponds to a component of
+            the velocity.  E.g. for u, v, w : [vel_u,vel_v,vel_w].
+        """
+        import Comm
+        comm = Comm.get()
+        vel_comp_DOF = []
+        vel_comp_DOF_vel=[]
+        scaled_ownership_range = ownership_range[0] * (num_components-1) / num_components
+        for i in range(1,num_components):
+            vel_comp_DOF.append(numpy.arange(start=ownership_range[0] + i,
+                                             stop=ownership_range[0] + num_equations,
+                                             step=num_components,
+                                             dtype="i"))
+            vel_comp_DOF_vel.append(numpy.arange(start=scaled_ownership_range + i - 1,
+                                                 stop=scaled_ownership_range + int( num_equations * (num_components-1) / num_components ),
+                                                 step=num_components-1,
+                                                 dtype="i"))
+        return vel_comp_DOF, vel_comp_DOF_vel
+
+    def create_no_dirichlet_bdy_nodes_is(self,
+                                         ownership_range,
+                                         num_equations,
+                                         num_components,
+                                         bdy_nodes):
+        """Build block velocity DOF arrays excluding Dirichlet bdy nodes.
+
+        Parameters
+        ----------
+        bdy_nodes : lst
+           This is a list of lists with the local dof index for strongly
+           enforced Dirichlet boundary conditions on the velocity
+           components.
+        """
+        strong_DOF , local_vel_DOF = self.create_vel_DOF_lists(ownership_range,
+                                                               num_equations,
+                                                               num_components)
+        mask = [numpy.ones(len(var), dtype=bool) for var in strong_DOF]
+        for i, bdy_node in enumerate(bdy_nodes):
+            mask[i][bdy_node] = False
+        strong_DOF = [strong_DOF[i][mask[i]] for i in range(len(strong_DOF))]
+        total_vars = int(0)
+        for var in strong_DOF:
+            total_vars += int(len(var))
+        strong_DOF_idx = numpy.empty((total_vars),dtype='int32')
+        for i, var_dof in enumerate(strong_DOF):
+            strong_DOF_idx[i::2] = var_dof
+        return self.create_IS(strong_DOF_idx)
+
 class ModelInfo(object):
     """
     This class stores the model information needed to initialize a
@@ -1425,21 +1811,33 @@ class ModelInfo(object):
         dof_order_type)
     """
     def __init__(self,
-                 num_components,
                  dof_order_type,
+                 num_components,
+                 L_range = None,
+                 neqns = None,
                  n_DOF_pressure=None):
-        self.nc = num_components
+        self.set_num_components(num_components)
+        self.set_dof_order_type(dof_order_type)
         if dof_order_type=='blocked':
             assert n_DOF_pressure!=None #ARB - add an error message
-            self.dof_order_type = BlockedDofOrderType(n_DOF_pressure)
+            self.dof_order_class = BlockedDofOrderType(self, n_DOF_pressure)
         if dof_order_type=='interlaced':
-            self.dof_order_type = InterlacedDofOrderType()
+            self.dof_order_class = InterlacedDofOrderType(self)
 
     def set_dof_order_type(self, dof_order_type):
-        self.dof_order_type = dof_order_type
+        self._dof_order_type = dof_order_type
 
-    def set_nc(self,nc):
+    def get_dof_order_type(self):
+        return self._dof_order_type
+
+    def set_num_components(self,nc):
         self.nc = nc
+
+    def get_num_components(self):
+        return self.nc
+
+    def get_dof_order_class(self):
+        return self.dof_order_class
 
 class SchurPrecon(KSP_Preconditioner):
     """ Base class for PETSc Schur complement preconditioners. """
@@ -1475,6 +1873,9 @@ class SchurPrecon(KSP_Preconditioner):
         self._initializeIS()
         self.bdyNullSpace = bdyNullSpace
         self.pc.setFromOptions()
+        if self.model_info.get_dof_order_type() == 'interlaced':
+            ## TODO: ARB - this should be extended to blocked types
+            self.set_velocity_var_names()
 
     def _initialize_without_solver_info(self):
         """
@@ -1482,12 +1883,31 @@ class SchurPrecon(KSP_Preconditioner):
         preconditioner.
         """
         nc = self.L.pde.nc
+        L_range = self.L.getOwnershipRanges()
+        neqns = self.L.getSizes()[0][0]
         if len(self.L.pde.u[0].dof) == len(self.L.pde.u[1].dof):
-            self.model_info = ModelInfo(nc,'interlaced')
+            self.model_info = ModelInfo('interlaced',
+                                        nc,
+                                        L_range = L_range,
+                                        neqns = neqns)
         else:
-            self.model_info = ModelInfo(nc,
-                                        'blocked',
+            self.model_info = ModelInfo('blocked',
+                                        nc,
+                                        L_range,
+                                        neqns,
                                         self.L.pde.u[0].dof.size)
+
+    def get_num_components(self):
+        val = int(self.isv.size / self.isp.size + 1)
+        return val
+
+    def set_velocity_var_names(self):
+        nc = self.get_num_components()
+        var_names = ('u','v','w')
+        self._var_names = [var_names[i] for i in range(nc-1)]
+
+    def get_velocity_var_names(self):
+        return self._var_names
 
     def setUp(self,global_ksp):
         """
@@ -1508,19 +1928,6 @@ class SchurPrecon(KSP_Preconditioner):
             logEvent('Unable to access Schur sub-blocks. Make sure petsc '\
                      'options are consistent with your preconditioner type.')
             exit(1)
-
-    def _setSchurApproximation(self,global_ksp):
-        """ Set the Schur approximation to the Schur block.
-
-        Parameters
-        ----------
-        global_ksp :
-        """
-        assert self.matcontext_inv is not None, "no matrix context has been set."
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
-
 
     def _setSchurApproximation(self,global_ksp):
         """ Set the Schur approximation to the Schur block.
@@ -1559,12 +1966,12 @@ class SchurPrecon(KSP_Preconditioner):
         case, the degrees of freedom are interlaced (e.g. p[0], u[0],
         v[0], p[1], u[1], v[1], ...).
         """
-        L_sizes = self.L.getSizes()
         L_range = self.L.getOwnershipRange()
-        neqns = L_sizes[0][0]
-        dof_arrays = self.model_info.dof_order_type.create_DOF_lists(L_range,
-                                                                     neqns,
-                                                                     self.model_info.nc)
+        neqns = self.L.getSizes()[0][0]
+        dof_order_cls = self.model_info.get_dof_order_class()
+        dof_arrays = dof_order_cls.create_DOF_lists(L_range,
+                                                    neqns,
+                                                    self.model_info.nc)
         self.isp = p4pyPETSc.IS()
         self.isp.createGeneral(dof_arrays[1],comm=p4pyPETSc.COMM_WORLD)
         self.isv = p4pyPETSc.IS()
@@ -1599,10 +2006,6 @@ class SchurPrecon(KSP_Preconditioner):
             if truenorm < ksp.atol:
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
         return False
-
-    def _setConstantPressureNullSpace(self,global_ksp):
-        nsp = global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].getNullSpace()
-        global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
 
 class Schur_Sp(SchurPrecon):
     """
@@ -1719,17 +2122,208 @@ class Schur_Qp(SchurPrecon) :
             self._setConstantPressureNullSpace(global_ksp)
 
 class NavierStokesSchur(SchurPrecon):
-    """ Schur complement preconditioners for Navier-Stokes problems.
+    r""" Schur complement preconditioners for Navier-Stokes problems.
 
     This class is derived from SchurPrecond and serves as the base
     class for all NavierStokes preconditioners which use the Schur complement
     method.
     """
-    def __init__(self,L,prefix=None,bdyNullSpace=False):
+    def __init__(self,
+                 L,
+                 prefix=None,
+                 bdyNullSpace=False,
+                 velocity_block_preconditioner=True):
         SchurPrecon.__init__(self,L,prefix)
         self.operator_constructor = SchurOperatorConstructor(self,
                                                              pde_type='navier_stokes')
+        self.velocity_block_preconditioner = velocity_block_preconditioner
+        if self.velocity_block_preconditioner:
+            self._initialize_velocity_idx()
 
+    def _initialize_velocity_idx(self):
+        """
+        This function creates index sets so that a block
+        preconditioner ca be used for the velocity solve. One index
+        set (e.g. is_vel_*) describes the global dof associated
+        with the * component of the velocity.  The second
+        is (e.g. is*_local) describes the local dof
+        indexes relative to the velocity block.
+        """
+        L_range = self.L.getOwnershipRange()
+        neqns = self.L.getSizes()[0][0]
+
+        velocity_dof_calculator = VelocityInterlacedDofOrderType()
+        velocity_DOF_full, velocity_DOF_local = velocity_dof_calculator.create_DOF_lists(L_range,
+                                                                                         neqns,
+                                                                                         self.model_info.nc)
+
+        for i, var in enumerate(self.get_velocity_var_names()):
+            name_1 = "is_vel_" + var
+            name_2 = "is"+var+"_local"
+            setattr(self,name_1, p4pyPETSc.IS())
+            getattr(self,name_1).createGeneral(velocity_DOF_full[i],comm=p4pyPETSc.COMM_WORLD)
+            setattr(self,name_2, p4pyPETSc.IS())
+            getattr(self,name_2).createGeneral(velocity_DOF_local[i],comm=p4pyPETSc.COMM_WORLD)
+
+    def _initialize_velocity_block_preconditioner(self,global_ksp):
+        r""" Initialize the velocity block preconditioner.
+
+        """
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setType('fieldsplit')
+        is_lst = []
+        for var in self.get_velocity_var_names():
+            is_local_name = "is" + var + "_local"
+            is_local = getattr(self,is_local_name)
+            is_lst.append((var,is_local))
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitIS(*is_lst)
+        # ARB - need to run some tests to see what the best option is here
+#        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitType(1)  # This is for additive (e.g. Jacobi)
+
+    def _setup_velocity_block_preconditioner(self,global_ksp):
+        r"""To improve the effiency of the velocity-block solve in the
+            Schur complement preconditioner, we can apply a block
+            preconditioner.  This function builds an index set to
+            support this.
+
+        Parameters
+        ----------
+        global_ksp : xxx
+           xxx
+
+        Notes
+        -----
+        This is currently only set up for interlaced DOF ordering.
+        """
+        self.velocity_sub_matrix = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
+
+        for i, var in enumerate(self.get_velocity_var_names()):
+            name_str = "is_vel_" + var
+            name_str_mat = "velocity_" + var + "_sub_matrix"
+            is_set = getattr(self, name_str)
+            setattr(self,name_str_mat, global_ksp.getOperators()[0].getSubMatrix(is_set,
+                                                                                 is_set))
+            global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setOperators(getattr(self,name_str_mat),
+                                                                                            getattr(self,name_str_mat))
+            global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setFromOptions()
+            global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setUp()
+
+
+        global_ksp.pc.getFieldSplitSubKSP()[0].setUp()
+        global_ksp.pc.setUp()
+
+
+class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
+    r"""
+    Two-phase LSC Schur complement approximation class. Details of
+    this operator are in the forthcoming paper 'Preconditioners for
+    Two-Phase Incompressible Navier-Stokes Flow', Bootland et. al.
+    2017.
+    """
+    def __init__(self,
+                 L,
+                 prefix = None,
+                 bdyNullSpace = False,
+                 numerical_viscosity = True,
+                 lumped = True,
+                 is_p_stabilized = True):
+        """
+        Initialize the two-phase LSC preconditioning class.
+
+        Parameters
+        ----------
+        L : petsc4py Matrix
+            Defines the problem's operator.
+        prefix : str
+            String allowing PETSc4py options.
+        bdyNullSpace : bool
+            Does the boundary create a global null space
+        numerical_viscosity : bool
+            Should numerical viscosity be included
+        lumped : bool
+            Should the diagonal velocity mass matrix be lumped
+        is_p_stabilized : bool
+            Is a pressure stabilization being used?
+        """
+        NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
+        # Initialize discreate operators
+        self.C_1 = self.operator_constructor.initializeLSCStab_C1()
+        self.C_2 = self.operator_constructor.initializeLSCStab_C2()
+        self.Q_scaledVisc = self.operator_constructor.initializeTwoPhaseQ_visc()        
+        # Initialize velocity
+        self.numerical_viscosity = numerical_viscosity
+        self.lumped = lumped
+        self.is_p_stabilized = is_p_stabilized
+
+        dof_info = L.pde.dirichletConditionsForceDOF
+        try:
+            strong_DOF_lst = []
+            for i in range(1,self.get_num_components()):
+                strong_DOF_lst.append(dof_info[i].DOFBoundaryPointDict.keys())
+            dof_order_construc = self.model_info.get_dof_order_class()
+            self.strong_vel_DOF = dof_order_construc.create_no_dirichlet_bdy_nodes_is(self.L.getOwnershipRange(),
+                                                                                      self.L.getSizes()[0][0],
+                                                                                      self.model_info.nc,
+                                                                                      strong_DOF_lst)
+        except KeyError:
+            self.strong_u_DOF = []
+            self.strong_v_DOF = []
+
+    def setUp(self, global_ksp):
+        import Comm
+        comm = Comm.get()
+
+#        isv =self.strong_vel_DOF
+        isv = self.operator_constructor.linear_smoother.isv
+        isp = self.operator_constructor.linear_smoother.isp
+        A_mat = global_ksp.getOperators()[0]
+
+        self.operator_constructor.updateTwoPhaseQ_visc(viscosity_scaling=True,
+                                                       numerical_viscosity = self.numerical_viscosity,
+                                                       lumped = self.lumped)
+
+        self.Qv_scaledVisc = self.Q_scaledVisc.getSubMatrix(isv,
+                                                            isv)
+        self.F = A_mat.getSubMatrix(isv,
+                                    isv)
+        self.Bt = A_mat.getSubMatrix(isv,
+                                     isp)
+        self.B = A_mat.getSubMatrix(isp,
+                                    isv)
+        if self.is_p_stabilized:
+            self.operator_constructor.updateTwoPhaseLSC_StabC1()
+            self.operator_constructor.updateTwoPhaseLSC_StabC2()            
+            self.C1 = self.C_1.getSubMatrix(isp,
+                                            isp)
+            self.C2 = self.C_2.getSubMatrix(isp,
+                                            isp)
+        L_sizes = self.B.getSizes()[0][0]
+        self.TP_LSCInv_shell = p4pyPETSc.Mat().create()
+        self.TP_LSCInv_shell.setSizes(L_sizes)
+        self.TP_LSCInv_shell.setType('python')
+        if self.is_p_stabilized:
+            self.matcontext_inv = LSC_stabilized_Inv_shell(self.Qv_scaledVisc,
+                                                           self.B,
+                                                           self.Bt,
+                                                           self.F,
+                                                           self.C1,
+                                                           self.C2)
+        else:
+            self.matcontext_inv = LSCInv_shell(self.Qv_scaledVisc,
+                                               self.B,
+                                               self.Bt,
+                                               self.F)
+        self.TP_LSCInv_shell.setPythonContext(self.matcontext_inv)
+        self.TP_LSCInv_shell.setUp()
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        self._setSchurlog(global_ksp)
+        if self.bdyNullSpace == True:
+            nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                               vectors = (),
+                                               constant = True)
+            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
+            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
 
 class NavierStokes_TwoPhasePCD(NavierStokesSchur):
     r""" Two-phase PCD Schur complement approximation class.
@@ -1767,7 +2361,8 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                  numerical_viscosity = True,
                  lumped = True,
                  num_chebyshev_its = 0,
-                 laplace_null_space = True):
+                 laplace_null_space = True,
+                 velocity_block_preconditioner=False):
         """
         Initialize the two-phase PCD preconditioning class.
 
@@ -1797,8 +2392,11 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         laplace_null_space : bool
             Indicates whether the laplace operator inside the
             two-phase PCD operator has a constant null space.
+        velocity_block_preconditioner : bool
+            Indicates whether to use a block preconditioner for the
+            velocity solve.
         """
-        NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
+        NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace, velocity_block_preconditioner)
         # Initialize the discrete operators
         self.N_rho = self.operator_constructor.initializeTwoPhaseCp_rho()
         self.A_invScaledRho = self.operator_constructor.initializeTwoPhaseInvScaledAp()
@@ -1815,10 +2413,13 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
             self.strongPressureDOF = L.pde.dirichletConditionsForceDOF[0].DOFBoundaryPointDict.keys()
         except KeyError:
             self.strongPressureDOF = []
+        if self.velocity_block_preconditioner:
+            self.velocity_block_preconditioner_set = False
 
     def setUp(self, global_ksp):
         import Comm
         comm = Comm.get()
+
         self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
         self.operator_constructor.updateInvScaledAp()
         self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
@@ -1826,17 +2427,30 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
                                                                  lumped = self.lumped)
 
+        self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                              self.operator_constructor.linear_smoother.isp)
+        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                                self.operator_constructor.linear_smoother.isp)
+        self.Qp_rho = self.Q_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                              self.operator_constructor.linear_smoother.isp)
+        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                                self.operator_constructor.linear_smoother.isp)
+
+        isp = self.operator_constructor.linear_smoother.isp
+        isv = self.operator_constructor.linear_smoother.isv
+
         # ****** Sp for Ap *******
         # TODO - This is included for a possible extension which exchanges Ap with Sp for short
         #        time steps.
-        # self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
-        #                                                      self.operator_constructor.linear_smoother.isv)
-        # self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
-        #                                                      self.operator_constructor.linear_smoother.isp)
-        # self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
-        #                                                      self.operator_constructor.linear_smoother.isv)
-        # self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
-        #                                                      self.operator_constructor.linear_smoother.isp)
+        # A_mat = global_ksp.getOperators()[0]
+        # self.A00 = A_mat.getSubMatrix(isv,
+        #                               isv)
+        # self.A01 = A_mat.getSubMatrix(isv,
+        #                               isp)
+        # self.A10 = A_mat.getSubMatrix(isp,
+        #                               isv)
+        # self.A11 = A_mat.getSubMatrix(isp,
+        #                               isp)
 
         # dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
         # self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
@@ -1846,20 +2460,28 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         # self.Sp.axpy( 1. , self.A11)
 
         # End ******** Sp for Ap ***********
-        self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                              self.operator_constructor.linear_smoother.isp)
 
-        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                                self.operator_constructor.linear_smoother.isp)
+        self.Np_rho = self.N_rho.getSubMatrix(isp,
+                                              isp)
 
-        self.Qp_rho = self.Q_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                              self.operator_constructor.linear_smoother.isp)
-
-        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                                self.operator_constructor.linear_smoother.isp)
+        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(isp,
+                                                                isp)
+        self.Qp_rho = self.Q_rho.getSubMatrix(isp,
+                                              isp)
+        try:
+            if self.velocity_block_preconditioner_set is False:
+                self._initialize_velocity_block_preconditioner(global_ksp)
+                self.velocity_block_preconditioner_set = True
+        except AttributeError:
+            pass
+        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(isp,
+                                                                isp)
+        if self.velocity_block_preconditioner:
+            self._setup_velocity_block_preconditioner(global_ksp)
 
         L_sizes = self.Qp_rho.size
         L_range = self.Qp_rho.owner_range
+
         self.TP_PCDInv_shell = p4pyPETSc.Mat().create()
         self.TP_PCDInv_shell.setSizes(L_sizes)
         self.TP_PCDInv_shell.setType('python')
@@ -1879,6 +2501,11 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+
+        if self.velocity_block_preconditioner:
+            self._setup_velocity_block_preconditioner(global_ksp)
+
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setUp()
 
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
@@ -1920,49 +2547,29 @@ class Schur_LSC(SchurPrecon):
         self._setSchurApproximation(global_ksp)
         self._setSchurlog(global_ksp)
 
-class NavierStokes3D:
-    def __init__(self,L,prefix=None):
-        self.L = L
-        self.PCD=False
-        L_sizes = L.getSizes()
-        L_range = L.getOwnershipRange()
-        neqns = L_sizes[0][0]
-        rank = p4pyPETSc.COMM_WORLD.rank
-        if self.L.pde.stride[0] == 1:#assume end to end
-            pSpace = self.L.pde.u[0].femSpace
-            pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
-            nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
-            self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+nDOF_pressure,
-                                            dtype="i")
-            self.velocityDOF = numpy.arange(start=L_range[0]+nDOF_pressure,
-                                            stop=L_range[0]+neqns,
-                                            step=1,
-                                            dtype="i")
-        else: #assume blocked
-            self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+neqns,
-                                            step=4,
-                                            dtype="i")
-            velocityDOF = []
-            for start in range(1,4):
-                velocityDOF.append(numpy.arange(start=L_range[0]+start,
-                                                stop=L_range[0]+neqns,
-                                                step=4,
-                                                dtype="i"))
-            self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
-        self.pc = p4pyPETSc.PC().create()
-        if prefix:
-            self.pc.setOptionsPrefix(prefix)
-        self.pc.setType('fieldsplit')
-        self.isp = p4pyPETSc.IS()
-        self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
-        self.isv = p4pyPETSc.IS()
-        self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
-        self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
-        self.pc.setFromOptions()
+class NavierStokes3D(NavierStokesSchur):
+    def __init__(self,
+                 L,
+                 prefix=None,
+                 velocity_block_preconditioner=False):
+        NavierStokesSchur.__init__(self,
+                                   L,
+                                   prefix,
+                                   velocity_block_preconditioner=velocity_block_preconditioner)
+        if self.velocity_block_preconditioner:
+            self.velocity_block_preconditioner_set = False
 
     def setUp(self, global_ksp=None):
+        try:
+            if self.velocity_block_preconditioner_set is False:
+                self._initialize_velocity_block_preconditioner(global_ksp)
+                self.velocity_block_preconditioner_set = True
+        except AttributeError:
+            pass
+
+        if self.velocity_block_preconditioner:
+            self._setup_velocity_block_preconditioner(global_ksp)
+
         try:
             if self.L.pde.pp_hasConstantNullSpace:
                 if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
@@ -1971,110 +2578,6 @@ class NavierStokes3D:
                     self.kspList[1].setNullSpace(self.nsp)
         except:
             pass
-        if self.PCD:
-            #modify the mass term in the continuity equation so the p-p block is Q
-            rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
-            self.Qsys_rowptr = rowptr.copy()
-            self.Qsys_colind = colind.copy()
-            self.Qsys_nzval = nzval.copy()
-            nr = rowptr.shape[0] - 1
-            nc = nr
-            self.Qsys =SparseMat(nr,nc,
-                                 self.Qsys_nzval.shape[0],
-                                 self.Qsys_nzval,
-                                 self.Qsys_colind,
-                                 self.Qsys_rowptr)
-            self.L.pde.q[('dm',0,0)][:] = 1.0
-            self.L.pde.getMassJacobian(self.Qsys)
-            self.Qsys_petsc4py = self.L.duplicate()
-            L_sizes = self.L.getSizes()
-            Q_csr_rep_local = self.Qsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
-            self.Qsys_petsc4py.setValuesLocalCSR(Q_csr_rep_local[0],
-                                                 Q_csr_rep_local[1],
-                                                 Q_csr_rep_local[2],
-                                                 p4pyPETSc.InsertMode.INSERT_VALUES)
-            self.Qsys_petsc4py.assemblyBegin()
-            self.Qsys_petsc4py.assemblyEnd()
-            self.Qp = self.Qsys_petsc4py.getSubMatrix(self.isp,self.isp)
-            from LinearAlgebraTools import _petsc_view
-            _petsc_view(self.Qp, "Qp")#write to Qp.m
-            #running Qp.m will load into matlab  sparse matrix
-            #runnig Qpf = full(Mat_...) will get the full matrix
-            #
-            #modify the diffusion term in the mass equation so the p-p block is Ap
-            rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
-            self.Asys_rowptr = rowptr.copy()
-            self.Asys_colind = colind.copy()
-            self.Asys_nzval = nzval.copy()
-            L_sizes = self.L.getSizes()
-            nr = L_sizes[0][0]
-            nc = L_sizes[1][0]
-            self.Asys =SparseMat(nr,nc,
-                                 self.Asys_nzval.shape[0],
-                                 self.Asys_nzval,
-                                 self.Asys_colind,
-                                 self.Asys_rowptr)
-            self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
-            self.L.pde.q[('df',0,0)][:] = 0.0
-            self.L.pde.q[('df',0,1)][:] = 0.0
-            self.L.pde.q[('df',0,2)][:] = 0.0
-            self.L.pde.q[('df',0,3)][:] = 0.0
-            self.L.pde.getSpatialJacobian(self.Asys)#notice switched to  Spatial
-            self.Asys_petsc4py = self.L.duplicate()
-            A_csr_rep_local = self.Asys.getSubMatCSRrepresentation(0,L_sizes[0][0])
-            self.Asys_petsc4py.setValuesLocalCSR(A_csr_rep_local[0],
-                                                 A_csr_rep_local[1],
-                                                 A_csr_rep_local[2],
-                                                 p4pyPETSc.InsertMode.INSERT_VALUES)
-            self.Asys_petsc4py.assemblyBegin()
-            self.Asys_petsc4py.assemblyEnd()
-            self.Ap = self.Asys_petsc4py.getSubMatrix(self.isp,self.isp)
-            _petsc_view(self.Ap,"Ap")#write to A.m
-            #running A.m will load into matlab  sparse matrix
-            #runnig Af = full(Mat_...) will get the full matrix
-            #Af(1:np,1:np) whould be Ap, the pressure diffusion matrix
-            #modify the diffusion term in the mass equation so the p-p block is Ap
-            #modify the diffusion term in the mass equation so the p-p block is Fp
-            rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
-            self.Fsys_rowptr = rowptr.copy()
-            self.Fsys_colind = colind.copy()
-            self.Fsys_nzval = nzval.copy()
-            L_sizes = self.L.getSizes()
-            nr = L_sizes[0][0]
-            nc = L_sizes[1][0]
-            self.Fsys =SparseMat(nr,nc,
-                                 self.Fsys_nzval.shape[0],
-                                 self.Fsys_nzval,
-                                 self.Fsys_colind,
-                                 self.Fsys_rowptr)
-            self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
-            self.L.pde.q[('df',0,0)][...,0] = self.L.pde.q[('u',1)]
-            self.L.pde.q[('df',0,0)][...,1] = self.L.pde.q[('u',2)]
-            self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
-            self.L.pde.getSpatialJacobian(self.Fsys)#notice, switched  to spatial
-            self.Fsys_petsc4py = self.L.duplicate()
-            F_csr_rep_local = self.Fsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
-            self.Fsys_petsc4py.setValuesLocalCSR(F_csr_rep_local[0],
-                                                 F_csr_rep_local[1],
-                                                 F_csr_rep_local[2],
-                                                 p4pyPETSc.InsertMode.INSERT_VALUES)
-            self.Fsys_petsc4py.assemblyBegin()
-            self.Fsys_petsc4py.assemblyEnd()
-            self.Fp = self.Fsys_petsc4py.getSubMatrix(self.isp,self.isp)
-            _petsc_view(self.Fp, "Fp")#write to F.m
-            #running F.m will load into matlab  sparse matrix
-            #runnig Ff = full(Mat_...) will get the full matrix
-            #Ff(1:np,1:np) whould be Fp, the pressure convection-diffusion matrix
-            #
-            #now zero all the dummy coefficents
-            #
-            self.L.pde.q[('dm',0,0)][:] = 0.0
-            self.L.pde.q[('df',0,0)][:] = 0.0
-            self.L.pde.q[('a',0,0)][:] = 0.0
-            #
-            # I think the next step is to setup something that does
-            #  p = ksp(Qp, Fp*ksp(Ap,b)) for some input b
-            # where p represents the approximate solution of S p = b
 SimpleNavierStokes3D = NavierStokes3D
 
 class SimpleDarcyFC:
@@ -2099,47 +2602,29 @@ class SimpleDarcyFC:
     def setUp(self, global_ksp=None):
         pass
 
-class NavierStokes2D:
-    def __init__(self,L,prefix=None):
-        self.L=L
-        L_sizes = L.getSizes()
-        L_range = L.getOwnershipRange()
-        neqns = L_sizes[0][0]
-        rank = p4pyPETSc.COMM_WORLD.rank
-        if self.L.pde.stride[0] == 1:#assume end to end
-            pSpace = self.L.pde.u[0].femSpace
-            pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
-            nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
-            self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+nDOF_pressure,
-                                            dtype="i")
-            self.velocityDOF = numpy.arange(start=L_range[0]+nDOF_pressure,
-                                            stop=L_range[0]+neqns,
-                                            step=1,
-                                            dtype="i")
-        else: #assume blocked
-            self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+neqns,
-                                            step=3,
-                                            dtype="i")
-            velocityDOF = []
-            for start in range(1,3):
-                velocityDOF.append(numpy.arange(start=L_range[0]+start,
-                                                stop=L_range[0]+neqns,
-                                                step=3,
-                                                dtype="i"))
-                self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
-        self.pc = p4pyPETSc.PC().create()
-        if prefix:
-            self.pc.setOptionsPrefix(prefix)
-        self.pc.setType('fieldsplit')
-        self.isp = p4pyPETSc.IS()
-        self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
-        self.isv = p4pyPETSc.IS()
-        self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
-        self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
-        self.pc.setFromOptions()
+class NavierStokes2D(NavierStokesSchur):
+    def __init__(self,
+                 L,
+                 prefix=None,
+                 velocity_block_preconditioner=False):
+        NavierStokesSchur.__init__(self,
+                                   L,
+                                   prefix,
+                                   velocity_block_preconditioner=velocity_block_preconditioner)
+        if self.velocity_block_preconditioner:
+            self.velocity_block_preconditioner_set = False
+
     def setUp(self, global_ksp=None):
+        try:
+            if self.velocity_block_preconditioner_set is False:
+                self._initialize_velocity_block_preconditioner(global_ksp)
+                self.velocity_block_preconditioner_set = True
+        except AttributeError:
+            pass
+
+        if self.velocity_block_preconditioner:
+            self._setup_velocity_block_preconditioner(global_ksp)
+
         try:
             if self.L.pde.pp_hasConstantNullSpace:
                 if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
@@ -3125,7 +3610,7 @@ class OperatorConstructor:
                                                  self.model.rowptr)
 
     def attachScaledMassOperator(self):
-        """ Create discrete InvScaled Mass operator. """
+        """ Create discrete Scaled Mass operator. """
         self._scaled_mass_val = self.model.nzval.copy()
         self._scaled_mass_val.fill(0.)
         self.TPScaledMassOperator = SparseMat(self.model.nFreeVDOF_global,
@@ -3134,6 +3619,17 @@ class OperatorConstructor:
                                               self._scaled_mass_val,
                                               self.model.colind,
                                               self.model.rowptr)
+
+    def attachViscosityScaledMassOperator(self):
+        """ Create discrete Scaled Mass operator. """
+        self._visc_scaled_mass_val = self.model.nzval.copy()
+        self._visc_scaled_mass_val.fill(0.)
+        self.TPViscosityScaledMassOperator = SparseMat(self.model.nFreeVDOF_global,
+                                                       self.model.nFreeVDOF_global,
+                                                       self.model.nnz,
+                                                       self._visc_scaled_mass_val,
+                                                       self.model.colind,
+                                                       self.model.rowptr)
 
     def attachLaplaceOperator(self):
         """ Create discrete Laplace matrix operator. """
@@ -3157,6 +3653,27 @@ class OperatorConstructor:
                                                    self.model.colind,
                                                    self.model.rowptr)
 
+    def attachLSCStabilizationC1(self):
+        """ Create discrete Advection matrix operator. """
+        self._LSC_stab_c1_val = self.model.nzval.copy()
+        self._LSC_stab_c1_val.fill(0.)
+        self.LSC_stab_c1 = SparseMat(self.model.nFreeVDOF_global,
+                                     self.model.nFreeVDOF_global,
+                                     self.model.nnz,
+                                     self._LSC_stab_c1_val,
+                                     self.model.colind,
+                                     self.model.rowptr)
+
+    def attachLSCStabilizationC2(self):
+        """ Create discrete Advection matrix operator. """
+        self._LSC_stab_c2_val = self.model.nzval.copy()
+        self._LSC_stab_c2_val.fill(0.)
+        self.LSC_stab_c2 = SparseMat(self.model.nFreeVDOF_global,
+                                     self.model.nFreeVDOF_global,
+                                     self.model.nnz,
+                                     self._LSC_stab_c2_val,
+                                     self.model.colind,
+                                     self.model.rowptr)
 
 class OperatorConstructor_rans2p(OperatorConstructor):
     """ A class for building common discrete rans2p operators.
@@ -3169,6 +3686,22 @@ class OperatorConstructor_rans2p(OperatorConstructor):
     def __init__(self,levelModel):
         OperatorConstructor.__init__(self,levelModel)
 
+    def updateLSCStabilizationC1(self):
+        """
+        Update the LSC Stabilization block
+        """
+        self.LSC_stab_c1.getCSRrepresentation()[2].fill(0.)
+        self.model.getLSCStabilizationC1(1,
+                                         self.LSC_stab_c1)
+
+    def updateLSCStabilizationC2(self):
+        """
+        Update the LSC Stabilization block
+        """
+        self.LSC_stab_c2.getCSRrepresentation()[2].fill(0.)
+        self.model.getLSCStabilizationC1(2,
+                                         self.LSC_stab_c2)
+         
     def updateTPAdvectionOperator(self,
                                   density_scaling):
         """
@@ -3271,7 +3804,7 @@ class OperatorConstructor_rans2p(OperatorConstructor):
         rho_0 = density_scaling*self.model.coefficients.rho_0 + (1-density_scaling)*1
         nu_0 = density_scaling*self.model.coefficients.nu_0 + (1-density_scaling)*1
         rho_1 = density_scaling*self.model.coefficients.rho_1 + (1-density_scaling)*1
-        nu_1 = density_scaling*self.model.coefficients.nu_1 + (1-density_scaling)*1        
+        nu_1 = density_scaling*self.model.coefficients.nu_1 + (1-density_scaling)*1
 
         self.TPScaledMassOperator.getCSRrepresentation()[2].fill(0.)
         self.model.rans2p.getTwoPhaseScaledMassOperator(1,
@@ -3308,7 +3841,70 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                         self.model.csrRowIndeces[(0,0)],self.model.csrColumnOffsets[(0,0)],
                                                         self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
                                                         self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
-                                                        self.TPScaledMassOperator)    
+                                                        self.TPScaledMassOperator)
+
+    def updateTwoPhaseMassOperator_visc(self,
+                                        viscosity_scaling = True,
+                                        numerical_viscosity = True,
+                                        lumped = True):
+        """
+        Create a discrete TwoPhase Mass operator matrix.
+
+        Parameters
+        ----------
+        viscosity_scaling : bool
+            Indicates whether advection terms should be scaled with
+            the viscosity (True) or 1 (False)
+        numerical_viscosity : False
+            Indicates whether the numerical viscosity should be
+            included with the mass matrix.
+        lumped : bool
+            Indicates whether the mass matrices should be lumped or
+            full.
+
+        """
+        rho_0 = viscosity_scaling*self.model.coefficients.rho_0 + (1-viscosity_scaling)*1
+        nu_0 = viscosity_scaling*self.model.coefficients.nu_0 + (1-viscosity_scaling)*1
+        rho_1 = viscosity_scaling*self.model.coefficients.rho_1 + (1-viscosity_scaling)*1
+        nu_1 = viscosity_scaling*self.model.coefficients.nu_1 + (1-viscosity_scaling)*1
+
+        self.TPViscosityScaledMassOperator.getCSRrepresentation()[2].fill(0.)
+        self.model.rans2p.getTwoPhaseScaledMassOperator(2,
+                                                        numerical_viscosity,
+                                                        lumped,
+                                                        self.model.u[0].femSpace.elementMaps.psi,
+                                                        self.model.u[0].femSpace.elementMaps.grad_psi,
+                                                        self.model.mesh.nodeArray,
+                                                        self.model.mesh.elementNodesArray,
+                                                        self.model.elementQuadratureWeights[('u',0)],
+                                                        self.model.u[0].femSpace.psi,
+                                                        self.model.u[0].femSpace.psi,
+                                                        self.model.u[1].femSpace.psi,
+                                                        self.model.u[1].femSpace.psi,
+                                                        self.model.elementDiameter,
+                                                        self.model.mesh.nodeDiametersArray,
+                                                        self.model.coefficients.numerical_viscosity,
+                                                        self.model.mesh.nElements_global,
+                                                        self.model.coefficients.useMetrics,
+                                                        self.model.coefficients.epsFact_density,
+                                                        self.model.coefficients.epsFact,
+                                                        rho_0,
+                                                        nu_0,
+                                                        rho_1,
+                                                        nu_1,
+                                                        self.model.u[0].femSpace.dofMap.l2g,
+                                                        self.model.u[1].femSpace.dofMap.l2g,
+                                                        self.model.u[0].dof,
+                                                        self.model.u[1].dof,
+                                                        self.model.u[2].dof,
+                                                        self.model.coefficients.useVF,
+                                                        self.model.coefficients.q_vf,
+                                                        self.model.coefficients.q_phi,
+                                                        self.model.csrRowIndeces[(0,0)],self.model.csrColumnOffsets[(0,0)],
+                                                        self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
+                                                        self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
+                                                        self.TPViscosityScaledMassOperator)
+
 
     def updateTwoPhaseInvScaledMassOperator(self,
                                             numerical_viscosity = True,
