@@ -258,7 +258,7 @@ def petsc4py_mat_has_constant_null_space(A):
     x_petsc = p4pyPETSc.Vec().createWithArray(x)
     y_petsc = p4pyPETSc.Vec().createWithArray(y)
     A.mult(x_petsc,y_petsc)
-    if y_petsc.norm() < 1e-15:
+    if y_petsc.norm() < 1e-12:
         return True
     else:
         return False
@@ -1201,7 +1201,7 @@ class LSC_stabilized_Inv_shell(InvOperatorShell):
     is used to approximate the Schur complement.
     *** ARB - update documentation and add source ***
     """
-    def __init__(self, Qv, B, Bt, F, C):
+    def __init__(self, Qv, B, Bt, F, C1, C2):
         """Initializes the LSC inverse operator.
 
         Parameters
@@ -1223,15 +1223,15 @@ class LSC_stabilized_Inv_shell(InvOperatorShell):
         self.B = B
         self.Bt = Bt
         self.F = F
+        self.C1 = C1
+        self.C2 = C2
 
         # calculate alpha and gamma
-        self._calculate_alpha_gamma()
         self._constructBQinvBt_C()
         self._options = p4pyPETSc.Options()
 
         if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
             self._create_constant_nullspace()
-            self.BQinvBt.setNullSpace(self.const_null_space)
 
         self.kspBQinvBt_C = p4pyPETSc.KSP().create()
         self.kspBQinvBt_C.setOperators(self.BQinvBt_C,self.BQinvBt_C)
@@ -1275,42 +1275,38 @@ class LSC_stabilized_Inv_shell(InvOperatorShell):
         x_tmp = p4pyPETSc.Vec().create()
         x_tmp = x.copy()
         tmp1 = self._create_tmp_vec(B_sizes[0])
+        tmp4 = self._create_tmp_vec(B_sizes[0])        
         tmp2 = self._create_tmp_vec(B_sizes[1])
         tmp3 = self._create_tmp_vec(B_sizes[1])
+#        import pdb ; pdb.set_trace()
 
         if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
             self.const_null_space.remove(x_tmp)
-        self.kspBQinvBt.solve(x_tmp,tmp1)
+        self.kspBQinvBt_C.solve(x_tmp,tmp1)
+
+#        import pdb ; pdb.set_trace()
         self.B.multTranspose(tmp1,tmp2)
+        self.C2.mult(tmp1,tmp4)
         self.kspQv.solve(tmp2,tmp3)
         self.F.mult(tmp3,tmp2)
         self.kspQv.solve(tmp2,tmp3)
         self.B.mult(tmp3,tmp1)
+        tmp1.axpy(1.0, tmp4)
+
         if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
             self.const_null_space.remove(tmp1)
-        self.kspBQinvBt.solve(tmp1,y)
+        self.kspBQinvBt_C.solve(tmp1,y)
         assert numpy.isnan(y.norm())==False, "Applying the LSC schur complement \
         resulted in not-a-number."
 
-    def _constructBQinvBt(self):
-        """ Private method repsonsible for building BQinvBt """
+    def _constructBQinvBt_C(self):
         self.Qv_inv = petsc_create_diagonal_inv_matrix(self.Qv)
+#        import pdb ; pdb.set_trace()
         QinvBt = self.Qv_inv.matMult(self.Bt)
-        self.BQinvBt = self.B.matMult(QinvBt)
-
-    def _calculate_alpha_gamma(self):
-        """
-        This function approximates values for alpha and gamma
-        using an approach based on the paper: Least Squares
-        Preconditioners for Stabilized Discretizations of the
-        Navier-Stokes Equations.
-        """
-        #Use the norm of F as an approximation to the spectral
-        #radius of F_hat
-
-        #TBD - not exactly sure the best way to proceed.
-        pass
-
+        self.BQinvBt_C = self.B.matMult(QinvBt)
+#        import pdb ; pdb.set_trace()
+        self.BQinvBt_C.axpy(-1., self.C1)
+        
 class MatrixShell(ProductOperatorShell):
     """ A shell class for a matrix. """
     def __init__(self,A):

@@ -516,6 +516,7 @@ class KSP_petsc4py(LinearSolver):
             except:
                 pass
 
+#        import pdb ; pdb.set_trace()
         self.ksp.solve(par_b,par_u)
 
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
@@ -838,6 +839,101 @@ class SchurOperatorConstructor:
             for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],range(rowptr_petsc[i],rowptr_petsc[i+1])):
                 nzval_petsc[k] = petsc_a[i,j]
         return SparseMat(transport.dim,transport.dim,nzval_petsc.shape[0], nzval_petsc, colind_petsc, rowptr_petsc)
+
+    def initializeLSCStab_C1(self):
+        """ Initialize a discreate operator.
+
+        Input
+        -----
+        SparseMat : superlu mat
+
+        Returns
+        -------
+        discrete_op : matrix
+        """
+        import Comm
+        comm = Comm.get()
+        self.opBuilder.attachLSCStabilizationC1()
+        par_info = self.linear_smoother.L.pde.par_info
+        if comm.size() == 1:
+            self.two_phase_LSC_stabC1 = ParMat_petsc4py(self.opBuilder.LSC_stab_c1,
+                                                        par_info.par_bs,
+                                                        par_info.par_n,
+                                                        par_info.par_N,
+                                                        par_info.par_nghost,
+                                                        par_info.subdomain2global)
+        else:
+            mixed = False
+            if mixed == True:
+                self.petsc_two_phase_LSC_stabC1 = self._initializeMat(self.opBuilder.LSC_stab_c1)
+                self.two_phase_LSC_stabC1 = ParMat_petsc4py(self.petsc_two_phase_LSC_stabC1,
+                                                        par_info.par_bs,
+                                                        par_info.par_n,
+                                                        par_info.par_N,
+                                                        par_info.par_nghost,
+                                                        par_info.petsc_subdomain2global_petsc,
+                                                        pde=self.L.pde,
+                                                        proteus_jacobian=self.opBuilder.LSC_stab_c1,
+                                                        nzval_proteus2petsc=par_info.nzval_proteus2petsc)
+            else:
+                self.two_phase_LSC_stabC1 = ParMat_petsc4py(self.opBuilder.LSC_stab_c1,
+                                                        par_info.par_bs,
+                                                        par_info.par_n,
+                                                        par_info.par_N,
+                                                        par_info.par_nghost,
+                                                        par_info.subdomain2global,
+                                                        pde=self.L.pde)
+        self.two_phase_LSC_stabC1_csr_rep = self.two_phase_LSC_stabC1.csr_rep
+        self.two_phase_LSC_stabC1_csr_rep_local = self.two_phase_LSC_stabC1.csr_rep_local
+        return self.two_phase_LSC_stabC1
+
+    def initializeLSCStab_C2(self):
+        """ Initialize a discreate operator.
+
+        Input
+        -----
+        SparseMat : superlu mat
+
+        Returns
+        -------
+        discrete_op : matrix
+        """
+        import Comm
+        comm = Comm.get()
+        self.opBuilder.attachLSCStabilizationC2()
+        par_info = self.linear_smoother.L.pde.par_info
+        if comm.size() == 1:
+            self.two_phase_LSC_stabC2 = ParMat_petsc4py(self.opBuilder.LSC_stab_c2,
+                                                        par_info.par_bs,
+                                                        par_info.par_n,
+                                                        par_info.par_N,
+                                                        par_info.par_nghost,
+                                                        par_info.subdomain2global)
+        else:
+            mixed = False
+            if mixed == True:
+                self.petsc_two_phase_LSC_stabC2 = self._initializeMat(self.opBuilder.LSC_stab_c2)
+                self.two_phase_LSC_stabC2 = ParMat_petsc4py(self.petsc_two_phase_LSC_stabC2,
+                                                        par_info.par_bs,
+                                                        par_info.par_n,
+                                                        par_info.par_N,
+                                                        par_info.par_nghost,
+                                                        par_info.petsc_subdomain2global_petsc,
+                                                        pde=self.L.pde,
+                                                        proteus_jacobian=self.opBuilder.LSC_stab_c2,
+                                                        nzval_proteus2petsc=par_info.nzval_proteus2petsc)
+            else:
+                self.two_phase_LSC_stabC2 = ParMat_petsc4py(self.opBuilder.LSC_stab_c2,
+                                                        par_info.par_bs,
+                                                        par_info.par_n,
+                                                        par_info.par_N,
+                                                        par_info.par_nghost,
+                                                        par_info.subdomain2global,
+                                                        pde=self.L.pde)
+        self.two_phase_LSC_stabC2_csr_rep = self.two_phase_LSC_stabC2.csr_rep
+        self.two_phase_LSC_stabC2_csr_rep_local = self.two_phase_LSC_stabC2.csr_rep_local
+        return self.two_phase_LSC_stabC2
+    
 
     def initializeTwoPhaseCp_rho(self):
         """Initialize a two phase scaled advection operator Cp.
@@ -1209,6 +1305,37 @@ class SchurOperatorConstructor:
         if output_matrix is True:
             self._exportMatrix(self.two_phase_Qp_scaled,'Qp_scaled')
 
+    def updateTwoPhaseLSC_StabC1(self,
+                                 output_matrix=False):
+        self.opBuilder.updateLSCStabilizationC1()
+        self.two_phase_LSC_stabC1.zeroEntries()
+        if self.two_phase_LSC_stabC1.proteus_jacobian != None:
+            self.two_phase_LSC_stabC1[2][self.two_phase_LSC_stabC1.nzval_proteus2petsc] = self.two_phase_LSC_stabC1.proteus_csr_rep[2][:]
+        self.two_phase_LSC_stabC1.setValuesLocalCSR(self.two_phase_LSC_stabC1_csr_rep_local[0],
+                                                    self.two_phase_LSC_stabC1_csr_rep_local[1],
+                                                    self.two_phase_LSC_stabC1_csr_rep_local[2],
+                                                    p4pyPETSc.InsertMode.INSERT_VALUES)
+        self.two_phase_LSC_stabC1.assemblyBegin()
+        self.two_phase_LSC_stabC1.assemblyEnd()
+        if output_matrix is True:
+            self._exportMatrix(self.two_phase_LSC_stabC1,'LSC_stabC1')
+
+    def updateTwoPhaseLSC_StabC2(self,
+                                 output_matrix=False):
+        self.opBuilder.updateLSCStabilizationC2()
+        self.two_phase_LSC_stabC2.zeroEntries()
+        if self.two_phase_LSC_stabC2.proteus_jacobian != None:
+            self.two_phase_LSC_stabC2[2][self.two_phase_LSC_stabC2.nzval_proteus2petsc] = self.two_phase_LSC_stabC2.proteus_csr_rep[2][:]
+        self.two_phase_LSC_stabC2.setValuesLocalCSR(self.two_phase_LSC_stabC2_csr_rep_local[0],
+                                                    self.two_phase_LSC_stabC2_csr_rep_local[1],
+                                                    self.two_phase_LSC_stabC2_csr_rep_local[2],
+                                                    p4pyPETSc.InsertMode.INSERT_VALUES)
+        self.two_phase_LSC_stabC2.assemblyBegin()
+        self.two_phase_LSC_stabC2.assemblyEnd()
+        if output_matrix is True:
+            self._exportMatrix(self.two_phase_LSC_stabC2,'LSC_stabC2')
+
+        
     def updateTwoPhaseQ_visc(self,
                              viscosity_scaling = True,
                              numerical_viscosity = True,
@@ -1233,7 +1360,7 @@ class SchurOperatorConstructor:
                                                        lumped = lumped)
         self.two_phase_Q_viscosity_scaled.zeroEntries()
         if self.two_phase_Q_viscosity_scaled.proteus_jacobian != None:
-            self.two_phase_Q_viscosity_scaled_csr_rep[2][self.two_phase_Qp_scaled.nzval_proteus2petsc] = self.two_phase_Qp_scaled.proteus_csr_rep[2][:]
+            self.two_phase_Q_viscosity_scaled_csr_rep[2][self.two_phase_Qp_scaled.nzval_proteus2petsc] = self.two_phase_Q_viscosity_scaled.proteus_csr_rep[2][:]
         self.two_phase_Q_viscosity_scaled.setValuesLocalCSR(self.two_phase_Q_viscosity_scaled_csr_rep_local[0],
                                                             self.two_phase_Q_viscosity_scaled_csr_rep_local[1],
                                                             self.two_phase_Q_viscosity_scaled_csr_rep_local[2],
@@ -2087,7 +2214,7 @@ class NavierStokesSchur(SchurPrecon):
 
 class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
     r"""
-    Two-phase PCD Schur complement approximation class. Details of
+    Two-phase LSC Schur complement approximation class. Details of
     this operator are in the forthcoming paper 'Preconditioners for
     Two-Phase Incompressible Navier-Stokes Flow', Bootland et. al.
     2017.
@@ -2098,7 +2225,7 @@ class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
                  bdyNullSpace = False,
                  numerical_viscosity = True,
                  lumped = True,
-                 infsup_fe = True):
+                 is_p_stabilized = True):
         """
         Initialize the two-phase LSC preconditioning class.
 
@@ -2114,26 +2241,29 @@ class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
             Should numerical viscosity be included
         lumped : bool
             Should the diagonal velocity mass matrix be lumped
-        infsup_fe : bool
-            Are the simulation's fe inf-sup stable
+        is_p_stabilized : bool
+            Is a pressure stabilization being used?
         """
         NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
+        # Initialize discreate operators
+        self.C_1 = self.operator_constructor.initializeLSCStab_C1()
+        self.C_2 = self.operator_constructor.initializeLSCStab_C2()
+        self.Q_scaledVisc = self.operator_constructor.initializeTwoPhaseQ_visc()        
         # Initialize velocity
-        self.Q_scaledVisc = self.operator_constructor.initializeTwoPhaseQ_visc()
         self.numerical_viscosity = numerical_viscosity
         self.lumped = lumped
-        self.infsup_fe = infsup_fe
+        self.is_p_stabilized = is_p_stabilized
+
         dof_info = L.pde.dirichletConditionsForceDOF
-        var_names = self.get_velocity_var_names()
         try:
             strong_DOF_lst = []
             for i in range(1,self.get_num_components()):
                 strong_DOF_lst.append(dof_info[i].DOFBoundaryPointDict.keys())
             dof_order_construc = self.model_info.get_dof_order_class()
-            strong_vel_DOF = dof_order_construc.create_no_dirichlet_bdy_nodes_is(self.L.getOwnershipRange(),
-                                                                                 self.L.getSizes()[0][0],
-                                                                                 self.model_info.nc,
-                                                                                 strong_DOF_lst)
+            self.strong_vel_DOF = dof_order_construc.create_no_dirichlet_bdy_nodes_is(self.L.getOwnershipRange(),
+                                                                                      self.L.getSizes()[0][0],
+                                                                                      self.model_info.nc,
+                                                                                      strong_DOF_lst)
         except KeyError:
             self.strong_u_DOF = []
             self.strong_v_DOF = []
@@ -2142,6 +2272,7 @@ class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
         import Comm
         comm = Comm.get()
 
+#        isv =self.strong_vel_DOF
         isv = self.operator_constructor.linear_smoother.isv
         isp = self.operator_constructor.linear_smoother.isp
         A_mat = global_ksp.getOperators()[0]
@@ -2149,6 +2280,7 @@ class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
         self.operator_constructor.updateTwoPhaseQ_visc(viscosity_scaling=True,
                                                        numerical_viscosity = self.numerical_viscosity,
                                                        lumped = self.lumped)
+
         self.Qv_scaledVisc = self.Q_scaledVisc.getSubMatrix(isv,
                                                             isv)
         self.F = A_mat.getSubMatrix(isv,
@@ -2157,25 +2289,29 @@ class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
                                      isp)
         self.B = A_mat.getSubMatrix(isp,
                                     isv)
-        if self.infsup_fe is False:
-            self.C = A_mat.getSubMatrix(isp,
-                                        isp)
-
+        if self.is_p_stabilized:
+            self.operator_constructor.updateTwoPhaseLSC_StabC1()
+            self.operator_constructor.updateTwoPhaseLSC_StabC2()            
+            self.C1 = self.C_1.getSubMatrix(isp,
+                                            isp)
+            self.C2 = self.C_2.getSubMatrix(isp,
+                                            isp)
         L_sizes = self.B.getSizes()[0][0]
         self.TP_LSCInv_shell = p4pyPETSc.Mat().create()
         self.TP_LSCInv_shell.setSizes(L_sizes)
         self.TP_LSCInv_shell.setType('python')
-        if self.infsup_fe:
-            self.matcontext_inv = LSCInv_shell(self.Qv_scaledVisc,
-                                               self.B,
-                                               self.Bt,
-                                               self.F)
-        else:
+        if self.is_p_stabilized:
             self.matcontext_inv = LSC_stabilized_Inv_shell(self.Qv_scaledVisc,
                                                            self.B,
                                                            self.Bt,
                                                            self.F,
-                                                           self.C)
+                                                           self.C1,
+                                                           self.C2)
+        else:
+            self.matcontext_inv = LSCInv_shell(self.Qv_scaledVisc,
+                                               self.B,
+                                               self.Bt,
+                                               self.F)
         self.TP_LSCInv_shell.setPythonContext(self.matcontext_inv)
         self.TP_LSCInv_shell.setUp()
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
@@ -2288,12 +2424,9 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.operator_constructor.updateInvScaledAp()
         self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
                                                        lumped = self.lumped)
-        self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
-        self.operator_constructor.updateInvScaledAp()
-        self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
-                                                       lumped = self.lumped)
         self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
                                                                  lumped = self.lumped)
+
         self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
                                               self.operator_constructor.linear_smoother.isp)
         self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
@@ -3520,6 +3653,27 @@ class OperatorConstructor:
                                                    self.model.colind,
                                                    self.model.rowptr)
 
+    def attachLSCStabilizationC1(self):
+        """ Create discrete Advection matrix operator. """
+        self._LSC_stab_c1_val = self.model.nzval.copy()
+        self._LSC_stab_c1_val.fill(0.)
+        self.LSC_stab_c1 = SparseMat(self.model.nFreeVDOF_global,
+                                     self.model.nFreeVDOF_global,
+                                     self.model.nnz,
+                                     self._LSC_stab_c1_val,
+                                     self.model.colind,
+                                     self.model.rowptr)
+
+    def attachLSCStabilizationC2(self):
+        """ Create discrete Advection matrix operator. """
+        self._LSC_stab_c2_val = self.model.nzval.copy()
+        self._LSC_stab_c2_val.fill(0.)
+        self.LSC_stab_c2 = SparseMat(self.model.nFreeVDOF_global,
+                                     self.model.nFreeVDOF_global,
+                                     self.model.nnz,
+                                     self._LSC_stab_c2_val,
+                                     self.model.colind,
+                                     self.model.rowptr)
 
 class OperatorConstructor_rans2p(OperatorConstructor):
     """ A class for building common discrete rans2p operators.
@@ -3532,6 +3686,22 @@ class OperatorConstructor_rans2p(OperatorConstructor):
     def __init__(self,levelModel):
         OperatorConstructor.__init__(self,levelModel)
 
+    def updateLSCStabilizationC1(self):
+        """
+        Update the LSC Stabilization block
+        """
+        self.LSC_stab_c1.getCSRrepresentation()[2].fill(0.)
+        self.model.getLSCStabilizationC1(1,
+                                         self.LSC_stab_c1)
+
+    def updateLSCStabilizationC2(self):
+        """
+        Update the LSC Stabilization block
+        """
+        self.LSC_stab_c2.getCSRrepresentation()[2].fill(0.)
+        self.model.getLSCStabilizationC1(2,
+                                         self.LSC_stab_c2)
+         
     def updateTPAdvectionOperator(self,
                                   density_scaling):
         """
