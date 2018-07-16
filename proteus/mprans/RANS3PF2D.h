@@ -2224,7 +2224,7 @@ namespace proteus
                 {
                     isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + i]]=0.0;/////since by default it has value 1 for ibm.
                     isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + i]]=0.0;
-                    quantDOFs[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + i]]=0.0;/////For plot
+                    quantDOFs[vel_l2g[eN*nDOF_trial_element + i]]=0.0;/////For plot
                 }
         }
         for(int eN=0;eN<nElements_global;eN++)
@@ -2281,11 +2281,11 @@ namespace proteus
                     int opp_node=-1;
                     for (int I=0;I<nDOF_mesh_trial_element;I++)
                     {
-                        quantDOFs[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + I]] = 2.0;////////for test
+                        quantDOFs[vel_l2g[eN*nDOF_trial_element + I]] = 2.0;////////for test
                         if (_distance[I] < 0)
                         {
                             opp_node = I;
-                            quantDOFs[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + I]] = 1.0;////////for test
+                            quantDOFs[vel_l2g[eN*nDOF_trial_element + I]] = 1.0;////////for test
                         }
                     }
                     assert(opp_node >=0);
