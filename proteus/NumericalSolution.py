@@ -536,8 +536,8 @@ class NS_base:  # (HasTraits):
                         logEvent("NumericalSolution ViewMesh failed for mesh level %s" % l)
 
         theMesh = mlMesh.meshList[0].subdomainMesh
-        pCT = self.pList[0].ct
-        nCT = self.nList[0].ct
+        pCT = self.pList[0]#self.pList[0].ct
+        nCT = self.nList[0]#self.nList[0].ct
         theDomain = pCT.domain
 
         if hasattr(theDomain,"PUMIMesh") and not isinstance(theDomain,Domain.PUMIDomain) :
@@ -1057,10 +1057,10 @@ class NS_base:  # (HasTraits):
         Ainsworth and Oden and generates a corresponding error field.
         """
 
-        #p0 = self.pList[0]
-        #n0 = self.nList[0]
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
+        #p0 = self.pList[0].ct
+        #n0 = self.nList[0].ct
 
         adaptMeshNow = False
         #will need to move this to earlier when the mesh is created
