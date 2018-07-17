@@ -2283,63 +2283,76 @@ namespace proteus
                     }
                     assert(opp_node >=0);
                     assert(opp_node <nDOF_mesh_trial_element);
-                    int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
-                    surrogate_boundaries.push_back(ebN);
-                    //now find which element neighbor this element is
-                    if (eN == elementBoundaryElementsArray[ebN*2+0])//should be ebN
-                        surrogate_boundary_elements.push_back(1);
-                    else if(eN == elementBoundaryElementsArray[ebN*2+1])
-                        surrogate_boundary_elements.push_back(0);
-                    else
-                        assert(0);
-
-                    //check which particle this surrogate edge is related to.
-                    int j=-1;
-                    if(use_ball_as_particle==1)
+                    //For parallel. Two reasons:
+                    //if none of nodes of this edge is owned by this processor,
+                    //1. The surrogate_boundary_elements corresponding to this edge is -1, which gives 0 JacDet and infty h_penalty.
+                    //2. there is no contribution of the integral over this edge to Jacobian and residual.
+                    if(mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%3]<nNodes_owned || mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%3]<nNodes_owned)
                     {
-                        double middle_point_coord[3]={0.0};
-                        double middle_point_distance;
-                        if(opp_node == 0)
-                        {
-                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]);
-                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]);
-                        }
-                        else if(opp_node == 1)
-                        {
-                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]);
-                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]);
-                        }
-                        else if(opp_node == 2)
-                        {
-                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]);
-                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]);
-                        }
-                        j = get_distance_to_ball(nParticles, ball_center, ball_radius,
-                                middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
-                                middle_point_distance);
+                        int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+                        surrogate_boundaries.push_back(ebN);
+                        //now find which element neighbor this element is
+                        if (eN == elementBoundaryElementsArray[ebN*2+0])//should be ebN
+                            surrogate_boundary_elements.push_back(1);
+                        else if(eN == elementBoundaryElementsArray[ebN*2+1])
+                            surrogate_boundary_elements.push_back(0);
+                        else
+                            assert(0);
 
-                    }
-                    else
-                    {
-                        //The method is to check one quadrature point inside of this element.
-                        //It works based on the assumption that the distance between any two particles
-                        //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
-                        //or one edge belongs to two particles .
-                        //But in any case, phi_s is well defined as the minimum.
-                        double distance=1e10, distance_to_ith_particle;
-                        for (int i=0;i<nParticles;++i)
+                        //check which particle this surrogate edge is related to.
+                        int j=-1;
+                        if(use_ball_as_particle==1)
                         {
-                            distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
-                                                                               +eN*nQuadraturePoints_element
-                                                                               +0];//0-th quadrature point
-                            if (distance_to_ith_particle<distance)
+                            double middle_point_coord[3]={0.0};
+                            double middle_point_distance;
+                            if(opp_node == 0)
                             {
-                                distance = distance_to_ith_particle;
-                                j = i;
+                                middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]);
+                                middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]);
+                            }
+                            else if(opp_node == 1)
+                            {
+                                middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]);
+                                middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]);
+                            }
+                            else if(opp_node == 2)
+                            {
+                                middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]);
+                                middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]);
+                            }
+                            j = get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                    middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
+                                    middle_point_distance);
+
+                        }
+                        else
+                        {
+                            //The method is to check one quadrature point inside of this element.
+                            //It works based on the assumption that the distance between any two particles
+                            //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
+                            //or one edge belongs to two particles .
+                            //But in any case, phi_s is well defined as the minimum.
+                            double distance=1e10, distance_to_ith_particle;
+                            for (int i=0;i<nParticles;++i)
+                            {
+                                distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
+                                                                                   +eN*nQuadraturePoints_element
+                                                                                   +0];//0-th quadrature point
+                                if (distance_to_ith_particle<distance)
+                                {
+                                    distance = distance_to_ith_particle;
+                                    j = i;
+                                }
                             }
                         }
+                        surrogate_boundary_particle.push_back(j);
+                    }else{
+                        //If the integral over the surrogate boundary is needed, we have to make sure all edges are in surrogate_boundaries,
+                        //which is based on the assumption that if none of its nodes is owned by the processor, then the edge is not owned
+                        //by the processor. This assert is used to make sure this is the case.
+                        int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+                        assert(ebN>=nElementBoundaries_owned);
                     }
-                    surrogate_boundary_particle.push_back(j);
                 }
                 else if (pos_counter == 3)
                 {
@@ -4636,62 +4649,75 @@ namespace proteus
                       }
                     assert(opp_node >=0);
                     assert(opp_node <nDOF_mesh_trial_element);
-                    int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
-                    surrogate_boundaries.push_back(ebN);
-                    //now find which element neighbor this element is
-                    if (eN == elementBoundaryElementsArray[ebN*2+0])
-                        surrogate_boundary_elements.push_back(1);
-                    else if(eN == elementBoundaryElementsArray[ebN*2+1])
-                        surrogate_boundary_elements.push_back(0);
-                    else
-                        assert(0);
-                    //check which particle is this surrogate edge related to.
-                    int j=-1;
-                    if(use_ball_as_particle==1)
+                    //For parallel. Two reasons:
+                    //if none of nodes of this edge is owned by this processor,
+                    //1. The surrogate_boundary_elements corresponding to this edge is -1, which gives 0 JacDet and infty h_penalty.
+                    //2. there is no contribution of the integral over this edge to Jacobian and residual.
+                    if(mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%3]<nNodes_owned || mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%3]<nNodes_owned)
                     {
-                        double middle_point_coord[3]={0.0};
-                        double middle_point_distance;
-                        if(opp_node == 0)
+                        int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+                        surrogate_boundaries.push_back(ebN);
+                        //now find which element neighbor this element is
+                        if (eN == elementBoundaryElementsArray[ebN*2+0])
+                            surrogate_boundary_elements.push_back(1);
+                        else if(eN == elementBoundaryElementsArray[ebN*2+1])
+                            surrogate_boundary_elements.push_back(0);
+                        else
+                            assert(0);
+                        //check which particle is this surrogate edge related to.
+                        int j=-1;
+                        if(use_ball_as_particle==1)
                         {
-                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]);
-                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]);
-                        }
-                        else if(opp_node == 1)
-                        {
-                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]);
-                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]);
-                        }
-                        else if(opp_node == 2)
-                        {
-                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]);
-                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]);
-                        }
-                        j = get_distance_to_ball(nParticles, ball_center, ball_radius,
-                                middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
-                                middle_point_distance);
-
-                    }
-                    else
-                    {
-                        //The method is to check one quadrature point inside of this element.
-                        //It works based on the assumption that the distance between any two particles
-                        //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
-                        //or one edge belongs to two particles .
-                        //But in any case, phi_s is well defined as the minimum.
-                        double distance=1e10, distance_to_ith_particle;
-                        for (int i=0;i<nParticles;++i)
-                        {
-                            distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
-                                                                               +eN*nQuadraturePoints_element
-                                                                               +0];//0-th quadrature point
-                            if (distance_to_ith_particle<distance)
+                            double middle_point_coord[3]={0.0};
+                            double middle_point_distance;
+                            if(opp_node == 0)
                             {
-                                distance = distance_to_ith_particle;
-                                j = i;
+                                middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]);
+                                middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]);
+                            }
+                            else if(opp_node == 1)
+                            {
+                                middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]);
+                                middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]);
+                            }
+                            else if(opp_node == 2)
+                            {
+                                middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]);
+                                middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]);
+                            }
+                            j = get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                    middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
+                                    middle_point_distance);
+
+                        }
+                        else
+                        {
+                            //The method is to check one quadrature point inside of this element.
+                            //It works based on the assumption that the distance between any two particles
+                            //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
+                            //or one edge belongs to two particles .
+                            //But in any case, phi_s is well defined as the minimum.
+                            double distance=1e10, distance_to_ith_particle;
+                            for (int i=0;i<nParticles;++i)
+                            {
+                                distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
+                                                                                   +eN*nQuadraturePoints_element
+                                                                                   +0];//0-th quadrature point
+                                if (distance_to_ith_particle<distance)
+                                {
+                                    distance = distance_to_ith_particle;
+                                    j = i;
+                                }
                             }
                         }
+                        surrogate_boundary_particle.push_back(j);
+                    }else{
+                        //If the integral over the surrogate boundary is needed, we have to make sure all edges are in surrogate_boundaries,
+                        //which is based on the assumption that if none of its nodes is owned by the processor, then the edge is not owned
+                        //by the processor. This assert is used to make sure this is the case.
+                        int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+                        assert(ebN>=nElementBoundaries_owned);
                     }
-                    surrogate_boundary_particle.push_back(j);
                   }
                 else if (pos_counter == 3)
                   {
