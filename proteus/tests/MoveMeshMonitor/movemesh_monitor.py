@@ -24,6 +24,7 @@ nd = 2
 
 # use structured mesh
 domain = Domain.RectangularDomain(L=[1.0,1.0], x=[0.,0.])
+fixedNodeMaterialTypes = np.ones(10)
 he = 0.02
 
 center1 = [0.5, 0.5]
