@@ -2220,16 +2220,6 @@ namespace proteus
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
         //std::set<int> active_velocity_dof;
-        if(USE_SBM>0)
-        {
-            for(int eN=0;eN<nElements_global;eN++)
-                for (int i=0;i<nDOF_test_element;i++)
-                {
-                    isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + i]]=0.0;/////since by default it has value 1 for ibm.
-                    isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + i]]=0.0;
-                    quantDOFs[vel_l2g[eN*nDOF_trial_element + i]]=0.0;/////For plot
-                }
-        }
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
@@ -2284,11 +2274,11 @@ namespace proteus
                     int opp_node=-1;
                     for (int I=0;I<nDOF_mesh_trial_element;I++)
                     {
-                        quantDOFs[vel_l2g[eN*nDOF_trial_element + I]] = 2.0;////////for test
+                        quantDOFs[vel_l2g[eN*nDOF_trial_element + I]] = 2.0;//for test
                         if (_distance[I] < 0)
                         {
                             opp_node = I;
-                            quantDOFs[vel_l2g[eN*nDOF_trial_element + I]] = 1.0;////////for test
+                            quantDOFs[vel_l2g[eN*nDOF_trial_element + I]] = 1.0;//for test
                         }
                     }
                     assert(opp_node >=0);
@@ -2296,7 +2286,7 @@ namespace proteus
                     int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
                     surrogate_boundaries.push_back(ebN);
                     //now find which element neighbor this element is
-                    if (eN == elementBoundaryElementsArray[ebN*2+0])/////////should be ebN
+                    if (eN == elementBoundaryElementsArray[ebN*2+0])//should be ebN
                         surrogate_boundary_elements.push_back(1);
                     else if(eN == elementBoundaryElementsArray[ebN*2+1])
                         surrogate_boundary_elements.push_back(0);
@@ -3319,7 +3309,7 @@ namespace proteus
                     //
                     assert(dist>0.0);
                     assert(h_penalty>0.0);
-                    if (h_penalty < dist)//////Used in the proof
+                    if (h_penalty < dist)//Used in the proof of the paper
                     {
                         h_penalty = dist;
                     }
@@ -3361,15 +3351,15 @@ namespace proteus
                         globalResidual[GlobPos_v] += C_adim*phi_i*u_m_uD[1];
 
                         // (2)
-                        get_symmetric_gradient_dot_vec(grad_u_ext,grad_v_ext,normal,res);/////Use normal for consistency
+                        get_symmetric_gradient_dot_vec(grad_u_ext,grad_v_ext,normal,res);//Use normal for consistency
                         globalResidual[GlobPos_u] -= visco * phi_i*res[0];
                         globalResidual[GlobPos_v] -= visco * phi_i*res[1];
 
                         // (3)
                         get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,u_m_uD,res);
-                        globalResidual[GlobPos_u] -= visco * get_dot_product(normal,res);/////Use normal for consistency
+                        globalResidual[GlobPos_u] -= visco * get_dot_product(normal,res);//Use normal for consistency
                         get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,u_m_uD,res);
-                        globalResidual[GlobPos_v] -= visco * get_dot_product(normal,res);/////Use normal for consistency
+                        globalResidual[GlobPos_v] -= visco * get_dot_product(normal,res);//Use normal for consistency
 
                         // (4)
                         globalResidual[GlobPos_u] += C_adim*grad_phi_i_dot_d*u_m_uD[0];
@@ -3384,9 +3374,9 @@ namespace proteus
                         globalResidual[GlobPos_v] += C_adim*phi_i*grad_u_d[1];
 
                         // (7)
-                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,normal,res);/////Use normal for consistency
+                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,normal,res);//Use normal for consistency
                         globalResidual[GlobPos_u] -= visco*get_dot_product(grad_u_d,res);
-                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,normal,res);/////Use normal for consistency
+                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,normal,res);//Use normal for consistency
                         globalResidual[GlobPos_v] -= visco*get_dot_product(grad_u_d,res);
 
                         // the penalization on the tangential derivative
@@ -5660,10 +5650,11 @@ namespace proteus
                         const double zero_vec[2]={0.,0.};
                         for (int j=0;j<nDOF_trial_element;j++)
                           {
-                            register int ebN_i_j = (ebN*4
-                                    +surrogate_boundary_elements[ebN_s]*3/////////YY
-                                    )*nDOF_test_X_trial_element
-                                    + i*nDOF_trial_element + j;
+                            register int ebN_i_j = ebN*4*nDOF_test_X_trial_element
+                                                   + surrogate_boundary_elements[ebN_s]*2*nDOF_test_X_trial_element
+                                                   + surrogate_boundary_elements[ebN_s]*nDOF_test_X_trial_element
+                                                   + i*nDOF_trial_element
+                                                   + j;
 
                             double phi_j = vel_test_dS[j]/dS;
                             const double grad_phi_j[2]={vel_grad_test_dS[j*nSpace+0]/dS,
