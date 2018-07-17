@@ -2131,11 +2131,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phisErrorNodal = self.u[0].dof.copy()
         self.velocityErrorNodal = self.u[0].dof.copy()
 
-        if self.coefficients.use_sbm == 1:
-            self.isActiveDOF = np.zeros_like(r)
-        else:
-            self.isActiveDOF = np.ones_like(r)
-
     def updateMaterialParameters(self):
         x = self.q[('x')][:, :, 0]
         y = self.q[('x')][:, :, 1]
@@ -2241,10 +2236,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.pressureModel.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
-        if self.coefficients.use_sbm == 1:
-            self.isActiveDOF[:] = 0.0
-        else:
-            self.isActiveDOF[:] = 1.0
+
+        try:
+            if self.coefficients.use_sbm == 1:
+                self.isActiveDOF[:] = 0.0
+            else:
+                self.isActiveDOF[:] = 1.0
+        except AttributeError:
+            if self.coefficients.use_sbm == 1:
+                self.isActiveDOF = np.zeros_like(r)
+            else:
+                self.isActiveDOF = np.ones_like(r)
+
         self.rans3pf.calculateResidual(
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
