@@ -2274,11 +2274,11 @@ namespace proteus
                     int opp_node=-1;
                     for (int I=0;I<nDOF_mesh_trial_element;I++)
                     {
-                        quantDOFs[vel_l2g[eN*nDOF_trial_element + I]] = 2.0;//for test
+//                        quantDOFs[vel_l2g[eN*nDOF_trial_element + I]] = 2.0;//for test
                         if (_distance[I] < 0)
                         {
                             opp_node = I;
-                            quantDOFs[vel_l2g[eN*nDOF_trial_element + I]] = 1.0;//for test
+//                            quantDOFs[vel_l2g[eN*nDOF_trial_element + I]] = 1.0;//for test
                         }
                     }
                     assert(opp_node >=0);
@@ -2292,12 +2292,11 @@ namespace proteus
                         int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
                         surrogate_boundaries.push_back(ebN);
                         //now find which element neighbor this element is
+                        //YY: what if this face is a boundary face?
                         if (eN == elementBoundaryElementsArray[ebN*2+0])//should be ebN
                             surrogate_boundary_elements.push_back(1);
-                        else if(eN == elementBoundaryElementsArray[ebN*2+1])
-                            surrogate_boundary_elements.push_back(0);
                         else
-                            assert(0);
+                            surrogate_boundary_elements.push_back(0);
 
                         //check which particle this surrogate edge is related to.
                         int j=-1;
@@ -4655,10 +4654,8 @@ namespace proteus
                         //now find which element neighbor this element is
                         if (eN == elementBoundaryElementsArray[ebN*2+0])
                             surrogate_boundary_elements.push_back(1);
-                        else if(eN == elementBoundaryElementsArray[ebN*2+1])
-                            surrogate_boundary_elements.push_back(0);
                         else
-                            assert(0);
+                            surrogate_boundary_elements.push_back(0);
                         //check which particle is this surrogate edge related to.
                         int j=-1;
                         if(use_ball_as_particle==1)
