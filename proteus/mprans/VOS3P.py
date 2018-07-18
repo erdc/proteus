@@ -347,6 +347,20 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #log("Divergence = %12.5e" % (divergence,),level=2)
         self.model.q_grad_vos = self.model.q[('grad(u)',0)]
         self.q_grad_vos = self.model.q_grad_vos
+        #Limit vos (hard limit)
+        
+        for eN in range(self.model.q['x'].shape[0]):
+            for k in range(self.model.q['x'].shape[1]):                
+                self.model.q[('u',0)][eN,k] = max(  self.model.q[('u',0)][eN,k], 1e-10)
+        for eN in range(self.model.ebq[('u',0)].shape[0]):
+            for k in range(self.model.ebq[('u',0)].shape[1]):
+                for l in range(len(self.model.ebq[('u',0)][eN,k])):
+                    self.model.ebq[('u',0)][eN,k,l] = max(  self.model.ebq[('u',0)][eN,k,l], 1e-10)
+        for eN in range(self.model.ebqe['x'].shape[0]):
+            for k in range(self.model.ebqe['x'].shape[1]):
+                self.model.ebqe[('u',0)][eN,k] = max(  self.model.ebqe[('u',0)][eN,k], 1e-10)
+
+
         copyInstructions = {}
         return copyInstructions
 
