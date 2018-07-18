@@ -1211,7 +1211,7 @@ class SchurOperatorConstructor:
             The pressure mass matrix.
         """
         Qsys_petsc4py = self._massMatrix(recalculate = recalculate)
-        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+        self.Qv = Qsys_petsc4py.createSubMatrix(self.linear_smoother.isv,
                                              self.linear_smoother.isv)
         if output_matrix is True:
             self._exportMatrix(self.Qv,"Qv")
@@ -1233,7 +1233,7 @@ class SchurOperatorConstructor:
             The pressure mass matrix.
         """
         Qsys_petsc4py = self._massMatrix(recalculate = recalculate)
-        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+        self.Qv = Qsys_petsc4py.createSubMatrix(self.linear_smoother.isv,
                                              self.linear_smoother.isv)
         if output_matrix is True:
             self._exportMatrix(self.Qv,"Qv")
@@ -1741,13 +1741,13 @@ class Schur_Sp(SchurPrecon):
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace is True:
             self._setConstantPressureNullSpace(global_ksp)
-        self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
+        self.A00 = global_ksp.getOperators()[0].createSubMatrix(self.isv,
                                                              self.isv)
-        self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
+        self.A01 = global_ksp.getOperators()[0].createSubMatrix(self.isv,
                                                              self.isp)
-        self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.isp,
+        self.A10 = global_ksp.getOperators()[0].createSubMatrix(self.isp,
                                                              self.isv)
-        self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.isp,
+        self.A11 = global_ksp.getOperators()[0].createSubMatrix(self.isp,
                                                              self.isp)
         L_sizes = self.isp.sizes
         self.SpInv_shell = p4pyPETSc.Mat().create()
@@ -1792,8 +1792,8 @@ class Schur_Qp(SchurPrecon) :
         """
         # Create the pressure mass matrix and scaxle by the viscosity.
         self.operator_constructor.updateQ()
-        self.Qp = self.Q.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                      self.operator_constructor.linear_smoother.isp)
+        self.Qp = self.Q.createSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                         self.operator_constructor.linear_smoother.isp)
         self.Qp.scale(1./self.L.pde.coefficients.nu)
         L_sizes = self.Qp.size
 
@@ -1883,13 +1883,13 @@ class NavierStokesSchur(SchurPrecon):
         -----
         This is currently only set up for interlaced DOF ordering.
         """
-        self.velocity_sub_matrix = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
+        self.velocity_sub_matrix = global_ksp.getOperators()[0].createSubMatrix(self.isv,self.isv)
 
         for i, var in enumerate(self.get_velocity_var_names()):
             name_str = "is_vel_" + var
             name_str_mat = "velocity_" + var + "_sub_matrix"
             is_set = getattr(self, name_str)
-            setattr(self,name_str_mat, global_ksp.getOperators()[0].getSubMatrix(is_set,
+            setattr(self,name_str_mat, global_ksp.getOperators()[0].createSubMatrix(is_set,
                                                                                  is_set))
             global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setOperators(getattr(self,name_str_mat),
                                                                                             getattr(self,name_str_mat))
@@ -2006,25 +2006,25 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                                                        lumped = self.lumped)
         self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
                                                                  lumped = self.lumped)
-        self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        self.Np_rho = self.N_rho.createSubMatrix(self.operator_constructor.linear_smoother.isp,
                                               self.operator_constructor.linear_smoother.isp)
-        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        self.Ap_invScaledRho = self.A_invScaledRho.createSubMatrix(self.operator_constructor.linear_smoother.isp,
                                                                 self.operator_constructor.linear_smoother.isp)
-        self.Qp_rho = self.Q_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        self.Qp_rho = self.Q_rho.createSubMatrix(self.operator_constructor.linear_smoother.isp,
                                               self.operator_constructor.linear_smoother.isp)
-        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        self.Qp_invScaledVis = self.Q_invScaledVis.createSubMatrix(self.operator_constructor.linear_smoother.isp,
                                                                 self.operator_constructor.linear_smoother.isp)
 
         # ****** Sp for Ap *******
         # TODO - This is included for a possible extension which exchanges Ap with Sp for short
         #        time steps.
-        # self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
+        # self.A00 = global_ksp.getOperators()[0].createSubMatrix(self.operator_constructor.linear_smoother.isv,
         #                                                      self.operator_constructor.linear_smoother.isv)
-        # self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
+        # self.A01 = global_ksp.getOperators()[0].createSubMatrix(self.operator_constructor.linear_smoother.isv,
         #                                                      self.operator_constructor.linear_smoother.isp)
-        # self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        # self.A10 = global_ksp.getOperators()[0].createSubMatrix(self.operator_constructor.linear_smoother.isp,
         #                                                      self.operator_constructor.linear_smoother.isv)
-        # self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        # self.A11 = global_ksp.getOperators()[0].createSubMatrix(self.operator_constructor.linear_smoother.isp,
         #                                                      self.operator_constructor.linear_smoother.isp)
 
         # dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
@@ -2097,7 +2097,7 @@ class Schur_LSC(SchurPrecon):
 
     def setUp(self,global_ksp):
         self.operator_constructor.updateQ()
-        self.Qv = self.Q.getSubMatrix(self.operator_constructor.linear_smoother.isv,
+        self.Qv = self.Q.createSubMatrix(self.operator_constructor.linear_smoother.isv,
                                       self.operator_constructor.linear_smoother.isv)
         self.Qv_hat = p4pyPETSc.Mat().create()
         self.Qv_hat.setSizes(self.Qv.getSizes())
@@ -2105,9 +2105,9 @@ class Schur_LSC(SchurPrecon):
         self.Qv_hat.setUp()
         self.Qv_hat.setDiagonal(self.Qv.getDiagonal())
 
-        self.B = global_ksp.getOperators()[0].getSubMatrix(self.isp,self.isv)
-        self.F = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
-        self.Bt = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isp)
+        self.B = global_ksp.getOperators()[0].createSubMatrix(self.isp,self.isv)
+        self.F = global_ksp.getOperators()[0].createSubMatrix(self.isv,self.isv)
+        self.Bt = global_ksp.getOperators()[0].createSubMatrix(self.isv,self.isp)
 
         self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.Bt,self.F)
 
