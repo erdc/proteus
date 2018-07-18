@@ -261,8 +261,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # FOR ARTIFICIAL COMPRESSION
                  cK=1.0,
                  # OUTPUT quantDOFs
-                 outputQuantDOFs = True):
+                 outputQuantDOFs = True,
+                 epsilon=0.01):
 
+        self.epsilon=epsilon
         self.useMetrics = useMetrics
         self.variableNames=['vof']
         nc=1
@@ -471,6 +473,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
+        print "********************... ", self.model.u[0].dof.min(), self.model.u[0].dof.max()
+        print "********************... ", len(self.model.u[0].dof)
+
+        tolerance = 1.0E-12
+        self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof > 1.0+tolerance) - 1.0*(self.model.u[0].dof < 0.0-tolerance)
+        print self.model.quantDOFs.max()
+        print abs(1.-self.model.u[0].dof.max())
+        #print sum(self.model.quantDOFs)
+        
         # COMPUTE NORMS #        
         self.model.getMetricsAtEOS()
         self.model.metricsAtEOS.write(repr(np.sqrt(self.model.global_L2))+","+
@@ -895,6 +906,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # dL_global and dC_global are not the full matrices but just the CSR arrays containing the non zero entries
         self.low_order_solution=None
         self.dt_times_dC_minus_dL=None
+        self.dLow=None
         self.min_u_bc=None
         self.max_u_bc=None
         # Aux quantity at DOFs to be filled by optimized code (MQL)
@@ -1112,7 +1124,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def updateBlendingFunction(self):
         # DO LUMPED L2 PROJECTION #
-        self.blendingFunctionViaLumpedL2Projection=True
+        self.blendingFunctionViaLumpedL2Projection=False
         if self.blendingFunctionViaLumpedL2Projection:
             print "********************... "," Computing blending function via lumped L2 projection"
             self.updateAlphaFunction()
@@ -1377,6 +1389,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # This is dummy. I just care about the csr structure of the sparse matrix
         self.dt_times_dC_minus_dL = np.zeros(Cx.shape,'d')
+        self.dLow = np.zeros(Cx.shape,'d')
         self.min_u_bc = numpy.zeros(self.u[0].dof.shape,'d')+1E10
         self.max_u_bc = numpy.zeros(self.u[0].dof.shape,'d')-1E10
         self.low_order_solution = numpy.zeros(self.u[0].dof.shape,'d')
@@ -1421,13 +1434,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         except:
             pass
 
-        if (self.coefficients.STABILIZATION_TYPE == 0): #SUPG
-            self.calculateResidual = self.vof.calculateResidual
-            self.calculateJacobian = self.vof.calculateJacobian 
-        else:
-            self.calculateResidual = self.vof.calculateResidual_entropy_viscosity
-            self.calculateJacobian = self.vof.calculateMassMatrix
-
         self.calculateResidual = self.vof.calculateResidual_blending_spaces
         self.calculateJacobian = self.vof.calculateJacobian_blending_spaces
 
@@ -1455,6 +1461,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # END OF EXACT SOLUTION #
         #self.beta=(meshSize[0])
 
+        self.dLow.fill(0.0)
         self.beta=0        
         self.calculateResidual(#element
             self.timeIntegration.dt,
@@ -1564,8 +1571,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.blendingFunctionDOFs, #alpha
             self.aux[0].femSpace.psi,
             self.aux[0].femSpace.grad_psi,
+            self.dLow,
             self.quantDOFs,
-            self.beta)
+            self.beta,
+            self.coefficients.epsilon)
+        
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
@@ -1658,7 +1668,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.blendingFunctionDOFs, #alpha
             self.aux[0].femSpace.psi,
             self.aux[0].femSpace.grad_psi,
-            self.beta)
+            self.dLow,
+            self.beta,
+            self.coefficients.epsilon)
 
         # CHECKING IF THE MATRIX IS AN M-MATRIX BEFORE STRONG BCs#
         #self.quantDOFs[:]=0
