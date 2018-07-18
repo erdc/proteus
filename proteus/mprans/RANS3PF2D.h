@@ -2230,7 +2230,7 @@ namespace proteus
               //elementResidual_w[nDOF_test_element],
               eps_rho,eps_mu;
             //const double* elementResidual_w(NULL);
-            int element_active=1;//use 1 since by default it is ibm
+            double element_active=1.0;//use 1 since by default it is ibm
             double mesh_volume_conservation_element=0.0,
               mesh_volume_conservation_element_weak=0.0;
             for (int i=0;i<nDOF_test_element;i++)
@@ -2270,7 +2270,7 @@ namespace proteus
                 }
                 if (pos_counter == 2)
                 {
-                    element_active=0;
+                    element_active=0.0;
                     int opp_node=-1;
                     for (int I=0;I<nDOF_mesh_trial_element;I++)
                     {
@@ -2365,7 +2365,7 @@ namespace proteus
                 }
                 else
                 {
-                    element_active=0;
+                    element_active=0.0;
                 }
             }
             //
@@ -3156,20 +3156,17 @@ namespace proteus
             //
             //load element into global residual and save element residual
             //
-            if(element_active)
+            for(int i=0;i<nDOF_test_element;i++)
             {
-                for(int i=0;i<nDOF_test_element;i++)
-                {
-                    register int eN_i=eN*nDOF_test_element+i;
-                    phisErrorNodal[vel_l2g[eN_i]]+= phisErrorElement[i];
-                    /* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
-                    /* mesh_volume_conservation_element_weak += elementResidual_mesh[i]; */
-                    /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
-                    globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=elementResidual_u[i];
-                    globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
-                    /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
-                }//i
-            }
+                register int eN_i=eN*nDOF_test_element+i;
+                phisErrorNodal[vel_l2g[eN_i]]+= element_active*phisErrorElement[i];
+                /* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
+                /* mesh_volume_conservation_element_weak += elementResidual_mesh[i]; */
+                /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
+                globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=element_active*elementResidual_u[i];
+                globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=element_active*elementResidual_v[i];
+                /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
+            }//i
             /* mesh_volume_conservation += mesh_volume_conservation_element; */
             /* mesh_volume_conservation_weak += mesh_volume_conservation_element_weak; */
             /* mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element)); */
@@ -3285,7 +3282,7 @@ namespace proteus
                       }
 
                     double dist = 0.0;
-                    double distance[2], P_normal[2], P_tangent[2], normal_Omega[2]; // distance vector, normal and tangent of the physical boundary
+                    double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
 
 
 
@@ -3330,8 +3327,6 @@ namespace proteus
                     distance[1] = -P_normal[1]*dist;
                     P_tangent[0] = -P_normal[1];
                     P_tangent[1] = P_normal[0];
-                    normal_Omega[0] = -P_normal[0];
-                    normal_Omega[1] = -P_normal[1];
                     double visco = nu_0*rho_0;
                     double Csb=10;
                     double C_adim = Csb*visco/h_penalty;
@@ -4572,7 +4567,7 @@ namespace proteus
         for(int eN=0;eN<nElements_global;eN++)
           {
             register double eps_rho,eps_mu;
-            int element_active=1;//value 1 is because it is ibm by default
+            double element_active=1.0;//value 1 is because it is ibm by default
 
             register double  elementJacobian_p_p[nDOF_test_element][nDOF_trial_element],
               elementJacobian_p_u[nDOF_test_element][nDOF_trial_element],
@@ -4639,7 +4634,7 @@ namespace proteus
                 }
                 if (pos_counter == 2)
                   {
-                    element_active=0;
+                    element_active=0.0;
                     //std::cout<<"Identified cut cell"<<std::endl;
                     int opp_node=-1;
                     for (int I=0;I<nDOF_mesh_trial_element;I++)
@@ -4721,11 +4716,11 @@ namespace proteus
                   }
                 else if (pos_counter == 3)
                   {
-                    element_active=1;
+                    element_active=1.0;
                   }
                 else
                   {
-                    element_active=0;
+                    element_active=0.0;
                   }
               }
             for  (int k=0;k<nQuadraturePoints_element;k++)
@@ -5492,7 +5487,6 @@ namespace proteus
             //
             //load into element Jacobian into global Jacobian
             //
-            if(element_active)
             for (int i=0;i<nDOF_test_element;i++)
               {
                 register int eN_i = eN*nDOF_test_element+i;
@@ -5505,13 +5499,13 @@ namespace proteus
                     /* globalJacobian[csrRowIndeces_p_w[eN_i] + csrColumnOffsets_p_w[eN_i_j]] += elementJacobian_p_w[i][j]; */
 
                     /* globalJacobian[csrRowIndeces_u_p[eN_i] + csrColumnOffsets_u_p[eN_i_j]] += elementJacobian_u_p[i][j]; */
-                    globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
-                    globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_u_v[eN_i_j]] += elementJacobian_u_v[i][j];
+                    globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += element_active*elementJacobian_u_u[i][j];
+                    globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_u_v[eN_i_j]] += element_active*elementJacobian_u_v[i][j];
                     /* globalJacobian[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_u_w[eN_i_j]] += elementJacobian_u_w[i][j]; */
 
                     /* globalJacobian[csrRowIndeces_v_p[eN_i] + csrColumnOffsets_v_p[eN_i_j]] += elementJacobian_v_p[i][j]; */
-                    globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_v_u[eN_i_j]] += elementJacobian_v_u[i][j];
-                    globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += elementJacobian_v_v[i][j];
+                    globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_v_u[eN_i_j]] += element_active*elementJacobian_v_u[i][j];
+                    globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += element_active*elementJacobian_v_v[i][j];
                     /* globalJacobian[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_v_w[eN_i_j]] += elementJacobian_v_w[i][j]; */
 
                     /* globalJacobian[csrRowIndeces_w_p[eN_i] + csrColumnOffsets_w_p[eN_i_j]] += elementJacobian_w_p[i][j]; */
@@ -5621,7 +5615,7 @@ namespace proteus
                     //
 
                     double dist = 0.0;
-                    double distance[2], P_normal[2], P_tangent[2], normal_Omega[2]; // distance vector, normal and tangent of the physical boundary
+                    double distance[2], P_normal[2], P_tangent[2]; // distance vector, normal and tangent of the physical boundary
 
                     if(use_ball_as_particle==1)
                     {
@@ -5652,8 +5646,6 @@ namespace proteus
                     distance[1] = -P_normal[1]*dist;
                     P_tangent[0]= -P_normal[1];
                     P_tangent[1]= P_normal[0];
-                    normal_Omega[0] = -P_normal[0];
-                    normal_Omega[1] = -P_normal[1];
                     assert(dist>0.0);
                     assert(h_penalty>0.0);
                     if (h_penalty < dist)
