@@ -749,7 +749,7 @@ def setup_given_extensions(extensions):
                        ['proteus/tests/AddedMass/petsc.options.superlu_dist']),
                       (os.path.join(proteus_install_path,'tests','MoveMeshMonitor'),
                        ['proteus/tests/MoveMeshMonitor/petsc.options.asm',
-                        'proteus/tests/MoveMeshMonitor/nodeResult.csv']),
+                        'proteus/tests/MoveMeshMonitor/nodesResult.csv']),
                        (os.path.join(proteus_install_path,'tests','wave_tests'),
                        ['proteus/tests/wave_tests/data_timeSeries.dat',
                         'proteus/tests/wave_tests/data_timeSeries.txt',
