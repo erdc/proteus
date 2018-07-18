@@ -74,7 +74,7 @@ class TestMoveMeshMonitor(unittest.TestCase):
         ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
         ns.calculateSolution('movemesh_monitor')
         nodes = ns.modelList[0].levelModelList[0].mesh.nodeArray
-        nodesResult = np.genfromtxt('nodesResult.csv', delimiter=',')
+        nodesResult = np.genfromtxt(os.path.join(dirloc, "nodesResult.csv"), delimiter=',')
         for node in range(len(nodesResult)):
             npt.assert_almost_equal(nodes[node], nodesResult[node], decimal=5)
             # npt.assert_almost_equal(nodes[node, 0], nodesResult[node, 0], decimal=5)
