@@ -6,7 +6,7 @@
 #include "ModelFactory.h"
 
 #define heaviside(z) (z>0 ? 1. : (z<0 ? 0. : 0.5))
-#define SINGLE_POTENTIAL 0
+#define SINGLE_POTENTIAL 1
 
 namespace proteus
 {
