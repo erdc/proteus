@@ -3335,6 +3335,25 @@ namespace proteus
                     assert(h_penalty>0.0);
                     if (h_penalty < dist)
                         h_penalty = dist;
+
+                    if(get_dot_product(P_normal,normal)>0)
+                    {
+//                        std::cout<<"YYPDB: some normal direction has wrong sign\n";
+//
+//                        for(int i=0;i<4;++i)
+//                        {
+//                            std::cout<<"\t"<<mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(surrogate_boundary_elements[ebN_s]+i)%4]+0]
+//                                     <<"\t"<<mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(surrogate_boundary_elements[ebN_s]+i)%4]+1]
+//                                     <<"\t"<<mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(surrogate_boundary_elements[ebN_s]+i)%4]+2]<<"\n";
+//                        }
+//                        std::cout<<"\t"<<normal[0]
+//                                 <<"\t"<<normal[1]
+//                                 <<"\t"<<normal[2]<<"\n";
+                        for(int i=0;i<3;++i)
+                        {
+                            normal[i] *= -1.0;
+                        }
+                    }
                     double visco = nu_0*rho_0;
                     double Csb=10;
                     double C_adim = Csb*visco/h_penalty;
@@ -5700,6 +5719,14 @@ namespace proteus
 //                    P_tangent[0] = -P_normal[1];
 //                    P_tangent[1] = P_normal[0];
 //                    double tx = P_tangent[0] ; double ty = P_tangent[1];
+                    if(get_dot_product(P_normal,normal)>0)
+                    {
+                        //                        std::cout<<"YYPDB: some normal direction has wrong sign\n";
+                        for(int i=0;i<3;++i)
+                        {
+                            normal[i] *= -1.0;
+                        }
+                    }
                     assert(dist>0.0);
                     assert(h_penalty>0.0);
                     if (h_penalty < dist)
@@ -5721,8 +5748,11 @@ namespace proteus
                         const double grad_phi_i_dot_d = get_dot_product(grad_phi_i,distance);
                         for (int j=0;j<nDOF_trial_element;j++)
                         {
-                            register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j,
-                                    ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
+                            register int ebN_i_j = ebN*4*nDOF_test_X_trial_element
+                                                    + surrogate_boundary_elements[ebN_s]*2*nDOF_test_X_trial_element
+                                                    + surrogate_boundary_elements[ebN_s]*nDOF_test_X_trial_element
+                                                    + i*nDOF_trial_element
+                                                    + j;
 
                             double phi_j = vel_test_dS[j]/dS;//since phi_i has dS
                             const double grad_phi_j[3]={vel_grad_test_dS[j*nSpace+0]/dS,
