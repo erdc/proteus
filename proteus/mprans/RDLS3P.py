@@ -191,6 +191,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             weakDirichletFactor=10.0,
             backgroundDiffusionFactor=0.01,
             # Parameters for elliptic re-distancing
+            computeMetrics = False,
             ELLIPTIC_REDISTANCING=0, #Linear elliptic re-distancing by default
             alpha=1.0E9,
             backgroundDissipationEllipticRedist=1.0,
@@ -229,6 +230,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.penaltyParameter = penaltyParameter
         self.backgroundDiffusionFactor = backgroundDiffusionFactor
         self.weakDirichletFactor = weakDirichletFactor
+        self.computeMetrics=computeMetrics
         self.ELLIPTIC_REDISTANCING=ELLIPTIC_REDISTANCING
         assert (ELLIPTIC_REDISTANCING >= 0 and ELLIPTIC_REDISTANCING <= 3), "ELLIPTIC_REDISTANCING=0,1,2 or 3."
         #ELLIPTIC_REDISTANCING:
@@ -243,7 +245,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if alpha=='inf':
             self.alpha = 0
             self.freeze_interface_within_elliptic_redist = True
-        
+
     def attachModels(self, modelList):
         if self.nModelId is not None:
             self.nModel = modelList[self.nModelId]
@@ -313,7 +315,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.rdModel.updateTimeHistory(t, resetFromDOF=True)
             copyInstructions = {'copy_uList': True,
                                 'uList_model': self.nModelId}
-            copyInstructions = {'reset_uList': False} #mql: should this be True or False?  
+            copyInstructions = {'reset_uList': False} #mql: should this be True or False?
             return copyInstructions
         else:
             return {}
@@ -329,7 +331,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.nModel.numericalFlux.ebqe[
                     ('u', 0)][:] = self.rdModel.ebqe[
                     ('u', 0)]
-            copyInstructions = {}                      
+            copyInstructions = {}
             return copyInstructions
         else:
             return {}
@@ -879,7 +881,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if comm.size() > 1:
             assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions, "You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        # add some structures for elliptic re-distancing        
+        # add some structures for elliptic re-distancing
         self.interface_locator = None
         self.lumped_qx = numpy.zeros(self.u[0].dof.shape,'d')
         self.lumped_qy = numpy.zeros(self.u[0].dof.shape,'d')
@@ -900,7 +902,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                               proteus.FemTools.C0_AffineBernsteinOnSimplex)
             isBernstein = isBernsteinOnCube or isBernsteinOnSimplex
             assert isBernstein==True, "If order>1 and ELLIPTIC_REDISTANCING=True, use Bernstein polynomials"
-            
+
         log(memory("stride+offset", "OneLevelTransport"), level=4)
         if numericalFluxType is not None:
             if options is None or options.periodicDirichletConditions is None:
@@ -1000,6 +1002,74 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.nElementBoundaryQuadraturePoints_elementBoundary,
             compKernelFlag)
 
+        ###########
+        # METRICS #
+        ###########
+        self.hasExactSolution = False
+        if ('exactSolution') in dir (options):
+            self.hasExactSolution = True
+            self.exactSolution = options.exactSolution
+
+        # metrics
+        self.global_I_err = 0.0
+        self.global_V_err = 0.0
+        self.global_D_err = 0.0
+        if self.coefficients.computeMetrics:
+            self.metricsAtEOS = open(self.name+"_metricsAtEOS.csv","w")
+            self.metricsAtEOS.write('global_I_err'+","+
+                                    'global_V_err'+","+
+                                    'global_D_err'+"\n")
+
+    ####################################3
+    def runAtEOS(self):
+        if self.coefficients.computeMetrics==True and self.hasExactSolution==True:
+            # Get exact solution at quad points
+            u_exact = numpy.zeros(self.q[('u',0)].shape,'d')
+            X = {0:self.q[('x')][:,:,0],
+                 1:self.q[('x')][:,:,1],
+                 2:self.q[('x')][:,:,2]}
+            t = self.timeIntegration.t
+            u_exact[:] = self.exactSolution[0](X,t)
+            self.getMetricsAtEOS(u_exact)
+            self.metricsAtEOS.write(repr(self.global_I_err)+","+
+                                    repr(self.global_V_err)+","+
+                                    repr(self.global_D_err)+"\n")
+            self.metricsAtEOS.flush()
+
+    def getMetricsAtEOS(self,u_exact):
+        import copy
+        """
+        Calculate the element residuals and add in to the global residual
+        """
+        degree_polynomial = 1
+        try:
+            degree_polynomial = self.u[0].femSpace.order
+        except:
+            pass
+
+        (self.global_I_err,
+         self.global_V_err,
+         self.global_D_err) = self.rdls.calculateMetricsAtEOS(#element
+             self.u[0].femSpace.elementMaps.psi,
+             self.u[0].femSpace.elementMaps.grad_psi,
+             self.mesh.nodeArray,
+             self.mesh.elementNodesArray,
+             self.elementQuadratureWeights[('u',0)],
+             self.u[0].femSpace.psi,
+             self.u[0].femSpace.grad_psi,
+             self.u[0].femSpace.psi,
+             #physics
+             self.mesh.nElements_global,
+             self.u[0].femSpace.dofMap.l2g,
+             self.mesh.elementDiametersArray,
+             degree_polynomial,
+             self.coefficients.epsFact,
+             self.u[0].dof, # This is u_lstage due to update stages in RKEV
+             u_exact,
+             self.offset[0],self.stride[0])
+
+    ###############################################
+
     def calculateCoefficients(self):
         pass
 
@@ -1035,7 +1105,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.interface_locator = self.coefficients.nModel.interface_locator
             else:
                 self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')
-                
+
         # try to use 1d,2d,3d specific modules
         # mwf debug
         # pdb.set_trace()
@@ -1162,7 +1232,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if self.interface_locator[gi] == 1.0:
                     r[gi] = 0
         # END OF FREEZING INTERFACE #
-        
+
         # print "m_tmp",self.timeIntegration.m_tmp[0]
         # print "dH",self.q[('dH',0,0)]
         # print "dH_sge",self.q[('dH_sge',0,0)]
@@ -1184,7 +1254,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #import numpy
         import pdb
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,jacobian)
-        
+
         # for  now force time integration
         useTimeIntegration = 1
         if self.timeIntegration.__class__ == TimeIntegration.NoIntegration or not self.timeTerm:
@@ -1264,7 +1334,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         else:
                             self.nzval[i] = 0.0
         # END OF FREEZING INTERFACE #
-        
+
         log("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
