@@ -5,21 +5,19 @@ from proteus.Profiling import logEvent
 
 ct = Context.Options([
     ("degree_pol",1,"1 or 2"),
-    ("parallel", False, "Use PETSc or not"),
-    ("unstructured", False, "unstructured mesh or not"),
-    ("nRefine", 5, "Specify initial mesh size by giving number of cells in each direction"),
-    ("use_sbm",1,"1 or 0"),
+    ("parallel", False, "Use PETSc or not"),##################Use Petsc to get condition number
+    ("unstructured", True, "unstructured mesh or not"),
+    ("nRefine",4, "Specify initial mesh size by giving number of cells in each direction"),
+    ("use_sbm",1,"0=no sbm, 1=1st order sbm, 2=2nd order sbm"),
 ], mutable=True)
 
 Context.set(ct)
 
 #===============================================================================
-# 
+# Parameters
 #===============================================================================
 USE_SBM = ct.use_sbm
 
-# if True uses PETSc solvers
-parallel = ct.parallel
 # linearSmoother = ct.linearSmoother
 # compute mass balance statistics or not
 # checkMass = ct.checkMass  # True
@@ -36,6 +34,13 @@ soname = '_'.join([str(i) for i in
                    ['poisson_tri',`ct.degree_pol`,`ct.nRefine`,`ct.use_sbm`,`ct.unstructured`]
                    ])
 
+
+parallel = ct.parallel
+if parallel:
+   usePETSc = True
+   useSuperlu=False
+else:
+   usePETSc = False
 #===============================================================================
 # # spatial approximation orders
 #===============================================================================
@@ -55,16 +60,18 @@ else:
 # parallel partitioning info
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
+nLayersOfOverlapForParallel = 0
 #===============================================================================
 # spatial mesh
 #===============================================================================
 nn = nnx = nny = 2**ct.nRefine + 1
 nnz = 1
-he = 1.0 / (nnx - 1.0)
+# he = 0.6/(nnx - 1.0)
+he = 0.05/2**ct.nRefine
 # True for tetgen, false for tet or hex from rectangular grid
 unstructured = ct.unstructured
-lower_left_cornor = (-1.0, -1.0)
-width_and_hight = (2.0, 2.0)
+lower_left_cornor = (-0.21, -0.21)
+width_and_hight = (0.42, 0.42)
 triangleFlag=1
 boundaries = ['bottom', 'right', 'top', 'left', 'front', 'back', 'obstacle']
 boundaryTags = dict([(key, i + 1) for (i, key) in enumerate(boundaries)])
@@ -77,15 +84,15 @@ domain = box
 if unstructured:
     import my_domain
     if ct.use_sbm==1:
-        domain,boundaryTags = my_domain.get_domain_2D_square(left_bottom_cornor=(-1,-1),
-                                                       L=(2,2),
+        domain,boundaryTags = my_domain.get_domain_2D_square(left_bottom_cornor=lower_left_cornor,
+                                                       L=width_and_hight,
                                                        he=he,
                                                        )
 
     else:
         domain,boundaryTags = my_domain.get_domain_2D_disk(center=(0.0,0.0),
-                                                       radius=0.7+ct.use_sbm*he,
-                                                       he=2.0/(nn-1),
+                                                       radius=0.2,
+                                                       he=he,
                                                        )
 
     domain.writePoly("mesh")

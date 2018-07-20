@@ -7,7 +7,8 @@ from proteus.Transport import OneLevelTransport
 
 cdef extern from "Poisson_M1.h" namespace "proteus":
     cdef cppclass Poisson_base:
-        void calculateResidual(double dt,
+        void calculateResidual(int rank,
+                               double dt,
                                double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -41,6 +42,8 @@ cdef extern from "Poisson_M1.h" namespace "proteus":
                                int * elementBoundariesArray,
                                int * elementBoundaryElementsArray,
                                int * elementBoundaryLocalElementBoundariesArray,
+                               int nNodes_owned,
+                               int nElementBoundaries_owned,
                                int u_ndofs,
                                int NNZ,
                                int * csrRowIndeces_DofLoops,
@@ -89,6 +92,8 @@ cdef extern from "Poisson_M1.h" namespace "proteus":
                                int * elementBoundariesArray,
                                int * elementBoundaryElementsArray,
                                int * elementBoundaryLocalElementBoundariesArray,
+                               int nNodes_owned,
+                               int nElementBoundaries_owned,
                                int USE_SBM)
         void calculateMassMatrix(double dt,
                                  double * mesh_trial_ref,
@@ -169,6 +174,7 @@ cdef class cPoisson_base:
         del self.thisptr
 
     def calculateResidual(self,
+                          int rank,
                           double dt,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -203,6 +209,8 @@ cdef class cPoisson_base:
                           numpy.ndarray elementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray,
+                          int nNodes_owned,
+                          int nElementBoundaries_owned,
                           int u_ndofs,
                           int NNZ,
                           numpy.ndarray csrRowIndeces_DofLoops,
@@ -215,7 +223,8 @@ cdef class cPoisson_base:
                           numpy.ndarray isActiveDOF,
                           int USE_SBM
                           ):
-        self.thisptr.calculateResidual(dt,
+        self.thisptr.calculateResidual(rank,
+                                       dt,
                                        < double * >mesh_trial_ref.data,
                                        < double * >mesh_grad_trial_ref.data,
                                        < double * >mesh_dof.data,
@@ -249,6 +258,8 @@ cdef class cPoisson_base:
                                        < int * >elementBoundariesArray.data,
                                        < int * >elementBoundaryElementsArray.data,
                                        < int * >elementBoundaryLocalElementBoundariesArray.data,
+                                       nNodes_owned,
+                                       nElementBoundaries_owned,
                                        u_ndofs,
                                        NNZ,
                                        < int * >csrRowIndeces_DofLoops.data,
@@ -298,6 +309,8 @@ cdef class cPoisson_base:
                           numpy.ndarray elementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray,
+                          int nNodes_owned,
+                          int nElementBoundaries_owned,
                           int USE_SBM):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
@@ -337,6 +350,8 @@ cdef class cPoisson_base:
                                        < int * >elementBoundariesArray.data,
                                        < int * >elementBoundaryElementsArray.data,
                                        < int * >elementBoundaryLocalElementBoundariesArray.data,
+                                       nNodes_owned,
+                                       nElementBoundaries_owned,
                                        USE_SBM)
 
     def calculateMassMatrix(self,

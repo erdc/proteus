@@ -149,7 +149,7 @@ initialConditions = {
 #===============================================================================
 class true_solution(object):
     def uOfXT(self, x, t):
-        R2 = 0.7**2
+        R2 = 0.2**2
         r2 = x[0]*x[0]+x[1]*x[1]
         d = 0.0
         if r2<R2:
@@ -157,7 +157,7 @@ class true_solution(object):
         return d
 
     def duOfXT(self, x, t):
-        R2 = 0.7**2
+        R2 = 0.2**2
         r2 = x[0]*x[0]+x[1]*x[1]
         d = [0.0, 0.0]
         if r2<R2:

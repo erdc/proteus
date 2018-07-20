@@ -25,6 +25,7 @@ cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","-g")
 cv["CFLAGS"]+=" -march=native"
 
 
+
 PROTEUS_PETSC_EXTRA_LINK_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_LINK_ARGS', [])
 PROTEUS_PETSC_EXTRA_COMPILE_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_COMPILE_ARGS', [])
 
@@ -60,11 +61,29 @@ setup(name='ChMBDModel',
                     Extension("cPoisson_M1",["cPoisson_M1.pyx"],
                               depends=["Poisson_M1.h"] + ["ModelFactory.h","CompKernel.h"],
                               language="c++",
-                              extra_compile_args=PROTEUS_OPT,
+#                             extra_compile_args=PROTEUS_OPT, ##To turn on debug mode and make assert work
                               include_dirs=[numpy.get_include(),
                                             '/Users/yy/p/proteus/proteus',
                                             '/Users/yy/p/proteus/darwin/include'],#boost
                               library_dirs=[config.PROTEUS_LIB_DIR,config.PROTEUS_LIB_DIR[:-3]+'lib64'],
                                 ),
+#                     Extension("cPoisson_M2",["cPoisson_M2.pyx"],
+#                               depends=["Poisson_M2.h"] + ["ModelFactory.h","CompKernel.h"],
+#                               language="c++",
+# #                             extra_compile_args=PROTEUS_OPT,
+#                               include_dirs=[numpy.get_include(),
+#                                             '/Users/yy/p/proteus/proteus',
+#                                             '/Users/yy/p/proteus/darwin/include'],#boost
+#                               library_dirs=[config.PROTEUS_LIB_DIR,config.PROTEUS_LIB_DIR[:-3]+'lib64'],
+#                                 ),
+#                     Extension("cPoisson_M3",["cPoisson_M3.pyx"],
+#                               depends=["Poisson_M3.h"] + ["ModelFactory.h","CompKernel.h"],
+#                               language="c++",
+# #                             extra_compile_args=PROTEUS_OPT,
+#                               include_dirs=[numpy.get_include(),
+#                                             '/Users/yy/p/proteus/proteus',
+#                                             '/Users/yy/p/proteus/darwin/include'],#boost
+#                               library_dirs=[config.PROTEUS_LIB_DIR,config.PROTEUS_LIB_DIR[:-3]+'lib64'],
+#                                 ),
                 ]
       )

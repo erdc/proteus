@@ -936,6 +936,10 @@ class LevelModel(OneLevelTransport):
 
         self.forceStrongConditions = True
         
+        comm = Comm.get()
+        self.comm = comm
+        self.rank = comm.rank()
+        
     def yy_attach_model(self):
         
         ########################
@@ -1268,6 +1272,20 @@ class LevelModel(OneLevelTransport):
         r[:] += u
         r /= 3.0
         
+    def test_mesh(self, node_xyz, ele_nodes):
+        for eN in range(ele_nodes.shape[0]):
+            i1,i2,i3 = ele_nodes[eN,:]
+            print "YYPDB-",self.rank,",",eN,node_xyz[i1,0],node_xyz[i1,1],node_xyz[i2,0],node_xyz[i2,1],node_xyz[i3,0],node_xyz[i3,1]
+            
+    def test_ele(self, eN, node_xyz, ele_nodes):
+        i1,i2,i3 = ele_nodes[eN,:]
+        print "YYPDB-",self.rank,",",eN,node_xyz[i1,0],node_xyz[i1,1],node_xyz[i2,0],node_xyz[i2,1],node_xyz[i3,0],node_xyz[i3,1]
+            
+    def test_ownedEdges_ownedNodes(self, edge_nodes, N_nodes_owned, N_edges_owned):
+        for i in range(N_edges_owned):
+            i1,i2=edge_nodes[i]
+            if i1 >= N_nodes_owned and i2 >= N_nodes_owned: 
+                print "Error: Both nodes are not owned: ", self.rank, i, i1, i2
     def getResidual(self, u, r):
         # zero out residual
         r.fill(0.0)
@@ -1298,10 +1316,19 @@ class LevelModel(OneLevelTransport):
         print "**"*10,"dt= ",self.timeIntegration.dt
 #         import pdb
 #         pdb.set_trace()
+        print "my rank is: ",self.rank
+#         if self.rank==0:
+# #             self.test_mesh(self.mesh.nodeArray, self.mesh.elementNodesArray)
+#             from pdb_clone import pdb; pdb.set_trace_remote()
+#         Comm.get().barrier()
+        self.test_ownedEdges_ownedNodes(self.mesh.edgeNodesArray,self.mesh.nNodes_owned,self.mesh.nElementBoundaries_owned)
+        Comm.get().barrier()
+        
         self.isActiveDOF = np.ones_like(r);#####YY:Used for sbm
         self.Poisson.calculateResidual(  # element
 #         self.coefficients.calculateResidual(#YY
 #         self.ncls.calculateResidual_entropy_viscosity(
+            self.rank,
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1336,6 +1363,8 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
+            self.mesh.nNodes_owned,
+            self.mesh.nElementBoundaries_owned,
             self.nFreeDOF_global[0],#number of free dofs of 0-component #1089 #####YY: should be the size of self.u[0].dof == global size of the vector
             self.nnz,   #non-zero elements in global matrix  
             self.rowptr,  # Row indices for global sparse pattern; global = all components #len is 4357(1089*4+1)
@@ -1348,8 +1377,6 @@ class LevelModel(OneLevelTransport):
             self.isActiveDOF,
             self.coefficients.USE_SBM)
         r*=self.isActiveDOF
-#         import pdb
-#         pdb.set_trace()
         for dofN in np.nditer(self.coefficients.dirichlet_bc_dofs['dof']):
             global_dofN = dofN
             r[global_dofN] = 0.0#######always
@@ -1426,6 +1453,8 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
+            self.mesh.nNodes_owned,
+            self.mesh.nElementBoundaries_owned,
             self.coefficients.USE_SBM)
 
         # sb method

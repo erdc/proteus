@@ -14,8 +14,8 @@ elif pDegree_ls == 2:
 else:
     print "pDegree_ls = %s not recognized " % pDegree_ls
 
-elementQuadrature = SimplexGaussQuadrature(nd, rotation_quad_order)
-elementBoundaryQuadrature = SimplexGaussQuadrature(nd - 1, rotation_quad_order)
+elementQuadrature = SimplexGaussQuadrature(nd, 3)
+elementBoundaryQuadrature = SimplexGaussQuadrature(nd - 1, 3)
 
 subgridError = None
 
@@ -88,7 +88,7 @@ matrix = SparseMatrix
 if parallel:
     multilevelLinearSolver = KSP_petsc4py  # PETSc
     levelLinearSolver = KSP_petsc4py  # PETSc
-    linear_solver_options_prefix = 'ncls_'
+    linear_solver_options_prefix = 'sbm_'
     linearSolverConvergenceTest = 'r-true'
 else:
     multilevelLinearSolver = LU
