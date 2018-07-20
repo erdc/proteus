@@ -299,6 +299,8 @@ static apf::Field *computeHessianField(apf::Field *grad2phi)
     apf::Matrix3x3 g2phi;
     apf::getMatrix(grad2phi, v, 0, g2phi);
     apf::Matrix3x3 hess = hessianFormula(g2phi);
+    if(m->getDimension()==2)
+      hess[2][2] = 1.0;
     apf::setMatrix(hessf, v, 0, hess);
   }
   m->end(it);
@@ -535,7 +537,11 @@ static apf::Field *getSizeScales(apf::Field *phif, apf::Field *curves,
     apf::Vector3 curve;
     apf::getVector(curves, v, 0, curve);
     apf::Vector3 scale;
-    scaleFormula(phi, hmin, hmax, adapt_step, curve, scale);
+    scale[0] = 0.1;
+    scale[1] = 1.0;
+    scale[2] = 1.0;
+
+    //scaleFormula(phi, hmin, hmax, adapt_step, curve, scale);
     apf::setVector(scales, v, 0, scale);
   }
   m->end(it);
@@ -693,8 +699,10 @@ int MeshAdaptPUMIDrvr::calculateAnisoSizeField()
   apf::destroyField(hess);
 
   apf::destroyField(gradphi);
+/*
   for (int i = 0; i < 2; ++i)
     SmoothField(size_scale);
+*/
 
   return 0;
 }
