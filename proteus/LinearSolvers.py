@@ -457,8 +457,9 @@ class KSP_petsc4py(LinearSolver):
         logEvent("KSP atol %e rtol %e" % (self.ksp.atol,self.ksp.rtol))
 
     def prepare(self,b=None):
-        pc_setup_stage = p4pyPETSc.Log.Stage('pc_setup_stage')
-        pc_setup_stage.push()
+        if self.ksp.prefix=='rans2p_':
+            pc_setup_stage = p4pyPETSc.Log.Stage('pc_setup_stage')
+            pc_setup_stage.push()
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
         if self.petsc_L.proteus_jacobian is not None:
@@ -482,11 +483,13 @@ class KSP_petsc4py(LinearSolver):
                 self.preconditioner.setUp(self.ksp)
         self.ksp.setUp()
         self.ksp.pc.setUp()
-        pc_setup_stage.pop()
+        if self.ksp.prefix=='rans2p_':
+            pc_setup_stage.pop()
 
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
-        solve_stage = p4pyPETSc.Log.Stage('lin_solve')
-        solve_stage.push()
+        if self.ksp.prefix=='rans2p_':
+            solve_stage = p4pyPETSc.Log.Stage('rans2p_lin_solve')
+            solve_stage.push()
         if par_b.proteus2petsc_subdomain is not None:
             par_b.proteus_array[:] = par_b.proteus_array[par_b.petsc2proteus_subdomain]
             par_u.proteus_array[:] = par_u.proteus_array[par_u.petsc2proteus_subdomain]
@@ -530,7 +533,8 @@ class KSP_petsc4py(LinearSolver):
         if par_b.proteus2petsc_subdomain is not None:
             par_b.proteus_array[:] = par_b.proteus_array[par_b.proteus2petsc_subdomain]
             par_u.proteus_array[:] = par_u.proteus_array[par_u.proteus2petsc_subdomain]
-        solve_stage.pop()
+        if self.ksp.prefix=='rans2p_':
+            solve_stage.pop()
 
     def converged(self,r):
         """
