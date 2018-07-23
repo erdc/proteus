@@ -479,7 +479,7 @@ class KSP_petsc4py(LinearSolver):
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
             if self.preconditioner:
-                self.preconditioner.setUp(self.ksp,newton_it=newton_it)
+                self.preconditioner.setUp(self.ksp)
         self.ksp.setUp()
         self.ksp.pc.setUp()
         pc_setup_stage.pop()
@@ -1287,9 +1287,8 @@ class petsc_ASM(KSP_Preconditioner):
         """ Create the pc object. """
         self.pc = p4pyPETSc.PC().create()
 
-    def setUp(self,global_ksp=None):
-        self.pc.setUp()
-#        self.pc.getASMSubKSP()[0].setUp()
+    def setUp(self,global_ksp):
+        global_ksp.pc.getASMSubKSP()[0].setUp()
 
 class petsc_LU(KSP_Preconditioner):
     """ LU PETSc preconditioner class.
