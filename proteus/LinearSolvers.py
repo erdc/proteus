@@ -1293,8 +1293,7 @@ class petsc_ASM(KSP_Preconditioner):
         self.pc = p4pyPETSc.PC().create()
 
     def setUp(self,global_ksp=None):
-        self.pc.setUp()
-#        self.pc.getASMSubKSP()[0].setUp()
+        global_ksp.pc.getASMSubKSP()[0].setUp()
 
 class petsc_LU(KSP_Preconditioner):
     """ LU PETSc preconditioner class.
