@@ -263,6 +263,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         if self._b_or[2] == 1. or self._b_or[2] == -1.:
             self.w_diffusive.setConstantBC(0.)
             self.ws_diffusive.setConstantBC(0.)
+        self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
 
     def setRigidBodyMoveMesh(self, body):
@@ -355,10 +356,14 @@ class BC_RANS(BoundaryConditions.BC_Base):
             - If False, the wall function prescribes dirichlet conditions.
 
         """
-
-        self.reset()
-
         wf = wall
+        self.reset()
+        self.setNoSlip()
+        self.BC_type = "Wall function"
+        self.dissipation_diffusive.resetBC()
+        self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)
+        self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
+        """
         self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
         self.vof_advective.setConstantBC(0.)
         self.p_advective.setConstantBC(0.)
@@ -374,7 +379,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.v_dirichlet.uOfXT = lambda x, t: wf.get_v_dirichlet(x, t)
             self.w_dirichlet.uOfXT = lambda x, t: wf.get_w_dirichlet(x, t)
             self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)
-
+        """
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
         Sets boundary conditions for moving the mesh with a rigid body
@@ -633,7 +638,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.dissipation_diffusive.resetBC()
 
     def setHydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
-                                              refLevel, smoothing, U=None, Uwind=None,
+                                              refLevel, smoothing,
                                               pRef=0.0, vert_axis=None,
                                               air=1.0, water=0.0,
                                               kInflow=None, dissipationInflow=None,
@@ -699,21 +704,24 @@ class BC_RANS(BoundaryConditions.BC_Base):
                 H = 1.0
             return H * dissipationInflowAir + (1 - H) * dissipationInflow
 
-        self.u_dirichlet.setConstantBC(0.)
-        self.v_dirichlet.setConstantBC(0.)
-        self.w_dirichlet.setConstantBC(0.)
-        self.us_dirichlet.setConstantBC(0.)
-        self.vs_dirichlet.setConstantBC(0.)
-        self.ws_dirichlet.setConstantBC(0.)
+        if ( (kInflow is not None) and (kInflowAir is not None)):
+            self.k_dirichlet.uOfXT = inlet_k_dirichlet
+        if ( (dissipationInflow is not None) and (dissipationInflowAir is not None)):
+            self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.pInit_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.pInc_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
         self.vos_dirichlet.setConstantBC(0.)
         self.u_diffusive.setConstantBC(0.)
+        self.v_diffusive.setConstantBC(0.)
+        self.w_diffusive.setConstantBC(0.)
+        self.us_diffusive.setConstantBC(0.)
+        self.vs_diffusive.setConstantBC(0.)
+        self.ws_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
-
+        """
         if U is not None:
             def get_inlet_ux_dirichlet(i):
                 def ux_dirichlet(x, t):
@@ -744,7 +752,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
             self.dissipation_advective.resetBC()
             self.dissipation_diffusive.resetBC()
-
+        """
 
     def setHydrostaticPressureOutletWithDepth_stressFree(self, seaLevel, rhoUp, rhoDown, nuUp, nuDown, g,
                                                          refLevel, smoothing, U=None, Uwind=None,
