@@ -424,6 +424,23 @@ independently and lagged in time
 
     def postStep(self, t, firstStep=False):
         self.u_old_dof = numpy.copy(self.model.u[0].dof)
+
+        #Limit k (hard limit)
+        
+        for eN in range(self.model.q[('u',0)].shape[0]):
+            for k in range(self.model.q[('u',0)].shape[1]):                
+                self.model.q[('u',0)][eN,k] = max(  self.model.q[('u',0)][eN,k], 1e-50)
+
+        if self.model.ebq.has_key(('u', 0)):
+            for eN in range(self.model.ebq[('u',0)].shape[0]):
+                for k in range(self.model.ebq[('u',0)].shape[1]):
+                    for l in range(len(self.model.ebq[('u',0)][eN,k])):
+                        self.model.ebq[('u',0)][eN,k,l] = max(  self.model.ebq[('u',0)][eN,k,l], 1e-50)
+        for eN in range(self.model.ebqe[('u',0)].shape[0]):
+            for k in range(self.model.ebqe[('u',0)].shape[1]):
+                self.model.ebqe[('u',0)][eN,k] = max(  self.model.ebqe[('u',0)][eN,k], 1e-50)
+
+
         copyInstructions = {}
         return copyInstructions
 
