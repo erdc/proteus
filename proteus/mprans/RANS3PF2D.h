@@ -110,8 +110,8 @@ namespace proteus
                                    const double* ebq_global_phi_solid,
                                    const double* ebq_global_grad_phi_solid,
                                    const double* ebq_particle_velocity_solid,
-                                   const double* phi_solid_nodes,
-                                   const double* phi_solid,
+                                         double* phi_solid_nodes,
+                                         double* phi_solid,
                                    const double* q_velocity_solid,
                                    const double* q_vos,
                                    const double* q_dvos_dt,
@@ -1162,10 +1162,14 @@ namespace proteus
             //              dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
             //            force_y = dV * D_s * (p * phi_s_normal[1] - porosity * mu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]) + C_surf * (v - v_s) * rho) +
             //              dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
-            force_x = dV*D_s*(p*fluid_outward_normal[0] - porosity*mu*(fluid_outward_normal[0]*grad_u[0] + fluid_outward_normal[1]*grad_u[1]) + C_surf*rel_vel_norm*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
-            force_y = dV*D_s*(p*fluid_outward_normal[1] - porosity*mu*(fluid_outward_normal[0]*grad_v[0] + fluid_outward_normal[1]*grad_v[1]) + C_surf*rel_vel_norm*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
-
-
+//            force_x = dV*D_s*(p*fluid_outward_normal[0] - porosity*mu*(fluid_outward_normal[0]*grad_u[0] + fluid_outward_normal[1]*grad_u[1]) + C_surf*rel_vel_norm*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
+//            force_y = dV*D_s*(p*fluid_outward_normal[1] - porosity*mu*(fluid_outward_normal[0]*grad_v[0] + fluid_outward_normal[1]*grad_v[1]) + C_surf*rel_vel_norm*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
+            force_x = dV * D_s * (p * fluid_outward_normal[0]
+                                  -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
+                                  );
+            force_y = dV * D_s * (p * fluid_outward_normal[1]
+                                  -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
+                                  );
             //always 3D for particle centroids
             r_x = x - center[0];
             r_y = y - center[1];
@@ -2052,8 +2056,8 @@ namespace proteus
                              const double* ebq_global_phi_solid,
                              const double* ebq_global_grad_phi_solid,
                              const double* ebq_particle_velocity_solid,
-                             const double* phi_solid_nodes,
-                             const double* phi_solid,
+                                   double* phi_solid_nodes,
+                                   double* phi_solid,
                              const double* q_velocity_solid,
                              const double* q_vos,
                              const double* q_dvos_dt,
@@ -2244,6 +2248,16 @@ namespace proteus
                 phisErrorElement[i]=0.0;
                 /* elementResidual_w[i]=0.0; */
               }//i
+            //Use for plotting result
+            if(use_ball_as_particle==1)
+            {
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+0],
+                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
+                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
+                                                phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]);
+            }
             if(USE_SBM>0)
             {
                 //
@@ -2556,6 +2570,12 @@ namespace proteus
                 q_x[eN_k_3d+0]=x;
                 q_x[eN_k_3d+1]=y;
                 /* q_x[eN_k_3d+2]=z; */
+                if(use_ball_as_particle==1)
+                {
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                         x,y,z,
+                                         phi_solid[eN_k]);
+                }
                 /* // */
                 //calculate pde coefficients at quadrature points
                 //
