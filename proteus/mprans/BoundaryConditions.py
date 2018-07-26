@@ -476,6 +476,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.ws_dirichlet.setConstantBC(0.0)
         self.k_dirichlet.setConstantBC(kInflow)
         self.dissipation_diffusive.setConstantBC(0.)
+        self.k_diffusive.setConstantBC(0.0)
 
     def __cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(self, x, t):
         cython.declare(xx=cython.double[3])
