@@ -13,6 +13,8 @@
 #include <queue>
 #include <algorithm> 
 
+#define RATIO 8.0
+
 static void SmoothField(apf::Field *f);
 void gradeAnisoMesh(apf::Mesh* m,double gradingFactor);
 void gradeAspectRatio(apf::Mesh* m, int idx, double gradingFactor);
@@ -299,15 +301,35 @@ static apf::Field *computeHessianField(apf::Field *grad2phi)
     apf::Matrix3x3 g2phi;
     apf::getMatrix(grad2phi, v, 0, g2phi);
     apf::Matrix3x3 hess = hessianFormula(g2phi);
-    if(m->getDimension()==2)
-      hess[2][2] = 1.0;
     apf::setMatrix(hessf, v, 0, hess);
   }
   m->end(it);
   return hessf;
 }
 
-static apf::Field *computeMetricField(apf::Field *gradphi, apf::Field *grad2phi, apf::Field *size_iso, double eps_u)
+static apf::Matrix3x3 computeGradPhiMetric(apf::Field *gradphi, apf::Field *grad2phi, apf::Field *size_iso, double eps_u,apf::MeshEntity* v,double hPhi)
+//Function used to generate a field of metric tensors at vertices. It is meant to be an instantiation or member of computeMetricField .
+//Currently needs development.
+{
+    apf::Mesh *m = apf::getMesh(grad2phi);
+    apf::Matrix3x3 g2phi;
+    apf::getMatrix(grad2phi, v, 0, g2phi);
+    apf::Vector3 gphi;
+    apf::getVector(gradphi, v, 0, gphi);
+    apf::Matrix3x3 gphigphit(gphi[0] * gphi[0], gphi[0] * gphi[1], gphi[0] * gphi[2],
+                             gphi[0] * gphi[1], gphi[1] * gphi[1], gphi[1] * gphi[2],
+                             gphi[0] * gphi[2], gphi[1] * gphi[2], gphi[2] * gphi[2]);
+
+    apf::Matrix3x3 hess = hessianFormula(g2phi);
+    //apf::Matrix3x3 metric = gphigphit/(apf::getScalar(size_iso,v,0)*apf::getScalar(size_iso,v,0))+ hess/eps_u; 
+    //apf::Matrix3x3 metric = gphigphit/(apf::getScalar(size_iso,v,0)*apf::getScalar(size_iso,v,0));
+    //apf::Matrix3x3 metric = gphigphit/(hPhi*hPhi);
+    //apf::Matrix3x3 metric = hess;
+    apf::Matrix3x3 metric = gphigphit/(hPhi*hPhi)+ hess/eps_u;
+  return metric;
+}
+
+static apf::Field *computeMetricField(apf::Field *gradphi, apf::Field *grad2phi, apf::Field *size_iso, double eps_u,double hPhi)
 //Function used to generate a field of metric tensors at vertices. It is meant to be an umbrella function that can compute Hessians too.
 //Currently needs development.
 {
@@ -315,26 +337,53 @@ static apf::Field *computeMetricField(apf::Field *gradphi, apf::Field *grad2phi,
   apf::Field *metricf = createLagrangeField(m, "proteus_metric", apf::MATRIX, 1);
   apf::MeshIterator *it = m->begin(0);
   apf::MeshEntity *v;
+  apf::Field* phif = m->findField("phi");
   while ((v = m->iterate(it)))
   {
+    apf::Matrix3x3 metric;
+
+    //metric = computeGradPhiMetric(gradphi,grad2phi, size_iso, eps_u, v);
+    double epsilon = RATIO * hPhi*2.0;
+    if( (fabs(apf::getScalar(phif,v,0)) < epsilon ))
+    {
+      metric = computeGradPhiMetric(gradphi,grad2phi, size_iso, eps_u, v,hPhi);
+    }
+    else
+    {
+      for(int i=0; i<3; i++)
+      {
+        for(int j=0;j<3; j++)
+        {
+          if(i==j)
+            metric[i][j] = 1.0;
+          else
+            metric[i][j] = 0.0;
+        }
+      }
+    }
+
+    if(m->getDimension()==2){
+      metric[0][2]=0.0;
+      metric[1][2]=0.0;
+      metric[2][2]=1.0;
+      metric[2][0]=0.0;
+      metric[2][1]=0.0;
+    }
+
+
+/*
     apf::Matrix3x3 g2phi;
     apf::getMatrix(grad2phi, v, 0, g2phi);
-/*
-    apf::Vector3 gphi;
-    apf::getVector(gradphi, v, 0, gphi);
-    apf::Matrix3x3 gphigphit(gphi[0] * gphi[0], gphi[0] * gphi[1], gphi[0] * gphi[2],
-                             gphi[0] * gphi[1], gphi[1] * gphi[1], gphi[1] * gphi[2],
-                             gphi[0] * gphi[2], gphi[1] * gphi[2], gphi[2] * gphi[2]);
-*/
+
     apf::Matrix3x3 hess = hessianFormula(g2phi);
     apf::Matrix3x3 metric = hess;
-    //apf::Matrix3x3 metric = gphigphit/(apf::getScalar(size_iso,v,0)*apf::getScalar(size_iso,v,0))+ hess/eps_u;
-    //apf::Matrix3x3 metric(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
+*/
     apf::setMatrix(metricf, v, 0, metric);
   }
   m->end(it);
   return metricf;
 }
+
 
 // Gaussian, Mean and principal curvatures based on Hessian and gradient of phi.
 static void curveFormula(apf::Matrix3x3 const &h, apf::Vector3 const &g,
@@ -450,7 +499,10 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
 {
 /*
   double epsilon = 7.0 * hmin;
-  double lambdamin = 1.0 / (hmin * hmin);
+*/
+
+  //This ensures that the eigenvalues are not too small
+  double lambdamin = lambda[0]/maxAspect;
   if (lambda[1] < 1e-10)
   {
     lambda[1] = lambdamin;
@@ -460,19 +512,7 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
   {
     lambda[2] = lambdamin;
   }
-*/
-  ///* useful
-  
-/*
-  scale[0] = h_dest*pow(lambda[1]/lambda[0],0.25);  
-  scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
-  scale[2] = 1.0;
-*/
-/*
-  scale[0] = h_dest*pow(lambda[1]/lambda[0],0.25)*pow(3,0.25)*0.5;  
-  scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
-  scale[2] = 1.0;
-*/
+
 /*
   if(nsd == 2){
     scale[0] = h_dest;  
@@ -486,41 +526,105 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
   }
 */
 
-//3D
+    double epsilon = RATIO * hmin*2.0;
+    if (fabs(phi) < epsilon)
+    {
+      scale[0] = hmin;  
+      scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
+      scale[2] = sqrt(lambda[0]/lambda[2])*scale[0];
+    }
+    else{
+      scale[0] = h_dest;
+      scale[1] = h_dest;
+      scale[2] = h_dest;
+    }
 
+
+  if(scale[1]/scale[0] > maxAspect)
+    scale[1] = maxAspect*scale[0];
+  if(scale[2]/scale[0] > maxAspect)
+    scale[2] = maxAspect*scale[0];
+  if(scale[1]/scale[0] > maxAspect || scale[2]/scale[0] > maxAspect){
+    std::cout<<"Scales reached maximum aspect ratio\n";
+  }
+
+}
+
+static void scaleFormulaPhiVMS(double phi, double hmin, double hmax, double h_dest,
+                            apf::Vector3 const &curves,
+                            double lambda[3], double eps_u, apf::Vector3 &scale,int nsd,double maxAspect)
+//Function used to set the size scale vector for the anisotropic ERM size field configuration
+//Inputs:
+// phi is is the distance to the interface
+// hmin is the minimum mesh size
+// hmax is the maximum mesh size
+// h_dest is the computed new mesh size
+// curves is a vector that denotes the curvature of the interface
+// lambda is the ordered set of eigenvalues from an eigendecomposition of the metric tensor
+// eps_u is a tolerance for the distance away from the interface
+//Output:
+// scale is the mesh size in each direction for a vertex
+{
+
+  //This ensures that the eigenvalues are not too small
+  double lambdamin = lambda[0]/maxAspect;
+  if (lambda[1] < 1e-10)
+  {
+    lambda[1] = lambdamin;
+    lambda[2] = lambdamin;
+  }
+  if (lambda[2] < 1e-10)
+  {
+    lambda[2] = lambdamin;
+  }
+
+/*
   if(nsd == 2){
-    scale[0] = h_dest * pow((lambda[1] ) / (lambda[0]), 1.0 / 4.0);
-    scale[1] = sqrt(lambda[0] / lambda[1]) * scale[0];
-    scale[2] = 1.0;
+    scale[0] = hmin;
+    scale[1] = sqrt(0.002 / fabs(curves[1]));
+    scale[2] = sqrt(0.002 / fabs(curves[2]));
   }
   else{
-/*
-    scale[0] = h_dest * pow((lambda[1] * lambda[2]) / (lambda[0] * lambda[0]), 1.0 / 6.0);
-    scale[1] = sqrt(lambda[0] / lambda[1]) * scale[0];
-    scale[2] = sqrt(lambda[0] / lambda[2]) * scale[0];
-*/
-    scale[0] = h_dest;
-    scale[1] = sqrt(lambda[0] / lambda[1]) * scale[0];
-    scale[2] = sqrt(lambda[0] / lambda[2]) * scale[0];
-    if(scale[1]/scale[0] > maxAspect)
-      scale[1] = maxAspect*scale[0];
-    if(scale[2]/scale[0] > maxAspect)
-      scale[2] = maxAspect*scale[0];
-    if(scale[1]/scale[0] > maxAspect || scale[2]/scale[0] > maxAspect){
-      std::cout<<"Scales reached maximum aspect ratio\n";
+
+    double epsilon = 7.0 * hmin;
+    if (fabs(phi) < epsilon)
+    {
+      scale[0] = hmin;
+      scale[1] = sqrt(0.002 / fabs(curves[1]));
+      scale[2] = sqrt(0.002 / fabs(curves[2]));
+    }
+    else{
+      scale[0] = h_dest;
+      scale[1] = h_dest;
+      scale[2] = h_dest;
     }
   }
-  //*/
-  /*
-    if(fabs(phi)<epsilon){
-      scale[0] = h_dest;
-      scale[1] = sqrt(eps_u/fabs(curves[2]));
-      scale[2] = sqrt(eps_u/fabs(curves[1]));
-    }
-    else
-      scale = apf::Vector3(1,1,1) * h_dest; 
 */
+    double epsilon = RATIO * hmin*2.0;
+    if (fabs(phi) < epsilon)
+    {
+      scale[0] = hmin;
+      scale[1] = sqrt(0.002 / fabs(curves[1]));
+      scale[2] = sqrt(0.002 / fabs(curves[2]));
+    }
+    else{
+      scale[0] = h_dest;
+      scale[1] = h_dest;
+      scale[2] = h_dest;
+    }
+
+
+  if(scale[1]/scale[0] > maxAspect)
+    scale[1] = maxAspect*scale[0];
+  if(scale[2]/scale[0] > maxAspect)
+    scale[2] = maxAspect*scale[0];
+  if(scale[1]/scale[0] > maxAspect || scale[2]/scale[0] > maxAspect){
+    std::cout<<"Scales reached maximum aspect ratio\n";
+  }
+
 }
+
+
 
 static apf::Field *getSizeScales(apf::Field *phif, apf::Field *curves,
                                  double hmin, double hmax, int adapt_step)
@@ -537,11 +641,8 @@ static apf::Field *getSizeScales(apf::Field *phif, apf::Field *curves,
     apf::Vector3 curve;
     apf::getVector(curves, v, 0, curve);
     apf::Vector3 scale;
-    scale[0] = 0.1;
-    scale[1] = 1.0;
-    scale[2] = 1.0;
 
-    //scaleFormula(phi, hmin, hmax, adapt_step, curve, scale);
+    scaleFormula(phi, hmin, hmax, adapt_step, curve, scale);
     apf::setVector(scales, v, 0, scale);
   }
   m->end(it);
@@ -911,12 +1012,15 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     //
     //error-to-size relationship should be different between anisotropic and isotropic cases
     //consider moving this to where size frames are computed to get aspect ratio info
+    
+/* temporarily turn off until this is tested
     if (adapt_type_config == "anisotropic")
       if(target_error/err_curr <= 1)
         h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+1.0)); //refinement
       else
         h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+3.0)); //coarsening
     else //isotropic
+*/
       h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
 
     apf::setScalar(errorSize_reg, reg, 0, h_new);
@@ -942,18 +1046,19 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     if(comm_rank==0)
       std::cout<<"Entering anisotropic loop to compute size scales and frames\n";
     double eps_u = 0.002; //distance from the interface
-/*
     apf::Field *phif = m->findField("phi");
     apf::Field *gradphi = apf::recoverGradientByVolume(phif);
     apf::Field *grad2phi = apf::recoverGradientByVolume(gradphi);
-*/
+
     apf::Field *speedF = extractSpeed(m->findField("velocity"));
     apf::Field *gradSpeed = apf::recoverGradientByVolume(speedF);
     apf::Field *grad2Speed = apf::recoverGradientByVolume(gradSpeed);
-    //apf::Field *hess = computeHessianField(grad2phi);
-    //apf::Field *curves = getCurves(hess, gradphi);
-    //apf::Field* metricf = computeMetricField(gradphi,grad2phi,errorSize,eps_u);
-    apf::Field *metricf = computeMetricField(gradSpeed, grad2Speed, errorSize, eps_u);
+
+    apf::Field *hess = computeHessianField(grad2phi);
+    apf::Field *curves = getCurves(hess, gradphi);
+    //apf::Field* metricf = computeGradPhiMetricField(gradphi,grad2phi,errorSize,eps_u);
+    apf::Field *metricf = computeMetricField(gradphi, grad2phi, errorSize, eps_u,hPhi);
+    //apf::Field *metricf = computeMetricField(gradSpeed, grad2Speed, errorSize, eps_u);
     apf::Field *frame_comps[3] = {apf::createLagrangeField(m, "frame_0", apf::VECTOR, 1), apf::createLagrangeField(m, "frame_1", apf::VECTOR, 1), apf::createLagrangeField(m, "frame_2", apf::VECTOR, 1)};
     //getERMSizeFrames(metricf, gradSpeed, frame_comps);
 
@@ -974,9 +1079,9 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     }
     it = m->begin(0);
     while( (v = m->iterate(it)) ){
-      double phi;// = apf::getScalar(phif, v, 0);
+      double phi = apf::getScalar(phif, v, 0);
       apf::Vector3 curve;
-      //apf::getVector(curves, v, 0, curve);
+      apf::getVector(curves, v, 0, curve);
 
       //metricf is the hessian
       apf::Matrix3x3 metric;
@@ -1000,7 +1105,10 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
       double lambda[3] = {ssa[2].wm, ssa[1].wm, ssa[0].wm};
 
-      scaleFormulaERM(phi, hmin, hmax, apf::getScalar(errorSize, v, 0), curve, lambda, eps_u, scale,nsd,maxAspect);
+      //anisotropic scales based on eigenvalues of metric
+      //scaleFormulaERM(phi, hPhi, hmax, apf::getScalar(errorSize, v, 0), curve, lambda, eps_u, scale,nsd,maxAspect);
+      scaleFormulaPhiVMS(phi, hPhi, hmax, apf::getScalar(errorSize, v, 0), curve, lambda, eps_u, scale,nsd,maxAspect);
+
       apf::setVector(size_scale, v, 0, scale);
       //get frames
 
@@ -1018,11 +1126,11 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
         frame[i] = frame[i].normalize();
       frame = apf::transpose(frame);
       apf::setMatrix(size_frame, v, 0, frame);
-
     }
     m->end(it);
 
     //Do simple size and aspect ratio grading
+    /*
     gradeAnisoMesh(m,gradingFactor);
     if(comm_rank==0)
       std::cout<<"Finished grading size 0\n";
@@ -1032,19 +1140,22 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     gradeAspectRatio(m,2,gradingFactor);
     if(comm_rank==0)
       std::cout<<"Finished grading size 2\n";
+    */
 
     apf::synchronize(size_scale);
 
-    //apf::destroyField(gradphi);
-    //apf::destroyField(grad2phi);
-    //apf::destroyField(curves);
-    //apf::destroyField(hess);
+    apf::destroyField(gradphi);
+    apf::destroyField(grad2phi);
+    apf::destroyField(curves);
+    apf::destroyField(hess);
 
+/*
     if(logging_config=="on"){
       char namebuffer[20];
       sprintf(namebuffer,"pumi_preadapt_aniso_%i",nAdapt);
       apf::writeVtkFiles(namebuffer, m);
     }
+*/
 
     apf::destroyField(metricf);
     apf::destroyField(frame_comps[0]);
@@ -1053,6 +1164,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     apf::destroyField(speedF);
     apf::destroyField(gradSpeed);
     apf::destroyField(grad2Speed);
+    apf::destroyField(errorSize); //should be moved over to an intersecting function when available
   }
   else
   {
