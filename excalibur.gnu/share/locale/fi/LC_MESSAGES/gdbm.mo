@@ -1,0 +1,1 @@
+/p/home/jcollins/.hashdist/bld/gdbm/oovog225omsr/share/locale/fi/LC_MESSAGES/gdbm.mo

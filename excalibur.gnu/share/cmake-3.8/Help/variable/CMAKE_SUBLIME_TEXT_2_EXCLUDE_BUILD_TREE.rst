@@ -1,0 +1,1 @@
+/p/home/jcollins/.hashdist/bld/cmake/rpuvdavnd5ia/share/cmake-3.8/Help/variable/CMAKE_SUBLIME_TEXT_2_EXCLUDE_BUILD_TREE.rst

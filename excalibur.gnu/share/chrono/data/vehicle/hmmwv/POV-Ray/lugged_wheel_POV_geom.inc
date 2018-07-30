@@ -1,0 +1,1 @@
+/p/home/jcollins/.hashdist/bld/chrono/aysqmmwaj4if/share/chrono/data/vehicle/hmmwv/POV-Ray/lugged_wheel_POV_geom.inc

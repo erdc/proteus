@@ -1,0 +1,1 @@
+/p/home/jcollins/.hashdist/bld/chrono/aysqmmwaj4if/share/chrono/data/vehicle/M113/POV-Ray/TrackShoe_POV_geom.inc

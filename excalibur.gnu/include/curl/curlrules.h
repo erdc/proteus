@@ -1,0 +1,1 @@
+/p/home/jcollins/.hashdist/bld/curl/qc2iwbufjxw2/include/curl/curlrules.h
