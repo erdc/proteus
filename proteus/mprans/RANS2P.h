@@ -1884,7 +1884,7 @@ namespace proteus
             flux += penaltyFlux;
             //cek: need to investigate this issue more
             //contact line slip
-            //flux*=(smoothedDirac(eps,0) - smoothedDirac(eps,phi))/smoothedDirac(eps,0);
+            flux*=(smoothedDirac(eps,0) - smoothedDirac(eps,phi))/smoothedDirac(eps,0);
           }
         else
           {
@@ -1923,7 +1923,7 @@ namespace proteus
             tmp +=max_a*penalty*v;
             //cek: need to investigate this issue more
             //contact line slip
-            //tmp*=(smoothedDirac(eps,0) - smoothedDirac(eps,phi))/smoothedDirac(eps,0);
+            tmp*=(smoothedDirac(eps,0) - smoothedDirac(eps,phi))/smoothedDirac(eps,0);
           }
         return tmp;
       }

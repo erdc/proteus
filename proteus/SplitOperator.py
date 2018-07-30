@@ -4,7 +4,7 @@ A class hierarchy for split operator methods.
 .. inheritance-diagram:: proteus.SplitOperator
    :parts: 1
 """
-from .Profiling import logEvent 
+from .Profiling import logEvent
 
 class System:
     def __init__(self):
