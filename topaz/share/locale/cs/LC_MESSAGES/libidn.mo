@@ -1,0 +1,1 @@
+/p/home/jcollins/.hashdist/bld/libidn/oyyqmzunlvw5/share/locale/cs/LC_MESSAGES/libidn.mo

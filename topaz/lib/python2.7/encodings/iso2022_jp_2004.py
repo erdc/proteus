@@ -1,0 +1,1 @@
+/p/home/jcollins/.hashdist/bld/python/c2yamkr4yy5l/lib/python2.7/encodings/iso2022_jp_2004.py

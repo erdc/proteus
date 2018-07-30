@@ -1,0 +1,1 @@
+/p/home/jcollins/.hashdist/bld/pillow/dwzmz7ohz4ye/bin/pilfont.py

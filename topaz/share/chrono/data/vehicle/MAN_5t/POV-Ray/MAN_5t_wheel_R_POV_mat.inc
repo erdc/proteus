@@ -1,0 +1,1 @@
+/p/home/jcollins/.hashdist/bld/chrono/mk2oa66hffxk/share/chrono/data/vehicle/MAN_5t/POV-Ray/MAN_5t_wheel_R_POV_mat.inc

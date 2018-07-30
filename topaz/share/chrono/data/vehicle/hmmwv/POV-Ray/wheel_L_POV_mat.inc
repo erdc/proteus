@@ -1,0 +1,1 @@
+/p/home/jcollins/.hashdist/bld/chrono/mk2oa66hffxk/share/chrono/data/vehicle/hmmwv/POV-Ray/wheel_L_POV_mat.inc

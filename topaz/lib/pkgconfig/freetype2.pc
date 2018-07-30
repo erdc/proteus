@@ -1,0 +1,1 @@
+/p/home/jcollins/.hashdist/bld/freetype/phesrpivxgvc/lib/pkgconfig/freetype2.pc
