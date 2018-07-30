@@ -66,7 +66,7 @@ class Physics_base(_Physics_base):
                     self.__dict__[k] = copy.deepcopy(v)
                 except:
                     pass
-                
+
 def reset_default_p():
     for k,v in Physics_base().__dict__.iteritems():
         default_p.__dict__[k] = v

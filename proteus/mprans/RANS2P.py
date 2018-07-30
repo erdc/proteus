@@ -181,7 +181,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  PRESSURE_SGE=1.0,
                  VELOCITY_SGE=1.0,
                  PRESSURE_PROJECTION_STABILIZATION=0.0,
-                 phaseFunction=None):
+                 phaseFunction=None,
+                 LAG_LES=1.0):
+        self.LAG_LES=LAG_LES
         self.phaseFunction=phaseFunction
         self.NONCONSERVATIVE_FORM=NONCONSERVATIVE_FORM
         self.MOMENTUM_SGE=MOMENTUM_SGE
@@ -753,12 +755,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.comm.isMaster():
-            # print "wettedAreas"
-            # print self.wettedAreas[:]
-            # print "Forces_p"
-            # print self.netForces_p[:,:]
-            # print "Forces_v"
-            # print self.netForces_v[:,:]
+            logEvent("wettedAreas\n"+
+                     `self.wettedAreas[:]` +
+                     "\nForces_p\n" +
+                     `self.netForces_p[:,:]` +
+                     "\nForces_v\n" +
+                     `self.netForces_v[:,:]`)
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
             self.forceHistory_p.flush()
@@ -1015,6 +1017,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('u', 1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('u', 2)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('u', 3)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe['eddy_viscosity'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe['eddy_viscosity_last'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('advectiveFlux_bc_flag', 0)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
         self.ebqe[('advectiveFlux_bc_flag', 1)] = numpy.zeros(
@@ -1051,6 +1055,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # VRANS start, defaults to RANS
         self.q[('r', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['eddy_viscosity'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['eddy_viscosity_last'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         # VRANS end
         # RANS 2eq Models start
         self.q[('grad(u)', 1)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
@@ -1426,8 +1431,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     if cj == 0:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
                     else:
-                        self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],
-                                                 self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+                        self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t) + self.MOVING_DOMAIN*self.mesh.nodeVelocityArray[dofN,cj-1]
+
         self.rans2p.calculateResidual(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
@@ -1498,7 +1503,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.q_turb_var[0],
                                       self.coefficients.q_turb_var[1],
                                       self.coefficients.q_turb_var_grad[0],
+                                      self.coefficients.LAG_LES,
                                       self.q['eddy_viscosity'],
+                                      self.q['eddy_viscosity_last'],
+                                      self.ebqe['eddy_viscosity'],
+                                      self.ebqe['eddy_viscosity_last'],
                                       # VRANS end
                                       self.u[0].femSpace.dofMap.l2g,
                                       self.u[1].femSpace.dofMap.l2g,
@@ -1723,6 +1732,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.q_turb_var[0],
                                       self.coefficients.q_turb_var[1],
                                       self.coefficients.q_turb_var_grad[0],
+                                      self.coefficients.LAG_LES,
+                                      self.q['eddy_viscosity_last'],
+                                      self.ebqe['eddy_viscosity_last'],
                                       # VRANS end
                                       self.u[0].femSpace.dofMap.l2g,
                                       self.u[1].femSpace.dofMap.l2g,
@@ -1999,7 +2011,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.velocityPostProcessor.vpp_algorithms[ci].updateConservationJacobian[cj] = True
         self.q['velocityError'][:] = self.q[('velocity', 0)]
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
-        self.q['velocityError'] -= self.q[('velocity', 0)]
+        if  self.coefficients.nd ==3:
+            self.q[('cfl',0)][:] = np.sqrt(self.q[('velocity',0)][...,0]*self.q[('velocity',0)][...,0] +
+                                           self.q[('velocity',0)][...,1]*self.q[('velocity',0)][...,1] +
+                                           self.q[('velocity',0)][...,2]*self.q[('velocity',0)][...,2])/self.elementDiameter[:,np.newaxis]
+        else:
+            self.q[('cfl',0)][:] = np.sqrt(self.q[('velocity',0)][...,0]*self.q[('velocity',0)][...,0] +
+                                           self.q[('velocity',0)][...,1]*self.q[('velocity',0)][...,1])/self.elementDiameter[:,np.newaxis]
+        self.q['velocityError'] -= self.q[('velocity',0)]
+
+        self.q['eddy_viscosity_last'][:] = self.q['eddy_viscosity']
+        self.ebqe['eddy_viscosity_last'][:] = self.ebqe['eddy_viscosity']
+
     def updateAfterMeshMotion(self):
         pass
 

@@ -212,7 +212,7 @@ class Shape(object):
         """
         Indicates that this shape is within another shape
         (this function or setChildShape is necessary for gmsh)
-        Sets the shape within 
+        Sets the shape within
 
         Parameters
         ----------
@@ -849,7 +849,7 @@ class Cylinder(Shape):
         vert_bottom = np.array(vert)
         facets += [[[i for i in range(0, len(vert_bottom))]]]
         vert_top = np.array(vert)+h_offset
-        segs_top = np.array(segs)+len(vert) 
+        segs_top = np.array(segs)+len(vert)
         nvb = len(vert_bottom)
         facets += [[[i+nvb for i in range(0, len(vert_top))]]]
         for i in range(len(vert_bottom)-1):
@@ -918,7 +918,7 @@ class Circle(Shape):
         seg_last=[nVertices-1,0]
         segm.append(seg_last,)
         self.segments=np.array(segm)
-        
+
         # facets
         facets=[]
         for kkk in range(nVertices):
@@ -1436,7 +1436,7 @@ def _assembleGeometry(domain, BC_class):
                                         fn = child_seg[(fac[j-1], fac[j])]
                                         f_to_merge = child.facets[fn][0]
                                         # reverse list
-                                        f_to_merge = f_to_merge[::-1] 
+                                        f_to_merge = f_to_merge[::-1]
                                         # shift lists
                                         f_to_merge = list(deque(f_to_merge).rotate(-f_to_merge.index(fac[j-1])))
                                         fac = list(deque(fac).rotate(-fac.index(fac[j])))
@@ -1534,14 +1534,16 @@ def _generateMesh(domain):
     # ----- MESH GENERATION ----- #
     # --------------------------- #
     mesh = domain.MeshOptions
-    if mesh.outputFiles['poly'] is True:
-        domain.writePoly(mesh.outputFiles_name)
-    if mesh.outputFiles['ply'] is True:
-        domain.writePLY(mesh.outputFiles_name)
-    if mesh.outputFiles['asymptote'] is True:
-        domain.writeAsymptote(mesh.outputFiles_name)
-    if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
-        domain.writeGeo(mesh.outputFiles_name)
+    comm = Comm.get()
+    if comm.isMaster():
+        if mesh.outputFiles['poly'] is True:
+            domain.writePoly(mesh.outputFiles_name)
+        if mesh.outputFiles['ply'] is True:
+            domain.writePLY(mesh.outputFiles_name)
+        if mesh.outputFiles['asymptote'] is True:
+            domain.writeAsymptote(mesh.outputFiles_name)
+        if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
+            domain.writeGeo(mesh.outputFiles_name)
     mesh.setTriangleOptions()
 
 
