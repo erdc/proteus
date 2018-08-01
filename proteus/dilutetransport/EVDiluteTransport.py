@@ -64,6 +64,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         assert transport.coefficients.STABILIZATION_TYPE>0,"SSP method just works for edge based EV methods; i.e., STABILIZATION_TYPE>0"
         assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
         self.cfl = transport.edge_based_cfl
+        #self.cfl = transport.q[('cfl',0)]
         # Stuff particular for SSP
         self.timeOrder = timeOrder  #order of approximation
         self.nStages = timeOrder  #number of stages total
@@ -82,11 +83,16 @@ class RKEV(proteus.TimeIntegration.SSP):
     #def set_dt(self, DTSET):
     #    self.dt = DTSET #  don't update t
     def choose_dt(self):
-        maxCFL = 1.0e-0 #TIM HACK
+        maxCFL = 1.0e-6 #TIM HACK
+        #import pdb; pdb.set_trace()
         maxCFL = max(maxCFL,globalMax(self.cfl.max()))
         self.dt = self.runCFL/maxCFL  #TIM HACK
+        #import pdb; pdb.set_trace()
+        #print self.dt,self.runCFL,globalMax(self.cfl.max())
         if self.dtLast is None:
             self.dtLast = self.dt
+        if self.dt/self.dtLast  > self.dtRatioMax:
+            self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
         self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
 
@@ -886,6 +892,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
+
         self.entropy = numpy.zeros( len(self.mesh.nodeArray) ,'d')
 
 
@@ -946,6 +953,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
+
         if self.coefficients.porosity_dof is None:
             self.coefficients.porosity_dof = numpy.ones(self.u[0].dof.shape,'d')
         if self.u_dof_old is None:
@@ -1169,6 +1177,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             pass
 
         #import pdb; pdb.set_trace()
+        #print "ADV",self.q[('grad(u)',0)]
 
         if (self.coefficients.STABILIZATION_TYPE == 0): #SUPG
             self.calculateResidual = self.evdilutetransport.calculateResidual
@@ -1528,7 +1537,7 @@ class MyCoefficients(Coefficients):
 		self.forceStrongConditions=forceStrongConditions
 		self.cE=cE
 		self.outputQuantDOFs=outputQuantDOFs
-		#EVDiluteTransport
+		#EVDilutetransport
 		self.mom_ModelId  = mom_ModelId
 		self.adv_ModelId  = adv_ModelId
 		self.diff_ModelId = diff_ModelId
@@ -1537,7 +1546,7 @@ class MyCoefficients(Coefficients):
 		self.diff = diff
 		self.alpha_L = alpha_L
 		self.tnList = tnList
-		self.entropy = None
+		self.entropy = None 
 
 	def attachModels(self,modelList):
 		self.mom_Model = modelList[self.mom_ModelId]
@@ -1547,30 +1556,35 @@ class MyCoefficients(Coefficients):
 		self.ebqe_v = np.zeros(self.adv_Model.ebqe[('grad(u)',0)].shape,'d')
 		self.ebqe_phi = np.zeros(self.adv_Model.ebqe[('u',0)].shape,'d')
 		if self.mom_Model.q.has_key(('velocity',0)):
-			self.q_v = self.mom_Model.q[('velocity',0)]/self.poro
-			self.ebqe_v = self.mom_Model.ebqe[('velocity',0)]/self.poro
-		else:
-			self.q_v = self.mom_Model.q[('f',0)]/self.poro
-			self.ebqe_v = self.mom_Model.ebqe[('f',0)]/self.poro
-		if self.mom_Model.ebq.has_key(('velocity',0)):
-			self.ebq_v = self.mom_Model.ebq[('velocity',0)]/self.poro
-		else:
-			if self.mom_Model.ebq.has_key(('f',0)):
-				self.ebq_v = self.mom_Model.ebq[('f',0)]/self.poro
+			self.q_v = self.mom_Model.q[('velocity',0)]
+			self.ebqe_v = self.mom_Model.ebqe[('velocity',0)]
+		#else:
+		#	self.q_v = self.mom_Model.q[('f',0)]/self.poro
+		#	self.ebqe_v = self.mom_Model.ebqe[('f',0)]/self.poro
+		elif self.mom_Model.ebq.has_key(('velocity',0)):
+			self.ebq_v = self.mom_Model.ebq[('velocity',0)]
+		#else:
+		#	if self.mom_Model.ebq.has_key(('f',0)):
+		#		self.ebq_v = self.mom_Model.ebq[('f',0)]/self.poro
 
 	def preStep(self,t,firstStep=False):
-		#import pdb; pdb.set_trace()
-		print "Advection Pre",t,self.adv_Model.u[0].dof[0]
-		self.adv_Model.u_dof_old[:] = self.adv_Model.u[0].dof
-		self.adv_Model.timeIntegration.m_last = self.diff_Model.timeIntegration.m_last
-		copyInstructions = {'copy_uList':True,'uList_model':self.diff_ModelId}
-		copyInstructions = {'reset_uList':True}
-		print "Advection Pre_2",t,self.adv_Model.u[0].dof[0]
-		return copyInstructions
+# 		#import pdb; pdb.set_trace()
+# 		#print "Advection!!!!"
+ 		self.adv_Model.u_dof_old[:] = self.diff_Model.u[0].dof
+# 		#self.adv_Model.timeIntegration.m_last = self.diff_Model.timeIntegration.m_last
+# 		#self.adv_Model.calculateCoefficients()
+# 		#self.adv_Model.calculateElementResidual()
+# 		#self.adv_Model.timeIntegration.updateTimeHistory(resetFromDOF=True)
+# 		#self.adv_Model.timeIntegration.resetTimeHistory(resetFromDOF=True)
+# 		#self.adv_Model.updateTimeHistory(t,resetFromDOF=True)
+#        # COMPUTE NEW VELOCITY (if given by user) #
+ 		#if self.adv_Model.hasVelocityFieldAsFunction:
+ 		#	self.adv_Model.updateVelocityFieldAsFunction()
+# 		#copyInstructions = {'copy_uList':True,'uList_model':self.adv_ModelId}
+# 		#copyInstructions = {'reset_uList':True}
+# 		#return copyInstructions
 
 	def postStep(self,t,firstStep=False):
-		#import pdb; pdb.set_trace()
-		print "Advection Post",t,self.adv_Model.u[0].dof[0]
 		self.adv_Model.q['dV_last'][:] = self.adv_Model.q['dV']
 
 

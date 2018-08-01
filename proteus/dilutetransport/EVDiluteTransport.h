@@ -6,7 +6,7 @@
 #include "ModelFactory.h"
 #include "dilutetransport/TCAT_ND.h"
 
-#define POWER_SMOOTHNESS_INDICATOR 2
+#define POWER_SMOOTHNESS_INDICATOR 0
 #define IS_BETAij_ONE 0
 #define GLOBAL_FCT 0
 
@@ -1281,7 +1281,7 @@ namespace proteus
 	 int ijT = 0;
      register double grad_w_TCAT[numDOFs], grad_p_TCAT[numDOFs], den_dof[numDOFs];
 	 for (int i=0; i<numDOFs; i++){
-		den_dof[i] = den(u_dof_old[i]);
+		den_dof[i] = den(0.0);//den(u_dof_old[i]);
 		grad_w_TCAT[i] = 0.0;
 		grad_p_TCAT[i] = 0.0;
 		double mi = ML[i];
@@ -1305,7 +1305,7 @@ namespace proteus
           // NODAL ENTROPY //
           if (STABILIZATION_TYPE==1) //EV stab
             {
-              double porosity_times_solni = den_dof[i]*u_dof_old[i];
+              double porosity_times_solni = porosity_dof[i]*u_dof_old[i];
               if (ENTROPY_TYPE == 1){
 				eta[i] = ENTROPY(porosity_times_solni,uL,uR);
 				entropy[i] = eta[i];
@@ -1361,7 +1361,7 @@ namespace proteus
                 // for entropy residual
                 aux_entropy_residual=0., DENTROPY_un, DENTROPY_uni,
                 //for mass matrix contributions
-                u=0.0, un=0.0, grad_un[nSpace], porosity_times_velocity[nSpace], grad_p[nSpace],
+                u=0.0, un=0.0, grad_un[nSpace], porosity_times_velocity[nSpace],
                 u_test_dV[nDOF_trial_element],
                 u_grad_trial[nDOF_trial_element*nSpace],
                 u_grad_test_dV[nDOF_test_element*nSpace],
@@ -1371,7 +1371,7 @@ namespace proteus
                 //VRANS
                 porosity,
                 //TCAT
-                den_u,den_un;
+                den_u,den_un,grad_p[nSpace];
               //get the physical integration weight
               ck.calculateMapping_element(eN,
                                           k,
@@ -1399,8 +1399,8 @@ namespace proteus
               ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
 
               //TCAT
-              den_u = den(u);
-              den_un = den(un);
+              den_u = den(0.0);//den(u);
+              den_un = den(0.0);//den(un);
 			  ck.gradFromDOF(p_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_p);
 
               //precalculate test function products with integration weights for mass matrix terms
@@ -1415,6 +1415,8 @@ namespace proteus
               if (q_dV_last[eN_k] <= -100)
                 q_dV_last[eN_k] = dV;
               q_dV[eN_k] = dV;
+              //VRANS
+              porosity = q_porosity[eN_k];
               //
               //moving mesh
               //
@@ -1424,7 +1426,7 @@ namespace proteus
               mesh_velocity[2] = zt;
               //relative velocity at tn
               for (int I=0;I<nSpace;I++)
-                porosity_times_velocity[I] = den_un*(velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
+                porosity_times_velocity[I] = porosity*(velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
               //////////////////////////////
               // CALCULATE CELL BASED CFL //
               //////////////////////////////
@@ -1438,10 +1440,10 @@ namespace proteus
                   for (int I=0;I<nSpace;I++)
                     aux_entropy_residual += porosity_times_velocity[I]*grad_un[I];
                     if (ENTROPY_TYPE==1){
-						DENTROPY_un = DENTROPY(poro*den_un*un,uL,uR);
+						DENTROPY_un = DENTROPY(porosity*un,uL,uR);
 					}
 					else if (ENTROPY_TYPE==2){
-						DENTROPY_un = DENTROPY_LOG(poro*den_un*un,uL,uR);
+						DENTROPY_un = DENTROPY_LOG(porosity*un,uL,uR);
 					}
 					else if (ENTROPY_TYPE==3){ 
 						DENTROPY_un = DENTROPY_TCAT(un,grad_un[0],grad_p[0],TCAT_v);
@@ -1457,7 +1459,7 @@ namespace proteus
                   if (STABILIZATION_TYPE==1) // EV stab
                     {
                       int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
-                      double porosity_times_uni = den_dof[gi]*u_dof_old[gi];
+                      double porosity_times_uni = porosity_dof[gi]*u_dof_old[gi];
                 	  if (ENTROPY_TYPE==1){
 						DENTROPY_uni = DENTROPY(porosity_times_uni,uL,uR);
 					  }
@@ -1468,9 +1470,8 @@ namespace proteus
 						DENTROPY_uni = DENTROPY_TCAT(u_dof_old[gi],grad_w_TCAT[gi],grad_p_TCAT[gi],TCAT_v);
 					  }
                       element_entropy_residual[i] += (DENTROPY_un - DENTROPY_uni)*aux_entropy_residual*u_test_dV[i];
-//printf("%e %e %e %e %e %e \n",element_entropy_residual[i],DENTROPY_un,DENTROPY_uni,aux_entropy_residual,u_test_dV[i],u_dof_old[gi]);
                     }
-                  elementResidual_u[i] += poro*(u-un)*u_test_dV[i];
+                  elementResidual_u[i] += porosity*(u-un)*u_test_dV[i];
                   ///////////////
                   // j-th LOOP // To construct transport matrices
                   ///////////////
@@ -1488,7 +1489,7 @@ namespace proteus
                 }//i
               //save solution for other models
               q_u[eN_k] = u;
-              q_m[eN_k] = poro*u;
+              q_m[eN_k] = porosity*u;
             }
           /////////////////
           // DISTRIBUTE // load cell based element into global residual
@@ -1588,6 +1589,8 @@ namespace proteus
               //precalculate test function products with integration weights
               for (int j=0;j<nDOF_trial_element;j++)
                 u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+              //VRANS
+              porosity_ext = ebqe_porosity_ext[ebNE_kb];
               //
               //moving mesh
               //
@@ -1597,7 +1600,7 @@ namespace proteus
               mesh_velocity[2] = zt_ext;
               //std::cout<<"mesh_velocity ext"<<std::endl;
               for (int I=0;I<nSpace;I++)
-                porosity_times_velocity[I] = den(u_ext)*(ebqe_velocity_ext[ebNE_kb_nSpace+I] - MOVING_DOMAIN*mesh_velocity[I]);
+                porosity_times_velocity[I] = porosity_ext*(ebqe_velocity_ext[ebNE_kb_nSpace+I] - MOVING_DOMAIN*mesh_velocity[I]);
               //
               //calculate the fluxes
               //
@@ -1682,7 +1685,7 @@ namespace proteus
               etaMaxi = fabs(eta[i]);
               etaMini = fabs(eta[i]);
             }
-          double porosity_times_solni = den_dof[i]*u_dof_old[i];
+          double porosity_times_solni = porosity_dof[i]*u_dof_old[i];
           // initialize gi and compute xi
           for (int I=0; I < nSpace; I++)
             {
@@ -1700,7 +1703,7 @@ namespace proteus
                   etaMaxi = fmax(etaMaxi,fabs(eta[j]));
                   etaMini = fmin(etaMini,fabs(eta[j]));
                 }
-              double porosity_times_solnj = den_dof[j]*u_dof_old[j];
+              double porosity_times_solnj = porosity_dof[j]*u_dof_old[j];
               // Update Cij matrices
               Cij[0] = Cx[ij];
 			if (nSpace == 2) Cij[1] = Cy[ij];
@@ -1778,7 +1781,7 @@ namespace proteus
         {
           // NOTE: Transport matrices already have the porosity considered. ---> Dissipation matrices as well.
           double solni = u_dof_old[i]; // solution at time tn for the ith DOF
-          double den_solni = den(solni); 
+          double porosityi = porosity_dof[i];
           double ith_dissipative_term = 0;
           double ith_low_order_dissipative_term = 0;
           double ith_flux_term = 0;
@@ -1789,17 +1792,19 @@ namespace proteus
             {
               int j = csrColumnOffsets_DofLoops[offset];
               double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
-              double den_solnj = den(solnj);
+              double porosityj = porosity_dof[j];
               double dLowij, dLij, dEVij, dHij;
 
               ith_flux_term += TransportMatrix[ij]*solnj;
               if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term)
                 {
                   // artificial compression
-                  double solij = 0.5*(den_solni*solni+den_solnj*solnj);
-                  double Compij = cK*fmax(solij*(1.0-solij),0.0)/(fabs(den_solni*solni-den_solnj*solnj)+1E-14);
+                  double solij = 0.5*(porosityi*solni+porosityj*solnj);
+                  double Compij = cK*fmax(solij*(1.0-solij),0.0)/(fabs(porosityi*solni-porosityj*solnj)+1E-14);
                   // first-order dissipative operator
                   dLowij = fmax(fabs(TransportMatrix[ij]),fabs(TransposeTransportMatrix[ij]));
+                  //dLij = fmax(0.,fmax(psi[i]*TransportMatrix[ij], // Approach by S. Badia
+                  //              psi[j]*TransposeTransportMatrix[ij]));
                   dLij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
                   if (STABILIZATION_TYPE==1) //EV Stab
                     {
@@ -1830,17 +1835,16 @@ namespace proteus
           double mi = ML[i];
           // compute edge_based_cfl
           edge_based_cfl[i] = 2.*fabs(dLii)/mi;
-          low_order_solution[i] = u_dof_old[i] - dt/mi/(u_dof_old[i]*d_den(u_dof_old[i]) + den_dof[i])*(ith_flux_term
+          low_order_solution[i] = u_dof_old[i] - dt/mi/poro*(ith_flux_term
                                                         + boundary_integral[i]
                                                         - ith_low_order_dissipative_term);
           // update residual
           if (LUMPED_MASS_MATRIX==1)
-            globalResidual[i] = u_dof_old[i] - dt/mi/(u_dof_old[i]*d_den(u_dof_old[i]) + den_dof[i])*(ith_flux_term + boundary_integral[i] - ith_dissipative_term);
+            globalResidual[i] = u_dof_old[i] - dt/mi/poro*(ith_flux_term + boundary_integral[i] - ith_dissipative_term);
           else
-            globalResidual[i] += dt/(u_dof_old[i]*d_den(u_dof_old[i]) + den_dof[i])*(ith_flux_term - ith_dissipative_term);
+            globalResidual[i] += dt/poro*(ith_flux_term - ith_dissipative_term);
         }
     }
-
     void calculateJacobian(//element
                            double dt,
                            double* mesh_trial_ref,

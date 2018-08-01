@@ -24,7 +24,7 @@ double den(double x){
  double a3 = 0.86154;
  x2 = x*x; x3 = x2*x; 
  d = a0 + a1*x + a2*x2 + a3*x3;
- return d;
+ return 1.0;
 }
 
 
@@ -48,7 +48,7 @@ double visc(double x){
  double conv = 0.01;
  x2 = x*x; x3 = x2*x;
  eval = a0 + a1*x + a2*x2 + a3*x3;
- mu = conv * exp2(eval);
+ mu = conv * exp(eval);
  return mu;
 }
 
@@ -65,7 +65,7 @@ double d_visc(double x)
  eval = a3*x3 + a2*x2 + a1*x + a0;
  d_eval = 3.*a3*x2 + 2.*a2*x + a1;
 
- d_mu = conv*exp2(eval)*d_eval;
+ d_mu = conv*exp(eval)*d_eval;
  return d_mu;
 }
 
@@ -117,15 +117,13 @@ MW_b = TCAT_v.MW_b;
 T = TCAT_v.T;
 R = TCAT_v.R;
 
-mu = visc(w);
-rho = den(w);
-x_a = mole_frac(w,TCAT_v);
+mu = visc(0.0);
+rho = den(0.0);
+x_a = mole_frac(0.0,TCAT_v);
 MW_w = mol_weight(x_a,TCAT_v);
 
 velocity = -perm/mu*(grad_p - rho*grav)/poro; 
-D = diff + alpha_L*velocity;
-
-//printf("%e %e \n",velocity,D);
+D = (diff + alpha_L*velocity);
 
 ent = mu/(perm*T)*(poro*poro*velocity*velocity) + poro*rho*R*D/(w*(1.-w))*MW_w/MW_a/MW_b*grad_w*grad_w;
 return ent;
@@ -147,26 +145,25 @@ R = TCAT_v.R;
 MW_a = TCAT_v.MW_a;
 MW_b = TCAT_v.MW_b;
 
-mu = visc(w);
-d_mu = d_visc(w);
-rho = den(w);
+mu = visc(0.0);
+d_mu = d_visc(0.0);
+rho = den(0.0);
 velocity = -perm/mu*(grad_p - rho*grav)/poro; 
 
 
 if (w<1.e-10){
-	d_ent = d_mu/(perm*T)*(poro*poro*velocity*velocity);
+	d_ent = 0.0;
 }
 else{
-	d_rho = d_den(w);
-	x_a = mole_frac(w,TCAT_v);
-	d_x_a = d_mole_frac(w,TCAT_v);
-	MW_w = mol_weight(x_a,TCAT_v);
-	d_x_a = d_mole_frac(w,TCAT_v);
+	d_rho = d_den(0.0);
+	x_a = mole_frac(0.0,TCAT_v);
+	d_x_a = d_mole_frac(0.0,TCAT_v);
+	MW_w = mol_weight(0.0,TCAT_v);
+	d_x_a = d_mole_frac(0.0,TCAT_v);
 	d_MW_w = d_mol_weight(d_x_a,TCAT_v);
-	D = diff + alpha_L*velocity;
-	c = poro*D*R/MW_a/MW_b*grad_w*grad_w;
-	d_ent =  d_mu/(perm*T)*(poro*poro*velocity*velocity) +  c*(d_MW_w*rho/(w*(1.-w)) + d_rho*MW_w/(w*(1.-w)) + rho*MW_w*(2.*w-1.)/(w*w*(1.-w)*(1.-w)) ) ;
-    ent = mu/(perm*T)*(poro*poro*velocity*velocity) + poro*rho*R*D/(w*(1.-w))*MW_w/MW_a/MW_b*grad_w*grad_w;
+	D = (diff + alpha_L*velocity);
+	c = poro*rho*D*R/MW_a/MW_b*grad_w*grad_w;
+	d_ent =  c*(d_MW_w/(w*(1.-w)) + MW_w*(2.*w-1.)/(w*w*(1.-w)*(1.-w)) ) ;
 
 }
 return d_ent;
