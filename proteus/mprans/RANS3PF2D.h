@@ -1109,7 +1109,8 @@ namespace proteus
                                            double *particle_netMoments,
                                            double *particle_surfaceArea)
       {
-        double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
+        double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s;
+        double force_x, force_y, r_x, r_y, force_p_x, force_p_y, force_stress_x, force_stress_y;
         double phi_s_normal[2]={0.0};
         double fluid_outward_normal[2];
         double vel[2];
@@ -1164,12 +1165,18 @@ namespace proteus
             //              dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
 //            force_x = dV*D_s*(p*fluid_outward_normal[0] - porosity*mu*(fluid_outward_normal[0]*grad_u[0] + fluid_outward_normal[1]*grad_u[1]) + C_surf*rel_vel_norm*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
 //            force_y = dV*D_s*(p*fluid_outward_normal[1] - porosity*mu*(fluid_outward_normal[0]*grad_v[0] + fluid_outward_normal[1]*grad_v[1]) + C_surf*rel_vel_norm*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
-            force_x = dV * D_s * (p * fluid_outward_normal[0]
-                                  -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
-                                  );
-            force_y = dV * D_s * (p * fluid_outward_normal[1]
-                                  -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
-                                  );
+//            force_x = dV * D_s * (p * fluid_outward_normal[0]
+//                                  -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
+//                                  );
+//            force_y = dV * D_s * (p * fluid_outward_normal[1]
+//                                  -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
+//                                  );
+            force_p_x = dV * D_s * p * fluid_outward_normal[0];
+            force_stress_x = dV * D_s * (-mu) * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]));
+            force_p_y = dV * D_s * p * fluid_outward_normal[1];
+            force_stress_y = dV * D_s * (-mu) * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1]);
+            force_x = force_p_x + force_stress_x;
+            force_y = force_p_y + force_stress_y;
             //always 3D for particle centroids
             r_x = x - center[0];
             r_y = y - center[1];
@@ -1179,6 +1186,10 @@ namespace proteus
                 particle_surfaceArea[i] += dV * D_s;
                 particle_netForces[i * 3 + 0] += force_x;
                 particle_netForces[i * 3 + 1] += force_y;
+                particle_netForces[(i+  nParticles)*3+0]+= force_stress_x;
+                particle_netForces[(i+2*nParticles)*3+0]+= force_p_x;
+                particle_netForces[(i+  nParticles)*3+1]+= force_stress_y;
+                particle_netForces[(i+2*nParticles)*3+1]+= force_p_y;
                 particle_netMoments[i * 3 + 2] += (r_x * force_y - r_y * force_x);
               }
 
@@ -4581,7 +4592,7 @@ namespace proteus
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
         //
-        std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3), particle_netMoments(nParticles*3);
+        std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3*3), particle_netMoments(nParticles*3);
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         std::vector<int> surrogate_boundaries,surrogate_boundary_elements,surrogate_boundary_particle;
         //std::set<int> active_velocity_dof;
