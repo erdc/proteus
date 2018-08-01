@@ -314,6 +314,7 @@ int MeshAdaptPUMIDrvr::willAdapt()
   assertFlag = adaptFlag;
   PCU_Add_Ints(&assertFlag,1);
   assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
+  adaptFlag=1; //zhanga: hack to always adapt at the moment, remember to remove eventually
   return adaptFlag;
 }
 
@@ -333,8 +334,10 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
  *  The nAdapt counter is iterated to track how many times a mesh is adapted
  */
 {
-  if (size_field_config == "interface")
+  if (size_field_config == "interface"){
       calculateAnisoSizeField();
+      adapt_type_config = "anisotropic";
+  }
   else if (size_field_config == "ERM"){
       assert(err_reg);
       removeBCData();
@@ -382,7 +385,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     abort();
   }
 
-  isotropicIntersect();
+  if(adapt_type_config!="anisotropic")
+    isotropicIntersect();
 
   if(logging_config=="on"){
     char namebuffer[50];
@@ -513,6 +517,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   if(adapt_type_config=="anisotropic")
     apf::destroyField(adaptFrame);
   nAdapt++; //counter for number of adapt steps
+  //std::abort();
   return 0;
 }
 
