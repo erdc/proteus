@@ -595,15 +595,15 @@ namespace proteus
                 //
                 //calculate pde coefficients at quadrature points
                 //
-                /* norm = 1.0e-8; */
-                /* for (int I=0;I<nSpace;I++) */
-                /*        norm += grad_u[I]*grad_u[I]; */
-                /* norm = sqrt(norm); */
+                norm = 1.0e-8;
+                for (int I=0;I<nSpace;I++) 
+                        norm += grad_u[I]*grad_u[I];
+                norm = sqrt(norm); 
 
-                /* for (int I=0;I<nSpace;I++) */
-                /*        dir[I] = grad_u[I]/norm; */
+                for (int I=0;I<nSpace;I++) 
+                       dir[I] = grad_u[I]/norm; 
 
-                /* ck.calculateGScale(G,dir,h_phi); */
+                ck.calculateGScale(G,dir,h_phi);
 
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 
@@ -1091,14 +1091,14 @@ namespace proteus
                 //
                 //calculate pde coefficients and derivatives at quadrature points
                 //
-                /* norm = 1.0e-8; */
-                /* for (int I=0;I<nSpace;I++) */
-                /*        norm += grad_u[I]*grad_u[I]; */
-                /* norm = sqrt(norm); */
-                /* for (int I=0;I<nSpace;I++) */
-                /*        dir[I] = grad_u[I]/norm; */
+                norm = 1.0e-8;
+                for (int I=0;I<nSpace;I++) 
+                       norm += grad_u[I]*grad_u[I]; 
+                norm = sqrt(norm); 
+                for (int I=0;I<nSpace;I++) 
+                       dir[I] = grad_u[I]/norm; 
 
-                /* ck.calculateGScale(G,dir,h_phi); */
+                 ck.calculateGScale(G,dir,h_phi);
 
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 

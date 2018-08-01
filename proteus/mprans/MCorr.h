@@ -606,14 +606,14 @@ namespace proteus
 	    dV = fabs(jacDet)*dV_ref[k];
 	    ck.calculateG(jacInv,G,G_dd_G,tr_G);
 
-	    /* double dir[nSpace]; */
-	    /* double norm = 1.0e-8; */
-	    /* for (int I=0;I<nSpace;I++) */
-	    /*   norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
-	    /* norm = sqrt(norm);    */
-	    /* for (int I=0;I<nSpace;I++) */
-	    /*   dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
-	    /* ck.calculateGScale(G,dir,h_phi); */
+	    double dir[nSpace]; 
+	    double norm = 1.0e-8; 
+	    for (int I=0;I<nSpace;I++) 
+	       norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; 
+	    norm = sqrt(norm);    
+	    for (int I=0;I<nSpace;I++) 
+	      dir[I] = q_normal_phi[eN_k_nSpace+I]/norm;
+	    ck.calculateGScale(G,dir,h_phi);
 
 	    //get the trial function gradients
 	    ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
@@ -982,14 +982,14 @@ namespace proteus
 	    dV = fabs(jacDet)*dV_ref[k];
 	    ck.calculateG(jacInv,G,G_dd_G,tr_G);
 
-	    /* double dir[nSpace]; */
-	    /* double norm = 1.0e-8; */
-	    /* for (int I=0;I<nSpace;I++) */
-	    /*   norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
-	    /* norm = sqrt(norm); */
-	    /* for (int I=0;I<nSpace;I++) */
-	    /*   dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
-	    /* ck.calculateGScale(G,dir,h_phi); */
+	    double dir[nSpace];
+	    double norm = 1.0e-8;
+	    for (int I=0;I<nSpace;I++)
+	       norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I];
+	    norm = sqrt(norm);
+	    for (int I=0;I<nSpace;I++)
+	       dir[I] = q_normal_phi[eN_k_nSpace+I]/norm;
+	    ck.calculateGScale(G,dir,h_phi);
 
 
 	    //get the trial function gradients
@@ -1892,14 +1892,14 @@ namespace proteus
 		//get the physical integration weight
 		dV = fabs(jacDet)*dV_ref[k];
 		ck.calculateG(jacInv,G,G_dd_G,tr_G);
-		/* double dir[nSpace]; */
-		/* double norm = 1.0e-8; */
-		/* for (int I=0;I<nSpace;I++) */
-		/*        norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
-		/* norm = sqrt(norm); */
-		/* for (int I=0;I<nSpace;I++) */
-		/*        dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
-		/* ck.calculateGScale(G,dir,h_phi); */
+		double dir[nSpace];
+		double norm = 1.0e-8;
+		for (int I=0;I<nSpace;I++)
+		       norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I];
+		norm = sqrt(norm);
+		for (int I=0;I<nSpace;I++)
+		       dir[I] = q_normal_phi[eN_k_nSpace+I]/norm;
+		ck.calculateGScale(G,dir,h_phi);
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 		*globalMass += smoothedHeaviside(epsHeaviside,q_phi[eN_k])*dV;
 	      }//k
@@ -1997,15 +1997,15 @@ namespace proteus
 		dV = fabs(jacDet)*dV_ref[k];
 		ck.calculateG(jacInv,G,G_dd_G,tr_G);
 
-		/* double dir[nSpace]; */
-		/* double norm = 1.0e-8; */
-		/* for (int I=0;I<nSpace;I++) */
-		/*        norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
-		/* norm = sqrt(norm); */
-		/* for (int I=0;I<nSpace;I++) */
-		/*        dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
+		double dir[nSpace];
+		double norm = 1.0e-8; 
+		for (int I=0;I<nSpace;I++)
+		        norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; 
+		norm = sqrt(norm);
+		for (int I=0;I<nSpace;I++)
+		        dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; 
 
-		/* ck.calculateGScale(G,dir,h_phi); */
+		ck.calculateGScale(G,dir,h_phi); 
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 		q_H[eN_k] = q_porosity[eN_k]*smoothedHeaviside(epsHeaviside,q_phi[eN_k]);
 	      }//k
@@ -2193,14 +2193,14 @@ namespace proteus
 	    dV = fabs(jacDet)*dV_ref[k];
 	    ck.calculateG(jacInv,G,G_dd_G,tr_G);
 
-	    /* double dir[nSpace]; */
-	    /* double norm = 1.0e-8; */
-	    /* for (int I=0;I<nSpace;I++) */
-	    /*   norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
-	    /* norm = sqrt(norm); */
-	    /* for (int I=0;I<nSpace;I++) */
-	    /*   dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
-	    /* ck.calculateGScale(G,dir,h_phi); */
+	    double dir[nSpace];
+	    double norm = 1.0e-8; 
+	    for (int I=0;I<nSpace;I++) 
+	      norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I];
+	    norm = sqrt(norm);
+	    for (int I=0;I<nSpace;I++) 
+	      dir[I] = q_normal_phi[eN_k_nSpace+I]/norm;
+	    ck.calculateGScale(G,dir,h_phi);
 
 
 	    //get the trial function gradients
@@ -2454,15 +2454,15 @@ namespace proteus
 		for (int j=0;j<nDOF_trial_element;j++)
 		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
 
-		/* double dir[nSpace]; */
-		/* double norm = 1.0e-8; */
-		/* for (int I=0;I<nSpace;I++) */
-		/*        norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; */
-		/* norm = sqrt(norm); */
-		/* for (int I=0;I<nSpace;I++) */
-		/*        dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
+		double dir[nSpace];
+		double norm = 1.0e-8; 
+		for (int I=0;I<nSpace;I++)
+		        norm += q_normal_phi[eN_k_nSpace+I]*q_normal_phi[eN_k_nSpace+I]; 
+		norm = sqrt(norm); 
+		for (int I=0;I<nSpace;I++)
+		        dir[I] = q_normal_phi[eN_k_nSpace+I]/norm;
 
-		/* ck.calculateGScale(G,dir,h_phi); */
+		ck.calculateGScale(G,dir,h_phi);
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 		q_H[eN_k] = q_porosity[eN_k]*smoothedHeaviside(epsHeaviside,q_phi[eN_k]);
 

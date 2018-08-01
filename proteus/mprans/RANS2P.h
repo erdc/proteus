@@ -2265,7 +2265,7 @@ namespace proteus
                 //get the physical integration weight
                 dV = fabs(jacDet)*dV_ref[k];
                 ck.calculateG(jacInv,G,G_dd_G,tr_G);
-                //ck.calculateGScale(G,&normal_phi[eN_k_nSpace],h_phi);
+                ck.calculateGScale(G,&normal_phi[eN_k_nSpace],h_phi);
 
                 eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
@@ -4085,7 +4085,7 @@ namespace proteus
                 //get the physical integration weight
                 dV = fabs(jacDet)*dV_ref[k];
                 ck.calculateG(jacInv,G,G_dd_G,tr_G);
-                //ck.calculateGScale(G,&normal_phi[eN_k_nSpace],h_phi);
+                ck.calculateGScale(G,&normal_phi[eN_k_nSpace],h_phi);
 
                 eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
