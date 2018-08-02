@@ -3,7 +3,7 @@
 
 #include "Python.h"
 
-//This function to accepts a string which gets passed to the logEvent Python function in Profiling
+//This function accepts a string which gets passed to the logEvent Python function in Profiling
 int logEvent(char* logString,int logLevel)
 
 //logString is the desired string: usually set with sprintf() to combine characters with numbers
@@ -53,48 +53,5 @@ int logEvent(char* logString,int logLevel)
   Py_DECREF(pModule);
   return 0;
 }
-
-/* 
-//using an std::string could be more convenient but the conversion of a float to string requires std::to_string(), which requires compilation using c++11. 
-//For robustness, we will use the char* arrays
-int logEvent(std::string logString,int logLevel)
-{
-  if(!Py_IsInitialized())
-    Py_Initialize();
-  //PyRun_SimpleString("print 'Test Embedding'\n");
-  PyObject *pName=NULL, *pModule=NULL, *pFunc=NULL;
-  PyObject *pArgs=NULL, *pValue=NULL;
-
-  pName = PyString_FromString("proteus.Profiling");
-  pModule = PyImport_Import(pName);
-  Py_DECREF(pName);
-  if (pModule != NULL)
-  {
-    pFunc = PyObject_GetAttrString(pModule,"logEvent");
-    pArgs = PyTuple_New(2);
-
-    PyTuple_SetItem(pArgs, 0, PyString_FromString(logString.c_str()));
-    PyTuple_SetItem(pArgs, 1, PyInt_FromLong(logLevel));
-
-    PyObject_CallObject(pFunc,pArgs);
-    Py_DECREF(pFunc);
-    Py_DECREF(pArgs);
-    if(pValue !=NULL)
-    {
-      Py_DECREF(pValue);
-      Py_XDECREF(pValue);
-    }
-  }
-  else
-  {
-    PyErr_Print();
-    fprintf(stderr,"Failed to load \"%s\"\n", "proteus.Profiling"); 
-    return 1;
-  }
-  Py_DECREF(pModule);
-  return 0;
-}
-
-*/
 
 #endif
