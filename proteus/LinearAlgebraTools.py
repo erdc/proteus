@@ -996,13 +996,15 @@ class InvOperatorShell(OperatorShell):
         """
         comm = Comm.get()
         # Assign number of unknowns
+        num_dof = self.getSize()
+        self.strong_dirichlet_DOF = [i for i in self.strong_dirichlet_DOF if i< num_dof]
         try:
             num_known_dof = len(self.strong_dirichlet_DOF)
         except AttributeError:
             print "ERROR - strong_dirichlet_DOF have not been " \
                   " assigned for this inverse operator object."
             exit()
-        num_dof = self.getSize()
+
         num_unknown_dof = num_dof - num_known_dof
         # Use boolean mask to collect unknown DOF indices
         self.dof_indices = numpy.arange(num_dof,
