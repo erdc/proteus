@@ -647,7 +647,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.dissipation_diffusive.resetBC()
 
     def setHydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
-                                              refLevel, smoothing,
+                                              refLevel, smoothing, U=None, Uwind=None,
                                               pRef=0.0, vert_axis=None,
                                               air=1.0, water=0.0,
                                               kInflow=None, dissipationInflow=None,
@@ -713,10 +713,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
                 H = 1.0
             return H * dissipationInflowAir + (1 - H) * dissipationInflow
 
-        if ( (kInflow is not None) and (kInflowAir is not None)):
-            self.k_dirichlet.uOfXT = inlet_k_dirichlet
-        if ( (dissipationInflow is not None) and (dissipationInflowAir is not None)):
-            self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
         if self._b_or[0] == 1. or self._b_or[0] == -1.:
             self.v_dirichlet.setConstantBC(0.)
             self.w_dirichlet.setConstantBC(0.)
@@ -745,7 +741,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.vos_dirichlet.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
-        """
         if U is not None:
             def get_inlet_ux_dirichlet(i):
                 def ux_dirichlet(x, t):
@@ -776,7 +771,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
             self.dissipation_advective.resetBC()
             self.dissipation_diffusive.resetBC()
-        """
 
     def setHydrostaticPressureOutletWithDepth_stressFree(self, seaLevel, rhoUp, rhoDown, nuUp, nuDown, g,
                                                          refLevel, smoothing, U=None, Uwind=None,
