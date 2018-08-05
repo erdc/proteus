@@ -12,12 +12,18 @@
 #include <samElementCount.h>
 #include <queue>
 #include <algorithm> 
+#include <cmath>
 
 #define RATIO 8.0
 
 static void SmoothField(apf::Field *f);
 void gradeAnisoMesh(apf::Mesh* m,double gradingFactor);
 void gradeAspectRatio(apf::Mesh* m, int idx, double gradingFactor);
+//double getMetricLength(apf::Matrix3x3 metric, apf::Vector3 directionVector);
+//void getGeometricMetricLength(apf::Matrix3x3 metric1, apf::Matrix3x3 metric2, apf::Vector3 directionVector,double &metricLength1, double &metricLength2);
+void getGeometricMetricLength(apf::Matrix3x3 metric1, apf::Matrix3x3 metric2, apf::Vector3 directionVector,double &metricLength);
+
+apf::Matrix3x3 getMetricIntersection(apf::Matrix3x3 metric1, apf::Matrix3x3 metric2);
 
 /* Based on the distance from the interface epsilon can be controlled to determine
    thickness of refinement near the interface */
@@ -326,6 +332,17 @@ static apf::Matrix3x3 computeGradPhiMetric(apf::Field *gradphi, apf::Field *grad
     //apf::Matrix3x3 metric = gphigphit/(hPhi*hPhi);
     //apf::Matrix3x3 metric = hess;
     apf::Matrix3x3 metric = gphigphit/(hPhi*hPhi)+ hess/eps_u;
+    
+/*
+    //std::cout<<"metric is \n"<<metric<<"\n gphi "<< gphi<<" metric length "<<getMetricLength(metric,gphi)<<std::endl; 
+    double metricLength =0.0;
+    //double metricLength2 =0.0;
+    apf::Matrix3x3 identity(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
+    //getGeometricMetricLength(metric, identity, gphi, metricLength1, metricLength2);
+    getGeometricMetricLength(identity, identity, gphi, metricLength);
+    getMetricIntersection(metric,identity);
+    std::abort();
+*/
   return metric;
 }
 
@@ -1821,3 +1838,176 @@ void gradeAspectRatio(apf::Mesh* m,int idx,double gradingFactor)
   m->destroyTag(isMarked);
   apf::synchronize(size_scale);
 }
+
+
+
+double getMetricLength(apf::Matrix3x3 metric, apf::Vector3 directionVector)
+{
+  double length =0.0;
+  length = directionVector*(metric*directionVector);
+  return sqrt(length);
+}
+
+//void getGeometricMetricLength(apf::Matrix3x3 metric1, apf::Matrix3x3 metric2, apf::Vector3 directionVector,double &metricLength1, double &metricLength2)
+void getGeometricMetricLength(apf::Matrix3x3 metric1, apf::Matrix3x3 metric2, apf::Vector3 directionVector,double &metricLength)
+//Compute geometric interpolated metric length of edge w/ respect to both end points
+{
+  double edgeLength = directionVector.getLength();
+  double l1 = edgeLength/getMetricLength(metric1,directionVector);
+  double l2 = edgeLength/getMetricLength(metric2,directionVector);
+  double a = l1/l2;
+  //double a2 = l2/l1;
+
+  if(fabs(a-1.0)<1e-13)
+    metricLength = l1;
+  else
+    metricLength = l1*(a-1)/(a*std::log(a));
+  //metricLength2 = l2*(a2-1)/(a2*std::log(a2));
+
+/*
+  std::cout<<"L1 "<<l1<<std::endl;
+  std::cout<<"L2 "<<l2<<std::endl;
+  std::cout<<"a "<<a<<std::endl;
+  std::cout<<"a2 "<<a2<<std::endl;
+  std::cout<<"metricLength 1 "<<metricLength1<<std::endl;
+  std::cout<<"metricLength 2 "<<metricLength2<<std::endl;
+*/
+}
+
+
+
+
+apf::Matrix3x3 getMetricIntersection(apf::Matrix3x3 metric1, apf::Matrix3x3 metric2)
+{
+
+  //if metric1 = metric 2 then the intersection is itself
+ 
+  apf::Matrix3x3 diff = metric1-metric2;
+  if(sqrt(apf::getInnerProduct(diff,diff)) < 1e-12)
+    return metric1;
+
+  apf::Matrix3x3 N = apf::invert(metric1)*metric2;
+  apf::Vector3 eigenVectors[3];
+  double eigenValues[3];
+  apf::eigen(N, eigenVectors, eigenValues);
+ 
+  apf::Matrix3x3 R; //this will be used to store the eigenvectors
+  apf::Matrix3x3 R_t; //transpose
+
+  //This loads eigenvectors as rows, but it should be columns, so we transpose
+  for(int i=0;i<3;i++)
+    R_t[i] = eigenVectors[i];
+
+  R = apf::transpose(R_t); 
+
+  apf::Matrix3x3 finalMat;
+  apf::Matrix3x3 lambdaMat = R_t*metric1*R;
+  apf::Matrix3x3 muMat = R_t*metric2*R;
+  for(int i=0;i<3;i++) 
+  {
+    for(int j=0;j<3;j++)
+    {
+      if(i == j)
+        finalMat[i][j] = std::max(std::fabs(lambdaMat[i][j]),std::fabs(muMat[i][j]));
+      else
+        finalMat[i][j] = 0.0;
+    }
+  }
+
+  apf::Matrix3x3 intersect =apf::transpose(apf::invert(R))*finalMat*apf::invert(R);
+/*
+  std::cout<<"N "<<N<<std::endl;
+  std::cout<<"R "<<R<<std::endl;
+  std::cout<<"eigenVectors "<<eigenVectors[0]<<std::endl;
+  std::cout<<"metric 1 "<<metric1<<std::endl;
+  std::cout<<"lambdaMat "<<lambdaMat<<std::endl;
+  std::cout<<"muMat "<<muMat<<std::endl;
+  std::cout<<"finalMat "<<finalMat<<std::endl;
+  std::cout<<"intersect "<<apf::transpose(apf::invert(R))*finalMat*apf::invert(R)<<std::endl;
+*/
+  return intersect;
+}
+
+
+int serialMetricGradation(apf::Mesh* m, std::queue<apf::MeshEntity*> &markedEdges,double gradingFactor)
+{
+  double size[2];
+  //marker structure for 0) not marked 1) marked 2)storage
+  int marker[3] = {0,1,0}; 
+  apf::MeshTag* isMarked = m->findTag("isMarked");
+  apf::Field* size_frames = m->findField("proteus_size_scales");
+  apf::Adjacent edgAdjVert;
+  apf::Adjacent vertAdjEdg;
+  apf::MeshEntity* edge;
+  apf::MeshIterator* it = m->begin(1);
+  int needsParallel=0;
+
+  //perform serial gradation while packing necessary info for parallel
+  while(!markedEdges.empty()){ 
+    edge = markedEdges.front();
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      size[i] = apf::getScalar(size_iso,edgAdjVert[i],0);
+    }
+
+    needsParallel+=gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::SCALAR,0, 0);
+    needsParallel+=gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::SCALAR,0, 1);
+
+    m->setIntTag(edge,isMarked,&marker[0]);
+    markedEdges.pop();
+  }
+  return needsParallel;
+}
+
+
+
+void gradeMetric(apf::Mesh* m, double gradingFactor)
+//Based on Alauzet, Frédéric. "Size gradation control of anisotropic meshes." Finite Elements in Analysis and Design 46.1-2 (2010): 181-202.
+{
+  if(PCU_Comm_Self()==0)
+    std::cout<<"Entered function\n"; 
+
+  apf::MeshEntity* edge;
+  apf::Adjacent edgAdjVert;
+  apf::Adjacent vertAdjEdg;
+  double size[2];
+  std::queue<apf::MeshEntity*> markedEdges;
+  apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
+
+  //marker structure for 0) not marked 1) marked 2)storage
+  int marker[3] = {0,1,0}; 
+
+  apf::MeshIterator* it;
+  markEdgesInitial(m,markedEdges,gradingFactor);
+
+  int needsParallel=1;
+  int nCount=1;
+
+
+  //initialize queue
+  //mark edges that need intersection
+  //while queue is non-empty
+  //  Compute intersection
+  //  Check via Frobenius Norm if metric need intersection on vertex 0
+  //  If yes, replace metric with intersection and set flag to 1
+  //  Check vertex 1
+  //  
+
+  while(needsParallel)
+  }
+  //Cleanup of edge marker field
+  it = m->begin(1);
+  while((edge=m->iterate(it))){
+    m->removeTag(edge,isMarked);
+  }
+  m->end(it); 
+  m->destroyTag(isMarked);
+
+
+}
+
+
+
+
