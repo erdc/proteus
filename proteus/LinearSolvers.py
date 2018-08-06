@@ -924,7 +924,7 @@ class SchurOperatorConstructor:
         return self.two_phase_Ap_inv
 
     def initializeTwoPhaseQp_rho(self):
-        """Initialize a two phase scaled laplace operator Ap.
+        """Initialize a two phase scaled mass matrix.
 
         Returns
         -------
@@ -966,7 +966,7 @@ class SchurOperatorConstructor:
         return self.two_phase_Qp_scaled
 
     def initializeTwoPhaseInvScaledQp(self):
-        """Initialize a two phase scaled laplace operator Ap.
+        """Initialize a two phase scaled mass operator Qp.
 
         Returns
         -------
@@ -1149,7 +1149,7 @@ class SchurOperatorConstructor:
             calculated as a lumped matrix (True) or as a full
             matrix (False).
         output_matrix : bool
-            Save updated laplace operator.
+            Save updated mass operator.
         """
         self.opBuilder.updateTwoPhaseMassOperator_rho(density_scaling = density_scaling,
                                                       lumped = lumped)
@@ -1338,8 +1338,11 @@ class DofOrderInfo(object):
         be constructed.  Currently supports: 'blocked'
         and 'interlaced'.
     """
-    def __init__(self, dof_order_type):
+    def __init__(self,
+                 dof_order_type,
+                 model_info = 'no model info set'):
         self.dof_order_type = dof_order_type
+        self.set_model_info(model_info)
 
     def create_DOF_lists(self,
                          ownership_range,
@@ -1347,6 +1350,18 @@ class DofOrderInfo(object):
                          num_components):
         """Virtual function with no implementation"""
         raise NotImplementedError()
+
+    def set_model_info(self, model_info):
+        self._model_info = model_info
+
+    def get_model_info(self, model_info):
+        return self._model_info
+
+    def create_IS(self,
+                  dof_array):
+        idx_set = p4pyPETSc.IS()
+        idx_set.createGeneral(dof_array,comm=p4pyPETSc.COMM_WORLD)
+        return idx_set
 
 class BlockedDofOrderType(DofOrderInfo):
     """Manages the DOF for blocked velocity and pressure ordering.
@@ -1362,8 +1377,12 @@ class BlockedDofOrderType(DofOrderInfo):
     unknowns appear first, followed by all the u-components of the
     velocity and then all the v-components of the velocity etc.
     """
-    def __init__(self, n_DOF_pressure):
-        DofOrderInfo.__init__(self,'blocked')
+    def __init__(self,
+                 n_DOF_pressure,
+                 model_info = 'no model info set'):
+        DofOrderInfo.__init__(self,
+                              'blocked',
+                              model_info = 'no model info set')
         self.n_DOF_pressure = n_DOF_pressure
 
     def create_DOF_lists(self,
@@ -1396,61 +1415,6 @@ class BlockedDofOrderType(DofOrderInfo):
                                    dtype="i")
         return [velocityDOF, pressureDOF]
 
-class VelocityInterlacedDofOrderType(DofOrderInfo):
-    """Manages the DOF for blocked velocity and pressure ordering.
-
-    Parameters
-    ----------
-    n_DOF_pressure : int
-        Number of pressure degrees of freedom.
-
-    Notes
-    -----
-    Blocked degree of freedom ordering occurs when all the pressure
-    unknowns appear first, followed by all the u-components of the
-    velocity and then all the v-components of the velocity etc.
-    """
-    def __init__(self):
-        DofOrderInfo.__init__(self,'interlaced_velocity')
-
-    def create_DOF_lists(self,
-                         ownership_range,
-                         num_equations,
-                         num_components):
-        """
-        Build interlaced DOF arrays for the components of the velocity.
-
-        Parameters
-        ----------
-        ownership_range: tuple
-            Local ownership range of DOF
-        num_equations: int
-            Number of local equations
-        num_components: int
-            Number of pressure and velocity components
-
-        Returns
-        -------
-        DOF_output : lst of arrays
-            Each element of this list corresponds to a component of
-            the velocity.  E.g. for u, v, w : [vel_u,vel_v,vel_w].
-        """
-        import Comm
-        comm = Comm.get()
-        vel_comp_DOF = []
-        vel_comp_DOF_vel=[]
-        scaled_ownership_range = ownership_range[0] * (num_components-1) / num_components
-        for i in range(1,num_components):
-            vel_comp_DOF.append(numpy.arange(start=ownership_range[0] + i,
-                                             stop=ownership_range[0] + num_equations,
-                                             step=num_components,
-                                             dtype="i"))
-            vel_comp_DOF_vel.append(numpy.arange(start=scaled_ownership_range + i - 1,
-                                                 stop=scaled_ownership_range + int( num_equations * (num_components-1) / num_components ),
-                                                 step=num_components-1,
-                                                 dtype="i"))
-        return vel_comp_DOF, vel_comp_DOF_vel
-
 class InterlacedDofOrderType(DofOrderInfo):
     """Manages the DOF for interlaced velocity and pressure ordering.
 
@@ -1459,8 +1423,12 @@ class InterlacedDofOrderType(DofOrderInfo):
     Interlaced degrees of occur when the degrees of freedom are
     ordered as (p[0], u[0], v[0], p[1], u[1], ..., p[n], u[n], v[n]).
     """
-    def __init__(self):
-        DofOrderInfo.__init__(self,'interlaced')
+    def __init__(self,
+                 model_info = 'no model info set'):
+        DofOrderInfo.__init__(self,
+                              'interlaced',
+                              model_info = model_info)
+
     def create_DOF_lists(self,
                          ownership_range,
                          num_equations,
@@ -1495,6 +1463,75 @@ class InterlacedDofOrderType(DofOrderInfo):
         velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
         return [velocityDOF, pressureDOF]
 
+    def create_vel_DOF_IS(self,
+                          ownership_range,
+                          num_equations,
+                          num_components):
+        """
+        Build interlaced DOF arrays for the components of the velocity.
+
+        Parameters
+        ----------
+        ownership_range: tuple
+            Local ownership range of DOF
+        num_equations: int
+            Number of local equations
+        num_components: int
+            Number of pressure and velocity components
+
+        Returns
+        -------
+        DOF_output : lst of arrays
+            Each element of this list corresponds to a component of
+            the velocity.  E.g. for u, v, w : [vel_u,vel_v,vel_w].
+        """
+        import Comm
+        comm = Comm.get()
+        vel_comp_DOF = []
+        vel_comp_DOF_vel=[]
+        scaled_ownership_range = ownership_range[0] * (num_components-1) / num_components
+        for i in range(1,num_components):
+            vel_comp_DOF.append(self.create_IS(numpy.arange(start=ownership_range[0] + i,
+                                                            stop=ownership_range[0] + num_equations,
+                                                            step=num_components,
+                                                            dtype="i")))
+            vel_comp_DOF_vel.append(self.create_IS(numpy.arange(start=scaled_ownership_range + i - 1,
+                                                                stop=scaled_ownership_range + int( num_equations * (num_components-1) / num_components ),
+                                                                step=num_components-1,
+                                                                dtype="i")))
+        return vel_comp_DOF, vel_comp_DOF_vel
+
+    def create_no_dirichlet_bdy_nodes_is(self,
+                                         ownership_range,
+                                         num_equations,
+                                         num_components,
+                                         bdy_nodes):
+        """Build block velocity DOF arrays excluding Dirichlet bdy nodes.
+
+        Parameters
+        ----------
+        bdy_nodes : lst
+           This is a list of lists with the local dof index for strongly
+           enforced Dirichlet boundary conditions on the velocity
+           components.
+        """
+        strong_DOF , local_vel_DOF = self.create_vel_DOF_IS(ownership_range,
+                                                            num_equations,
+                                                            num_components)
+        strong_DOF = [ele.array for ele in strong_DOF]
+        local_vel_DOF = [ele.array for ele in local_vel_DOF]
+        mask = [numpy.ones(len(var), dtype=bool) for var in strong_DOF]
+        for i, bdy_node in enumerate(bdy_nodes):
+            mask[i][bdy_node] = False
+        strong_DOF = [strong_DOF[i][mask[i]] for i in range(len(strong_DOF))]
+        total_vars = int(0)
+        for var in strong_DOF:
+            total_vars += int(len(var))
+        strong_DOF_idx = numpy.empty((total_vars),dtype='int32')
+        for i, var_dof in enumerate(strong_DOF):
+            strong_DOF_idx[i::2] = var_dof
+        return self.create_IS(strong_DOF_idx)
+
 class ModelInfo(object):
     """
     This class stores the model information needed to initialize a
@@ -1512,28 +1549,34 @@ class ModelInfo(object):
         dof_order_type)
     """
     def __init__(self,
-                 num_components,
                  dof_order_type,
+                 num_components,
+                 L_range = None,
+                 neqns = None,
                  n_DOF_pressure=None):
-        self.nc = num_components
-        self.set_dof_order_type_name(dof_order_type)
+        self.set_num_components(num_components)
+        self.set_dof_order_type(dof_order_type)
         if dof_order_type=='blocked':
-            assert n_DOF_pressure!=None #ARB - add an error message
-            self.dof_order_type = BlockedDofOrderType(n_DOF_pressure)
+            assert n_DOF_pressure!=None, \
+                "need num of pressure unknowns for blocked dof order type"
+            self.dof_order_class = BlockedDofOrderType(n_DOF_pressure, self)
         if dof_order_type=='interlaced':
-            self.dof_order_type = InterlacedDofOrderType()
+            self.dof_order_class = InterlacedDofOrderType(self)
 
     def set_dof_order_type(self, dof_order_type):
-        self.dof_order_type = dof_order_type
+        self._dof_order_type = dof_order_type
 
-    def set_dof_order_type_name(self, dof_order_type):
-        self._dof_order_type_name = dof_order_type
+    def get_dof_order_type(self):
+        return self._dof_order_type
 
-    def get_dof_order_type_name(self):
-        return self._dof_order_type_name
-
-    def set_nc(self,nc):
+    def set_num_components(self,nc):
         self.nc = nc
+
+    def get_num_components(self):
+        return self.nc
+
+    def get_dof_order_class(self):
+        return self.dof_order_class
 
 class SchurPrecon(KSP_Preconditioner):
     """ Base class for PETSc Schur complement preconditioners. """
@@ -1569,7 +1612,7 @@ class SchurPrecon(KSP_Preconditioner):
         self._initializeIS()
         self.bdyNullSpace = bdyNullSpace
         self.pc.setFromOptions()
-        if self.model_info.get_dof_order_type_name() == 'interlaced':
+        if self.model_info.get_dof_order_type() == 'interlaced':
             ## TODO: ARB - this should be extended to blocked types
             self.set_velocity_var_names()
 
@@ -1579,11 +1622,18 @@ class SchurPrecon(KSP_Preconditioner):
         preconditioner.
         """
         nc = self.L.pde.nc
+        L_range = self.L.getOwnershipRanges()
+        neqns = self.L.getSizes()[0][0]
         if len(self.L.pde.u[0].dof) == len(self.L.pde.u[1].dof):
-            self.model_info = ModelInfo(nc,'interlaced')
+            self.model_info = ModelInfo('interlaced',
+                                        nc,
+                                        L_range = L_range,
+                                        neqns = neqns)
         else:
-            self.model_info = ModelInfo(nc,
-                                        'blocked',
+            self.model_info = ModelInfo('blocked',
+                                        nc,
+                                        L_range,
+                                        neqns,
                                         self.L.pde.u[0].dof.size)
 
     def get_num_components(self):
@@ -1657,9 +1707,10 @@ class SchurPrecon(KSP_Preconditioner):
         """
         L_range = self.L.getOwnershipRange()
         neqns = self.L.getSizes()[0][0]
-        dof_arrays = self.model_info.dof_order_type.create_DOF_lists(L_range,
-                                                                     neqns,
-                                                                     self.model_info.nc)
+        dof_order_cls = self.model_info.get_dof_order_class()
+        dof_arrays = dof_order_cls.create_DOF_lists(L_range,
+                                                    neqns,
+                                                    self.model_info.nc)
         self.isp = p4pyPETSc.IS()
         self.isp.createGeneral(dof_arrays[1],comm=p4pyPETSc.COMM_WORLD)
         self.isv = p4pyPETSc.IS()
@@ -1844,18 +1895,17 @@ class NavierStokesSchur(SchurPrecon):
         L_range = self.L.getOwnershipRange()
         neqns = self.L.getSizes()[0][0]
 
-        velocity_dof_calculator = VelocityInterlacedDofOrderType()
-        velocity_DOF_full, velocity_DOF_local = velocity_dof_calculator.create_DOF_lists(L_range,
-                                                                                         neqns,
-                                                                                         self.model_info.nc)
+        vel_is_func = self.model_info.dof_order_class.create_vel_DOF_IS
+        
+        velocity_DOF_full, velocity_DOF_local = vel_is_func(L_range,
+                                                            neqns,
+                                                            self.model_info.nc)
 
         for i, var in enumerate(self.get_velocity_var_names()):
             name_1 = "is_vel_" + var
             name_2 = "is"+var+"_local"
-            setattr(self,name_1, p4pyPETSc.IS())
-            getattr(self,name_1).createGeneral(velocity_DOF_full[i],comm=p4pyPETSc.COMM_WORLD)
-            setattr(self,name_2, p4pyPETSc.IS())
-            getattr(self,name_2).createGeneral(velocity_DOF_local[i],comm=p4pyPETSc.COMM_WORLD)
+            setattr(self,name_1, velocity_DOF_full[i])
+            setattr(self,name_2, velocity_DOF_local[i])
 
     def _initialize_velocity_block_preconditioner(self,global_ksp):
         r""" Initialize the velocity block preconditioner.
@@ -1902,7 +1952,6 @@ class NavierStokesSchur(SchurPrecon):
 
         global_ksp.pc.getFieldSplitSubKSP()[0].setUp()
         global_ksp.pc.setUp()
-
 
 class NavierStokes_TwoPhasePCD(NavierStokesSchur):
     r""" Two-phase PCD Schur complement approximation class.
@@ -2003,10 +2052,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.operator_constructor.updateInvScaledAp()
         self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
                                                        lumped = self.lumped)
-        self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
-        self.operator_constructor.updateInvScaledAp()
-        self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
-                                                       lumped = self.lumped)
         self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
                                                                  lumped = self.lumped)
         self.Np_rho = self.N_rho.createSubMatrix(self.operator_constructor.linear_smoother.isp,
@@ -2018,17 +2063,21 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.Qp_invScaledVis = self.Q_invScaledVis.createSubMatrix(self.operator_constructor.linear_smoother.isp,
                                                                 self.operator_constructor.linear_smoother.isp)
 
+        isp = self.operator_constructor.linear_smoother.isp
+        isv = self.operator_constructor.linear_smoother.isv
+
         # ****** Sp for Ap *******
         # TODO - This is included for a possible extension which exchanges Ap with Sp for short
         #        time steps.
-        # self.A00 = global_ksp.getOperators()[0].createSubMatrix(self.operator_constructor.linear_smoother.isv,
-        #                                                      self.operator_constructor.linear_smoother.isv)
-        # self.A01 = global_ksp.getOperators()[0].createSubMatrix(self.operator_constructor.linear_smoother.isv,
-        #                                                      self.operator_constructor.linear_smoother.isp)
-        # self.A10 = global_ksp.getOperators()[0].createSubMatrix(self.operator_constructor.linear_smoother.isp,
-        #                                                      self.operator_constructor.linear_smoother.isv)
-        # self.A11 = global_ksp.getOperators()[0].createSubMatrix(self.operator_constructor.linear_smoother.isp,
-        #                                                      self.operator_constructor.linear_smoother.isp)
+        # A_mat = global_ksp.getOperators()[0]
+        # self.A00 = A_mat.createSubMatrix(isv,
+        #                               isv)
+        # self.A01 = A_mat.createSubMatrix(isv,
+        #                               isp)
+        # self.A10 = A_mat.createSubMatrix(isp,
+        #                               isv)
+        # self.A11 = A_mat.createSubMatrix(isp,
+        #                               isp)
 
         # dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
         # self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
@@ -2039,13 +2088,21 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
 
         # End ******** Sp for Ap ***********
 
+        self.Np_rho = self.N_rho.createSubMatrix(isp,
+                                              isp)
+
+        self.Ap_invScaledRho = self.A_invScaledRho.createSubMatrix(isp,
+                                                                isp)
+        self.Qp_rho = self.Q_rho.createSubMatrix(isp,
+                                              isp)
         try:
             if self.velocity_block_preconditioner_set is False:
                 self._initialize_velocity_block_preconditioner(global_ksp)
                 self.velocity_block_preconditioner_set = True
         except AttributeError:
             pass
-
+        self.Qp_invScaledVis = self.Q_invScaledVis.createSubMatrix(isp,
+                                                                isp)
         if self.velocity_block_preconditioner:
             self._setup_velocity_block_preconditioner(global_ksp)
 
