@@ -88,6 +88,7 @@ namespace proteus
                                    double* ebqe_rd_u_ext,
                                    double* ebqe_bc_u_ext,
                                    double* ebqe_u,
+                                   double* ebqe_grad_u,
 				   double* interface_locator,
 				   // TO KILL SUPG AND SHOCK CAPTURING 
 				   int PURE_BDF,
@@ -682,6 +683,7 @@ namespace proteus
 			     double* ebqe_rd_u_ext,
 			     double* ebqe_bc_u_ext,
 			     double* ebqe_u,
+           double* ebqe_grad_u,
 			     double* interface_locator,
 			     // TO KILL SUPG AND SHOCK CAPTURING 
 			     int PURE_BDF,
@@ -1075,6 +1077,15 @@ namespace proteus
 				      velocity_ext,
 				      flux_ext);
 		ebqe_u[ebNE_kb] = u_ext;
+
+		// gradient //
+
+		register double norm = 1.0e-8;
+		for (int I=0;I<nSpace;I++)
+		  norm += grad_u_ext[I]*grad_u_ext[I];
+		norm = sqrt(norm);
+		for (int I=0;I<nSpace;I++)
+		  ebqe_grad_u[ebNE_kb_nSpace+I]  = grad_u_ext[I]/norm;
 
 		//
 		//update residuals
