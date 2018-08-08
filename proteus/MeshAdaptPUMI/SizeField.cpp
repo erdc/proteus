@@ -1946,9 +1946,11 @@ int serialMetricGradation(apf::Mesh* m, std::queue<apf::MeshEntity*> &markedEdge
   while(!markedEdges.empty()){ 
     edge = markedEdges.front();
     m->getAdjacent(edge, 0, edgAdjVert);
+/*
     for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
       size[i] = apf::getScalar(size_iso,edgAdjVert[i],0);
     }
+*/
 
     needsParallel+=gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
       vertAdjEdg, markedEdges, isMarked, apf::SCALAR,0, 0);
@@ -1963,7 +1965,7 @@ int serialMetricGradation(apf::Mesh* m, std::queue<apf::MeshEntity*> &markedEdge
 
 
 
-void gradeMetric(apf::Mesh* m, double gradingFactor)
+void MeshAdaptPUMIDrvr::gradeMetric()
 //Based on Alauzet, Frédéric. "Size gradation control of anisotropic meshes." Finite Elements in Analysis and Design 46.1-2 (2010): 181-202.
 {
   if(PCU_Comm_Self()==0)
@@ -1996,6 +1998,8 @@ void gradeMetric(apf::Mesh* m, double gradingFactor)
   //  
 
   while(needsParallel)
+  {
+    needsParallel = serialMetricGradation(m,markedEdges,gradingFactor);
   }
   //Cleanup of edge marker field
   it = m->begin(1);
@@ -2008,6 +2012,10 @@ void gradeMetric(apf::Mesh* m, double gradingFactor)
 
 }
 
+void MeshAdaptPUMIDrvr::anisotropicIntersect()
+{
+  gradeMetric();
+}
 
 
 

@@ -387,6 +387,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
 
   if(adapt_type_config!="anisotropic")
     isotropicIntersect();
+  else if(adapt_type_config=="anisotropic")
+    anisotropicIntersect();
 
   if(logging_config=="on"){
     char namebuffer[50];

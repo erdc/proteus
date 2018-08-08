@@ -60,6 +60,7 @@ class MeshAdaptPUMIDrvr{
   int testIsotropicSizeField();
   int getERMSizeField(double err_total);
   int gradeMesh();
+  void gradeMetric();
 
   //Quality Check Functions
   double getMinimumQuality();
@@ -146,6 +147,7 @@ class MeshAdaptPUMIDrvr{
   //queue for size fields
   std::queue<apf::Field*> sizeFieldList;
   void isotropicIntersect();
+  void anisotropicIntersect();
 
   int constructGlobalNumbering(Mesh& mesh);
   int constructGlobalStructures(Mesh& mesh);
