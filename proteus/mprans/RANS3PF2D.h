@@ -3384,10 +3384,10 @@ namespace proteus
                         globalResidual[GlobPos_v] -= visco * phi_i*res[1];
 
                         // (3)
-                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,u_m_uD,res);
-                        globalResidual[GlobPos_u] -= visco * get_dot_product(normal,res);//Use normal for consistency
-                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,u_m_uD,res);
-                        globalResidual[GlobPos_v] -= visco * get_dot_product(normal,res);//Use normal for consistency
+                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,normal,res);
+                        globalResidual[GlobPos_u] -= visco * get_dot_product(u_m_uD,res);//Use normal for consistency
+                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,normal,res);
+                        globalResidual[GlobPos_v] -= visco * get_dot_product(u_m_uD,res);//Use normal for consistency
 
                         // (4)
                         globalResidual[GlobPos_u] += C_adim*grad_phi_i_dot_d*u_m_uD[0];
@@ -3407,8 +3407,8 @@ namespace proteus
                         get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,normal,res);//Use normal for consistency
                         globalResidual[GlobPos_v] -= visco*get_dot_product(grad_u_d,res);
 
-                        // the penalization on the tangential derivative
-                        // B < Gw t , (Gu - GuD) t >
+                        //the penalization on the tangential derivative
+                        //B < Gw t , (Gu - GuD) t >
                         globalResidual[GlobPos_u] += beta_adim*grad_u_t[0]*grad_phi_i_dot_t;
                         globalResidual[GlobPos_v] += beta_adim*grad_u_t[1]*grad_phi_i_dot_t;
 

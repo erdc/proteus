@@ -2241,12 +2241,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
 
         try:
-            if self.coefficients.use_sbm == 1:
+            if self.coefficients.use_sbm > 0:
                 self.isActiveDOF[:] = 0.0
             else:
                 self.isActiveDOF[:] = 1.0
         except AttributeError:
-            if self.coefficients.use_sbm == 1:
+            if self.coefficients.use_sbm > 0:
                 self.isActiveDOF = np.zeros_like(r)
             else:
                 self.isActiveDOF = np.ones_like(r)
