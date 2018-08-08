@@ -351,7 +351,7 @@ namespace proteus
                                    const double *ebq_global_phi_solid,
                                    const double *ebq_global_grad_phi_solid,
                                    const double* ebq_particle_velocity_solid,
-                                   const double *phi_solid_nodes,
+                                         double *phi_solid_nodes,
                                    const double *phi_solid,
                                    const double *q_velocity_solid,
                                    const double *q_vos,
@@ -2332,21 +2332,8 @@ namespace proteus
                         {
                             double middle_point_coord[3]={0.0};
                             double middle_point_distance;
-                            if(opp_node == 0)
-                            {
-                                middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]);
-                                middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]);
-                            }
-                            else if(opp_node == 1)
-                            {
-                                middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]);
-                                middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]);
-                            }
-                            else if(opp_node == 2)
-                            {
-                                middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]);
-                                middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]);
-                            }
+                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%3]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%3]+0]);
+                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%3]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%3]+1]);
                             j = get_distance_to_ball(nParticles, ball_center, ball_radius,
                                     middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
                                     middle_point_distance);
@@ -4454,7 +4441,7 @@ namespace proteus
                              const double* ebq_global_phi_solid,
                              const double* ebq_global_grad_phi_solid,
                              const double* ebq_particle_velocity_solid,
-                             const double* phi_solid_nodes,
+                                   double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
                              const double* q_vos,
@@ -4638,6 +4625,15 @@ namespace proteus
                   elementJacobian_w_v[i][j]=0.0;
                   elementJacobian_w_w[i][j]=0.0;
                 }
+            if(use_ball_as_particle==1)
+            {
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+0],
+                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
+                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
+                                                phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]);
+            }
             //
             //detect cut cells
             //
@@ -4699,21 +4695,8 @@ namespace proteus
                         {
                             double middle_point_coord[3]={0.0};
                             double middle_point_distance;
-                            if(opp_node == 0)
-                            {
-                                middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]);
-                                middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]);
-                            }
-                            else if(opp_node == 1)
-                            {
-                                middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]);
-                                middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]);
-                            }
-                            else if(opp_node == 2)
-                            {
-                                middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]);
-                                middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]);
-                            }
+                            middle_point_coord[0] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%3]+0]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%3]+0]);
+                            middle_point_coord[1] = 0.5*(mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%3]+1]+mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%3]+1]);
                             j = get_distance_to_ball(nParticles, ball_center, ball_radius,
                                     middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
                                     middle_point_distance);
@@ -5643,7 +5626,6 @@ namespace proteus
                     bc_u_ext = 0.0;
                     bc_v_ext = 0.0;
                     ck.calculateGScale(G,normal,h_penalty);
-                    penalty = h_penalty;
                     //
                     //update the global Jacobian from the flux Jacobian
                     //
