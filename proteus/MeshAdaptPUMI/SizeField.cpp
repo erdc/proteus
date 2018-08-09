@@ -13,6 +13,7 @@
 #include <queue>
 #include <algorithm> 
 #include <cmath>
+#include <Eigen/Eigenvalues>
 
 #define RATIO 8.0
 
@@ -1849,7 +1850,7 @@ double getMetricLength(apf::Matrix3x3 metric, apf::Vector3 directionVector)
 }
 
 //void getGeometricMetricLength(apf::Matrix3x3 metric1, apf::Matrix3x3 metric2, apf::Vector3 directionVector,double &metricLength1, double &metricLength2)
-void getGeometricMetricLength(apf::Matrix3x3 metric1, apf::Matrix3x3 metric2, apf::Vector3 directionVector,double &metricLength)
+double getGeometricMetricLength(apf::Matrix3x3 metric1, apf::Matrix3x3 metric2, apf::Vector3 directionVector)
 //Compute geometric interpolated metric length of edge w/ respect to both end points
 {
   double edgeLength = directionVector.getLength();
@@ -1858,6 +1859,7 @@ void getGeometricMetricLength(apf::Matrix3x3 metric1, apf::Matrix3x3 metric2, ap
   double a = l1/l2;
   //double a2 = l2/l1;
 
+  double metricLength;
   if(fabs(a-1.0)<1e-13)
     metricLength = l1;
   else
@@ -1872,10 +1874,8 @@ void getGeometricMetricLength(apf::Matrix3x3 metric1, apf::Matrix3x3 metric2, ap
   std::cout<<"metricLength 1 "<<metricLength1<<std::endl;
   std::cout<<"metricLength 2 "<<metricLength2<<std::endl;
 */
+  return metricLength;
 }
-
-
-
 
 apf::Matrix3x3 getMetricIntersection(apf::Matrix3x3 metric1, apf::Matrix3x3 metric2)
 {
@@ -1887,9 +1887,35 @@ apf::Matrix3x3 getMetricIntersection(apf::Matrix3x3 metric1, apf::Matrix3x3 metr
     return metric1;
 
   apf::Matrix3x3 N = apf::invert(metric1)*metric2;
+  //std::cout<<"N "<<N<<std::endl;
   apf::Vector3 eigenVectors[3];
   double eigenValues[3];
-  apf::eigen(N, eigenVectors, eigenValues);
+  Eigen::MatrixXd A(3,3);
+  for(int i=0; i<3; i++){
+    for(int j=0; j<3; j++){
+      A(i,j) = N[i][j];
+    }
+  }
+  Eigen::EigenSolver<Eigen::MatrixXd> es(A);
+/*
+  std::cout << "Here is a random 6x6 matrix, A:" << std::endl << A << std::endl << std::endl;
+  std::cout << "The eigenvalues of A are:" << std::endl << es.eigenvalues() << std::endl;
+  std::cout << "The matrix of eigenvectors, V, is:" << std::endl << es.eigenvectors() << std::endl << std::endl;
+*/
+
+  for(int i=0;i<3;i++)
+  {
+    eigenValues[i] = es.eigenvalues()[i].real();
+//    std::cout<<"eigenvalues "<<eigenValues[i]<<std::endl;
+    for(int j=0;j<3;j++)
+    {
+      eigenVectors[i][j] = es.eigenvectors().col(i)[j].real();
+    }
+  }
+//  std::cout<<"eigenVectors "<<eigenVectors[0]<<" "<<eigenVectors[1]<<" "<<eigenVectors[2]<<std::endl;
+
+  //apf::eigen(N, eigenVectors, eigenValues);
+//  std::cout<<"Past the eigen call\n";
  
   apf::Matrix3x3 R; //this will be used to store the eigenvectors
   apf::Matrix3x3 R_t; //transpose
@@ -1928,37 +1954,186 @@ apf::Matrix3x3 getMetricIntersection(apf::Matrix3x3 metric1, apf::Matrix3x3 metr
   return intersect;
 }
 
-
-int serialMetricGradation(apf::Mesh* m, std::queue<apf::MeshEntity*> &markedEdges,double gradingFactor)
+int metricIntersection_core(apf::Mesh2* m, apf::MeshEntity* edge, apf::Matrix3x3 intersect[],double gradingFactor)
 {
-  double size[2];
+//  1. look at the metric on each vertex
+//  2. compute the scaled metric based on metric length for each vertex
+//  3. compute the intersections
+//  4. compare the intersections with the original metric via Frobenius norm ; More generally, this is where we determine if an ellipsoid is in another ellipsoid
+
+  apf::Matrix3x3 metric[2];
+  apf::Matrix3x3 scaledMetric[2];
+  apf::Field* metricField = m->findField("metric");
+  apf::Adjacent edgAdjVert;
+
+  //1.
+  m->getAdjacent(edge, 0, edgAdjVert);
+  for (std::size_t i=0; i < edgAdjVert.getSize(); ++i)
+  {
+    apf::getMatrix(metricField,edgAdjVert[i],0,metric[i]);
+  }
+
+  //2.
+
+  //get the points to compute a direction for the edge
+  apf::Vector3 pts[2];
+  for (std::size_t i=0; i < edgAdjVert.getSize(); ++i)
+  {
+    m->getPoint(edgAdjVert[i],0,pts[i]);
+  }
+  apf::Vector3 directionVector = pts[1]-pts[0];
+  double metricLength = getGeometricMetricLength(metric[0], metric[1], directionVector);
+  double scalingFactor = 1.0+metricLength*std::log(gradingFactor);
+  scalingFactor = scalingFactor*scalingFactor;
+  scalingFactor = 1.0/scalingFactor;
+
+  for (std::size_t i=0; i < edgAdjVert.getSize(); ++i)
+  {
+    scaledMetric[i]=metric[i]*scalingFactor;
+  }
+
+  //3.
+  for (std::size_t i=0; i < edgAdjVert.getSize(); ++i)
+  {
+    if(i==0)
+      intersect[0] = getMetricIntersection(metric[0],scaledMetric[1]);
+    else if (i==1)
+      intersect[1] = getMetricIntersection(metric[1],scaledMetric[0]);
+  }
+
+  //4.
+  
+  int needToIntersect = 0;
+  for (std::size_t i=0; i < edgAdjVert.getSize(); ++i)
+  {
+    apf::Matrix3x3 diff =metric[i]-intersect[i];
+    //std::cout<<"metric \n"<<metric[i]<<std::endl;
+    //std::cout<<"intersect \n"<<intersect[i]<<std::endl;
+    double diff_norm = sqrt(apf::getInnerProduct(diff,diff));
+    if(diff_norm > 1e-10)
+      needToIntersect++;
+  }
+  //std::abort();
+
+  return needToIntersect;
+}
+
+
+void markEdgesInitialMetric(apf::Mesh2* m, std::queue<apf::MeshEntity*> &markedEdges,double gradingFactor)
+//This function looks at each edge and determines whether or not applying simultaneous intersection will be necessary
+//For each edge
+
+//This will actually waste some resources making the comparisons, but this is simpler to understand
+{
   //marker structure for 0) not marked 1) marked 2)storage
-  int marker[3] = {0,1,0}; 
+  int marker[2] = {0,1}; 
+
+  apf::Matrix3x3 intersect[2];
   apf::MeshTag* isMarked = m->findTag("isMarked");
-  apf::Field* size_frames = m->findField("proteus_size_scales");
+  apf::Adjacent edgAdjVert;
+  apf::MeshEntity* edge;
+  apf::MeshIterator* it = m->begin(1);
+  while((edge=m->iterate(it)))
+  {
+    int needToIntersect = metricIntersection_core(m, edge, intersect,gradingFactor);
+    if(needToIntersect>0) 
+    {
+      //add edge to a queue 
+      markedEdges.push(edge);
+      //tag edge to indicate that it is part of queue 
+      m->setIntTag(edge,isMarked,&marker[1]); 
+    }
+    else
+    {
+      m->setIntTag(edge,isMarked,&marker[0]); 
+    }
+  } //end while
+  m->end(it); 
+}
+
+
+
+int serialMetricGradation(apf::Mesh2* m, std::queue<apf::MeshEntity*> &markedEdges,double gradingFactor)
+{
+  //marker structure for 0) not marked 1) marked 2)storage
+  int marker[2] = {0,1}; 
+  int markerTag; //used to check marker
+
+  apf::MeshTag* isMarked = m->findTag("isMarked");
+  apf::Field* metricField = m->findField("metric");
+
   apf::Adjacent edgAdjVert;
   apf::Adjacent vertAdjEdg;
   apf::MeshEntity* edge;
-  apf::MeshIterator* it = m->begin(1);
   int needsParallel=0;
+  apf::Matrix3x3 intersect[2];
 
   //perform serial gradation while packing necessary info for parallel
-  while(!markedEdges.empty()){ 
+  std::cout<<"Enter queue loop\n";
+  while(!markedEdges.empty())
+  { 
     edge = markedEdges.front();
     m->getAdjacent(edge, 0, edgAdjVert);
+    
+    int needToIntersect = metricIntersection_core(m, edge, intersect,gradingFactor);
+    //if need to intersect, set intersect as the metric
+    if(needToIntersect>0)
+    {
+
+      for (std::size_t i=0; i < edgAdjVert.getSize(); ++i)
+      {
+        apf::setMatrix(metricField,edgAdjVert[i],0,intersect[i]);
+      }
+
 /*
-    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
-      size[i] = apf::getScalar(size_iso,edgAdjVert[i],0);
-    }
+      //Need to look at add adjacent edges to the queue
+      for (std::size_t i=0; i < edgAdjVert.getSize(); ++i)
+      {
+        m->getAdjacent(edgAdjVert[i], 1, vertAdjEdg);
+        //Loop over adjacent edges to vertex
+        std::cout<<i<<" edgAdjVert size "<<edgAdjVert.getSize()<<" vertAdjEdg size "<<vertAdjEdg.getSize()<<std::endl;
+        for (std::size_t j=0; i < vertAdjEdg.getSize(); ++j)
+        {
+          std::cout<<"Is this the problem?\n";
+          std::cout<<"type is "<<m->getType(vertAdjEdg[j])<<" type of base "<<m->getType(edgAdjVert[i])<<std::endl;
+          apf::Vector3 pts; 
+          m->getPoint(edgAdjVert[i],0,pts);
+          std::cout<<"points "<<pts<<"  "<<std::endl;
+
+          if(m->getType(vertAdjEdg[j])==1)
+          {
+            m->getIntTag(vertAdjEdg[j],isMarked,&markerTag);
+            std::cout<<"no?\n";
+            if(!markerTag)
+            {
+              //push edge to queue and tag edge to indicate that it is part of queue 
+              markedEdges.push(vertAdjEdg[j]);
+              m->setIntTag(vertAdjEdg[j],isMarked,&marker[1]); 
+            }
+          }
+        }
+      } //end for - add adjacent edges to queue
 */
+      apf::Adjacent edgAdjEdg;
+      apf::getBridgeAdjacent(m,edge,0,1,edgAdjEdg);
+      for (std::size_t i=0; i < edgAdjEdg.getSize(); ++i)
+      {
+        m->getIntTag(edgAdjEdg[i],isMarked,&markerTag);
+        if(!markerTag)
+        {
+        //push edge to queue and tag edge to indicate that it is part of queue 
+          markedEdges.push(edgAdjEdg[i]);
+          m->setIntTag(edgAdjEdg[i],isMarked,&marker[1]); 
+        }
 
-    needsParallel+=gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
-      vertAdjEdg, markedEdges, isMarked, apf::SCALAR,0, 0);
-    needsParallel+=gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
-      vertAdjEdg, markedEdges, isMarked, apf::SCALAR,0, 1);
-
-    m->setIntTag(edge,isMarked,&marker[0]);
+      } //end for adjacent edges
+      
+    } //end if
+  
+    //Will need a section to determine if parallel communication is necessary
+    m->setIntTag(edge,isMarked,&marker[0]); 
     markedEdges.pop();
+    std::cout <<" queue size is "<<markedEdges.size()<<std::endl;
   }
   return needsParallel;
 }
@@ -1969,20 +2144,13 @@ void MeshAdaptPUMIDrvr::gradeMetric()
 //Based on Alauzet, Frédéric. "Size gradation control of anisotropic meshes." Finite Elements in Analysis and Design 46.1-2 (2010): 181-202.
 {
   if(PCU_Comm_Self()==0)
-    std::cout<<"Entered function\n"; 
+    std::cout<<"Entered metric gradation function\n"; 
 
-  apf::MeshEntity* edge;
-  apf::Adjacent edgAdjVert;
-  apf::Adjacent vertAdjEdg;
-  double size[2];
   std::queue<apf::MeshEntity*> markedEdges;
   apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
 
-  //marker structure for 0) not marked 1) marked 2)storage
-  int marker[3] = {0,1,0}; 
-
-  apf::MeshIterator* it;
-  markEdgesInitial(m,markedEdges,gradingFactor);
+  markEdgesInitialMetric(m,markedEdges,gradingFactor);
+  std::cout<<"Past markEdgesInitialMetric\n";
 
   int needsParallel=1;
   int nCount=1;
@@ -2001,20 +2169,103 @@ void MeshAdaptPUMIDrvr::gradeMetric()
   {
     needsParallel = serialMetricGradation(m,markedEdges,gradingFactor);
   }
+  std::cout<<"Past serialMetricGradation\n";
   //Cleanup of edge marker field
+  apf::MeshEntity* edge;
+  apf::MeshIterator* it;
+
   it = m->begin(1);
-  while((edge=m->iterate(it))){
+  while((edge=m->iterate(it)))
+  {
     m->removeTag(edge,isMarked);
   }
   m->end(it); 
   m->destroyTag(isMarked);
 
-
 }
 
 void MeshAdaptPUMIDrvr::anisotropicIntersect()
 {
+  //create metric fields 
+  
+  apf::Field* metricField = apf::createLagrangeField(m, "metric", apf::MATRIX, 1);
+  apf::Field* size_scales = m->findField("proteus_size_scale");
+  apf::Field* size_frames = m->findField("proteus_size_frame");
+
+  apf::Matrix3x3 metric;
+  apf::Matrix3x3 frame;
+  apf::Vector3 scale;
+
+  apf::MeshEntity* v;
+  apf::MeshIterator* it = m->begin(0);
+  while( (v = m->iterate(it)) )
+  {
+    apf::getVector(size_scales,v,0,scale);
+    apf::getMatrix(size_frames,v,0,frame);
+    apf::Matrix3x3 scaleMatrix(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
+    scaleMatrix[0][0] = scale[0];
+    scaleMatrix[1][1] = scale[1];
+    scaleMatrix[2][2] = scale[2];
+    
+    metric = apf::transpose(frame)*scaleMatrix*frame;
+    //symmetrize metric
+    //metric = (metric+apf::transpose(metric))/2.0;
+    apf::setMatrix(metricField,v,0,metric);
+  }
+  m->end(it);
+  
+  //intersect them - don't need this yet as we only have one size field description
+  //
+  char namebuffer[50];
+  sprintf(namebuffer,"pumi_preGrade_%i",nAdapt);
+  apf::writeVtkFiles(namebuffer, m);
+ 
+  
+  //grade the metric field
   gradeMetric();
+
+  sprintf(namebuffer,"pumi_postGrade_%i",nAdapt);
+  apf::writeVtkFiles(namebuffer, m);
+  //std::abort();
+
+  //deconstruct metric fields back into frame and size
+
+  it = m->begin(0);
+  while( (v = m->iterate(it)) )
+  {
+    apf::getMatrix(metricField,v,0,metric);
+  
+    //eigendecomposition
+    //sort and set
+    apf::Vector3 eigenVectors[3];
+    double eigenValues[3];
+    apf::eigen(metric, eigenVectors, eigenValues);
+    SortingStruct ssa[3];
+    for (int i = 0; i < 3; ++i)
+    {
+      ssa[i].v = eigenVectors[i];
+      ssa[i].wm = std::fabs(eigenValues[i]);
+    }
+    std::sort(ssa, ssa + 3);
+
+    for (int i = 0; i < 3; ++i)
+    {
+      scale[i] = ssa[2-i].wm;
+      frame[i] = ssa[2-i].v;
+      frame[i] = frame[i].normalize();
+    }
+
+    frame = apf::transpose(frame);
+
+
+    apf::setVector(size_scales,v,0,scale);
+    apf::setMatrix(size_frames,v,0,frame);
+    
+
+  }
+  m->end(it);
+
+  apf::destroyField(metricField);
 }
 
 
