@@ -47,10 +47,10 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     dragAlpha=dragAlpha,
                                     PSTAB=0.0,
                                     nParticles=1,
-                                    particle_epsFact=2.0,
+                                    particle_epsFact=1.5,
                                     particle_alpha=1e6,
                                     particle_beta=1e6,
-                                    particle_penalty_constant=1e16,
+                                    particle_penalty_constant=100.0,
                                     particle_sdfList=[particle_sdf],
                                     particle_velocityList=[particle_vel])
 
