@@ -213,7 +213,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
                  particle_nitsche=1.0,
-                 particle_sdfList=[],
+                 particle_sdfList=None,
                  vos_function=None,
                  particle_velocityList=[],
                  granular_sdf_Calc=None,
@@ -488,7 +488,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.use_ball_as_particle==1:
             pass
         else:
-            # Might need to add particle centroid updates in updateSDF function
             self.particles.updateSDF(self.mesh.nodeArray,
                                      self.model.q['x'],
                                      self.model.ebq_global['x'],
@@ -496,10 +495,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                      self.particle_signed_distances,
                                      self.particle_signed_distance_normals,
                                      self.particle_velocities,
+                                     self.particle_centroids,
                                      self.ebq_global_phi_s,
                                      self.ebq_global_grad_phi_s,
                                      self.ebq_particle_velocity_s)
 
+            # This is a temporary hack... something weird is happening where the
+            # particle centroids are not being updated by updateSDF. Will address later
             for i in range(self.particles.size()):
                 self.particle_centroids[i,:] = self.particles[i].x()
             
@@ -660,10 +662,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 if self.granular_sdf_Calc is not None:
                     sdf = lambda x: self.granular_sdf_Calc(x,i)
                 else:
-                    sdf = lambda x: self.particles[i].sdf(x)
+                    if self.particles is not None:
+                        sdf = lambda x: self.particles[i].sdf(x)
+                    else:
+                        sdf = lambda x: self.particle_sdfList[i](0.0, x)
 
             for j in range(mesh.nodeArray.shape[0]):
-                sdf_at_node = sdf(mesh.nodeArray[j,:])
+                if self.use_ball_as_particle==1 or self.particle_sdfList is not None:
+                    sdf_at_node, _ = sdf(mesh.nodeArray[j,:])
+                elif self.particles is not None:
+                    sdf_at_node = sdf(mesh.nodeArray[j,:])
                 if (abs(sdf_at_node) < abs(self.phi_s[j])):
                     self.phi_s[j] = sdf_at_node
 
@@ -1045,13 +1053,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         logEvent("updating {0} particles...".format(self.nParticles))
         if self.use_ball_as_particle == 0:
 
-            self.particles.moveParticles(self.particle_netForces, 
-                                         self.particle_netMoments, 
-                                         self.model.dt_last, 
+            self.particles.moveParticles(self.model.dt_last, 
                                          t,
-                                         1000,
-                                         "particles_out")
-            
+                                         self.particle_netForces, 
+                                         self.particle_netMoments)
+
             self.particles.updateSDF(self.mesh.nodeArray,
                                      self.model.q['x'],
                                      self.model.ebq_global['x'],
@@ -1059,13 +1065,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                      self.particle_signed_distances,
                                      self.particle_signed_distance_normals,
                                      self.particle_velocities,
+                                     self.particle_centroids,
                                      self.ebq_global_phi_s,
                                      self.ebq_global_grad_phi_s,
                                      self.ebq_particle_velocity_s)
 
+            # Temporary hack... see note in attachModels
             for i in range(self.particles.size()):
                 self.particle_centroids[i,:] = self.particles[i].x()
-            
+
         if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
