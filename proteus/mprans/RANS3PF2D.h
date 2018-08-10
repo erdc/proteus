@@ -1158,20 +1158,14 @@ namespace proteus
             double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
 
             C = (D_s * C_surf + (1.0 - H_s) * C_vol);
-            //            force_x = dV * D_s * (p * phi_s_normal[0] - porosity * mu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]) + C_surf * (u - u_s) * rho) +
-            //dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
-            //force_y = dV * D_s * (p * phi_s_normal[1] - porosity * mu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]) + C_surf * (v - v_s) * rho) +
-            //dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
-            force_x = dV*D_s*(p*fluid_outward_normal[0] - porosity*mu*(fluid_outward_normal[0]*grad_u[0] + fluid_outward_normal[1]*grad_u[1]));
-            //+ C_surf*rel_vel_norm*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
-            force_y = dV*D_s*(p*fluid_outward_normal[1] - porosity*mu*(fluid_outward_normal[0]*grad_v[0] + fluid_outward_normal[1]*grad_v[1]));
-            // + C_surf*rel_vel_norm*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
-            /* force_x = dV * D_s * (p * fluid_outward_normal[0] */
-            /*                       -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0])) */
-            /*                       ); */
-            /* force_y = dV * D_s * (p * fluid_outward_normal[1] */
-            /*                       -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1]) */
-            /*                       ); */
+            force_x = dV * D_s * (p * fluid_outward_normal[0]
+                                  -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
+                                  +C_surf*(u-u_s)*rho
+                                  );
+            force_y = dV * D_s * (p * fluid_outward_normal[1]
+                                  -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
+                                  +C_surf*(v-v_s)*rho
+                                  );
             //always 3D for particle centroids
             r_x = x - center[0];
             r_y = y - center[1];
@@ -2726,9 +2720,9 @@ namespace proteus
                                            ball_velocity,
                                            ball_angular_velocity,
                                            porosity,
-                                           particle_penalty_constant/h_phi,//penalty,
-                                           particle_alpha,
-                                           particle_beta,
+                                           particle_penalty_constant/h_phi,
+                                           particle_alpha/h_phi,
+                                           particle_beta/h_phi,
                                            eps_rho,
                                            eps_mu,
                                            rho_0,
@@ -2787,9 +2781,9 @@ namespace proteus
                                            ball_radius,
                                            ball_velocity,
                                            ball_angular_velocity,
-                                           particle_penalty_constant/h_phi,//penalty,
-                                           particle_alpha,
-                                           particle_beta,
+                                           particle_penalty_constant/h_phi,
+                                           particle_alpha/h_phi,
+                                           particle_beta/h_phi,
                                            eps_rho,
                                            eps_mu,
                                            rho_0,
@@ -5087,9 +5081,9 @@ namespace proteus
                                            ball_velocity,
                                            ball_angular_velocity,
                                            porosity,
-                                           particle_penalty_constant/h_phi,//penalty,
-                                           particle_alpha,
-                                           particle_beta,
+                                           particle_penalty_constant/h_phi,
+                                           particle_alpha/h_phi,
+                                           particle_beta/h_phi,
                                            eps_rho,
                                            eps_mu,
                                            rho_0,
