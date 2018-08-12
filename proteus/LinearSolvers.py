@@ -729,7 +729,16 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Sp:
                 logEvent("NAHeader Preconditioner selfp" )
-                self.preconditioner = Schur_Sp(par_L,prefix,self.bdyNullSpace)
+                try:
+                    self.preconditioner = Schur_Sp(par_L,
+                                                   prefix,
+                                                   self.bdyNullSpace,
+                                                   velocity_block_preconditioner=self.preconditionerOptions[0])
+                except IndexError:
+                    logEvent("Preconditioner options not specified, using defaults")
+                    self.preconditioner = Schur_Sp(par_L,
+                                                   prefix,
+                                                   self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Qp:
                 logEvent("NAHeader Preconditioner Qp" )
@@ -1750,6 +1759,7 @@ class SchurPrecon(KSP_Preconditioner):
         nsp = global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].getNullSpace()
         global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
 
+<<<<<<< HEAD
 class Schur_Sp(SchurPrecon):
     """
     Implements the SIMPLE Schur complement approximation proposed
@@ -1802,6 +1812,76 @@ class Schur_Sp(SchurPrecon):
         self.A10 = global_ksp.getOperators()[0].createSubMatrix(self.isp,
                                                              self.isv)
         self.A11 = global_ksp.getOperators()[0].createSubMatrix(self.isp,
+                                                             self.isp)
+        L_sizes = self.isp.sizes
+        self.SpInv_shell = p4pyPETSc.Mat().create()
+        self.SpInv_shell.setSizes(L_sizes)
+        self.SpInv_shell.setType('python')
+        self.matcontext_inv = SpInv_shell(self.A00,
+                                          self.A11,
+                                          self.A01,
+                                          self.A10,
+                                          constNullSpace = self.bdyNullSpace)
+        self.SpInv_shell.setPythonContext(self.matcontext_inv)
+        self.SpInv_shell.setUp()
+        # Set PETSc Schur operator
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+
+||||||| parent of 0254c36... update selfp_petsc to include velocity block pc
+class Schur_Sp(SchurPrecon):
+    """
+    Implements the SIMPLE Schur complement approximation proposed
+    in 2009 by Rehman, Vuik and Segal.
+
+    Parameters
+    ----------
+    L: :class:`p4pyPETSc.Mat`
+    prefix: str
+    bdyNullSpace: bool
+        Indicates the models boundary conditions create a global
+        null space. (see Notes)
+
+    Notes
+    -----
+    This Schur complement approximation is also avaliable in PETSc
+    by the name selfp.
+
+    One drawback of this operator is that it must be constructed from
+    the component pieces.  For small problems this is okay,
+    but for large problems this process may not scale well and often
+    a pure Laplace operator will prove a more effective choice of
+    preconditioner.
+
+    The `bdyNullSpace` parameter indicates if the model has a
+    global null space because the saddle point problem uses pure
+    Dirichlet boundary conditions.  When the global saddle point
+    system model has a null space, it is necessary apply a constant
+    null space to this operator.
+    """
+    def __init__(self,
+                 L,
+                 prefix,
+                 bdyNullSpace=False,
+                 solver_info = None):
+        SchurPrecon.__init__(self,
+                             L,
+                             prefix,
+                             bdyNullSpace,
+                             solver_info=solver_info)
+
+    def setUp(self,global_ksp):
+        self._setSchurlog(global_ksp)
+        if self.bdyNullSpace is True:
+            self._setConstantPressureNullSpace(global_ksp)
+        self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
+                                                             self.isv)
+        self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
+                                                             self.isp)
+        self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.isp,
+                                                             self.isv)
+        self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.isp,
                                                              self.isp)
         L_sizes = self.isp.sizes
         self.SpInv_shell = p4pyPETSc.Mat().create()
@@ -1952,6 +2032,87 @@ class NavierStokesSchur(SchurPrecon):
 
         global_ksp.pc.getFieldSplitSubKSP()[0].setUp()
         global_ksp.pc.setUp()
+
+class Schur_Sp(NavierStokesSchur):
+    """
+    Implements the SIMPLE Schur complement approximation proposed
+    in 2009 by Rehman, Vuik and Segal.
+
+    Parameters
+    ----------
+    L: :class:`p4pyPETSc.Mat`
+    prefix: str
+    bdyNullSpace: bool
+        Indicates the models boundary conditions create a global
+        null space. (see Notes)
+
+    Notes
+    -----
+    This Schur complement approximation is also avaliable in PETSc
+    by the name selfp.
+
+    One drawback of this operator is that it must be constructed from
+    the component pieces.  For small problems this is okay,
+    but for large problems this process may not scale well and often
+    a pure Laplace operator will prove a more effective choice of
+    preconditioner.
+
+    The `bdyNullSpace` parameter indicates if the model has a
+    global null space because the saddle point problem uses pure
+    Dirichlet boundary conditions.  When the global saddle point
+    system model has a null space, it is necessary apply a constant
+    null space to this operator.
+    """
+    def __init__(self,
+                 L,
+                 prefix,
+                 bdyNullSpace=False,
+                 velocity_block_preconditioner=False):
+        NavierStokesSchur.__init__(self,
+                                   L,
+                                   prefix,
+                                   bdyNullSpace,
+                                   velocity_block_preconditioner)
+        if self.velocity_block_preconditioner:
+            self.velocity_block_preconditioner_set = False
+
+    def setUp(self,global_ksp):
+        try:
+            if self.velocity_block_preconditioner_set is False:
+                self._initialize_velocity_block_preconditioner(global_ksp)
+                self.velocity_block_preconditioner_set = True
+        except AttributeError:
+            pass
+
+        if self.velocity_block_preconditioner:
+            self._setup_velocity_block_preconditioner(global_ksp)
+
+        self._setSchurlog(global_ksp)
+        if self.bdyNullSpace is True:
+            self._setConstantPressureNullSpace(global_ksp)
+        self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
+                                                             self.isv)
+        self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
+                                                             self.isp)
+        self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.isp,
+                                                             self.isv)
+        self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.isp,
+                                                             self.isp)
+        L_sizes = self.isp.sizes
+        self.SpInv_shell = p4pyPETSc.Mat().create()
+        self.SpInv_shell.setSizes(L_sizes)
+        self.SpInv_shell.setType('python')
+        self.matcontext_inv = SpInv_shell(self.A00,
+                                          self.A11,
+                                          self.A01,
+                                          self.A10,
+                                          constNullSpace = self.bdyNullSpace)
+        self.SpInv_shell.setPythonContext(self.matcontext_inv)
+        self.SpInv_shell.setUp()
+        # Set PETSc Schur operator
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
 
 class NavierStokes_TwoPhasePCD(NavierStokesSchur):
     r""" Two-phase PCD Schur complement approximation class.
