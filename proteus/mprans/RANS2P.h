@@ -1896,7 +1896,7 @@ namespace proteus
           }
         else
           {
-            std::cerr<<"warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl;
+            std::cerr<<"RANS2P: warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl;
             flux = 0.0;
           }
       }

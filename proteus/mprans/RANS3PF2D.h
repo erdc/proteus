@@ -114,6 +114,7 @@ namespace proteus
                                    const double* q_velocity_solid,
                                    const double* q_vos,
                                    const double* q_dvos_dt,
+				   const double* q_grad_vos,
                                    const double* q_dragAlpha,
                                    const double* q_dragBeta,
                                    const double* q_mass_source,
@@ -354,6 +355,7 @@ namespace proteus
                                    const double *q_velocity_solid,
                                    const double *q_vos,
                                    const double *q_dvos_dt,
+                                   const double *q_grad_vos,
                                    const double *q_dragAlpha,
                                    const double *q_dragBeta,
                                    const double *q_mass_source,
@@ -989,6 +991,7 @@ namespace proteus
                                                const double nu_0,
                                                const double rho_1,
                                                const double nu_1,
+					       double nu_t,
                                                const double useVF,
                                                const double vf,
                                                const double phi,
@@ -1008,7 +1011,10 @@ namespace proteus
                                                double& mom_w_source,
                                                double dmom_u_source[nSpace],
                                                double dmom_v_source[nSpace],
-                                               double dmom_w_source[nSpace])
+                                               double dmom_w_source[nSpace],
+                                               double gradC_x,
+					       double gradC_y,
+					       double gradC_z)
       {
         double rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
@@ -1027,8 +1033,8 @@ namespace proteus
 					    solid_velocity,
 					    viscosity);
 
-        mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s);
-        mom_v_source += (1.0 - phi_s) * new_beta * (v - v_s);
+	mom_u_source += (1.0 - phi_s) * new_beta *( (u - u_s) - nu_t*gradC_x/closure.sigmaC_ );
+	mom_v_source += (1.0 - phi_s) * new_beta * ( (v - v_s)- nu_t*gradC_y/closure.sigmaC_);
         /* mom_w_source += phi_s*new_beta*(w-w_s); */
 
         dmom_u_source[0] = (1.0 - phi_s) * new_beta;
@@ -1881,7 +1887,7 @@ namespace proteus
           }
         else
           {
-            std::cerr<<"warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl;
+            std::cerr<<"RANS3PF2D: warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl;
             flux = 0.0;
           }
       }
@@ -2054,6 +2060,7 @@ namespace proteus
                              const double* q_velocity_solid,
                              const double* q_vos,
                              const double* q_dvos_dt,
+                             const double* q_grad_vos,
                              const double* q_dragAlpha,
                              const double* q_dragBeta,
                              const double* q_mass_source,
@@ -2649,6 +2656,7 @@ namespace proteus
                                                   nu_0,
                                                   rho_1,
                                                   nu_1,
+						  q_eddy_viscosity[eN_k],
                                                   useVF,
                                                   vf[eN_k],
                                                   phi[eN_k],
@@ -2668,7 +2676,10 @@ namespace proteus
                                                   mom_w_source,
                                                   dmom_u_source,
                                                   dmom_v_source,
-                                                  dmom_w_source);
+                                                  dmom_w_source,
+                                                  q_grad_vos[eN_k_nSpace+0],
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  q_grad_vos[eN_k_nSpace+1]);
                 double C_particles=0.0;
                 if(nParticles > 0 && USE_SBM==0)
                   updateSolidParticleTerms(eN < nElements_owned,
@@ -4400,6 +4411,7 @@ namespace proteus
                              const double* q_velocity_solid,
                              const double* q_vos,
                              const double* q_dvos_dt,
+                             const double* q_grad_vos,
                              const double* q_dragAlpha,
                              const double* q_dragBeta,
                              const double* q_mass_source,
@@ -4985,6 +4997,7 @@ namespace proteus
                                                   nu_0,
                                                   rho_1,
                                                   nu_1,
+						                          eddy_viscosity,
                                                   useVF,
                                                   vf[eN_k],
                                                   phi[eN_k],
@@ -5004,7 +5017,11 @@ namespace proteus
                                                   mom_w_source,
                                                   dmom_u_source,
                                                   dmom_v_source,
-                                                  dmom_w_source);
+                                                  dmom_w_source,
+                                                  q_grad_vos[eN_k_nSpace+0],
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  q_grad_vos[eN_k_nSpace+1]);//cek hack, should not be used
+
                 double C_particles=0.0;
                 if(nParticles > 0 && USE_SBM==0)
                   updateSolidParticleTerms(eN < nElements_owned,
