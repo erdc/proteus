@@ -65,6 +65,3 @@ else:
     levelLinearSolver = LU
 
 conservativeFlux = {}
-
-
-
