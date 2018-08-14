@@ -23,12 +23,14 @@ coefficients.variableNames=['u']
 def velx(X,t):
     x=X[0]
     y=X[1]
-    return -2*np.sin(pi*x)**2*np.sin(pi*y)*np.cos(pi*y)*np.sin(2*pi*t/8.0)
+    return 0.0
+    #return -2*np.sin(pi*x)**2*np.sin(pi*y)*np.cos(pi*y)*np.sin(2*pi*t/8.0)
 
 def vely(X,t):
     x=X[0]
     y=X[1]
-    return 2*np.sin(pi*y)**2*np.sin(pi*x)*np.cos(pi*x)*np.sin(2*pi*t/8.0)
+    return 0.0
+    #return 2*np.sin(pi*y)**2*np.sin(pi*x)*np.cos(pi*x)*np.sin(2*pi*t/8.0)
 
 velocityField={0:velx, 
                1:vely}
@@ -95,10 +97,7 @@ class zalesak_disk:
         return self.scaling*dist
     
 analyticalSolution = {0:init_cond(L,scaling=1.0)}
-initialConditions  = {0:init_cond(L,scaling=1.0)}
-
-#analyticalSolution = {0:zalesak_disk(L,scaling=1.0)}
-#initialConditions  = {0:zalesak_disk(L,scaling=0.75)}
+initialConditions  = {0:init_cond(L,scaling=0.9)}
 
 # BOUNDARY CONDITIONS #
 def getDBC(x,flag):

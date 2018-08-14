@@ -1,6 +1,6 @@
 from proteus import *
 from proteus.default_n import *
-from rdls3P_p import *
+from rdls_p import *
 from vortex2D import *
 
 timeIntegration = NoIntegration
@@ -8,7 +8,7 @@ stepController = Newton_controller
 
 # About the nonlinear solver
 multilevelNonlinearSolver  = Newton
-levelNonlinearSolver = Newton
+levelNonlinearSolver = TwoStageNewton
 
 tolFac = 0.0
 nl_atol_res = atolRedistance
@@ -36,7 +36,7 @@ else:
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
 
 subgridError = HamiltonJacobi_ASGS_opt(coefficients,nd,stabFlag='2',lag=False)
-shockCapturing = RDLS3P.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_rd,lag=lag_shockCapturing_rd)
+shockCapturing = RDLS.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_rd,lag=lag_shockCapturing_rd)
 
 numericalFluxType = DoNothing
 
@@ -48,7 +48,7 @@ matrix = SparseMatrix
 if parallel:
     multilevelLinearSolver = KSP_petsc4py#PETSc
     levelLinearSolver = KSP_petsc4py#PETSc
-    linear_solver_options_prefix = 'rdls3P_'
+    linear_solver_options_prefix = 'rdls_'
     linearSolverConvergenceTest = 'r-true'
 else:
     multilevelLinearSolver = LU
