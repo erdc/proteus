@@ -5,14 +5,12 @@ import numpy as np
 
 ct=Context.Options([
     # General parameters #
-    ("T",0.1,"Final time"),
+    ("T",0.01,"Final time"),
     ("nDTout",1,"Number of time steps to archive"),
     ("refinement",1,"Level of refinement"),
     ("unstructured",False,"Use unstructured mesh. Set to false for periodic BCs"),
     # parameters for elliptic re-distancing    
-    ("ELLIPTIC_REDISTANCING",False, "Type of elliptic re-distancing"),
-    ("ELLIPTIC_REDISTANCING_TYPE",2, "Type of elliptic re-distancing"),    
-    ("alpha",100.0,"penalization parameter")
+    ("ELLIPTIC_REDISTANCING",0, "Type of elliptic re-distancing"),
 ],mutable=True)
 
 # ELLIPTIC_REDISTANCING #
@@ -26,7 +24,7 @@ runCFL=0.33
 nd=2
 
 # General parameters 
-parallel = False
+parallel = True
 linearSmoother = None
 checkMass=False
 
