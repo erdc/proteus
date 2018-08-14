@@ -7,6 +7,7 @@
 const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
 const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
 const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume change
+#include "PyEmbeddedFunctions.h"
 namespace proteus
 {
   class RANS2P_base
@@ -2101,6 +2102,7 @@ namespace proteus
                              double* velocityError,
                              double* velocityErrorNodal)
       {
+        logEvent("Entered mprans 3D calculateResidual",6);
         //
         //loop over elements to compute volume integrals and load them into element and global residual
         //
