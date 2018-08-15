@@ -2769,7 +2769,7 @@ namespace proteus
                                            particle_netForces,
                                            particle_netMoments,
                                            particle_surfaceArea);
-                if(USE_SBM>0)
+                if(USE_SBM==2)
                 compute_force_around_solid(eN < nElements_owned,
                                            dV,
                                            nParticles,
@@ -3197,8 +3197,11 @@ namespace proteus
         //
         if(USE_SBM>0)
           {
-            std::memset(particle_netForces,0,nParticles*3*sizeof(double));
-            std::memset(particle_netMoments,0,nParticles*3*sizeof(double));
+            if(USE_SBM==1)
+            {
+                std::memset(particle_netForces,0,nParticles*3*sizeof(double));
+                std::memset(particle_netMoments,0,nParticles*3*sizeof(double));
+            }
             for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
               {
                 // Initialization of the force to 0
@@ -3452,7 +3455,8 @@ namespace proteus
                     }
                     Mz  += r_x*Fy-r_y*Fx;
                   }//kb
-                if(ebN < nElementBoundaries_owned)//avoid double counting
+                if(USE_SBM==1
+                        && ebN < nElementBoundaries_owned)//avoid double counting
                 {
                     particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += Fx;
                     particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Fy;
