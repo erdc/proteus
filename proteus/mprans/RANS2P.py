@@ -1409,6 +1409,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.velocityErrorNodal = self.u[0].dof.copy()
         logEvent('WARNING: The boundary fluxes at interpart boundaries are skipped if elementBoundaryMaterialType is 0 for RANS2P-based models. This means that DG methods are currently incompatible with RANS2P.')
 
+        
+        self.q[('force', 0)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('force', 1)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('force', 2)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+
     def getResidual(self, u, r):
         """
         Calculate the element residuals and add in to the global residual
@@ -1628,7 +1636,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.netForces_v,
                                       self.coefficients.netMoments,
                                       self.q['velocityError'],
-                                      self.velocityErrorNodal)
+                                      self.velocityErrorNodal,
+                                      self.q[('force', 0)],
+                                      self.q[('force', 1)],
+                                      self.q[('force', 2)])
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])

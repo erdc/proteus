@@ -167,7 +167,10 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double * netForces_v,
                                double * netMoments,
                                double * velocityError,
-                               double * velocityErrorNodal)
+                               double * velocityErrorNodal,
+                               double* forcex,
+                               double* forcey,
+                               double* forcez)
         void calculateJacobian(double NONCONSERVATIVE_FORM,
                                double MOMENTUM_SGE,
                                double PRESSURE_SGE,
@@ -640,7 +643,10 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray netForces_v,
                           numpy.ndarray netMoments,
                           numpy.ndarray velocityError,
-                          numpy.ndarray velocityErrorNodal):
+                          numpy.ndarray velocityErrorNodal,
+                          numpy.ndarray forcex,
+                          numpy.ndarray forcey,
+                          numpy.ndarray forcez):
         self.thisptr.calculateResidual(NONCONSERVATIVE_FORM,
                                        MOMENTUM_SGE,
                                        PRESSURE_SGE,
@@ -801,7 +807,10 @@ cdef class cRANS2P2D_base:
                                        < double * > netForces_v.data,
                                        < double * > netMoments.data,
                                        < double * > velocityError.data,
-                                       < double * > velocityErrorNodal.data)
+                                       < double * > velocityErrorNodal.data,
+                                       < double * > forcex.data,
+                                       < double * > forcey.data,
+                                       < double * > forcez.data)
 
     def calculateJacobian(self,
                           double NONCONSERVATIVE_FORM,
