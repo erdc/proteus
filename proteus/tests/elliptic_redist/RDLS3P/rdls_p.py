@@ -2,7 +2,9 @@ from proteus import *
 from proteus.default_p import *
 from math import *
 from vortex2D import *
-from proteus.mprans import RDLS
+#from proteus.mprans import RDLS
+from proteus.mprans import RDLS3P as RDLS
+
 import ncls_p
 name = soname+"_rdls"
 LevelModelType = RDLS.LevelModel
@@ -13,9 +15,9 @@ coefficients = RDLS.Coefficients(applyRedistancing=True,
                                  rdModelId=1,
                                  useMetrics=useMetrics,
                                  ELLIPTIC_REDISTANCING=ct.ELLIPTIC_REDISTANCING,
-                                 ELLIPTIC_REDISTANCING_TYPE=ct.ELLIPTIC_REDISTANCING_TYPE,
-                                 alpha=ct.alpha)
-
+                                 backgroundDissipationEllipticRedist=1.0,
+                                 alpha=1E9)
+                                 
 #now define the Dirichlet boundary conditions
 def getDBC(x,flag):
     pass

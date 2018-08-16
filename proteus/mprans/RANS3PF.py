@@ -520,11 +520,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.q_vos = self.model.q_vos
             self.q_dvos_dt = self.model.q_dvos_dt
             self.ebqe_vos = self.model.ebqe_vos
+            self.q_grad_vos = modelList[self.VOS_model].q[('grad(u)',0)]
         else:
             if self.VOF_model is None:
                 self.vos_dof = modelList[self.ME_model].u[0].dof.copy()
                 self.vos_dof[:] = 0.0
                 self.q_vos = modelList[self.ME_model].q[('u', 0)].copy()
+                self.q_grad_vos = modelList[self.ME_model].q[('grad(u)',0)].copy()
                 self.q_vos[:] = 0.0
                 self.q_dvos_dt = self.q_vos.copy()
                 self.q_dvos_dt[:] = 0.0
@@ -536,6 +538,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.q_vos = modelList[self.VOF_model].coefficients.q_vos
                 self.q_dvos_dt = self.q_vos.copy()
                 self.q_dvos_dt[:] = 0.0
+                self.q_grad_vos = modelList[self.VOF_model].q[('grad(u)',0)].copy()
                 self.ebqe_vos = modelList[self.VOF_model].coefficients.ebqe_vos
         if self.SED_model is not None:
             self.rho_s = modelList[self.SED_model].coefficients.rho_s
@@ -2279,6 +2282,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_velocity_solid,
             self.coefficients.q_vos,#sed fraction - gco check
             self.coefficients.q_dvos_dt,
+            self.coefficients.q_grad_vos,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,
             self.q[('r', 0)],
@@ -2599,6 +2603,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_velocity_solid,
             self.coefficients.q_vos,#sed fraction - gco check
             self.coefficients.q_dvos_dt,
+            self.coefficients.q_grad_vos,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,
             self.pressureModel.q[('r', 0)],
