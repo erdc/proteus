@@ -184,7 +184,11 @@ namespace proteus
                                    double* ball_center,
                                    double* ball_radius,
                                    double* ball_velocity,
-                                   double* ball_angular_velocity)=0;
+                                   double* ball_angular_velocity,
+                                   int nParticles,
+                                   double *particle_netForces,
+                                   double *particle_netMoments,
+                                   double *particle_surfaceArea)=0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
@@ -357,7 +361,8 @@ namespace proteus
                                    double* ball_center,
                                    double* ball_radius,
                                    double* ball_velocity,
-                                   double* ball_angular_velocity)=0;
+                                   double* ball_angular_velocity,
+                                   int nParticles)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           int* exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -847,7 +852,7 @@ namespace proteus
         mom_v_source -= forcey;
       }
 
-      int get_distance_to_ball(int n_balls,double* ball_center, double* ball_radius, double x, double y, double z, double& distance)
+      int get_distance_to_ball(int n_balls,const double* ball_center, const double* ball_radius, const double x, const double y, const double z, double& distance)
       {
           distance = 1e10;
           int index = -1;
@@ -866,9 +871,9 @@ namespace proteus
           }
           return index;
       }
-      void get_distance_to_ith_ball(int n_balls,double* ball_center, double* ball_radius,
+      void get_distance_to_ith_ball(int n_balls,const double* ball_center, const double* ball_radius,
                                   int I,
-                                  double x, double y, double z,
+                                  const double x, const double y, const double z,
                                   double& distance)
       {
           distance = std::sqrt((ball_center[I*3+0]-x)*(ball_center[I*3+0]-x)
@@ -876,9 +881,9 @@ namespace proteus
 //                                  + (ball_center[I*3+2]-z)*(ball_center[I*3+2]-z)
                             ) - ball_radius[I];
       }
-      void get_normal_to_ith_ball(int n_balls,double* ball_center, double* ball_radius,
+      void get_normal_to_ith_ball(int n_balls,const double* ball_center, const double* ball_radius,
                                   int I,
-                                  double x, double y, double z,
+                                  const double x, const double y, const double z,
                                   double& nx, double& ny)
       {
           double distance = std::sqrt((ball_center[I*3+0]-x)*(ball_center[I*3+0]-x)
@@ -888,16 +893,17 @@ namespace proteus
           nx = (x - ball_center[I*3+0])/(distance+1e-10);
           ny = (y - ball_center[I*3+1])/(distance+1e-10);
       }
-      void get_velocity_to_ith_ball(int n_balls,double* ball_center, double* ball_radius,
-                                    double* ball_velocity, double* ball_angular_velocity,
+      void get_velocity_to_ith_ball(int n_balls,const double* ball_center, const double* ball_radius,
+                                    const double* ball_velocity, const double* ball_angular_velocity,
                                     int I,
-                                    double x, double y, double z,
+                                    const double x, const double y, const double z,
                                     double& vx, double& vy)
       {
           vx = ball_velocity[3*I + 0] - ball_angular_velocity[3*I + 2]*(y-ball_center[3*I + 1]);
           vy = ball_velocity[3*I + 1] + ball_angular_velocity[3*I + 2]*(x-ball_center[3*I + 0]);
       }
-      inline void updateSolidParticleTerms(bool element_owned,
+      inline void updateSolidParticleTerms(const double NONCONSERVATIVE_FORM,
+                                           bool element_owned,
                                            const double particle_nitsche,
                                            const double dV,
                                            const int nParticles,
@@ -906,11 +912,11 @@ namespace proteus
 //                                           double *particle_signed_distance_normals,
 //                                           double *particle_velocities,
 //                                           double *particle_centroids,
-                                           int use_ball_as_particle,
-                                           double* ball_center,
-                                           double* ball_radius,
-                                           double* ball_velocity,
-                                           double* ball_angular_velocity,
+                                           const int use_ball_as_particle,
+                                           const double* ball_center,
+                                           const double* ball_radius,
+                                           const double* ball_velocity,
+                                           const double* ball_angular_velocity,
                                            const double porosity, //VRANS specific
                                            const double penalty,
                                            const double alpha,
@@ -1975,7 +1981,11 @@ namespace proteus
                              double* ball_center,
                              double* ball_radius,
                              double* ball_velocity,
-                             double* ball_angular_velocity)
+                             double* ball_angular_velocity,
+                             int nParticles,
+                             double *particle_netForces,
+                             double *particle_netMoments,
+                             double *particle_surfaceArea)
       {
         logEvent("Entered mprans 2D calculateResidual",6);
         
@@ -3542,7 +3552,8 @@ namespace proteus
                              double* ball_center,
                              double* ball_radius,
                              double* ball_velocity,
-                             double* ball_angular_velocity)
+                             double* ball_angular_velocity,
+                             int nParticles)
       {
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian

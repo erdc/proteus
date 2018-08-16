@@ -175,7 +175,11 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double* ball_center,
                                double* ball_radius,
                                double* ball_velocity,
-                               double* ball_angular_velocity)
+                               double* ball_angular_velocity,
+                               int nParticles,
+                               double *particle_netForces,
+                               double *particle_netMoments,
+                               double *particle_surfaceArea)
         void calculateJacobian(double NONCONSERVATIVE_FORM,
                                double MOMENTUM_SGE,
                                double PRESSURE_SGE,
@@ -346,7 +350,8 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double* ball_center,
                                double* ball_radius,
                                double* ball_velocity,
-                               double* ball_angular_velocity)
+                               double* ball_angular_velocity,
+                               int nParticles)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -661,7 +666,11 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray ball_center,
                           numpy.ndarray ball_radius,
                           numpy.ndarray ball_velocity,
-                          numpy.ndarray ball_angular_velocity):
+                          numpy.ndarray ball_angular_velocity,
+                          int nParticles,
+                          numpy.ndarray particle_netForces,
+                          numpy.ndarray particle_netMoments,
+                          numpy.ndarray particle_surfaceArea):
         self.thisptr.calculateResidual(NONCONSERVATIVE_FORM,
                                        MOMENTUM_SGE,
                                        PRESSURE_SGE,
@@ -830,7 +839,11 @@ cdef class cRANS2P2D_base:
                                        < double * > ball_center.data,
                                        < double * > ball_radius.data,
                                        < double * > ball_velocity.data,
-                                       < double * > ball_angular_velocity.data)
+                                       < double * > ball_angular_velocity.data,
+                                       nParticles,
+                                       < double * > particle_netForces.data,
+                                       < double * > particle_netMoments.data,
+                                       < double * > particle_surfaceArea.data)
 
     def calculateJacobian(self,
                           double NONCONSERVATIVE_FORM,
@@ -1003,7 +1016,8 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray ball_center,
                           numpy.ndarray ball_radius,
                           numpy.ndarray ball_velocity,
-                          numpy.ndarray ball_angular_velocity):
+                          numpy.ndarray ball_angular_velocity,
+                          int nParticles):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(NONCONSERVATIVE_FORM,
@@ -1176,7 +1190,8 @@ cdef class cRANS2P2D_base:
                                        < double * > ball_center.data,
                                        < double * > ball_radius.data,
                                        < double * > ball_velocity.data,
-                                       < double * > ball_angular_velocity.data)
+                                       < double * > ball_angular_velocity.data,
+                                       nParticles)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,

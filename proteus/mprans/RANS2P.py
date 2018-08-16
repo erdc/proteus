@@ -213,9 +213,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ball_center=None,
                  ball_radius=None,
                  ball_velocity=None,
-                 ball_angular_velocity=None,):
+                 ball_angular_velocity=None,
+                 nParticles = 0):
         self.use_ball_as_particle = use_ball_as_particle
-        self.nParticles = 1
+        self.nParticles = nParticles
+        self.particle_netForces = np.zeros((3*self.nParticles, 3), 'd')#####[total_force_1,total_force_2,...,stress_1,stress_2,...,pressure_1,pressure_2,...]  
+        self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
+        self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
         if ball_center is None:
             self.ball_center = 1e10*numpy.ones((self.nParticles,3),'d')
         else:
@@ -1670,7 +1674,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.ball_center,
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
-                                      self.coefficients.ball_angular_velocity)
+                                      self.coefficients.ball_angular_velocity,
+                                      self.coefficients.nParticles,
+                                      self.coefficients.particle_netForces,
+                                      self.coefficients.particle_netMoments,
+                                      self.coefficients.particle_surfaceArea)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
@@ -1912,7 +1920,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.ball_center,
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
-                                      self.coefficients.ball_angular_velocity)
+                                      self.coefficients.ball_angular_velocity,
+                                      self.coefficients.nParticles)
         
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
