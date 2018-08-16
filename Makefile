@@ -340,6 +340,8 @@ jupyter:
 	jupyter nbextension enable --py --sys-prefix ipympl
 	jupyter nbextension enable --py --sys-prefix ipymesh
 	jupyter nbextension enable --py --sys-prefix ipyleaflet
+	jupyter nbextension install --py --sys-prefix hide_code
+	jupyter nbextension enable --py --sys-prefix hide_code
 	jupyter nbextension install --py --sys-prefix rise
 	jupyter nbextension enable --py --sys-prefix rise
 	jupyter dashboards quick-setup --sys-prefix
