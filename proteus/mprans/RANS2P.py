@@ -208,7 +208,33 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  VELOCITY_SGE=1.0,
                  PRESSURE_PROJECTION_STABILIZATION=0.0,
                  phaseFunction=None,
-                 LAG_LES=1.0):
+                 LAG_LES=1.0,
+                 use_ball_as_particle=1,
+                 ball_center=None,
+                 ball_radius=None,
+                 ball_velocity=None,
+                 ball_angular_velocity=None,):
+        self.use_ball_as_particle = use_ball_as_particle
+        self.nParticles = 1
+        if ball_center is None:
+            self.ball_center = 1e10*numpy.ones((self.nParticles,3),'d')
+        else:
+            self.ball_center = ball_center
+        
+        if ball_radius is None:
+            self.ball_radius = 1e10*numpy.ones((self.nParticles,1),'d')
+        else:
+            self.ball_radius = ball_radius
+
+        if ball_velocity is None:
+            self.ball_velocity = numpy.zeros((self.nParticles,3),'d')
+        else:
+            self.ball_velocity = ball_velocity
+
+        if ball_angular_velocity is None:
+            self.ball_angular_velocity = numpy.zeros((self.nParticles,3),'d')
+        else:
+            self.ball_angular_velocity = ball_angular_velocity
         self.LAG_LES=LAG_LES
         self.phaseFunction=phaseFunction
         self.NONCONSERVATIVE_FORM=NONCONSERVATIVE_FORM
@@ -1639,7 +1665,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.velocityErrorNodal,
                                       self.q[('force', 0)],
                                       self.q[('force', 1)],
-                                      self.q[('force', 2)])
+                                      self.q[('force', 2)],
+                                      self.coefficients.use_ball_as_particle,
+                                      self.coefficients.ball_center,
+                                      self.coefficients.ball_radius,
+                                      self.coefficients.ball_velocity,
+                                      self.coefficients.ball_angular_velocity)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
@@ -1876,7 +1907,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.csrColumnOffsets_eb[(3, 2)],
                                       self.csrColumnOffsets_eb[(3, 3)],
                                       self.mesh.elementMaterialTypes,
-                                      self.mesh.elementBoundaryMaterialTypes)
+                                      self.mesh.elementBoundaryMaterialTypes,
+                                      self.coefficients.use_ball_as_particle,
+                                      self.coefficients.ball_center,
+                                      self.coefficients.ball_radius,
+                                      self.coefficients.ball_velocity,
+                                      self.coefficients.ball_angular_velocity)
         
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True

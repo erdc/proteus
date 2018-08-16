@@ -18,7 +18,7 @@ namespace proteus
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
-				   double PRESSURE_PROJECTION_STABLIZATION,
+                                   double PRESSURE_PROJECTION_STABLIZATION,
                                    double* numerical_viscosity,
                                    //element
                                    double* mesh_trial_ref,
@@ -97,7 +97,7 @@ namespace proteus
                                    double* w_dof,
                                    double* g,
                                    const double useVF,
-				   double* q_rho,
+                                   double* q_rho,
                                    double* vf,
                                    double* phi,
                                    double* normal_phi,
@@ -179,12 +179,17 @@ namespace proteus
                                    double* velocityErrorNodal,
                                    double* forcex,
                                    double* forcey,
-                                   double* forcez)=0;
+                                   double* forcez,
+                                   int     use_ball_as_particle,
+                                   double* ball_center,
+                                   double* ball_radius,
+                                   double* ball_velocity,
+                                   double* ball_angular_velocity)=0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
-				   double PRESSURE_PROJECTION_STABILIZATION,
+                                   double PRESSURE_PROJECTION_STABILIZATION,
                                    //element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -347,7 +352,12 @@ namespace proteus
                                    int* csrColumnOffsets_eb_w_v,
                                    int* csrColumnOffsets_eb_w_w,
                                    int* elementFlags,
-                                   int* boundaryFlags)=0;
+                                   int* boundaryFlags,
+                                   int     use_ball_as_particle,
+                                   double* ball_center,
+                                   double* ball_radius,
+                                   double* ball_velocity,
+                                   double* ball_angular_velocity)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           int* exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -1798,7 +1808,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
-			     double PRESSURE_PROJECTION_STABILIZATION,
+                             double PRESSURE_PROJECTION_STABILIZATION,
                              double* numerical_viscosity,
                              //element
                              double* mesh_trial_ref,
@@ -1878,7 +1888,7 @@ namespace proteus
                              double* w_dof,
                              double* g,
                              const double useVF,
-			     double* q_rho,
+                             double* q_rho,
                              double* vf,
                              double* phi,
                              double* normal_phi,
@@ -1960,7 +1970,12 @@ namespace proteus
                              double* velocityErrorNodal,
                              double* forcex,
                              double* forcey,
-                             double* forcez)
+                             double* forcez,
+                             int     use_ball_as_particle,
+                             double* ball_center,
+                             double* ball_radius,
+                             double* ball_velocity,
+                             double* ball_angular_velocity)
       {
         logEvent("Entered mprans 2D calculateResidual",6);
         
@@ -3358,7 +3373,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
-			     double PRESSURE_PROJECTION_STABILIZATION,
+                             double PRESSURE_PROJECTION_STABILIZATION,
                              //element
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
@@ -3522,7 +3537,12 @@ namespace proteus
                              int* csrColumnOffsets_eb_w_v,
                              int* csrColumnOffsets_eb_w_w,
                              int* elementFlags,
-                             int* boundaryFlags)
+                             int* boundaryFlags,
+                             int     use_ball_as_particle,
+                             double* ball_center,
+                             double* ball_radius,
+                             double* ball_velocity,
+                             double* ball_angular_velocity)
       {
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian

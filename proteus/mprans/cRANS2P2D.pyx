@@ -11,7 +11,7 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double MOMENTUM_SGE,
                                double PRESSURE_SGE,
                                double VELOCITY_SGE,
-			       double PRESSURE_PROJECTION_STABILIZATION,
+                               double PRESSURE_PROJECTION_STABILIZATION,
                                double* numerical_viscosity,
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -170,12 +170,17 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double * velocityErrorNodal,
                                double* forcex,
                                double* forcey,
-                               double* forcez)
+                               double* forcez,
+                               int     use_ball_as_particle,
+                               double* ball_center,
+                               double* ball_radius,
+                               double* ball_velocity,
+                               double* ball_angular_velocity)
         void calculateJacobian(double NONCONSERVATIVE_FORM,
                                double MOMENTUM_SGE,
                                double PRESSURE_SGE,
                                double VELOCITY_SGE,
-			       double PRESSURE_PROJECTION_STABILIZATION,
+                               double PRESSURE_PROJECTION_STABILIZATION,
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -336,7 +341,12 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                int * csrColumnOffsets_eb_w_v,
                                int * csrColumnOffsets_eb_w_w,
                                int * elementFlags,
-                               int * boundaryFlags)
+                               int * boundaryFlags,
+                               int     use_ball_as_particle,
+                               double* ball_center,
+                               double* ball_radius,
+                               double* ball_velocity,
+                               double* ball_angular_velocity)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -646,12 +656,17 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray velocityErrorNodal,
                           numpy.ndarray forcex,
                           numpy.ndarray forcey,
-                          numpy.ndarray forcez):
+                          numpy.ndarray forcez,
+                          int use_ball_as_particle,
+                          numpy.ndarray ball_center,
+                          numpy.ndarray ball_radius,
+                          numpy.ndarray ball_velocity,
+                          numpy.ndarray ball_angular_velocity):
         self.thisptr.calculateResidual(NONCONSERVATIVE_FORM,
                                        MOMENTUM_SGE,
                                        PRESSURE_SGE,
                                        VELOCITY_SGE,
-				       PRESSURE_PROJECTION_STABILIZATION,
+                                       PRESSURE_PROJECTION_STABILIZATION,
                                        <double*> numerical_viscosity.data,
                                        <double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
@@ -810,7 +825,12 @@ cdef class cRANS2P2D_base:
                                        < double * > velocityErrorNodal.data,
                                        < double * > forcex.data,
                                        < double * > forcey.data,
-                                       < double * > forcez.data)
+                                       < double * > forcez.data,
+                                       use_ball_as_particle,
+                                       < double * > ball_center.data,
+                                       < double * > ball_radius.data,
+                                       < double * > ball_velocity.data,
+                                       < double * > ball_angular_velocity.data)
 
     def calculateJacobian(self,
                           double NONCONSERVATIVE_FORM,
@@ -978,14 +998,19 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray csrColumnOffsets_eb_w_v,
                           numpy.ndarray csrColumnOffsets_eb_w_w,
                           numpy.ndarray elementFlags,
-                          numpy.ndarray boundaryFlags):
+                          numpy.ndarray boundaryFlags,
+                          int use_ball_as_particle,
+                          numpy.ndarray ball_center,
+                          numpy.ndarray ball_radius,
+                          numpy.ndarray ball_velocity,
+                          numpy.ndarray ball_angular_velocity):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(NONCONSERVATIVE_FORM,
                                        MOMENTUM_SGE,
                                        PRESSURE_SGE,
                                        VELOCITY_SGE,
-				       PRESSURE_PROJECTION_STABILIZATION,
+                                       PRESSURE_PROJECTION_STABILIZATION,
                                        <double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -1146,7 +1171,12 @@ cdef class cRANS2P2D_base:
                                        < int * > csrColumnOffsets_eb_w_v.data,
                                        < int * > csrColumnOffsets_eb_w_w.data,
                                        < int * > elementFlags.data,
-                                       < int * > boundaryFlags.data)
+                                       < int * > boundaryFlags.data,
+                                       use_ball_as_particle,
+                                       < double * > ball_center.data,
+                                       < double * > ball_radius.data,
+                                       < double * > ball_velocity.data,
+                                       < double * > ball_angular_velocity.data)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
