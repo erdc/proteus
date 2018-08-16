@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from .ncls3P_p import *
+from .ncls_p import *
 from .vortex2D import *
 nd = 2
 
@@ -46,10 +46,10 @@ subgridError = HamiltonJacobi_ASGS_opt(coefficients,nd,lag=True)
 massLumping = False
 numericalFluxType = None
 
-shockCapturing = NCLS3P.ShockCapturing(coefficients,
-                                       nd,
-                                       shockCapturingFactor=shockCapturingFactor_ls,
-                                       lag=lag_shockCapturing_ls)
+shockCapturing = NCLS.ShockCapturing(coefficients,
+                                     nd,
+                                     shockCapturingFactor=shockCapturingFactor_ls,
+                                     lag=lag_shockCapturing_ls)
 numericalFluxType = DoNothing
 
 nonlinearSolverConvergenceTest = 'rits'
@@ -67,6 +67,3 @@ else:
     levelLinearSolver = LU
 
 conservativeFlux = {}
-
-
-
