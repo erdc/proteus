@@ -527,7 +527,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         if ( abs(sdf) < abs(self.ebq_global_phi_s[ebN,kb]) ):
                             self.ebq_global_phi_s[ebN,kb]=sdf
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
-        else:
+        elif self.nParticles > 0:
             corresponding_point_on_boundary = np.zeros((3,),'d')
             for i, sdf, vel in zip(range(self.nParticles),
                                    self.particle_sdfList, self.particle_velocityList):
