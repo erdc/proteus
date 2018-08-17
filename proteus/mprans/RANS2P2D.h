@@ -1136,13 +1136,13 @@ namespace proteus
 
             }
             //(6)
-            mass_ham += D_s * porosity * (fluid_outward_normal[0] * u + fluid_outward_normal[1] * v);
-            dmass_ham_u += D_s * porosity * fluid_outward_normal[0];
-            dmass_ham_v += D_s * porosity * fluid_outward_normal[1];
+//            mass_ham += D_s * porosity * (fluid_outward_normal[0] * u + fluid_outward_normal[1] * v);
+//            dmass_ham_u += D_s * porosity * fluid_outward_normal[0];
+//            dmass_ham_v += D_s * porosity * fluid_outward_normal[1];
             //(7)
-            mass_ham += C_surf * D_s * porosity * (fluid_outward_normal[0] * (u - u_s) + fluid_outward_normal[1] * (v - v_s));
-            dmass_ham_u += C_surf * D_s * porosity * fluid_outward_normal[0];
-            dmass_ham_v += C_surf * D_s * porosity * fluid_outward_normal[1];
+//            mass_ham += C_surf * D_s * porosity * (fluid_outward_normal[0] * (u - u_s) + fluid_outward_normal[1] * (v - v_s));
+//            dmass_ham_u += C_surf * D_s * porosity * fluid_outward_normal[0];
+//            dmass_ham_v += C_surf * D_s * porosity * fluid_outward_normal[1];
         }
     }
       //VRANS specific
