@@ -971,10 +971,23 @@ namespace proteus
                                            double dmom_w_adv_w[nSpace],
                                            double &mom_u_ham,
                                            double dmom_u_ham_grad_u[nSpace],
+                                           double &dmom_u_ham_u,
+                                           double &dmom_u_ham_v,
+                                           double &dmom_u_ham_w,
                                            double &mom_v_ham,
                                            double dmom_v_ham_grad_v[nSpace],
+                                           double &dmom_v_ham_u,
+                                           double &dmom_v_ham_v,
+                                           double &dmom_v_ham_w,
                                            double &mom_w_ham,
                                            double dmom_w_ham_grad_w[nSpace],
+                                           double &dmom_w_ham_u,
+                                           double &dmom_w_ham_v,
+                                           double &dmom_w_ham_w,
+                                           double &mass_ham,
+                                           double &dmass_ham_u,
+                                           double &dmass_ham_v,
+                                           double &dmass_ham_w,
                                            double *particle_netForces,
                                            double *particle_netMoments,
                                            double *particle_surfaceArea)
@@ -1071,24 +1084,54 @@ namespace proteus
             dmom_u_source[0] += C;
             dmom_v_source[1] += C;
 
-            //Nitsche terms
-            mom_u_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
-            dmom_u_ham_grad_u[0] -= D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_u_ham_grad_u[1] -= D_s * porosity * nu * fluid_outward_normal[1];
+            if (NONCONSERVATIVE_FORM > 0.0)
+            {
+                mom_u_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
+                dmom_u_ham_grad_u[0] -= D_s * porosity * nu * fluid_outward_normal[0];
+                dmom_u_ham_grad_u[1] -= D_s * porosity * nu * fluid_outward_normal[1];
 
-            mom_v_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
-            dmom_v_ham_grad_v[0] -= D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_v_ham_grad_v[1] -= D_s * porosity * nu * fluid_outward_normal[1];
+                mom_v_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
+                dmom_v_ham_grad_v[0] -= D_s * porosity * nu * fluid_outward_normal[0];
+                dmom_v_ham_grad_v[1] -= D_s * porosity * nu * fluid_outward_normal[1];
 
-            mom_u_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (u - u_s);
-            mom_u_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (u - u_s);
-            dmom_u_adv_u[0] += D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_u_adv_u[1] += D_s * porosity * nu * fluid_outward_normal[1];
+                mom_u_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (u - u_s);
+                mom_u_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (u - u_s);
+                dmom_u_adv_u[0] += D_s * porosity * nu * fluid_outward_normal[0];
+                dmom_u_adv_u[1] += D_s * porosity * nu * fluid_outward_normal[1];
 
-            mom_v_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (v - v_s);
-            mom_v_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (v - v_s);
-            dmom_v_adv_v[0] += D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_v_adv_v[1] += D_s * porosity * nu * fluid_outward_normal[1];
+                mom_v_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (v - v_s);
+                mom_v_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (v - v_s);
+                dmom_v_adv_v[0] += D_s * porosity * nu * fluid_outward_normal[0];
+                dmom_v_adv_v[1] += D_s * porosity * nu * fluid_outward_normal[1];
+            }
+            else
+            {
+                mom_u_ham -= D_s * porosity * nu/rho * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
+                dmom_u_ham_grad_u[0] -= D_s * porosity * nu/rho * fluid_outward_normal[0];
+                dmom_u_ham_grad_u[1] -= D_s * porosity * nu/rho * fluid_outward_normal[1];
+
+                mom_v_ham -= D_s * porosity * nu/rho * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
+                dmom_v_ham_grad_v[0] -= D_s * porosity * nu/rho * fluid_outward_normal[0];
+                dmom_v_ham_grad_v[1] -= D_s * porosity * nu/rho * fluid_outward_normal[1];
+
+                mom_u_adv[0] += D_s * porosity * nu/rho * fluid_outward_normal[0] * (u - u_s);
+                mom_u_adv[1] += D_s * porosity * nu/rho * fluid_outward_normal[1] * (u - u_s);
+                dmom_u_adv_u[0] += D_s * porosity * nu/rho * fluid_outward_normal[0];
+                dmom_u_adv_u[1] += D_s * porosity * nu/rho * fluid_outward_normal[1];
+
+                mom_v_adv[0] += D_s * porosity * nu/rho * fluid_outward_normal[0] * (v - v_s);
+                mom_v_adv[1] += D_s * porosity * nu/rho * fluid_outward_normal[1] * (v - v_s);
+                dmom_v_adv_v[0] += D_s * porosity * nu/rho * fluid_outward_normal[0];
+                dmom_v_adv_v[1] += D_s * porosity * nu/rho * fluid_outward_normal[1];
+
+                mom_u_ham +=  D_s * porosity * (fluid_outward_normal[0] * u + fluid_outward_normal[1] * v)*u;
+                mom_v_ham +=  D_s * porosity * (fluid_outward_normal[0] * u + fluid_outward_normal[1] * v)*v;
+                dmom_u_ham_u += D_s * porosity * fluid_outward_normal[0] * u * 2.0;
+                dmom_u_ham_v += D_s * porosity * fluid_outward_normal[1] * u;
+                dmom_v_ham_u += D_s * porosity * fluid_outward_normal[0] * v;
+                dmom_v_ham_v += D_s * porosity * fluid_outward_normal[1] * v * 2.0;
+
+            }
         }
     }
       //VRANS specific
@@ -2061,6 +2104,10 @@ namespace proteus
                   dmass_adv_u[nSpace],
                   dmass_adv_v[nSpace],
                   dmass_adv_w[nSpace],
+                  mass_ham=0.0,
+                  dmass_ham_u=0.0,
+                  dmass_ham_v=0.0,
+                  dmass_ham_w=0.0,
                   mom_u_adv[nSpace],
                   dmom_u_adv_u[nSpace],
                   dmom_u_adv_v[nSpace],
@@ -2410,10 +2457,23 @@ namespace proteus
                                             dmom_w_adv_w,
                                             mom_u_ham,
                                             dmom_u_ham_grad_u,
+                                            dmom_u_ham_u,
+                                            dmom_u_ham_v,
+                                            dmom_u_ham_w,
                                             mom_v_ham,
                                             dmom_v_ham_grad_v,
+                                            dmom_v_ham_u,
+                                            dmom_v_ham_v,
+                                            dmom_v_ham_w,
                                             mom_w_ham,
                                             dmom_w_ham_grad_w,
+                                            dmom_w_ham_u,
+                                            dmom_w_ham_v,
+                                            dmom_w_ham_w,
+                                            mass_ham,
+                                            dmass_ham_u,
+                                            dmass_ham_v,
+                                            dmass_ham_w,
                                             &particle_netForces[0],
                                             &particle_netMoments[0],
                                             &particle_surfaceArea[0]);
@@ -3711,6 +3771,10 @@ namespace proteus
                   dmass_adv_u[nSpace],
                   dmass_adv_v[nSpace],
                   dmass_adv_w[nSpace],
+                  mass_ham=0.0,
+                  dmass_ham_u=0.0,
+                  dmass_ham_v=0.0,
+                  dmass_ham_w=0.0,
                   mom_u_adv[nSpace],
                   dmom_u_adv_u[nSpace],
                   dmom_u_adv_v[nSpace],
@@ -4065,10 +4129,23 @@ namespace proteus
                                             dmom_w_adv_w,
                                             mom_u_ham,
                                             dmom_u_ham_grad_u,
+                                            dmom_u_ham_u,
+                                            dmom_u_ham_v,
+                                            dmom_u_ham_w,
                                             mom_v_ham,
                                             dmom_v_ham_grad_v,
+                                            dmom_v_ham_u,
+                                            dmom_v_ham_v,
+                                            dmom_v_ham_w,
                                             mom_w_ham,
                                             dmom_w_ham_grad_w,
+                                            dmom_w_ham_u,
+                                            dmom_w_ham_v,
+                                            dmom_w_ham_w,
+                                            mass_ham,
+                                            dmass_ham_u,
+                                            dmass_ham_v,
+                                            dmass_ham_w,
                                             &particle_netForces[0],
                                             &particle_netMoments[0],
                                             &particle_surfaceArea[0]);
