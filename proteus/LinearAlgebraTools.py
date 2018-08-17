@@ -996,13 +996,15 @@ class InvOperatorShell(OperatorShell):
         """
         comm = Comm.get()
         # Assign number of unknowns
+        num_dof = self.getSize()
+        self.strong_dirichlet_DOF = [i for i in self.strong_dirichlet_DOF if i< num_dof]
         try:
             num_known_dof = len(self.strong_dirichlet_DOF)
         except AttributeError:
             print "ERROR - strong_dirichlet_DOF have not been " \
                   " assigned for this inverse operator object."
             exit()
-        num_dof = self.getSize()
+
         num_unknown_dof = num_dof - num_known_dof
         # Use boolean mask to collect unknown DOF indices
         self.dof_indices = numpy.arange(num_dof,
@@ -1470,7 +1472,8 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         self.kspAp_rho.solve(tmp2, tmp1)
         y.axpy(1.,tmp1)
         y.setValues(self.known_dof_is.getIndices(),zero_array)
-        
+        y.assemblyEnd()
+
         assert numpy.isnan(y.norm())==False, "Applying the schur complement \
         resulted in not-a-number."
 

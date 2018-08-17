@@ -81,7 +81,6 @@ class NS_base:  # (HasTraits):
         memBase = Profiling.memLast #save current memory usage for later
         if not so.useOneMesh:
             so.useOneArchive=False
-
         logEvent("Setting Archiver(s)")
 
         if so.useOneArchive:
@@ -260,7 +259,6 @@ class NS_base:  # (HasTraits):
                         check_call(gmsh_cmd, shell=True)
                         logEvent("Done running gmsh; converting to triangle")
                         MeshTools.msh2simplex(fileprefix=p.domain.geofile, nd=2)
-
                     comm.barrier()
                     mesh = MeshTools.TriangularMesh()
                     mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
@@ -275,11 +273,11 @@ class NS_base:  # (HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
                 else:
-                    logEvent("Calling Triangle to generate 2D mesh for"+p.name)
-                    tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
-                                                           nbase=1,
-                                                           verbose=10)
                     if comm.isMaster() and p.genMesh:
+                        logEvent("Calling Triangle to generate 2D mesh for"+p.name)
+                        tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
+                                                               nbase=1,
+                                                               verbose=10)
                         tmesh.readFromPolyFile(p.domain.polyfile)
                         tmesh.writeToFile(p.domain.polyfile)
                     comm.barrier()
@@ -1799,7 +1797,7 @@ class NS_base:  # (HasTraits):
                                                                    writeVelocityPostProcessor=self.opts.writeVPP)
         else:
             model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],self.tnList[0],self.tCount,initialPhase=True,
-                                                                   writeVectors=True,meshChanged=True,
+                                                                   writeVectors=True,meshChanged=True,femSpaceWritten={},
                                                                    writeVelocityPostProcessor=self.opts.writeVPP)
         #could just pull the code and flags out from SimTools rathter than asking it to parse them
         #uses values in simFlags['storeQuantities']
@@ -1914,7 +1912,7 @@ class NS_base:  # (HasTraits):
         else:
             model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],t,self.tCount,
                                                                    initialPhase=False,
-                                                                   writeVectors=True,meshChanged=True,
+                                                                   writeVectors=True,meshChanged=True,femSpaceWritten={},
                                                                    writeVelocityPostProcessor=self.opts.writeVPP)
         model.levelModelList[-1].archiveAnalyticalSolutions(self.ar[index],self.pList[index].analyticalSolution,
                                                             t,
