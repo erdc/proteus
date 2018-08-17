@@ -179,7 +179,13 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                int nParticles,
                                double *particle_netForces,
                                double *particle_netMoments,
-                               double *particle_surfaceArea)
+                               double *particle_surfaceArea,
+                               int nElements_owned,
+                               double particle_nitsche,
+                               double particle_epsFact,
+                               double particle_alpha,
+                               double particle_beta,
+                               double particle_penalty_constant)
         void calculateJacobian(double NONCONSERVATIVE_FORM,
                                double MOMENTUM_SGE,
                                double PRESSURE_SGE,
@@ -351,7 +357,13 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double* ball_radius,
                                double* ball_velocity,
                                double* ball_angular_velocity,
-                               int nParticles)
+                               int nParticles,
+                               int nElements_owned,
+                               double particle_nitsche,
+                               double particle_epsFact,
+                               double particle_alpha,
+                               double particle_beta,
+                               double particle_penalty_constant)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -670,7 +682,13 @@ cdef class cRANS2P2D_base:
                           int nParticles,
                           numpy.ndarray particle_netForces,
                           numpy.ndarray particle_netMoments,
-                          numpy.ndarray particle_surfaceArea):
+                          numpy.ndarray particle_surfaceArea,
+                          int nElements_owned,
+                          double particle_nitsche,
+                          double particle_epsFact,
+                          double particle_alpha,
+                          double particle_beta,
+                          double particle_penalty_constant):
         self.thisptr.calculateResidual(NONCONSERVATIVE_FORM,
                                        MOMENTUM_SGE,
                                        PRESSURE_SGE,
@@ -843,7 +861,13 @@ cdef class cRANS2P2D_base:
                                        nParticles,
                                        < double * > particle_netForces.data,
                                        < double * > particle_netMoments.data,
-                                       < double * > particle_surfaceArea.data)
+                                       < double * > particle_surfaceArea.data,
+                                       nElements_owned,
+                                       particle_nitsche,
+                                       particle_epsFact,
+                                       particle_alpha,
+                                       particle_beta,
+                                       particle_penalty_constant)
 
     def calculateJacobian(self,
                           double NONCONSERVATIVE_FORM,
@@ -1017,7 +1041,13 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray ball_radius,
                           numpy.ndarray ball_velocity,
                           numpy.ndarray ball_angular_velocity,
-                          int nParticles):
+                          int nParticles,
+                          int nElements_owned,
+                          double particle_nitsche,
+                          double particle_epsFact,
+                          double particle_alpha,
+                          double particle_beta,
+                          double particle_penalty_constant):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(NONCONSERVATIVE_FORM,
@@ -1191,7 +1221,13 @@ cdef class cRANS2P2D_base:
                                        < double * > ball_radius.data,
                                        < double * > ball_velocity.data,
                                        < double * > ball_angular_velocity.data,
-                                       nParticles)
+                                       nParticles,
+                                       nElements_owned,
+                                       particle_nitsche,
+                                       particle_epsFact,
+                                       particle_alpha,
+                                       particle_beta,
+                                       particle_penalty_constant)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,

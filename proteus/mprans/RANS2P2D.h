@@ -2,6 +2,7 @@
 #define RANS2P2D_H
 #include <cmath>
 #include <iostream>
+#include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "PyEmbeddedFunctions.h"
@@ -188,7 +189,13 @@ namespace proteus
                                    int nParticles,
                                    double *particle_netForces,
                                    double *particle_netMoments,
-                                   double *particle_surfaceArea)=0;
+                                   double *particle_surfaceArea,
+                                   int nElements_owned,
+                                   double particle_nitsche,
+                                   double particle_epsFact,
+                                   double particle_alpha,
+                                   double particle_beta,
+                                   double particle_penalty_constant)=0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
@@ -362,7 +369,13 @@ namespace proteus
                                    double* ball_radius,
                                    double* ball_velocity,
                                    double* ball_angular_velocity,
-                                   int nParticles)=0;
+                                   int nParticles,
+                                   int nElements_owned,
+                                   double particle_nitsche,
+                                   double particle_epsFact,
+                                   double particle_alpha,
+                                   double particle_beta,
+                                   double particle_penalty_constant)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           int* exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -965,7 +978,7 @@ namespace proteus
                                            double *particle_netForces,
                                            double *particle_netMoments,
                                            double *particle_surfaceArea)
-      {
+    {
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s;
         double force_x, force_y, r_x, r_y, force_p_x, force_p_y, force_stress_x, force_stress_y;
         double phi_s_normal[2]={0.0};
@@ -978,7 +991,7 @@ namespace proteus
         mu = rho_0 * nu_0 * (1.0 - H_mu) + rho_1 * nu_1 * H_mu;
         C = 0.0;
         for (int i = 0; i < nParticles; i++)
-          {
+        {
             if(use_ball_as_particle==1)
             {
                 get_distance_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s);
@@ -1076,8 +1089,8 @@ namespace proteus
             mom_v_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (v - v_s);
             dmom_v_adv_v[0] += D_s * porosity * nu * fluid_outward_normal[0];
             dmom_v_adv_v[1] += D_s * porosity * nu * fluid_outward_normal[1];
-          }
-      }
+        }
+    }
       //VRANS specific
       inline
         void updateDarcyForchheimerTerms_Ergun(const double NONCONSERVATIVE_FORM,
@@ -1985,9 +1998,17 @@ namespace proteus
                              int nParticles,
                              double *particle_netForces,
                              double *particle_netMoments,
-                             double *particle_surfaceArea)
+                             double *particle_surfaceArea,
+                             int nElements_owned,
+                             double particle_nitsche,
+                             double particle_epsFact,
+                             double particle_alpha,
+                             double particle_beta,
+                             double particle_penalty_constant)
       {
         logEvent("Entered mprans 2D calculateResidual",6);
+
+        const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         
         //
         //loop over elements to compute volume integrals and load them into element and global residual
@@ -2331,6 +2352,71 @@ namespace proteus
                                                   dmom_v_source,
                                                   dmom_w_source);
 
+                const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                if(nParticles > 0)
+                    updateSolidParticleTerms(NONCONSERVATIVE_FORM,
+                                            eN < nElements_owned,
+                                            particle_nitsche,
+                                            dV,
+                                            nParticles,
+                                            nQuadraturePoints_global,
+//                                            &particle_signed_distances[eN_k],
+//                                            &particle_signed_distance_normals[eN_k_nSpace],
+//                                            particle_velocities,
+//                                            particle_centroids,
+                                            use_ball_as_particle,
+                                            ball_center,
+                                            ball_radius,
+                                            ball_velocity,
+                                            ball_angular_velocity,
+                                            porosity,
+                                            particle_penalty_constant/h_phi,//penalty,
+                                            particle_alpha,
+                                            particle_beta,
+                                            eps_rho,
+                                            eps_mu,
+                                            rho_0,
+                                            nu_0,
+                                            rho_1,
+                                            nu_1,
+                                            useVF,
+                                            vf[eN_k],
+                                            phi[eN_k],
+                                            x,
+                                            y,
+                                            z,
+                                            p,
+                                            u,
+                                            v,
+                                            w,
+                                            q_velocity_sge[eN_k_nSpace+0],
+                                            q_velocity_sge[eN_k_nSpace+1],
+                                            q_velocity_sge[eN_k_nSpace+1],
+                                            particle_eps,
+                                            grad_u,
+                                            grad_v,
+                                            grad_w,
+                                            mom_u_source,
+                                            mom_v_source,
+                                            mom_w_source,
+                                            dmom_u_source,
+                                            dmom_v_source,
+                                            dmom_w_source,
+                                            mom_u_adv,
+                                            mom_v_adv,
+                                            mom_w_adv,
+                                            dmom_u_adv_u,
+                                            dmom_v_adv_v,
+                                            dmom_w_adv_w,
+                                            mom_u_ham,
+                                            dmom_u_ham_grad_u,
+                                            mom_v_ham,
+                                            dmom_v_ham_grad_v,
+                                            mom_w_ham,
+                                            dmom_w_ham_grad_w,
+                                            &particle_netForces[0],
+                                            &particle_netMoments[0],
+                                            &particle_surfaceArea[0]);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -3553,8 +3639,16 @@ namespace proteus
                              double* ball_radius,
                              double* ball_velocity,
                              double* ball_angular_velocity,
-                             int nParticles)
+                             int nParticles,
+                             int nElements_owned,
+                             double particle_nitsche,
+                             double particle_epsFact,
+                             double particle_alpha,
+                             double particle_beta,
+                             double particle_penalty_constant)
       {
+          const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
+          std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3*3), particle_netMoments(nParticles*3);
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
         //
@@ -3912,6 +4006,72 @@ namespace proteus
                                                   dmom_u_source,
                                                   dmom_v_source,
                                                   dmom_w_source);
+
+                const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                if(nParticles > 0)
+                    updateSolidParticleTerms(NONCONSERVATIVE_FORM,
+                                            eN < nElements_owned,
+                                            particle_nitsche,
+                                            dV,
+                                            nParticles,
+                                            nQuadraturePoints_global,
+//                                            &particle_signed_distances[eN_k],
+//                                            &particle_signed_distance_normals[eN_k_nSpace],
+//                                            particle_velocities,
+//                                            particle_centroids,
+                                            use_ball_as_particle,
+                                            ball_center,
+                                            ball_radius,
+                                            ball_velocity,
+                                            ball_angular_velocity,
+                                            porosity,
+                                            particle_penalty_constant/h_phi,//penalty,
+                                            particle_alpha,
+                                            particle_beta,
+                                            eps_rho,
+                                            eps_mu,
+                                            rho_0,
+                                            nu_0,
+                                            rho_1,
+                                            nu_1,
+                                            useVF,
+                                            vf[eN_k],
+                                            phi[eN_k],
+                                            x,
+                                            y,
+                                            z,
+                                            p,
+                                            u,
+                                            v,
+                                            w,
+                                            q_velocity_sge[eN_k_nSpace+0],
+                                            q_velocity_sge[eN_k_nSpace+1],
+                                            q_velocity_sge[eN_k_nSpace+1],
+                                            particle_eps,
+                                            grad_u,
+                                            grad_v,
+                                            grad_w,
+                                            mom_u_source,
+                                            mom_v_source,
+                                            mom_w_source,
+                                            dmom_u_source,
+                                            dmom_v_source,
+                                            dmom_w_source,
+                                            mom_u_adv,
+                                            mom_v_adv,
+                                            mom_w_adv,
+                                            dmom_u_adv_u,
+                                            dmom_v_adv_v,
+                                            dmom_w_adv_w,
+                                            mom_u_ham,
+                                            dmom_u_ham_grad_u,
+                                            mom_v_ham,
+                                            dmom_v_ham_grad_v,
+                                            mom_w_ham,
+                                            dmom_w_ham_grad_w,
+                                            &particle_netForces[0],
+                                            &particle_netMoments[0],
+                                            &particle_surfaceArea[0]);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {

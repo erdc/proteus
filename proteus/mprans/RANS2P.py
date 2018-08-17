@@ -214,9 +214,19 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ball_radius=None,
                  ball_velocity=None,
                  ball_angular_velocity=None,
-                 nParticles = 0):
+                 nParticles = 0,
+                 particle_epsFact=3.0,
+                 particle_alpha=1000.0,
+                 particle_beta=1000.0,
+                 particle_penalty_constant=1000.0,
+                 particle_nitsche=1.0,):
         self.use_ball_as_particle = use_ball_as_particle
         self.nParticles = nParticles
+        self.particle_nitsche = particle_nitsche
+        self.particle_epsFact = particle_epsFact
+        self.particle_alpha = particle_alpha
+        self.particle_beta = particle_beta
+        self.particle_penalty_constant = particle_penalty_constant
         self.particle_netForces = np.zeros((3*self.nParticles, 3), 'd')#####[total_force_1,total_force_2,...,stress_1,stress_2,...,pressure_1,pressure_2,...]  
         self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
         self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
@@ -1678,7 +1688,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.nParticles,
                                       self.coefficients.particle_netForces,
                                       self.coefficients.particle_netMoments,
-                                      self.coefficients.particle_surfaceArea)
+                                      self.coefficients.particle_surfaceArea,
+                                      self.mesh.nElements_owned,
+                                      self.coefficients.particle_nitsche,
+                                      self.coefficients.particle_epsFact,
+                                      self.coefficients.particle_alpha,
+                                      self.coefficients.particle_beta,
+                                      self.coefficients.particle_penalty_constant)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
@@ -1921,7 +1937,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
                                       self.coefficients.ball_angular_velocity,
-                                      self.coefficients.nParticles)
+                                      self.coefficients.nParticles,
+                                      self.mesh.nElements_owned,
+                                      self.coefficients.particle_nitsche,
+                                      self.coefficients.particle_epsFact,
+                                      self.coefficients.particle_alpha,
+                                      self.coefficients.particle_beta,
+                                      self.coefficients.particle_penalty_constant)
         
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
