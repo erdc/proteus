@@ -311,6 +311,9 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     apf::destroyElement(visc_elem);
     apf::destroyElement(pres_elem);
     apf::destroyElement(velo_elem);
+    apf::destroyElement(velo_elem_old);
+    apf::destroyElement(vof_elem);
+    apf::destroyMeshElement(element);
     count++;
   } //end loop over elements
   
