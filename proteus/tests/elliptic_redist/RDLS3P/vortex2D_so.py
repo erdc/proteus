@@ -18,6 +18,6 @@ needEBQ = False
 archiveFlag = ArchiveFlags.EVERY_USER_STEP
 useOneArchive = True
 
-tnList=[0.,1E-6]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
-#tnList=[0.,1E-12]
+#tnList=[0.,1E-6]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
+tnList=[0.,1E-6]
 
