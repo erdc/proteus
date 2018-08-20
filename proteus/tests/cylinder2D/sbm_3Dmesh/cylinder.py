@@ -114,7 +114,7 @@ weak_bc_penalty_constant = 100.0
 nLevels = 1
 #parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
 parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.node
-nLayersOfOverlapForParallel = 0
+nLayersOfOverlapForParallel = 1
 structured = False
 
 #===============================================================================
