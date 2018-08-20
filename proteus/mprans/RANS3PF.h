@@ -2316,54 +2316,17 @@ namespace proteus
                         {
                             double middle_point_coord[3]={0.0};
                             double middle_point_distance;
-                            if(opp_node==0)
-                            {
-                                middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+0])/3.0;
-                                middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+1])/3.0;
-                                middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+2]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+2]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+2])/3.0;
-                            }
-                            else if(opp_node==1)
-                            {
-                                middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+0]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0])/3.0;
-                                middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+1]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1])/3.0;
-                                middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+2]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+2]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+2])/3.0;
-                            }
-                            else if(opp_node==2)
-                            {
-                                middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+0]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0])/3.0;
-                                middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+1]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1])/3.0;
-                                middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+2]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+2]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+2])/3.0;
-                            }
-                            else if(opp_node==3)
-                            {
-                                middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0])/3.0;
-                                middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1])/3.0;
-                                middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+2]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+2]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+2])/3.0;
-                            }
+
+                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+0]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+0]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+0])/3.0;
+                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+1]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+1]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+1])/3.0;
+                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+2]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+2]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+2])/3.0;
+
                             j = get_distance_to_ball(nParticles, ball_center, ball_radius,
                                     middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
                                     middle_point_distance);
@@ -2387,7 +2350,7 @@ namespace proteus
                         //If the integral over the surrogate boundary is needed, we have to make sure all edges are in surrogate_boundaries,
                         //which is based on the assumption that if none of its nodes is owned by the processor, then the edge is not owned
                         //by the processor. This assert is used to make sure this is the case.
-                        int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+//                        int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
                         assert(ebN>=nElementBoundaries_owned);
                     }
                 }
