@@ -122,7 +122,7 @@ namespace proteus
                                    const double* q_velocity_solid,
                                    const double* q_vos,//sed fraction - gco check
                                    const double* q_dvos_dt,
-				                   const double* q_grad_vos,
+                                   const double* q_grad_vos,
                                    const double* q_dragAlpha,
                                    const double* q_dragBeta,
                                    const double* q_mass_source,
@@ -2350,8 +2350,10 @@ namespace proteus
                         //If the integral over the surrogate boundary is needed, we have to make sure all edges are in surrogate_boundaries,
                         //which is based on the assumption that if none of its nodes is owned by the processor, then the edge is not owned
                         //by the processor. This assert is used to make sure this is the case.
-//                        int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
-                        assert(ebN>=nElementBoundaries_owned);
+                        if(ebN<nElementBoundaries_owned)//eN_oppo ==-1
+                        {
+                            assert(eN_oppo==-1);
+                        }
                     }
                 }
                 else if (pos_counter == 4)// so the element is in fluid totally
@@ -3300,15 +3302,15 @@ namespace proteus
                         bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
                         bc_w_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+2];
                     }
-                    distance[0] = -P_normal[0]*dist;
+                    distance[0] = -P_normal[0]*dist;//distance=vector from \tilde{x} to x
                     distance[1] = -P_normal[1]*dist;
                     distance[2] = -P_normal[2]*dist;
 //                    P_tangent[0] = -P_normal[1];
 //                    P_tangent[1] = P_normal[0];
-                    assert(dist>0.0);
+//                    assert(dist>0.0);//distance=vector from \tilde{x} to x. It holds also when dist<0.0
                     assert(h_penalty>0.0);
-                    if (h_penalty < dist)
-                        h_penalty = dist;
+                    if (h_penalty < std::abs(dist))
+                        h_penalty = std::abs(dist);
 
                     if(get_dot_product(P_normal,normal)>0)
                     {
@@ -3366,12 +3368,12 @@ namespace proteus
                         globalResidual[GlobPos_w] -= visco * phi_i*res[2];
 
                         // (3)
-                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,u_m_uD,res);
-                        globalResidual[GlobPos_u] -= visco * get_dot_product(normal,res);
-                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,u_m_uD,res);
-                        globalResidual[GlobPos_v] -= visco * get_dot_product(normal,res);
-                        get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,u_m_uD,res);
-                        globalResidual[GlobPos_w] -= visco * get_dot_product(normal,res);
+                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,normal,res);
+                        globalResidual[GlobPos_u] -= visco * get_dot_product(u_m_uD,res);
+                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,normal,res);
+                        globalResidual[GlobPos_v] -= visco * get_dot_product(u_m_uD,res);
+                        get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,normal,res);
+                        globalResidual[GlobPos_w] -= visco * get_dot_product(u_m_uD,res);
 
                         // (4)
                         globalResidual[GlobPos_u] += C_adim*grad_phi_i_dot_d*u_m_uD[0];
@@ -4745,8 +4747,10 @@ namespace proteus
                         //If the integral over the surrogate boundary is needed, we have to make sure all edges are in surrogate_boundaries,
                         //which is based on the assumption that if none of its nodes is owned by the processor, then the edge is not owned
                         //by the processor. This assert is used to make sure this is the case.
-                        int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
-                        assert(ebN>=nElementBoundaries_owned);
+                        if(ebN<nElementBoundaries_owned)//eN_oppo ==-1
+                        {
+                            assert(eN_oppo==-1);
+                        }
                     }
                 }
                 else if (pos_counter == 4)// element is in fluid totally
@@ -5692,7 +5696,7 @@ namespace proteus
                         bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
                         bc_w_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+2];
                     }
-                    distance[0] = -P_normal[0]*dist;
+                    distance[0] = -P_normal[0]*dist;//distance=vector from \tilde{x} to x. It holds also when dist<0.0
                     distance[1] = -P_normal[1]*dist;
                     distance[2] = -P_normal[2]*dist;
 //                    P_tangent[0] = -P_normal[1];
@@ -5706,10 +5710,10 @@ namespace proteus
                             normal[i] *= -1.0;
                         }
                     }
-                    assert(dist>0.0);
+
                     assert(h_penalty>0.0);
-                    if (h_penalty < dist)
-                        h_penalty = dist;
+                    if (h_penalty < std::abs(dist))
+                        h_penalty = std::abs(dist);
                     double visco = nu_0*rho_0;
                     double Csb=10;
                     double C_adim = Csb*visco/h_penalty;
