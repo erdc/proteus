@@ -129,20 +129,24 @@ class Coefficients(TC_base):
         """
         Give the TC object an opportunity to modify itself before the time step.
         """
-        self.q_massFlux[:] = self.fluidModel.q[('velocity', 0)]
-        np.multiply(self.fluidModel.coefficients.q_rho[:, :, np.newaxis],
-                    self.q_massFlux,
-                    out=self.q_massFlux)
-        np.multiply(self.fluidModel.coefficients.q_nu[:, :, np.newaxis],
-                    self.q_massFlux,
-                    out=self.q_massFlux)
-        self.ebqe_massFlux[:] = self.fluidModel.ebqe[('velocity', 0)]
-        np.multiply(self.fluidModel.coefficients.ebqe_rho[:, :, np.newaxis],
-                    self.ebqe_massFlux,
-                    out=self.ebqe_massFlux)
-        np.multiply(self.fluidModel.coefficients.ebqe_nu[:, :, np.newaxis],
-                    self.ebqe_massFlux,
-                    out=self.ebqe_massFlux)
+        if self.useRotationalForm:
+            self.q_massFlux[:] = self.fluidModel.q[('uncorrectedVelocity', 0)]
+            np.multiply(self.fluidModel.coefficients.q_rho[:, :, np.newaxis],
+                        self.q_massFlux,
+                        out=self.q_massFlux)
+            np.multiply(self.fluidModel.coefficients.q_nu[:, :, np.newaxis],
+                        self.q_massFlux,
+                        out=self.q_massFlux)
+            self.ebqe_massFlux[:] = self.fluidModel.ebqe[('uncorrectedVelocity', 0)]
+            np.multiply(self.fluidModel.coefficients.ebqe_rho[:, :, np.newaxis],
+                        self.ebqe_massFlux,
+                        out=self.ebqe_massFlux)
+            np.multiply(self.fluidModel.coefficients.ebqe_nu[:, :, np.newaxis],
+                        self.ebqe_massFlux,
+                        out=self.ebqe_massFlux)
+        else:
+            self.q_massFlux[:] = 0.0
+            self.ebqe_massFlux[:] = 0.0
         copyInstructions = {}
         return copyInstructions
 
@@ -669,8 +673,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('grad(u)', 0)],
             self.q[('u_last', 0)],
             coefficients_pressureIncrementModel_q_u,
-            self.coefficients.q_massFlux * (1. if self.coefficients.useRotationalForm == True else 0.),
-            self.coefficients.ebqe_massFlux * (1. if self.coefficients.useRotationalForm == True else 0.),
+            self.coefficients.q_massFlux,
+            self.coefficients.ebqe_massFlux,
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
             self.offset[0], self.stride[0],

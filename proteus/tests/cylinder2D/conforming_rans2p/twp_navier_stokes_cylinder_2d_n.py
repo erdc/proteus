@@ -41,8 +41,8 @@ shockCapturing = RANS2P.ShockCapturing(coefficients,nd,ns_shockCapturingFactor,l
 massLumping = False
 
 fullNewtonFlag = True
-multilevelNonlinearSolver = NewtonNS
-levelNonlinearSolver = NewtonNS
+multilevelNonlinearSolver = Newton
+levelNonlinearSolver = Newton
 
 nonlinearSmoother = None
 linearSmoother = SimpleNavierStokes2D
