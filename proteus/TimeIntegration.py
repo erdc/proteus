@@ -360,6 +360,14 @@ class BackwardEuler_cfl(BackwardEuler):
         """
         if 'runCFL' in dir(nOptions):
             self.runCFL = nOptions.runCFL
+    def postAdaptUpdate(self,oldTime):
+        """This looks exactly like updateTimeHistory with the exception of setting self.tLast=self.t"""
+        for ci in self.massComponents:
+            self.m_last[ci].flat[:] = self.m_tmp[ci].flat
+
+        #unclear why this is needed; a change of machine precision in these values yield larger deviations in the gauges
+        self.dtLast = oldTime.dtLast
+
 
 class SSP(BackwardEuler_cfl):
     def __init__(self,transport,runCFL=0.9,integrateInterpolationPoints=False):
