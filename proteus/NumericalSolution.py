@@ -965,10 +965,6 @@ class NS_base:  # (HasTraits):
         #    self.modelList[1].levelModelList[0].shockCapturing.updateShockCapturingHistory() 
 
 
-        #This gets the subgrid error history correct
-        if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
-            self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
-            self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
         ###This loop stores the current solution (u^n) and loads in the previous timestep solution (u^{n-1})
         ###The getResidual computation is used to populate the m_tmp array for each model which just depends on the model's solution variable so no need to worry about stagger behavior
         for m,mOld in zip(self.modelList, modelListOld):
@@ -983,6 +979,11 @@ class NS_base:  # (HasTraits):
                 #    lm.q[('m_last',0)][:] = lm.q[('m_tmp',0)]
                 lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
 
+                #This gets the subgrid error history correct
+                if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
+                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
+
 
 
         ###This loop reloads the current solution and the previous solution into proper places
@@ -994,6 +995,12 @@ class NS_base:  # (HasTraits):
                 #if(m.name == "vof_p"):
                 #    lm.q[('m_last',0)][:] = lm.q[('m_tmp',0)]
                 lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
+
+                #This gets the subgrid error history correct
+                if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
+                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
+
                 
         ###
 
