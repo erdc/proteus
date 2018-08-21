@@ -1,8 +1,7 @@
 import proteus.default_so
 reload(proteus.default_so)
 from proteus.default_so import *
-from . import cylinder
-reload(cylinder)
+import cylinder
 
 from proteus.SplitOperator import Sequential_FixedStep_Simple, defaultSystem
 
