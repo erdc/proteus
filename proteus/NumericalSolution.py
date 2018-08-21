@@ -976,7 +976,7 @@ class NS_base:  # (HasTraits):
         ###This loop stores the current solution (u^n) and loads in the previous timestep solution (u^{n-1})
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-                lm.coefficients.postAdaptStep() #MCorr needs this at the moment
+                #lm.coefficients.postAdaptStep() #MCorr needs this at the moment
                 lm.u_store = copy.deepcopy(lm.u)
                 lm.dt_store = copy.deepcopy(lm.timeIntegration.dt)
                 for ci in range(0,lm.coefficients.nc):
