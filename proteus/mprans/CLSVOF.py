@@ -163,7 +163,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # Norm factor
         self.model.norm_factor_lagged = np.maximum(self.model.max_distance - self.model.mean_distance,
                                                    self.model.mean_distance - self.model.min_distance)
-
+               
         # Compute metrics at end of time step
         if self.computeMetrics == 2:
             self.model.getMetricsAtETS()
@@ -614,6 +614,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.min_distance = 0.
         self.max_distance = 0.
         self.mean_distance = 0.
+        self.volume_domain = 0.
         self.norm_factor_lagged = 1.0
         self.weighted_lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d')
         # rhs for normal reconstruction
@@ -1042,7 +1043,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         min_distance = numpy.zeros(1)
         max_distance = numpy.zeros(1)
         mean_distance = numpy.zeros(1)
-
+        volume_domain = numpy.zeros(1)
+        
         self.clsvof.calculateResidual(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1119,6 +1121,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             min_distance,
             max_distance,
             mean_distance,
+            volume_domain,
             self.norm_factor_lagged,
             # normal reconstruction
             self.projected_qx_tn,
@@ -1137,7 +1140,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.min_distance = -globalMax(-min_distance[0])
         self.max_distance = globalMax(max_distance[0])
         self.mean_distance = globalSum(mean_distance[0])
-
+        self.volume_domain = globalSum(volume_domain[0])
+        self.mean_distance /= self.volume_domain
+        
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0

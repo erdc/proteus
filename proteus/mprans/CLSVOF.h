@@ -92,7 +92,8 @@ namespace proteus
                                    double* min_distance,
                                    double* max_distance,
                                    double* mean_distance,
-                                   double norm_factor_lagged,
+				   double* volume_domain,
+				   double norm_factor_lagged,
                                    // normal reconstruction
                                    double* projected_qx_tn,
                                    double* projected_qy_tn,
@@ -497,7 +498,8 @@ namespace proteus
                              double* min_distance,
                              double* max_distance,
                              double* mean_distance,
-                             double norm_factor_lagged,
+			     double* volume_domain,
+			     double norm_factor_lagged,
                              // normal reconstruction
                              double* projected_qx_tn,
                              double* projected_qy_tn,
@@ -513,7 +515,8 @@ namespace proteus
         min_distance[0] = 1E10;
         max_distance[0] = -1E10;
         mean_distance[0] = 0.;
-
+	volume_domain[0] = 0.;
+	
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for local contributions and initialize
@@ -636,12 +639,13 @@ namespace proteus
                 /////////////////////
                 double time_derivative_residual = (Snp1-Sn)/dt;
 
-                // CALCULATE min, max and mean distance
+                // CALCULATE min, max, mean distance, domain area/volume
                 if (eN<nElements_owned) // locally owned?
                   {
                     min_distance[0] = fmin(min_distance[0],u);
                     max_distance[0] = fmax(max_distance[0],u);
                     mean_distance[0] += u*dV;
+		    volume_domain[0] += dV;
                   }
 
 		//double norm_grad_un = 0;
