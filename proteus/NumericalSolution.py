@@ -965,43 +965,54 @@ class NS_base:  # (HasTraits):
         #    self.modelList[1].levelModelList[0].shockCapturing.updateShockCapturingHistory() 
 
 
+        ###Details for solution transfer
+        #To get shock capturing lagging correct, the numDiff array needs to be computed correctly with the u^{n} solution.
+        #numDiff depends on the PDE residual and can depend on the subgrid error (SGE)
+        #the PDE residual depends on the alpha and beta_bdf terms which depend on m_tmp from u^{n-1} as well as VOF or LS fields.
+        #getResidual() is used to populate m_tmp, numDiff.
+        #The goal is therefore to populate the nodal fields with the old solution, get m_tmp properly and lagged sge properly.
+        #Mimic the solver stagger with a new loop to repopulate the nodal fields with u^{n} solution. This is necessary because NS relies on the u^{n-1} field for VOF/LS
+
         ###This loop stores the current solution (u^n) and loads in the previous timestep solution (u^{n-1})
-        ###The getResidual computation is used to populate the m_tmp array for each model which just depends on the model's solution variable so no need to worry about stagger behavior
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 lm.coefficients.postAdaptStep() #MCorr needs this at the moment
                 lm.u_store = copy.deepcopy(lm.u)
+                lm.dt_store = copy.deepcopy(lm.timeIntegration.dt)
                 for ci in range(0,lm.coefficients.nc):
                     lm.u[ci].dof[:] = lm.u[ci].dof_last
                 lm.setFreeDOF(lu)
+
+        #All solution fields are now in state u^{n-1}
+        for m,mOld in zip(self.modelList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 lm.getResidual(lu,lr)
-                #if(m.name == "vof_p"):
-                #    lm.q[('m_last',0)][:] = lm.q[('m_tmp',0)]
                 lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
+    
+                if(hasattr(lm.timeIntegration,"dtLast")):
+                    lm.timeIntegration.dt = lm.timeIntegration.dtLast
 
                 #This gets the subgrid error history correct
                 if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
                     self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
                     self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
 
-
-
         ###This loop reloads the current solution and the previous solution into proper places
+        for m,mOld in zip(self.modelList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 for ci in range(0,lm.coefficients.nc):
                     lm.u[ci].dof[:] = lm.u_store[ci].dof
                     lm.u[ci].dof_last[:] = lm.u_store[ci].dof_last
                 lm.setFreeDOF(lu)
                 lm.getResidual(lu,lr)
-                #if(m.name == "vof_p"):
-                #    lm.q[('m_last',0)][:] = lm.q[('m_tmp',0)]
                 lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
+                lm.timeIntegration.dt = lm.dt_store
 
                 #This gets the subgrid error history correct
                 if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
                     self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
                     self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
 
-                
         ###
 
         ###Shock capturing
