@@ -989,7 +989,7 @@ class NS_base:  # (HasTraits):
                 lm.getResidual(lu,lr)
                 lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
     
-                if(hasattr(lm.timeIntegration,"dtLast") and lm.timeIntegration.dtLast != None):
+                if(hasattr(lm.timeIntegration,"dtLast") and lm.timeIntegration.dtLast is not None):
                     lm.timeIntegration.dt = lm.timeIntegration.dtLast
 
                 #This gets the subgrid error history correct
