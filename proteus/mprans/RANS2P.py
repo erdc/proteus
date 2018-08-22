@@ -545,6 +545,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir, "forceHistory_p.txt"), "w")
             self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir, "forceHistory_v.txt"), "w")
             self.momentHistory = open(os.path.join(proteus.Profiling.logDir, "momentHistory.txt"), "w")
+            if self.nParticles:
+                self.particle_forceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_forceHistory.txt"), "w")
+                self.particle_momentHistory = open(os.path.join(proteus.Profiling.logDir, "particle_momentHistory.txt"), "w")
         self.comm = comm
     # initialize so it can run as single phase
 
@@ -834,6 +837,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.forceHistory_v.flush()
             self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1, :]))
             self.momentHistory.flush()
+            if self.nParticles:
+                self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0, :]))
+                self.particle_forceHistory.flush()
+                self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0, :]))
+                self.particle_momentHistory.flush()
 
 
 class LevelModel(proteus.Transport.OneLevelTransport):
@@ -1499,6 +1507,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.netForces_p[:, :] = 0.0
         self.coefficients.netForces_v[:, :] = 0.0
         self.coefficients.netMoments[:, :] = 0.0
+        self.coefficients.particle_netForces[:, :] = 0.0
+        self.coefficients.particle_netMoments[:, :] = 0.0
+        self.coefficients.particle_surfaceArea[:] = 0.0
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1712,6 +1723,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 #    self.coefficients.netForces_p[i,I] = (125.0* math.pi**2 * 0.125*math.cos(self.timeIntegration.t*math.pi) + 125.0*9.81)/4.0
                 #if I==2:
                 #    self.coefficients.netMoments[i,I] = (4.05* math.pi**2 * (math.pi/4.0)*math.cos(self.timeIntegration.t*math.pi))/4.0
+        for i in range(self.coefficients.nParticles):
+            for I in range(3):
+                self.coefficients.particle_netForces[i, I] = globalSum(
+                    self.coefficients.particle_netForces[i, I])
+                self.coefficients.particle_netForces[i+self.coefficients.nParticles, I] = globalSum(
+                    self.coefficients.particle_netForces[i+self.coefficients.nParticles, I])
+                self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I] = globalSum(
+                    self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I])
+                self.coefficients.particle_netMoments[i, I] = globalSum(
+                    self.coefficients.particle_netMoments[i, I])
+            self.coefficients.particle_surfaceArea[i] = globalSum(
+                self.coefficients.particle_surfaceArea[i])
+            logEvent("particle i=" + `i`+ " force " + `self.coefficients.particle_netForces[i]`)
+            logEvent("particle i=" + `i`+ " moment " + `self.coefficients.particle_netMoments[i]`)
+            logEvent("particle i=" + `i`+ " surfaceArea " + `self.coefficients.particle_surfaceArea[i]`)
+            logEvent("particle i=" + `i`+ " stress force " + `self.coefficients.particle_netForces[i+self.coefficients.nParticles]`)
+            logEvent("particle i=" + `i`+ " pressure force " + `self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]`)
+
+        
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
