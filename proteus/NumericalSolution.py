@@ -989,7 +989,7 @@ class NS_base:  # (HasTraits):
                 lm.getResidual(lu,lr)
                 lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
     
-                if(hasattr(lm.timeIntegration,"dtLast")):
+                if(hasattr(lm.timeIntegration,"dtLast") and lm.timeIntegration.dtLast != None):
                     lm.timeIntegration.dt = lm.timeIntegration.dtLast
 
                 #This gets the subgrid error history correct
@@ -1012,7 +1012,6 @@ class NS_base:  # (HasTraits):
                 if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
                     self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
                     self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
-
         ###
 
         ###Shock capturing
