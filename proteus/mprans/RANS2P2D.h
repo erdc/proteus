@@ -1127,12 +1127,12 @@ namespace proteus
                 dmom_v_adv_v[0] += D_s * porosity * nu/rho * fluid_outward_normal[0];
                 dmom_v_adv_v[1] += D_s * porosity * nu/rho * fluid_outward_normal[1];
                 //(4)
-                mom_u_ham +=  D_s * porosity * (fluid_outward_normal[0] * u + fluid_outward_normal[1] * v)*u;
-                mom_v_ham +=  D_s * porosity * (fluid_outward_normal[0] * u + fluid_outward_normal[1] * v)*v;
-                dmom_u_ham_u += D_s * porosity * fluid_outward_normal[0] * u * 2.0;
-                dmom_u_ham_v += D_s * porosity * fluid_outward_normal[1] * u;
-                dmom_v_ham_u += D_s * porosity * fluid_outward_normal[0] * v;
-                dmom_v_ham_v += D_s * porosity * fluid_outward_normal[1] * v * 2.0;
+//                mom_u_ham +=  D_s * porosity * (fluid_outward_normal[0] * u + fluid_outward_normal[1] * v)*u;
+//                mom_v_ham +=  D_s * porosity * (fluid_outward_normal[0] * u + fluid_outward_normal[1] * v)*v;
+//                dmom_u_ham_u += D_s * porosity * fluid_outward_normal[0] * u * 2.0;
+//                dmom_u_ham_v += D_s * porosity * fluid_outward_normal[1] * u;
+//                dmom_v_ham_u += D_s * porosity * fluid_outward_normal[0] * v;
+//                dmom_v_ham_v += D_s * porosity * fluid_outward_normal[1] * v * 2.0;
 
             }
             //(6)
