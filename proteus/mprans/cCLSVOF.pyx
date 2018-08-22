@@ -73,7 +73,7 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                double* min_distance,
                                double* max_distance,
                                double* mean_distance,
-			       double* volume_distance,
+			       double* volume_domain,
 			       double norm_factor_lagged,
                                double* projected_qx_tn,
                                double* projected_qy_tn,

@@ -396,6 +396,18 @@ namespace proteus
         return d;
       }
 
+      inline double smoothedNormalizedDirac(double eps, double u)
+      {
+	double d;
+	if (u > eps)
+	  d=0.0;
+	else if (u < -eps)
+	  d=0.0;
+	else
+	  d = 0.5*(1.0 + cos(M_PI*u/eps));
+	return d;
+      }
+      
       inline double smoothedSign(double eps, double u)
       {
         double H;
@@ -603,12 +615,14 @@ namespace proteus
                 mesh_velocity[0] = xt;
                 mesh_velocity[1] = yt;
                 mesh_velocity[2] = zt;
-
-                double lambda = lambdaFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged;
-                double epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
+		
+                //double lambda = lambdaFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged; //JHC
+		double epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
                 double Sn = smoothedSign(epsHeaviside,un);
                 double Snp1 = smoothedSign(epsHeaviside,u);
 		double Hnp1 = smoothedHeaviside(epsHeaviside,u);
+		double sn_dir = smoothedNormalizedDirac(epsHeaviside, un);
+		double lambda = lambdaFact*((useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/dt)*(1-sn_dir); // JHC
 		
 		///////////////////
 		// save solution // for other models
@@ -1012,11 +1026,13 @@ namespace proteus
                 mesh_velocity[1] = yt;
                 mesh_velocity[2] = zt;
 
-                double lambda = lambdaFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged;
+                //double lambda = lambdaFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged; //JHC
                 double epsDirac = epsFactDirac*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
                 double epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
                 double dSnp1 = smoothedDerivativeSign(epsDirac,u); //derivative of smoothed sign
-
+		double sn_dir = smoothedNormalizedDirac(epsHeaviside, un); //JHC
+		double lambda = lambdaFact*((useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/dt)*(1-sn_dir); // JHC                                                                                                    
+		
                 for (int I=0;I<nSpace;I++)
                   {
                     relative_velocity[I] = (velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
