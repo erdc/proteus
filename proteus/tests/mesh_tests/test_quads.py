@@ -12,10 +12,10 @@ import stokes_2d_p
 import stokes_2d_n
 import pytest
 import inspect
+import numpy as np
 
-@pytest.mark.MeshTools
-def test_mesh_build():
-    """  Test mesh generation and refinment """
+@pytest.fixture(scope="module")
+def simple_mesh():
     nnx = 4
     nny = 4
     x = (-1.0,-1.0)
@@ -24,7 +24,6 @@ def test_mesh_build():
     nLayersOfOverlap = 1
     parallelPartitioningType = 0
     skipInit = False
-    
     mlMesh = MeshTools.MultilevelQuadrilateralMesh(nnx,nny,1,
                                                    x[0],x[1],0.0,
                                                    L[0],L[1],1,
@@ -32,9 +31,38 @@ def test_mesh_build():
                                                    skipInit,
                                                    nLayersOfOverlap,
                                                    parallelPartitioningType)
+    yield mlMesh, nnx, nny
 
+@pytest.mark.MeshTools
+def test_mesh_build(simple_mesh):
+    """  Test mesh generation and refinment """
+    mlMesh,nnx,nny = simple_mesh
     assert mlMesh.meshList[0].nElements_global == (nnx-1)*(nny-1), 'Mesh generator has built incorrect number of quads'
     assert mlMesh.meshList[1].nElements_global == 4*(nnx-1)*(nny-1), 'Mesh generator has built incorrect number of quads'
+
+@pytest.mark.MeshTools
+def test_calc_quad_area(simple_mesh):
+    mlMesh, nnx, nny = simple_mesh
+    for i in range(9):
+        assert mlMesh.meshList[0]._calc_quad_area(i) == 4./9.
+
+@pytest.mark.MeshTools
+def test_calc_hmax(simple_mesh):
+    mlMesh, nnx, nny = simple_mesh
+    quad_mesh = mlMesh.meshList[0]
+    for i in range(9):
+        hmax_i = quad_mesh._calc_hmax(i)
+        h = quad_mesh._calc_pt_distance((-1.0,-1./3.),(-1./3.,1./3.))
+        assert abs(h-hmax_i) < 1e-12
+
+@pytest.mark.MeshTools
+def test_buildNodeDiameterArray_1(simple_mesh):
+    mlMesh, nnx, nny = simple_mesh
+    quad_mesh = mlMesh.meshList[0]
+    quad_mesh.buildNodeDiameterArray()
+    expected = np.full((16),0.94280904)
+    assert np.allclose(quad_mesh.nodeDiametersArray,expected)
+    assert abs(quad_mesh.volume-4.0) < 1e-12
 
 @pytest.mark.modelTest
 @pytest.mark.moderateTest

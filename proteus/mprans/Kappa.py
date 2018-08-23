@@ -136,15 +136,30 @@ independently and lagged in time
     from proteus.ctransportCoefficients import kEpsilon_k_3D_Evaluate_sd
     from proteus.ctransportCoefficients import kEpsilon_k_2D_Evaluate_sd
 
-    def __init__(self, LS_model=None, V_model=0, RD_model=None, dissipation_model=None, ME_model=6,
+    def __init__(self,
+                 VOS_model=None, # Solid model
+                 V_model=None, # Fluid model
+                 LS_model=None,
+                 RD_model=None,
+                 dissipation_model=None,
+                 ME_model=6,
+                 SED_model=None,
                  dissipation_model_flag=1,  # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988
                  c_mu=0.09,
                  sigma_k=1.0,  # Prandtl Number
-                 rho_0=998.2, nu_0=1.004e-6,
-                 rho_1=1.205, nu_1=1.500e-5,
+                 rho_0=998.2,
+                 nu_0=1.004e-6,
+                 rho_1=1.205,
+                 nu_1=1.500e-5,
                  g=[0.0, -9.8],
                  nd=3,
-                 epsFact=0.01, useMetrics=0.0, sc_uref=1.0, sc_beta=1.0, default_dissipation=1.0e-3):
+                 epsFact=0.01,
+                 useMetrics=0.0,
+                 sc_uref=1.0,
+                 sc_beta=1.0,
+                 default_dissipation=1.0e-3,
+                 closure=None):
+
         self.useMetrics = useMetrics
         self.variableNames = ['kappa']
         nc = 1
@@ -185,13 +200,56 @@ independently and lagged in time
         self.modelIndex = ME_model
         self.RD_modelIndex = RD_model
         self.LS_modelIndex = LS_model
+        self.VOS_modelIndex = VOS_model
+        self.SED_modelIndex = SED_model
         self.dissipation_modelIndex = dissipation_model
         self.dissipation_model_flag = dissipation_model_flag  # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
         # for debugging model
         self.default_dissipation = default_dissipation
-
+        try:
+            self.aDarcy=closure.aDarcy
+            self.betaForch=closure.betaForch
+            self.grain=closure.grain
+            self.packFraction=closure.packFraction
+            self.packMargin=closure.packMargin
+            self.maxFraction=closure.maxFraction
+            self.frFraction=closure.frFraction
+            self.sigmaC=closure.sigmaC
+            self.C3e=closure.C3e
+            self.C4e=closure.C4e
+            self.eR=closure.eR
+            self.fContact=closure.fContact
+            self.mContact=closure.mContact
+            self.nContact=closure.nContact
+            self.angFriction=closure.angFriction
+            self.vos_limiter = closure.vos_limiter
+            self.mu_fr_limiter = closure.mu_fr_limiter
+            self.sedFlag = 1
+            logEvent("INFO: Loading parameters for sediment closure",2)
+        except:
+            self.aDarcy=-1.
+            self.betaForch=-1.
+            self.grain=-1.
+            self.packFraction=-1.
+            self.packMargin=-1.
+            self.maxFraction=-1.
+            self.frFraction=-1.
+            self.sigmaC=-1.
+            self.C3e=-1.
+            self.C4e=-1.
+            self.eR=-1.
+            self.fContact=-1.
+            self.mContact=-1.
+            self.nContact=-1.
+            self.angFriction=-1.
+            self.vos_limiter = -1.
+            self.mu_fr_limiter = -1.
+            self.sedFlag=0
+            assert VOS_model == None
+            assert SED_model == None
+            logEvent("Sediment module is off. Loading dummy parameters",2)
     def initializeMesh(self, mesh):
         self.eps = self.epsFact * mesh.h
 
@@ -268,7 +326,7 @@ independently and lagged in time
             if hasattr(modelList[self.flowModelIndex].coefficients, 'ebqe_porosity'):
                 self.ebqe_porosity = modelList[self.flowModelIndex].coefficients.ebqe_porosity
             else:
-                self.ebqe_porosity = numpy.ones(self.ebqe[('u', 0)].shape, 'd')
+                self.ebqe_porosity = numpy.ones( modelList[self.flowModelIndex].ebqe[('velocity', 0)].shape, 'd')
         else:
             self.velocity_dof_u = numpy.zeros(self.model.u[0].dof.shape, 'd')
             self.velocity_dof_v = numpy.zeros(self.model.u[0].dof.shape, 'd')
@@ -277,7 +335,7 @@ independently and lagged in time
             else:
                 self.velocity_dof_w = numpy.zeros(self.model.u[0].dof.shape, 'd')
             self.q_porosity = numpy.ones(self.q[('u', 0)].shape, 'd')
-            self.ebqe_porosity = numpy.ones(self.ebqe[('u', 0)].shape, 'd')
+            self.ebqe_porosity = numpy.ones( modelList[self.dissipation_modelIndex].ebqe[('u', 0)].shape, 'd')
 
         #
         #assert self.dissipation_modelIndex is not None and self.dissipation_modelIndex < len(modelList), "Kappa: invalid index for dissipation model allowed range: [0,%s]" % len(modelList)
@@ -299,6 +357,25 @@ independently and lagged in time
                 self.ebq_dissipation = numpy.zeros(self.model.ebq[('u', 0)].shape, 'd')
                 self.ebq_dissipation.fill(self.default_dissipation)
             #
+        if self.VOS_modelIndex is not None:
+            self.vosModel = model[self.VOS_modelIndex ]
+            self.q_vos = modelList[self.VOS_modelIndex].q[('u', 0)]
+            self.grad_vos = modelList[self.VOS_modelIndex].q[('grad(u)', 0)]
+            self.ebqe_vos = modelList[self.VOS_modelIndex].ebqe[('u', 0)]
+            self.ebqe_grad_vos = modelList[self.VOS_modelIndex].ebqe[('grad(u)', 0)]
+        else:
+            self.q_vos = self.model.q[('u', 0)]
+            self.grad_vos = self.model.q[('u', 0)]
+            self.ebqe_vos = self.model.ebqe[('u', 0)]
+            self.ebqe_grad_vos = self.model.ebqe[('u', 0)]
+        if self.SED_modelIndex is not None:
+            self.rho_s=modelList[self.SED_modelIndex].coefficients.rho_s
+            self.vs=modelList[self.SED_modelIndex].q[('u', 0)]
+            self.ebqe_vs=modelList[self.SED_modelIndex].ebqe[('u', 0)]
+        else:
+            self.rho_s=self.rho_0
+            self.vs=self.q_v
+            self.ebqe_vs=self.ebqe_v
         #
 
     def initializeElementQuadrature(self, t, cq):
@@ -347,6 +424,23 @@ independently and lagged in time
 
     def postStep(self, t, firstStep=False):
         self.u_old_dof = numpy.copy(self.model.u[0].dof)
+
+        #Limit k (hard limit)
+        
+        for eN in range(self.model.q[('u',0)].shape[0]):
+            for k in range(self.model.q[('u',0)].shape[1]):                
+                self.model.q[('u',0)][eN,k] = max(  self.model.q[('u',0)][eN,k], 1e-50)
+
+        if self.model.ebq.has_key(('u', 0)):
+            for eN in range(self.model.ebq[('u',0)].shape[0]):
+                for k in range(self.model.ebq[('u',0)].shape[1]):
+                    for l in range(len(self.model.ebq[('u',0)][eN,k])):
+                        self.model.ebq[('u',0)][eN,k,l] = max(  self.model.ebq[('u',0)][eN,k,l], 1e-50)
+        for eN in range(self.model.ebqe[('u',0)].shape[0]):
+            for k in range(self.model.ebqe[('u',0)].shape[1]):
+                self.model.ebqe[('u',0)][eN,k] = max(  self.model.ebqe[('u',0)][eN,k], 1e-50)
+
+
         copyInstructions = {}
         return copyInstructions
 
@@ -799,7 +893,24 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                        self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                                        self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                       compKernelFlag)
+                                                   compKernelFlag,
+                                                   self.coefficients.aDarcy,
+                                                    self.coefficients.betaForch,
+                                                    self.coefficients.grain,
+                                                    self.coefficients.packFraction,
+                                                    self.coefficients.packMargin,
+                                                    self.coefficients.maxFraction,
+                                                    self.coefficients.frFraction,
+                                                    self.coefficients.sigmaC,
+                                                    self.coefficients.C3e,
+                                                    self.coefficients.C4e,
+                                                    self.coefficients.eR,
+                                                    self.coefficients.fContact,
+                                                    self.coefficients.mContact,
+                                                    self.coefficients.nContact,
+                                                    self.coefficients.angFriction,
+                                                    self.coefficients.vos_limiter,
+                                                    self.coefficients.mu_fr_limiter)
 
         else:
             self.kappa = cKappa_base(self.nSpace_global,
@@ -808,7 +919,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                      self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                                      self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                      self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                     compKernelFlag)
+                                     compKernelFlag,
+                                     self.coefficients.aDarcy,
+                                     self.coefficients.betaForch,
+                                     self.coefficients.grain,
+                                     self.coefficients.packFraction,
+                                     self.coefficients.packMargin,
+                                     self.coefficients.maxFraction,
+                                     self.coefficients.frFraction,
+                                     self.coefficients.sigmaC,
+                                     self.coefficients.C3e,
+                                     self.coefficients.C4e,
+                                     self.coefficients.eR,
+                                     self.coefficients.fContact,
+                                     self.coefficients.mContact,
+                                     self.coefficients.nContact,
+                                     self.coefficients.angFriction,
+                                     self.coefficients.vos_limiter,
+                                     self.coefficients.mu_fr_limiter)
+
 
         self.forceStrongConditions = False
         if self.forceStrongConditions:
@@ -898,6 +1027,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.c_mu,
             self.coefficients.rho_0,
             self.coefficients.rho_1,
+#Sediment model
+            self.coefficients.sedFlag,
+            self.coefficients.q_vos,
+            self.coefficients.grad_vos,
+            self.coefficients.ebqe_vos,
+            self.coefficients.ebqe_grad_vos,
+            self.coefficients.rho_0,
+            self.coefficients.rho_s,
+            self.coefficients.vs,
+            self.coefficients.ebqe_vs,
+            self.coefficients.g,
+#end Sediment
             self.coefficients.dissipation_model_flag,
             # end diffusion
             self.coefficients.useMetrics,
@@ -1005,6 +1146,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_dissipation,  # dissipation rate variable
             self.coefficients.q_grad_dissipation,
             self.coefficients.q_porosity,  # VRANS
+            #sediment
+            self.coefficients.sedFlag,
+            self.coefficients.q_vos,
+            self.coefficients.grad_vos,
+            self.coefficients.ebqe_vos,
+            self.coefficients.ebqe_grad_vos,
+            self.coefficients.rho_0,
+            self.coefficients.rho_s,
+            self.coefficients.vs,
+            self.coefficients.ebqe_vs,
+            self.coefficients.g,
+            #sediment end
             # velocity dof
             self.coefficients.velocity_dof_u,
             self.coefficients.velocity_dof_v,

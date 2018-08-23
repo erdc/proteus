@@ -6489,20 +6489,45 @@ from LinearAlgebraTools import ParVec
 import Comm
 
 class FiniteElementFunction:
-    """  A member of a finite element space of scalar functions.
+    """A member of a finite element space of scalar functions.
+
+    This class manages the calculation of function, gradient, tensor,
+    and trace values associated with a finite element function.
+    Typically, this function will be a scalar function  (For example,
+    in a 2D stokes problem with a pressure, and two velocity
+    components (say u or v), this class will manage the calculation of
+    one of the scalar functions for p, u or v.
 
     Arguments
     ---------
     finiteElementSpace : :class:`proteus.FemTools.ParametricFiniteElementSpace`
+
+    Notes
+    -----
+    `femSpace` and `dof` are the two main attributes of this class.
+    The `dof` attributes provide the scalar multiples for the
+    underlying basis functions that comes from `femSpace`'s
+    ParametricFiniteElementSpace object
     """
     def __init__(self,finiteElementSpace,dof=None,dim_dof=1,name="no_name",isVector=False):
+        #: Name assigned to the FiniteElementFunction instance
         self.name=name
+        #: boolean variable identifying whether the
+        #: finiteElementFunction is vector quantitied.
         self.isVector=isVector
+        #: :class:`proteus.FemTools.ParametricFiniteElementSpace`
+        #: provides information on the underlying finite element
+        #: space.
         self.femSpace = finiteElementSpace
+        #: integer variable with the global number of degrees of
+        #: freedom
         self.nDOF_global = self.femSpace.dim
+        #: dimension of the degree of freedom
         self.dim_dof = dim_dof
         self.range_dim_dof = range(self.dim_dof)
         if dof is not None:
+            #: numpy array of degree-of-freedom values used to
+            #: calculate the finite element function.
             self.dof=dof
             self.dof_last=dof_last
         else:
@@ -6510,17 +6535,16 @@ class FiniteElementFunction:
                                      'd')
             self.dof_last = numpy.zeros((self.femSpace.dim*dim_dof),
                                      'd')
+        #: boolean variable indentifying whether calculations should
+        #: use C-routines.
         self.useC=True
         #we need to be able to get references to existing values for values at nodes for some calculations
         #like vtkVisualization
         self.meshNodeValues = None
-        #add parallel capability to FiniteElementFunction now as well
+        #: for parallel FiniteElementFunciton capability
         self.par_dof = None
 
     def projectFromInterpolationConditions(self,interpolationValues):
-        #mwf debug
-#        import pdb
-#        pdb.set_trace()
         if self.useC and self.femSpace.referenceFiniteElement.interpolationConditions.projectFiniteElementFunctionFromInterpolationConditions_opt is not None:
             self.femSpace.referenceFiniteElement.interpolationConditions.projectFiniteElementFunctionFromInterpolationConditions_opt(self,interpolationValues)
         else:
@@ -6538,6 +6562,11 @@ class FiniteElementFunction:
             Global element number.
         xi : point
             Evaluation coordinate.
+
+        Returns
+        -------
+        value: float
+           The finite element functions value at xi.
         """
         value = 0.0
         for i,psi in zip(
