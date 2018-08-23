@@ -8,7 +8,7 @@
 // True characteristic functions
 #define heaviside(z) (z>0 ? 1. : (z<0 ? 0. : 0.5))
 #define sign(z) (z>0 ? 1. : (z<0 ? -1. : 0.))
-
+#define lambda_scaling 1
 namespace proteus
 {
   class CLSVOF_base
@@ -88,7 +88,7 @@ namespace proteus
                                    double epsFactHeaviside,
                                    double epsFactDirac,
                                    double lambdaFact,
-                                   // normalization factor
+				   // normalization factor
                                    double* min_distance,
                                    double* max_distance,
                                    double* mean_distance,
@@ -165,7 +165,7 @@ namespace proteus
                                    double epsFactHeaviside,
                                    double epsFactDirac,
                                    double lambdaFact,
-                                   // normalization factor
+				   // normalization factor
                                    double norm_factor_lagged)=0;
     virtual void calculateMetricsAtEOS( //EOS=End Of Simulation
                                        double* mesh_trial_ref,
@@ -506,7 +506,7 @@ namespace proteus
                              double epsFactHeaviside,
                              double epsFactDirac,
                              double lambdaFact,
-                             // normalization factor
+			     // normalization factor
                              double* min_distance,
                              double* max_distance,
                              double* mean_distance,
@@ -622,8 +622,12 @@ namespace proteus
                 double Snp1 = smoothedSign(epsHeaviside,u);
 		double Hnp1 = smoothedHeaviside(epsHeaviside,u);
 		double sn_dir = smoothedNormalizedDirac(epsHeaviside, un);
-		double lambda = lambdaFact*((useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/dt)*(1-sn_dir); // JHC
+		double lambda = lambdaFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged; //JHC
 		
+		if (lambda_scaling == 1)
+		  double lambda = lambdaFact*((useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/dt)*(1-sn_dir); // JHC
+		  
+	
 		///////////////////
 		// save solution // for other models
 		///////////////////
@@ -656,9 +660,9 @@ namespace proteus
                 // CALCULATE min, max, mean distance, domain area/volume
                 if (eN<nElements_owned) // locally owned?
                   {
-                    min_distance[0] = fmin(min_distance[0],u);
+                    min_distance[0] = abs(fmin(min_distance[0],u)); //JHC added abs()
                     max_distance[0] = fmax(max_distance[0],u);
-                    mean_distance[0] += u*dV;
+                    mean_distance[0] += abs(u)*dV;
 		    volume_domain[0] += dV;
                   }
 
@@ -956,7 +960,7 @@ namespace proteus
                              double epsFactHeaviside,
                              double epsFactDirac,
                              double lambdaFact,
-                             // normalization factor
+			     // normalization factor
                              double norm_factor_lagged)
       {
         double timeCoeff=1.0;
@@ -1031,7 +1035,14 @@ namespace proteus
                 double epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
                 double dSnp1 = smoothedDerivativeSign(epsDirac,u); //derivative of smoothed sign
 		double sn_dir = smoothedNormalizedDirac(epsHeaviside, un); //JHC
-		double lambda = lambdaFact*((useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/dt)*(1-sn_dir); // JHC                                                                                                    
+		//double lambda = lambdaFact*((useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/dt)*(1-sn_dir); // JHC
+		double lambda = lambdaFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged; //JHC
+		
+		if (lambda_scaling == 1)
+		 double lambda = lambdaFact*((useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/dt)*(1-sn_dir); // JHC
+		
+		
+
 		
                 for (int I=0;I<nSpace;I++)
                   {

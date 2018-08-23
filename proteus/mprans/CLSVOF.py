@@ -853,6 +853,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_sV0 = globalSum(global_sV0)
         self.global_V_err = np.abs(self.global_V-self.global_V0)/self.global_V0
         self.global_sV_err = np.abs(self.global_sV-self.global_sV0)/self.global_sV0
+
+#        print self.global_V_err, self.global_V-self.global_V0, self.global_V0 #JHC
+#        input("*****")
         # metrics about distance property
         self.global_D_err = globalSum(global_D_err)
         # compute global_R and global_sR
