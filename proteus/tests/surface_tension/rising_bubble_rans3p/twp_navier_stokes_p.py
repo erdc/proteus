@@ -40,7 +40,7 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     turbulenceClosureModel=ns_closure,
                                     movingDomain=movingDomain,
                                     dragAlpha=dragAlpha,
-                                    PSTAB=1.0,
+                                    PSTAB=0.0,
                                     USE_SUPG=ct.USE_SUPG_NS,
                                     ARTIFICIAL_VISCOSITY=ct.ARTIFICIAL_VISCOSITY_NS,
                                     cE=1.0, cMax=1.0)
