@@ -810,7 +810,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 0].diffusiveFluxBoundaryConditionsDictDict[0].iteritems():
             self.ebqe[('diffusiveFlux_bc',0,0)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
             self.ebqe[('diffusiveFlux_bc_flag',0,0)][t[0],t[1]] = 1 
-        if self.coefficients.fixNullSpace:        
+        if self.coefficients.fixNullSpace and self.comm.rank() == 0:
             self.u[0].dof[0] = 0
         self.presinc.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
@@ -870,7 +870,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['a'],
             self.ebqe['a'])
 
-        if self.coefficients.fixNullSpace:
+        if self.coefficients.fixNullSpace and self.comm.rank() == 0:
             r[0] = 0.
         log("Global residual", level=9, data=r)
         # turn this on to view the global conservation residual
@@ -928,7 +928,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.csrColumnOffsets_eb[(0, 0)])
 
-        if self.coefficients.fixNullSpace:
+        if self.coefficients.fixNullSpace and self.comm.rank() == 0:
             dofN = 0
             global_dofN = self.offset[0] + self.stride[0] * dofN
             for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
