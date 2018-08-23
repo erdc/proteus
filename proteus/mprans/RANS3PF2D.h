@@ -2369,8 +2369,10 @@ namespace proteus
                         //If the integral over the surrogate boundary is needed, we have to make sure all edges are in surrogate_boundaries,
                         //which is based on the assumption that if none of its nodes is owned by the processor, then the edge is not owned
                         //by the processor. This assert is used to make sure this is the case.
-                        int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
-                        assert(ebN>=nElementBoundaries_owned);
+                        if(ebN<nElementBoundaries_owned)//eN_oppo ==-1
+                        {
+                            assert(eN_oppo==-1);
+                        }
                     }
                 }
                 else if (pos_counter == 3)
@@ -3346,12 +3348,9 @@ namespace proteus
                     //
                     //update the element and global residual storage
                     //
-                    assert(dist>0.0);
                     assert(h_penalty>0.0);
-                    if (h_penalty < dist)//Used in the proof of the paper
-                    {
-                        h_penalty = dist;
-                    }
+                    if (h_penalty < std::abs(dist))
+                        h_penalty = std::abs(dist);
                     distance[0] = -P_normal[0]*dist;
                     distance[1] = -P_normal[1]*dist;
                     P_tangent[0] = -P_normal[1];
@@ -4737,8 +4736,10 @@ namespace proteus
                         //If the integral over the surrogate boundary is needed, we have to make sure all edges are in surrogate_boundaries,
                         //which is based on the assumption that if none of its nodes is owned by the processor, then the edge is not owned
                         //by the processor. This assert is used to make sure this is the case.
-                        int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
-                        assert(ebN>=nElementBoundaries_owned);
+                        if(ebN<nElementBoundaries_owned)//eN_oppo ==-1
+                        {
+                            assert(eN_oppo==-1);
+                        }
                     }
                   }
                 else if (pos_counter == 3)
@@ -5677,10 +5678,9 @@ namespace proteus
                     distance[1] = -P_normal[1]*dist;
                     P_tangent[0]= -P_normal[1];
                     P_tangent[1]= P_normal[0];
-                    assert(dist>0.0);
                     assert(h_penalty>0.0);
-                    if (h_penalty < dist)
-                        h_penalty = dist;
+                    if (h_penalty < std::abs(dist))
+                        h_penalty = std::abs(dist);
                     double visco = nu_0*rho_0;
                     double Csb=10;
                     double C_adim = Csb*visco/h_penalty;
