@@ -549,7 +549,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
                             for j in range(len(sdNormals)):
                                 corresponding_point_on_boundary[j] = self.model.ebq_global['x'][ebN,kb][j] - sdf_ebN_kb*sdNormals[j]
-                            self.ebq_particle_velocity_s[ebN,kb,:] = vel(t=0.0, corresponding_point_on_boundary, self.particle_centroids[i])#YY:But self.particle_centroids[i] has not been updated?
+                            self.ebq_particle_velocity_s[ebN,kb,:] = vel(0.0, corresponding_point_on_boundary)
 
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]

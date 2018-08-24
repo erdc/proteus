@@ -521,8 +521,8 @@ namespace proteus
     {
     public:
 //      std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
-      static const double C_sbm=1000;//penalty constant for sbm
-      static const double beta_sbm=0.0;//tangent penalty constant for sbm
+      const double C_sbm;//penalty constant for sbm
+      const double beta_sbm;//tangent penalty constant for sbm
 
       cppHsuSedStress<2> closure;
       const int nDOF_test_X_trial_element,
@@ -546,6 +546,8 @@ namespace proteus
                 5.0,
                 M_PI/6., 0.05, 1.00),
         nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
+        C_sbm(1000),
+        beta_sbm(0.0),
         ck()
           {/*        std::cout<<"Constructing cppRANS3PF2D<CompKernelTemplate<"
                      <<0<<","
