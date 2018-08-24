@@ -89,6 +89,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.nSmoothOut = nSmoothOut
         self.dt_last = None
         self.u_phi = None
+        self.nTimes = 0
         #super(MyCoeff, self).__init__(aOfX, fOfX)
         TransportCoefficients.PoissonEquationCoefficients.__init__(self, aOfX, fOfX)
 
@@ -184,16 +185,21 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             self.model.mesh.nodeVelocityArray[:] = 0.
 
     def postStep(self, t,firstStep=False):
+        self.nTimes += 1
         # gradient recovery
         logEvent("Gradient recovery at mesh nodes", level=3)
+        # self.grads[:] = ms.pyVectorRecoveryAtNodes(vectors=self.model.q[('grad(u)', 0)][:,0,:],
+        #                                            nodeElementsArray=self.mesh.nodeElementsArray,
+        #                                            nodeElementOffsets=self.mesh.nodeElementOffsets,
+        #                                            nd=self.nd)
         self.grads[:] = cmm.gradientRecoveryAtNodes(grads=self.model.q[('grad(u)', 0)],
-                                                    nodeElementsArray=self.mesh.nodeElementsArray,
-                                                    nodeElementOffsets=self.mesh.nodeElementOffsets,
-                                                    nd=self.nd)
+                                                   nodeElementsArray=self.mesh.nodeElementsArray,
+                                                   nodeElementOffsets=self.mesh.nodeElementOffsets,
+                                                   nd=self.nd)
         logEvent("Area recovery at mesh nodes", level=3)
-        self.areas_nodes[:] = cmm.recoveryAtNodes(variable=self.areas,
-                                                  nodeElementsArray=self.mesh.nodeElementsArray,
-                                                  nodeElementOffsets=self.mesh.nodeElementOffsets)
+        self.areas_nodes[:] = cmm.recoveryAtNodes(scalars=self.areas,
+                                                         nodeElementsArray=self.mesh.nodeElementsArray,
+                                                         nodeElementOffsets=self.mesh.nodeElementOffsets)
         nNodes_owned = self.mesh.nNodes_owned
         nNodes_global = self.mesh.nNodes_global
         nElements_owned = self.mesh.nElements_owned
@@ -227,7 +233,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.gamma0 = 10.  # user defined parameter
         self.na = np.log(self.gamma)/np.log(self.gamma0)
         nNodes_owned = self.mesh.nNodes_owned
-        if self.dt_last is not None:
+        if self.dt_last is not None and self.nTimes > 5:
             # pseudo-time step
             self.PHI[:] = self.mesh.nodeArray
             self.cCoefficients.pseudoTimeStepping(eps=self.epsTimeStep,
@@ -239,6 +245,12 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             dt = self.dt_last
             # move nodes
             self.model.mesh.nodeVelocityArray[:] = (self.PHI[:]-self.model.mesh.nodeArray[:])/dt
+            # # tri hack: remove mesh velocity when dirichlet imposed on boundaries
+            # for i in range(nNodes_global):
+            #     if self.mesh.nodeMaterialTypes[i] == 3:
+            #         self.mesh.nodeVelocityArray[i, :] = 0.
+            #     if self.mesh.nodeMaterialTypes[i] == 4:
+            #         self.mesh.nodeVelocityArray[i, :] = 0.
             #self.model.mesh.nodeVelocityArray[:] = np.zeros(self.model.mesh.nodeArray.shape)
             self.model.mesh.nodeArray[:] = self.PHI[:]
             # re-initialise nearest nodes

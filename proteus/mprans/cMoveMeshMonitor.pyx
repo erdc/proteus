@@ -383,7 +383,6 @@ cdef class cCoefficients:
                 elif nodesSentBoolArray[node] == 0:
                     if flag != 0:
                         fixed_dir[:] = 0
-                        fixed = True
                         if fixedNodesBoolArray is not None:
                             if fixedNodesBoolArray[node] == 1:
                                 fixed = True
@@ -502,6 +501,18 @@ cdef class cCoefficients:
                                         if nodeMaterialTypes[nodeEl] != 0:
                                             # tridelat hack: node is probably on exterior boundary
                                             new_rank = my_rank
+                                    # if exteriorElementBoundariesBoolArray[b_i] == 1:
+                                    #     for ii in range(2):
+                                    #         if elementBoundaryElementsArray[b_i, ii] == -1:
+                                    #             nearestN = elementBoundaryElementsArray[b_i, ii-1]
+                                    # else:
+                                    #     result = ms.cyGetGlobalVariable(variable_nb_local=b_i,
+                                    #                                     nVariables_owned=nElementBoundaries_owned,
+                                    #                                     variableNumbering_subdomain2global=elementBoundaryNumbering_subdomain2global,
+                                    #                                     variableOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned)
+                                    #     b_i_global = result[0]
+                                    #     new_rank = result[1]
+                                    #     pending = True
                             if new_rank != my_rank:
                                 pending = True
                             else:
@@ -536,6 +547,7 @@ cdef class cCoefficients:
                                         xx[node, ndi] = coords[ndi]
                                 if inside_eN is False and pending is False:
                                     print('outside!!', node, nearestN,  coords[0], coords[1], elementBarycentersArray[nearestN,0], elementBarycentersArray[nearestN,1])
+                                    print('outside2!!', node, nodeArray[node, 0],  nodeArray[node, 1])
                                     print('neighbours', elementNeighborsArray[nearestN, 0], elementNeighborsArray[nearestN, 1], elementNeighborsArray[nearestN, 2])
                             if pending is True:  # info to send to other processor
                                 nodesSentBoolArray[node] = 1
@@ -827,7 +839,7 @@ cdef class cCoefficients:
                                       nNodes_owned=nNodes_owned,
                                       nd=nd,
                                       simultaneous=simultaneous,
-                                      smoothBoundaries=False,
+                                      smoothBoundaries=True,
                                       fixedNodesBoolArray=fixedNodesBoolArray,
                                       alpha=0.)
             comm.barrier()
@@ -928,22 +940,21 @@ cdef class cCoefficients:
     #             f = min(he_max, f)
     #             self.uOfXTatQuadrature[e, k] = f
 
-
-def recoveryAtNodes(variable,
-                    nodeElementsArray,
-                    nodeElementOffsets):
-    return cppRecoveryAtNodes(variable=variable,
+def recoveryAtNodes(double[:] scalars,
+                    int[:] nodeElementsArray,
+                    int[:] nodeElementOffsets):
+    return cppRecoveryAtNodes(scalars=scalars,
                               nodeElementsArray=nodeElementsArray,
                               nodeElementOffsets=nodeElementOffsets)
 
-cdef double[:] cppRecoveryAtNodes(double[:] variable,
+cdef double[:] cppRecoveryAtNodes(double[:] scalars,
                                   int[:] nodeElementsArray,
                                   int[:] nodeElementOffsets):
     """
-    variable:
-         Variable in element
+    scalar:
+         Scalar in element
     """
-    cdef double[:] recovered_variable = np.zeros(len(nodeElementOffsets)-1)
+    cdef double[:] recovered_scalars = np.zeros(len(nodeElementOffsets)-1)
     cdef int nb_el
     cdef double var_sum
     for node in range(len(nodeElementOffsets)-1):
@@ -952,9 +963,50 @@ cdef double[:] cppRecoveryAtNodes(double[:] variable,
         for eOffset in range(nodeElementOffsets[node],
                              nodeElementOffsets[node+1]):
             nb_el += 1
-            var_sum += variable[nodeElementsArray[eOffset]]
-        recovered_variable[node] = var_sum/nb_el
-    return recovered_variable
+            var_sum += scalars[nodeElementsArray[eOffset]]
+        recovered_scalars[node] = var_sum/nb_el
+    return recovered_scalars
+
+def recoveryAtNodesWeighted(double[:] scalars,
+                            int[:] nodeElementsArray,
+                            int[:] nodeElementOffsets,
+                            double[:] detJ_array,
+                            int nNodes):
+    return cppRecoveryAtNodesWeighted(scalars=scalars,
+                                      nodeElementsArray=nodeElementsArray,
+                                      nodeElementOffsets=nodeElementOffsets,
+                                      detJ_array=detJ_array,
+                                      nNodes=nNodes)
+
+cdef double[:] cppRecoveryAtNodesWeighted(double[:] scalars,
+                                          int[:] nodeElementsArray,
+                                          int[:] nodeElementOffsets,
+                                          double[:] detJ_array,
+                                          int nNodes):
+    cdef double[:] recovered_scalars = np.zeros(nNodes)
+    cdef int nb_el
+    cdef double detJ_patch = 0.
+    cdef double scalar_sum = 0.
+    cdef int node
+    cdef int eOffset
+    cdef int eN
+    for node in range(nNodes):
+        nb_el = 0
+        detJ_patch = 0.
+        scalar_sum = 0.
+        for eOffset in range(nodeElementOffsets[node],
+                             nodeElementOffsets[node+1]):
+            nb_el += 1
+            eN = nodeElementsArray[eOffset]
+            # for k in range(n_quad):
+            #     scalar_k = gradrads[eN, k]
+            #     scalar_eN_av += gradrad_k
+            # scalar_eN_av /= n_quad
+            detJ_patch += detJ_array[eN]
+            scalar_sum += detJ_array[eN]*scalars[eN]  # same value at all quad points
+        recovered_scalars[node] = scalar_sum/detJ_patch
+    return recovered_scalars
+
 
 def gradientRecoveryAtNodes(grads,
                             nodeElementsArray,
@@ -1029,6 +1081,8 @@ cdef double[:,:] cppGradientRecoveryAtNodesWeighted(double[:,:,:] grads,
         for ndi in range(nd):
             recovered_grads[node, ndi] = grad_sum[ndi]/detJ_patch
     return recovered_grads
+
+
 
 # cdef tuple pyxSearchNearestNodeElementFromMeshObject(object mesh,
 #                                                      double[:] x,
@@ -1114,10 +1168,10 @@ cdef double[:,:] cppGradientRecoveryAtNodesWeighted(double[:,:,:] grads,
 
 
 def pyCheckOwnedVariable(int variable_nb_local,
-                       int rank,
-                       int nVariables_owned,
-                       int[:] variableNumbering_subdomain2global,
-                       int[:] variableOffsets_subdomain_owned):
+                         int rank,
+                         int nVariables_owned,
+                         int[:] variableNumbering_subdomain2global,
+                         int[:] variableOffsets_subdomain_owned):
     return checkOwnedVariable(variable_nb_local=variable_nb_local,
                               rank=rank,
                               nVariables_owned=nVariables_owned,

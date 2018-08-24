@@ -66,12 +66,8 @@ cdef double[:,:] cySmoothNodesQuality(double[:] distortion,
                                       int[:] nodeMaterialTypes,
                                       int[:] nodeElementOffsets,
                                       int[:] nodeElementsArray,
-                                      int[:] elementNodesArray,
+                                      int[:,:] elementNodesArray,
                                       bool apply_directly=*)
-
-cdef double[:] recoveryAtNodes(double[:] variable,
-                               double[:] nodeElementsArray,
-                               double[:] nodeElementOffsets)
 
 cdef int pyxGetLocalNearestNode(double[:] coords,
                                 double[:,:] nodeArray,
@@ -152,3 +148,24 @@ cdef int cyGetLocalVariable(int variable_nb_global,
                             int nVariables_owned,
                             int[:] variableNumbering_subdomain2global,
                             int[:] variableOffsets_subdomain_owned)
+
+cdef double[:] cyScalarRecoveryAtNodes(double[:] scalars,
+                                       int[:] nodeElementsArray,
+                                       int[:] nodeElementOffsets)
+
+cdef double[:] cyScalarRecoveryAtNodesWeighted(double[:] scalars,
+                                               int[:] nodeElementsArray,
+                                               int[:] nodeElementOffsets,
+                                               double[:] detJ_array,
+                                               int nNodes)
+
+cdef double[:,:] cyVectorRecoveryAtNodesWeighted(double[:,:] vectors,
+                                                 int[:] nodeElementsArray,
+                                                 int[:] nodeElementOffsets,
+                                                 double[:,:] detJ_array,
+                                                 int nd)
+
+cdef double[:,:] cyVectorRecoveryAtNodes(double[:,:] vectors,
+                                         int[:] nodeElementsArray,
+                                         int[:] nodeElementOffsets,
+                                         int nd)
