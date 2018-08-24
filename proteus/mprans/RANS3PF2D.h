@@ -2790,7 +2790,7 @@ namespace proteus
                                            particle_netForces,
                                            particle_netMoments,
                                            particle_surfaceArea);
-                if(USE_SBM>0)
+                if(USE_SBM==2)
                 compute_force_around_solid(eN < nElements_owned,
                                            dV,
                                            nParticles,
@@ -3218,8 +3218,11 @@ namespace proteus
         //
         if(USE_SBM>0)
           {
-            std::memset(particle_netForces,0,nParticles*3*sizeof(double));
-            std::memset(particle_netMoments,0,nParticles*3*sizeof(double));
+            if(USE_SBM==1)
+            {
+                std::memset(particle_netForces,0,nParticles*3*sizeof(double));
+                std::memset(particle_netMoments,0,nParticles*3*sizeof(double));
+            }
             for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
               {
                 // Initialization of the force to 0
@@ -3361,7 +3364,7 @@ namespace proteus
                     assert(h_penalty>0.0);
                     if (h_penalty < std::abs(dist))
                         h_penalty = std::abs(dist);
-                    distance[0] = -P_normal[0]*dist;
+                    distance[0] = -P_normal[0]*dist;//distance=vector from \tilde{x} to x. It holds also when dist<0.0
                     distance[1] = -P_normal[1]*dist;
                     P_tangent[0] = -P_normal[1];
                     P_tangent[1] = P_normal[0];
@@ -3469,7 +3472,8 @@ namespace proteus
                     }
                     Mz  += r_x*Fy-r_y*Fx;
                   }//kb
-                if(ebN < nElementBoundaries_owned)//avoid double counting
+                if(USE_SBM==1
+                        && ebN < nElementBoundaries_owned)//avoid double counting
                 {
                     particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += Fx;
                     particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Fy;
@@ -5684,7 +5688,7 @@ namespace proteus
                         bc_u_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+0];
                         bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
                     }
-                    distance[0] = -P_normal[0]*dist;
+                    distance[0] = -P_normal[0]*dist;//distance=vector from \tilde{x} to x. It holds also when dist<0.0
                     distance[1] = -P_normal[1]*dist;
                     P_tangent[0]= -P_normal[1];
                     P_tangent[1]= P_normal[0];
