@@ -520,6 +520,10 @@ namespace proteus
     class cppRANS3PF2D : public cppRANS3PF2D_base
     {
     public:
+//      std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
+      const double C_sbm;//penalty constant for sbm
+      const double beta_sbm;//tangent penalty constant for sbm
+
       cppHsuSedStress<2> closure;
       const int nDOF_test_X_trial_element,
         nSpace2;
@@ -542,6 +546,8 @@ namespace proteus
                 5.0,
                 M_PI/6., 0.05, 1.00),
         nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
+        C_sbm(1000),
+        beta_sbm(0.0),
         ck()
           {/*        std::cout<<"Constructing cppRANS3PF2D<CompKernelTemplate<"
                      <<0<<","
@@ -2239,6 +2245,10 @@ namespace proteus
         double globalConservationError=0.0;
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
+        surrogate_boundaries.clear();
+        surrogate_boundary_elements.clear();
+        surrogate_boundary_particle.clear();
+
         //std::set<int> active_velocity_dof;
         for(int eN=0;eN<nElements_global;eN++)
           {
@@ -2780,7 +2790,7 @@ namespace proteus
                                            particle_netForces,
                                            particle_netMoments,
                                            particle_surfaceArea);
-                if(USE_SBM>0)
+                if(USE_SBM==2)
                 compute_force_around_solid(eN < nElements_owned,
                                            dV,
                                            nParticles,
@@ -3208,8 +3218,11 @@ namespace proteus
         //
         if(USE_SBM>0)
           {
-            std::memset(particle_netForces,0,nParticles*3*sizeof(double));
-            std::memset(particle_netMoments,0,nParticles*3*sizeof(double));
+            if(USE_SBM==1)
+            {
+                std::memset(particle_netForces,0,nParticles*3*sizeof(double));
+                std::memset(particle_netMoments,0,nParticles*3*sizeof(double));
+            }
             for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
               {
                 // Initialization of the force to 0
@@ -3351,16 +3364,15 @@ namespace proteus
                     assert(h_penalty>0.0);
                     if (h_penalty < std::abs(dist))
                         h_penalty = std::abs(dist);
-                    distance[0] = -P_normal[0]*dist;
+                    distance[0] = -P_normal[0]*dist;//distance=vector from \tilde{x} to x. It holds also when dist<0.0
                     distance[1] = -P_normal[1]*dist;
                     P_tangent[0] = -P_normal[1];
                     P_tangent[1] = P_normal[0];
                     double visco = nu_0*rho_0;
-                    double Csb=10;
-                    double C_adim = Csb*visco/h_penalty;
+                    double C_adim = C_sbm*visco/h_penalty;
                     //std::cout << "C_adim "<< C_adim << std::endl;
                     double beta = 0.0;
-                    double beta_adim = beta*h_penalty*visco;
+                    double beta_adim = beta*visco/h_penalty;
 
                     const double grad_u_d[2] = {get_dot_product(distance,grad_u_ext),
                                                 get_dot_product(distance,grad_v_ext)};
@@ -3460,7 +3472,8 @@ namespace proteus
                     }
                     Mz  += r_x*Fy-r_y*Fx;
                   }//kb
-                if(ebN < nElementBoundaries_owned)//avoid double counting
+                if(USE_SBM==1
+                        && ebN < nElementBoundaries_owned)//avoid double counting
                 {
                     particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += Fx;
                     particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Fy;
@@ -4646,6 +4659,7 @@ namespace proteus
             //
             //detect cut cells
             //
+            //if(0)
             if(USE_SBM>0)
               {
                 //
@@ -5674,7 +5688,7 @@ namespace proteus
                         bc_u_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+0];
                         bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
                     }
-                    distance[0] = -P_normal[0]*dist;
+                    distance[0] = -P_normal[0]*dist;//distance=vector from \tilde{x} to x. It holds also when dist<0.0
                     distance[1] = -P_normal[1]*dist;
                     P_tangent[0]= -P_normal[1];
                     P_tangent[1]= P_normal[0];
@@ -5682,10 +5696,8 @@ namespace proteus
                     if (h_penalty < std::abs(dist))
                         h_penalty = std::abs(dist);
                     double visco = nu_0*rho_0;
-                    double Csb=10;
-                    double C_adim = Csb*visco/h_penalty;
-                    double beta = 0.0;
-                    double beta_adim = beta*h_penalty*visco;
+                    double C_adim = C_sbm*visco/h_penalty;
+                    double beta_adim = beta_sbm*visco/h_penalty;
 
                     for (int i=0;i<nDOF_test_element;i++)
                       {
