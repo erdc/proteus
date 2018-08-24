@@ -2317,15 +2317,14 @@ namespace proteus
                             double middle_point_coord[3]={0.0};
                             double middle_point_distance;
                             middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+0]
-                                                              +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+0]
-                                                                        +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+0])/3.0;
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+0]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+0])/3.0;
                             middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+1]
-                                                              +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+1]
-                                                                        +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+1])/3.0;
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+1]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+1])/3.0;
                             middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+2]
-                                                              +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+2]
-                                                                        +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+2])/3.0;
-
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+2]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+2])/3.0;
                             j = get_distance_to_ball(nParticles, ball_center, ball_radius,
                                     middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
                                     middle_point_distance);
@@ -2345,6 +2344,7 @@ namespace proteus
                             }
                         }
                         surrogate_boundary_particle.push_back(j);
+
                     }else{
                         //If the integral over the surrogate boundary is needed, we have to make sure all edges are in surrogate_boundaries,
                         //which is based on the assumption that if none of its nodes is owned by the processor, then the edge is not owned
@@ -3301,11 +3301,9 @@ namespace proteus
                         bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
                         bc_w_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+2];
                     }
-                    distance[0] = -P_normal[0]*dist;
+                    distance[0] = -P_normal[0]*dist;//distance=vector from \tilde{x} to x
                     distance[1] = -P_normal[1]*dist;
                     distance[2] = -P_normal[2]*dist;
-//                    P_tangent[0] = -P_normal[1];
-//                    P_tangent[1] = P_normal[0];
                     assert(h_penalty>0.0);
                     if (h_penalty < std::abs(dist))
                         h_penalty = std::abs(dist);
@@ -5644,7 +5642,7 @@ namespace proteus
                         bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
                         bc_w_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+2];
                     }
-                    distance[0] = -P_normal[0]*dist;
+                    distance[0] = -P_normal[0]*dist;//distance=vector from \tilde{x} to x. It holds also when dist<0.0
                     distance[1] = -P_normal[1]*dist;
                     distance[2] = -P_normal[2]*dist;
 //                    P_tangent[0] = -P_normal[1];
