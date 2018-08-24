@@ -122,6 +122,7 @@ namespace proteus
                                    const double* q_velocity_solid,
                                    const double* q_vos,//sed fraction - gco check
                                    const double* q_dvos_dt,
+				                   const double* q_grad_vos,
                                    const double* q_dragAlpha,
                                    const double* q_dragBeta,
                                    const double* q_mass_source,
@@ -363,6 +364,7 @@ namespace proteus
                                    const double *q_velocity_solid,
                                    const double *q_vos,//sed fraction - gco check
                                    const double *q_dvos_dt,
+                                   const double *q_grad_vos,
                                    const double *q_dragAlpha,
                                    const double *q_dragBeta,
                                    const double *q_mass_source,
@@ -1010,6 +1012,7 @@ namespace proteus
                                                const double nu_0,
                                                const double rho_1,
                                                const double nu_1,
+					       double nu_t,
                                                const double useVF,
                                                const double vf,
                                                const double phi,
@@ -1029,7 +1032,10 @@ namespace proteus
                                                double& mom_w_source,
                                                double dmom_u_source[nSpace],
                                                double dmom_v_source[nSpace],
-                                               double dmom_w_source[nSpace])
+                                               double dmom_w_source[nSpace],
+                                               double gradC_x,
+					       double gradC_y,
+					       double gradC_z)
       {
         double rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
@@ -1049,9 +1055,9 @@ namespace proteus
                                            solid_velocity,
                                             viscosity);
         //new_beta/=rho;
-        mom_u_source +=  (1.0 - phi_s)*new_beta*(u-u_s);
-        mom_v_source +=  (1.0 - phi_s)*new_beta*(v-v_s);
-        mom_w_source +=  (1.0 - phi_s)*new_beta*(w-w_s);
+        mom_u_source +=  (1.0 - phi_s)*new_beta*( (u - u_s) - nu_t*gradC_x/closure.sigmaC_ );
+        mom_v_source +=  (1.0 - phi_s)*new_beta*( (v - v_s)- nu_t*gradC_y/closure.sigmaC_ );
+        mom_w_source +=  (1.0 - phi_s)*new_beta*( (w - w_s)- nu_t*gradC_z/closure.sigmaC_ );;
 
         dmom_u_source[0] =  (1.0 - phi_s)*new_beta;
         dmom_u_source[1] = 0.0;
@@ -1825,7 +1831,7 @@ namespace proteus
           }
         else
           {
-            std::cerr<<"warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl;
+            std::cerr<<"RANS3PF: warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl;
             flux = 0.0;
           }
       }
@@ -2036,6 +2042,7 @@ namespace proteus
                              const double* q_velocity_solid,
                              const double* q_vos,//sed fraction - gco check 
                              const double* q_dvos_dt,
+                             const double* q_grad_vos,
                              const double* q_dragAlpha,
                              const double* q_dragBeta,
                              const double* q_mass_source,
@@ -2666,6 +2673,7 @@ namespace proteus
                                                   nu_0,
                                                   rho_1,
                                                   nu_1,
+						  q_eddy_viscosity[eN_k],
                                                   useVF,
                                                   vf[eN_k],
                                                   phi[eN_k],
@@ -2685,7 +2693,10 @@ namespace proteus
                                                   mom_w_source,
                                                   dmom_u_source,
                                                   dmom_v_source,
-                                                  dmom_w_source);
+                                                  dmom_w_source,
+                                                  q_grad_vos[eN_k_nSpace+0],
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  q_grad_vos[eN_k_nSpace+2]);
                 double C_particles = 0.0;
                 if (nParticles > 0 && USE_SBM==0)
                   updateSolidParticleTerms(eN < nElements_owned,
@@ -3293,26 +3304,12 @@ namespace proteus
                     distance[0] = -P_normal[0]*dist;//distance=vector from \tilde{x} to x
                     distance[1] = -P_normal[1]*dist;
                     distance[2] = -P_normal[2]*dist;
-//                    P_tangent[0] = -P_normal[1];
-//                    P_tangent[1] = P_normal[0];
-//                    assert(dist>0.0);//distance=vector from \tilde{x} to x. It holds also when dist<0.0
                     assert(h_penalty>0.0);
                     if (h_penalty < std::abs(dist))
                         h_penalty = std::abs(dist);
 
                     if(get_dot_product(P_normal,normal)>0)
                     {
-//                        std::cout<<"YYPDB: some normal direction has wrong sign\n";
-//
-//                        for(int i=0;i<4;++i)
-//                        {
-//                            std::cout<<"\t"<<mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(surrogate_boundary_elements[ebN_s]+i)%4]+0]
-//                                     <<"\t"<<mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(surrogate_boundary_elements[ebN_s]+i)%4]+1]
-//                                     <<"\t"<<mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(surrogate_boundary_elements[ebN_s]+i)%4]+2]<<"\n";
-//                        }
-//                        std::cout<<"\t"<<normal[0]
-//                                 <<"\t"<<normal[1]
-//                                 <<"\t"<<normal[2]<<"\n";
                         for(int i=0;i<3;++i)
                         {
                             normal[i] *= -1.0;
@@ -4420,6 +4417,7 @@ namespace proteus
                              const double *q_velocity_solid,
                              const double *q_vos,
                              const double *q_dvos_dt,
+                             const double* q_grad_vos,
                              const double *q_dragAlpha,
                              const double *q_dragBeta,
                              const double *q_mass_source,
@@ -4663,54 +4661,15 @@ namespace proteus
                         {
                             double middle_point_coord[3]={0.0};
                             double middle_point_distance;
-                            if(opp_node==0)
-                            {
-                                middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+0])/3.0;
-                                middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+1])/3.0;
-                                middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+2]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+2]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+2])/3.0;
-                            }
-                            else if(opp_node==1)
-                            {
-                                middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+0]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0])/3.0;
-                                middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+1]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1])/3.0;
-                                middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+2]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+2]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+2])/3.0;
-                            }
-                            else if(opp_node==2)
-                            {
-                                middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+0]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0])/3.0;
-                                middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+1]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1])/3.0;
-                                middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+2]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+2]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+2])/3.0;
-                            }
-                            else if(opp_node==3)
-                            {
-                                middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0])/3.0;
-                                middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1])/3.0;
-                                middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+2]
-                                                                  +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+2]
-                                                                            +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+2])/3.0;
-                            }
+                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+0]
+                                                              +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+0]
+                                                                        +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+0])/3.0;
+                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+1]
+                                                              +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+1]
+                                                                        +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+1])/3.0;
+                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+2]
+                                                              +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+2]
+                                                                        +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+2])/3.0;
                             j = get_distance_to_ball(nParticles, ball_center, ball_radius,
                                     middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
                                     middle_point_distance);
@@ -5053,6 +5012,7 @@ namespace proteus
                                                   nu_0,
                                                   rho_1,
                                                   nu_1,
+						  eddy_viscosity,
                                                   useVF,
                                                   vf[eN_k],
                                                   phi[eN_k],
@@ -5072,7 +5032,10 @@ namespace proteus
                                                   mom_w_source,
                                                   dmom_u_source,
                                                   dmom_v_source,
-                                                  dmom_w_source);
+                                                  dmom_w_source,
+                                                  q_grad_vos[eN_k_nSpace+0],
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  q_grad_vos[eN_k_nSpace+2]);
                 double C_particles=0.0;
                 if (nParticles > 0 && USE_SBM==0)
                   updateSolidParticleTerms(eN < nElements_owned,
@@ -5693,7 +5656,6 @@ namespace proteus
                             normal[i] *= -1.0;
                         }
                     }
-
                     assert(h_penalty>0.0);
                     if (h_penalty < std::abs(dist))
                         h_penalty = std::abs(dist);

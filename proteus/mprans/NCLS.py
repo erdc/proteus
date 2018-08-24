@@ -1266,6 +1266,7 @@ class LevelModel(OneLevelTransport):
             self.coefficients.rdModel.ebqe[('u', 0)],
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('u', 0)],
+            self.ebqe[('grad(u)', 0)],
             self.interface_locator,
             # TO KILL SUPG AND SHOCK CAPTURING
             self.coefficients.PURE_BDF,
