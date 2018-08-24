@@ -997,6 +997,9 @@ class NS_base:  # (HasTraits):
                     self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
                     self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
 
+                #update the eddy-viscosity history
+                lm.calculateAuxiliaryQuantitiesAfterStep()
+
         ###This loop reloads the current solution and the previous solution into proper places
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
@@ -1019,6 +1022,8 @@ class NS_base:  # (HasTraits):
                     lm.shockCapturing.nSteps=lm.shockCapturing.nStepsToDelay
                     lm.shockCapturing.updateShockCapturingHistory() 
 
+                #update the eddy-viscosity history
+                lm.calculateAuxiliaryQuantitiesAfterStep()
 
         if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
             #hack for archiving initial solution on adapted mesh
