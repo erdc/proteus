@@ -8,7 +8,8 @@
 // True characteristic functions
 #define heaviside(z) (z>0 ? 1. : (z<0 ? 0. : 0.5))
 #define sign(z) (z>0 ? 1. : (z<0 ? -1. : 0.))
-#define lambda_scaling 1
+#define LAMBDA_SCALING 0
+
 namespace proteus
 {
   class CLSVOF_base
@@ -88,12 +89,13 @@ namespace proteus
                                    double epsFactHeaviside,
                                    double epsFactDirac,
                                    double lambdaFact,
-				   // normalization factor
+                                   // normalization factor
                                    double* min_distance,
                                    double* max_distance,
                                    double* mean_distance,
 				   double* volume_domain,
-				   double norm_factor_lagged,
+                                   double norm_factor_lagged,
+				   double VelMax,
                                    // normal reconstruction
                                    double* projected_qx_tn,
                                    double* projected_qy_tn,
@@ -165,8 +167,9 @@ namespace proteus
                                    double epsFactHeaviside,
                                    double epsFactDirac,
                                    double lambdaFact,
-				   // normalization factor
-                                   double norm_factor_lagged)=0;
+                                   // normalization factor
+                                   double norm_factor_lagged,
+				   double VelMax)=0;
     virtual void calculateMetricsAtEOS( //EOS=End Of Simulation
                                        double* mesh_trial_ref,
                                        double* mesh_grad_trial_ref,
@@ -327,6 +330,23 @@ namespace proteus
       }
 
       inline
+        void calculateNonlinearCFL(const double& elementDiameter,
+				   const double df[nSpace],
+				   const double norm_factor_lagged,
+				   const double epsFactHeaviside,
+				   const double lambdaFact,
+				   double& cfl)
+      {
+        double h,nrm2_v;
+        h = elementDiameter;
+        nrm2_v=0.0;
+        for(int I=0;I<nSpace;I++)
+          nrm2_v+=df[I]*df[I];
+        cfl = nrm2_v*norm_factor_lagged/(epsFactHeaviside*lambdaFact*h*h*h);
+	cfl = std::sqrt(cfl);
+      }
+
+      inline
         void exteriorNumericalAdvectiveFlux(const int& isDOFBoundary_u,
                                             const int& isFluxBoundary_u,
                                             const double n[nSpace],
@@ -398,16 +418,16 @@ namespace proteus
 
       inline double smoothedNormalizedDirac(double eps, double u)
       {
-	double d;
-	if (u > eps)
-	  d=0.0;
-	else if (u < -eps)
-	  d=0.0;
-	else
-	  d = 0.5*(1.0 + cos(M_PI*u/eps));
-	return d;
+        double d;
+        if (u > eps)
+          d=0.0;
+        else if (u < -eps)
+          d=0.0;
+        else
+          d = 0.5*(1.0 + cos(M_PI*u/eps));
+        return d;
       }
-      
+
       inline double smoothedSign(double eps, double u)
       {
         double H;
@@ -506,12 +526,13 @@ namespace proteus
                              double epsFactHeaviside,
                              double epsFactDirac,
                              double lambdaFact,
-			     // normalization factor
+                             // normalization factor
                              double* min_distance,
                              double* max_distance,
                              double* mean_distance,
 			     double* volume_domain,
-			     double norm_factor_lagged,
+                             double norm_factor_lagged,
+			     double VelMax,
                              // normal reconstruction
                              double* projected_qx_tn,
                              double* projected_qy_tn,
@@ -528,7 +549,7 @@ namespace proteus
         max_distance[0] = -1E10;
         mean_distance[0] = 0.;
 	volume_domain[0] = 0.;
-	
+
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for local contributions and initialize
@@ -615,19 +636,20 @@ namespace proteus
                 mesh_velocity[0] = xt;
                 mesh_velocity[1] = yt;
                 mesh_velocity[2] = zt;
-		
-                //double lambda = lambdaFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged; //JHC
-		double epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
+
+		double hK=(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
+		double epsHeaviside = epsFactHeaviside*hK;
+		double lambda = lambdaFact*hK/norm_factor_lagged;
+		if (LAMBDA_SCALING==1)
+		  {
+		    double delta = 1.0;//fmax(smoothedNormalizedDirac(2*epsHeaviside,un),1E-6);
+		    lambda = lambdaFact*VelMax*delta;
+		  }
+
                 double Sn = smoothedSign(epsHeaviside,un);
                 double Snp1 = smoothedSign(epsHeaviside,u);
 		double Hnp1 = smoothedHeaviside(epsHeaviside,u);
-		double sn_dir = smoothedNormalizedDirac(epsHeaviside, un);
-		double lambda = lambdaFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged; //JHC
 		
-		if (lambda_scaling == 1)
-		  double lambda = lambdaFact*((useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/dt)*(1-sn_dir); // JHC
-		  
-	
 		///////////////////
 		// save solution // for other models
 		///////////////////
@@ -643,6 +665,7 @@ namespace proteus
                     relative_velocity[I] = (velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
                     relative_velocity_old[I] = (velocity_old[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
                     fnp1[I] = relative_velocity[I]*Snp1; //implicit advection via BDF
+		    //fnp1[I] = relative_velocity_old[I]*Sn; // explicit advection
                     fnHalf[I] = 0.5*(relative_velocity[I]*Snp1+relative_velocity_old[I]*Sn); //implicit advection via CN
                     grad_unHalf[I] = 0.5*(grad_u[I]+grad_un[I]);
                   }
@@ -651,18 +674,24 @@ namespace proteus
                 // CALCULATE CELL BASED CFL //
                 //////////////////////////////
                 calculateCFL(elementDiameter[eN]/degree_polynomial,relative_velocity,cfl[eN_k]);
+		//calculateNonlinearCFL(elementDiameter[eN]/degree_polynomial,
+		//		      relative_velocity,
+		//		      norm_factor_lagged,
+		//		      epsFactHeaviside,
+		//		      lambdaFact,
+		//		      cfl[eN_k]);
 
                 /////////////////////
                 // TIME DERIVATIVE //
                 /////////////////////
                 double time_derivative_residual = (Snp1-Sn)/dt;
 
-                // CALCULATE min, max, mean distance, domain area/volume
+                // CALCULATE min, max and mean distance
                 if (eN<nElements_owned) // locally owned?
                   {
-                    min_distance[0] = abs(fmin(min_distance[0],u)); //JHC added abs()
-                    max_distance[0] = fmax(max_distance[0],u);
-                    mean_distance[0] += abs(u)*dV;
+                    min_distance[0] = fmin(min_distance[0],fabs(u));
+                    max_distance[0] = fmax(max_distance[0],fabs(u));
+                    mean_distance[0] += fabs(u)*dV;
 		    volume_domain[0] += dV;
                   }
 
@@ -960,8 +989,9 @@ namespace proteus
                              double epsFactHeaviside,
                              double epsFactDirac,
                              double lambdaFact,
-			     // normalization factor
-                             double norm_factor_lagged)
+                             // normalization factor
+                             double norm_factor_lagged,
+			     double VelMax)
       {
         double timeCoeff=1.0;
         if (timeOrder==2)
@@ -1030,20 +1060,18 @@ namespace proteus
                 mesh_velocity[1] = yt;
                 mesh_velocity[2] = zt;
 
-                //double lambda = lambdaFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged; //JHC
-                double epsDirac = epsFactDirac*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
-                double epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
-                double dSnp1 = smoothedDerivativeSign(epsDirac,u); //derivative of smoothed sign
-		double sn_dir = smoothedNormalizedDirac(epsHeaviside, un); //JHC
-		//double lambda = lambdaFact*((useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/dt)*(1-sn_dir); // JHC
-		double lambda = lambdaFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial/norm_factor_lagged; //JHC
-		
-		if (lambda_scaling == 1)
-		 double lambda = lambdaFact*((useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/dt)*(1-sn_dir); // JHC
-		
-		
+		double hK=(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
+		double epsHeaviside = epsFactHeaviside*hK;
+                double lambda = lambdaFact*hK/norm_factor_lagged;
+		if (LAMBDA_SCALING==1)
+		  {
+		    double delta = 1.0;//fmax(smoothedNormalizedDirac(2*epsHeaviside,un),1E-6);
+		    lambda = lambdaFact*VelMax*delta;
+		  }
 
-		
+                double epsDirac = epsFactDirac*hK;
+		double dSnp1 = smoothedDerivativeSign(epsDirac,u); //derivative of smoothed sign
+
                 for (int I=0;I<nSpace;I++)
                   {
                     relative_velocity[I] = (velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);

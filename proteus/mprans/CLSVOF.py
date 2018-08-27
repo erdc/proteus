@@ -92,6 +92,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 if modelList[self.flowModelIndex].ebq.has_key(('f',0)):
                     self.ebq_v = modelList[self.flowModelIndex].ebq[('f',0)]
         self.q_v_old = numpy.copy(self.q_v)
+        self.q_v_tStar = numpy.copy(self.q_v)
         #VRANS
         self.flowCoefficients = modelList[self.flowModelIndex].coefficients
         if hasattr(self.flowCoefficients,'q_porosity'):
@@ -146,6 +147,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if (self.computeMetrics > 0 and firstStep==True):
             # Overwritten if spin up step is taken
             self.model.u0_dof[:] = self.model.u[0].dof
+        #
+        if (firstStep==True):
+            r=1
+        else:
+            r=self.model.timeIntegration.dt/self.dt_old
+        #
+        self.dt_old=self.model.timeIntegration.dt
+        self.q_v_tStar[:] = (1+r)*self.q_v - r*self.q_v_old
+
         # SAVE OLD VELOCITY #
         self.q_v_old[:] = self.q_v
         # COMPUTE NEW VELOCITY (if given by user) #
@@ -153,9 +163,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.updateVelocityFieldAsFunction()
         if (firstStep==True):
             self.q_v_old[:] = self.q_v
+            self.q_v_tStar[:] = self.q_v
         # GET NORMALS RECONSTRUCTION; i.e, compute qx_tn, qy_tn. This is done within CLSVOF solver
         # SAVE OLD SOLUTION (and VELOCITY) #
         self.model.u_dof_old[:] = self.model.u[0].dof
+        self.VelMax = max(self.q_v.max(),1E-6)
+
         copyInstructions = {}
         return copyInstructions
 
@@ -163,7 +176,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # Norm factor
         self.model.norm_factor_lagged = np.maximum(self.model.max_distance - self.model.mean_distance,
                                                    self.model.mean_distance - self.model.min_distance)
-               
+
         # Compute metrics at end of time step
         if self.computeMetrics == 2:
             self.model.getMetricsAtETS()
@@ -616,6 +629,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.mean_distance = 0.
         self.volume_domain = 0.
         self.norm_factor_lagged = 1.0
+        self.VelMax = 1.0
         self.weighted_lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d')
         # rhs for normal reconstruction
         self.rhs_qx = numpy.zeros(self.u[0].dof.shape,'d')
@@ -853,9 +867,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_sV0 = globalSum(global_sV0)
         self.global_V_err = np.abs(self.global_V-self.global_V0)/self.global_V0
         self.global_sV_err = np.abs(self.global_sV-self.global_sV0)/self.global_sV0
-
-#        print self.global_V_err, self.global_V-self.global_V0, self.global_V0 #JHC
-#        input("*****")
         # metrics about distance property
         self.global_D_err = globalSum(global_D_err)
         # compute global_R and global_sR
@@ -1047,7 +1058,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         max_distance = numpy.zeros(1)
         mean_distance = numpy.zeros(1)
         volume_domain = numpy.zeros(1)
-        
+
         self.clsvof.calculateResidual(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1126,6 +1137,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             mean_distance,
             volume_domain,
             self.norm_factor_lagged,
+            self.VelMax,
             # normal reconstruction
             self.projected_qx_tn,
             self.projected_qy_tn,
@@ -1224,7 +1236,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.epsFactHeaviside,
             self.coefficients.epsFactDirac,
             self.coefficients.lambdaFact,
-            self.norm_factor_lagged)
+            self.norm_factor_lagged,
+            self.VelMax)
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
