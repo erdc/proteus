@@ -13,7 +13,7 @@ The file cylinder.py is called first, where `he`, depending on `Refinement`, is 
 
 This problem can be run using the following command
 ```bash
-    parun -v -l 5 cylinder_so.py -C "Refinement=5"  -D ibm_p2
+    parun -v -l 5 cylinder_so.py -C "Refinement=5"  -D ibm_p1
 ```
 
 
