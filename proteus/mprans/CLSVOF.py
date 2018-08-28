@@ -23,7 +23,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  forceStrongConditions=0,
                  # OUTPUT quantDOFs
                  outputQuantDOFs = True, # mql. I use it to visualize H(u) at the DOFs via a lumped L2 projection
-                 computeMetrics = 0, #0, 1 or 2
+                 computeMetrics = 0, #0, 1, 2 or 3
                  # SPIN UP STEP #
                  doSpinUpStep=False,
                  # NONLINEAR CLSVOF
@@ -32,8 +32,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  epsFactDirac=1.5,
                  lambdaFact=1.0): #lambda parameter in CLSVOF paper
         assert timeOrder==1 or timeOrder==2, "timeOrder must be 1 or 2"
-        assert computeMetrics in [0,1,2]
-        # 0: don't compute metrics, 1: compute metrics at EOS (end of simulations), 2: compute metrics at ETS (every time step) and EOS
+        assert computeMetrics in [0,1,2,3]
+        # 0: don't compute metrics
+        # 1: compute change in volume at ETS (every time step)
+        # 2: compute several metrics at ETS (every time step)
+        # 3: compute metrics at EOS (end of simulations). Needs an exact solution
         self.useMetrics=useMetrics
         self.doSpinUpStep=doSpinUpStep
         self.timeOrder=timeOrder
@@ -165,21 +168,28 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                    self.model.mean_distance - self.model.min_distance)
 
         # Compute metrics at end of time step
-        if self.computeMetrics == 2:
+        if self.computeMetrics == 1 or self.computeMetrics == 2: #compute metrics at ETS
             self.model.getMetricsAtETS()
             if self.model.comm.isMaster():
-                self.model.metricsAtETS.write(repr(self.model.timeIntegration.dt)+","+
-                                              repr(self.model.newton_iterations_stage1)+","+
-                                              repr(self.model.newton_iterations_stage2)+","+
-                                              repr(math.sqrt(self.model.global_R))+","+
-                                              repr(math.sqrt(self.model.global_sR))+","+
-                                              repr(self.model.global_V_err)+","+
-                                              repr(self.model.global_sV_err)+","+
-                                              repr(self.model.global_D_err)+
-                                              "\n")
-                self.model.metricsAtETS.flush()
+                if self.computeMetrics == 1:
+                    self.model.metricsAtETS.write(repr(self.model.timeIntegration.t)[:4]+",\t"+
+                                                  repr(self.model.global_sV_err)+
+                                                  "\n")
+                    self.model.metricsAtETS.flush()
+                else:
+                    self.model.metricsAtETS.write(repr(self.model.timeIntegration.t)[:4]+","+
+                                                  repr(self.model.timeIntegration.dt)+","+
+                                                  repr(self.model.newton_iterations_stage1)+","+
+                                                  repr(self.model.newton_iterations_stage2)+","+
+                                                  repr(math.sqrt(self.model.global_R))+","+
+                                                  repr(math.sqrt(self.model.global_sR))+","+
+                                                  repr(self.model.global_V_err)+","+
+                                                  repr(self.model.global_sV_err)+","+
+                                                  repr(self.model.global_D_err)+
+                                                  "\n")
+                    self.model.metricsAtETS.flush()
+        #
         self.model.q['dV_last'][:] = self.model.q['dV']
-
         copyInstructions = {}
         return copyInstructions
 
@@ -718,7 +728,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_L2Banded_err = 0.0
         self.global_sH_L2_err = 0.0
         if self.coefficients.computeMetrics > 0 and self.comm.isMaster():
-            if self.hasExactSolution: # at EOS
+            if self.hasExactSolution and self.coefficients.computeMetrics==3: # at EOS
                 self.metricsAtEOS = open(self.name+"_metricsAtEOS.csv","w")
                 self.metricsAtEOS.write('global_I_err'+","+
                                         'global_sI_err'+","+
@@ -728,17 +738,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                         'global_L2_err'+","+
                                         'global_L2Banded_err'+","+
                                         'global_sH_L2_err'+"\n")
-            if self.coefficients.computeMetrics==2: # at ETS
-                self.metricsAtETS = open(self.name+"_metricsAtETS.csv","w")
-                self.metricsAtETS.write('time_step'+","+
-                                        'newton_iterations_stage1'+","+
-                                        'newton_iterations_stage2'+","+
-                                        'global_R'+","+
-                                        'global_sR'+","+
-                                        'global_V_err'+","+
-                                        'global_sV_err'+","+
-                                        'global_D_err'+
-                                        "\n")
+            elif self.coefficients.computeMetrics in [1,2]:
+                self.metricsAtETS = open(self.name+"_metricsAtETS.csv","w")                
+                if self.coefficients.computeMetrics==1:
+                    self.metricsAtETS.write('time'+","+
+                                            'global_sV_err'+
+                                            "\n")
+                else:
+                    self.metricsAtETS.write('time'+","+
+                                            'time_step'+","+
+                                            'newton_iterations_stage1'+","+
+                                            'newton_iterations_stage2'+","+
+                                            'global_R'+","+
+                                            'global_sR'+","+
+                                            'global_V_err'+","+
+                                            'global_sV_err'+","+
+                                            'global_D_err'+
+                                            "\n")                    
 
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
@@ -784,7 +800,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_v[...,2] = self.velocityFieldAsFunction[2](ebqe_X,time)
 
     def runAtEOS(self):
-        if self.coefficients.computeMetrics > 0 and self.hasExactSolution:
+        if self.coefficients.computeMetrics ==3 and self.hasExactSolution:
             # Get exact solution at quad points
             u_exact = numpy.zeros(self.q[('u',0)].shape,'d')
             X = {0:self.q[('x')][:,:,0],
