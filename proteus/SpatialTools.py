@@ -1313,18 +1313,14 @@ def _assembleGeometry(domain, BC_class):
     domain.barycenters = np.array([[0., 0., 0.]])
     start_flag = 0
     start_vertex = 0
-    max_flag = 0
-    for i, shape in enumerate(domain.shape_list):
+    for shape in domain.shape_list:
         # --------------------------- #
         # ----- DOMAIN GEOMETRY ----- #
         # --------------------------- #
-        start_flag += max_flag
-        shape.start_flag = start_flag
-        max_flag = max(domain.shape_list[i].boundaryTags.values())
+        start_flag = shape.start_flag = len(domain.bc)-1
         start_vertex = shape.start_vertex = len(domain.vertices)
         start_segment = shape.start_segment = len(domain.segments)
         start_facet = shape.start_facet = len(domain.facets)
-        domain.bc += [0 for iss in range(max_flag)]
         if shape.boundaryTags:
             shape.boundaryTags_global = {}
             for tag, value in shape.boundaryTags.iteritems():
@@ -1334,12 +1330,12 @@ def _assembleGeometry(domain, BC_class):
                 shape.boundaryTags_global[tag] = new_flag
                 domain.reversed_boundaryTags[new_flag] = new_tag
                 domain.BCbyFlag[new_flag] = shape.BC[tag]
-                domain.bc[new_flag] = shape.BC[tag]
                 domain.BC[new_tag] = shape.BC[tag]
         if domain.regionFlags:
             start_rflag = max(domain.regionFlags)
         else:
             start_rflag = 0
+        domain.bc += shape.BC_list
         # making copies of shape properties before operations/modifications
         vertices = copy.deepcopy(shape.vertices)
         vertexFlags = copy.deepcopy(shape.vertexFlags)
@@ -1374,7 +1370,7 @@ def _assembleGeometry(domain, BC_class):
         domain.vertices += vertices.tolist()
         domain.vertexFlags += (vertexFlags+start_flag).tolist()
         shape.vertexFlags_global = vertexFlags+start_flag
-        barycenters = np.array([shape.barycenter for bco in range(max_flag)])
+        barycenters = np.array([shape.barycenter for bco in shape.BC_list])
         domain.barycenters = np.append(domain.barycenters, barycenters, axis=0)
         if shape.segments is not None:
             domain.segments += (segments+start_vertex).tolist()

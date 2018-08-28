@@ -90,6 +90,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.dt_last = None
         self.u_phi = None
         self.nTimes = 0
+        self.t_last = 0
+        self.poststepdone = False
         #super(MyCoeff, self).__init__(aOfX, fOfX)
         TransportCoefficients.PoissonEquationCoefficients.__init__(self, aOfX, fOfX)
 
@@ -180,9 +182,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.model.areas = self.areas
         logEvent("Finished updating area function",
                  level=3)
-        if t != self.t:
-            self.t = t
+        if self.t != self.model.t_mesh:
+            self.t_last = self.t
+            self.t = self.model.t_mesh
             self.model.mesh.nodeVelocityArray[:] = 0.
+            self.poststepdone = False
 
     def postStep(self, t,firstStep=False):
         self.nTimes += 1
@@ -233,7 +237,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.gamma0 = 10.  # user defined parameter
         self.na = np.log(self.gamma)/np.log(self.gamma0)
         nNodes_owned = self.mesh.nNodes_owned
-        if self.dt_last is not None and self.nTimes > 5:
+        if self.dt_last is not None and self.poststepdone is False:
             # pseudo-time step
             self.PHI[:] = self.mesh.nodeArray
             self.cCoefficients.pseudoTimeStepping(eps=self.epsTimeStep,
@@ -243,22 +247,26 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             #     dt = self.dt_last
             # dt = self.model.timeIntegration.dt
             dt = self.dt_last
+            import pdb; pdb.set_trace()
             # move nodes
             self.model.mesh.nodeVelocityArray[:] = (self.PHI[:]-self.model.mesh.nodeArray[:])/dt
             # # tri hack: remove mesh velocity when dirichlet imposed on boundaries
             # for i in range(nNodes_global):
-            #     if self.mesh.nodeMaterialTypes[i] == 3:
-            #         self.mesh.nodeVelocityArray[i, :] = 0.
-            #     if self.mesh.nodeMaterialTypes[i] == 4:
-            #         self.mesh.nodeVelocityArray[i, :] = 0.
+                # if self.mesh.nodeMaterialTypes[i] == 1:
+                #     self.mesh.nodeVelocityArray[i, :] = 0.
+                # if self.mesh.nodeMaterialTypes[i] == 2:
+                #     self.mesh.nodeVelocityArray[i, :] = 0.
+                # if self.mesh.nodeMaterialTypes[i] == 3:
+                #     self.mesh.nodeVelocityArray[i, :] = 0.
             #self.model.mesh.nodeVelocityArray[:] = np.zeros(self.model.mesh.nodeArray.shape)
             self.model.mesh.nodeArray[:] = self.PHI[:]
             # re-initialise nearest nodes
             self.nearest_nodes[:] = self.nearest_nodes0[:]
             # re-initialise containing element
             self.eN_phi[:] = None
+            self.cCoefficients.postStep()
         self.dt_last = self.model.timeIntegration.dt
-        self.cCoefficients.postStep()
+        self.poststepdone = True
         # copyInstructions = {'clear_uList': True}
         # return copyInstructions
         # IMR_nodes = ms.getInverseMeanRatioTriangleNodes(nodeArray=self.mesh.nodeArray,
@@ -377,7 +385,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         if self.grading_type == 2:
             f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
         f = min(self.he_max, f)
-        return f
+        # return f
+        return np.sqrt(3)/4.*f**2
 
     def evaluateFunAtNodes(self):
         for i in range(len(self.mesh.nodeArray)):
@@ -396,7 +405,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             if self.grading_type == 2:
                 f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
             f = min(self.he_max, f)
-            self.uOfXTatNodes[i] = f
+            self.uOfXTatNodes[i] = np.sqrt(3)/4.*f**2
+            # self.uOfXTatNodes[i] = f
 
     def evaluateFunAtQuadraturePoints(self):
         xx = self.model.q['x']
@@ -418,7 +428,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                 if self.grading_type == 2:
                     f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
                 f = min(self.he_max, f)
-                self.uOfXTatQuadrature[e, k] = f
+                self.uOfXTatQuadrature[e, k] = np.sqrt(3)/4.*f**2
+                # self.uOfXTatQuadrature[e, k] = f
 
     def getLevelSetValue(self, eN, xi):
         value = self.model_ls.u[0].getValue(eN, xi)
