@@ -1070,6 +1070,8 @@ int gradeSizeModify(apf::Mesh* m, double gradingFactor,
     int fieldType,
     int vecPos, //which idx of sizeVec to modify
     int idxFlag)
+
+//General function to actually modify sizes
 {
     //Determine a switching scheme depending on which vertex needs a modification
     int idx1,idx2;
@@ -1146,6 +1148,7 @@ int gradeSizeModify(apf::Mesh* m, double gradingFactor,
 }
 
 void markEdgesInitial(apf::Mesh* m, std::queue<apf::MeshEntity*> &markedEdges,double gradingFactor)
+//Function used to initially determine which edges need to be considered for gradation
 {
   //marker structure for 0) not marked 1) marked 2)storage
   int marker[3] = {0,1,0}; 
@@ -1175,6 +1178,7 @@ void markEdgesInitial(apf::Mesh* m, std::queue<apf::MeshEntity*> &markedEdges,do
 }
 
 int serialGradation(apf::Mesh* m, std::queue<apf::MeshEntity*> &markedEdges,double gradingFactor)
+//Function used loop over the mesh edge queue for gradation and modify the sizes
 {
   double size[2];
   //marker structure for 0) not marked 1) marked 2)storage
@@ -1208,7 +1212,12 @@ int serialGradation(apf::Mesh* m, std::queue<apf::MeshEntity*> &markedEdges,doub
 
 int MeshAdaptPUMIDrvr::gradeMesh()
 //Function to grade isotropic mesh through comparison of edge vertex size ratios
-//For simplicity, we do not bother with accounting for entities across partitions
+//This implementation accounts for parallel meshes as well
+//First do serial gradation. 
+//If a shared entity has its size modified, then send new size to owning copy.
+//After full loop over entities, have owning copy take minimum of all sizes received
+//Flag adjacent entities to owning copy.
+//Communicate to remote copies that a size was modified, and flag adjacent edges to remote copies for further gradation
 {
   //
   if(comm_rank==0)
@@ -1216,7 +1225,6 @@ int MeshAdaptPUMIDrvr::gradeMesh()
   apf::MeshEntity* edge;
   apf::Adjacent edgAdjVert;
   apf::Adjacent vertAdjEdg;
-  //double gradingFactor = 1.5;
   double size[2];
   std::queue<apf::MeshEntity*> markedEdges;
   apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
@@ -1307,11 +1315,6 @@ int MeshAdaptPUMIDrvr::gradeMesh()
         std::cout<<"Problem occurred\n";
         std::exit(1);
       }
-/*
-      currentSize = apf::getScalar(size_iso,ent,0);
-      newSize = std::min(receivedSize,currentSize);
-      apf::setScalar(size_iso,ent,0,newSize);
-*/
 
       //add adjacent edges into Q
       m->getAdjacent(ent, 1, vertAdjEdg);
