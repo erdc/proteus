@@ -31,6 +31,7 @@ static double isotropicFormula(double phi, double dphi, double verr, double hmin
 }
 
 static void setSizeField(apf::Mesh2 *m,apf::MeshEntity *vertex,double h,apf::MeshTag *marker,apf::Field* sizeField)
+//helper function for banded interface to facilitate with setting the proper mesh size and parallel communication
 {
   int isMarked=0;
   if(m->hasTag(vertex,marker))
@@ -59,13 +60,14 @@ static void setSizeField(apf::Mesh2 *m,apf::MeshEntity *vertex,double h,apf::Mes
 
 
 int MeshAdaptPUMIDrvr::calculateSizeField()
+//Implementation of banded interface, edge intersection algorithm
+//If mesh edge intersects the 0 level-set, then the adjacent edges need to be refined 
 {
   freeField(size_iso);
   size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
   apf::Field *phif = m->findField("phi");
   assert(phif);
 
-  //Implementation of banded interface, edge intersection algorithm
   apf::MeshTag* vertexMarker = m->createIntTag("vertexMarker",1);
   apf::MeshIterator *it = m->begin(1);
   apf::MeshEntity *edge;
