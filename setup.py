@@ -569,6 +569,7 @@ def setup_given_extensions(extensions):
                       'proteus.tests.matrix_constructor.import_modules',
                       'proteus.MeshAdaptPUMI',
                       'proteus.tests.MeshAdaptPUMI',
+                      'proteus.tests.MeshAdaptPUMI.gauge_compare.dambreak_Colagrossi_2D',
                       'proteus.tests.mesh_tests',
                       'proteus.tests.mesh_tests.import_modules',
                       'proteus.tests.poisson_2d',
