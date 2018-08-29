@@ -242,6 +242,11 @@ class TC_base:
         Give the TC object an opportunity to modify itself after the time step.
         """
         return {}
+    def postAdaptStep(self):
+        """
+        Give opportunity to TC object to maintain consistency with previous TC object
+        """
+        return {}
     def allocateDummyCoefficients(self,c=None,nPoints=101,uMax=1.0,uMin=0.0,nSpace=1):
         """
         Allocate some coefficient dictionaries to use for viewing the coefficients

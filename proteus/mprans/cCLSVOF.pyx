@@ -73,7 +73,9 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                double* min_distance,
                                double* max_distance,
                                double* mean_distance,
+			       double* volume_domain,
                                double norm_factor_lagged,
+			       double VelMax,
                                double* projected_qx_tn,
                                double* projected_qy_tn,
                                double* projected_qz_tn,
@@ -135,7 +137,8 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                double epsFactHeaviside,
                                double epsFactDirac,
                                double lambdaFact,
-                               double norm_factor_lagged)
+                               double norm_factor_lagged,
+			       double VelMax)
         void calculateMetricsAtEOS(double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
@@ -349,7 +352,9 @@ cdef class cCLSVOF_base:
                          numpy.ndarray min_distance,
                          numpy.ndarray max_distance,
                          numpy.ndarray mean_distance,
+			 numpy.ndarray volume_domain,
                          double norm_factor_lagged,
+			 double VelMax,
                          numpy.ndarray projected_qx_tn,
                          numpy.ndarray projected_qy_tn,
                          numpy.ndarray projected_qz_tn,
@@ -426,7 +431,9 @@ cdef class cCLSVOF_base:
                                       <double*> min_distance.data,
                                       <double*> max_distance.data,
                                       <double*> mean_distance.data,
+				      <double*> volume_domain.data,
                                       norm_factor_lagged,
+				      VelMax,
                                       <double*> projected_qx_tn.data,
                                       <double*> projected_qy_tn.data,
                                       <double*> projected_qz_tn.data,
@@ -490,7 +497,8 @@ cdef class cCLSVOF_base:
                          double epsFactHeaviside,
                          double epsFactDirac,
                          double lambdaFact,
-                         norm_factor_lagged):
+                         norm_factor_lagged,
+			 VelMax):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateJacobian(dt,
@@ -546,7 +554,8 @@ cdef class cCLSVOF_base:
                                       epsFactHeaviside,
                                       epsFactDirac,
                                       lambdaFact,
-                                      norm_factor_lagged)
+                                      norm_factor_lagged,
+				      VelMax)
    def calculateMetricsAtEOS(self,
                              numpy.ndarray mesh_trial_ref,
                              numpy.ndarray mesh_grad_trial_ref,
