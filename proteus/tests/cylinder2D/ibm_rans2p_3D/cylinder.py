@@ -15,13 +15,13 @@ ct = Context.Options([
     ("parallel",False,"Use parallel or not"),
     ("dt_fixed",0.005,"fixed time step"),
     ##################################
-    ("Refinement",          8,"refinement"),
+    ("Refinement",          6,"refinement"),
     ("StrongDirichlet",     True,"weak or strong"),
     ("use_sbm",             0,"use sbm instead of imb"),
     ("spaceOrder",          1,"FE space for velocity"),
     ("timeOrder",           2,"1=be or 2=vbdf"),#both works, but 2 gives better cd-cl
     ("use_supg",            1,"Use supg or not"),
-    ("nonconservative",     1,"0=conservative"),
+    ("nonconservative",     0,"0=conservative"),
     ("forceStrongDirichlet",False,"strong or weak"),
     ##################################
     ("use_ball_as_particle",1,"1 or 0 == use ball or particle"),
@@ -150,8 +150,8 @@ structured = False
 L = [1.5, 0.41, 0.01]
 he = L[0]/(2**Refinement)
 
-
-L[2] = 5*he
+he = 0.01
+L[2] = 2*he
 
 import my_domain
 # domain,boundaryTags = get_domain()
