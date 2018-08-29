@@ -248,9 +248,9 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
 */
     
     //H1 error compute nu_err at centroid and compute residual
-    qpt[0] = 1./3.;
-    qpt[1] = 1./3.;
-    qpt[2] = 0.0;
+    qpt[0] = 0.0; qpt[1] = 0.0; qpt[2] = 0.0; //ensure it is initialized to 0
+    for(int i=0; i<nsd; i++)
+      qpt[i] = 1./(nsd+1.0);
 
     double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
     Inputs info;
@@ -311,13 +311,14 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     apf::destroyElement(visc_elem);
     apf::destroyElement(pres_elem);
     apf::destroyElement(velo_elem);
+    apf::destroyElement(velo_elem_old);
+    apf::destroyElement(vof_elem);
+    apf::destroyMeshElement(element);
     count++;
   } //end loop over elements
   
-
-    //TODO: Need to ensure that the total VMS error is computed in parallel
-    if(PCU_Comm_Self()>0)
-      std::cout<<"Improper parallel implementation\n";
+    PCU_Add_Doubles(&VMSerrTotalL2,1);
+    PCU_Add_Doubles(&VMSerrTotalH1,1);
     if(PCU_Comm_Self()==0)
       std::cout<<std::scientific<<std::setprecision(15)<<"Total Error L2 "<<sqrt(VMSerrTotalL2)<<" H1 "<<sqrt(VMSerrTotalH1)<<std::endl;
     total_error = sqrt(VMSerrTotalH1);
