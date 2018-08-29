@@ -82,15 +82,15 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.epsFact_density = epsFact_density
         aOfX = [lambda x: np.array([[1., 0.], [0., 1.]])]
         fOfX = [self.uOfX]  # scaled function reciprocal
-        self.t = 0
         self.fixedNodeMaterialTypes = fixedNodeMaterialTypes
         self.fixedElementMaterialTypes = fixedElementMaterialTypes
         self.nSmoothIn = nSmoothIn
         self.nSmoothOut = nSmoothOut
         self.dt_last = None
         self.u_phi = None
-        self.nTimes = 0
-        self.t_last = 0
+        self.nt = 0
+        self.t = 0.
+        self.t_last = 0.
         self.poststepdone = False
         #super(MyCoeff, self).__init__(aOfX, fOfX)
         TransportCoefficients.PoissonEquationCoefficients.__init__(self, aOfX, fOfX)
@@ -163,7 +163,10 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.nearest_nodes = np.array([i for i in range(len(self.mesh.nodeArray))])
         self.eN_phi = np.array([None for i in range(len(self.mesh.nodeArray))])  # element containing displaced phi (guess)
         self.nearest_nodes0 = np.array([i for i in range(len(self.mesh.nodeArray))])
-        self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape,'d')
+        if self.mesh.nodeVelocityArray is None:
+            import pdb; pdb.set_trace()
+            self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape,'d')
+        self.mesh.nodeDisplacementArray = np.zeros(self.mesh.nodeArray.shape,'d')
         self.uOfXTatNodes = np.zeros(len(self.mesh.nodeArray))
         self.uOfXTatQuadrature = np.zeros((self.model.q['x'].shape[0], self.model.q['x'].shape[1]))
         if self.LS_MODEL is not None:
@@ -183,13 +186,13 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         logEvent("Finished updating area function",
                  level=3)
         if self.t != self.model.t_mesh:
+            self.nt += 1
             self.t_last = self.t
             self.t = self.model.t_mesh
-            self.model.mesh.nodeVelocityArray[:] = 0.
             self.poststepdone = False
+            # self.mesh.nodeVelocityArray[:] = 0.
 
     def postStep(self, t,firstStep=False):
-        self.nTimes += 1
         # gradient recovery
         logEvent("Gradient recovery at mesh nodes", level=3)
         # self.grads[:] = ms.pyVectorRecoveryAtNodes(vectors=self.model.q[('grad(u)', 0)][:,0,:],
@@ -237,34 +240,38 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.gamma0 = 10.  # user defined parameter
         self.na = np.log(self.gamma)/np.log(self.gamma0)
         nNodes_owned = self.mesh.nNodes_owned
-        if self.dt_last is not None and self.poststepdone is False:
+        if self.dt_last is not None and self.poststepdone is False and self.nt>5:
             # pseudo-time step
-            self.PHI[:] = self.mesh.nodeArray
+            self.PHI[:] = self.mesh.nodeArray[:]
             self.cCoefficients.pseudoTimeStepping(eps=self.epsTimeStep,
                                                   xx=self.PHI)
             # dt = self.model.timeIntegration.dt
             # else:
             #     dt = self.dt_last
             # dt = self.model.timeIntegration.dt
-            dt = self.dt_last
-            import pdb; pdb.set_trace()
+            # dt = self.dt_last
             # move nodes
-            self.model.mesh.nodeVelocityArray[:] = (self.PHI[:]-self.model.mesh.nodeArray[:])/dt
-            # # tri hack: remove mesh velocity when dirichlet imposed on boundaries
-            # for i in range(nNodes_global):
-                # if self.mesh.nodeMaterialTypes[i] == 1:
-                #     self.mesh.nodeVelocityArray[i, :] = 0.
-                # if self.mesh.nodeMaterialTypes[i] == 2:
-                #     self.mesh.nodeVelocityArray[i, :] = 0.
-                # if self.mesh.nodeMaterialTypes[i] == 3:
-                #     self.mesh.nodeVelocityArray[i, :] = 0.
-            #self.model.mesh.nodeVelocityArray[:] = np.zeros(self.model.mesh.nodeArray.shape)
-            self.model.mesh.nodeArray[:] = self.PHI[:]
-            # re-initialise nearest nodes
+            # dt = self.model.timeIntegration.dt
+            dt = self.t-self.t_last
+            self.mesh.nodeVelocityArray[:] = (self.PHI[:]-self.mesh.nodeArray[:])/dt
+            # self.model.mesh.nodeVelocityArray[:] = self.model.mesh.nodeDisplacementArray[:]/dt
+            self.mesh.nodeArray[:] = self.PHI[:]
             self.nearest_nodes[:] = self.nearest_nodes0[:]
-            # re-initialise containing element
             self.eN_phi[:] = None
-            self.cCoefficients.postStep()
+        # # tri hack: remove mesh velocity when dirichlet imposed on boundaries
+        # for i in range(nNodes_global):
+        #     if self.mesh.nodeMaterialTypes[i] == 1:
+        #         self.mesh.nodeVelocityArray[i, :] = 0.
+        #     if self.mesh.nodeMaterialTypes[i] == 2:
+        #         self.mesh.nodeVelocityArray[i, :] = 0.
+            # if self.mesh.nodeMaterialTypes[i] == 3:
+            #     self.mesh.nodeVelocityArray[i, :] = 0.
+            # if self.mesh.nodeMaterialTypes[i] == 4:
+            #     self.mesh.nodeVelocityArray[i, :] = 0.
+        #self.model.mesh.nodeVelocityArray[:] = np.zeros(self.model.mesh.nodeArray.shape)
+        # re-initialise nearest nodes
+        # re-initialise containing element
+        self.cCoefficients.postStep()
         self.dt_last = self.model.timeIntegration.dt
         self.poststepdone = True
         # copyInstructions = {'clear_uList': True}
@@ -378,15 +385,15 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         else:
             f = self.myfunc(x, self.t)
             # f = min(self.he_max, f)
-        if f < self.epsFact_density*self.he_min:
+        f = f-self.epsFact_density*self.he_min
+        if f < 0:
             f = 0.
         if self.grading_type == 1:
             f = self.he_min*self.grading**(f/self.he_min)
         if self.grading_type == 2:
             f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
         f = min(self.he_max, f)
-        # return f
-        return np.sqrt(3)/4.*f**2
+        return f
 
     def evaluateFunAtNodes(self):
         for i in range(len(self.mesh.nodeArray)):
@@ -398,15 +405,15 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             else:
                 f = self.myfunc(self.mesh.nodeArray[i], self.t)
                 # f = min(self.he_max, f)
-            if f < self.epsFact_density*self.he_min:
+            f = f-self.epsFact_density*self.he_min
+            if f < 0:
                 f = 0.
             if self.grading_type == 1:
                 f = self.he_min*self.grading**(f/self.he_min)
             if self.grading_type == 2:
                 f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
             f = min(self.he_max, f)
-            self.uOfXTatNodes[i] = np.sqrt(3)/4.*f**2
-            # self.uOfXTatNodes[i] = f
+            self.uOfXTatNodes[i] = f
 
     def evaluateFunAtQuadraturePoints(self):
         xx = self.model.q['x']
@@ -421,15 +428,15 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                 else:
                     f = self.myfunc(xx[e, k], self.t)
                     # f = min(self.he_max, f)
-                if f < self.epsFact_density*self.he_min:
+                f = f-self.epsFact_density*self.he_min
+                if f < 0:
                     f = 0.
                 if self.grading_type == 1:
                     f = self.he_min*self.grading**(f/self.he_min)
                 if self.grading_type == 2:
                     f = self.he_min*self.grading**(1.+np.log((-1./self.grading*(f-self.he_min)+f)/self.he_min)/np.log(self.grading))
                 f = min(self.he_max, f)
-                self.uOfXTatQuadrature[e, k] = np.sqrt(3)/4.*f**2
-                # self.uOfXTatQuadrature[e, k] = f
+                self.uOfXTatQuadrature[e, k] = f
 
     def getLevelSetValue(self, eN, xi):
         value = self.model_ls.u[0].getValue(eN, xi)

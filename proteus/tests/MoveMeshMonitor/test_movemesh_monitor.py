@@ -80,7 +80,6 @@ class TestMoveMeshMonitor(unittest.TestCase):
             # npt.assert_almost_equal(nodes[node, 0], nodesResult[node, 0], decimal=5)
             # npt.assert_almost_equal(nodes[node, 1], nodesResult[node, 1], decimal=5)
             # npt.assert_almost_equal(nodes[node, 2], nodesResult[node, 2], decimal=5)
-        self.teardown_method(self)
 
 if __name__ == "__main__":
     unittest.main()
