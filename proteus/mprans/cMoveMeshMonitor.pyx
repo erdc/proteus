@@ -382,46 +382,47 @@ cdef class cCoefficients:
                     nPending_disp += 1
                 elif nodesSentBoolArray[node] == 0:
                     if flag != 0:
-                        fixed_dir[:] = 0
-                        if fixedNodesBoolArray is not None:
-                            if fixedNodesBoolArray[node] == 1:
-                                fixed = True
-                        # smooth on boundary only unless it is a corner node
-                        if fixed is False:
-                            # tridelat todo: works only in 2D here
-                            if nd == 2:
-                                vec[:] = 0.
-                                vec2[:] = 0.
-                                for nOffset in range(nodeStarOffsets[node],
-                                                     nodeStarOffsets[node+1]):
-                                    if nodeMaterialTypes[nodeStarArray[nOffset]] != 0:
-                                        if vec[0] == 0. and vec[1] == 0. and vec[2] == 0.:
-                                            vec[0] = nodeArray[node, 0]-nodeArray[nodeStarArray[nOffset], 0]
-                                            vec[1] = nodeArray[node, 1]-nodeArray[nodeStarArray[nOffset], 1]
-                                            vec[2] = nodeArray[node, 2]-nodeArray[nodeStarArray[nOffset], 2]
-                                            vec_dist = np.sqrt(vec[0]**2+vec[1]**2+vec[2]**2)
-                                            vec[0] = vec[0]/vec_dist
-                                            vec[1] = vec[1]/vec_dist
-                                            vec[2] = vec[2]/vec_dist
-                                            fixed_dir[0] = abs(vec[0])
-                                            fixed_dir[1] = abs(vec[1])
-                                            fixed_dir[2] = abs(vec[2])
-                                        else:
-                                            vec2[0] = nodeArray[node, 0]-nodeArray[nodeStarArray[nOffset], 0]
-                                            vec2[1] = nodeArray[node, 1]-nodeArray[nodeStarArray[nOffset], 1]
-                                            vec2[2] = nodeArray[node, 2]-nodeArray[nodeStarArray[nOffset], 2]
-                                            vec_dist = np.sqrt(vec2[0]**2+vec2[1]**2+vec2[2]**2)
-                                            vec2[0] = vec2[0]/vec_dist
-                                            vec2[1] = vec2[1]/vec_dist
-                                            vec2[2] = vec2[2]/vec_dist
-                                            dot = vec[0]*vec2[0]+vec[1]*vec2[1]+vec[2]*vec2[2]
-                                            if dot == 1. or dot == -1.:
-                                                dot = 1.
-                                            else:
-                                                fixed = True
-                            elif nd == 3:
-                                assert 1>2, 'works only in 2D for moving boundary nodes'
-                                fixed = True
+                        # fixed_dir[:] = 0
+                        # if fixedNodesBoolArray is not None:
+                        #     if fixedNodesBoolArray[node] == 1:
+                        #         fixed = True
+                        # # smooth on boundary only unless it is a corner node
+                        # if fixed is False:
+                        #     # tridelat todo: works only in 2D here
+                        #     if nd == 2:
+                        #         vec[:] = 0.
+                        #         vec2[:] = 0.
+                        #         for nOffset in range(nodeStarOffsets[node],
+                        #                              nodeStarOffsets[node+1]):
+                        #             if nodeMaterialTypes[nodeStarArray[nOffset]] != 0:
+                        #                 if vec[0] == 0. and vec[1] == 0. and vec[2] == 0.:
+                        #                     vec[0] = nodeArray[node, 0]-nodeArray[nodeStarArray[nOffset], 0]
+                        #                     vec[1] = nodeArray[node, 1]-nodeArray[nodeStarArray[nOffset], 1]
+                        #                     vec[2] = nodeArray[node, 2]-nodeArray[nodeStarArray[nOffset], 2]
+                        #                     vec_dist = np.sqrt(vec[0]**2+vec[1]**2+vec[2]**2)
+                        #                     vec[0] = vec[0]/vec_dist
+                        #                     vec[1] = vec[1]/vec_dist
+                        #                     vec[2] = vec[2]/vec_dist
+                        #                     fixed_dir[0] = abs(vec[0])
+                        #                     fixed_dir[1] = abs(vec[1])
+                        #                     fixed_dir[2] = abs(vec[2])
+                        #                 else:
+                        #                     vec2[0] = nodeArray[node, 0]-nodeArray[nodeStarArray[nOffset], 0]
+                        #                     vec2[1] = nodeArray[node, 1]-nodeArray[nodeStarArray[nOffset], 1]
+                        #                     vec2[2] = nodeArray[node, 2]-nodeArray[nodeStarArray[nOffset], 2]
+                        #                     vec_dist = np.sqrt(vec2[0]**2+vec2[1]**2+vec2[2]**2)
+                        #                     vec2[0] = vec2[0]/vec_dist
+                        #                     vec2[1] = vec2[1]/vec_dist
+                        #                     vec2[2] = vec2[2]/vec_dist
+                        #                     dot = vec[0]*vec2[0]+vec[1]*vec2[1]+vec[2]*vec2[2]
+                        #                     if dot == 1. or dot == -1.:
+                        #                         dot = 1.
+                        #                     else:
+                        #                         fixed = True
+                        #     elif nd == 3:
+                        #         assert 1>2, 'works only in 2D for moving boundary nodes'
+                        #         fixed = True
+                        fixed = True
                     if not fixed:  # either flag==0 or not fixed
                         if i_time == 0:  # nodes are at original position (no search)
                             for ndi in range(nd):

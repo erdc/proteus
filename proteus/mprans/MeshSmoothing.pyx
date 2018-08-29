@@ -778,16 +778,16 @@ cdef void cySmoothNodesLaplace(double[:,:] nodeArray_,
                             sum_star[1] += nodeArray_[nodeStarArray[nOffset], 1]
                             sum_star[2] += nodeArray_[nodeStarArray[nOffset], 2]
                         nNodes += 1
-                    # else:
-                    #     if simultaneous is True:
-                    #         sum_star[0] += nodeArray0[nodeStarArray[nOffset], 0]*fixed_dir[0]
-                    #         sum_star[1] += nodeArray0[nodeStarArray[nOffset], 1]*fixed_dir[1]
-                    #         sum_star[2] += nodeArray0[nodeStarArray[nOffset], 2]*fixed_dir[2]
-                    #     else:
-                    #         sum_star[0] += nodeArray_[nodeStarArray[nOffset], 0]*fixed_dir[0]
-                    #         sum_star[1] += nodeArray_[nodeStarArray[nOffset], 1]*fixed_dir[1]
-                    #         sum_star[2] += nodeArray_[nodeStarArray[nOffset], 2]*fixed_dir[2]
-                    #         nNodes += 1
+                    else:
+                        if simultaneous is True:
+                            sum_star[0] += nodeArray0[node, 0]*(1-fixed_dir[0])+nodeArray0[nodeStarArray[nOffset], 0]*fixed_dir[0]
+                            sum_star[1] += nodeArray0[node, 1]*(1-fixed_dir[1])+nodeArray0[nodeStarArray[nOffset], 1]*fixed_dir[1]
+                            sum_star[2] += nodeArray0[node, 2]*(1-fixed_dir[2])+nodeArray0[nodeStarArray[nOffset], 2]*fixed_dir[2]
+                        else:
+                            sum_star[0] += nodeArray_[nodeStarArray[nOffset], 0]*fixed_dir[0]
+                            sum_star[1] += nodeArray_[nodeStarArray[nOffset], 1]*fixed_dir[1]
+                            sum_star[2] += nodeArray_[nodeStarArray[nOffset], 2]*fixed_dir[2]
+                        nNodes += 1
         else:
             sum_star[0] = nodeArray0[node, 0]
             sum_star[1] = nodeArray0[node, 1]
