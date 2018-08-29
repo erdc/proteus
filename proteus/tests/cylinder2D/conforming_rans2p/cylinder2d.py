@@ -8,9 +8,9 @@ from proteus import Context
 flow around a 2D cylinder  benchmark problem.
 '''
 
-ct = Context.Options([
+opts = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("he",0.04, "maximum size of edges"),
+    ("he",0.02, "maximum size of edges"),
     ("backwardEuler",False,"use backward Euler or not"),
     ("onlySaveFinalSolution",False,"Only save the final solution")
 ], mutable=True)
@@ -22,7 +22,7 @@ spaceOrder=1
 Refinement=1
 useHex=False
 points_on_grain = 21
-DX = ct.he
+DX = opts.he
 usePETSc = False#True
 
 
@@ -74,18 +74,18 @@ domain = symmetric2D(box=(2.2,0.41),
 boundaryTags=domain.boundaryFlags
 
 # Time stepping
-T= ct.T
+T= opts.T
 runCFL = 0.9
 dt_fixed = 0.005
 dt_init = 0.0025
 nDTout = int(T/dt_fixed)
 dt_init = min(dt_init,0.5*dt_fixed)
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)] 
-if ct.onlySaveFinalSolution == True:
-    tnList = [0.0,dt_init,ct.T]
+if opts.onlySaveFinalSolution == True:
+    tnList = [0.0,dt_init,opts.T]
 
 
-useBackwardEuler = True
+useBackwardEuler = opts.backwardEuler
 # Numerical parameters
 ns_shockCapturingFactor  = 0.0
 ns_lag_shockCapturing = True#False

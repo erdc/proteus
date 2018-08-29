@@ -2,7 +2,10 @@ from proteus import *
 import proteus.default_so
 reload(proteus.default_so)
 from proteus.default_so import *
-from . import cylinder2d as cylinder
+try:
+    from . import cylinder2d as cylinder
+except:
+    import cylinder2d as cylinder
 
 from proteus.SplitOperator import Sequential_FixedStep_Simple, defaultSystem
 
@@ -16,11 +19,11 @@ class Sequential_MinAdaptiveModelStepPS(Sequential_FixedStep):
         self.modelList = modelList
 
 dt_system_fixed = cylinder.dt_fixed
-systemStepControllerType = Sequential_MinAdaptiveModelStepPS
+#systemStepControllerType = Sequential_MinAdaptiveModelStepPS
 
-# systemStepControllerType = Sequential_FixedStep #Sequential_FixedStep_Simple # uses time steps in so.tnList
+systemStepControllerType = Sequential_FixedStep #Sequential_FixedStep_Simple # uses time steps in so.tnList
 # dt_system_fixed = 0.01; 
-# systemStepExact=False;
+systemStepExact=False;
 # 
 # 
 # needEBQ_GLOBAL = False

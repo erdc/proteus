@@ -107,3 +107,4 @@ class MyCoefficients(CLSVOF.Coefficients):
         self.q_v = np.zeros(self.model.q[('grad(u)',0)].shape,'d')
         self.ebqe_v = np.zeros(self.model.ebqe[('grad(u)',0)].shape,'d')
         self.q_v_old = np.zeros(self.model.q[('grad(u)',0)].shape,'d')
+        self.q_v_tStar = np.zeros(self.model.q[('grad(u)',0)].shape,'d')
