@@ -441,7 +441,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         for eN in range(self.model.q[('u',0)].shape[0]):
             for k in range(self.model.q[('u',0)].shape[1]):                
                 self.model.q[('u',0)][eN,k] = max(  self.model.q[('u',0)][eN,k], 1e-10)
-        if self.model.ebq.has_key(('u', 0)):
+        if ('u', 0) in self.model.ebq:
             for eN in range(self.model.ebq[('u',0)].shape[0]):
                 for k in range(self.model.ebq[('u',0)].shape[1]):
                     for l in range(len(self.model.ebq[('u',0)][eN,k])):

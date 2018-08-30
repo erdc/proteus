@@ -2589,11 +2589,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.coefficients.particle_netMoments[i, I])
             self.coefficients.particle_surfaceArea[i] = globalSum(
                 self.coefficients.particle_surfaceArea[i])
-            logEvent("particle i=" + repr(i)+ " force " + `self.coefficients.particle_netForces[i]`)
-            logEvent("particle i=" + repr(i)+ " moment " + `self.coefficients.particle_netMoments[i]`)
-            logEvent("particle i=" + repr(i)+ " surfaceArea " + `self.coefficients.particle_surfaceArea[i]`)
-            logEvent("particle i=" + repr(i)+ " stress force " + `self.coefficients.particle_netForces[i+self.coefficients.nParticles]`)
-            logEvent("particle i=" + repr(i)+ " pressure force " + `self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]`)
+            logEvent("particle i=" + repr(i)+ " force " + repr(self.coefficients.particle_netForces[i]))
+            logEvent("particle i=" + repr(i)+ " moment " + repr(self.coefficients.particle_netMoments[i]))
+            logEvent("particle i=" + repr(i)+ " surfaceArea " + repr(self.coefficients.particle_surfaceArea[i]))
+            logEvent("particle i=" + repr(i)+ " stress force " + repr(self.coefficients.particle_netForces[i+self.coefficients.nParticles]))
+            logEvent("particle i=" + repr(i)+ " pressure force " + repr(self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]))
 
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
