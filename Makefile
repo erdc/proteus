@@ -183,6 +183,7 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find 
 	$(call show_info)
 
 	cd stack && ${PROTEUS}/hashdist/bin/hit develop -j ${N} ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
+	-ln -s ${PROTEUS_PREFIX}/lib64/* ${PROTEUS_PREFIX}/lib/
 
 	@echo "************************"
 	@echo "Dependency build complete"

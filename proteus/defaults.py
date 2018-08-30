@@ -18,10 +18,8 @@ from . import (TransportCoefficients,
                default_n,
                SplitOperator,
                default_so)
-
 from .Archiver import ArchiveFlags
 from .Profiling import logEvent
-
 import sys
 
 if sys.version_info.major < 3:  # Python 2?
@@ -130,6 +128,7 @@ class Numerics_base(_Numerics_base):
                     self.__dict__[k] = copy.deepcopy(default_n.__dict__[k])
                 except:
                     pass
+
 def reset_default_n():
     for k,v in Numerics_base().__dict__.iteritems():
         default_n.__dict__[k] = v
