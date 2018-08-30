@@ -233,7 +233,7 @@ class TI_base(object):
         """
         ensure array histories are properly set after adapt. This should only work for backwards euler and vbdf at the moment.
         """
-        print "WARNING: calling abstract function that doesn't have a definition for your object so just passing for now"
+        logEvent("WARNING: calling abstract function that doesn't have a definition for your object so just passing for now")
         pass
 
 NoIntegration = TI_base

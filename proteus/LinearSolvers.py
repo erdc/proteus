@@ -1490,7 +1490,7 @@ class InterlacedDofOrderType(DofOrderInfo):
             Each element of this list corresponds to a component of
             the velocity.  E.g. for u, v, w : [vel_u,vel_v,vel_w].
         """
-        import Comm
+        from . import Comm
         comm = Comm.get()
         vel_comp_DOF = []
         vel_comp_DOF_vel=[]
