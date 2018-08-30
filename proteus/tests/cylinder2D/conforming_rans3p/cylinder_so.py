@@ -5,7 +5,6 @@ try:
     from . import cylinder
 except:
     import cylinder
-
 reload(cylinder)
 
 from proteus.SplitOperator import Sequential_FixedStep_Simple, defaultSystem

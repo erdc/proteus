@@ -1005,7 +1005,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if self.interface_locator[gi] == 1.0:
                     self.u[0].dof[gi] = self.coefficients.dof_u0[gi]
         # END OF FREEZING INTERFACE #
-        
         self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1075,6 +1074,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_qy,
             self.lumped_qz,
             old_div(self.coefficients.alpha,self.elementDiameter.min()))
+
 
         # FREEZE INTERFACE #
         if self.coefficients.freeze_interface_within_elliptic_redist==True:
@@ -1244,12 +1244,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def calculateSolutionAtQuadrature(self):
         pass
-        # self.q[('u',0)].flat[:]=0.0
-        # for eN in range(self.u[0].femSpace.elementMaps.mesh.nElements_global):
-        #     for k in range(self.nQuadraturePoints_element):
-        #         for j in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
-        #             J = self.u[0].femSpace.dofMap.l2g[eN,j]
-        #             self.q[('u',0)][eN,k]+=self.u[0].dof[J]*self.u[0].femSpace.psi[k,j]
 
     def calculateAuxiliaryQuantitiesAfterStep(self):
         pass

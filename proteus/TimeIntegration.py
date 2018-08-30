@@ -229,6 +229,12 @@ class TI_base(object):
         allow classes to set various numerical parameters
         """
         pass
+    def postAdaptUpdate(self,oldTime):
+        """
+        ensure array histories are properly set after adapt. This should only work for backwards euler and vbdf at the moment.
+        """
+        print "WARNING: calling abstract function that doesn't have a definition for your object so just passing for now"
+        pass
 
 NoIntegration = TI_base
 
@@ -363,6 +369,14 @@ class BackwardEuler_cfl(BackwardEuler):
         """
         if 'runCFL' in dir(nOptions):
             self.runCFL = nOptions.runCFL
+    def postAdaptUpdate(self,oldTime):
+        """This looks exactly like updateTimeHistory with the exception of setting self.tLast=self.t"""
+        for ci in self.massComponents:
+            self.m_last[ci].flat[:] = self.m_tmp[ci].flat
+
+        #unclear why this is needed; a change of machine precision in these values yield larger deviations in the gauges
+        self.dtLast = oldTime.dtLast
+
 
 class SSP(BackwardEuler_cfl):
     def __init__(self,transport,runCFL=0.9,integrateInterpolationPoints=False):
@@ -1486,6 +1500,28 @@ class VBDF(TI_base):
         #decide where this goes
         self.chooseOrder()
     #
+    def postAdaptUpdate(self,oldTime):
+        """This looks exactly like updateTimeHistory with the exeption of setting self.tLast=self.t"""
+        self.nUpdatesTimeHistoryCalled  = oldTime.nUpdatesTimeHistoryCalled
+        for n in range(self.max_order-1):
+            for ci in self.massComponents:
+                self.m_history[n+1][ci].flat[:] =self.m_history[n][ci].flat
+                self.mt_history[n+1][ci].flat[:]=self.mt_history[n][ci].flat
+            #
+            self.dt_history[n+1]   = self.dt_history[n]
+        #
+        self.dt_history[0] = self.dt
+        for ci in self.massComponents:
+            self.m_history[0][ci].flat[:] = self.m_tmp[ci].flat
+            self.mt_history[0][ci].flat[:]= self.mt_tmp[ci].flat
+
+        self.needToCalculateBDFCoefs = True
+        #decide where this goes
+        self.chooseOrder()
+
+        #unclear why this is needed; a change of machine precision in these values yield larger deviations in the gauges
+        self.dt_history[:] = oldTime.dt_history[:]
+
     def computeErrorEstimate(self):
         """calculate :math:`\vec{e}^{n+1}`
 
