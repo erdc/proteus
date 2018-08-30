@@ -4,7 +4,6 @@ from __future__ import division
 # cython: initializedcheck=False
 from builtins import str
 from builtins import range
-#from builtins import object
 from past.utils import old_div
 import cython
 
@@ -925,7 +924,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
 # for regions
 
 
-class RelaxationZone(object):
+class RelaxationZone:
     """
     Holds information about a relaxation zone (wave generation/absorption
     or porous zone)
@@ -1049,7 +1048,7 @@ class RelaxationZone(object):
         return self.waves.__cpp_calculate_velocity(x, t)
 
 
-class RelaxationZoneWaveGenerator(object):
+class RelaxationZoneWaveGenerator:
     """
     Prescribe a velocity penalty scaling in a material zone via a
     Darcy-Forchheimer penalty
@@ -1077,13 +1076,13 @@ class RelaxationZoneWaveGenerator(object):
 
     def calculate_init(self):
         max_key = 0
-        for key, zone in self.zones.items():
+        for key, zone in list(self.zones.items()):
             zone.calculate_init()
             if key > max_key:
                 max_key = key
         self.max_flag = max_key
         self.zones_array = np.empty(self.max_flag + 1, dtype=object)
-        for key, zone in self.zones.items():
+        for key, zone in list(self.zones.items()):
             self.zones_array[key] = zone
 
     def calculate(self):
@@ -1122,7 +1121,7 @@ class RelaxationZoneWaveGenerator(object):
             m.q['velocity_solid'] = q_velocity_solid
 
 
-class __cppClass_WavesCharacteristics(object):
+class __cppClass_WavesCharacteristics:
     """
     Class holding information from WaveTools waves and cnvering it to
     boundary conditions to use for relaxation zones and wave inlet.
@@ -1244,7 +1243,7 @@ from collections import OrderedDict
 from proteus.mprans import BodyDynamics as bd
 
 
-class WallFunctions(AuxiliaryVariables.AV_base, object):
+class WallFunctions(AuxiliaryVariables.AV_base):
     """
     Auxiliary variable used to calculate attributes of an associated shape
     class instance acting as a wall.
@@ -1618,7 +1617,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         return gradU
 
 
-class kWall(AuxiliaryVariables.AV_base, object):
+class kWall(AuxiliaryVariables.AV_base):
     """
     Auxiliary variable used to calculate attributes of an associated shape
     class instance acting as a wall for the k variable.

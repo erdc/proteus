@@ -1156,7 +1156,7 @@ class LevelModel(OneLevelTransport):
         # flux boundary conditions, SHOULDN'T HAVE
 
         if self.forceStrongConditions:
-            for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items():
+            for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
                 self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN], self.timeIntegration.t)
 
         degree_polynomial = 1
@@ -1264,7 +1264,7 @@ class LevelModel(OneLevelTransport):
         self.quantDOFs[:] = self.interface_locator
 
         if self.forceStrongConditions:
-            for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items():
+            for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
                 r[dofN] = 0
 
         if (self.auxiliaryCallCalculateResidual == False):

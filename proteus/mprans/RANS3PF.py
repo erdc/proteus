@@ -1162,7 +1162,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                 self.ebq_particle_velocity_s[ebN,kb,:]=vel(0.0,corresponding_point_on_boundary)
                 self.model.q[('phis')] = self.phisField
                  #Update velocity inside the particle
-                for ci_g_dof,ci_fg_dof in self.model.dirichletConditions[0].global2freeGlobal.iteritems():
+                for ci_g_dof,ci_fg_dof in self.model.dirichletConditions[0].global2freeGlobal.items():
                     if isinstance(self.model.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
                         xyz = self.model.mesh.nodeArray[ci_g_dof,:]
                     elif isinstance(self.model.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
@@ -1911,19 +1911,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         log("Dumping quadrature shapes for model %s" % self.name, level=9)
         log("Element quadrature array (q)", level=9)
-        for (k, v) in self.q.items():
+        for (k, v) in list(self.q.items()):
             log(str((k, v.shape)), level=9)
         log("Element boundary quadrature (ebq)", level=9)
-        for (k, v) in self.ebq.items():
+        for (k, v) in list(self.ebq.items()):
             log(str((k, v.shape)), level=9)
         log("Global element boundary quadrature (ebq_global)", level=9)
-        for (k, v) in self.ebq_global.items():
+        for (k, v) in list(self.ebq_global.items()):
             log(str((k, v.shape)), level=9)
         log("Exterior element boundary quadrature (ebqe)", level=9)
-        for (k, v) in self.ebqe.items():
+        for (k, v) in list(self.ebqe.items()):
             log(str((k, v.shape)), level=9)
         log("Interpolation points for nonlinear diffusion potential (phi_ip)", level=9)
-        for (k, v) in self.phi_ip.items():
+        for (k, v) in list(self.phi_ip.items()):
             log(str((k, v.shape)), level=9)
         #
         # allocate residual and Jacobian storage
@@ -2064,10 +2064,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.elementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         log("flux bc objects")
-        for ci, fbcObject in self.fluxBoundaryConditionsObjectsDict.items():
+        for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
             self.ebqe[('advectiveFlux_bc_flag', ci)] = numpy.zeros(
                 self.ebqe[('advectiveFlux_bc', ci)].shape, 'i')
-            for t, g in fbcObject.advectiveFluxBoundaryConditionsDict.items():
+            for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
                 if ci in self.coefficients.advection:
                     self.ebqe[
                         ('advectiveFlux_bc', ci)][
@@ -2076,10 +2076,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             ('x')][
                             t[0], t[1]], self.timeIntegration.t)
                     self.ebqe[('advectiveFlux_bc_flag', ci)][t[0], t[1]] = 1
-            for ck, diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.items():
+            for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
                 self.ebqe[('diffusiveFlux_bc_flag', ck, ci)] = numpy.zeros(
                     self.ebqe[('diffusiveFlux_bc', ck, ci)].shape, 'i')
-                for t, g in diffusiveFluxBoundaryConditionsDict.items():
+                for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
                     self.ebqe[
                         ('diffusiveFlux_bc', ck, ci)][
                         t[0], t[1]] = g(
@@ -2247,8 +2247,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # Dirichlet boundary conditions
             self.numericalFlux.setDirichletValues(self.ebqe)
             # Flux boundary conditions
-            for ci, fbcObject in self.fluxBoundaryConditionsObjectsDict.items():
-                for t, g in fbcObject.advectiveFluxBoundaryConditionsDict.items():
+            for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
+                for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
                     if ci in self.coefficients.advection:
                         self.ebqe[
                             ('advectiveFlux_bc', ci)][
@@ -2259,8 +2259,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.ebqe[
                             ('advectiveFlux_bc_flag', ci)][
                             t[0], t[1]] = 1
-                for ck, diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.items():
-                    for t, g in diffusiveFluxBoundaryConditionsDict.items():
+                for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
+                    for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
                         self.ebqe[
                             ('diffusiveFlux_bc', ck, ci)][
                             t[0], t[1]] = g(
@@ -2292,8 +2292,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if self.forceStrongConditions and self.firstStep == False:
             for cj in range(len(self.dirichletConditionsForceDOF)):
-                for dofN, g in self.dirichletConditionsForceDOF[
-                        cj].DOFBoundaryConditionsDict.items():
+                for dofN, g in list(self.dirichletConditionsForceDOF[
+                        cj].DOFBoundaryConditionsDict.items()):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                         dofN], self.timeIntegration.t)  # + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
 
@@ -2597,7 +2597,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
-                for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items():
+                for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                         dofN], self.timeIntegration.t)  # - self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
 

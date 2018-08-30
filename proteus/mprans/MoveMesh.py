@@ -370,19 +370,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         logEvent("Dumping quadrature shapes for model %s" % self.name, level=9)
         logEvent("Element quadrature array (q)", level=9)
-        for (k, v) in self.q.items():
+        for (k, v) in list(self.q.items()):
             logEvent(str((k, v.shape)), level=9)
         logEvent("Element boundary quadrature (ebq)", level=9)
-        for (k, v) in self.ebq.items():
+        for (k, v) in list(self.ebq.items()):
             logEvent(str((k, v.shape)), level=9)
         logEvent("Global element boundary quadrature (ebq_global)", level=9)
-        for (k, v) in self.ebq_global.items():
+        for (k, v) in list(self.ebq_global.items()):
             logEvent(str((k, v.shape)), level=9)
         logEvent("Exterior element boundary quadrature (ebqe)", level=9)
-        for (k, v) in self.ebqe.items():
+        for (k, v) in list(self.ebqe.items()):
             logEvent(str((k, v.shape)), level=9)
         logEvent("Interpolation points for nonlinear diffusion potential (phi_ip)", level=9)
-        for (k, v) in self.phi_ip.items():
+        for (k, v) in list(self.phi_ip.items()):
             logEvent(str((k, v.shape)), level=9)
         #
         # allocate residual and Jacobian storage
@@ -480,9 +480,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.elementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
-        for ci, sbcObject in self.stressFluxBoundaryConditionsObjectsDict.items():
+        for ci, sbcObject in list(self.stressFluxBoundaryConditionsObjectsDict.items()):
             self.ebqe[('stressFlux_bc_flag', ci)] = numpy.zeros(self.ebqe[('stressFlux_bc', ci)].shape, 'i')
-            for t, g in sbcObject.stressFluxBoundaryConditionsDict.items():
+            for t, g in list(sbcObject.stressFluxBoundaryConditionsDict.items()):
                 self.ebqe[('stressFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
                 self.ebqe[('stressFlux_bc_flag', ci)][t[0], t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
@@ -546,8 +546,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # Dirichlet boundary conditions
             self.numericalFlux.setDirichletValues(self.ebqe)
             # Flux boundary conditions
-            for ci, fbcObject in self.stressFluxBoundaryConditionsObjectsDict.items():
-                for t, g in fbcObject.stressFluxBoundaryConditionsDict.items():
+            for ci, fbcObject in list(self.stressFluxBoundaryConditionsObjectsDict.items()):
+                for t, g in list(fbcObject.stressFluxBoundaryConditionsDict.items()):
                     self.ebqe[('stressFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
                     self.ebqe[('stressFlux_bc_flag', ci)][t[0], t[1]] = 1
         r.fill(0.0)
@@ -557,7 +557,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementResidual[2].fill(0.0)
         if self.forceStrongConditions:
             for cj in range(self.nc):
-                for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items():
+                for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         self.moveMesh.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
@@ -610,7 +610,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('stressFlux_bc', 2)])
         if self.forceStrongConditions:
             for cj in range(self.nc):
-                for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items():
+                for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - \
                         g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         logEvent("Global residual", level=9, data=r)
@@ -781,5 +781,5 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateExteriorElementBoundaryQuadrature()  # pass
         for cj in range(self.nc):
             self.u[cj].femSpace.updateInterpolationPoints()
-            for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items():
+            for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                 self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN] = self.mesh.nodeArray[dofN]

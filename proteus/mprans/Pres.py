@@ -621,7 +621,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         r.fill(0.0)
         # set strong Dirichlet conditions
-        for dofN, g in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.items():
+        for dofN, g in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.items()):
             # load the BC valu        # Load the unknowns into the finite element dof
             u[self.offset[0] + self.stride[0] * dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         self.setUnknowns(u)
@@ -669,7 +669,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
-        for dofN, g in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.items():
+        for dofN, g in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.items()):
             r[self.offset[0] + self.stride[0] * dofN] = self.u[0].dof[dofN] - \
                 g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         log("Global residual", level=9, data=r)

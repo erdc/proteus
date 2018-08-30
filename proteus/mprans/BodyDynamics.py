@@ -688,7 +688,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
                 with open(self.record_file, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(headers)
-            for key, val in self.record_dict.items():
+            for key, val in list(self.record_dict.items()):
                 if val[1] is not None:
                     values_towrite += [getattr(self, val[0])[val[1]]]
                 else:

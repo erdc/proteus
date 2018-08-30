@@ -657,7 +657,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         r.fill(0.0)
         # Load the unknowns into the finite element dof
-        for dofN, g in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.items():
+        for dofN, g in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.items()):
             # load the BC valu        # Load the unknowns into the finite element dof
             u[self.offset[0] + self.stride[0] * dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         self.setUnknowns(u)
@@ -708,7 +708,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 numpy.set_printoptions(precision=2, linewidth=160)
                 logEvent("Added Mass Tensor for rigid body i" + repr(i))
                 logEvent("Aij = \n"+str(self.Aij[i]))
-        for dofN, g in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.items():
+        for dofN, g in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.items()):
             r[self.offset[0] + self.stride[0] * dofN] = self.u[0].dof[dofN] - \
                 g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         logEvent("Global residual", level=9, data=r)

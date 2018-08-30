@@ -24,6 +24,7 @@ st.assembleDomain(domain)
 from __future__ import division
 
 #from builtins import str
+from builtins import str
 from builtins import range
 from past.utils import old_div
 from math import cos, sin, sqrt, atan2, acos, asin
@@ -817,7 +818,7 @@ class Tank3D(ShapeRANS):
         waves = None
         wind_speed = np.array([0., 0., 0.])
         sl = self.spongeLayers
-        for key, value in self.abs_zones.items():
+        for key, value in list(self.abs_zones.items()):
             if value is True:
                 self._attachAuxiliaryVariable('RelaxZones')
                 ind = self.regionIndice[key]
@@ -890,7 +891,7 @@ class Tank3D(ShapeRANS):
         waves = waves
         wind_speed = np.array(wind_speed)
         sl = self.spongeLayers
-        for key, value in self.abs_zones.items():
+        for key, value in list(self.abs_zones.items()):
             if value is True:
                 self._attachAuxiliaryVariable('RelaxZones')
                 ind = self.regionIndice[key]
@@ -1379,7 +1380,7 @@ class TankWithObstacles2D(Tank2D):
         # add boundaryTags
         self.obstacle_flags = []
         max_flag = 0
-        for tag, flag in self.boundaryTags.items():
+        for tag, flag in list(self.boundaryTags.items()):
             if flag > max_flag:
                 max_flag = flag
         flag = max_flag + 1
@@ -2123,7 +2124,7 @@ def assembleAuxiliaryVariables(domain):
                 domain.dragBetaTypes = np.zeros(len(domain.regionFlags) + 1)
                 domain.epsFact_solid = np.zeros(len(domain.regionFlags) + 1)
             i0 = start_region + 1
-            for flag, zone in shape.zones.items():
+            for flag, zone in list(shape.zones.items()):
                 ind = [i for i, f in enumerate(shape.regionFlags) if f == flag]
                 for i1 in ind:
                     domain.porosityTypes[i0 + i1] = zone.porosity

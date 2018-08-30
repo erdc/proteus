@@ -832,7 +832,7 @@ class LevelModel(OneLevelTransport):
         # try to use 1d,2d,3d specific modules
 
         if self.forceStrongConditions:
-            for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items():
+            for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
                 self.u[0].dof[dofN] = g(
                     self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],
                     self.timeIntegration.t)
@@ -914,7 +914,7 @@ class LevelModel(OneLevelTransport):
         self.quantDOFs[:] = self.interface_locator
         
         if self.forceStrongConditions:
-            for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items():
+            for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
                 r[dofN] = 0
 
         # print "velocity in ncls",self.coefficients.q_v,
