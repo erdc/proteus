@@ -18,3 +18,4 @@ proteus/tests/cylinder2D/sbm_method/comparison_files/T1_sbm_rans3p.h5 filter=lfs
 proteus/tests/HotStart_3P/comparison_files/T01P1_hotstart.h5 filter=lfs diff=lfs merge=lfs -text
 proteus/tests/HotStart_3P/comparison_files/T01P2_hotstart.h5 filter=lfs diff=lfs merge=lfs -text
 proteus/tests/cylinder2D/sbm_3Dmesh/comparison_files/T001_P1_sbm_3Dmesh.h5 filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/ibm_rans2p/comparison_files/T1_ibm_rans2p.h5 filter=lfs diff=lfs merge=lfs -text

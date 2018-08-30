@@ -5,23 +5,12 @@ import cylinder
 from proteus.SplitOperator import Sequential_FixedStep_Simple, defaultSystem
 
 
-pnList = [("twp_navier_stokes_p", "twp_navier_stokes_n"),#0
-      ("pressureincrement_p", "pressureincrement_n"),#1
-      ("pressure_p", "pressure_n"),#2
-      ("pressureInitial_p", "pressureInitial_n")]#3
-
-cylinder.VOF_model=None
-cylinder.VOS_model=None
-cylinder.SED_model=None
-cylinder.V_model=0
-cylinder.PINC_model=1
-cylinder.PRESSURE_model=2
-cylinder.PINIT_model=3
+pnList = [("twp_navier_stokes_p", "twp_navier_stokes_n"),]#3
 
 name = "cylinder"
 
 #modelSpinUpList = [cylinder.VOF_model, cylinder.LS_model, cylinder.V_model, cylinder.PINIT_model]
-modelSpinUpList = [cylinder.PINIT_model]
+#modelSpinUpList = [cylinder.PINIT_model]
 
 # class Sequential_MinAdaptiveModelStepPS(Sequential_MinAdaptiveModelStep):
 #     def __init__(self,modelList,system=defaultSystem,stepExact=True):
@@ -32,7 +21,7 @@ modelSpinUpList = [cylinder.PINIT_model]
 class Sequential_MinAdaptiveModelStepPS(Sequential_FixedStep):
     def __init__(self,modelList,system=defaultSystem,stepExact=True):
         Sequential_FixedStep.__init__(self,modelList,system,stepExact)
-        self.modelList = modelList[:len(pnList)-1]
+        self.modelList = modelList[:len(pnList)]####without minus 1
 
 dt_system_fixed = cylinder.dt_fixed
 systemStepControllerType = Sequential_MinAdaptiveModelStepPS
