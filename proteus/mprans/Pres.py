@@ -130,8 +130,6 @@ class Coefficients(TC_base):
         Give the TC object an opportunity to modify itself before the time step.
         """
         if self.useRotationalForm:
-            ####This is wrong since velocity is already corrected in PresInc.py, See evaluatePressure
-#             self.q_massFlux[:] = self.fluidModel.q[('velocity', 0)]
             self.q_massFlux[:] = self.fluidModel.q[('uncorrectedVelocity', 0)]
             np.multiply(self.fluidModel.coefficients.q_rho[:, :, np.newaxis],
                         self.q_massFlux,

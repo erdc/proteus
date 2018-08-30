@@ -18,22 +18,21 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    nd=nd,
                                    LS_model=None,
                                    epsFact_density=epsFact_density,
-                                   stokes=False,#useStokes,
-                                   forceStrongDirichlet=True,
+                                   stokes=False,
+                                   forceStrongDirichlet=False,
                                    eb_adjoint_sigma=1.0,
-                                   eb_penalty_constant=10.0,
+                                   eb_penalty_constant=100.0,
                                    useRBLES=0.0,
                                    useMetrics=1.0)
 
 
 def vel(x,t):
     U = Um*x[1]*(fl_H-x[1])/(fl_H/2.0)**2
-#     if t < 2.0:
-#         return t*U/2.0
-#     else:
-#         return U
+    #if t < 2.0:
+    #    return t*U/2.0
+    #else:
+    #    return U
     return U
-
 def getDBC_p(x,flag):
     if flag == boundaryTags['right']:
         return lambda x,t: 0.0

@@ -208,7 +208,47 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  VELOCITY_SGE=1.0,
                  PRESSURE_PROJECTION_STABILIZATION=0.0,
                  phaseFunction=None,
-                 LAG_LES=1.0):
+                 LAG_LES=1.0,
+                 use_ball_as_particle=1,
+                 ball_center=None,
+                 ball_radius=None,
+                 ball_velocity=None,
+                 ball_angular_velocity=None,
+                 nParticles = 0,
+                 particle_epsFact=3.0,
+                 particle_alpha=1000.0,
+                 particle_beta=1000.0,
+                 particle_penalty_constant=1000.0,
+                 particle_nitsche=1.0,):
+        self.use_ball_as_particle = use_ball_as_particle
+        self.nParticles = nParticles
+        self.particle_nitsche = particle_nitsche
+        self.particle_epsFact = particle_epsFact
+        self.particle_alpha = particle_alpha
+        self.particle_beta = particle_beta
+        self.particle_penalty_constant = particle_penalty_constant
+        self.particle_netForces = np.zeros((3*self.nParticles, 3), 'd')#####[total_force_1,total_force_2,...,stress_1,stress_2,...,pressure_1,pressure_2,...]  
+        self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
+        self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
+        if ball_center is None:
+            self.ball_center = 1e10*numpy.ones((self.nParticles,3),'d')
+        else:
+            self.ball_center = ball_center
+        
+        if ball_radius is None:
+            self.ball_radius = 1e10*numpy.ones((self.nParticles,1),'d')
+        else:
+            self.ball_radius = ball_radius
+
+        if ball_velocity is None:
+            self.ball_velocity = numpy.zeros((self.nParticles,3),'d')
+        else:
+            self.ball_velocity = ball_velocity
+
+        if ball_angular_velocity is None:
+            self.ball_angular_velocity = numpy.zeros((self.nParticles,3),'d')
+        else:
+            self.ball_angular_velocity = ball_angular_velocity
         self.LAG_LES=LAG_LES
         self.phaseFunction=phaseFunction
         self.NONCONSERVATIVE_FORM=NONCONSERVATIVE_FORM
@@ -505,6 +545,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir, "forceHistory_p.txt"), "w")
             self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir, "forceHistory_v.txt"), "w")
             self.momentHistory = open(os.path.join(proteus.Profiling.logDir, "momentHistory.txt"), "w")
+            if self.nParticles:
+                self.particle_forceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_forceHistory.txt"), "w")
+                self.particle_momentHistory = open(os.path.join(proteus.Profiling.logDir, "particle_momentHistory.txt"), "w")
         self.comm = comm
     # initialize so it can run as single phase
 
@@ -794,6 +837,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.forceHistory_v.flush()
             self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1, :]))
             self.momentHistory.flush()
+            if self.nParticles:
+                self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0, :]))
+                self.particle_forceHistory.flush()
+                self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0, :]))
+                self.particle_momentHistory.flush()
 
 
 class LevelModel(proteus.Transport.OneLevelTransport):
@@ -1409,6 +1457,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.velocityErrorNodal = self.u[0].dof.copy()
         logEvent('WARNING: The boundary fluxes at interpart boundaries are skipped if elementBoundaryMaterialType is 0 for RANS2P-based models. This means that DG methods are currently incompatible with RANS2P.')
 
+        
+        self.q[('force', 0)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('force', 1)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('force', 2)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+
     def getResidual(self, u, r):
         """
         Calculate the element residuals and add in to the global residual
@@ -1451,6 +1507,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.netForces_p[:, :] = 0.0
         self.coefficients.netForces_v[:, :] = 0.0
         self.coefficients.netMoments[:, :] = 0.0
+        self.coefficients.particle_netForces[:, :] = 0.0
+        self.coefficients.particle_netMoments[:, :] = 0.0
+        self.coefficients.particle_surfaceArea[:] = 0.0
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1628,7 +1687,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.netForces_v,
                                       self.coefficients.netMoments,
                                       self.q['velocityError'],
-                                      self.velocityErrorNodal)
+                                      self.velocityErrorNodal,
+                                      self.q[('force', 0)],
+                                      self.q[('force', 1)],
+                                      self.q[('force', 2)],
+                                      self.coefficients.use_ball_as_particle,
+                                      self.coefficients.ball_center,
+                                      self.coefficients.ball_radius,
+                                      self.coefficients.ball_velocity,
+                                      self.coefficients.ball_angular_velocity,
+                                      self.coefficients.nParticles,
+                                      self.coefficients.particle_netForces,
+                                      self.coefficients.particle_netMoments,
+                                      self.coefficients.particle_surfaceArea,
+                                      self.mesh.nElements_owned,
+                                      self.coefficients.particle_nitsche,
+                                      self.coefficients.particle_epsFact,
+                                      self.coefficients.particle_alpha,
+                                      self.coefficients.particle_beta,
+                                      self.coefficients.particle_penalty_constant)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
@@ -1646,6 +1723,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 #    self.coefficients.netForces_p[i,I] = (125.0* math.pi**2 * 0.125*math.cos(self.timeIntegration.t*math.pi) + 125.0*9.81)/4.0
                 #if I==2:
                 #    self.coefficients.netMoments[i,I] = (4.05* math.pi**2 * (math.pi/4.0)*math.cos(self.timeIntegration.t*math.pi))/4.0
+        for i in range(self.coefficients.nParticles):
+            for I in range(3):
+                self.coefficients.particle_netForces[i, I] = globalSum(
+                    self.coefficients.particle_netForces[i, I])
+                self.coefficients.particle_netForces[i+self.coefficients.nParticles, I] = globalSum(
+                    self.coefficients.particle_netForces[i+self.coefficients.nParticles, I])
+                self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I] = globalSum(
+                    self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I])
+                self.coefficients.particle_netMoments[i, I] = globalSum(
+                    self.coefficients.particle_netMoments[i, I])
+            self.coefficients.particle_surfaceArea[i] = globalSum(
+                self.coefficients.particle_surfaceArea[i])
+            logEvent("particle i=" + `i`+ " force " + `self.coefficients.particle_netForces[i]`)
+            logEvent("particle i=" + `i`+ " moment " + `self.coefficients.particle_netMoments[i]`)
+            logEvent("particle i=" + `i`+ " surfaceArea " + `self.coefficients.particle_surfaceArea[i]`)
+            logEvent("particle i=" + `i`+ " stress force " + `self.coefficients.particle_netForces[i+self.coefficients.nParticles]`)
+            logEvent("particle i=" + `i`+ " pressure force " + `self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]`)
+
+        
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1865,7 +1961,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.csrColumnOffsets_eb[(3, 2)],
                                       self.csrColumnOffsets_eb[(3, 3)],
                                       self.mesh.elementMaterialTypes,
-                                      self.mesh.elementBoundaryMaterialTypes)
+                                      self.mesh.elementBoundaryMaterialTypes,
+                                      self.coefficients.use_ball_as_particle,
+                                      self.coefficients.ball_center,
+                                      self.coefficients.ball_radius,
+                                      self.coefficients.ball_velocity,
+                                      self.coefficients.ball_angular_velocity,
+                                      self.coefficients.nParticles,
+                                      self.mesh.nElements_owned,
+                                      self.coefficients.particle_nitsche,
+                                      self.coefficients.particle_epsFact,
+                                      self.coefficients.particle_alpha,
+                                      self.coefficients.particle_beta,
+                                      self.coefficients.particle_penalty_constant)
         
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True

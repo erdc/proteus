@@ -115,6 +115,7 @@ namespace proteus
                                    const double* q_velocity_solid,
                                    const double* q_vos,
                                    const double* q_dvos_dt,
+				   const double* q_grad_vos,
                                    const double* q_dragAlpha,
                                    const double* q_dragBeta,
                                    const double* q_mass_source,
@@ -356,6 +357,7 @@ namespace proteus
                                    const double *q_velocity_solid,
                                    const double *q_vos,
                                    const double *q_dvos_dt,
+                                   const double *q_grad_vos,
                                    const double *q_dragAlpha,
                                    const double *q_dragBeta,
                                    const double *q_mass_source,
@@ -518,6 +520,10 @@ namespace proteus
     class cppRANS3PF2D : public cppRANS3PF2D_base
     {
     public:
+//      std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
+      const double C_sbm;//penalty constant for sbm
+      const double beta_sbm;//tangent penalty constant for sbm
+
       cppHsuSedStress<2> closure;
       const int nDOF_test_X_trial_element,
         nSpace2;
@@ -540,6 +546,8 @@ namespace proteus
                 5.0,
                 M_PI/6., 0.05, 1.00),
         nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
+        C_sbm(1000),
+        beta_sbm(0.0),
         ck()
           {/*        std::cout<<"Constructing cppRANS3PF2D<CompKernelTemplate<"
                      <<0<<","
@@ -991,6 +999,7 @@ namespace proteus
                                                const double nu_0,
                                                const double rho_1,
                                                const double nu_1,
+					       double nu_t,
                                                const double useVF,
                                                const double vf,
                                                const double phi,
@@ -1010,7 +1019,10 @@ namespace proteus
                                                double& mom_w_source,
                                                double dmom_u_source[nSpace],
                                                double dmom_v_source[nSpace],
-                                               double dmom_w_source[nSpace])
+                                               double dmom_w_source[nSpace],
+                                               double gradC_x,
+					       double gradC_y,
+					       double gradC_z)
       {
         double rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
@@ -1029,8 +1041,8 @@ namespace proteus
 					    solid_velocity,
 					    viscosity);
 
-        mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s);
-        mom_v_source += (1.0 - phi_s) * new_beta * (v - v_s);
+	mom_u_source += (1.0 - phi_s) * new_beta *( (u - u_s) - nu_t*gradC_x/closure.sigmaC_ );
+	mom_v_source += (1.0 - phi_s) * new_beta * ( (v - v_s)- nu_t*gradC_y/closure.sigmaC_);
         /* mom_w_source += phi_s*new_beta*(w-w_s); */
 
         dmom_u_source[0] = (1.0 - phi_s) * new_beta;
@@ -1159,24 +1171,22 @@ namespace proteus
             double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
 
             C = (D_s * C_surf + (1.0 - H_s) * C_vol);
-            //            force_x = dV * D_s * (p * phi_s_normal[0] - porosity * mu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]) + C_surf * (u - u_s) * rho) +
-            //              dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
-            //            force_y = dV * D_s * (p * phi_s_normal[1] - porosity * mu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]) + C_surf * (v - v_s) * rho) +
-            //              dV * (1.0 - H_s) * C_vol * (v - v_s) * rho;
-//            force_x = dV*D_s*(p*fluid_outward_normal[0] - porosity*mu*(fluid_outward_normal[0]*grad_u[0] + fluid_outward_normal[1]*grad_u[1]) + C_surf*rel_vel_norm*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
-//            force_y = dV*D_s*(p*fluid_outward_normal[1] - porosity*mu*(fluid_outward_normal[0]*grad_v[0] + fluid_outward_normal[1]*grad_v[1]) + C_surf*rel_vel_norm*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
-//            force_x = dV * D_s * (p * fluid_outward_normal[0]
-//                                  -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
-//                                  );
-//            force_y = dV * D_s * (p * fluid_outward_normal[1]
-//                                  -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
-//                                  );
+            force_x = dV * D_s * (p * fluid_outward_normal[0]
+                                  -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
+                                  +C_surf*(u-u_s)*rho
+                                  );
+            force_y = dV * D_s * (p * fluid_outward_normal[1]
+                                  -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
+                                  +C_surf*(v-v_s)*rho
+                                  );
             force_p_x = dV * D_s * p * fluid_outward_normal[0];
-            force_stress_x = dV * D_s * (-mu) * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]));
             force_p_y = dV * D_s * p * fluid_outward_normal[1];
-            force_stress_y = dV * D_s * (-mu) * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1]);
-            force_x = force_p_x + force_stress_x;
-            force_y = force_p_y + force_stress_y;
+            force_stress_x = dV * D_s * (-mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
+                                  +C_surf*(u-u_s)*rho
+                                  );
+            force_stress_y = dV * D_s * (-mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
+                                  +C_surf*(v-v_s)*rho
+                                  );
             //always 3D for particle centroids
             r_x = x - center[0];
             r_y = y - center[1];
@@ -1898,7 +1908,7 @@ namespace proteus
           }
         else
           {
-            std::cerr<<"warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl;
+            std::cerr<<"RANS3PF2D: warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl;
             flux = 0.0;
           }
       }
@@ -2072,6 +2082,7 @@ namespace proteus
                              const double* q_velocity_solid,
                              const double* q_vos,
                              const double* q_dvos_dt,
+                             const double* q_grad_vos,
                              const double* q_dragAlpha,
                              const double* q_dragBeta,
                              const double* q_mass_source,
@@ -2234,6 +2245,10 @@ namespace proteus
         double globalConservationError=0.0;
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
+        surrogate_boundaries.clear();
+        surrogate_boundary_elements.clear();
+        surrogate_boundary_particle.clear();
+
         //std::set<int> active_velocity_dof;
         for(int eN=0;eN<nElements_global;eN++)
           {
@@ -2687,6 +2702,7 @@ namespace proteus
                                                   nu_0,
                                                   rho_1,
                                                   nu_1,
+						  q_eddy_viscosity[eN_k],
                                                   useVF,
                                                   vf[eN_k],
                                                   phi[eN_k],
@@ -2706,7 +2722,10 @@ namespace proteus
                                                   mom_w_source,
                                                   dmom_u_source,
                                                   dmom_v_source,
-                                                  dmom_w_source);
+                                                  dmom_w_source,
+                                                  q_grad_vos[eN_k_nSpace+0],
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  q_grad_vos[eN_k_nSpace+1]);
                 double C_particles=0.0;
                 if(nParticles > 0 && USE_SBM==0)
                   updateSolidParticleTerms(eN < nElements_owned,
@@ -2724,9 +2743,9 @@ namespace proteus
                                            ball_velocity,
                                            ball_angular_velocity,
                                            porosity,
-                                           particle_penalty_constant/h_phi,//penalty,
-                                           particle_alpha,
-                                           particle_beta,
+                                           particle_penalty_constant/h_phi,
+                                           particle_alpha/h_phi,
+                                           particle_beta/h_phi,
                                            eps_rho,
                                            eps_mu,
                                            rho_0,
@@ -2785,9 +2804,9 @@ namespace proteus
                                            ball_radius,
                                            ball_velocity,
                                            ball_angular_velocity,
-                                           particle_penalty_constant/h_phi,//penalty,
-                                           particle_alpha,
-                                           particle_beta,
+                                           particle_penalty_constant/h_phi,
+                                           particle_alpha/h_phi,
+                                           particle_beta/h_phi,
                                            eps_rho,
                                            eps_mu,
                                            rho_0,
@@ -3350,11 +3369,10 @@ namespace proteus
                     P_tangent[0] = -P_normal[1];
                     P_tangent[1] = P_normal[0];
                     double visco = nu_0*rho_0;
-                    double Csb=10;
-                    double C_adim = Csb*visco/h_penalty;
+                    double C_adim = C_sbm*visco/h_penalty;
                     //std::cout << "C_adim "<< C_adim << std::endl;
                     double beta = 0.0;
-                    double beta_adim = beta*h_penalty*visco;
+                    double beta_adim = beta*visco/h_penalty;
 
                     const double grad_u_d[2] = {get_dot_product(distance,grad_u_ext),
                                                 get_dot_product(distance,grad_v_ext)};
@@ -4449,6 +4467,7 @@ namespace proteus
                              const double* q_velocity_solid,
                              const double* q_vos,
                              const double* q_dvos_dt,
+                             const double* q_grad_vos,
                              const double* q_dragAlpha,
                              const double* q_dragBeta,
                              const double* q_mass_source,
@@ -4640,6 +4659,7 @@ namespace proteus
             //
             //detect cut cells
             //
+            //if(0)
             if(USE_SBM>0)
               {
                 //
@@ -5047,6 +5067,7 @@ namespace proteus
                                                   nu_0,
                                                   rho_1,
                                                   nu_1,
+						                          eddy_viscosity,
                                                   useVF,
                                                   vf[eN_k],
                                                   phi[eN_k],
@@ -5066,7 +5087,11 @@ namespace proteus
                                                   mom_w_source,
                                                   dmom_u_source,
                                                   dmom_v_source,
-                                                  dmom_w_source);
+                                                  dmom_w_source,
+                                                  q_grad_vos[eN_k_nSpace+0],
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  q_grad_vos[eN_k_nSpace+1]);//cek hack, should not be used
+
                 double C_particles=0.0;
                 if(nParticles > 0 && USE_SBM==0)
                   updateSolidParticleTerms(eN < nElements_owned,
@@ -5084,9 +5109,9 @@ namespace proteus
                                            ball_velocity,
                                            ball_angular_velocity,
                                            porosity,
-                                           particle_penalty_constant/h_phi,//penalty,
-                                           particle_alpha,
-                                           particle_beta,
+                                           particle_penalty_constant/h_phi,
+                                           particle_alpha/h_phi,
+                                           particle_beta/h_phi,
                                            eps_rho,
                                            eps_mu,
                                            rho_0,
@@ -5671,10 +5696,8 @@ namespace proteus
                     if (h_penalty < std::abs(dist))
                         h_penalty = std::abs(dist);
                     double visco = nu_0*rho_0;
-                    double Csb=10;
-                    double C_adim = Csb*visco/h_penalty;
-                    double beta = 0.0;
-                    double beta_adim = beta*h_penalty*visco;
+                    double C_adim = C_sbm*visco/h_penalty;
+                    double beta_adim = beta_sbm*visco/h_penalty;
 
                     for (int i=0;i<nDOF_test_element;i++)
                       {

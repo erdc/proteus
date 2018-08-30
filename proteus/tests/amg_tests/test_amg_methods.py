@@ -17,6 +17,7 @@ import petsc4py as p4pyPETSc
 import numpy as np
 import pytest
 import pickle
+import timeit
 
 from petsc4py import PETSc as p4pyPETSc
 
@@ -66,7 +67,6 @@ def initialize_asm_ksp_obj(matrix_A):
     ksp_obj.setUp()
     return ksp_obj
 
-
 def build_amg_index_sets(L_sizes):
     """
     Create PETSc index sets for the velocity components of a saddle
@@ -74,7 +74,7 @@ def build_amg_index_sets(L_sizes):
 
     Parameters
     ----------
-    L_sizes : 
+    L_sizes :
         Sizes of original saddle-point system
 
     Returns:
@@ -91,15 +91,15 @@ def build_amg_index_sets(L_sizes):
                                      dtype='i'))
         velocityDOF_full=np.vstack(velocityDOF).transpose().flatten()
     velocity_u_DOF = []
-    velocity_u_DOF.append(np.arange(start=1,
-                                    stop=1+neqns,
-                                    step=3,
+    velocity_u_DOF.append(np.arange(start=0,
+                                    stop=int((2/3.)*neqns),
+                                    step=2,
                                     dtype='i'))
     velocity_u_DOF_full = np.vstack(velocity_u_DOF).transpose().flatten()
     velocity_v_DOF = []
-    velocity_v_DOF.append(np.arange(start=2,
-                                    stop=2+neqns,
-                                    step=3,
+    velocity_v_DOF.append(np.arange(start=1,
+                                    stop=1+int((2/3.)*neqns),
+                                    step=2,
                                     dtype='i'))
     velocity_v_DOF_full = np.vstack(velocity_v_DOF).transpose().flatten()
     isvelocity = p4pyPETSc.IS()
@@ -118,11 +118,18 @@ def initialize_velocity_block_petsc_options():
     petsc_options = p4pyPETSc.Options()
     petsc_options.setValue('ksp_type','gmres')
     petsc_options.setValue('ksp_gmres_restart',100)
-    petsc_options.setValue('ksp_pc_side','right')
+#    petsc_options.setValue('ksp_pc_side','right')
     petsc_options.setValue('ksp_atol',1e-8)
     petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
     petsc_options.setValue('pc_type','hypre')
     petsc_options.setValue('pc_type_hypre_type','boomeramg')
+
+def initialize_velocity_block_petsc_options_2():
+    petsc_options = p4pyPETSc.Options()
+    petsc_options.setValue('ksp_type','gmres')
+    petsc_options.setValue('ksp_gmres_restart',100)
+    petsc_options.setValue('ksp_atol',1e-8)
+    petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
 
 @pytest.fixture()
 def load_saddle_point_matrix_1(request):
@@ -148,10 +155,9 @@ def load_medium_step_matrix(request):
     yield A
 
 @pytest.mark.amg
-@pytest.mark.skip
 def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
     mat_A = load_saddle_point_matrix_1
-    petsc_options = initialize_velocity_block_petsc_options
+    petsc_options = initialize_velocity_block_petsc_options()
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
 
@@ -160,17 +166,16 @@ def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
     b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
                                                 index_sets[0]))
 #    F_ksp.solve(b,x)
-#    assert F_ksp.its == 76
+#    assert F_ksp.its == 58
 
     p4pyPETSc.Options().setValue('pc_hypre_boomeramg_relax_type_all','sequential-Gauss-Seidel')
     F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
                                                       index_sets[0]))
     b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
                                                 index_sets[0]))
-    
-    F_ksp.solve(b,x)
-    import pdb ; pdb.set_trace()
-    assert F_ksp.its == 80
+
+#    F_ksp.solve(b,x)
+#    assert F_ksp.its == 61
 
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
@@ -182,7 +187,7 @@ def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
                                                 index_sets[0]))
 
 #    F_ksp.solve(b,x)
-#    assert F_ksp.its = 197
+#    assert F_ksp.its = 105
 
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
@@ -197,6 +202,29 @@ def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
 #    F_ksp.solve(b,x)
 #    assert F_ksp.its == 231
 
-     
+def test_amg_iteration_matrix_2(load_saddle_point_matrix_1):
+    mat_A = load_saddle_point_matrix_1
+    petsc_options = initialize_velocity_block_petsc_options_2()
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+
+    F_ksp.pc.setType('fieldsplit')
+    F_ksp.pc.setFieldSplitIS(('v1',index_sets[1]),('v2',index_sets[2]))
+
+    F_ksp.pc.getFieldSplitSubKSP()[0].setType('richardson')
+    F_ksp.pc.getFieldSplitSubKSP()[1].setType('richardson')
+    F_ksp.pc.getFieldSplitSubKSP()[0].pc.setType('hypre')
+    F_ksp.pc.getFieldSplitSubKSP()[0].pc.setHYPREType('boomeramg')
+    F_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('hypre')
+    F_ksp.pc.getFieldSplitSubKSP()[1].pc.setHYPREType('boomeramg')
+
+    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+                                                index_sets[0]))
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 7
+
 if __name__ == '__main__':
     pass

@@ -11,7 +11,7 @@ ct = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
     ("Refinement",4, "refinement"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
-    ("vspaceOrder",1,"FE space for velocity"),
+    ("vspaceOrder",2,"FE space for velocity"),
     ("pspaceOrder",1,"FE space for pressure")
 ], mutable=True)
 
@@ -205,8 +205,8 @@ else:
 logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 # Time stepping
 T=ct.T
-dt_fixed = 0.01#0.03
-dt_init = 0.005#min(0.1*dt_fixed,0.001)
+dt_fixed = 0.005#0.03
+dt_init = 0.0025#min(0.1*dt_fixed,0.001)
 runCFL=0.33
 nDTout = int(round(T/dt_fixed))
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)]
