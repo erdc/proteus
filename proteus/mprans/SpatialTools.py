@@ -411,7 +411,7 @@ class Tank3D(ShapeRANS):
     def __init__(self, domain, dim=(0., 0., 0.), coords=None, from_0=True):
         super(Tank3D, self).__init__(domain, nd=3)
         self.__class__.count += 1
-        self.name = "tank3d" + str(self.__class__.count)
+        self.name = "tank3d" + repr(self.__class__.count)
         self.from_0 = from_0
         if coords is None:
             self.coords = old_div(np.array(dim), 2.)
@@ -968,7 +968,7 @@ class Tank2D(ShapeRANS):
 
     def _nameSelf(self):
         self.__class__.count += 1
-        self.name = "tank2D" + str(self.__class__.count)
+        self.name = "tank2D" + repr(self.__class__.count)
 
     def _setupBCs(self):
         self.boundaryTags = {'y-': 1, 'x+': 2, 'y+': 3, 'x-': 4, 'sponge': 5}
@@ -1385,7 +1385,7 @@ class TankWithObstacles2D(Tank2D):
                 max_flag = flag
         flag = max_flag + 1
         for i in range(len(self.obstacles)):
-            tag = 'obstacle' + str(i + 1)
+            tag = 'obstacle' + repr(i + 1)
             self.boundaryTags[tag] = flag
             self.obstacle_flags += [flag]
             self.BC[tag] = self.BC_class(shape=self, name=tag)
@@ -1581,7 +1581,7 @@ class TankWithObstacles2D(Tank2D):
                                 for i in range(len(obstacle))]
             elif self.hole is False:
                 vertices += obstacle
-                vertexFlags += [self.boundaryTags['obstacle' + str(nb + 1)]
+                vertexFlags += [self.boundaryTags['obstacle' + repr(nb + 1)]
                                 for i in range(len(obstacle))]
 
             # ---- Paperwork ---- #
@@ -1783,7 +1783,7 @@ class TankWithObstacles2D(Tank2D):
                 regions = [[region[0], region[1]]]
                 ind_region += 1
                 regionFlags = [ind_region, ]
-                self.regionIndice['obstacle' + str(i + 1)] = ind_region - 1
+                self.regionIndice['obstacle' + repr(i + 1)] = ind_region - 1
 
         if True in list(self.corners.values()):
             regions += self._getCornerRegion()
