@@ -1,10 +1,14 @@
 """
 Incompressible Navier-Stokes flow around a cylinder in 2D.
 """
+from __future__ import absolute_import
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 import sys
-from cylinder2d import *
+from .cylinder2d import *
 from proteus.mprans import RANS2P
 name="rans2p"
 bcsTimeDependent = True
@@ -27,11 +31,11 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
 
 
 def vel(x,t):
-    U = Um*x[1]*(fl_H-x[1])/(fl_H/2.0)**2
-    #if t < 2.0:
-    #    return t*U/2.0
-    #else:
-    #    return U
+    U = Um*x[1]*(fl_H-x[1])/(old_div(fl_H,2.0))**2
+#     if t < 2.0:
+#         return t*U/2.0
+#     else:
+#         return U
     return U
 def getDBC_p(x,flag):
     if flag == boundaryTags['right']:
@@ -100,19 +104,19 @@ diffusiveFluxBoundaryConditions = {0:{},
                                    1:{1:getDFBC_u},
                                    2:{2:getDFBC_v}}
 
-class Steady_p:
+class Steady_p(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
         return 0.0
 
-class Steady_u:
+class Steady_u(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
         return 0.0
 
-class Steady_v:
+class Steady_v(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

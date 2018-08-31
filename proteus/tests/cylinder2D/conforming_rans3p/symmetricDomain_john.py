@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import math
 from proteus import Domain
 import os
@@ -13,14 +16,14 @@ def symmetric2D(box=(1.0,0.41),
                 DX_coarse = 0.02):
     boundaries = ['left', 'right', 'front', 'back', 'obstacle']
     boundaryFlags=dict([(key,i+1) for i,key in enumerate(boundaries)])
-    left_nPoints = int(math.ceil((H-r)/DX))
-    top_nPoints = int(math.ceil(L/DX))
-    right_nPoints = int(math.ceil(H/DX))
-    bottom_nPoints = int(math.ceil((L-r)/DX))
-    DX_left = (H-r)/float(left_nPoints)
-    DX_top = L/float(top_nPoints)
-    DX_right = H/float(right_nPoints)
-    DX_bottom = (L-r)/float(bottom_nPoints)
+    left_nPoints = int(math.ceil(old_div((H-r),DX)))
+    top_nPoints = int(math.ceil(old_div(L,DX)))
+    right_nPoints = int(math.ceil(old_div(H,DX)))
+    bottom_nPoints = int(math.ceil(old_div((L-r),DX)))
+    DX_left = old_div((H-r),float(left_nPoints))
+    DX_top = old_div(L,float(top_nPoints))
+    DX_right = old_div(H,float(right_nPoints))
+    DX_bottom = old_div((L-r),float(bottom_nPoints))
 
     vertices0 = [(0.0, r)]
     vertexFlags0 = [boundaryFlags['obstacle']]
@@ -48,7 +51,7 @@ def symmetric2D(box=(1.0,0.41),
         vertexFlags0.append(0)
 
     arclength= 0.5*math.pi*r
-    nPoints_cyl = int(math.ceil(arclength/DX))
+    nPoints_cyl = int(math.ceil(old_div(arclength,DX)))
     #DX_cyl = arclength/float(nPoints_cyl)
     nPoints_cyl = max([nPoints_cyl,10])
     # cyl

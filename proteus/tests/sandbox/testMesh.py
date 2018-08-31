@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from builtins import range
 from MeshTools import *
 import numpy
 
@@ -78,7 +80,7 @@ def buildMatlabMeshDataStructures(mesh,meshFileBase='meshMatlab'):
     #total number of nodes
     nnodes = mesh.nNodes_global
     mnodes = Numeric.zeros((2,nnodes),Numeric.Float)
-    for key in mesh.nodeDict.keys():
+    for key in list(mesh.nodeDict.keys()):
         nN = mesh.nodeDict[key].N      #global node number?
         xy = mesh.nodeDict[key].p      #physical location
         mnodes[0,nN] = xy[X]
@@ -93,7 +95,7 @@ def buildMatlabMeshDataStructures(mesh,meshFileBase='meshMatlab'):
     #print 'in build edge number of elems= ',mesh.nElements_global
     medges = Numeric.zeros((7,nedges),Numeric.Int)
 
-    for key in mesh.edgeDict.keys():
+    for key in list(mesh.edgeDict.keys()):
         nE = mesh.edgeDict[key].N     #global edge number
         pE = mesh.edgeDict[key].nodes #nodes defining edge
         #mwf debug
@@ -113,7 +115,7 @@ def buildMatlabMeshDataStructures(mesh,meshFileBase='meshMatlab'):
     nelems = mesh.nElements_global
     melems = Numeric.zeros((4,nelems),Numeric.Int)
 
-    for key in mesh.triangleDict.keys():
+    for key in list(mesh.triangleDict.keys()):
         nE = mesh.triangleDict[key].N        #global element number
         pE = mesh.triangleDict[key].nodes    #nodes defining triangle
 
@@ -128,7 +130,7 @@ def buildMatlabMeshDataStructures(mesh,meshFileBase='meshMatlab'):
     mfile = open(meshFileBase+'.m','w')
 
     mfile.write('p = [ ... \n')
-    for j in xrange(mnodes.shape[1]):
+    for j in range(mnodes.shape[1]):
         sn = '%g %g \n' % (mnodes[0,j],mnodes[1,j])
         mfile.write(sn)
     #end nodes loop
@@ -136,7 +138,7 @@ def buildMatlabMeshDataStructures(mesh,meshFileBase='meshMatlab'):
     mfile.write("p = p\';\n")  #need transpose for matlab
 
     mfile.write('e = [ ... \n')
-    for j in xrange(medges.shape[1]):
+    for j in range(medges.shape[1]):
         sn = '%g %g %g %g %g %g %g \n' % tuple(medges[:,j])
         mfile.write(sn)
     #end edge loop
@@ -145,7 +147,7 @@ def buildMatlabMeshDataStructures(mesh,meshFileBase='meshMatlab'):
 
     #write triangles last
     mfile.write('t = [ ... \n')
-    for j in xrange(melems.shape[1]):
+    for j in range(melems.shape[1]):
         sn = '%g %g %g %g \n' % tuple(melems[:,j])
         mfile.write(sn)
     #end element loop
@@ -182,28 +184,28 @@ if __name__=='__main__':
     viewMesh = 2
     mesh = constructTriangularMeshOnRectangle(Lx,Ly,nx,ny,viewMesh)
 
-    print 'mesh Info says \n',mesh.meshInfo()
+    print('mesh Info says \n',mesh.meshInfo())
     fileName2 = 'meshV2'
     mp,me,mt = buildMatlabMeshDataStructures(mesh,fileName2)
 
     if verboseLevel > 1:
         #do brute force loop through array to look at it
-        print 'matlab node array is '
-        for j in xrange(mp.shape[1]): #number of columns is number of nodes
-            print '\t',mp[0,j],' ',mp[1,j]
+        print('matlab node array is ')
+        for j in range(mp.shape[1]): #number of columns is number of nodes
+            print('\t',mp[0,j],' ',mp[1,j])
         #end for
 
         #do brute force loop through edge array too
-        print 'matlab edge array holds (matlab edge id, node 0, node 1)'
-        print 'note base 0'
-        for j in xrange(me.shape[1]): #number of columns is number of edges
-            print '\t',me[4,j]-1,' ',me[0,j]-1,' ',me[1,j]-1
+        print('matlab edge array holds (matlab edge id, node 0, node 1)')
+        print('note base 0')
+        for j in range(me.shape[1]): #number of columns is number of edges
+            print('\t',me[4,j]-1,' ',me[0,j]-1,' ',me[1,j]-1)
         #end for
 
         #do brute force loop through element array too
-        print 'matlab elem array (matlab elem id, node 0, node 1, node 3)'
-        print 'note base 0'
-        for j in xrange(mt.shape[1]): #number of columns is number of edges
-            print '\t',j,' ',mt[0,j]-1,' ',mt[1,j]-1,' ',mt[2,j]-1
+        print('matlab elem array (matlab elem id, node 0, node 1, node 3)')
+        print('note base 0')
+        for j in range(mt.shape[1]): #number of columns is number of edges
+            print('\t',j,' ',mt[0,j]-1,' ',mt[1,j]-1,' ',mt[2,j]-1)
         #end for
     #end verbose print out for mesh

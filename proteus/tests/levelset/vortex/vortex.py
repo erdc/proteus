@@ -1,4 +1,7 @@
+from __future__ import absolute_import
+from __future__ import division
 #if True uses PETSc solvers
+from past.utils import old_div
 parallel = False
 linearSmoother = None
 #compute mass balance statistics or not
@@ -41,21 +44,21 @@ pseudo2D=True
 if pseudo2D:
     nn=nnx=nny=(2**lRefinement)*5+1
     nnz=2
-    he=1.0/(nnx-1.0)
+    he=old_div(1.0,(nnx-1.0))
     L=[1.0,1.0,he]
 else:
     nn=nnx=nny=nnz=(2**lRefinement)*10+1
-    he = 1.0/(nnx-1.0)
+    he = old_div(1.0,(nnx-1.0))
     L = [1.0,1.0,1.0]
 unstructured=True#True for tetgen, false for tet or hex from rectangular grid
 if unstructured:
-    from tank3dDomain import *
+    from .tank3dDomain import *
     domain = tank3d(L=L)
     bt = domain.boundaryTags
     domain.writePoly("tank3d")
     domain.writePLY("tank3d")
     domain.writeAsymptote("tank3d")
-    triangleOptions="VApq1.3q18ena%21.16e" % ((he**3)/6.0,)
+    triangleOptions="VApq1.3q18ena%21.16e" % (old_div((he**3),6.0),)
 else:
     from proteus.Domain import RectangularDomain
     domain = RectangularDomain(L)
@@ -94,6 +97,6 @@ correctionType = 'cg'
 #correctionType = 'none'
 if useHex:
     hex=True
-    soname="vortex_c0q"+`pDegree_ls`+correctionType+"_bdf_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="vortex_c0q"+repr(pDegree_ls)+correctionType+"_bdf_"+repr(timeOrder)+"_level_"+repr(lRefinement)
 else:
-    soname="vortex_c0p"+`pDegree_ls`+correctionType+"_bdf_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="vortex_c0p"+repr(pDegree_ls)+correctionType+"_bdf_"+repr(timeOrder)+"_level_"+repr(lRefinement)

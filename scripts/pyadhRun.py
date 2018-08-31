@@ -12,12 +12,20 @@
 #   \brief driver for single model simulations
 #
 #
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import input
+from builtins import range
+from past.utils import old_div
 import os
 import sys
 import socket
-import cPickle
+import pickle
 import numpy as numpy
-print sys.path
+print(sys.path)
 from proteus import *
 from warnings import *
 
@@ -117,8 +125,8 @@ def proteusRun(runRoutine):
     if opts.petscOptions != None:
         sys.argv = sys.argv[:-1]+opts.petscOptions.split()
     comm = Comm.init()
-    print "is initialized",comm.isInitialized()
-    print "done with comm.init"
+    print("is initialized",comm.isInitialized())
+    print("done with comm.init")
     #mwf modify path to be able to load proteus test problems
     #for now always insert
     probDir = str(opts.probDir)
@@ -144,7 +152,7 @@ def proteusRun(runRoutine):
                 n = __import__(args[0][:-6]+'n')
             except:
                 n = p
-        pNameProc = pName + `comm.rank()`
+        pNameProc = pName + repr(comm.rank())
     if opts.batchFileName != "":
         inputStream = open(opts.batchFileName,'r')
     else:
@@ -166,8 +174,8 @@ def proteusRun(runRoutine):
         p.coefficients.plotCoefficients = opts.plotCoefficients
     #
     if opts.ensight:
-        if simFlags.has_key('plotOptions'):
-            if simFlags['plotOptions'].has_key('ensight'):
+        if 'plotOptions' in simFlags:
+            if 'ensight' in simFlags['plotOptions']:
                 simFlags['plotOptions']['ensight']['on'] = True
             else:
                 simFlags['plotOptions']['ensight'] = {'on':True}
@@ -221,7 +229,7 @@ def proteusRun(runRoutine):
         elif opts.batchFileName != "":
             userInput = False
             lines = '\n'.join(batchBlocks.pop(0))
-            exec lines
+            exec(lines)
             run     = True
             running = len(batchBlocks) > 0
         else:
@@ -244,7 +252,7 @@ def proteusRun(runRoutine):
                     running = False
                 else:
                     userInput = True
-                    exec line
+                    exec(line)
                     sys.stdout.write(">>>")
             else:
                 userInput = False
@@ -266,7 +274,7 @@ def proteusRun(runRoutine):
                 runRoutine(pName,p,n,opts,simFlags)
         os.chdir('../../')
     if opts.viewer and (comm.rank()==0):
-        raw_input('\nPress return to close windows and exit... \n')
+        input('\nPress return to close windows and exit... \n')
         if Viewers.viewerType == 'matlab':
             Viewers.viewerPipe.write("quit \n")
         #matlab
@@ -274,7 +282,7 @@ def proteusRun(runRoutine):
 def runProblem(pName,p,n,opts,simFlags=None):
     from proteus import cmeshTools
     comm = Comm.get()
-    pNameProc = pName+`comm.rank()` #mwf does this agree with pNameProc above?
+    pNameProc = pName+repr(comm.rank()) #mwf does this agree with pNameProc above?
     Profiling.memory()
 
 
@@ -354,7 +362,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
             if p.polyfile != None:
                 #mwf hack
                 if False:
-                    print "reading triangle mesh node and element files directly"
+                    print("reading triangle mesh node and element files directly")
                     #could put in system call to triangle for generating from poly
                     nbase = 1
                     mesh=MeshTools.TriangularMesh()
@@ -363,7 +371,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels)
                 #
                 else:
-                    print "reading triangle mesh"
+                    print("reading triangle mesh")
                     tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
                                                            nbase=1,
                                                            verbose=10)
@@ -406,7 +414,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
                     #    n.triangleOptions += 'f'
                     tetcmd = "tetgen -%s %s.poly" % (n.triangleOptions,p.polyfile)
                     #mwf debug
-                    print "proteusRun trying to run tetgen with %s " % tetcmd
+                    print("proteusRun trying to run tetgen with %s " % tetcmd)
                     failed = os.system(tetcmd)
                     elefile = "%s.1.ele" % p.polyfile
                     nodefile = "%s.1.node" % p.polyfile
@@ -429,14 +437,14 @@ def runProblem(pName,p,n,opts,simFlags=None):
                         assert os.path.exists(tmp)
 
 
-                print "reading tetgen mesh node and element files directly"
+                print("reading tetgen mesh node and element files directly")
                 nbase = 1
                 mesh=MeshTools.TetrahedralMesh()
                 mesh.generateFromTetgenFiles(p.polyfile,nbase)
                 mlMesh = MeshTools.MultilevelTetrahedralMesh(2,2,2)
                 mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels)
             else:
-                print "is initialized",comm.isInitialized()
+                print("is initialized",comm.isInitialized())
                 mlMesh = MeshTools.MultilevelTetrahedralMesh(n.nn,n.nn,n.nn,
                                                              p.L[0],p.L[1],p.L[2],
                                                              refinementLevels=n.nLevels)
@@ -495,13 +503,13 @@ def runProblem(pName,p,n,opts,simFlags=None):
         for m in mlMesh.meshList:
             testElementBoundaryTags(m)
 
-        print "error,tol,error>tol",error,tol,error > tol
+        print("error,tol,error>tol",error,tol,error > tol)
         #mwf debug
         #mlMesh.meshList[-1].writeEdgesGnuplot2('mesh')
         #mlMesh.meshList[-1].viewMeshGnuplotPipe('mesh')
         for l in range(n.nLevels):
-            print """proteusRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
-                                                                                          mlMesh.meshList[l].nElements_global,mlMesh.meshList[l].nNodes_global,mlMesh.meshList[l].nElementBoundaries_global,mlMesh.meshList[l].h)
+            print("""proteusRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
+                                                                                          mlMesh.meshList[l].nElements_global,mlMesh.meshList[l].nNodes_global,mlMesh.meshList[l].nElementBoundaries_global,mlMesh.meshList[l].h))
 
         Profiling.logEvent(Profiling.memory("mesh","proteusRun"),level=1)
         Profiling.logEvent("Setting up MultilevelTransport",level=1)
@@ -509,11 +517,11 @@ def runProblem(pName,p,n,opts,simFlags=None):
         linTolList=[]
         pOrder=1
         for ci,space in enumerate(n.femSpaces.values()):
-            print "Finite Element Space for comnent ci=",ci,space
+            print("Finite Element Space for comnent ci=",ci,space)
             if (space == FemTools.DG_AffineQuadraticOnSimplexWithNodalBasis or
                 space == FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis):
                 pOrder = 2
-        print "Max Polynomial order",pOrder
+        print("Max Polynomial order",pOrder)
         for l in range(n.nLevels):
             if mlMesh.meshList[l].hasGeometricInfo != True:
                 mlMesh.meshList[l].computeGeometricInfo()
@@ -539,7 +547,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
             n.timeIntegration,
             massLumping = n.massLumping,
             reactionLumping = n.reactionLumping)
-        print "Total DOF = ",mlTransport.modelList[-1].nFreeVDOF_global
+        print("Total DOF = ",mlTransport.modelList[-1].nFreeVDOF_global)
         (multilevelLinearSolver,directSolverFlag) = LinearSolvers.multilevelLinearSolverChooser(
             linearOperatorList = mlTransport.jacobianList,
             par_linearOperatorList = mlTransport.par_jacobianList,
@@ -644,20 +652,20 @@ def runProblem(pName,p,n,opts,simFlags=None):
                     mlTransport.modelList[i].viewSolution(titleModifier=': Initial Condition')
                     mlTransport.modelList[i].saveSolution()
                     if opts.wait:
-                        raw_input('\nPress return to close windows and exit... \n')
+                        input('\nPress return to close windows and exit... \n')
                 #mwf undo plots so not in new window?
                 Viewers.windowNumber -= len(mlTransport.modelList)
         if opts.ensight:
             comm = Comm.get()
             if comm.isMaster():
                 sosOut = open(pName+'.sos','w')
-                header = "FORMAT\n"+"type: master_server gold\n"+"SERVERS\n"+"number of servers: "+`comm.size()`+"\n\n"
+                header = "FORMAT\n"+"type: master_server gold\n"+"SERVERS\n"+"number of servers: "+repr(comm.size())+"\n\n"
                 sosOut.write(header)
                 for proc in range(comm.size()):
                     machineEntry = ("machine id: "+socket.gethostname()+"\n"+
                                     "executable: ensight8.server\n"+
                                     "data_path: "+os.getcwd()+"\n"+
-                                    "casefile: "+pName+`proc`+".case\n\n")
+                                    "casefile: "+pName+repr(proc)+".case\n\n")
                     sosOut.write(machineEntry)
                 sosOut.close()
         mlTransport.modelList[-1].timeIntegration.runCFL = n.runCFL
@@ -684,7 +692,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
         errorEstimator = ErrorEstimators.HierarchicalMeshEstimator(mlTransport)
 
         simOutput.preprocess(mlTransport,tn)
-        print timeIntegrator
+        print(timeIntegrator)
         timeIntegrator.initialize(n.DT,t0=tn,T=p.T)
         #mwf debug
         #temporarily turn off if not 1d
@@ -692,28 +700,28 @@ def runProblem(pName,p,n,opts,simFlags=None):
             ctemp=mlTransport.modelList[-1].coefficients.allocateDummyCoefficients(c=mlTransport.modelList[-1].q)
             mlTransport.modelList[-1].coefficients.plotCoefficientFunctions(mlTransport.modelList[-1].T,ctemp)
         timeValues = [tn]
-        dt = p.T/n.nDTout
+        dt = old_div(p.T,n.nDTout)
         #mwf debug
-        print """proteusRun T=%g nDTout= %d dt=%g """ % (p.T,n.nDTout,dt)
+        print("""proteusRun T=%g nDTout= %d dt=%g """ % (p.T,n.nDTout,dt))
         failedFlag=False
         while (tn < p.T and not failedFlag==True):
             if opts.wait:
-                raw_input('\nPress return to continue... \n')
+                input('\nPress return to continue... \n')
 
             #mwf debug
-            print """proteusRun tn=%g dt=%g """ % (tn,dt)
+            print("""proteusRun tn=%g dt=%g """ % (tn,dt))
             failedFlag,tn = timeIntegrator.calculateSolution(tn,tn+dt)
 
             simOutput.processTimeLevel(mlTransport,tn)
             if adaptMesh:
                 error,elementTagArray = errorEstimator.calculate()
-            print "error,tol,error>tol",error,tol,error > tol
+            print("error,tol,error>tol",error,tol,error > tol)
             if abs(tn) < abs(p.T) and abs(tn+dt) > abs(p.T - tn*1.0e-8):
                 dt= p.T-tn
             assert dt > 1.0e-15, "dt= %s too small " % dt
             #mwf debug
             if failedFlag:
-                print """proteusRun tn=%g dt=%g failed= %s""" % (tn,dt,failedFlag)
+                print("""proteusRun tn=%g dt=%g failed= %s""" % (tn,dt,failedFlag))
 
             if abs(p.T-tn) < 1.0e-15:
                 tn = p.T
@@ -724,7 +732,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
         #end while T
         simOutput.postprocess(mlTransport,tn)
     #end adapt mesh
-    print "nLevels",n.nLevels
+    print("nLevels",n.nLevels)
     #mwf hack
     #mlMesh.meshList[-1].writeTriangleFiles("mesh-last",1)
 if __name__ == '__main__':

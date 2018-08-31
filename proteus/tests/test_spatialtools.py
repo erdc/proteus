@@ -5,6 +5,9 @@ TO DO:
 test inertia
 test rigid body calculations
 """
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import unittest
 import numpy.testing as npt
 import numpy as np
@@ -295,7 +298,7 @@ class TestShapeRANS(unittest.TestCase):
         epsFact_solid = 0.5
         center = [0.5, 0., 0.]
         orientation = [1., 0., 0.]
-        dragAlpha = 0.5/1.005e-6
+        dragAlpha = old_div(0.5,1.005e-6)
         dragBeta = 0.
         porosity = 1.
         domain = create_domain2D()
@@ -407,7 +410,7 @@ class TestShapeRANS(unittest.TestCase):
         epsFact_solid = 0.5
         center = [0.5, 0., 0.]
         orientation = [1., 0., 0.]
-        dragAlpha = 0.5/1.005e-6
+        dragAlpha = old_div(0.5,1.005e-6)
         dragBeta = 0.
         porosity = 1.
         from proteus import WaveTools as wt
@@ -520,7 +523,7 @@ class TestShapeRANS(unittest.TestCase):
 
     def test_porous_zones(self):
         flag = 1
-        dragAlpha = 0.5/1.005e-6
+        dragAlpha = old_div(0.5,1.005e-6)
         dragBeta = 0.
         porosity = 1.
         domain = create_domain2D()

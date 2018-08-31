@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from vof_vortex_2d_p import *
-from vortex2D import *
+from .vof_vortex_2d_p import *
+from .vortex2D import *
 
 multilevelNonlinearSolver  = NLNI
 levelNonlinearSolver = Newton

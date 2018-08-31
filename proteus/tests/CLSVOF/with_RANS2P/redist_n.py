@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from proteus.default_n import *
 from proteus import (StepControl,
                      TimeIntegration,
@@ -6,8 +7,8 @@ from proteus import (StepControl,
                      LinearAlgebraTools,
                      NumericalFlux)
 from proteus.mprans import RDLS
-import redist_p as physics
-from multiphase import *
+from . import redist_p as physics
+from .multiphase import *
 
 tolFac = 0.0
 nl_atol_res = rd_nl_atol_res
