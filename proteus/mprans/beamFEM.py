@@ -1,3 +1,7 @@
+from __future__ import division
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import numpy as np
 #import scipy as sp
 #import matplotlib.pyplot as plt
@@ -5,7 +9,7 @@ import math
 import numpy.linalg as linalg
 
 
-class FEMTools:
+class FEMTools(object):
     def __init__(self,
                  L=1.0,
                  nElements=10,
@@ -43,11 +47,11 @@ class FEMTools:
     def GaussQuad(self):
         if self.quadOrder == 2:
             self.w = (1.0, 1.0)
-            self.zeta = (-1.0 / 3.0**.5, 1.0 / 3.0**0.5)
+            self.zeta = (old_div(-1.0, 3.0**.5), old_div(1.0, 3.0**0.5))
             #self.quadSpacing = (self.zeta[0]+1.0, self.zeta[1]-self.zeta[0], 1.0-self.zeta[1])
         elif self.quadOrder == 3:
-            self.w = (5.0 / 9.0, 8.0 / 9.0, 5.0 / 9.0)
-            self.zeta = (-(3.0 / 5.0)**.5, 0.0, (3.0 / 5.0)**0.5)
+            self.w = (old_div(5.0, 9.0), old_div(8.0, 9.0), old_div(5.0, 9.0))
+            self.zeta = (-(old_div(3.0, 5.0))**.5, 0.0, (old_div(3.0, 5.0))**0.5)
             #self.quadSpacing = (self.zeta[0]+1.0, self.zeta[1]-self.zeta[0], self.zeta[2]-self.zeta[1],1.0-self.zeta[2])
 
     def initializeCoords(self):

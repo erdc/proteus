@@ -1,7 +1,10 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
 from proteus import *
 from proteus.default_n import *
-from clsvof_p import *
-from clsvof import *
+from .clsvof_p import *
+from .clsvof import *
 
 nd=2
 if ct.test_case==3 or ct.test_case==4:
@@ -35,7 +38,7 @@ if useHex:
         else:
             femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}
     else:
-        print "pDegree = %s not recognized " % pDegree_clsvof
+        print("pDegree = %s not recognized " % pDegree_clsvof)
     elementQuadrature = CubeGaussQuadrature(nd,clsvof_quad_order)
     elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,clsvof_quad_order)
 else:
@@ -47,7 +50,7 @@ else:
         else:
             femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
-        print "pDegree = %s not recognized " % pDegree_clsvof
+        print("pDegree = %s not recognized " % pDegree_clsvof)
     elementQuadrature = SimplexGaussQuadrature(nd,clsvof_quad_order)
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,clsvof_quad_order)
 

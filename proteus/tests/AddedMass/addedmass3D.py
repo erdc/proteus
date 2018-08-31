@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import division
+from past.utils import old_div
 import numpy as np
 from proteus import Domain
 from proteus.mprans import SpatialTools as st
@@ -15,12 +18,12 @@ water_level = 2.5
 # GEOMETRY
 
 domain = Domain.PiecewiseLinearComplexDomain()
-
+nd=3
 tank_dim = [5.,5.,5.]
 tank = st.Tank3D(domain, dim=tank_dim)
-rect = st.Cuboid(domain, dim=[1.,1.,1.], coords=[tank_dim[0]/2.,
-                                                 tank_dim[1]/2.,
-                                                 tank_dim[2]/2.])
+rect = st.Cuboid(domain, dim=[1.,1.,1.], coords=[old_div(tank_dim[0],2.),
+                                                 old_div(tank_dim[1],2.),
+                                                 old_div(tank_dim[2],2.)])
 rect.setHoles(holes=np.array([rect.coords]))
 
 domain.MeshOptions.he = he
@@ -71,7 +74,7 @@ freezeLevelSet=True
 #----------------------------------------------------
 # Time stepping and velocity
 #----------------------------------------------------
-weak_bc_penalty_constant = 10./nu_0
+weak_bc_penalty_constant = old_div(10.,nu_0)
 dt_init = 0.001
 dt_fixed = 0.001
 T = 0.002
@@ -97,15 +100,15 @@ useRANS = 0.
             # 3 -- K-Omega, 1988
 # Input checks
 if spaceOrder not in [1,2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit()
 
 if useRBLES not in [0.0, 1.0]:
-    print "INVALID: useRBLES" + useRBLES
+    print("INVALID: useRBLES" + useRBLES)
     sys.exit()
 
 if useMetrics not in [0.0, 1.0]:
-    print "INVALID: useMetrics"
+    print("INVALID: useMetrics")
     sys.exit()
 
 #  Discretization

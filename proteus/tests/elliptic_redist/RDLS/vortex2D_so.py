@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from builtins import range
 from proteus.default_so import *
-import vortex2D
-from vortex2D import *
+from . import vortex2D
+from .vortex2D import *
 
 pnList = [("ncls_p","ncls_n"),
           ("rdls_p","rdls_n")]

@@ -1,5 +1,7 @@
+from __future__ import absolute_import
+from builtins import range
 from proteus.default_so import *
-import NS_convergence
+from . import NS_convergence
 
 from proteus.SplitOperator import Sequential_FixedStep_Simple, defaultSystem
 

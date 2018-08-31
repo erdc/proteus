@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
-from twp_navier_stokes_p import *
-from NS_hotstart import *
+from .twp_navier_stokes_p import *
+from .NS_hotstart import *
 
 STABILIZATION_TYPE = STABILIZATION_TYPE 
 if timeDiscretization=='vbdf':

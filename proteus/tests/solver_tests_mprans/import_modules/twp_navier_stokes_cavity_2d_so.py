@@ -1,6 +1,11 @@
+from __future__ import absolute_import
 from proteus.default_so import *
 import proteus
-import cavity2d
+try:
+    from . import cavity2d
+except:
+    import cavity2d
+
 from proteus import Context
 import os
 

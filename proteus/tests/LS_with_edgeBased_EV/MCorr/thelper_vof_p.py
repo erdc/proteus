@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
-from thelper_cons_ls import *
+from .thelper_cons_ls import *
 from proteus.mprans import VOF
 name=soname+"_vof"
 
@@ -26,7 +28,7 @@ coefficients = VOF.Coefficients(LS_model=LS_model, #0
 #####################
 # INITIAL CONDITION #
 #####################
-class init_cond:
+class init_cond(object):
     def __init__(self,L):
         self.radius = 0.15
         self.xc=0.5

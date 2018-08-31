@@ -1,8 +1,6 @@
 #include "cmeshToolsModule.h"
 #include "mesh.h"
 #include <algorithm>
-/* //mwf added for python wrapper structures */
-/* #include "flcbdfWrappersModule.h" */
 #include <valarray>
 #include <iostream>
 #include <map>
@@ -16,16 +14,6 @@
 #define SHAPE(p) ((PyArrayObject *)p)->dimensions
 #define DDATA(p) ((double *) (((PyArrayObject *)p)->data))
 #define IDATA(p) ((int *) (((PyArrayObject *)p)->data))
-
-
-//mwf
-// typedef struct
-// {
-//   PyObject_HEAD
-//   Mesh mesh;
-// } CMesh;
-
-// #define MESH(p) ((CMesh*)p)->mesh
 
 extern "C"
 {
