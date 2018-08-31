@@ -1,5 +1,5 @@
 #include <math.h>
-#include <curses.h>
+#include "ncurses/curses.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

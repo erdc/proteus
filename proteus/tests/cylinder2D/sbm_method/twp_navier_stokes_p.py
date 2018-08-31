@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
-from cylinder import *
+from .cylinder import *
 from proteus.mprans import RANS3PF
 name="rans3p"
 LevelModelType = RANS3PF.LevelModel
@@ -106,7 +108,7 @@ advectiveFluxBoundaryConditions =  {0:getAFBC_u,
 diffusiveFluxBoundaryConditions = {0:{0:getDFBC_u},
                                    1:{1:getDFBC_v}}
 
-class AtRest:
+class AtRest(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

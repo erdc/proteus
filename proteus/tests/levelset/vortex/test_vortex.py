@@ -2,6 +2,9 @@
 """
 Test module for level set transport
 """
+from __future__ import print_function
+from builtins import range
+from builtins import object
 from proteus.iproteus import *
 import os
 import numpy as np
@@ -16,7 +19,7 @@ from . import (ls_vortex_3d_p,
                ls_consrv_vortex_3d_n,
                ls_vortex_3d_so)
 
-class TestVortex3D():
+class TestVortex3D(object):
 
     @classmethod
     def setup_class(cls):
@@ -40,7 +43,7 @@ class TestVortex3D():
             if os.path.exists(f):
                 try:
                     os.remove(f)
-                except OSError, e:
+                except OSError as e:
                     print ("Error: %s - %s" %(e.filename,e.strerror))
             else:
                 pass

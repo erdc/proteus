@@ -3,6 +3,9 @@
 """
 some tests for initial DEIM implementation in proteus
 """
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import numpy as np
 import numpy.testing as npt
 from nose.tools import ok_ as ok
@@ -17,7 +20,7 @@ def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=False):
     #adjust default end time and number of output steps
     bu.T=T
     bu.nDTout=nDTout
-    bu.DT=bu.T/float(bu.nDTout)
+    bu.DT=old_div(bu.T,float(bu.nDTout))
     bu.so.tnList = [i*bu.DT for i in range(bu.nDTout+1)]
     #request archiving of spatial residuals ...
     simFlagsList=None
@@ -139,8 +142,8 @@ def test_deim_indices():
         test_svd_space_res(file_prefix='F_s')
     U = np.loadtxt(basis_file)
     from proteus.deim_utils import calculate_deim_indices
-    rho_half = calculate_deim_indices(U[:,:U.shape[1]/2])
-    assert rho_half.shape[0] == U.shape[1]/2
+    rho_half = calculate_deim_indices(U[:,:old_div(U.shape[1],2)])
+    assert rho_half.shape[0] == old_div(U.shape[1],2)
 
     rho = calculate_deim_indices(U)    
     assert rho.shape[0] == U.shape[1]

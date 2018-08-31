@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
-from twp_navier_stokes_p import *
-from multiphase import *
+from .twp_navier_stokes_p import *
+from .multiphase import *
 
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF

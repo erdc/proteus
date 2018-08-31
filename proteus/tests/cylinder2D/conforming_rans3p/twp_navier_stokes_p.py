@@ -1,6 +1,13 @@
+from __future__ import absolute_import
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
-from cylinder import *
+try:
+    from .cylinder import *
+except:
+    from cylinder import *
 from proteus.mprans import RANS3PF
 
 LevelModelType = RANS3PF.LevelModel
@@ -50,11 +57,11 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
 
 def getDBC_u(x,flag):
     if flag in[ boundaryTags['left']]:
-        return lambda x,t: Um*x[1]*(fl_H-x[1])/(fl_H/2.0)**2
+        return lambda x,t: Um*x[1]*(fl_H-x[1])/(old_div(fl_H,2.0))**2
     elif flag in [boundaryTags['front'],boundaryTags['back'],boundaryTags['top'],boundaryTags['bottom'],boundaryTags['obstacle']]:
         return lambda x,t: 0.0
     elif ns_forceStrongDirichlet==False and flag == boundaryTags['right']:
-        return lambda x,t: Um*x[1]*(fl_H-x[1])/(fl_H/2.0)**2
+        return lambda x,t: Um*x[1]*(fl_H-x[1])/(old_div(fl_H,2.0))**2
 
 def getDBC_v(x,flag):
     if flag in[boundaryTags['left']]:
@@ -97,7 +104,7 @@ advectiveFluxBoundaryConditions =  {0:getAFBC_u,
 diffusiveFluxBoundaryConditions = {0:{0:getDFBC_u},
                                    1:{1:getDFBC_v}}
 
-class AtRest:
+class AtRest(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
