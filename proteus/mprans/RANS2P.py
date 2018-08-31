@@ -525,6 +525,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.ebqe_vf[i, j] = smoothedHeaviside(self.epsFact * he, self.phaseFunction(pt))
 
     def initializeMesh(self, mesh):
+        
+        self.phi_s = numpy.ones(mesh.nodeArray.shape[0], 'd')*1e10#
         # cek we eventually need to use the local element diameter
         self.eps_density = self.epsFact_density * mesh.h
         self.eps_viscosity = self.epsFact * mesh.h
@@ -1705,7 +1707,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_epsFact,
                                       self.coefficients.particle_alpha,
                                       self.coefficients.particle_beta,
-                                      self.coefficients.particle_penalty_constant)
+                                      self.coefficients.particle_penalty_constant,
+                                      self.coefficients.phi_s)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
