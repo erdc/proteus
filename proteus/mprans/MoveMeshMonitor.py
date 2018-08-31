@@ -34,6 +34,11 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         corresponding to the material type set as: 0 -> not fixed, 1 -> fixed.
         all nodes that have at least one element with fixed material type around
         them will be fixed
+    noNodeVelocityNodeMaterialTypes: int[:]
+        array of length of all domain node material types, with indexes
+        corresponding to the material type set as: 0 -> not fixed, 1 -> fixed.
+        e.g. if nodes of material type 3 should not have a node velocity:
+        fixedNodeMaterialTypes[3]=1   (!) must be integers
     nSmoothIn: int
         number of smoothing steps while pseudo time stepping (during each step)
     nSmoothOut: int
@@ -61,6 +66,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                  nd=2,
                  fixedNodeMaterialTypes=None,
                  fixedElementMaterialTypes=None,
+                 noNodeVelocityNodeMaterialTypes=None,
                  nSmoothIn=0,
                  nSmoothOut=0,
                  epsFact_density=3,
@@ -92,6 +98,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.t = 0.
         self.t_last = 0.
         self.poststepdone = False
+        self.noNodeVelocityNodeMaterialTypes = noNodeVelocityNodeMaterialTypes
         #super(MyCoeff, self).__init__(aOfX, fOfX)
         TransportCoefficients.PoissonEquationCoefficients.__init__(self, aOfX, fOfX)
 
@@ -164,7 +171,6 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.eN_phi = np.array([None for i in range(len(self.mesh.nodeArray))])  # element containing displaced phi (guess)
         self.nearest_nodes0 = np.array([i for i in range(len(self.mesh.nodeArray))])
         if self.mesh.nodeVelocityArray is None:
-            import pdb; pdb.set_trace()
             self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape,'d')
         self.mesh.nodeDisplacementArray = np.zeros(self.mesh.nodeArray.shape,'d')
         self.uOfXTatNodes = np.zeros(len(self.mesh.nodeArray))
@@ -240,7 +246,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.gamma0 = 10.  # user defined parameter
         self.na = np.log(self.gamma)/np.log(self.gamma0)
         nNodes_owned = self.mesh.nNodes_owned
-        if self.dt_last is not None and self.poststepdone is False and self.nt>5:
+        if self.dt_last is not None and self.poststepdone is False:
             # pseudo-time step
             self.PHI[:] = self.mesh.nodeArray[:]
             self.cCoefficients.pseudoTimeStepping(eps=self.epsTimeStep,
@@ -259,15 +265,10 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             self.nearest_nodes[:] = self.nearest_nodes0[:]
             self.eN_phi[:] = None
         # # tri hack: remove mesh velocity when dirichlet imposed on boundaries
-        # for i in range(nNodes_global):
-        #     if self.mesh.nodeMaterialTypes[i] == 1:
-        #         self.mesh.nodeVelocityArray[i, :] = 0.
-        #     if self.mesh.nodeMaterialTypes[i] == 2:
-        #         self.mesh.nodeVelocityArray[i, :] = 0.
-            # if self.mesh.nodeMaterialTypes[i] == 3:
-            #     self.mesh.nodeVelocityArray[i, :] = 0.
-            # if self.mesh.nodeMaterialTypes[i] == 4:
-            #     self.mesh.nodeVelocityArray[i, :] = 0.
+        if self.noNodeVelocityNodeMaterialTypes is not None:
+            for node in range(nNodes_global):
+                if self.noNodeVelocityNodeMaterialTypes[self.mesh.nodeMaterialTypes[node]] == 1:
+                    self.mesh.nodeVelocityArray[node, :] = 0.
         #self.model.mesh.nodeVelocityArray[:] = np.zeros(self.model.mesh.nodeArray.shape)
         # re-initialise nearest nodes
         # re-initialise containing element
