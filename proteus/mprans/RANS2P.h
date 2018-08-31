@@ -10,7 +10,7 @@ const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) onl
 const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume change
 #include "PyEmbeddedFunctions.h"
 
-#define USE_CYLINDER_AS_PARTICLE//just for debug
+// #define USE_CYLINDER_AS_PARTICLE//just for debug
 
 namespace proteus
 {
@@ -198,7 +198,8 @@ namespace proteus
                                    double particle_epsFact,
                                    double particle_alpha,
                                    double particle_beta,
-                                   double particle_penalty_constant)=0;
+                                   double particle_penalty_constant,
+                                   double *phi_solid_nodes)=0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
@@ -2521,7 +2522,8 @@ namespace proteus
                              double particle_epsFact,
                              double particle_alpha,
                              double particle_beta,
-                             double particle_penalty_constant)
+                             double particle_penalty_constant,
+                             double *phi_solid_nodes)
       {
         logEvent("Entered mprans 3D calculateResidual",6);
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
@@ -2554,6 +2556,16 @@ namespace proteus
                 elementResidual_v[i]=0.0;
                 elementResidual_w[i]=0.0;
               }//i
+            //Use for plotting result
+            if(use_ball_as_particle==1)
+            {
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+0],
+                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
+                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
+                                                phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]);
+            }
             //
             //loop over quadrature points and compute integrands
             //

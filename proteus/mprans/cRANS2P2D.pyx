@@ -185,7 +185,8 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double particle_epsFact,
                                double particle_alpha,
                                double particle_beta,
-                               double particle_penalty_constant)
+                               double particle_penalty_constant,
+                               double *phi_solid_nodes)
         void calculateJacobian(double NONCONSERVATIVE_FORM,
                                double MOMENTUM_SGE,
                                double PRESSURE_SGE,
@@ -688,7 +689,8 @@ cdef class cRANS2P2D_base:
                           double particle_epsFact,
                           double particle_alpha,
                           double particle_beta,
-                          double particle_penalty_constant):
+                          double particle_penalty_constant,
+                          numpy.ndarray phi_solid_nodes):
         self.thisptr.calculateResidual(NONCONSERVATIVE_FORM,
                                        MOMENTUM_SGE,
                                        PRESSURE_SGE,
@@ -867,7 +869,8 @@ cdef class cRANS2P2D_base:
                                        particle_epsFact,
                                        particle_alpha,
                                        particle_beta,
-                                       particle_penalty_constant)
+                                       particle_penalty_constant,
+                                       < double * > phi_solid_nodes.data)
 
     def calculateJacobian(self,
                           double NONCONSERVATIVE_FORM,
