@@ -19,6 +19,10 @@ for i in range(nPoints_x):
             x[i,j,k,1] = j*dy
             x[i,j,k,2] = k*dz
 
+grid = MeshTools.RectangularGrid(500,1,1,Lx=1.0)
+X=numpy.array([n.p for n in grid.nodeList])
+Xx=numpy.array([n.p[0] for n in grid.nodeList])
+
 def test_PlaneCouetteFlow():
     iwork = numpy.zeros((1,),'i')
     rwork = numpy.zeros((5,),'d')
@@ -60,10 +64,7 @@ def test_PlaneBase():
                                   mu=1.0,
                                   grad_p=1.0)
 
-def test_NonlinearDAE
-    grid = MeshTools.RectangularGrid(500,1,1,Lx=1.0)
-    X=numpy.array([n.p for n in grid.nodeList])
-    Xx=numpy.array([n.p[0] for n in grid.nodeList])
+def test_NonlinearDAE():
     logEvent("Testing Solutions in 1D")
     logEvent("NonlinearDAE")
     from proteus.AnalyticalSolutions import NonlinearDAE
@@ -140,7 +141,7 @@ def test_LinearADR_Sine():
     plt.legend()
     plt.savefig("LinearADR_Sine.png")
 
-def test_LinearAD_DiracIC();
+def test_LinearAD_DiracIC():
     logEvent("LinearAD_DiracIC")
     sol=AnalyticalSolutions.LinearAD_DiracIC()
     plt.plot(Xx,
@@ -214,23 +215,23 @@ def test_LinearADR_Decay_DiracIC():
              [sol.rOfUXT(sol.uOfXT(x,T=0.75),x,T=0.75) for x in X],
              label='Reaction,t=0.75')
     plt.legend()
-    plt.savefix("LinearADR_Decay_DiracIC.png")
+    plt.savefig("LinearADR_Decay_DiracIC.png")
 
 def test_NonlinearADR_Decay_DiracIC():
     logEvent("NonlinearADR_Decay_DiracIC")
     sol=AnalyticalSolutions.NonlinearADR_Decay_DiracIC()
     plt.plot(Xx,
              [sol.uOfXT(x,T=0.25) for x in X],
-             label='Solution,t=0.25'),
+             label='Solution,t=0.25')
     plt.plot(Xx,
              [sol.uOfXT(x,T=0.75) for x in X],
-             label='Solution,t=0.75'))
+             label='Solution,t=0.75')
     plt.plot(Xx,
              [sol.duOfXT(x,T=0.25)[0] for x in X],
-             label='Gradient,t=0.25'),
+             label='Gradient,t=0.25')
     plt.plot(Xx,
              [sol.duOfXT(x,T=0.75)[0] for x in X],
-             label='Gradient,t=0.75'))
+             label='Gradient,t=0.75')
     plt.plot(Xx,
              [sol.advectiveFluxOfXT(x,T=0.25)[0] for x in X],
              label='Advective Flux,t=0.25')
@@ -239,7 +240,7 @@ def test_NonlinearADR_Decay_DiracIC():
              label='Advective Flux,t=0.75')
     plt.plot(Xx,
              [sol.diffusiveFluxOfXT(x,T=0.25)[0] for x in X],
-             label='Diffusive Flux,t=0.25'),
+             label='Diffusive Flux,t=0.25')
     plt.plot(Xx,
              [sol.diffusiveFluxOfXT(x,T=0.75)[0] for x in X],
              label='Diffusive Flux,t=0.75')
@@ -255,8 +256,8 @@ def test_NonlinearADR_Decay_DiracIC():
     plt.plot(Xx,
              [sol.rOfUXT(sol.uOfXT(x,T=0.75),x,T=0.75) for x in X],
              label='Reaction,t=0.75')
-    plt.legend("NonlinearADR_Decay_DiracIC.png")
-    plt.savefig()
+    plt.legend()
+    plt.savefig("NonlinearADR_Decay_DiracIC.png")
 
 def test_NonlinearDAE_f():
     iwork = numpy.zeros((1,),'i')
@@ -264,14 +265,12 @@ def test_NonlinearDAE_f():
     rwork[0]=5.0
     rwork[1]=2.0
     t=1.0
-    u = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
-    # x is the initial u.
-    u = x.copy()
-    canalyticalSolutions.NonlinearDAE_f(iwork,rwork,t,x,u)
+    f = x.copy()
+    canalyticalSolutions.NonlinearDAE_f(iwork,rwork,t,x,f)
     slice = nPoints_z/2
-    plt.contourf(x[:,:,0],
-                 x[:,:,1],
-                 u[:,:,slice,0])
+    plt.contourf(x[:,:,slice,0],
+                 x[:,:,slice,1],
+                 f[:,:,slice,0])
     plt.savefig("NonlinearDAE_f.png")
 
 def test_poissonsEquationExp1D():
@@ -306,8 +305,8 @@ def test_poissonsEquationsExp2D():
     canalyticalSolutions.poissonsEquationExp2D(iwork,rwork,t,x,u)
     plt.contourf(x[:,:,0],
                  x[:,:,1],
-                 u,
-                 label='poissonsEquationExp2D')
+                 u)
+    plt.title('poissonsEquationExp2D')
     plt.savefig("poissonsEquationExp2D.png")
 
 def test_poissonsEquationExp3D():
@@ -322,19 +321,19 @@ def test_poissonsEquationExp3D():
                  x[slice,:,:,1],
                  u[slice,:,:])
     plt.title('poissonsEquationExp3D-x/2')
-    plt.savefig('poissonsEquationExp3D_x/2.png')
+    plt.savefig('poissonsEquationExp3D_xby2.png')
     slice=nPoints_y/2
     plt.contourf(x[:,slice,:,0],
                  x[:,slice,:,1],
                  u[:,slice,:])
     plt.title('poissonsEquationExp3D-y/2')
-    plt.savefig('poissonsEquationExp3D-y/2.png')
+    plt.savefig('poissonsEquationExp3D_yby2.png')
     slice=nPoints_z/2
     plt.contourf(x[:,:,slice,0],
                  x[:,:,slice,1],
                  u[:,:,slice])
     plt.title('poissonsEquationExp3D-z/2')
-    plt.savefig('poissonsEquationExp3D-z/2.png')
+    plt.savefig('poissonsEquationExp3D_zby2.png')
 
 def test_diffusionSin1D():
     iwork = numpy.zeros((1,),'i')
@@ -414,7 +413,7 @@ def test_STflowSphere_P():
     plt.contourf(x[slice,:,:,1],
                  x[slice,:,:,2],
                  p[slice,:,:])
-    plt.title('STflowSphere_P: yz plane'))
+    plt.title('STflowSphere_P: yz plane')
     slice=nPoints_y/2
     plt.contourf(x[:,slice,:,0],
                  x[:,slice,:,2],
@@ -424,63 +423,63 @@ def test_STflowSphere_P():
     plt.contourf(x[:,:,slice,0],
                  x[:,:,slice,1],
                  p[:,:,slice])
-     plt.title('STflowSphere_P: xy plane')
-     plt.savefig("STflowSphere_P.png")
-     ux = numpy.zeros(x.shape[:-1],'d')
-     canalyticalSolutions.STflowSphere_Vx(iwork,rwork,t,x,ux)
-     uy = numpy.zeros(x.shape[:-1],'d')
-     canalyticalSolutions.STflowSphere_Vy(iwork,rwork,t,x,uy)
-     uz = numpy.zeros(x.shape[:-1],'d')
-     canalyticalSolutions.STflowSphere_Vz(iwork,rwork,t,x,uz)
-     slice=nPoints_z/2
-     plt.quiver(x[:,:,slice,0],
-                x[:,:,slice,1],
-                ux[:,:,slice],
-                uy[:,:,slice])
-     plot.title('STflowSphere : xy plane')
-     plot.savefig('STflowSphere_xy.png')
-     slice=nPoints_y/2
-     plt.quiver(x[:,slice,:,0],
-                x[:,slice,:,2],
-                ux[:,slice,:],
-                uz[:,slice,:])
-     plt.title('STflowSphere : xz plane')
-     plt.savefig('STflowSphere_xz.png')
-     slice=nPoints_x/2
-     plt.quiver(x[slice,:,:,1],
-                x[slice,:,:,2],
-                uy[slice,:,:],
-                uz[slice,:,:])
-     plt.title('STflowSphere : yz plane')
-     plt.savefig('STflowSphere_yz.png')
-
-def test_PoiseuilleFlow():
-     iwork = numpy.zeros((1,),'i')
-     rwork = numpy.zeros((7,),'d')
-     t=0.0
-     rwork[0]=dy*(nPoints_y-1.0)
-     rwork[1]=0.001
-     rwork[2]=-1.0
-     # rwork[3]=83.3
-     rwork[4]=0.0
-     rwork[5]=0.0
-     rwork[6]=0.0
-     ux = numpy.zeros(x.shape[:-1],'d')
-     uy = numpy.zeros(x.shape[:-1],'d')
-     canalyticalSolutions.PoiseuilleFlow(iwork,rwork,t,x,ux)
-     slice=nPoints_z/2
-     plt.contourf(x[:,:,slice,0],
-                  x[:,:,slice,1],
-                  u[:,:,slice])
-     plt.title("Poiseuille Flow")
-     plt.savefig("PoiseuilleFlow.png")
-     plt.quiver(x[:,:,slice,0],
-                x[:,:,slice,1],
-                ux[:,:,slice],
-                uy[:,:,slice])
-     plt.title("Poiseuille Flow Velocity")
-     plt.savefig("PoiseuilleFlowQuiver.png")
-
+    plt.title('STflowSphere_P: xy plane')
+    plt.savefig("STflowSphere_P.png")
+    ux = numpy.zeros(x.shape[:-1],'d')
+    canalyticalSolutions.STflowSphere_Vx(iwork,rwork,t,x,ux)
+    uy = numpy.zeros(x.shape[:-1],'d')
+    canalyticalSolutions.STflowSphere_Vy(iwork,rwork,t,x,uy)
+    uz = numpy.zeros(x.shape[:-1],'d')
+    canalyticalSolutions.STflowSphere_Vz(iwork,rwork,t,x,uz)
+    slice=nPoints_z/2
+    plt.quiver(x[:,:,slice,0],
+               x[:,:,slice,1],
+               ux[:,:,slice],
+               uy[:,:,slice])
+    plt.title('STflowSphere : xy plane')
+    plt.savefig('STflowSphere_xy.png')
+    slice=nPoints_y/2
+    plt.quiver(x[:,slice,:,0],
+               x[:,slice,:,2],
+               ux[:,slice,:],
+               uz[:,slice,:])
+    plt.title('STflowSphere : xz plane')
+    plt.savefig('STflowSphere_xz.png')
+    slice=nPoints_x/2
+    plt.quiver(x[slice,:,:,1],
+               x[slice,:,:,2],
+               uy[slice,:,:],
+               uz[slice,:,:])
+    plt.title('STflowSphere : yz plane')
+    plt.savefig('STflowSphere_yz.png')
+    
+def test_PlanePoiseuilleFlow_u():
+    iwork = numpy.zeros((1,),'i')
+    rwork = numpy.zeros((7,),'d')
+    t=0.0
+    rwork[0]=dy*(nPoints_y-1.0)
+    rwork[1]=0.001
+    rwork[2]=-1.0
+    # rwork[3]=83.3
+    rwork[4]=0.0
+    rwork[5]=0.0
+    rwork[6]=0.0
+    ux = numpy.zeros(x.shape[:-1],'d')
+    uy = numpy.zeros(x.shape[:-1],'d')
+    canalyticalSolutions.PlanePoiseuilleFlow_u(iwork,rwork,t,x,ux)
+    slice=nPoints_z/2
+    plt.contourf(x[:,:,slice,0],
+                 x[:,:,slice,1],
+                 ux[:,:,slice])
+    plt.title("Plane Poiseuille Flow")
+    plt.savefig("PlanePoiseuilleFlow.png")
+    plt.quiver(x[:,:,slice,0],
+               x[:,:,slice,1],
+               ux[:,:,slice],
+               uy[:,:,slice])
+    plt.title("Plane Poiseuille Flow Velocity")
+    plt.savefig("PlanePoiseuilleFlowQuiver.png")
+    
 def test_PoiseuillePipeFlow():
     iwork = numpy.zeros((1,),'i')
     rwork = numpy.zeros((7,),'d')
@@ -533,5 +532,5 @@ def test_PoiseuillePipeFlow_P():
      plt.contourf(x[:,:,slice,0],
                   x[:,:,slice,1],
                   ux[:,:,slice])
-     plt.title('Poiseuille Pipe Flow: Pressure'))
+     plt.title('Poiseuille Pipe Flow: Pressure')
      plt.savefig("PoiseuillePipeFlow_P.png")
