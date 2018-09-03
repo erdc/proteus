@@ -688,6 +688,19 @@ class AddedMassNewton(Newton):
             self.F.added_mass_i=i
             Newton.solve(self,u,r,b,par_u,par_r)
 
+class MoveMeshMonitorNewton(Newton):
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        if self.F.coefficients.t > 0:
+            for i in range(self.F.coefficients.ntimes_solved):
+                self.F.coefficients.ntimes_i = i
+                if i > 0:
+                    self.F.coefficients.model.tLast_mesh = self.F.coefficients.t_last
+                    self.F.coefficients.model.calculateQuadrature()
+                    self.F.coefficients.preStep(t=None)
+                Newton.solve(self,u,r,b,par_u,par_r)
+                if i < self.F.coefficients.ntimes_solved-1:
+                    self.F.coefficients.postStep(t=None)
+
 class TwoStageNewton(Newton):
     """Solves a 2 Stage problem via Newton's solve"""
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
@@ -3667,6 +3680,28 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                             directSolver=linearDirectSolverFlag,
                                                             EWtol=EWtol,
                                                             maxLSits=maxLSits ))     
+    elif levelNonlinearSolverType == MoveMeshMonitorNewton:
+        for l in range(nLevels):
+            if par_duList is not None and len(par_duList) > 0:
+                par_du=par_duList[l]
+            else:
+                par_du=None
+            levelNonlinearSolverList.append(MoveMeshMonitorNewton(linearSolver=linearSolverList[l],
+                                                            F=nonlinearOperatorList[l],
+                                                            J=jacobianList[l],
+                                                            du=duList[l],
+                                                            par_du=par_du,
+                                                            rtol_r=relativeToleranceList[l],
+                                                            atol_r=absoluteTolerance,
+                                                            maxIts=maxSolverIts,
+                                                            norm = nonlinearSolverNorm,
+                                                            convergenceTest = levelSolverConvergenceTest,
+                                                            computeRates = computeLevelSolverRates,
+                                                            printInfo=printLevelSolverInfo,
+                                                            fullNewton=levelSolverFullNewtonFlag,
+                                                            directSolver=linearDirectSolverFlag,
+                                                            EWtol=EWtol,
+                                                            maxLSits=maxLSits))
     else:
         try:
             for l in range(nLevels):
@@ -3705,6 +3740,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                          printInfo=printSolverInfo)
     elif (multilevelNonlinearSolverType == Newton or
           multilevelNonlinearSolverType == AddedMassNewton or
+          multilevelNonlinearSolverType == MoveMeshMonitorNewton or
           multilevelNonlinearSolverType == POD_Newton or
           multilevelNonlinearSolverType == POD_DEIM_Newton or
           multilevelNonlinearSolverType == NewtonNS or
