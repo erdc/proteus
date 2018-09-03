@@ -130,6 +130,7 @@ cdef class cCoefficients:
                                                     elementBarycentersArray=elementBarycentersArray,
                                                     nElements=nElements_global)
 
+
     def postStep(self):
         pc = self.pyCoefficients
         self.cppPostStep()
@@ -203,10 +204,14 @@ cdef class cCoefficients:
     cdef cppPseudoTimeSteppingParallel(self,
                                        double[:,:] xx,
                                        double eps):
-        logEvent("Pseudo-time stepping with dt={eps} (0<t<1)".format(eps=eps),
-                 level=3)
         pc = self.pyCoefficients
-        cdef double[:] t_range = np.linspace(0., 1., int(1./eps+1))[1:]
+        cdef int ntimes_solved = pc.ntimes_solved
+        cdef int ntimes_i = pc.ntimes_i
+        cdef double t_min = 1./ntimes_solved*(ntimes_i)
+        cdef double t_max = t_min+1./ntimes_solved
+        logEvent("Pseudo-time stepping with dt={eps} ({t_min}<t<{t_max})".format(eps=eps, t_max=t_max, t_min=t_min),
+                 level=3)
+        cdef double[:] t_range = np.linspace(t_min, t_max, int((t_max-t_min)/eps+1))[1:]
         cdef int ntimesteps = len(t_range)
         cdef int[:] eN_phi = np.zeros(len(xx), dtype=np.int32)
         cdef double[:] normal = np.zeros(3)
@@ -263,7 +268,6 @@ cdef class cCoefficients:
         cdef int[:] elementBoundaryOffsets_subdomain_owned = pc.mesh.globalMesh.elementBoundaryOffsets_subdomain_owned
         cdef int[:,:] elementBoundaryNodesArray = pc.mesh.elementBoundaryNodesArray
         cdef int[:] fixedNodesBoolArray = pc.mesh.fixedNodesBoolArray
-        cdef int nSmoothIn = pc.nSmoothIn
         cdef int nSmoothOut = pc.nSmoothOut
         cdef bool inside_eN = False
         cdef double[:] vec = np.zeros(3)
@@ -820,7 +824,7 @@ cdef class cCoefficients:
                                  nodeNumbering_subdomain2global,
                                  nodeOffsets_subdomain_owned)
 
-        if nSmoothOut > 0:
+        if nSmoothOut > 0 and ntimes_i == ntimes_solved-1:
             comm.barrier()
             logEvent('Smoothing Mesh with Laplace Smoothing - '+str(nSmoothOut))
             for iS in range(nSmoothOut):
@@ -1259,3 +1263,369 @@ cdef tuple checkOwnedVariable(int variable_nb_local,
 #                                                                                        variableOffsets_subdomain_owned=eNOffsets_subdomain_owned)
 #                                     elements2rank[new_rank] = np.append(elements2rank[new_rank], nearest_eN_new_rank)
 #                                     nPending_disp += 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# coords_2rank = coords_2rank,
+# tofind_2rank = 
+#     cdef dict ls_coords_2rank = {}
+#     # nodes to send
+#     cdef dict ls_nodes0_2rank = {}
+#     # original rank of sending rank
+#     cdef dict ls_rank0_2rank = {}
+#     # original node number on sending rank
+#     cdef dict ls_nearestN_2rank = {}
+#     # elements to send
+#     cdef dict ls_typeN_2rank = {}
+#     # direction to rank (for sliding nodes)
+#     cdef dict ls_b_i_2rank = {}
+#     # solutions
+#     cdef int nPending_disp = 0  # number of pending solutions from other ranks
+#     cdef int nPending_disp_total = 0  # number of pending solutions from other ranks
+#     cdef double[:,:] nodeArray0 = mesh.nodeArray0
+#     cdef double[:,:] elementBarycentersArray0 = mesh.elementBarycentersArray0
+#     cdef double[:,:,:] elementBoundaryNormalsArray0 = mesh.elementBoundaryNormalsArray0
+#     cdef double[:,:] elementBoundaryBarycentersArray0 = mesh.elementBoundaryBarycentersArray0
+#     # declare variables for speed up
+#     if comm_size > 1:
+#         for rank in range(comm_size):
+#             # things to send to other processors to get solution
+#             ls_coords_2rank[rank] = np.zeros((0, 3))
+#             ls_b_i_2rank[rank] = np.zeros(0, dtype=np.int32)
+#             ls_nodes0_2rank[rank] = np.zeros(0, dtype=np.int32)
+#             ls_rank0_2rank[rank] = np.zeros(0, dtype=np.int32)
+#             ls_nearestN_2rank[rank] = np.zeros(0, dtype=np.int32)
+#             ls_typeN_2rank[rank] = np.zeros(0, dtype=np.int32)
+#     ls_coords_2rank[my_rank] = coords_2rank[my_rank]
+#     ls_2rank[my_rank] = np.zeros(len(coords_2rank[my_rank]))
+#     ls_b_i_2rank[my_rank] = b_i_2rank[my_rank]
+#     ls_rank0_2rank[my_rank] = rank0_2rank[my_rank]
+#     ls_nodes0_2rank[my_rank] = nodes0_2rank[my_rank]
+#     ls_typeN_2rank[my_rank] = typeN_2rank[my_rank]
+#     ls_nearestN_2rank[my_rank] = nearestN_2rank[my_rank]
+# getMPI(string dtype='int',
+#        tofind_2rank=ls_2rank,
+#        coords_2rank=ls_coords_2rank,
+#        nodes0_2rank=ls_nodes0_2rank,
+#        b_i_2rank=ls_b_i_2rank,
+#        rank0_2rank=ls_rank0_2rank,
+#        nearestN_2rank=ls_nearestN_2rank,
+#        typeN_2rank=ls_typeN_2rank,
+#        femSpace=,
+#        tofind_function=pc.getLevelSetValue,
+#        nodeArray=nodeArray0,
+#        nodeStarOffsets=nodeStarOffsets,
+#        nodeStarArray=nodeStarArray,
+#        nNodes_owned=nNodes_owned,
+#        nodeNumbering_subdomain2global=nodeNumbering_subdomain2global,
+#        nodeOffsets_subdomain_owned=nodeOffsets_subdomain_owned,
+#        nodeElementOffsets=nodeElementOffsets,
+#        nodeElementsArray=nodeElementsArray,
+#        elementBarycentersArray=elementBarycentersArray0,
+#        elementBoundaryNormalsArray=elementBoundaryNormalsArray0,
+#        elementBoundariesArray=elementBoundariesArray,
+#        elementBoudnariesBoolArray=elementBoudnariesBoolArray,
+# )
+# def getMPI(string dtype,
+#            dict tofind_2rank,
+#            dict coords_2rank,
+#            dict nodes0_2rank,
+#            dict b_i_2rank,
+#            dict rank0_2rank,
+#            dict nearestN_2rank,
+#            dict typeN_2rank,
+#            object femSpace,
+#            object tofind_function,
+#            # mesh variables
+#            double[:,:] nodeArray,
+#            int[:] nodeStarOffsets,
+#            int[:] nodeStarArray,
+#            int nNodes_owned,
+#            int[:] nodeNumbering_subdomain2global,
+#            int[:] nodeOffsets_subdomain_owned,
+#            int[:] nodeElementOffsets,
+#            int[:,:] nodeElementsArray,
+#            double[:,:] elementBarycentersArray,
+#            double[:,:,:] elementBoundaryNormalsArray,
+#            int[:,:] elementBoundariesArray,
+#            double[:,:] elementBoundaryBarycentersArray,
+#            int[:,:] elementBoundaryElementsArray,
+#            int[:] exteriorElementBoundariesBoolArray,
+# ):
+#     if comm_size > 1:
+#         # number of pending solutions to send to other processors
+#         nPending_disp_total = comm.allreduce(nPending_disp)
+#         parallel_steps = -1
+#         while nPending_disp_total > 0:
+#             parallel_steps += 1
+#             nPending_disp = 0
+#             sendBack = True
+#             # initialize solution from previously found solutions
+#             tofind_2doArray = tofind_2rank[my_rank]
+#             coords_2doArray = coords_2rank[my_rank]
+#             nodes0_2doArray = nodes0_2rank[my_rank]
+#             b_i_2doArray = b_i_2rank[my_rank]
+#             rank0_2doArray = rank0_2rank[my_rank]
+#             nearestN_2doArray = nearestN_2rank[my_rank]
+#             typeN_2doArray = typeN_2rank[my_rank]
+#             if parallel_steps > 0:
+#                 # if coming from this rank, solution was already found
+#                 solFound_2doArray = np.ones(len(coords_2doArray), dtype=np.int32)
+#             else:
+#                 solFound_2doArray = np.zeros(len(coords_2doArray), dtype=np.int32)
+#             # wipe dicts out
+#             if dtype == 'int':
+#                 tofind_2rank[my_rank] = np.zeros(0, dtype=np.int32)
+#             elif dtype == 'intVector':
+#                 tofind_2rank[my_rank] = np.zeros((0, 3), dtype=np.int32)
+#             elif dtype == 'double':
+#                 tofind_2rank[my_rank] = np.zeros(0)
+#             elif dtype == 'doubleVector':
+#                 tofind_2rank[my_rank] = np.zeros((0, 3))
+#             coords_2rank[my_rank] = np.zeros((0, 3))
+#             nodes0_2rank[my_rank] = np.zeros(0, dtype=np.int32)
+#             rank0_2rank[my_rank] = np.zeros(0, dtype=np.int32)
+#             nearestN_2rank[my_rank] = np.zeros(0, dtype=np.int32)
+#             typeN_2rank[my_rank] = np.zeros(0, dtype=np.int32)
+#             b_i_2rank[my_rank] = np.zeros(0, dtype=np.int32)
+#             for rank_recv in range(comm.size):
+#                 for rank_send in range(comm.size):
+#                     if rank_send != rank_recv and rank_send == my_rank:
+#                         comm.send(coords_2rank[rank_recv].size, dest=rank_recv, tag=0)
+#                         if coords_2rank[rank_recv].size > 0:
+#                             # tofind
+#                             comm.send(tofind_2rank[rank_recv],  dest=rank_recv, tag=100)
+#                             # coords
+#                             comm.send(coords_2rank[rank_recv],  dest=rank_recv, tag=1)
+#                             # current nearest nodes
+#                             comm.send(nodes0_2rank[rank_recv], dest=rank_recv, tag=2)
+#                             # rank for original nodes (to send back final solution)
+#                             comm.send(rank0_2rank[rank_recv], dest=rank_recv, tag=3)
+#                             # node number of nodes on original rank send back final solution)
+#                             comm.send(nearestN_2rank[rank_recv], dest=rank_recv, tag=4)
+#                             # current nearest elements
+#                             comm.send(typeN_2rank[rank_recv], dest=rank_recv, tag=5)
+#                             # node direction (if boundary nodes)
+#                             comm.send(b_i_2rank[rank_recv], dest=rank_recv, tag=7)
+#                             # wipe the dictionary items now that it has been sent
+#                         if dtype == 'int':
+#                             tofind_2rank[rank_recv] = np.zeros(0, dtype=np.int32)
+#                         elif dtype == 'intVector':
+#                             tofind_2rank[rank_recv] = np.zeros((0, 3), dtype=np.int32)
+#                         elif dtype == 'double':
+#                             tofind_2rank[rank_recv] = np.zeros(0)
+#                         elif dtype == 'doubleVector':
+#                             tofind_2rank[rank_recv] = np.zeros((0, 3))
+#                         coords_2rank[rank_recv] = np.zeros((0, 3))
+#                         nodes0_2rank[rank_recv] = np.zeros(0, dtype=np.int32)
+#                         rank0_2rank[rank_recv] = np.zeros(0, dtype=np.int32)
+#                         nearestN_2rank[rank_recv] = np.zeros(0, dtype=np.int32)
+#                         typeN_2rank[rank_recv] = np.zeros(0, dtype=np.int32)
+#                         b_i_2rank[rank_recv] = np.zeros(0, dtype=np.int32)
+#                     elif rank_send!= rank_recv and rank_recv == my_rank:
+#                         size = comm.recv(source=rank_send, tag=0)
+#                         if size > 0:
+#                             tofind_2do = comm.recv(source=rank_send, tag=100)
+#                             tofind_2doArray = np.append(tofind_2doArray, tofind_2do, axis=0)
+#                             # coords
+#                             coords_2do = comm.recv(source=rank_send, tag=1)
+#                             coords_2doArray = np.append(coords_2doArray, coords_2do, axis=0)
+#                             # node number on original rank
+#                             nodes0_2do = comm.recv(source=rank_send, tag=2)
+#                             nodes0_2doArray = np.append(nodes0_2doArray, nodes0_2do)
+#                             # original rank
+#                             rank0_2do = comm.recv(source=rank_send, tag=3)
+#                             rank0_2doArray = np.append(rank0_2doArray, rank0_2do)
+#                             # current nearest N
+#                             nearestN_2do = comm.recv(source=rank_send, tag=4)
+#                             nearestN_2doArray = np.append(nearestN_2doArray, nearestN_2do)
+#                             # is it node (0) or element (1)
+#                             typeN_2do = comm.recv(source=rank_send, tag=5)
+#                             typeN_2doArray = np.append(typeN_2doArray, typeN_2do)
+#                             b_i_2do = comm.recv(source=rank_send, tag=7)
+#                             b_i_2doArray = np.append(b_i_2doArray, b_i_2do)
+#                             # sent information means solution was not found
+#                             solFound_2doArray = np.append(solFound_2doArray, np.zeros(len(coords_2do), dtype=np.int32))
+#                     comm.barrier()
+#             nNodes = len(nearestN_2doArray)
+#             for iN in range(nNodes):
+#                 coords = np.zeros(3)
+#                 coords[0] = coords_2doArray[iN, 0]
+#                 coords[1] = coords_2doArray[iN, 1]
+#                 coords[2] = coords_2doArray[iN, 2]
+#                 nearestN = nearestN_2doArray[iN]
+#                 typeN = typeN_2doArray[iN]
+#                 new_rank = my_rank
+#                 b_i_global = b_i_2doArray[iN]
+#                 node0 = nodes0_2doArray[iN]
+#                 if solFound_2doArray[iN] == 0:
+#                     if typeN == 0:
+#                         nearestN = ms.pyxGetLocalNearestNode(coords=coords,
+#                                                                 nodeArray=nodeArray,
+#                                                                 nodeStarOffsets=nodeStarOffsets,
+#                                                                 nodeStarArray=nodeStarArray,
+#                                                                 node=nearestN)
+#                         if nearestN >= nNodes_owned:
+#                             result = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
+#                                                                 rank=my_rank,
+#                                                                 nVariables_owned=nNodes_owned,
+#                                                                 variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
+#                                                                 variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
+#                             nearestN = result[0]
+#                             new_rank = result[1]
+#                         else:
+#                             typeN = 1
+#                             nearestN = ms.pyxGetLocalNearestElementAroundNode(coords=coords,
+#                                                                                 nodeElementOffsets=nodeElementOffsets,
+#                                                                                 nodeElementsArray=nodeElementsArray,
+#                                                                                 elementBarycentersArray=elementBarycentersArray,
+#                                                                                 node=nearestN)
+#                     if typeN == 1:
+#                         if nearestN == -1:
+#                             if b_i == -1:
+#                                 import pdb; pdb.set_trace()
+#                             b_i = ms.cyGetLocalVariable(variable_nb_global=b_i_global,
+#                                                         rank=my_rank,
+#                                                         nVariables_owned=nElementBoundaries_owned,
+#                                                         variableNumbering_subdomain2global=elementBoundaryNumbering_subdomain2global,
+#                                                         variableOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned)
+#                             for ii in range(2):
+#                                 eeN = elementBoundaryElementsArray[b_i, ii]
+#                                 if eeN == -1:
+#                                     nearestN = elementBoundaryElementsArray[b_i, ii-1]
+#                             if nearestN == -1:
+#                                 nearestN = eeN
+#                             assert nearestN != -1, 'did not find nearestN! {x}, {y}'.format(x=coords[0], y=coords[1])
+#                         starting_coords[0] = elementBarycentersArray[nearestN, 0]
+#                         starting_coords[1] = elementBarycentersArray[nearestN, 1]
+#                         starting_coords[2] = elementBarycentersArray[nearestN, 2]
+#                         result = ms.pyxGetLocalNearestElementIntersection(coords=coords,
+#                                                                             starting_coords=starting_coords,
+#                                                                             elementBoundaryNormalsArray=elementBoundaryNormalsArray,
+#                                                                             elementBoundariesArray=elementBoundariesArray,
+#                                                                             elementBoundaryBarycentersArray=elementBoundaryBarycentersArray,
+#                                                                             elementBoundaryElementsArray=elementBoundaryElementsArray,
+#                                                                             exteriorElementBoundariesBoolArray=exteriorElementBoundariesBoolArray,
+#                                                                             eN=nearestN)
+#                         nearestN = result[0]
+#                         b_i = result[1]
+#                         if nearestN >= nElements_owned:
+#                             result = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
+#                                                                 rank=my_rank,
+#                                                                 nVariables_owned=nElements_owned,
+#                                                                 variableNumbering_subdomain2global=elementNumbering_subdomain2global,
+#                                                                 variableOffsets_subdomain_owned=elementOffsets_subdomain_owned)
+#                             nearestN = result[0]
+#                             new_rank = result[1]
+#                         if nearestN == -1:
+#                             result = ms.cyGetGlobalVariable(variable_nb_local=b_i,
+#                                                             nVariables_owned=nElementBoundaries_owned,
+#                                                             variableNumbering_subdomain2global=elementBoundaryNumbering_subdomain2global,
+#                                                             variableOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned)
+#                             b_i_global = result[0]
+#                             new_rank = result[1]
+#                         else:
+#                             # directly using nearestN for next time
+#                             # (no need for b_i_global)
+#                             b_i_global = -1
+#                     if new_rank != my_rank:
+#                         pending = True
+#                     else:
+#                         pending = False
+#                     if pending is True:
+#                         nPending_disp += 1
+#                     else:
+#                         solFound_2doArray[iN] += 1
+#                         inside_eN = True  # checking if actually true
+#                         for ii in range(nEbn):
+#                             bb_i = elementBoundariesArray[nearestN, ii]
+#                             normal[0] = elementBoundaryNormalsArray[nearestN, ii, 0]
+#                             normal[1] = elementBoundaryNormalsArray[nearestN, ii, 1]
+#                             normal[2] = elementBoundaryNormalsArray[nearestN, ii, 2]
+#                             bound_bar = elementBoundaryBarycentersArray[bb_i]
+#                             dot = (bound_bar[0]-coords[0])*normal[0]+(bound_bar[1]-coords[1])*normal[1]+(bound_bar[2]-coords[2])*normal[2]
+#                             if dot < 0:
+#                                 inside_eN = False
+#                         if inside_eN:
+#                             xi = femSpace.elementMaps.getInverseValue(nearestN, coords)
+#                             # line below needs optimisation:
+#                             tofind = tofind_function(nearestN, xi)
+#                         else:
+#                             print('did not find coords', coords[0], coords[1])
+#                 tofind_2rank[new_rank] = np.append(tofind_2rank[new_rank], [tofind], axis=0)
+#                 coords_2rank[new_rank] = np.append(coords_2rank[new_rank], [coords], axis=0)
+#                 nodes0_2rank[new_rank] = np.append(nodes0_2rank[new_rank], nodes0_2doArray[iN])
+#                 rank0_2rank[new_rank] = np.append(rank0_2rank[new_rank], rank0_2doArray[iN])
+#                 nearestN_2rank[new_rank] = np.append(nearestN_2rank[new_rank], nearestN)
+#                 typeN_2rank[new_rank] = np.append(typeN_2rank[new_rank], typeN)
+#                 b_i_2rank[new_rank] = np.append(b_i_2rank[new_rank], b_i_global)
+#             nPending_disp_total = comm.allreduce(nPending_disp)
+
+
+#     # SEND NODES POSITION SOLUTION BACK TO ORIGINAL PROCESSORS
+#     if sendBack is True:
+#         tofind_2doArray = tofind_2rank[my_rank]
+#         nodes0_2doArray = nodes0_2rank[my_rank]
+#         rank0_2doArray = rank0_2rank[my_rank]
+#         for rank in range(comm.size):
+#             # things to send to other processors to get solution
+#             if dtype == 'int':
+#                 tofind_2rank[rank] = np.zeros(0, dtype=np.int32)
+#             elif dtype == 'intVector':
+#                 tofind_2rank[rank] = np.zeros((0, 3), dtype=np.int32)
+#             elif dtype == 'double':
+#                 tofind_2rank[rank] = np.zeros(0)
+#             elif dtype == 'doubleVector':
+#                 tofind_2rank[rank] = np.zeros((0, 3))
+#             nodes0_2rank[rank] = np.zeros(0, dtype=np.int32)
+#             rank0_2rank[rank] = np.zeros(0, dtype=np.int32)
+#         for iN in range(len(coords_2doArray)):
+#             if 'Vector' in dtype:
+#                 tofind_2rank[rank0_2doArray[iN]] = np.append(tofind_2rank[rank0_2doArray[iN]], [coords_2doArray[iN]], axis=0)
+#             else:
+#                 tofind_2rank[rank0_2doArray[iN]] = np.append(tofind_2rank[rank0_2doArray[iN]], coords_2doArray[iN])
+#             nodes0_2rank[rank0_2doArray[iN]] = np.append(nodes0_2rank[rank0_2doArray[iN]], nodes0_2doArray[iN])
+#             rank0_2rank[rank0_2doArray[iN]] = np.append(rank0_2rank[rank0_2doArray[iN]], rank0_2doArray[iN])
+#         tofind_2doArray = tofind_2rank[my_rank]
+#         nodes0_2doArray = nodes0_2rank[my_rank]
+#         for rank_recv in range(comm.size):
+#             for rank_send in range(comm.size):
+#                 if rank_send != rank_recv and rank_send == my_rank:
+#                     comm.send(tofind_2rank[rank_recv].size, dest=rank_recv, tag=0)
+#                     if tofind_2rank[rank_recv].size > 0:
+#                         # coords
+#                         comm.send(tofind_2rank[rank_recv],  dest=rank_recv, tag=1)
+#                         # original nodes
+#                         comm.send(nodes0_2rank[rank_recv], dest=rank_recv, tag=2)
+#                 elif rank_send!= rank_recv and rank_recv == my_rank:
+#                     size = comm.recv(source=rank_send, tag=0)
+#                     if size > 0:
+#                         # coords
+#                         tofind_2do = comm.recv(source=rank_send, tag=1)
+#                         tofind_2doArray = np.append(tofind_2doArray, tofind_2do, axis=0)
+#                         # original nodes
+#                         nodes0_2do = comm.recv(source=rank_send, tag=2)
+#                         nodes0_2doArray = np.append(nodes0_2doArray, nodes0_2do)
+#         return tofind_2do
