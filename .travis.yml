@@ -73,6 +73,7 @@ script:
   - python -c "import sys; print sys.path"
   - python -c "import backports"
   - python -c "import backports.functools_lru_cache"
+  - export MPLBACKEND="AGG"
   - python -c "import matplotlib"
   - if [[ "${TEST_PROFILE}" == "proteus" ]]; then py.test --forked -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus; fi
   
