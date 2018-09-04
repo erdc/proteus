@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 import unittest
 import numpy.testing as npt
 import numpy as np
@@ -50,13 +52,13 @@ class TestGMSH(unittest.TestCase):
         # with open('gmsh_mesh_test_3D.ele', 'r') as elefile:
         #     npt.assert_equal(elefile.readline(), '37473 4 1\n')
         with open('gmsh_mesh_test_3D.node', 'r') as nodefile:
-            assert(abs(int(nodefile.readline().split()[0]) - 7674)/7674.0 < .02)
+            assert(old_div(abs(int(nodefile.readline().split()[0]) - 7674),7674.0) < .02)
         with open('gmsh_mesh_test_3D.edge', 'r') as edgefile:
-            assert(abs(int(edgefile.readline().split()[0]) - 9384)/9384.0 < .02)
+            assert(old_div(abs(int(edgefile.readline().split()[0]) - 9384),9384.0) < .02)
         with open('gmsh_mesh_test_3D.face', 'r') as facefile:
-            assert(abs(int(facefile.readline().split()[0]) - 6256)/6256.0 < .02)
+            assert(old_div(abs(int(facefile.readline().split()[0]) - 6256),6256.0) < .02)
         with open('gmsh_mesh_test_3D.ele', 'r') as elefile:
-            assert(abs(int(elefile.readline().split()[0]) - 37473)/37473.0 < .02)
+            assert(old_div(abs(int(elefile.readline().split()[0]) - 37473),37473.0) < .02)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

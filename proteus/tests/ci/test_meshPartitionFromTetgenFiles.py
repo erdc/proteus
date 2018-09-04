@@ -9,6 +9,7 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
+from builtins import object
 import os, pytest
 from proteus.iproteus import *
 from proteus import Comm, defaults
@@ -17,7 +18,7 @@ modulepath = os.path.dirname(os.path.abspath(__file__))
 
 @pytest.mark.modelTest
 @pytest.mark.poissonTest
-class TestPoissonTetgen():
+class TestPoissonTetgen(object):
 
     @classmethod
     def setup_class(cls):
@@ -53,7 +54,7 @@ class TestPoissonTetgen():
         nList = [defaults.load_numerics('poisson_3d_tetgen_c0p1_n',
                                         modulepath)]
         so = defaults.System_base()
-        so.name = pList[0].name = "poisson_3d_tetgen_c0p1"+"pe"+`comm.size()`
+        so.name = pList[0].name = "poisson_3d_tetgen_c0p1"+"pe"+repr(comm.size())
         so.sList=[default_s]
         Profiling.logLevel=7
         Profiling.verbose=False
@@ -73,7 +74,7 @@ class TestPoissonTetgen():
         nList = [defaults.load_numerics('poisson_3d_tetgen_c0p2_n',
                                         modulepath)]
         so = defaults.System_base()
-        so.name = pList[0].name = "poisson_3d_tetgen_c0p2"+"pe"+`comm.size()`
+        so.name = pList[0].name = "poisson_3d_tetgen_c0p2"+"pe"+repr(comm.size())
         so.sList=[default_s]
         Profiling.logLevel=7
         Profiling.verbose=False

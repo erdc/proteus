@@ -4,6 +4,7 @@
 Test module for solver shell operator.
 
 """
+from builtins import object
 import proteus.test_utils.TestTools
 from proteus.iproteus import *
 from proteus import Comm

@@ -1,6 +1,10 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from pressure_p import *
+try:
+    from .pressure_p import *
+except:
+    from pressure_p import *
 
 
 triangleOptions = triangleOptions
@@ -37,9 +41,9 @@ levelNonlinearSolver = NonlinearSolvers.Newton
 
 #linear solve rtolerance
 
-linTolFac = 0.0
+linTolFac = 0.01
 l_atol_res = 0.1*pressure_nl_atol_res
-tolFac = 0.0
+tolFac = 0.01
 nl_atol_res = pressure_nl_atol_res
 maxLineSearches = 0
 nonlinearSolverConvergenceTest      = 'r'

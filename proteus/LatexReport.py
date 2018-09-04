@@ -5,7 +5,13 @@ Class and script for generating a report from simulation data.
 .. inheritance-diagram:: proteus.LatexReport
    :parts: 1
 """
+from __future__ import division
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from .Profiling import logEvent
 
 def openLatexReport(filename,reportname):
@@ -34,12 +40,12 @@ def closeLatexReport(file):
     file.close()
 
 
-class LatexResultsSummary:
+class LatexResultsSummary(object):
     """
     simple steps for taking simulation results and generating Latex
     Table of results
     """
-    import cPickle
+    import pickle
     def __init__(self,resFileName,repFileName,repName=None):
         self.resFileName = resFileName
         self.repFileName = repFileName
@@ -170,7 +176,7 @@ class LatexResultsSummary:
                                     exact = self.results['errorData'][ci][nLevels-1][exkey]
                                 if abs(exact) < relativeErrorEps:
                                     exact += relativeErrorEps
-                                error = error/exact
+                                error = old_div(error,exact)
                             if il == 0:
                                 row += """ & %g & %s """ % (error,'-')
                             else:
@@ -180,9 +186,9 @@ class LatexResultsSummary:
                                     errM=self.results['errorData'][ci][il-1][ekey]
                                 hM = self.results['simulationData']['spatialMesh'][il-1]['h'][-1]
                                 if useRelativeError == True: #only normalizing by finest mesh val
-                                    rate = math.log((errM/exact+1.0e-24)/(error+1.0e-24))/math.log(hM/h)
+                                    rate = old_div(math.log(old_div((old_div(errM,exact)+1.0e-24),(error+1.0e-24))),math.log(old_div(hM,h)))
                                 else:
-                                    rate = math.log((errM+1.0e-24)/(error+1.0e-24))/math.log(hM/h)
+                                    rate = old_div(math.log(old_div((errM+1.0e-24),(error+1.0e-24))),math.log(old_div(hM,h)))
 
                                 row += """& %g & %g """ % (error,rate)
                     if computeLocalMassBalErr or computeGlobalHeavisideMassBalErr:

@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 import proteus.default_so
 reload(proteus.default_so)
 from proteus.default_so import *
-import NS_hotstart
+from . import NS_hotstart
 reload(NS_hotstart)
 
 from proteus.SplitOperator import Sequential_FixedStep_Simple, defaultSystem

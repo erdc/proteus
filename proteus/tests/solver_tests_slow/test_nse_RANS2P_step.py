@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """ Test modules for Driven Cavity Stokes preconditioners. """
+from __future__ import absolute_import
 
 import proteus.test_utils.TestTools as TestTools
 from proteus.iproteus import *
@@ -17,10 +18,16 @@ import petsc4py
 import pytest
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
-from import_modules import step2d_so
-from import_modules import step2d
-from import_modules import twp_navier_stokes_step2d_p
-from import_modules import twp_navier_stokes_step2d_n
+try:
+    from .import_modules import step2d_so
+    from .import_modules import step2d
+    from .import_modules import twp_navier_stokes_step2d_p
+    from .import_modules import twp_navier_stokes_step2d_n
+except:
+    from import_modules import step2d_so
+    from import_modules import step2d
+    from import_modules import twp_navier_stokes_step2d_p
+    from import_modules import twp_navier_stokes_step2d_n
 
 def load_simulation(context_options_str=None):
     """
