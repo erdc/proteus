@@ -1530,7 +1530,7 @@ class NS_base:  # (HasTraits):
 
         if (hasattr(self.pList[0].domain, 'PUMIMesh') and
             self.pList[0].domain.PUMIMesh.adaptMesh() and
-            (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "interface") and
+            (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
             self.so.useOneMesh):
 
             self.PUMI_transferFields()

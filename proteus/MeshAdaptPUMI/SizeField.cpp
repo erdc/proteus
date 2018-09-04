@@ -73,7 +73,8 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   apf::MeshEntity *edge;
 
   double safetyFactor = 2.0; //need to make this user defined
-  double L_band = N_interface_band*hPhi*safetyFactor;
+  //double L_band = N_interface_band*hPhi*safetyFactor;
+  double L_band = (5.0+N_interface_band)*hPhi;
 
   PCU_Comm_Begin();
   while ((edge = m->iterate(it)))
