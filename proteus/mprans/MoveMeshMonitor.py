@@ -70,12 +70,14 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                  fixedElementMaterialTypes=None,
                  noNodeVelocityNodeMaterialTypes=None,
                  nSmoothOut=0,
-                 epsFact_density=3,
+                 epsFact_density=0,
                  epsTimeStep=1.,
                  ntimes_solved=1,
                  grading=1.1,
                  grading_type=0,
-                 resetNodeVelocityArray=True):
+                 resetNodeVelocityArray=True,
+                 scale_with_nd=False,
+                 do_firstStep=False):
         self.myfunc = func
         self.LS_MODEL = LS_MODEL
         self.ME_MODEL = ME_MODEL
@@ -102,12 +104,16 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.poststepdone = False
         self.noNodeVelocityNodeMaterialTypes = noNodeVelocityNodeMaterialTypes
         self.ntimes_solved = ntimes_solved
-        if self.nd == 2:
-            self.fFactor = lambda f: f**2
-        if self.nd == 3:
-            self.fFactor = lambda f: f**3
+        if scale_with_nd:
+            if self.nd == 2:
+                self.fFactor = lambda f: f**2
+            elif self.nd == 3:
+                self.fFactor = lambda f: f**3
+        else:
+            self.fFactor = lambda f: f
         self.resetNodeVelocityArray = resetNodeVelocityArray
         self.ntimes_i = 0
+        self.do_firstStep = do_firstStep
         #super(MyCoeff, self).__init__(aOfX, fOfX)
         TransportCoefficients.PoissonEquationCoefficients.__init__(self, aOfX, fOfX)
 
@@ -119,9 +125,13 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         if self.nd == 2:
             # triangle
             self.mesh.elementBoundaryNormalsArray = np.zeros((len(self.mesh.elementBoundariesArray), 3, 3))
+            self.mesh.elementBoundaryNormalsArray0 = np.zeros((len(self.mesh.elementBoundariesArray), 3, 3))
         elif self.nd == 3:
             # tetra
             self.mesh.elementBoundaryNormalsArray = np.zeros((len(self.mesh.elementBoundariesArray), 4, 3))
+            self.mesh.elementBoundaryNormalsArray0 = np.zeros((len(self.mesh.elementBoundariesArray), 4, 3))
+        self.mesh.elementBoundaryBarycentersArray0 = np.zeros(self.mesh.elementBoundaryBarycentersArray.shape)
+        self.mesh.elementBarycentersArray0 = np.zeros(self.mesh.elementBarycentersArray.shape)
         if self.nd == 2:
             ms.updateElementBoundaryNormalsTriangle(self.mesh.elementBoundaryNormalsArray,
                                                     self.mesh.nodeArray,
@@ -195,6 +205,9 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
     def preStep(self, t, firstStep=False):
         logEvent("Updating area function scaling coefficient and quadrature",
                  level=3)
+        # careful for nodeArray0 if mesh was moved with another moving mesh model
+        self.mesh.nodeArray0[:] = self.mesh.nodeArray[:]
+        self.mesh.elementBoundaryNormalsArray0[:] = self.mesh.elementBoundaryNormalsArray[:]
         self.evaluateFunAtQuadraturePoints()
         self.cCoefficients.preStep()
         self.C = self.cCoefficients.C
@@ -212,8 +225,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                 print('reset')
                 self.mesh.nodeVelocityArray[:] = 0.
 
-    def postStep(self, t,firstStep=False):
-        if self.t > 0:
+    def postStep(self, t, firstStep=False):
+        if self.t > 0 or self.do_firstStep is True and firstStep is True:
             # gradient recovery
             logEvent("Gradient recovery at mesh nodes", level=3)
             # self.grads[:] = ms.pyVectorRecoveryAtNodes(vectors=self.model.q[('grad(u)', 0)][:,0,:],
