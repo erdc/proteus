@@ -128,8 +128,6 @@ class TestBC(unittest.TestCase):
         npt.assert_equal(BC.vos_dirichlet.uOfXT, None)
         npt.assert_equal(k_dir, zeros)
         npt.assert_equal(BC.dissipation_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.pInit_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.pInc_dirichlet.uOfXT, None)
         npt.assert_equal(p_adv, zeros)
         npt.assert_equal(pInc_adv, zeros)
         npt.assert_equal(pInit_adv, zeros)
@@ -152,8 +150,6 @@ class TestBC(unittest.TestCase):
         npt.assert_equal(k_diff, zeros)
         npt.assert_equal(pInc_diff, zeros)
         npt.assert_equal(d_diff, zeros)
-        npt.assert_equal(BC.pInit_diffusive.uOfXT, None)
-        npt.assert_equal(pInc_diff, zeros)
 
     def test_mprans_free_slip(self):
         BC = create_BC(folder='mprans')
@@ -212,8 +208,6 @@ class TestBC(unittest.TestCase):
         npt.assert_equal(vos_adv, zeros)
         npt.assert_equal(BC.k_advective.uOfXT, None)
         npt.assert_equal(BC.dissipation_advective.uOfXT, None)
-        npt.assert_equal(pInit_adv, zeros)
-        npt.assert_equal(BC.pInc_advective.uOfXT, None)
         npt.assert_equal(u_diff, zeros)
         npt.assert_equal(v_diff, zeros)
         npt.assert_equal(w_diff, zeros)
