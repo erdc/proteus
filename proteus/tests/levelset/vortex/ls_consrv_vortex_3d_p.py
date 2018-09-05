@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
-from vortex import *
+from .vortex import *
 name=soname+"_phicor"
 from proteus.mprans import MCorr
 
@@ -17,7 +19,7 @@ coefficients = MCorr.Coefficients(applyCorrection=applyCorrection,
                                   checkMass=checkMass,
                                   nd=nd)
 
-class zero_phi:
+class zero_phi(object):
     def __init__(self):
         pass
     def uOfX(self,X):

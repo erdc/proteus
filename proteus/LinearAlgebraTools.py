@@ -8,11 +8,18 @@ representations using PETSc.
 .. inheritance-diagram:: proteus.LinearAlgebraTools
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import numpy
 import math
 import sys
-import superluWrappers
-import Comm
+from . import superluWrappers
+from . import Comm
 from .superluWrappers import *
 from .Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc
@@ -328,7 +335,7 @@ def petsc_create_diagonal_inv_matrix(sparse_petsc):
     diag_inv.setSizes(sparse_petsc.getSizes())
     diag_inv.setType('aij')
     diag_inv.setUp()
-    diag_inv.setDiagonal(1./sparse_petsc.getDiagonal())
+    diag_inv.setDiagonal(old_div(1.,sparse_petsc.getDiagonal()))
     return diag_inv
 
 def dense_numpy_2_petsc4py(dense_numpy, eps = 1.e-12):
@@ -410,7 +417,7 @@ def split_PETSc_Mat(mat):
     S.scale(0.5)
     return H, S
 
-class ParVec:
+class ParVec(object):
     """
     A parallel vector built on top of daetk's wrappers for petsc
     """
@@ -422,7 +429,7 @@ class ParVec:
                  nghosts=None,
                  subdomain2global=None,
                  blockVecType="simple"):#"block"
-        import flcbdfWrappers
+        from . import flcbdfWrappers
         self.dim_proc=n*blockSize
         if nghosts is None:
             if blockVecType=="simple":
@@ -543,7 +550,7 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
         """Saves to disk using a PETSc binary viewer."""
         _petsc_view(self, filename)
 
-class ParInfo_petsc4py:
+class ParInfo_petsc4py(object):
     """
     ARB - this class is experimental.  My idea is to store the
     information need to constructor parallel vectors and matrices
@@ -567,20 +574,20 @@ class ParInfo_petsc4py:
         self.mixed = False
 
     def print_info(cls):
-        import Comm
+        from . import Comm
         comm = Comm.get()
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_bs = ' + `cls.par_bs`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_n = ' + `cls.par_n`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_n_lst = ' + `cls.par_n_lst`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_N = ' + `cls.par_N`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_nghost = ' + `cls.par_nghost`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_nghost_lst = ' + `cls.par_nghost_lst`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' petsc_subdomain2global_petsc = ' + `cls.petsc_subdomain2global_petsc`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' subdomain2global = ' + `cls.subdomain2global`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' proteus2petsc_subdomain = ' + `cls.proteus2petsc_subdomain`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' petsc2proteus_subomdain = ' + `cls.petsc2proteus_subdomain`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' dim = ' + `cls.dim`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' nzval_proteus2petsc = ' + `cls.nzval_proteus2petsc`)
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_bs = ' + repr(cls.par_bs))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_n = ' + repr(cls.par_n))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_n_lst = ' + repr(cls.par_n_lst))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_N = ' + repr(cls.par_N))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_nghost = ' + repr(cls.par_nghost))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_nghost_lst = ' + repr(cls.par_nghost_lst))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' petsc_subdomain2global_petsc = ' + repr(cls.petsc_subdomain2global_petsc))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' subdomain2global = ' + repr(cls.subdomain2global))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' proteus2petsc_subdomain = ' + repr(cls.proteus2petsc_subdomain))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' petsc2proteus_subomdain = ' + repr(cls.petsc2proteus_subdomain))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' dim = ' + repr(cls.dim))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' nzval_proteus2petsc = ' + repr(cls.nzval_proteus2petsc))
 
 class ParMat_petsc4py(p4pyPETSc.Mat):
     """  Parallel matrix based on petsc4py's wrappers for PETSc.
@@ -724,11 +731,11 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         petsc_a = {}
 
         for i in range(dim):
-            for j,k in zip(colind[rowptr[i]:rowptr[i+1]],range(rowptr[i],rowptr[i+1])):
+            for j,k in zip(colind[rowptr[i]:rowptr[i+1]],list(range(rowptr[i],rowptr[i+1]))):
                 proteus_a[i,j] = nzval[k]
                 petsc_a[proteus2petsc_subdomain[i],proteus2petsc_subdomain[j]] = nzval[k]
         for i in range(dim):
-            for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],range(rowptr_petsc[i],rowptr_petsc[i+1])):
+            for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],list(range(rowptr_petsc[i],rowptr_petsc[i+1]))):
                 nzval_petsc[k] = petsc_a[i,j]
 
         #additional stuff needed for petsc par mat
@@ -778,8 +785,8 @@ def SparseMatFromDict(nr,nc,aDict):
     """
     Build a nr x nc sparse matrix from a dictionary representation
     """
-    import superluWrappers
-    indeces = aDict.keys()
+    from . import superluWrappers
+    indeces = list(aDict.keys())
     indeces.sort()
     nnz     = len(indeces)
     nzval   = numpy.zeros((nnz,),'d')
@@ -833,7 +840,7 @@ def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
         sys.exit(1)
     return superluWrappers.SparseMatrix(nr,nc,nnz,nzval,colind,rowptr)
 
-class SparseMatShell:
+class SparseMatShell(object):
     """ Build a parallel matrix shell from CSR data structures.
 
     Parameters
@@ -862,7 +869,7 @@ class SparseMatShell:
             self.ghosted_csr_mat.matvec(xlf.getArray(),ylf.getArray())
         y.setArray(self.yGhosted.getArray())
 
-class OperatorShell:
+class OperatorShell(object):
     """ A base class for operator shells """
     def __init__(self):
         pass
@@ -996,13 +1003,15 @@ class InvOperatorShell(OperatorShell):
         """
         comm = Comm.get()
         # Assign number of unknowns
+        num_dof = self.getSize()
+        self.strong_dirichlet_DOF = [i for i in self.strong_dirichlet_DOF if i< num_dof]
         try:
             num_known_dof = len(self.strong_dirichlet_DOF)
         except AttributeError:
-            print "ERROR - strong_dirichlet_DOF have not been " \
-                  " assigned for this inverse operator object."
+            print("ERROR - strong_dirichlet_DOF have not been " \
+                  " assigned for this inverse operator object.")
             exit()
-        num_dof = self.getSize()
+
         num_unknown_dof = num_dof - num_known_dof
         # Use boolean mask to collect unknown DOF indices
         self.dof_indices = numpy.arange(num_dof,
@@ -1367,7 +1376,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         par_info : ParInfoClass
             Provides parallel info.
         """
-        import LinearSolvers as LS
+        from . import LinearSolvers as LS
 
         # Set attributes
         self.Qp_visc = Qp_visc
@@ -1457,7 +1466,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         self.Np_rho.mult(tmp1,tmp2)
 
         if self.alpha is True:
-            tmp2.axpy(1./self.delta_t,x_tmp)
+            tmp2.axpy(old_div(1.,self.delta_t),x_tmp)
 
         if self.options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
             self.const_null_space.remove(tmp2)
@@ -1581,7 +1590,7 @@ def l2NormAvg(x):
     """
     Compute the arithmetic averaged l_2 norm (root mean squared norm)
     """
-    scale = 1.0/flcbdfWrappers.globalSum(len(x.flat))
+    scale = old_div(1.0,flcbdfWrappers.globalSum(len(x.flat)))
     return math.sqrt(scale*flcbdfWrappers.globalSum(numpy.dot(x,x)))
 
 
@@ -1595,7 +1604,7 @@ def l2Norm_local(x):
     return math.sqrt(numpy.dot(x,x))
 
 
-class WeightedNorm:
+class WeightedNorm(object):
     """
     Compute the weighted norm for time step control (not currently parallel)
     """
@@ -1614,7 +1623,7 @@ class WeightedNorm:
         self.tmp[:] = y
         self.tmp /= self.weight
         value = numpy.linalg.norm(self.tmp.flat,type)
-        return value/self.dim
+        return old_div(value,self.dim)
 
 
 if __name__ == '__main__':

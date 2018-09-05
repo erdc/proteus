@@ -1,4 +1,6 @@
 """Tests for 2d flow around a cylinder with a conforming mesh and rans3p"""
+from builtins import range
+from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import Context
@@ -11,7 +13,7 @@ Profiling.verbose = False
 import numpy as np
 
 
-class Test_HotStart_rans3p():
+class Test_HotStart_rans3p(object):
 
     @classmethod
     def setup_class(cls):

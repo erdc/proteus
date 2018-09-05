@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 from proteus.TransportCoefficients import TwophaseNavierStokes_ST_LS_SO as TPNSE_ST_LS_SO
 import numpy
 
@@ -60,12 +62,12 @@ class TwophaseNavierStokes_ST_LS_SO_VV(TPNSE_ST_LS_SO):
     def evaluate(self,t,c):
         self.rho_0 = 1.0
         self.rho_1 = 1.0
-        self.nu_0 = 1./50.
+        self.nu_0 = old_div(1.,50.)
 #        self.nu_1 = 1./5.
         if t==1.0:
-            self.nu_1 = 1./50.
+            self.nu_1 = old_div(1.,50.)
         elif t==2.0:
-            self.nu_1 = 1./5.
+            self.nu_1 = old_div(1.,5.)
         elif t==3.0:
             self.nu_1 = 2.0
         elif t==4.0:

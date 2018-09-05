@@ -1,6 +1,11 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from stokes_2d_p import *
+try:
+    from .stokes_2d_p import *
+except:
+    from stokes_2d_p import *
 
 #######################################################
 
@@ -39,7 +44,7 @@ elif numeric_scheme=="THQuads":
                  1:Q2,
                  2:Q2}
 else:
-    print 'INVALID FINITE ELEMENT SELECTED'
+    print('INVALID FINITE ELEMENT SELECTED')
 #######################################################
 #              Mesh and Quadrature Options
 

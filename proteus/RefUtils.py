@@ -6,8 +6,11 @@ for doing FEM calculations on reference elements, etc
 .. inheritance-diagram:: proteus.RefUtils
    :parts: 1
 """
-from EGeometry import *
-from Quadrature import *
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
+from .EGeometry import *
+from .Quadrature import *
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #global data
@@ -208,7 +211,7 @@ def testBarycentricCoords(verbose=0):
     xiArray = p2refNodes[nd-1]
     nxi = xiArray.shape[0]
     if verbose > 2:
-        print '1d creating xiArray= ',xiArray
+        print('1d creating xiArray= ',xiArray)
     #end if
     lamVals = numpy.zeros((nd+1,nxi),'d')
     dlamVals= numpy.zeros((nd+1,),'d')
@@ -229,7 +232,7 @@ la1 = %s
 dla = %s
 """ % (nd,xiArray,lamVals[0,:],lamVals[1,:],dlamVals)
 
-    print out
+    print(out)
 
     #2d
     nd=2
@@ -243,7 +246,7 @@ dla = %s
     xiArray = p2refNodes[nd-1]
     nxi = xiArray.shape[0]
     if verbose > 2:
-        print '2d creating xiArray= ',xiArray
+        print('2d creating xiArray= ',xiArray)
     #end if
     lamVals = numpy.zeros((nd+1,nxi),'d')
     dlamVals= numpy.zeros((nd+1,nd),'d')
@@ -265,7 +268,7 @@ la2 = %s
 dla =\n%s
 """ % (nd,xiArray,lamVals[0,:],lamVals[1,:],lamVals[2,:],dlamVals)
 
-    print out
+    print(out)
 
     #3d
     nd=3
@@ -282,7 +285,7 @@ dla =\n%s
     nxi = xiArray.shape[0]
 
     if verbose > 2:
-        print '3d creating xiArray= \n',xiArray
+        print('3d creating xiArray= \n',xiArray)
     #end if
     lamVals = numpy.zeros((nd+1,nxi),'d')
     dlamVals= numpy.zeros((nd+1,nd),'d')
@@ -305,7 +308,7 @@ la3 = %s
 dla =\n%s
 """ % (nd,xiArray,lamVals[0,:],lamVals[1,:],lamVals[2,:],lamVals[3,:],dlamVals)
 
-    print out
+    print(out)
 
 
 #end testBarycentricCoords

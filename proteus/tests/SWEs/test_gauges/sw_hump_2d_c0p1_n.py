@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from proteus.default_n import *
 from proteus import (Context,)
 from proteus.mprans import SW2D
@@ -49,10 +52,10 @@ nnx0=6
 nnz=1
 
 nnx = (nnx0-1)*(2**refinement)+1
-nny = (nnx-1)/2+1
+nny = old_div((nnx-1),2)+1
 #nny = 2
 
-he = ct.L[0]/float(nnx-1)
+he = old_div(ct.L[0],float(nnx-1))
 triangleOptions="pAq30Dena%f"  % (0.5*he**2,)
 
 #added flag for using SUPG stabilization based on Berger and Stockstill, 95
