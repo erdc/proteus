@@ -1,3 +1,7 @@
+from __future__ import print_function
+from __future__ import division
+from past.utils import old_div
+from builtins import object
 from math import ceil, sqrt, pow
 
 import os
@@ -53,7 +57,7 @@ def gauge_setup(nd, total_nodes=None):
 
     p.nd = nd
 
-    class LinearSolution:
+    class LinearSolution(object):
         def uOfXT(self,x,t):
             return (x[0]+10*x[1]+100*x[2])*(t+1.0)
 
@@ -79,7 +83,7 @@ def gauge_setup(nd, total_nodes=None):
         nnx = nny = int(ceil(sqrt(total_nodes)))+1
         mlMesh = build2DMesh(p, nnx, nny)
     elif p.nd == 3:
-        nnx = nny = nnz = int(ceil(pow(total_nodes, 1.0/3.0)))+1
+        nnx = nny = nnz = int(ceil(pow(total_nodes, old_div(1.0,3.0))))+1
         mlMesh = build3DMesh(p, nnx, nny, nnz)
 
     model = Transport.MultilevelTransport(p, n, mlMesh)
@@ -296,7 +300,7 @@ def delete_file(filename):
     if os.path.exists(filename):
         try:
             os.remove(filename)
-        except OSError, e:
+        except OSError as e:
             print ("Error: %s - %s" %(e.filename,e.strerror))
         else:
             pass

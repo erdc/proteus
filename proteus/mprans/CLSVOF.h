@@ -11,6 +11,7 @@
 
 #define USE_SIGN_FUNCTION 0
 #define IMPLICIT_BCs 0
+#define LAMBDA_SCALING 0
 
 namespace proteus
 {
@@ -96,6 +97,7 @@ namespace proteus
                                    double* mean_distance,
 				   double* volume_domain,
                                    double norm_factor_lagged,
+				   double VelMax,
                                    // normal reconstruction
                                    double* projected_qx_tn,
                                    double* projected_qy_tn,
@@ -333,6 +335,22 @@ namespace proteus
         cfl = nrm_v/h;
       }
 
+      inline void calculateNonlinearCFL(const double& elementDiameter,
+					const double df[nSpace],
+					const double norm_factor_lagged,
+					const double epsFactHeaviside,
+					const double lambdaFact,
+					double& cfl)
+      {
+        double h,nrm2_v;
+        h = elementDiameter;
+        nrm2_v=0.0;
+        for(int I=0;I<nSpace;I++)
+          nrm2_v+=df[I]*df[I];
+        cfl = nrm2_v*norm_factor_lagged/(epsFactHeaviside*lambdaFact*h*h*h);
+	cfl = std::sqrt(cfl);
+      }
+      
       inline void exteriorNumericalAdvectiveFlux(const int& isDOFBoundary_u,
 						 const int& isFluxBoundary_u,
 						 const double n[nSpace],
@@ -437,6 +455,18 @@ namespace proteus
           d=0.0;
         else
           d = 0.5*(1.0 + cos(M_PI*u/eps))/eps;
+        return d;
+      }
+
+      inline double smoothedNormalizedDirac(double eps, double u)
+      {
+        double d;
+        if (u > eps)
+          d=0.0;
+        else if (u < -eps)
+          d=0.0;
+        else
+          d = 0.5*(1.0 + cos(M_PI*u/eps));
         return d;
       }
 
@@ -549,6 +579,7 @@ namespace proteus
                              double* mean_distance,
 			     double* volume_domain,
                              double norm_factor_lagged,
+			     double VelMax,
                              // normal reconstruction
                              double* projected_qx_tn,
                              double* projected_qy_tn,
@@ -756,11 +787,24 @@ namespace proteus
 		    mesh_velocity[1] = yt;
 		    mesh_velocity[2] = zt;
 
-		    lambda = lambdaFact*hK/norm_factor_lagged;
+		    ///////////////////
+		    // GENERAL STUFF //
+		    ///////////////////
 		    double epsHeaviside = epsFactHeaviside*hK;
 		    double Sn = smoothedSign(epsHeaviside,un);
 		    double Snp1 = smoothedSign(epsHeaviside,u);
 		    Hnp1 = smoothedHeaviside(epsHeaviside,u);
+		    
+		    ////////////
+		    // LAMBDA //
+		    ////////////
+		    lambda = lambdaFact*hK/norm_factor_lagged;
+		    if (LAMBDA_SCALING==1)
+		      {
+			double deltaHat = fmax(smoothedNormalizedDirac(2*epsHeaviside,un),1E-6);
+			lambda = lambdaFact*deltaHat;
+		      }
+		
 		    /////////////////////
 		    // TIME DERIVATIVE //
 		    /////////////////////
@@ -788,7 +832,13 @@ namespace proteus
 		    // CALCULATE CELL BASED CFL //
 		    //////////////////////////////
 		    calculateCFL(elementDiameter[eN]/degree_polynomial,relative_velocity,cfl[eN_k]);
-
+		    //calculateNonlinearCFL(elementDiameter[eN]/degree_polynomial,
+		    //		      relative_velocity,
+		    //		      norm_factor_lagged,
+		    //		      epsFactHeaviside,
+		    //		      lambdaFact,
+		    //		      cfl[eN_k]);
+		    
 		    ///////////////
 		    // CALCULATE min, max and mean distance //
 		    ///////////////
@@ -1274,9 +1324,23 @@ namespace proteus
 		    mesh_velocity[0] = xt;
 		    mesh_velocity[1] = yt;
 		    mesh_velocity[2] = zt;
-		    lambda = lambdaFact*hK/norm_factor_lagged;
+
+		    ///////////////////
+		    // GENERAL STUFF //
+		    ///////////////////
 		    double epsDirac = epsFactDirac*hK;
 		    double dSnp1 = smoothedDerivativeSign(epsDirac,u); //derivative of smoothed sign
+		    
+		    ////////////
+		    // LAMBDA //
+		    ////////////
+		    lambda = lambdaFact*hK/norm_factor_lagged;
+		    if (LAMBDA_SCALING==1)
+		      {
+			double deltaHat = fmax(smoothedNormalizedDirac(2*epsDirac,un),1E-6);
+			lambda = lambdaFact*deltaHat;
+		      }		    
+		    
 		    /////////////////////
 		    // TIME DERIVATIVE //
 		    /////////////////////

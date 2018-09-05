@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from rdls_p import *
-from vortex2D import *
+from .rdls_p import *
+from .vortex2D import *
 
 timeIntegration = NoIntegration
 stepController = Newton_controller

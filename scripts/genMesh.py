@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import print_function
+from builtins import range
 import proteus
 from proteus.MeshTools import *
 ## \ingroup scripts
@@ -103,10 +105,10 @@ def genMesh():
                       type="string",
                       default='6T')
     (opts, args) = parser.parse_args()
-    print "The domain is Lx=%5.5e by Ly=%5.5e by Lz=%5.5e" % \
-          (opts.lx,opts.ly,opts.lz)
-    print "The mesh is nx=%i by ny=%i by nz=%i" % \
-          (opts.nx,opts.ny,opts.nz)
+    print("The domain is Lx=%5.5e by Ly=%5.5e by Lz=%5.5e" % \
+          (opts.lx,opts.ly,opts.lz))
+    print("The mesh is nx=%i by ny=%i by nz=%i" % \
+          (opts.nx,opts.ny,opts.nz))
     grid=RectangularGrid(opts.nx,opts.ny,opts.nz,opts.lx,opts.ly,opts.lz)
     cmesh=[]
     mesh=[]
@@ -125,14 +127,14 @@ def genMesh():
             elif opts.rType == '4T':
                 mesh.refine4T(cmesh)
             else:
-                print "refinement type not recognized, using 4T refinment"
+                print("refinement type not recognized, using 4T refinment")
                 mesh.refine4T(cmesh)
             cmesh = mesh
-            print mesh.meshInfo()
+            print(mesh.meshInfo())
         else:
             mesh = cmesh
     elif opts.ny > 1:
-        print "Building triangular mesh"
+        print("Building triangular mesh")
         cmesh=TriangularMesh()
         cmesh.rectangularToTriangular(grid)
         for i in range(opts.nr):
@@ -142,7 +144,7 @@ def genMesh():
             elif opts.rType == '4T':
                 mesh.refine3t(cmesh)
             else:
-                print "refinement type not recognized, using 4T refinment"
+                print("refinement type not recognized, using 4T refinment")
                 mesh.refine3t(cmesh)
             cmesh = mesh
         else:
@@ -156,7 +158,7 @@ def genMesh():
             cmesh = mesh
         else:
             mesh = cmesh
-    print "Writing ADH mesh to "+opts.meshFile
+    print("Writing ADH mesh to "+opts.meshFile)
     if opts.format == 'adh':
         mesh.writeMeshADH(opts.meshFile)
         if opts.boundaryMesh == True:
@@ -165,7 +167,7 @@ def genMesh():
             mesh.writeBoundaryNodesADH('boundaryNodes_'+opts.meshFile+'.bc')
     elif opts.format == 'ensight':
         mesh.writeMeshEnsight(opts.meshFile)
-    print mesh.meshInfo()
+    print(mesh.meshInfo())
     if opts.matlab or opts.viewMatlab:
         mesh.writeEdgesMatlab('meshEdges')
     if opts.viewMatlab:

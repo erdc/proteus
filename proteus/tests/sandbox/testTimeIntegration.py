@@ -1,10 +1,15 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from LinearAlgebra import *
 from TimeIntegrationTools import *
 from NonlinearSolvers import *
 from ScalarTransport import *
 import numpy
 
-class PhiDummy:
+class PhiDummy(object):
     """
     dummy class for passing off FEM potential function to TimeIntegration
     classes
@@ -16,7 +21,7 @@ class PhiDummy:
     #end init
 #end PhiDummy
 
-class dUdtEqMinusLambda:
+class dUdtEqMinusLambda(object):
     """
     test problem for TimeIntegration classes. Integrates the
     canonical test problem
@@ -257,24 +262,24 @@ if __name__ == '__main__':
     ode.getResidual(u0,r)
 
     if verbose > 1:
-        print 'u0= ',u0
-        print 'initial residual = ',r0
-        print 'initial dt= ',ode.timeIntegrator.DT
+        print('u0= ',u0)
+        print('initial residual = ',r0)
+        print('initial dt= ',ode.timeIntegrator.DT)
     #end verbose
 
     if verbose > 5:
-        print 'ode.q[u] = ',ode.q['u']
-        print 'ode.q[m] = ',ode.q['m']
-        print 'ode.q[r] = ',ode.q['r']
-        print 'ode.q[mt]= ',ode.q['mt']
-        print 'ode.q[dm]= ',ode.q['dm']
-        print 'ode.q[dr]= ',ode.q['dr']
+        print('ode.q[u] = ',ode.q['u'])
+        print('ode.q[m] = ',ode.q['m'])
+        print('ode.q[r] = ',ode.q['r'])
+        print('ode.q[mt]= ',ode.q['mt'])
+        print('ode.q[dm]= ',ode.q['dm'])
+        print('ode.q[dr]= ',ode.q['dr'])
     #end if
 
 
     # # create nonlinear system for solving problem
     if verbose > 0:
-        print 'creating nonlinear system'
+        print('creating nonlinear system')
     #end verbose
     MatType = Mat
     matType = 'dense'
@@ -284,8 +289,8 @@ if __name__ == '__main__':
 
     # # create linear system for solving problem
     if verbose > 5:
-        print 'creating linear system'
-        print 'initial jacobian mat =\n',jacobian
+        print('creating linear system')
+        print('initial jacobian mat =\n',jacobian)
     #end verbose
 
     linearSolver = DenseLU(jacobian)
@@ -295,17 +300,17 @@ if __name__ == '__main__':
     nlSolver = Newton(linearSolver,ode,jacobian,printInfo=printNLinfo)
 
     if verbose > 5:
-        print 'ode u0= ',u0
+        print('ode u0= ',u0)
         ode.getJacobian(jacobian)
-        print 'ode residual= ',r0
-        print 'system jacobian =\n',jacobian
+        print('ode residual= ',r0)
+        print('system jacobian =\n',jacobian)
     # # solving problem
 
     #now try a time loop?
     ode.timeIntegrator.runCFL = targetCFL
     t = t0
     nsteps = 0
-    dtFix = T/ntMax
+    dtFix = old_div(T,ntMax)
     L2err = 0.0
     LIerr = 0.0
     errT  = 0.0
@@ -342,8 +347,8 @@ if __name__ == '__main__':
         L2err += errT**2*ode.timeIntegrator.DT
         LIerr = max(LIerr,max(abs(err)))
         if verbose > 2:
-            print """t= %g \n\tu  = %s \n\tuex= %s
-        err= %g LIe= %g""" % (t,u,uex,errT,LIerr)
+            print("""t= %g \n\tu  = %s \n\tuex= %s
+        err= %g LIe= %g""" % (t,u,uex,errT,LIerr))
         #end verbose
 
         #make sure solution is kept by ode
@@ -355,5 +360,5 @@ if __name__ == '__main__':
 
     L2err = sqrt(L2err)
 
-    print """reached t= %g \n\tu  = %s \n\tuex= %s
-    err= %g L2err= %g LIe= %g""" % (t,u,uex,errT,L2err,LIerr)
+    print("""reached t= %g \n\tu  = %s \n\tuex= %s
+    err= %g L2err= %g LIe= %g""" % (t,u,uex,errT,L2err,LIerr))

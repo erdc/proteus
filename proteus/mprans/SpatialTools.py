@@ -21,7 +21,12 @@ shape2.BC.left.setNoSlip()
 
 st.assembleDomain(domain)
 """
+from __future__ import division
 
+#from builtins import str
+from builtins import str
+from builtins import range
+from past.utils import old_div
 from math import cos, sin, sqrt, atan2, acos, asin
 from itertools import compress
 import csv
@@ -361,9 +366,9 @@ def _CuboidsetInertiaTensor(self):
     (!) should not be used manually
     """
     L, W, H = self.dim
-    self.It = [[(W**2. + H**2.) / 12., 0, 0],
-               [0, (L**2. + H**2.) / 12., 0],
-               [0, 0, (W**2. + L**2.) / 12.]]
+    self.It = [[old_div((W**2. + H**2.), 12.), 0, 0],
+               [0, old_div((L**2. + H**2.), 12.), 0],
+               [0, 0, old_div((W**2. + L**2.), 12.)]]
 
 
 Cuboid._setInertiaTensor = _CuboidsetInertiaTensor
@@ -375,7 +380,7 @@ def _RectanglesetInertiaTensor(self):
     (!) should not be used manually
     """
     L, H = self.dim
-    self.It = (L**2 + H**2) / 12
+    self.It = old_div((L**2 + H**2), 12)
 
 
 Rectangle._setInertiaTensor = _RectanglesetInertiaTensor
@@ -406,10 +411,10 @@ class Tank3D(ShapeRANS):
     def __init__(self, domain, dim=(0., 0., 0.), coords=None, from_0=True):
         super(Tank3D, self).__init__(domain, nd=3)
         self.__class__.count += 1
-        self.name = "tank3d" + str(self.__class__.count)
+        self.name = "tank3d" + repr(self.__class__.count)
         self.from_0 = from_0
         if coords is None:
-            self.coords = np.array(dim) / 2.
+            self.coords = old_div(np.array(dim), 2.)
         else:
             self.coords = coords
             self.from_0 = False
@@ -491,7 +496,7 @@ class Tank3D(ShapeRANS):
         L, W, H = dim
         self.dim = dim
         if self.from_0 is True:
-            x, y, z = L / 2., W / 2., H / 2.
+            x, y, z = old_div(L, 2.), old_div(W, 2.), old_div(H, 2.)
         else:
             x, y, z = self.coords
         self.coords = [x, y, z]
@@ -515,7 +520,7 @@ class Tank3D(ShapeRANS):
         segmentFlags = []
         volumes = [[[0, 1]]]
         facetFlags = [bt['z-'], bt['z+']]
-        regions = [[(x0 + x1) / 2., (y0 + y1) / 2., (z0 + z1) / 2.]]
+        regions = [[old_div((x0 + x1), 2.), old_div((y0 + y1), 2.), old_div((z0 + z1), 2.)]]
         regionFlags = [1]
         self.regionIndice = {'tank': 0}
         v_i = 8  # index of next vector to add
@@ -545,7 +550,7 @@ class Tank3D(ShapeRANS):
             facets += [[[v0, v1, v3, v2]]]
             facetFlags += [bt['y-']]
             volumes[0][0] += [f_i]
-            regions += [[(x0 + x1) / 2., (y0 + (ymin)) / 2., (z0 + z1) / 2.]]
+            regions += [[old_div((x0 + x1), 2.), old_div((y0 + (ymin)), 2.), old_div((z0 + z1), 2.)]]
             self.regionIndice['y-'] = r_i
             regionFlags += [r_i + 1]
             facets += [[[0, 1, v1, v0]],
@@ -603,7 +608,7 @@ class Tank3D(ShapeRANS):
             facets += [[[v0, v1, v3, v2]]]
             facetFlags += [bt['x+']]
             volumes[0][0] += [f_i]
-            regions += [[(x1 + (xmax)) / 2., (y0 + y1) / 2., (z0 + z1) / 2.]]
+            regions += [[old_div((x1 + (xmax)), 2.), old_div((y0 + y1), 2.), old_div((z0 + z1), 2.)]]
             self.regionIndice['x+'] = r_i
             regionFlags += [r_i + 1]
             facets += [[[1, 2, v1, v0]],
@@ -661,7 +666,7 @@ class Tank3D(ShapeRANS):
             facets += [[[v0, v1, v3, v2]]]
             volumes[0][0] += [f_i]
             facetFlags += [bt['y+']]
-            regions += [[(x0 + x1) / 2., (y1 + (ymax)) / 2., (z0 + z1) / 2.]]
+            regions += [[old_div((x0 + x1), 2.), old_div((y1 + (ymax)), 2.), old_div((z0 + z1), 2.)]]
             self.regionIndice['y+'] = r_i
             regionFlags += [r_i + 1]
             facets += [[[2, 3, v1, v0]],
@@ -734,7 +739,7 @@ class Tank3D(ShapeRANS):
                         v3 = v_i + 1
             facets += [[[v0, v1, v3, v2]]]
             facetFlags += [bt['x-']]
-            regions += [[(x0 + (xmin)) / 2., (y0 + y1) / 2., (z0 + z1) / 2.]]
+            regions += [[old_div((x0 + (xmin)), 2.), old_div((y0 + y1), 2.), old_div((z0 + z1), 2.)]]
             self.regionIndice['x-'] = r_i
             regionFlags += [r_i + 1]
             facets += [[[0, 3, v1, v0]],
@@ -813,12 +818,12 @@ class Tank3D(ShapeRANS):
         waves = None
         wind_speed = np.array([0., 0., 0.])
         sl = self.spongeLayers
-        for key, value in self.abs_zones.iteritems():
+        for key, value in list(self.abs_zones.items()):
             if value is True:
                 self._attachAuxiliaryVariable('RelaxZones')
                 ind = self.regionIndice[key]
                 flag = self.regionFlags[ind]
-                epsFact_solid = self.spongeLayers[key] / 2.
+                epsFact_solid = old_div(self.spongeLayers[key], 2.)
                 center = np.array(self.coords)
                 zeros_to_append = 3 - len(center)
                 if zeros_to_append:
@@ -886,37 +891,37 @@ class Tank3D(ShapeRANS):
         waves = waves
         wind_speed = np.array(wind_speed)
         sl = self.spongeLayers
-        for key, value in self.abs_zones.iteritems():
+        for key, value in list(self.abs_zones.items()):
             if value is True:
                 self._attachAuxiliaryVariable('RelaxZones')
                 ind = self.regionIndice[key]
                 flag = self.regionFlags[ind]
-                epsFact_solid = self.spongeLayers[key] / 2.
+                epsFact_solid = old_div(self.spongeLayers[key], 2.)
                 center = np.array(self.coords)
                 zeros_to_append = 3 - len(center)
                 if zeros_to_append:
                     for i in range(zeros_to_append):
                         center = np.append(center, [0])
                 if key == 'x-':
-                    center[0] += -0.5 * self.dim[0] - sl['x-'] / 2.
+                    center[0] += -0.5 * self.dim[0] - old_div(sl['x-'], 2.)
                     orientation = np.array([1., 0., 0.])
                     self.BC['x-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                                    wind_speed=wind_speed,
                                                                    smoothing=smoothing)
                 elif key == 'x+':
-                    center[0] += +0.5 * self.dim[0] + sl['x+'] / 2.
+                    center[0] += +0.5 * self.dim[0] + old_div(sl['x+'], 2.)
                     orientation = np.array([-1., 0., 0.])
                     self.BC['x+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                                    wind_speed=wind_speed,
                                                                    smoothing=smoothing)
                 elif key == 'y-':
-                    center[1] += -0.5 * self.dim[1] - sl['y-'] / 2.
+                    center[1] += -0.5 * self.dim[1] - old_div(sl['y-'], 2.)
                     orientation = np.array([0., 1., 0.])
                     self.BC['y-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                                    wind_speed=wind_speed,
                                                                    smoothing=smoothing)
                 elif key == 'y+':
-                    center[1] += +0.5 * self.dim[1] + sl['y+'] / 2.
+                    center[1] += +0.5 * self.dim[1] + old_div(sl['y+'], 2.)
                     orientation = np.array([0., -1., 0.])
                     self.BC['y+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                                    wind_speed=wind_speed,
@@ -963,7 +968,7 @@ class Tank2D(ShapeRANS):
 
     def _nameSelf(self):
         self.__class__.count += 1
-        self.name = "tank2D" + str(self.__class__.count)
+        self.name = "tank2D" + repr(self.__class__.count)
 
     def _setupBCs(self):
         self.boundaryTags = {'y-': 1, 'x+': 2, 'y+': 3, 'x-': 4, 'sponge': 5}
@@ -1171,7 +1176,7 @@ class Tank2D(ShapeRANS):
                                0.5 * (self.y0 + self.y1), 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x-'] / 2.
+            epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
             orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
@@ -1188,7 +1193,7 @@ class Tank2D(ShapeRANS):
                                0.5 * (self.y0 + self.y1), 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x+'] / 2.
+            epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
             orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
@@ -1238,7 +1243,7 @@ class Tank2D(ShapeRANS):
                                0.5 * (self.y0 + self.y1), 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x-'] / 2.
+            epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
             orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
@@ -1259,7 +1264,7 @@ class Tank2D(ShapeRANS):
                                0.5 * (self.y0 + self.y1), 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x+'] / 2.
+            epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
             orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
@@ -1354,7 +1359,7 @@ class TankWithObstacles2D(Tank2D):
                              'x+': None}
 
         if special_boundaries:
-            for key in special_boundaries.keys():
+            for key in list(special_boundaries.keys()):
                 self.special_boundaries += [key for v in special_boundaries[key]]
                 self.special_BC_vertices += special_boundaries[key]
 
@@ -1368,19 +1373,19 @@ class TankWithObstacles2D(Tank2D):
     def _setupBCs(self):
         super(TankWithObstacles2D, self)._setupBCs()
         for boundary in self.special_boundaries:
-            if boundary not in self.boundaryTags.keys():
+            if boundary not in list(self.boundaryTags.keys()):
                 self.boundaryTags[boundary] = len(self.boundaryTags) + 1
                 self.BC[boundary] = self.BC_class(shape=self, name=boundary)
                 self.BC_list += [self.BC[boundary]]
         # add boundaryTags
         self.obstacle_flags = []
         max_flag = 0
-        for tag, flag in self.boundaryTags.iteritems():
+        for tag, flag in list(self.boundaryTags.items()):
             if flag > max_flag:
                 max_flag = flag
         flag = max_flag + 1
         for i in range(len(self.obstacles)):
-            tag = 'obstacle' + str(i + 1)
+            tag = 'obstacle' + repr(i + 1)
             self.boundaryTags[tag] = flag
             self.obstacle_flags += [flag]
             self.BC[tag] = self.BC_class(shape=self, name=tag)
@@ -1490,7 +1495,7 @@ class TankWithObstacles2D(Tank2D):
             """
             ordering = getClockwiseOrder(first)
             corners = [x for x in ordering
-                       if x in self.corners.keys()
+                       if x in list(self.corners.keys())
                        and ordering.index(x) < ordering.index(last)
                        ]
             corner_vertices = []
@@ -1523,7 +1528,7 @@ class TankWithObstacles2D(Tank2D):
             ordering = getClockwiseOrder(starting_point)
 
             for potential_corner in ordering:
-                if potential_corner in self.corners.keys():
+                if potential_corner in list(self.corners.keys()):
                     self.corners[potential_corner] = True
                     vertex, flag = addCorner(potential_corner)
                     corner_vertices += vertex
@@ -1576,7 +1581,7 @@ class TankWithObstacles2D(Tank2D):
                                 for i in range(len(obstacle))]
             elif self.hole is False:
                 vertices += obstacle
-                vertexFlags += [self.boundaryTags['obstacle' + str(nb + 1)]
+                vertexFlags += [self.boundaryTags['obstacle' + repr(nb + 1)]
                                 for i in range(len(obstacle))]
 
             # ---- Paperwork ---- #
@@ -1778,9 +1783,9 @@ class TankWithObstacles2D(Tank2D):
                 regions = [[region[0], region[1]]]
                 ind_region += 1
                 regionFlags = [ind_region, ]
-                self.regionIndice['obstacle' + str(i + 1)] = ind_region - 1
+                self.regionIndice['obstacle' + repr(i + 1)] = ind_region - 1
 
-        if True in self.corners.values():
+        if True in list(self.corners.values()):
             regions += self._getCornerRegion()
         else:
             regions += self._getRandomRegion(vertices, segments)
@@ -1912,7 +1917,7 @@ class TankWithObstacles2D(Tank2D):
                                sponge_half_height_x0, 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x-'] / 2.
+            epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
             orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
@@ -1929,7 +1934,7 @@ class TankWithObstacles2D(Tank2D):
                                sponge_half_height_x1, 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x+'] / 2.
+            epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
             orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
@@ -1984,7 +1989,7 @@ class TankWithObstacles2D(Tank2D):
                                sponge_half_height_x0, 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x-'] / 2.
+            epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
             orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
@@ -2006,7 +2011,7 @@ class TankWithObstacles2D(Tank2D):
                                sponge_half_height_x1, 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x+'] / 2.
+            epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
             orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
@@ -2080,7 +2085,7 @@ def assembleAuxiliaryVariables(domain):
         aux = domain.auxiliaryVariables
         # ----------------------------
         # RIGID BODIES
-        if 'RigidBody' in shape.auxiliaryVariables.keys():
+        if 'RigidBody' in list(shape.auxiliaryVariables.keys()):
             body = shape.auxiliaryVariables['RigidBody']
             aux['twp'] += [body]
             # fixing mesh on rigid body
@@ -2089,18 +2094,18 @@ def assembleAuxiliaryVariables(domain):
             # update the indice for force/moment calculations
             body.i_start = start_flag + 1
             body.i_end = start_flag + 1 + len(shape.BC_list)
-        if 'ChRigidBody' in shape.auxiliaryVariables.keys():
+        if 'ChRigidBody' in list(shape.auxiliaryVariables.keys()):
             body = shape.auxiliaryVariables['ChRigidBody']
             for boundcond in shape.BC_list:
                 boundcond.setChMoveMesh(body)
             body.i_start = start_flag + 1
             body.i_end = start_flag + 1 + len(shape.BC_list)
-        if 'WallFunction' in shape.auxiliaryVariables.keys():
+        if 'WallFunction' in list(shape.auxiliaryVariables.keys()):
             wall = shape.auxiliaryVariables['WallFunction']
             for ii in range(len(wall)):
                 aux['twp'] += [wall[ii]]
                 logEvent('WALL ATTACHED TO AUXVAR --> %s' % wall[ii])
-        if 'kWallFunction' in shape.auxiliaryVariables.keys():
+        if 'kWallFunction' in list(shape.auxiliaryVariables.keys()):
             kWall = shape.auxiliaryVariables['kWallFunction']
             for ii in range(len(kWall)):
                 aux['kappa'] += [kWall[ii]]
@@ -2108,7 +2113,7 @@ def assembleAuxiliaryVariables(domain):
         # ----------------------------
         # ABSORPTION/GENERATION ZONES
 
-        if 'RelaxZones' in shape.auxiliaryVariables.keys():
+        if 'RelaxZones' in list(shape.auxiliaryVariables.keys()):
             if not zones_global:
                 aux['twp'] += [bc.RelaxationZoneWaveGenerator(zones_global,
                                                               domain.nd)]
@@ -2119,7 +2124,7 @@ def assembleAuxiliaryVariables(domain):
                 domain.dragBetaTypes = np.zeros(len(domain.regionFlags) + 1)
                 domain.epsFact_solid = np.zeros(len(domain.regionFlags) + 1)
             i0 = start_region + 1
-            for flag, zone in shape.zones.iteritems():
+            for flag, zone in list(shape.zones.items()):
                 ind = [i for i, f in enumerate(shape.regionFlags) if f == flag]
                 for i1 in ind:
                     domain.porosityTypes[i0 + i1] = zone.porosity
@@ -2133,9 +2138,9 @@ def assembleAuxiliaryVariables(domain):
         # ----------------------------
         # GAUGES
         gauge_dict = {key: shape.auxiliaryVariables.get(key, [])
-                      for key in shape.auxiliaryVariables.keys()
+                      for key in list(shape.auxiliaryVariables.keys())
                       if str(key).startswith('Gauge_')}
-        for key in gauge_dict.keys():
+        for key in list(gauge_dict.keys()):
             key_name = key.split('_', 1)[1]  # Cutting off "Gauge_" prefix
             if key_name not in aux:
                 # It is probably too dangerous to simply put "aux[key_name] = []"
@@ -2144,7 +2149,7 @@ def assembleAuxiliaryVariables(domain):
                                  key_name,
                                  ' is not a recognized model by SpatialTools.',
                                  ' The known models in our dictionary are ',
-                                 str(aux.keys())
+                                 str(list(aux.keys()))
                                  )
             else:
                 aux[key_name] += gauge_dict[key]
@@ -2154,4 +2159,4 @@ def assembleAuxiliaryVariables(domain):
 
 
 def get_unit_vector(vector):
-    return np.array(vector) / np.linalg.norm(vector)
+    return old_div(np.array(vector), np.linalg.norm(vector))

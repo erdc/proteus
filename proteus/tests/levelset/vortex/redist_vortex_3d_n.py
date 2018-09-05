@@ -1,7 +1,10 @@
+from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
 from proteus import *
 from proteus.default_n import *
-from redist_vortex_3d_p import *
-from vortex import *
+from .redist_vortex_3d_p import *
+from .vortex import *
 
 timeIntegration = NoIntegration
 stepController = Newton_controller
@@ -33,7 +36,7 @@ elif cDegree_ls==-1:
     stepController = Osher_PsiTC_controller
     runCFL=1.0
     rtol_res[0] = 0.0
-    atol_res[0] = 0.01/float(nn-1)#1.0e-6
+    atol_res[0] = old_div(0.01,float(nn-1))#1.0e-6
     if pDegree_ls==0:
         femSpaces = {0:DG_AffineP0_OnSimplexWithMonomialBasis}
     elif pDegree_ls==1:

@@ -1,4 +1,6 @@
 """Tests for 2d flow around a cylinder with shifted boundary method on a 3D mesh"""
+from builtins import range
+from builtins import object
 from proteus.iproteus import *
 from proteus import Comm, defaults
 from proteus import Context
@@ -14,7 +16,7 @@ import numpy as np
 modulepath = os.path.dirname(os.path.abspath(__file__))
 
 
-class Test_sbm_cylinder2D_on_mesh3D():
+class Test_sbm_cylinder2D_on_mesh3D(object):
 
     @classmethod
     def setup_class(cls):

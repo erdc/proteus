@@ -1,4 +1,5 @@
-from default import *
+from __future__ import absolute_import
+from .default import *
 
 PROTEUS_PRELOAD_LIBS=[]
 PROTEUS_EXTRA_LINK_ARGS=['-L/opt/cray/libsci/13.0.3/GNU/49/x86_64/lib','-lsci_gnu'] + platform_extra_link_args

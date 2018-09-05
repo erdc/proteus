@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
-from risingBubble import *
+from .risingBubble import *
 from proteus.mprans import NCLS3P
 
 LevelModelType = NCLS3P.LevelModel
@@ -24,7 +26,7 @@ dirichletConditions = {0:getDBC_ls}
 advectiveFluxBoundaryConditions =  {}
 diffusiveFluxBoundaryConditions = {0:{}}
 
-class PHI_IC:
+class PHI_IC(object):
     def uOfXT(self,x,t):
         return signedDistanceToBubble(x)
 
