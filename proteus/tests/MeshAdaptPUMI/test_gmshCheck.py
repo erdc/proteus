@@ -34,7 +34,8 @@ def test_gmshLoadAndAdapt(verbose=0):
     nu = numpy.array([1.004e-6, 1.004e-6])
     g = numpy.asarray([0.0,0.0,0.0])
     deltaT = 1.0 #dummy number
-    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT)
+    epsFact = 1.0 #dummy number
+    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
 
     #Couette Flow
     Lz = 0.05
@@ -99,7 +100,8 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     nu = numpy.array([1.004e-6, 1.004e-6])
     g = numpy.asarray([0.0,0.0])
     deltaT = 1.0 #dummy number
-    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT)
+    epsFact = 1.0 #dummy number
+    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
 
     #Couette Flow
     Lz = 0.05

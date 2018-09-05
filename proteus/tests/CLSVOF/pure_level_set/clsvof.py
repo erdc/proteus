@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
 from proteus import Domain
 from proteus import Norms
 from proteus import Profiling
@@ -5,7 +8,7 @@ from proteus import Context
 from proteus.mprans import CLSVOF
 import numpy as np
 import math
-from parameters import *
+from .parameters import *
 
 AUTOMATED_TEST=True
 
@@ -79,13 +82,13 @@ if nd==2:
 else:
     if ct.test_case==3:
         nn=nnx=nny=int((2**refinement)*refinementMultiplier+1)
-        nnz=int((nnx-1)/2+1)
+        nnz=int(old_div((nnx-1),2)+1)
         L=[1.0,1.0,0.5]
     else:
         nn=nnx=nny=nnz=int((2**refinement)*refinementMultiplier+1)
         L=[1.0,1.0,1.0]
 # definition of he
-he=1.0/(nnx-1.0)
+he=old_div(1.0,(nnx-1.0))
 clsvof_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
 
 unstructured=unstructured #True for tetgen, false for tet or hex from rectangular grid
@@ -99,7 +102,7 @@ if unstructured:
 else:
     domain = box
 
-soname="clsvof_level_"+`refinement`
+soname="clsvof_level_"+repr(refinement)
 
 class MyCoefficients(CLSVOF.Coefficients):
     def attachModels(self,modelList):
@@ -107,3 +110,4 @@ class MyCoefficients(CLSVOF.Coefficients):
         self.q_v = np.zeros(self.model.q[('grad(u)',0)].shape,'d')
         self.ebqe_v = np.zeros(self.model.ebqe[('grad(u)',0)].shape,'d')
         self.q_v_old = np.zeros(self.model.q[('grad(u)',0)].shape,'d')
+        self.q_v_tStar = np.zeros(self.model.q[('grad(u)',0)].shape,'d')

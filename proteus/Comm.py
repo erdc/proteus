@@ -4,7 +4,10 @@ Module for controlling MPI
 .. inheritance-diagram:: proteus.Comm
    :parts: 1
 """
+from __future__ import absolute_import
 
+from builtins import range
+from builtins import object
 import ctypes
 import sys
 
@@ -13,7 +16,7 @@ from .Profiling import logEvent
 
 
 # Special workaround for broken MPI on certain Cray systems
-import config
+from . import config
 mpi_preload_libs=[]
 for lib in config.PROTEUS_PRELOAD_LIBS:
     mpi_preload_libs.append(ctypes.CDLL(lib,mode=ctypes.RTLD_GLOBAL))
@@ -51,7 +54,7 @@ def get():
         return init()
     return comm
 
-class Comm():
+class Comm(object):
     """Proteus wrapper around PETSc/MPI communicators
 
     This is a very simple class that provides compatibility with older Proteus comm objects.

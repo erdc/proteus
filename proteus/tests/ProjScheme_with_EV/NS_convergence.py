@@ -1,9 +1,13 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
 from proteus.default_n import *
 from proteus.Profiling import logEvent
-from parameters import *
+from .parameters import *
 
 manufactured_solution = 2 #1: u.n!=0, 2: u.n=0
 
@@ -40,11 +44,11 @@ useRBLES=0.0
 
 # Input checks
 if spaceOrder not in [1, 2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit()
 
 if useMetrics not in [0.0, 1.0]:
-    print "INVALID: useMetrics"
+    print("INVALID: useMetrics")
     sys.exit()
 
 #  Discretization
@@ -84,7 +88,7 @@ elif pspaceOrder == 2:
 
 # Domain and mesh
 L = (1.0, 1.0)
-he = L[0]/float(4*Refinement-1)
+he = old_div(L[0],float(4*Refinement-1))
 he*=0.5
 he*=0.5
 
@@ -137,14 +141,14 @@ else:
         domain.writePoly("mesh")
         domain.writePLY("mesh")
         domain.writeAsymptote("mesh")
-        triangleOptions = "VApq30Dena%8.8f" % ((he ** 2) / 2.0,)
+        triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
 
 # Time stepping
 T=1.0
 dt_fixed = 0.1
 dt_init = min(0.1*dt_fixed,0.001)
 runCFL=0.33
-nDTout = int(round(T/dt_fixed))
+nDTout = int(round(old_div(T,dt_fixed)))
 
 # Numerical parameters
 ns_sed_forceStrongDirichlet = False

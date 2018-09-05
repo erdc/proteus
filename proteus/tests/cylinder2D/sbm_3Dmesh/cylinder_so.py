@@ -51,4 +51,4 @@ needEBQ = False
 tnList = cylinder.tnList
 
 info = open("TimeList.txt","w")
-archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
+#archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP

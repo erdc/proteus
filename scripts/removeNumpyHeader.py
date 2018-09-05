@@ -1,7 +1,8 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import glob
 files = glob.glob('*.py')
-print files
+print(files)
 for f in files:
     fh = open(f,'r')
     a = fh.readlines()

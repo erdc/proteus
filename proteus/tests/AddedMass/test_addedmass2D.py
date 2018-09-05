@@ -1,10 +1,15 @@
 #!/usr/bin/env python
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
 import os
 from proteus.iproteus import *
 import unittest
 import numpy.testing as npt
 from importlib import import_module
 from petsc4py import PETSc
+
+modulepath = os.path.dirname(os.path.abspath(__file__))
 
 class TestAddedMass2D(unittest.TestCase):
 
@@ -39,17 +44,17 @@ class TestAddedMass2D(unittest.TestCase):
                 pass
 
     def test_AddedMass_2D(self):
-        from proteus import default_so
-        reload(default_so)
-        import addedmass2D_so
+        from proteus import defaults
+        so = defaults.load_system('addedmass2D_so', modulepath)
         pList = []
         nList = []
-        for (p,n) in addedmass2D_so.pnList:
-            pList.append(import_module("."+p,"proteus.tests.AddedMass"))
-            nList.append(import_module("."+n,"proteus.tests.AddedMass"))
+        for (pModule,nModule) in so.pnList:
+            log("Loading p module = "+pModule)
+            pList.append(proteus.defaults.load_physics(pModule, modulepath))
             if pList[-1].name == None:
-                pList[-1].name = p
-        so = addedmass2D_so
+                pList[-1].name = pModule
+            log("Loading n module = "+nModule)
+            nList.append(proteus.defaults.load_numerics(nModule, modulepath))
         so.name = "addedmass2D"
         if so.sList == []:
             for i in range(len(so.pnList)):
@@ -66,15 +71,15 @@ class TestAddedMass2D(unittest.TestCase):
             while i < len(all):
                 if i < len(all)-1:
                     if all[i+1][0]!='-':
-                        print "setting ", all[i].strip(), all[i+1]
+                        print("setting ", all[i].strip(), all[i+1])
                         OptDB.setValue(all[i].strip('-'),all[i+1])
                         i=i+2
                     else:
-                        print "setting ", all[i].strip(), "True"
+                        print("setting ", all[i].strip(), "True")
                         OptDB.setValue(all[i].strip('-'),True)
                         i=i+1
                 else:
-                    print "setting ", all[i].strip(), "True"
+                    print("setting ", all[i].strip(), "True")
                     OptDB.setValue(all[i].strip('-'),True)
                     i=i+1
         ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)

@@ -1,3 +1,4 @@
+from builtins import object
 from proteus.default_p import *
 from proteus.mprans import RANS2P
 import numpy as np
@@ -89,19 +90,19 @@ if nd == 3:
     advectiveFluxBoundaryConditions[3] = lambda x, flag: domain.bc[flag].w_advective.init_cython()
     diffusiveFluxBoundaryConditions[3] = {3: lambda x, flag: domain.bc[flag].w_diffusive.init_cython()}
 
-class P_IC:
+class P_IC(object):
     def uOfXT(self, x, t):
         return ct.twpflowPressure_init(x, t)
 
-class U_IC:
+class U_IC(object):
     def uOfXT(self, x, t):
         return 0.0
 
-class V_IC:
+class V_IC(object):
     def uOfXT(self, x, t):
         return 0.0
 
-class W_IC:
+class W_IC(object):
     def uOfXT(self, x, t):
         return 0.0
 

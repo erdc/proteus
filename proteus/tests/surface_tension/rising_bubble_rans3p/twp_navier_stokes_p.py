@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
-from risingBubble import *
+from .risingBubble import *
 from proteus.mprans import RANS3PF
 
 if useOnlyVF:
@@ -81,7 +83,7 @@ def getDFBC_v(x,flag):
 def getDFBC_w(x,flag):
     return lambda x,t: 0.0
 
-class AtRest:
+class AtRest(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

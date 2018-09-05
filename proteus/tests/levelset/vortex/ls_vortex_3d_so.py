@@ -1,6 +1,10 @@
+from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from proteus.default_so import *
-import vortex
-from vortex import *
+from . import vortex
+from .vortex import *
 
 if applyRedistancing:
     if applyCorrection:
@@ -30,7 +34,7 @@ needEBQ = False
 
 archiveFlag = ArchiveFlags.EVERY_USER_STEP
 #archiveFlag = ArchiveFlags.EVERY_MODEL_STEP
-DT = T/float(nDTout)
+DT = old_div(T,float(nDTout))
 tnList = [i*DT for i  in range(nDTout+1)]
 #cek hard coded steps for article snapshots
 #tnList = [0.0,4.0,8.0]

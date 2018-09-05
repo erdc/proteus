@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus.default_so import *
 import proteus
-import step2d
+from . import step2d
 reload(step2d)
 from proteus import Context
 import os

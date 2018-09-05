@@ -4,11 +4,13 @@ Tools for calculating norms on function spaces.
 .. inheritance-diagram:: proteus.Norms
    :parts: 1
 """
-from FemTools import *
-from Quadrature import *
+from __future__ import absolute_import
+from builtins import range
+from .FemTools import *
+from .Quadrature import *
 #from cmeshTools import globalSum,globalMax
-from flcbdfWrappers import globalSum,globalMax
-import  cfemIntegrals
+from .flcbdfWrappers import globalSum,globalMax
+from . import  cfemIntegrals
 
 useC = True
 
@@ -16,7 +18,7 @@ useC = True
 """
 def L2errorSFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArray,functionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(quadraturePointArray.shape[1])
+    range_nQuadraturePoints_element = list(range(quadraturePointArray.shape[1]))
     for eN in range(quadraturePointArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             AF = analyticalFunction.uOfXT(quadraturePointArray[eN,k],T)
@@ -26,7 +28,7 @@ def L2errorSFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArra
 
 def L1errorSFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArray,functionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(quadraturePointArray.shape[1])
+    range_nQuadraturePoints_element = list(range(quadraturePointArray.shape[1]))
     for eN in range(quadraturePointArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             AF = analyticalFunction.uOfXT(quadraturePointArray[eN,k],T)
@@ -35,7 +37,7 @@ def L1errorSFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArra
 
 def L2errorVFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArray,functionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(quadraturePointArray.shape[1])
+    range_nQuadraturePoints_element = list(range(quadraturePointArray.shape[1]))
     for eN in range(quadraturePointArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             AF = analyticalFunction.uOfXT(quadraturePointArray[eN,k],T)
@@ -47,7 +49,7 @@ def L2errorVFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArra
 
 def L1errorVFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArray,functionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(quadraturePointArray.shape[1])
+    range_nQuadraturePoints_element = list(range(quadraturePointArray.shape[1]))
     for eN in range(quadraturePointArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             AF = analyticalFunction.uOfXT(quadraturePointArray[eN,k],T)
@@ -60,7 +62,7 @@ def L1errorVFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArra
 def L2errorSFEMvsAF2(analyticalFunction,quadraturePointArray,abs_det_J,
                      quadratureWeightArray,functionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(quadraturePointArray.shape[1])
+    range_nQuadraturePoints_element = list(range(quadraturePointArray.shape[1]))
     for eN in range(quadraturePointArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             AF = analyticalFunction.uOfXT(quadraturePointArray[eN,k],T)
@@ -71,7 +73,7 @@ def L2errorSFEMvsAF2(analyticalFunction,quadraturePointArray,abs_det_J,
 def L1errorSFEMvsAF2(analyticalFunction,quadraturePointArray,abs_det_J,
                      quadratureWeightArray,functionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(quadraturePointArray.shape[1])
+    range_nQuadraturePoints_element = list(range(quadraturePointArray.shape[1]))
     for eN in range(quadraturePointArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             AF = analyticalFunction.uOfXT(quadraturePointArray[eN,k],T)
@@ -81,7 +83,7 @@ def L1errorSFEMvsAF2(analyticalFunction,quadraturePointArray,abs_det_J,
 def L2errorVFEMvsAF2(analyticalFunction,quadraturePointArray,abs_det_J,
                      quadratureWeightArray,functionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(quadraturePointArray.shape[1])
+    range_nQuadraturePoints_element = list(range(quadraturePointArray.shape[1]))
     for eN in range(quadraturePointArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             AF = analyticalFunction.uOfXT(quadraturePointArray[eN,k],T)
@@ -92,7 +94,7 @@ def L2errorVFEMvsAF2(analyticalFunction,quadraturePointArray,abs_det_J,
     return error
 def L1errorVFEMvsAF2(analyticalFunction,quadraturePointArray,quadratureWeightArray,functionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(quadraturePointArray.shape[1])
+    range_nQuadraturePoints_element = list(range(quadraturePointArray.shape[1]))
     for eN in range(quadraturePointArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             AF = analyticalFunction.uOfXT(quadraturePointArray[eN,k],T)
@@ -102,7 +104,7 @@ def L1errorVFEMvsAF2(analyticalFunction,quadraturePointArray,quadratureWeightArr
 
 def L2errorSFEM(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(aSolutionValueArray.shape[1])
+    range_nQuadraturePoints_element = list(range(aSolutionValueArray.shape[1]))
     for eN in range(aSolutionValueArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             error += ((aSolutionValueArray[eN,k] - nSolutionValueArray[eN,k])**2)*quadratureWeightArray[eN,k]
@@ -111,7 +113,7 @@ def L2errorSFEM(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=
 def L2errorSFEM_local(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,elementError,T=None):
     error=0.0
     elementError.flat[:]=0.0
-    range_nQuadraturePoints_element = range(nSolutionValueArray.shape[1])
+    range_nQuadraturePoints_element = list(range(nSolutionValueArray.shape[1]))
     for eN in range(nSolutionValueArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             elementError[eN] += ((aSolutionValueArray[eN,k] - nSolutionValueArray[eN,k])**2)*quadratureWeightArray[eN,k]
@@ -121,7 +123,7 @@ def L2errorSFEM_local(quadratureWeightArray,aSolutionValueArray,nSolutionValueAr
     return error
 def L2normSFEM(quadratureWeightArray,nSolutionValueArray):
     error=0.0
-    range_nQuadraturePoints_element = range(nSolutionValueArray.shape[1])
+    range_nQuadraturePoints_element = list(range(nSolutionValueArray.shape[1]))
     for eN in range(nSolutionValueArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             error += (nSolutionValueArray[eN,k]**2)*quadratureWeightArray[eN,k]
@@ -130,7 +132,7 @@ def L2normSFEM(quadratureWeightArray,nSolutionValueArray):
 
 def L1errorSFEM(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(aSolutionValueArray.shape[1])
+    range_nQuadraturePoints_element = list(range(aSolutionValueArray.shape[1]))
     for eN in range(aSolutionValueArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             error += abs(aSolutionValueArray[eN,k] - nSolutionValueArray[eN,k])*quadratureWeightArray[eN,k]
@@ -138,7 +140,7 @@ def L1errorSFEM(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=
 
 def L2errorVFEM(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(aSolutionValueArray.shape[1])
+    range_nQuadraturePoints_element = list(range(aSolutionValueArray.shape[1]))
     for eN in range(aSolutionValueArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             e2    = numpy.inner(aSolutionValueArray[eN,k,:] - nSolutionValueArray[eN,k,:],
@@ -149,7 +151,7 @@ def L2errorVFEM(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=
 
 def L1errorVFEM(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(aSolutionValueArray.shape[1])
+    range_nQuadraturePoints_element = list(range(aSolutionValueArray.shape[1]))
     for eN in range(aSolutionValueArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             e      = numpy.sum(numpy.absolute(aSolutionValueArray[eN,k,:] - nSolutionValueArray[eN,k,:]))
@@ -158,7 +160,7 @@ def L1errorVFEM(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=
 
 def L2errorSFEM2(abs_det_J,quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(aSolutionValueArray.shape[1])
+    range_nQuadraturePoints_element = list(range(aSolutionValueArray.shape[1]))
     for eN in range(aSolutionValueArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             error += ((aSolutionValueArray[eN,k] - nSolutionValueArray[eN,k])**2)*quadratureWeightArray[k]*abs_det_J[eN,k]
@@ -167,7 +169,7 @@ def L2errorSFEM2(abs_det_J,quadratureWeightArray,aSolutionValueArray,nSolutionVa
 
 def L1errorSFEM2(abs_det_J,quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(aSolutionValueArray.shape[1])
+    range_nQuadraturePoints_element = list(range(aSolutionValueArray.shape[1]))
     for eN in range(aSolutionValueArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             error += abs(aSolutionValueArray[eN,k] - nSolutionValueArray[eN,k])*quadratureWeightArray[k]*abs_det_J[eN,k]
@@ -176,7 +178,7 @@ def L1errorSFEM2(abs_det_J,quadratureWeightArray,aSolutionValueArray,nSolutionVa
 
 def L2errorVFEM2(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(aSolutionValueArray.shape[1])
+    range_nQuadraturePoints_element = list(range(aSolutionValueArray.shape[1]))
     for eN in range(aSolutionValueArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             e2    = numpy.inner(aSolutionValueArray[eN,k,:] - nSolutionValueArray[eN,k,:],
@@ -187,7 +189,7 @@ def L2errorVFEM2(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T
 
 def L1errorVFEM2(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(aSolutionValueArray.shape[1])
+    range_nQuadraturePoints_element = list(range(aSolutionValueArray.shape[1]))
     for eN in range(aSolutionValueArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             e      = numpy.sum(numpy.absolute(aSolutionValueArray[eN,k,:] - nSolutionValueArray[eN,k,:]))
@@ -204,7 +206,7 @@ def scalarDomainIntegral(dV,nValueArray,nElements=None):
             partialSum = cfemIntegrals.scalarDomainIntegral(dV,nValueArray,nElements)
     else:
         partialSum=0.0
-        range_nQuadraturePoints_element = range(nValueArray.shape[1])
+        range_nQuadraturePoints_element = list(range(nValueArray.shape[1]))
         for eN in range(nValueArray.shape[0]):
             for k in range_nQuadraturePoints_element:
                 partialSum += nValueArray[eN,k]*dV[eN,k]
@@ -229,7 +231,7 @@ def globalScalarDomainIntegral(abs_det_J,quadratureWeightArray,nValueArray):
         integral = cfemIntegrals.scalarDomainIntegral(abs_det_J,quadratureWeightArray,nValueArray)
     else:
         integral=0.0
-        range_nQuadraturePoints_element = range(nValueArray.shape[1])
+        range_nQuadraturePoints_element = list(range(nValueArray.shape[1]))
         for eN in range(nValueArray.shape[0]):
             for k in range_nQuadraturePoints_element:
                 integral += nValueArray[eN,k]*quadratureWeightArray[k]*abs_det_J[eN,k]
@@ -255,7 +257,7 @@ def fluxDomainBoundaryIntegralFromVector(dS,nValueArray,normal,mesh):
 
 def LIerrorSFEMvsAF(analyticalFunction,quadraturePointArray,functionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(quadraturePointArray.shape[1])
+    range_nQuadraturePoints_element = list(range(quadraturePointArray.shape[1]))
     for eN in range(quadraturePointArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             AF = analyticalFunction.uOfXT(quadraturePointArray[eN,k],T)
@@ -264,7 +266,7 @@ def LIerrorSFEMvsAF(analyticalFunction,quadraturePointArray,functionValueArray,T
 
 def LIerrorVFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArray,functionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(quadraturePointArray.shape[1])
+    range_nQuadraturePoints_element = list(range(quadraturePointArray.shape[1]))
     for eN in range(quadraturePointArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             AF = analyticalFunction.uOfXT(quadraturePointArray[eN,k],T)
@@ -275,7 +277,7 @@ def LIerrorVFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArra
 
 def LIerrorSFEM(quadratureWeightArray,aSolutionValueArray,nSolutionValueArray,T=None):
     error=0.0
-    range_nQuadraturePoints_element = range(aSolutionValueArray.shape[1])
+    range_nQuadraturePoints_element = list(range(aSolutionValueArray.shape[1]))
     error = max(numpy.absolute(aSolutionValueArray.flat - nSolutionValueArray.flat))
 
     return globalMax(error)
