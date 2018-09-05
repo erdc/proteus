@@ -323,7 +323,7 @@ doc:
 test: check
 	@echo "************************************"
 	@echo "Running test suite"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
 	@echo "Tests complete "
 	@echo "************************************"
 
