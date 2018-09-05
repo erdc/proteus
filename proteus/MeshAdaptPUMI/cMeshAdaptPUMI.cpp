@@ -460,7 +460,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
   in->shouldSnap = false;
-  //in->goodQuality = 0.16;//0.027;
+  in->goodQuality = 0.064;//0.027;
   //double mass_before = getTotalMass();
   
   double t1 = PCU_Time();
