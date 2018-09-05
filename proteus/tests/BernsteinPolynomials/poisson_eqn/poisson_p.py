@@ -1,6 +1,10 @@
+from __future__ import absolute_import
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
-from parameters_for_poisson import *
+from .parameters_for_poisson import *
 
 name = "poisson"
 assert ct.nd==2 or ct.nd==3, "Choose nd=2, or 3"
@@ -11,7 +15,7 @@ initialConditions = None
 # DOMAIN #
 ##########
 nn=(2**ct.refinement)*10+1
-he=1.0/(nn-1.0)
+he=old_div(1.0,(nn-1.0))
 if (nd==2):
     box=Domain.RectangularDomain(L=(1.0,1.0),
                                  x=(0.0,0.0),
@@ -34,7 +38,7 @@ nc = 1
 ##################
 # EXACT SOLUTION #
 ##################
-class exact_soln:
+class exact_soln(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

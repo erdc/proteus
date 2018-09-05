@@ -190,6 +190,10 @@ namespace proteus
           for (int j=0;j<nDOF_trial_element;j++)
             {
               u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+              for (int I=0;I<nSpace;I++)
+                {
+                  u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+                }
             }
           //
           //calculate pde coefficients at quadrature points
@@ -315,7 +319,6 @@ namespace proteus
           for(int i=0;i<nDOF_test_element;i++)
             {
               register int eN_i=eN*nDOF_test_element+i;
-
               globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
             }//i
         }//elements
@@ -423,7 +426,6 @@ namespace proteus
           for (int i=0;i<nDOF_test_element;i++)
             {
               int eN_i = eN*nDOF_test_element+i;
-
               globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
             }//i
         }//ebNE
@@ -476,7 +478,6 @@ namespace proteus
             u_grad_trial[nDOF_trial_element*nSpace],
             dV,
             u_test_dV[nDOF_test_element],
-            u_grad_test_dV[nDOF_test_element*nSpace],
             x,y,z,
             G[nSpace*nSpace],G_dd_G,tr_G;
           //

@@ -38,7 +38,19 @@ cdef extern from "Dissipation2D.h" namespace "proteus":
                                double c_e,
                                double rho_0,
                                double rho_1,
-                               int dissipation_model_flag,
+#Sediment model
+                                double sedFlag,
+                                double* q_vos,
+                                double *q_vos_gradc,
+                                double* ebqe_q_vos,
+                                double *ebqe_q_vos_gradc,
+                                double rho_f,
+                                double rho_s,
+                                double* vs,
+                                double* ebqe_vs,
+                                double* g,
+#end Sediment
+                              int dissipation_model_flag,
                                # end diffusion
                                double useMetrics,
                                double alphaBDF,
@@ -129,6 +141,18 @@ cdef extern from "Dissipation2D.h" namespace "proteus":
                                double * q_kappa,  # kinetic energy
                                double * q_grad_kappa,
                                double * q_porosity,  # VRANS
+#Sediment model
+                                double sedFlag,
+                                double* q_vos,
+                                double *q_vos_gradc,
+                                double* ebqe_q_vos,
+                                double *ebqe_q_vos_gradc,
+                                double rho_f,
+                                double rho_s,
+                                double* vs,
+                                double* ebqe_vs,
+                                double* g,
+#end Sediment
                                # velocity dof
                                double * velocity_dof_u,
                                double * velocity_dof_v,
@@ -161,7 +185,25 @@ cdef extern from "Dissipation2D.h" namespace "proteus":
                                           int nDOF_trial_elementIn,
                                           int nDOF_test_elementIn,
                                           int nQuadraturePoints_elementBoundaryIn,
-                                          int CompKernelFlag)
+                                          int CompKernelFlag,
+                                          double aDarcy,
+                                          double betaForch,
+                                          double grain,
+                                          double packFraction,
+                                          double packMargin,
+                                          double maxFraction,
+                                                 double frFraction,
+                                                 double sigmaC,
+                                                 double C3e,
+                                                 double C4e,
+                                                 double eR,
+                                                 double fContact,
+                                                 double mContact,
+                                                 double nContact,
+                                                 double angFriction,
+                                     double vos_limiter,
+                                     double mu_fr_limiter)
+
 
 cdef class cDissipation2D_base:
     cdef Dissipation2D_base * thisptr
@@ -173,15 +215,49 @@ cdef class cDissipation2D_base:
                   int nDOF_trial_elementIn,
                   int nDOF_test_elementIn,
                   int nQuadraturePoints_elementBoundaryIn,
-                  int CompKernelFlag):
-        self.thisptr = newDissipation2D(nSpaceIn,
-                                        nQuadraturePoints_elementIn,
-                                        nDOF_mesh_trial_elementIn,
-                                        nDOF_trial_elementIn,
-                                        nDOF_test_elementIn,
-                                        nQuadraturePoints_elementBoundaryIn,
-                                        CompKernelFlag)
+                  int CompKernelFlag,
+                  double aDarcy,
+                  double betaForch,
+                  double grain,
+                  double packFraction,
+                  double packMargin,
+                  double maxFraction,
+                  double frFraction,
+                  double sigmaC,
+                  double C3e,
+                  double C4e,
+                  double eR,
+                  double fContact,
+                  double mContact,
+                  double nContact,
+                  double angFriction,
+                  double vos_limiter,
+                  double mu_fr_limiter):
 
+        self.thisptr = newDissipation2D(nSpaceIn,
+                                  nQuadraturePoints_elementIn,
+                                 nDOF_mesh_trial_elementIn,
+                                nDOF_trial_elementIn,
+                               nDOF_test_elementIn,
+                              nQuadraturePoints_elementBoundaryIn,
+                                        CompKernelFlag,
+                          aDarcy,
+                  betaForch,
+                   grain,
+                   packFraction,
+                   packMargin,
+                   maxFraction,
+                   frFraction,
+                   sigmaC,
+                   C3e,
+                   C4e,
+                   eR,
+                   fContact,
+                   mContact,
+                   nContact,
+                   angFriction,
+                   vos_limiter,
+                   mu_fr_limiter)
     def __dealloc__(self):
         del self.thisptr
 
@@ -217,6 +293,18 @@ cdef class cDissipation2D_base:
                           double c_e,
                           double rho_0,
                           double rho_1,
+  #                             Argumentlist for sediment
+                           double sedFlag,
+                           numpy.ndarray  q_vos,
+                           numpy.ndarray q_vos_gradc,
+                           numpy.ndarray  ebqe_q_vos,
+                           numpy.ndarray ebqe_q_vos_gradc,
+                           double rho_f,
+                           double rho_s,
+                           numpy.ndarray  vs,
+                           numpy.ndarray  ebqe_vs,
+                           numpy.ndarray g,
+  #                             end for sediment
                           int dissipation_model_flag,
                           # end diffusion
                           double useMetrics,
@@ -295,6 +383,18 @@ cdef class cDissipation2D_base:
                                         c_e,
                                         rho_0,
                                         rho_1,
+  #                             Argumentlist for sediment
+                                        sedFlag,
+                                       < double * >  q_vos.data,
+                                       < double * > q_vos_gradc.data,
+                                       < double * >  ebqe_q_vos.data,
+                                       < double * > ebqe_q_vos_gradc.data,
+                                       rho_f,
+                                       rho_s,
+                                       < double * >  vs.data,
+                                       < double * >  ebqe_vs.data,
+                                       < double * > g.data,
+  #                             end for sediment
                                         dissipation_model_flag,
                                         # end diffuion
                                         useMetrics,
@@ -390,6 +490,18 @@ cdef class cDissipation2D_base:
                           numpy.ndarray q_kappa,  # kinetic energy
                           numpy.ndarray q_grad_kappa,  # kinetic energy
                           numpy.ndarray q_porosity,  # VRANS
+  #                             Argumentlist for sediment
+                           double sedFlag,
+                           numpy.ndarray  q_vos,
+                           numpy.ndarray q_vos_gradc,
+                           numpy.ndarray  ebqe_q_vos,
+                           numpy.ndarray ebqe_q_vos_gradc,
+                           double rho_f,
+                           double rho_s,
+                           numpy.ndarray  vs,
+                           numpy.ndarray  ebqe_vs,
+                           numpy.ndarray g,
+  #                             end for sediment
                           # velocity dof
                           numpy.ndarray velocity_dof_u,
                           numpy.ndarray velocity_dof_v,
@@ -465,6 +577,18 @@ cdef class cDissipation2D_base:
                                         < double * > q_kappa.data,
                                         < double * > q_grad_kappa.data,
                                         < double * > q_porosity.data,
+  #                             Argumentlist for sediment
+                                        sedFlag,
+                                       < double * >  q_vos.data,
+                                       < double * > q_vos_gradc.data,
+                                       < double * >  ebqe_q_vos.data,
+                                       < double * > ebqe_q_vos_gradc.data,
+                                       rho_f,
+                                       rho_s,
+                                       < double * >  vs.data,
+                                       < double * >  ebqe_vs.data,
+                                       < double * > g.data,
+  #                             end for sediment
                                         # velocity dofs
                                         < double * > velocity_dof_u.data,
                                         < double * > velocity_dof_v.data,

@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from re_gl_6_3d_p import *
+from .re_gl_6_3d_p import *
 
 #unsteady
 timeIntegration = FLCBDF

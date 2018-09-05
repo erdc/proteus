@@ -1,7 +1,11 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import object
 import os
 import pytest
 
-class TestIsosurface():
+class TestIsosurface(object):
 
     @classmethod
     def setup_class(cls):
@@ -26,10 +30,10 @@ class TestIsosurface():
 
     def test_povgen(self):
         import difflib
-        import urllib
+        import urllib.request, urllib.parse, urllib.error
         import subprocess
         import os
-        urllib.urlretrieve(
+        urllib.request.urlretrieve(
             'https://dl.dropbox.com/s/tjkj3ella3ntv75/floating_bar.h5',
             'floating_bar.h5')
         subprocess.check_call(['povgen.py',
@@ -41,7 +45,7 @@ class TestIsosurface():
             filename = 'phi_t_0.000000_{0:04d}.pov'.format(i)
             with open(filename, 'r') as f:
                 povfiles.append(f.readlines())
-        urllib.urlretrieve(
+        urllib.request.urlretrieve(
             'https://dl.dropbox.com/s/um635cllwdjxajc/phi_t_0.000000_000.tgz',
             'phi_t_0.000000_000.tgz')
         subprocess.check_call(['tar', 'xzf', 'phi_t_0.000000_000.tgz'])

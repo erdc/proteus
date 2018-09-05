@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from MeshTools import *
 from FemTools import *
 import numpy
@@ -16,7 +20,7 @@ def getEdgeNodesInPhysicalSpace(p0,p1,order):
     if order == 2:
         edgeRefNodes = (0.0,1.0,0.5)
     elif order == 3:
-        edgeRefNodes = (0.0,1.0,1.0/3.0,2.0/3.0)
+        edgeRefNodes = (0.0,1.0,old_div(1.0,3.0),old_div(2.0,3.0))
     elif order == 4:
         edgeRefNodes = (0.0,1.0,0.25,0.5,0.75)
     else: #default is k=1
@@ -74,10 +78,10 @@ def buildTraceOpArray(mesh,dgspace,verboseLevel=0):
 
     #end ie loop
     if verboseLevel > 0:
-        print 'in buildTraceOp '
+        print('in buildTraceOp ')
         for ie in range(ngEdges):
             for k in range(edgeDim):
-                print 'edge ',ie,' edge dof ',k,' = ',physEdgeNodes[ie,k,:]
+                print('edge ',ie,' edge dof ',k,' = ',physEdgeNodes[ie,k,:])
         #end printout
     #end if verbose
 
@@ -87,12 +91,12 @@ def buildTraceOpArray(mesh,dgspace,verboseLevel=0):
         refCoordsDebug[1,:] = (1.0,0.0,0.0)
         refCoordsDebug[2,:] = (0.0,1.0,0.0)
 
-        print 'in buildTraceOp '
+        print('in buildTraceOp ')
         for j in range(3):
-            print 'node ',j,' =\n',refCoordsDebug[j,:]
+            print('node ',j,' =\n',refCoordsDebug[j,:])
             for k,w in enumerate(dgspace.referenceSpace.basis):
-                print 'dg basis ', k,' value: '
-                print w(refCoordsDebug[j,:])
+                print('dg basis ', k,' value: ')
+                print(w(refCoordsDebug[j,:]))
             #end k loop
         #end j loop
     #end if verbose
@@ -144,10 +148,10 @@ def buildTraceOpArray(mesh,dgspace,verboseLevel=0):
     #mwf debug
     #print out traceArray
     if (verboseLevel > 0):
-        print 'in buildTraceArray, result is '
+        print('in buildTraceArray, result is ')
         for ie in range(ngEdges):
-            print 'glob edge ',ie,'\n 0 neig= \n',traceArray[ie,0,:,:]
-            print 'glob edge ',ie,'\n 1 neig= \n',traceArray[ie,1,:,:]
+            print('glob edge ',ie,'\n 0 neig= \n',traceArray[ie,0,:,:])
+            print('glob edge ',ie,'\n 1 neig= \n',traceArray[ie,1,:,:])
         #end ie
     #end if verbose
 
@@ -191,7 +195,7 @@ def checkFunctionTrace(u,mesh,dgspace,traceArray,jumpTol=1.0e-8):
             #end if
         #end neig loop
         if Numeric.sum(abs(jumpValues)) > jumpTol:
-            print 'Warning edge ',globedge,' jumpValues big= \n',jumpValues
+            print('Warning edge ',globedge,' jumpValues big= \n',jumpValues)
         #end if big jump
     #end for loop on edges
 #end checkFunctionTrace
@@ -219,15 +223,15 @@ if __name__ == '__main__':
     viewMesh = 2
     mesh = constructTriangularMeshOnRectangle(Lx,Ly,nx,ny,viewMesh)
 
-    print 'mesh Info says \n',mesh.meshInfo()
+    print('mesh Info says \n',mesh.meshInfo())
 
     dgDofMap = DG1LagrangeDofMap(mesh)
 
     if verboseLevel > 0:
-        print "DG1 dofMap l2g is "
-        for i in xrange(dgDofMap.l2g.shape[0]):
+        print("DG1 dofMap l2g is ")
+        for i in range(dgDofMap.l2g.shape[0]):
             sn = '\t %d %d %d' % tuple(dgDofMap.l2g[i,:])
-            print sn
+            print(sn)
         #end for i
     #end if verbose
 
@@ -247,17 +251,17 @@ if __name__ == '__main__':
     nodalRefPoints[2,:] = (0.0,1.0,0.0)
 
     if verboseLevel > 0:
-        print 'nodalRefPoints = \n',nodalRefPoints
+        print('nodalRefPoints = \n',nodalRefPoints)
     #end verbose check
 
-    print 'finite element space says num in map family is '
-    print '\t', u.femSpace.mapFamily.nMaps
+    print('finite element space says num in map family is ')
+    print('\t', u.femSpace.mapFamily.nMaps)
     physNodes = Numeric.zeros((nelem,polydim,3),Numeric.Float)
 
     u.femSpace.mapFamily.getValues(nodalRefPoints,physNodes)
 
     if verboseLevel > 0:
-        print 'physical Nodes = \n',physNodes
+        print('physical Nodes = \n',physNodes)
     #end verbose check
 
     #set value of u manually
@@ -271,7 +275,7 @@ if __name__ == '__main__':
     #end element loop
 
     if verboseLevel > 0:
-        print 'u dof values = \n',u.dof
+        print('u dof values = \n',u.dof)
     #end verbose check
 
     saveScalarFEMfunctionMatlab(u,'sol','mesh')

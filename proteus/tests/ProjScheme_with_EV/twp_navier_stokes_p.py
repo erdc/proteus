@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
-from NS_convergence import *
+from .NS_convergence import *
 from proteus.mprans import RANS3PF
 
 LevelModelType = RANS3PF.LevelModel
@@ -139,13 +141,13 @@ diffusiveFluxBoundaryConditions = {0:{0:getDFBC_u},
 ######################
 # INITIAL CONDITIONS #
 ######################
-class AtRest:
+class AtRest(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
         return 0.0
 
-class velx_at_t0:
+class velx_at_t0(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
@@ -154,7 +156,7 @@ class velx_at_t0:
         else: 
             return 0.
 
-class vely_at_t0:
+class vely_at_t0(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
@@ -239,7 +241,7 @@ forceTerms = {0:forcex,
 ##################
 # EXACT SOLUTION #
 ##################
-class velx:
+class velx(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
@@ -256,7 +258,7 @@ class velx:
             return [pi*np.cos(pi*x[0])*np.cos(pi*x[1])*np.sin(t),
                     -pi*np.sin(pi*x[0])*np.sin(pi*x[1])*np.sin(t)]
             
-class vely:
+class vely(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
@@ -276,7 +278,7 @@ class vely:
 analyticalSolution = {0:velx(), 
                       1:vely()}
 
-class pressure:
+class pressure(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

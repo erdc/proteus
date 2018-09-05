@@ -1,3 +1,8 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -6,7 +11,7 @@ from proteus.Profiling import logEvent
 
 from proteus import Context
 
-ct = Context.Options([
+opts = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
     ("he",0.04, "maximum size of edges"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
@@ -21,9 +26,9 @@ movingDomain = False
 # applyRedistancing = True
 useOldPETSc = False
 useSuperlu = True#False
-timeDiscretization = 'vbdf'#vbdf'#'vbdf'  # 'vbdf', 'be', 'flcbdf'
-spaceOrder = ct.vspaceOrder
-pspaceOrder = ct.pspaceOrder
+timeDiscretization = 'vbdf'#'vbdf'  # 'vbdf', 'be', 'flcbdf'
+spaceOrder = opts.vspaceOrder
+pspaceOrder = opts.pspaceOrder
 useHex = False
 useRBLES = 0.0
 useMetrics = 1.0
@@ -37,15 +42,15 @@ openTop=True
 fl_H = 0.41
 # Input checks
 if spaceOrder not in [1, 2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit()
 
 if useRBLES not in [0.0, 1.0]:
-    print "INVALID: useRBLES" + useRBLES
+    print("INVALID: useRBLES" + useRBLES)
     sys.exit()
 
 if useMetrics not in [0.0, 1.0]:
-    print "INVALID: useMetrics"
+    print("INVALID: useMetrics")
     sys.exit()
 
 nd = 2
@@ -90,9 +95,12 @@ parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.node
 nLayersOfOverlapForParallel = 0
 structured = False
 
-he=ct.he
-DX=he 
-from symmetricDomain_john import symmetric2D
+he=opts.he
+DX=he
+try:
+    from .symmetricDomain_john import symmetric2D
+except:
+    from symmetricDomain_john import symmetric2D
 
 domain = symmetric2D(box=(2.2,0.41),
                      L= 0.2,
@@ -115,15 +123,15 @@ triangleOptions= "VApq30Dena"
 
 logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 # Time stepping
-T=ct.T
+T=opts.T
 dt_fixed = 0.005#0.03
 dt_init = 0.0025#min(0.1*dt_fixed,0.001)
 runCFL=0.33
-nDTout = int(round(T/dt_fixed))
+nDTout = int(round(old_div(T,dt_fixed)))
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)]
 
-if ct.onlySaveFinalSolution == True:
-    tnList = [0.0,dt_init,ct.T]
+if opts.onlySaveFinalSolution == True:
+    tnList = [0.0,dt_init,opts.T]
 
 
 # Numerical parameters
