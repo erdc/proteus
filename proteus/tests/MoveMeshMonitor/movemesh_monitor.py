@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from proteus.iproteus import *
 import proteus.default_p as physics
