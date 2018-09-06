@@ -11,10 +11,10 @@ namespace chrono {
       public:
           ChBodyAddedMass();
           virtual ~ChBodyAddedMass() {}
-    /* void SetMass(double newmass); */
-    /* void SetInertia(const ChMatrix33<>& iner); */
-    /* void SetInertiaXX(const ChVector<>& iner); */
-    /* void SetInertiaXY(const ChVector<>& iner); */
+    void SetMass(double newmass);
+    void SetInertia(const ChMatrix33<>& iner);
+    void SetInertiaXX(const ChVector<>& iner);
+    void SetInertiaXY(const ChVector<>& iner);
     /* ChVector<> GetInertiaXX(); */
     /* ChVector<> GetInertiaXY(); */
     /* double GetMass() { return variables.GetBodyMass(); }; */
