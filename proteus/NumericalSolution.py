@@ -758,8 +758,8 @@ class NS_base:  # (HasTraits):
     def PUMI2Proteus(self,mesh):
         #p0 = self.pList[0] #This can probably be cleaned up somehow
         #n0 = self.nList[0]
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
 
         logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
         if p0.domain.nd == 3:
@@ -1035,8 +1035,8 @@ class NS_base:  # (HasTraits):
                     self.systemStepController.t_system_last+1.0e-6)
 
     def PUMI_transferFields(self):
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
 
         logEvent("Copying coordinates to PUMI")
         p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
@@ -1078,11 +1078,11 @@ class NS_base:  # (HasTraits):
         del scalar
         #Get Physical Parameters
         #Can we do this in a problem-independent  way?
-        rho = numpy.array([self.pList[0].ct.rho_0,
-                           self.pList[0].ct.rho_1])
-        nu = numpy.array([self.pList[0].ct.nu_0,
-                          self.pList[0].ct.nu_1])
-        g = numpy.asarray(self.pList[0].ct.g)
+        rho = numpy.array([self.pList[0].rho_0,
+                           self.pList[0].rho_1])
+        nu = numpy.array([self.pList[0].nu_0,
+                          self.pList[0].nu_1])
+        g = numpy.asarray(self.pList[0].g)
         if(hasattr(self,"tn")):
             deltaT = self.tn-self.tn_last
         else:
@@ -1256,8 +1256,8 @@ class NS_base:  # (HasTraits):
         #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
         #    #    diff_flux)
 
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
         sfConfig = p0.domain.PUMIMesh.size_field_config()
         logEvent("h-adapt mesh by calling AdaptPUMIMesh")
         if(sfConfig=="pseudo"):
