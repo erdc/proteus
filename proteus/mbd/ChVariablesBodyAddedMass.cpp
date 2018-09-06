@@ -45,6 +45,17 @@ ChVariablesBodyAddedMass& ChVariablesBodyAddedMass::operator=(const ChVariablesB
     return *this;
 }
 
+  // Set the inertia matrix
+  // void ChVariablesBodyAddedMass::SetBodyInertia(const ChMatrix33<>& minertia) {
+  //   ChVariablesBodyOwnMass::SetBodyInertia(minertia);
+  //   GetLog() << "JUST SET " << ChVariablesBodyOwnMass::GetBodyInertia();
+  //   GetLog() << "JUST SET 2 " << GetBodyInertia();
+  // }
+
+  // // Set the mass associated with translation of body
+  // void ChVariablesBodyAddedMass::SetBodyMass(const double mmass) {
+  //   ChVariablesBodyOwnMass::SetBodyMass(mmass);
+  // }
 // /// Set the inertia matrix
 // void ChVariablesBodyAddedMass::SetBodyInertia(const ChMatrix33<>& minertia) {
 //     ChVariablesBodyOwnMass::SetBodyInertia(minertia);
@@ -114,14 +125,9 @@ void ChVariablesBodyAddedMass::Compute_inc_Mb_v(ChMatrix<double>& result, const 
 void ChVariablesBodyAddedMass::MultiplyAndAdd(ChMatrix<double>& result,
     const ChMatrix<double>& vect,
     const double c_a) const {
-    assert(result.GetColumns() == 1 && vect.GetColumns() == 1);
-    for (int i = 0; i < Mfullmass.GetRows(); i++) {
-        double tot = 0;
-        for (int j = 0; j < Mfullmass.GetColumns(); j++) {
-            tot += Mfullmass(i, j) * vect(this->offset + i);
-        }
-        result(this->offset + i) += c_a * tot;
-    }
+  ChMatrixDynamic<> tot = ChMatrixDynamic<>(6, 1);
+  tot.PasteClippedMatrix(vect, this->offset, 0, 6, 1, 0, 0);  // for solver warm starting only
+  result.PasteSumMatrix(Mfullmass*tot*c_a, this->offset, 0);
 }
 
 // Add the diagonal of the mass matrix scaled by c_a to 'result'.
