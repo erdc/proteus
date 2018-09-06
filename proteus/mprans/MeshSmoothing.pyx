@@ -569,6 +569,7 @@ def getNonOwnedNodeValues(args_,
         nodes0_2rank = {}
         rank0_2rank = {}
         nodesNewRank_2rank = {}
+        cdef int[:] result
         if comm_size > 1:
             comm.barrier()
             for rank in range(comm_size):
@@ -576,11 +577,13 @@ def getNonOwnedNodeValues(args_,
                 nodesNewRank_2rank[rank] = np.zeros(0, dtype=np.int32)
                 rank0_2rank[rank] = np.zeros(0, dtype=np.int32)
             for node in range(nNodes_owned, nNodes_global):
-                node_new_rank, new_rank = cyCheckOwnedVariable(variable_nb_local=node,
-                                                               rank=my_rank,
-                                                               nVariables_owned=nNodes_owned,
-                                                               variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
-                                                               variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
+                result = cyCheckOwnedVariable(variable_nb_local=node,
+                                              rank=my_rank,
+                                              nVariables_owned=nNodes_owned,
+                                              variableNumbering_subdomain2global=nodeNumbering_subdomain2global,
+                                              variableOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
+                node_new_rank = result[0]
+                new_rank = result[1]
                 nodes0_2rank[new_rank] = np.append(nodes0_2rank[new_rank], node)
                 nodesNewRank_2rank[new_rank] = np.append(nodesNewRank_2rank[new_rank], node_new_rank)
                 rank0_2rank[new_rank] = np.append(rank0_2rank[new_rank], my_rank)
@@ -1525,7 +1528,7 @@ cdef int[:] cyCheckOwnedVariable(int variable_nb_local,
     cdef int new_variable_nb_local
     cdef int new_rank = -2  # initialised as fake rank
     cdef int i
-    cdef int[2] result
+    cdef int[2] result = [-1000, -1000]
     # cdef int[:] result = np.zeros(2, dtype=np.int32)
     result[0] = variable_nb_local
     result[1] = new_rank

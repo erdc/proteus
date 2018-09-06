@@ -247,16 +247,16 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             nElements_global = self.mesh.nElements_global
             nodeNumbering_subdomain2global = self.mesh.globalMesh.nodeNumbering_subdomain2global
             nodeOffsets_subdomain_owned = self.mesh.globalMesh.nodeOffsets_subdomain_owned
-            ms.getNonOwnedNodeValues(self.grads,
-                                    nNodes_owned,
-                                    nNodes_global,
-                                    nodeNumbering_subdomain2global,
-                                    nodeOffsets_subdomain_owned)
-            ms.getNonOwnedNodeValues(self.areas_nodes,
-                                    nNodes_owned,
-                                    nNodes_global,
-                                    nodeNumbering_subdomain2global,
-                                    nodeOffsets_subdomain_owned)
+            ms.getNonOwnedNodeValues(args_=self.grads,
+                                     nNodes_owned=nNodes_owned,
+                                     nNodes_global=nNodes_global,
+                                     nodeNumbering_subdomain2global=nodeNumbering_subdomain2global,
+                                     nodeOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
+            ms.getNonOwnedNodeValues(args_=self.areas_nodes,
+                                     nNodes_owned=nNodes_owned,
+                                     nNodes_global=nNodes_global,
+                                     nodeNumbering_subdomain2global=nodeNumbering_subdomain2global,
+                                     nodeOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
             # ms.getNonOwnedNodeValues(self.u_phi,
             #                          nNodes_owned,
             #                          nNodes_global,
