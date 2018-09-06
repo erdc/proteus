@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from pressure_p import *
+from .pressure_p import *
 
 
 triangleOptions = triangleOptions

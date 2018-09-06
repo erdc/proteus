@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 from proteus import Domain
 from proteus import Context
 from proteus.mprans import NCLS
@@ -70,9 +72,9 @@ partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 
 # create mesh # 
 nn=nnx=(2**ct.refinement)*10+1
-nny=(nnx-1)/10+1 if ct.problem==0 else nnx
+nny=old_div((nnx-1),10)+1 if ct.problem==0 else nnx
 nnz=1
-he=1.0/(nnx-1.0)
+he=old_div(1.0,(nnx-1.0))
 
 unstructured=ct.unstructured #True for tetgen, false for tet or hex from rectangular grid
 box=Domain.RectangularDomain(L=(1.0,0.1 if ct.problem==0 else 1.0),
@@ -87,7 +89,7 @@ if unstructured:
 else:
     domain = box
 
-soname="ncls_level_"+`ct.refinement`
+soname="ncls_level_"+repr(ct.refinement)
 
 class MyCoefficients(NCLS.Coefficients):
     def attachModels(self,modelList):

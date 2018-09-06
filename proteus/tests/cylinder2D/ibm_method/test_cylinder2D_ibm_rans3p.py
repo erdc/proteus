@@ -1,4 +1,6 @@
 """Tests for 2d flow around an immersed boundary cylinder with rans3p"""
+from builtins import range
+from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import Context
@@ -12,7 +14,7 @@ Profiling.verbose = False
 import numpy as np
 
 
-class Test_ibm():
+class Test_ibm(object):
 
     @classmethod
     def setup_class(cls):

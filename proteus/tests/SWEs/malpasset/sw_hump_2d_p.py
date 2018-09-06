@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 from proteus.mprans import SW2D
@@ -49,7 +52,7 @@ meshfile = "mal_50sec"
 ##### INITIAL CONDITIONS #####
 ##############################
 
-class water_height_at_t0:
+class water_height_at_t0(object):
     """set the water level to 100m behind the dam and dry elsewhere"""
     def uOfXT(self,X,t):
         x = X[0]
@@ -58,7 +61,7 @@ class water_height_at_t0:
         y1 = 4143.41
         x2 = 4655.5
         y2 = 4392.1
-        m = (y2-y1)/(x2-x1)
+        m = old_div((y2-y1),(x2-x1))
         dam1 = m*(x-x1)+y1
 
         #LINE 2
@@ -66,7 +69,7 @@ class water_height_at_t0:
         y1 = 4392.1
         x2 = 4000.0
         y2 = 5500.0
-        m = (y2-y1)/(x2-x1)
+        m = old_div((y2-y1),(x2-x1))
         dam2 = m*(x-x1)+y1        
 
         if (X[1] <= dam1 and X[1] <= dam2): 
@@ -74,7 +77,7 @@ class water_height_at_t0:
         else:
             return 0.
 
-class Zero:
+class Zero(object):
     """still water conditions"""
     def uOfXT(self,x,t):
         return 0.0

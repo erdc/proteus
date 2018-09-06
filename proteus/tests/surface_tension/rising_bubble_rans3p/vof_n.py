@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
-from risingBubble import *
-from vof_p import *
+from .risingBubble import *
+from .vof_p import *
 
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF

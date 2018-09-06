@@ -4,6 +4,10 @@ A simple implementation of basic 3D Euclidean Geometry
 .. inheritance-diagram:: proteus.EGeometry
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import division
+from builtins import zip
+from past.utils import old_div
 import math
 from math import *
 import numpy
@@ -242,10 +246,10 @@ def adj(t):
     return trans(cof(t))
 
 def einv(t):
-    return eadj(t)/edet(t)
+    return old_div(eadj(t),edet(t))
 
 def inv(t):
-    return adj(t)/det(t)
+    return old_div(adj(t),det(t))
 
 def etenten(r,t):
     tt = etrans(t)
@@ -276,11 +280,11 @@ if __name__=='__main__':
     #ey=EVec(0.0,1.0,0.0)
     ey=EVec(0.0,1.0)
     ez=EVec(0.0,0.0,1.0)
-    print 'ex = '+`ex`
-    print 'ey = '+`ey`
-    print 'ez = '+`ez`
+    print('ex = '+repr(ex))
+    print('ey = '+repr(ey))
+    print('ez = '+repr(ez))
     et=ETen(ex,ey,ez)
-    print 'et = '+`et`
+    print('et = '+repr(et))
     #perturb the standard basis
     eps=0.1
     epsv=EVec(random.uniform(-eps,eps),
@@ -298,92 +302,92 @@ if __name__=='__main__':
              random.uniform(-eps,eps))
     w = ez + epsv
     t = ETen(u,v,w)
-    print 'u = '+`u`
-    print 'u[X] = '+`u[X]`
-    print 'u[Y] = '+`u[Y]`
-    print 'u[Z] = '+`u[Z]`
-    print 'v = '+`v`
-    print 'u + v = '+`u+v`
-    print '2.0*u = '+`2.0*u`
-    print 'u*2.0 = '+`u*2.0`
-    print 'u/2.0 = '+`u/2.0`
-    print '2.0/u = '+`2.0/u`
-    print '-u = '+`-u`
-    print '2.0*u + v  = ' + `2.0*u+v`
-    print 'u - v = '+`u-v`
-    print 'u = '+`u`
+    print('u = '+repr(u))
+    print('u[X] = '+repr(u[X]))
+    print('u[Y] = '+repr(u[Y]))
+    print('u[Z] = '+repr(u[Z]))
+    print('v = '+repr(v))
+    print('u + v = '+repr(u+v))
+    print('2.0*u = '+repr(2.0*u))
+    print('u*2.0 = '+repr(u*2.0))
+    print('u/2.0 = '+repr(old_div(u,2.0)))
+    print('2.0/u = '+repr(old_div(2.0,u)))
+    print('-u = '+repr(-u))
+    print('2.0*u + v  = ' + repr(2.0*u+v))
+    print('u - v = '+repr(u-v))
+    print('u = '+repr(u))
     u*=2.0
-    print 'u *= 2.0 ' + `u`
+    print('u *= 2.0 ' + repr(u))
     u/=2.0
-    print 'u /= 2.0 ' + `u`
+    print('u /= 2.0 ' + repr(u))
     u+=v
-    print 'u += v '+` u`
-    print 'u = '+`u`
-    print 'enorm(u) = '+`enorm(u)`
-    print 'enorm(ex) = '+`enorm(ex)`
-    print 'enorm(ey) = '+`enorm(ey)`
-    print 'enorm(ez) = '+`enorm(ez)`
-    print 'u = '+`u`
-    print 'edot(u,ex) = '+`edot(u,ex)`
-    print 'edot(u,ey) = '+`edot(u,ey)`
-    print 'edot(u,ez) = '+`edot(u,ez)`
-    print 'edot(ex,u) = '+`edot(ex,u)`
-    print 'edot(ey,u) = '+`edot(ey,u)`
-    print 'edot(ez,u) = '+`edot(ez,u)`
-    print 'ecross(ex,ey) = '+`ecross(ex,ey)`
-    print 'ecross(ex,ez) = '+`ecross(ex,ez)`
-    print 'ecross(ey,ez) = '+`ecross(ey,ez)`
-    print 'ecross(ey,ex) = '+`ecross(ey,ex)`
-    print 'ecross(ez,ex) = '+`ecross(ez,ex)`
-    print 'ecross(ez,ey) = '+`ecross(ez,ey)`
-    print 'etriple(u,v,w) = '+`etriple(u,v,w)`
-    print 'etriple(u,u,v) = '+`etriple(u,u,v)`
-    print 'u = '+`u`
-    print 'v = '+`v`
-    print 'etensor(u,v) = '+`etensor(u,v)`
-    print 't = '+`t`
-    print 't[X] = '+`t[X]`
-    print 't[Y] = '+`t[Y]`
-    print 't[Z] = '+`t[Z]`
-    print 't[X][X] = '+`t[X][X]`
-    print 't[X][Y] = '+`t[X][Y]`
-    print 't[X][Z] = '+`t[X][Z]`
-    print 't[Y][X] = '+`t[Y][X]`
-    print 't[Y][Y] = '+`t[Y][Y]`
-    print 't[Y][Z] = '+`t[Y][Z]`
-    print 't[Z][X] = '+`t[Z][X]`
-    print 't[Z][Y] = '+`t[Z][Y]`
-    print 't[Z][Z] = '+`t[Z][Z]`
-    print 't+et = '+`t+et`
-    print '2.0*et = '+`2.0*et`
-    print '-et = '+`-et`
-    print 't+2.0*et = '+`t+2.0*et`
-    print 't-et = '+`t-et`
+    print('u += v '+repr( u))
+    print('u = '+repr(u))
+    print('enorm(u) = '+repr(enorm(u)))
+    print('enorm(ex) = '+repr(enorm(ex)))
+    print('enorm(ey) = '+repr(enorm(ey)))
+    print('enorm(ez) = '+repr(enorm(ez)))
+    print('u = '+repr(u))
+    print('edot(u,ex) = '+repr(edot(u,ex)))
+    print('edot(u,ey) = '+repr(edot(u,ey)))
+    print('edot(u,ez) = '+repr(edot(u,ez)))
+    print('edot(ex,u) = '+repr(edot(ex,u)))
+    print('edot(ey,u) = '+repr(edot(ey,u)))
+    print('edot(ez,u) = '+repr(edot(ez,u)))
+    print('ecross(ex,ey) = '+repr(ecross(ex,ey)))
+    print('ecross(ex,ez) = '+repr(ecross(ex,ez)))
+    print('ecross(ey,ez) = '+repr(ecross(ey,ez)))
+    print('ecross(ey,ex) = '+repr(ecross(ey,ex)))
+    print('ecross(ez,ex) = '+repr(ecross(ez,ex)))
+    print('ecross(ez,ey) = '+repr(ecross(ez,ey)))
+    print('etriple(u,v,w) = '+repr(etriple(u,v,w)))
+    print('etriple(u,u,v) = '+repr(etriple(u,u,v)))
+    print('u = '+repr(u))
+    print('v = '+repr(v))
+    print('etensor(u,v) = '+repr(etensor(u,v)))
+    print('t = '+repr(t))
+    print('t[X] = '+repr(t[X]))
+    print('t[Y] = '+repr(t[Y]))
+    print('t[Z] = '+repr(t[Z]))
+    print('t[X][X] = '+repr(t[X][X]))
+    print('t[X][Y] = '+repr(t[X][Y]))
+    print('t[X][Z] = '+repr(t[X][Z]))
+    print('t[Y][X] = '+repr(t[Y][X]))
+    print('t[Y][Y] = '+repr(t[Y][Y]))
+    print('t[Y][Z] = '+repr(t[Y][Z]))
+    print('t[Z][X] = '+repr(t[Z][X]))
+    print('t[Z][Y] = '+repr(t[Z][Y]))
+    print('t[Z][Z] = '+repr(t[Z][Z]))
+    print('t+et = '+repr(t+et))
+    print('2.0*et = '+repr(2.0*et))
+    print('-et = '+repr(-et))
+    print('t+2.0*et = '+repr(t+2.0*et))
+    print('t-et = '+repr(t-et))
     s=ETen()
     s[:][:]=t
-    print 's = '+`s`
+    print('s = '+repr(s))
     s*=2.0
-    print 's*=2.0'+`s`
+    print('s*=2.0'+repr(s))
     s/=2.0
-    print 's/=2.0'+`s`
+    print('s/=2.0'+repr(s))
     s+=s
-    print 's+=s'+`s`
+    print('s+=s'+repr(s))
     s-=s
-    print 's-=s'+`s`
-    print 'etrans(t) = '+`etrans(t)`
-    print 'edet(t) = '+`edet(t)`
-    print 'ecof(t) = '+`ecof(t)`
-    print 'eadj(t) = '+`eadj(t)`
-    print 'einv(t) = '+`einv(t)`
-    print 'etenten(t,et) = '+`etenten(t,et)`
-    print 'etenten(t,t) = '+`etenten(t,t)`
-    print 'etenten(t,einv(t)) = '+`etenten(t,einv(t))`
-    print 'etenten(einv(t),t) = '+`etenten(einv(t),t)`
-    print 'etenvec(t,ex) = '+`etenvec(t,ex)`
-    print 'etenvec(t,ey) = '+`etenvec(t,ey)`
-    print 'etenvec(t,ez) = '+`etenvec(t,ez)`
-    print 'etenvec(t,u) = '+`etenvec(t,u)`
+    print('s-=s'+repr(s))
+    print('etrans(t) = '+repr(etrans(t)))
+    print('edet(t) = '+repr(edet(t)))
+    print('ecof(t) = '+repr(ecof(t)))
+    print('eadj(t) = '+repr(eadj(t)))
+    print('einv(t) = '+repr(einv(t)))
+    print('etenten(t,et) = '+repr(etenten(t,et)))
+    print('etenten(t,t) = '+repr(etenten(t,t)))
+    print('etenten(t,einv(t)) = '+repr(etenten(t,einv(t))))
+    print('etenten(einv(t),t) = '+repr(etenten(einv(t),t)))
+    print('etenvec(t,ex) = '+repr(etenvec(t,ex)))
+    print('etenvec(t,ey) = '+repr(etenvec(t,ey)))
+    print('etenvec(t,ez) = '+repr(etenvec(t,ez)))
+    print('etenvec(t,u) = '+repr(etenvec(t,u)))
     vl = [w,v,u]
-    print 'vl = '+`vl`
+    print('vl = '+repr(vl))
     vl.sort()
-    print 'sorted vl = '+`vl`
+    print('sorted vl = '+repr(vl))

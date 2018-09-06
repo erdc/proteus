@@ -22,6 +22,7 @@ data*txt
 *.poly
 *.bak
 *.log.*
+*.swp
 install_*
 config_*
 build/

@@ -1,8 +1,11 @@
+from __future__ import print_function
 
 
 #import numpy
 #import os
 #from xml.etree.ElementTree import *
+from builtins import str
+from builtins import range
 import tables
 #from Xdmf import *
 
@@ -23,7 +26,7 @@ def H5toXMF(basename,size,start,finaltime,stride):
         for proc in range(0,size):
 
             filename="solution.p"+str(proc)+"."+str(step)+".h5"
-            print filename
+            print(filename)
             f1 = tables.open_file(filename)
             XMFfile.write (r'<Grid GridType="Uniform">'+"\n")
             XMFfile.write(r'      <Time Value="'+str(step)+'" />'+"\n")

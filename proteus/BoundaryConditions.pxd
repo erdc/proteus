@@ -10,7 +10,7 @@ cdef class BC_Base:
         str name
         str BC_type
         object ct
-    # cpdef void newGlobalBC(BC_Base cls, str name, object default_value)
+    # cpdef void newGlobalBC(BC_Base cls, newstr name, object default_value)
     # cpdef void getContext(BC_Base cls, object context=*)
 
 ctypedef double (*cpp_uOfXT) (BoundaryCondition, double[:], double)
