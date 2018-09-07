@@ -261,11 +261,14 @@ class NS_base(object):  # (HasTraits):
                     if comm.isMaster() and (p.genMesh or not (os.path.exists(p.domain.geofile+".ele") and
                                                               os.path.exists(p.domain.geofile+".node") and
                                                               os.path.exists(p.domain.geofile+".edge"))):
-                        logEvent("Running gmsh to generate 2D mesh for "+p.name,level=1)
-                        gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s} -format msh".format(p.domain.geofile+".geo", p.domain.geofile+".msh")
-                        logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
-                        check_call(gmsh_cmd, shell=True)
-                        logEvent("Done running gmsh; converting to triangle")
+                        if p.genMesh or not os.path.exists(p.domain.geofile+".msh"):
+                            logEvent("Running gmsh to generate 2D mesh for "+p.name,level=1)
+                            gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s} -format msh".format(p.domain.geofile+".geo", p.domain.geofile+".msh")
+                            logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
+                            check_call(gmsh_cmd, shell=True)
+                            logEvent("Done running gmsh; converting to triangle")
+                        else:
+                            logEvent("Using "+p.domain.geofile+".msh to convert to triangle")
                         MeshTools.msh2simplex(fileprefix=p.domain.geofile, nd=2)
                     comm.barrier()
                     mesh = MeshTools.TriangularMesh()
@@ -312,11 +315,14 @@ class NS_base(object):  # (HasTraits):
                                                            os.path.exists(fileprefix+".node") and
                                                            os.path.exists(fileprefix+".face"))):
                     if p.domain.use_gmsh is True:
-                        logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
-                        gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s} -format msh".format(fileprefix+'.geo', p.domain.geofile+'.msh')
-                        logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
-                        check_call(gmsh_cmd, shell=True)
-                        logEvent("Done running gmsh; converting to tetgen")
+                        if p.genMesh or not os.path.exists(fileprefix+".msh"):
+                            logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
+                            gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s} -format msh".format(fileprefix+'.geo', p.domain.geofile+'.msh')
+                            logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
+                            check_call(gmsh_cmd, shell=True)
+                            logEvent("Done running gmsh; converting to tetgen")
+                        else:
+                            logEvent("Using "+p.domain.geofile+".msh to convert to tetgen")
                         MeshTools.msh2simplex(fileprefix=fileprefix, nd=3)
                         check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
                     else:
