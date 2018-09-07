@@ -1234,32 +1234,47 @@ class CLSVOFNewton(Newton):
         # ************************************************ #
         # *************** PRE REDISTANCING *************** #
         # ************************************************ #
-        logEvent("+++++ Pre re-distancing +++++",level=2)
-        # compute q~nabla(phi)/|nabla(phi)|
-        self.getNormalReconstruction(u,r,b,par_u,par_r)
-        # PRE-REDISTANCE #
-        self.F.preRedistancingStage = 1
-        maxIts = self.maxIts
-        self.maxIts=5
-        Newton.solve(self,u,r,b,par_u,par_r)
-        # set back variables
-        self.maxIts = maxIts
-        self.F.preRedistancingStage = 0
-        self.failedFlag=False
+        if True:
+            logEvent("+++++ Pre re-distancing +++++",level=2)
+            # compute q~nabla(phi)/|nabla(phi)|
+            self.getNormalReconstruction(u,r,b,par_u,par_r)
+            # PRE-REDISTANCE #
+            self.F.preRedistancingStage = 1
+            maxIts = self.maxIts
+            self.maxIts=5
+            Newton.solve(self,u,r,b,par_u,par_r)
+            # set back variables
+            self.maxIts = maxIts
+            self.F.preRedistancingStage = 0
+            self.failedFlag=False
 
         # ********************************************* #
         # *************** CLSVOF Solver *************** #
         # ********************************************* #
-        logEvent("+++++ CLSVOF nonlinear solver +++++",level=2)
+        ###############
+        # FIRST STAGE #
+        ###############
+        logEvent("+++++ First stage of nonlinear CLSVOF +++++",level=2)
         # GET NORMAL RECONSTRUCTION #
         self.getNormalReconstruction(u,r,b,par_u,par_r)
-        # SOLVE NON-LINEAR SYSTEM #
-        # Note that the guess for the nonlinear process is the soln of the prestage != not u_old
-        #      with this we hope to get faster convergence
-        #u[:] = self.F.u_dof_old
+        # SOLVE NON-LINEAR SYSTEM FOR FIRST STAGE #
         Newton.solve(self,u,r,b,par_u,par_r)
         # save number of newton iterations
         self.F.newton_iterations_stage1 = self.its
+
+        ################
+        # SECOND STAGE #
+        ################
+        if self.F.coefficients.timeOrder==2:
+            logEvent("+++++ Second stage of nonlinear CLSVOF +++++",level=2)
+            self.F.timeStage=2
+            # GET NORMAL RECONSTRUCTION #
+            self.getNormalReconstruction(u,r,b,par_u,par_r)
+            # SOLVE NON-LINEAR SYSTEM FOR SECOND STAGE #
+            Newton.solve(self,u,r,b,par_u,par_r)
+            self.F.timeStage=1
+            # save number of newton iterations
+            self.F.newton_iterations_stage2 = self.its
 
         # ******************************************** #
         # ***** UPDATE VECTORS FOR VISUALIZATION ***** #
