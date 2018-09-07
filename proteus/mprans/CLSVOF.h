@@ -9,7 +9,7 @@
 #define heaviside(z) (z>0 ? 1. : (z<0 ? 0. : 0.5))
 #define Sign(z) (z>0 ? 1. : (z<0 ? -1. : 0.))
 
-#define USE_SIGN_FUNCTION 0
+#define USE_SIGN_FUNCTION 1
 #define IMPLICIT_BCs 0
 #define LAMBDA_SCALING 0
 
@@ -741,7 +741,7 @@ namespace proteus
 		q_dV[eN_k] = dV;
 
 		double delta, residualEikonal, tau, backgroundDissipation=0.1*hK;
-		double time_derivative_residual, fnHalf[nSpace], lambda, Hnp1;
+		double time_derivative_residual, fnHalf[nSpace], grad_unHalf[nSpace], lambda, Hnp1;
 		double sign;
 		int same_sign=1;
 		if (preRedistancingStage==1)
@@ -775,7 +775,7 @@ namespace proteus
 		    // compute coefficient for stabilization
 		    tau = 0.5*hK/normUn;
 		  }
-		else
+		else //clsvof model
 		  {
 		    //////////////////////////////////////////////////
 		    // *************** CLSVOF MODEL *************** //
@@ -823,9 +823,10 @@ namespace proteus
 						    -MOVING_DOMAIN*mesh_velocity[I]);
 			// compute advection term //
 			//fnp1[I] = relative_velocity[I]*Snp1; //implicit advection via BDF1
-			//fnHalf[I] = 0.5*relative_velocity[I]*(Snp1+Sn);
-			fnHalf[I] = 0.5*(relative_velocity[I]*Snp1
-					 +relative_velocity_old[I]*Sn); //implicit advection via CN
+			//fnHalf[I] = 0.5*(relative_velocity[I]*Snp1
+			//		 +relative_velocity_old[I]*Sn); //implicit advection via CN
+			fnHalf[I] = 0.5*relative_velocity[I]*(Snp1+Sn);
+			grad_unHalf[I] = 0.5*(grad_u[I] + grad_un[I]);
 		      }
 
 		    //////////////////////////////
@@ -887,7 +888,7 @@ namespace proteus
 						  normalReconstruction,
 						  &u_grad_test_dV[i_nSpace]);
 		      }
-		    else
+		    else // clsvof
 		      {
 			//////////////////////////
 			// LOCATE THE INTERFACE //
@@ -912,11 +913,10 @@ namespace proteus
 			  // TIME DERIVATIVE
 			  time_derivative_residual*u_test_dV[i]
 			  // ADVECTION TERM. This is IMPLICIT
-			  + ck.Advection_weak(fnHalf,
-			  		      &u_grad_test_dV[i_nSpace])
+			  + ck.Advection_weak(fnHalf,&u_grad_test_dV[i_nSpace])
 			  // REGULARIZATION TERM. This is IMPLICIT
 			  + lambda*(ck.NumericalDiffusion(1.0,
-							  grad_u,
+							  grad_unHalf,
 							  &u_grad_test_dV[i_nSpace])
 				    // TARGET for PENALIZATION. This is EXPLICIT
 				    - ck.NumericalDiffusion(1.0,
@@ -924,19 +924,21 @@ namespace proteus
 							    &u_grad_test_dV[i_nSpace]));
 			//}
 			//else // timeOrder=2
-			//	  elementResidual_u[i] +=
-			//	    // TIME DERIVATIVE
-			//	    time_derivative_residual*u_test_dV[i]
-			//    // ADVECTION TERM. This is IMPLICIT
-			//	    + ck.Advection_weak(fnHalf,&u_grad_test_dV[i_nSpace])
-			//    // REGULARIZATION TERM. This is IMPLICIT
-			//	    + lambda*ck.NumericalDiffusion(1.0,
-			//				   grad_u,
-			//					   &u_grad_test_dV[i_nSpace])
-			//	    // TARGET for PENALIZATION. This is EXPLICIT
-			//	    - lambda*ck.NumericalDiffusion(1.0,
-			//				   normalReconstruction,
-			//					   &u_grad_test_dV[i_nSpace]);
+			//{
+			//elementResidual_u[i] +=
+			// TIME DERIVATIVE
+			//time_derivative_residual*u_test_dV[i]
+			// ADVECTION TERM. This is IMPLICIT
+			//+ ck.Advection_weak(fnHalf,&u_grad_test_dV[i_nSpace])
+			// REGULARIZATION TERM. This is IMPLICIT
+			//+ lambda*ck.NumericalDiffusion(1.0,
+			//			     grad_unHalf,
+			//				     &u_grad_test_dV[i_nSpace])
+			// TARGET for PENALIZATION. This is EXPLICIT
+			//- lambda*ck.NumericalDiffusion(1.0,
+			//			     normalReconstruction,
+			//				     &u_grad_test_dV[i_nSpace]);
+			//}
 		      }
                   }//i
 		if (preRedistancingStage==0)
@@ -950,7 +952,7 @@ namespace proteus
 			  }
 		      }
 		  }
-              }
+              } //k
             /////////////////
             // DISTRIBUTE // load cell based element into global residual
             ////////////////
@@ -1382,7 +1384,7 @@ namespace proteus
 							     &u_grad_trial[j_nSpace],
 							     &u_grad_test_dV[i_nSpace]);
 			  }
-			else
+			else // clsvof model
 			  {
 			    /////////////////////
 			    // CLSVOF JACOBIAN //
@@ -1395,9 +1397,9 @@ namespace proteus
 			      + 0.5*ck.AdvectionJacobian_weak(df,
 							      u_trial_ref[k*nDOF_trial_element+j],
 							      &u_grad_test_dV[i_nSpace])
-			      + lambda*ck.NumericalDiffusionJacobian(1.0,
-								     &u_grad_trial[j_nSpace],
-								     &u_grad_test_dV[i_nSpace]);
+			      + 0.5*lambda*ck.NumericalDiffusionJacobian(1.0,
+									 &u_grad_trial[j_nSpace],
+									 &u_grad_test_dV[i_nSpace]);
 			  }
                       }//j
                   }//i

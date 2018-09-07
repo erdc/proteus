@@ -169,18 +169,18 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.updateVelocityFieldAsFunction()
         if (firstStep==True):
             self.q_v_old[:] = self.q_v
-        # SAVE OLD SOLUTION #
-        self.model.u_dof_old[:] = self.model.u[0].dof
+        # GET MAX VELOCITY #
         self.VelMax = max(self.q_v.max(),1E-6)
-
         copyInstructions = {}
         return copyInstructions
 
     def postStep(self,t,firstStep=False):
-        self.model.quantDOFs[:] = self.model.interface_locator
+        #self.model.quantDOFs[:] = self.model.interface_locator
+        # SAVE OLD SOLUTION #
+        self.model.u_dof_old[:] = self.model.u[0].dof        
         # SAVE OLD VELOCITY #
         self.q_v_old[:] = self.q_v
-        # Norm factor
+        # NORM FACTOR #
         self.model.norm_factor_lagged=np.maximum(self.model.max_distance - self.model.mean_distance,
                                                  self.model.mean_distance - self.model.min_distance)
 
@@ -979,50 +979,27 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def getNormalReconstruction(self,weighted_mass_matrix):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,weighted_mass_matrix)
-        if self.timeStage==1:
-            self.clsvof.normalReconstruction(#element
-                self.u[0].femSpace.elementMaps.psi,
-                self.u[0].femSpace.elementMaps.grad_psi,
-                self.mesh.nodeArray,
-                self.mesh.elementNodesArray,
-                self.elementQuadratureWeights[('u',0)],
-                self.u[0].femSpace.psi,
-                self.u[0].femSpace.grad_psi,
-                self.u[0].femSpace.psi,
-                self.mesh.nElements_global,
-                self.u[0].femSpace.dofMap.l2g,
-                self.mesh.elementDiametersArray,
-                self.u[0].dof,
-                self.offset[0],self.stride[0],
-                self.nFreeDOF_global[0], #numDOFs
-                self.weighted_lumped_mass_matrix,
-                self.rhs_qx,
-                self.rhs_qy,
-                self.rhs_qz,
-                self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-                weighted_mass_matrix)
-        else:
-            self.clsvof.normalReconstruction(#element
-                self.u[0].femSpace.elementMaps.psi,
-                self.u[0].femSpace.elementMaps.grad_psi,
-                self.mesh.nodeArray,
-                self.mesh.elementNodesArray,
-                self.elementQuadratureWeights[('u',0)],
-                self.u[0].femSpace.psi,
-                self.u[0].femSpace.grad_psi,
-                self.u[0].femSpace.psi,
-                self.mesh.nElements_global,
-                self.u[0].femSpace.dofMap.l2g,
-                self.mesh.elementDiametersArray,
-                self.u[0].dof,
-                self.offset[0],self.stride[0],
-                self.nFreeDOF_global[0], #numDOFs
-                self.weighted_lumped_mass_matrix,
-                self.rhs_qx,
-                self.rhs_qy,
-                self.rhs_qz,
-                self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-                weighted_mass_matrix)
+        self.clsvof.normalReconstruction(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.mesh.elementDiametersArray,
+            self.u[0].dof,
+            self.offset[0],self.stride[0],
+            self.nFreeDOF_global[0], #numDOFs
+            self.weighted_lumped_mass_matrix,
+            self.rhs_qx,
+            self.rhs_qy,
+            self.rhs_qz,
+            self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
+            weighted_mass_matrix)
 
     def getLumpedMassMatrix(self):
         self.lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d')
