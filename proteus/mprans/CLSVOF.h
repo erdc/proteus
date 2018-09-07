@@ -350,7 +350,7 @@ namespace proteus
         cfl = nrm2_v*norm_factor_lagged/(epsFactHeaviside*lambdaFact*h*h*h);
 	cfl = std::sqrt(cfl);
       }
-      
+
       inline void exteriorNumericalAdvectiveFlux(const int& isDOFBoundary_u,
 						 const int& isFluxBoundary_u,
 						 const double n[nSpace],
@@ -708,23 +708,21 @@ namespace proteus
                   }
 		double hK=(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
 
+
 		///////////////////////////
                 // NORMAL RECONSTRUCTION //
                 ///////////////////////////
                 //if (timeOrder == 2 && timeStage == 2) // this is never reached
 		//{
 		//normalReconstruction[0] = 0.5*(qxnStar+qxn);
-		//  normalReconstruction[1] = 0.5*(qynStar+qyn);
-		//  if (nSpace==3)
-		//    normalReconstruction[2] = 0.5*(qznStar+qzn);
-		//  else
-		//    normalReconstruction[2] = 0.;
-		//}
-                //else //timeOrder == 1 or timeStage==1
-		//{
-		//normalReconstruction[0] = grad_un[0]/norm_grad_un;
-		//normalReconstruction[1] = grad_un[1]/norm_grad_un;
+		//normalReconstruction[1] = 0.5*(qynStar+qyn);
+		//if (nSpace==3)
+		//normalReconstruction[2] = 0.5*(qznStar+qzn);
+		//else
 		//normalReconstruction[2] = 0.;
+		//}
+		//else //timeOrder == 1 or timeStage==1
+		//{
 		normalReconstruction[0] = qxn;
 		normalReconstruction[1] = qyn;
 		if (nSpace==3)
@@ -741,7 +739,7 @@ namespace proteus
 		q_dV[eN_k] = dV;
 
 		double delta, residualEikonal, tau, backgroundDissipation=0.1*hK;
-		double time_derivative_residual, fnHalf[nSpace], grad_unHalf[nSpace], lambda, Hnp1;
+		double time_derivative_residual, fnHalf[nSpace], lambda, Hnp1;
 		double sign;
 		int same_sign=1;
 		if (preRedistancingStage==1)
@@ -780,6 +778,7 @@ namespace proteus
 		    //////////////////////////////////////////////////
 		    // *************** CLSVOF MODEL *************** //
 		    //////////////////////////////////////////////////
+		    /////////////////
 		    // MOVING MESH //
 		    /////////////////
 		    double mesh_velocity[3];
@@ -794,7 +793,7 @@ namespace proteus
 		    double Sn = smoothedSign(epsHeaviside,un);
 		    double Snp1 = smoothedSign(epsHeaviside,u);
 		    Hnp1 = smoothedHeaviside(epsHeaviside,u);
-		    
+
 		    ////////////
 		    // LAMBDA //
 		    ////////////
@@ -804,7 +803,7 @@ namespace proteus
 			double deltaHat = fmax(smoothedNormalizedDirac(2*epsHeaviside,un),1E-6);
 			lambda = lambdaFact*deltaHat;
 		      }
-		
+
 		    /////////////////////
 		    // TIME DERIVATIVE //
 		    /////////////////////
@@ -826,7 +825,6 @@ namespace proteus
 			//fnHalf[I] = 0.5*(relative_velocity[I]*Snp1
 			//		 +relative_velocity_old[I]*Sn); //implicit advection via CN
 			fnHalf[I] = 0.5*relative_velocity[I]*(Snp1+Sn);
-			grad_unHalf[I] = 0.5*(grad_u[I] + grad_un[I]);
 		      }
 
 		    //////////////////////////////
@@ -839,7 +837,7 @@ namespace proteus
 		    //		      epsFactHeaviside,
 		    //		      lambdaFact,
 		    //		      cfl[eN_k]);
-		    
+
 		    ///////////////
 		    // CALCULATE min, max and mean distance //
 		    ///////////////
@@ -916,7 +914,7 @@ namespace proteus
 			  + ck.Advection_weak(fnHalf,&u_grad_test_dV[i_nSpace])
 			  // REGULARIZATION TERM. This is IMPLICIT
 			  + lambda*(ck.NumericalDiffusion(1.0,
-							  grad_unHalf,
+							  grad_u,
 							  &u_grad_test_dV[i_nSpace])
 				    // TARGET for PENALIZATION. This is EXPLICIT
 				    - ck.NumericalDiffusion(1.0,
@@ -1332,7 +1330,7 @@ namespace proteus
 		    ///////////////////
 		    double epsDirac = epsFactDirac*hK;
 		    double dSnp1 = smoothedDerivativeSign(epsDirac,u); //derivative of smoothed sign
-		    
+
 		    ////////////
 		    // LAMBDA //
 		    ////////////
@@ -1341,8 +1339,8 @@ namespace proteus
 		      {
 			double deltaHat = fmax(smoothedNormalizedDirac(2*epsDirac,un),1E-6);
 			lambda = lambdaFact*deltaHat;
-		      }		    
-		    
+		      }
+
 		    /////////////////////
 		    // TIME DERIVATIVE //
 		    /////////////////////
@@ -1397,9 +1395,9 @@ namespace proteus
 			      + 0.5*ck.AdvectionJacobian_weak(df,
 							      u_trial_ref[k*nDOF_trial_element+j],
 							      &u_grad_test_dV[i_nSpace])
-			      + 0.5*lambda*ck.NumericalDiffusionJacobian(1.0,
-									 &u_grad_trial[j_nSpace],
-									 &u_grad_test_dV[i_nSpace]);
+			      + lambda*ck.NumericalDiffusionJacobian(1.0,
+								     &u_grad_trial[j_nSpace],
+								     &u_grad_test_dV[i_nSpace]);
 			  }
                       }//j
                   }//i
