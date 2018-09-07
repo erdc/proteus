@@ -41,7 +41,8 @@ rect.BC['y-'].setNoSlip()
 # CHRONO
 
 system = crb.ProtChSystem(gravity=np.array([0.,-9.81,0.]))
-body = crb.ProtChBody(system=system, shape=rect)
+body = crb.ProtChBody(system=system)
+body.attachShape(rect)
 body.ChBody.SetMass(500.)
 body.ChBody.SetBodyFixed(True)  # fixing body
 
