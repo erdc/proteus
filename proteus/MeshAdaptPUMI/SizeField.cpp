@@ -75,7 +75,7 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
 
   double safetyFactor = 2.0; //need to make this user defined
   //double L_band = N_interface_band*hPhi*safetyFactor;
-  double L_band = (5.0+N_interface_band)*hPhi;
+  double L_band = (numAdaptSteps+N_interface_band)*hPhi;
 
   PCU_Comm_Begin();
   while ((edge = m->iterate(it)))
@@ -110,6 +110,16 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
         setSizeField(m,vertex2,hmax,vertexMarker,interfaceBand);
       }
     }
+
+/*
+    apf::Vector3 pt1, pt2;
+    m->getPoint(vertex1,0,pt1);
+    m->getPoint(vertex2,0,pt2);
+    if(pt1[0]<2.40 && pt1[0]>2.25 && pt1[1]>0.2985 && pt1[1]<(0.2985+0.403) && pt1[2]<0.161)
+        setSizeField(m,vertex1,hPhi,vertexMarker,interfaceBand);
+    if(pt2[0]<2.40 && pt2[0]>2.25 && pt2[1]>0.2985 && pt2[1]<(0.2985+0.403) && pt2[2]<0.161 )
+        setSizeField(m,vertex2,hPhi,vertexMarker,interfaceBand);
+*/
 
   }//end while
 
