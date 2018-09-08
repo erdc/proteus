@@ -1261,8 +1261,7 @@ class CLSVOFNewton(Newton):
         # ******************************************** #
         # ***** UPDATE VECTORS FOR VISUALIZATION ***** #
         # ******************************************** #
-        self.F.par_H_dof.scatter_forward_insert()
-        self.F.quantDOFs[:] = self.F.H_dof
+        self.F.par_vofDOFs.scatter_forward_insert()
 
     def solveOldMethod(self,u,r=None,b=None,par_u=None,par_r=None):
         # ******************************************** #
