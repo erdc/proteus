@@ -175,9 +175,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def postStep(self,t,firstStep=False):
-        #self.model.quantDOFs[:] = self.model.interface_locator
+        self.model.quantDOFs[:] = self.model.interface_locator
         # SAVE OLD SOLUTION #
-        self.model.u_dof_old[:] = self.model.u[0].dof        
+        self.model.u_dof_old[:] = self.model.u[0].dof
         # SAVE OLD VELOCITY #
         self.q_v_old[:] = self.q_v
         # NORM FACTOR #
@@ -620,10 +620,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         ##############################
         # VISUALIZATION OF VOF FIELD #
         ##############################
-        self.H_dof = numpy.zeros(self.u[0].dof.shape,'d')
-        self.par_H_dof = None
+        self.vofDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+        self.par_vofDOFs = None
         self.lumped_mass_matrix = None
-        # Aux quantity at DOFs to be filled by optimized code
+        # Aux quantity at DOFs
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
         ###################################
@@ -702,10 +702,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                                  n=n,N=N,nghosts=nghosts,
                                                                                  subdomain2global=subdomain2global)
         #
-        self.par_H_dof = proteus.LinearAlgebraTools.ParVec_petsc4py(self.H_dof,
-                                                                    bs=1,
-                                                                    n=n,N=N,nghosts=nghosts,
-                                                                    subdomain2global=subdomain2global)
+        self.par_vofDOFs = proteus.LinearAlgebraTools.ParVec_petsc4py(self.vofDOFs,
+                                                                      bs=1,
+                                                                      n=n,N=N,nghosts=nghosts,
+                                                                      subdomain2global=subdomain2global)
         ################
         # SPIN UP STEP #
         ################
@@ -1036,7 +1036,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u_dof_old = numpy.copy(self.u[0].dof)
 
         r.fill(0.0)
-        self.H_dof.fill(0.0)
+        self.vofDOFs.fill(0.0)
 
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
@@ -1157,7 +1157,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # To compute H at DOFs
             self.nFreeDOF_global[0], #numDOFs
             self.lumped_mass_matrix,
-            self.H_dof,
+            self.vofDOFs,
             self.preRedistancingStage,
             self.interface_locator,
             self.coefficients.alpha/self.mesh.elementDiametersArray.min())
