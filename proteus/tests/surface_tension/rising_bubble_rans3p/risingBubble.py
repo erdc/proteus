@@ -7,10 +7,13 @@ import proteus.MeshTools
 from proteus import Domain
 from proteus.default_n import *
 from proteus.Profiling import logEvent
-from .parameters import *
+try:
+    from .parameters import *
+except:
+    from parameters import *
 
 test_case=1
-AUTOMATED_TEST = True
+AUTOMATED_TEST = False#True
 
 # ----- PARAMETERS FOR ELLIPTIC REDISTANCING ----- #
 EXPLICIT_VOF=True
