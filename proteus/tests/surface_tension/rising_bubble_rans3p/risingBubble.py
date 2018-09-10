@@ -13,7 +13,7 @@ except:
     from parameters import *
 
 test_case=1
-AUTOMATED_TEST = False#True
+AUTOMATED_TEST = True
 
 # ----- PARAMETERS FOR ELLIPTIC REDISTANCING ----- #
 EXPLICIT_VOF=True
