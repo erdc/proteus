@@ -2,7 +2,10 @@ from __future__ import absolute_import
 from builtins import object
 from proteus import *
 from proteus.default_p import *
-from .risingBubble import *
+try:
+    from .risingBubble import *
+except:
+    from risingBubble import *
 from proteus.mprans import NCLS3P
 
 LevelModelType = NCLS3P.LevelModel
