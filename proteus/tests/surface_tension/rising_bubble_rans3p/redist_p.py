@@ -3,7 +3,10 @@ from builtins import object
 from proteus import *
 from proteus.default_p import *
 from math import *
-from .risingBubble import *
+try:
+    from .risingBubble import *
+except:
+    from risingBubble import *
 from proteus.mprans import RDLS3P
 """
 The redistancing equation in the sloshbox test problem.

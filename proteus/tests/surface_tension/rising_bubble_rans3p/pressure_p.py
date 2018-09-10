@@ -3,7 +3,10 @@ from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
-from .risingBubble import *
+try:
+    from .risingBubble import *
+except:
+    from risingBubble import *
 from proteus.mprans import Pres
 
 name = "pressure"
