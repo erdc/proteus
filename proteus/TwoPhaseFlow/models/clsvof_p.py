@@ -1,19 +1,17 @@
 from __future__ import absolute_import
 from builtins import object
-from proteus import *
 from proteus.default_p import *
-from proteus.ctransportCoefficients import smoothedHeaviside
-from math import *
-from proteus.mprans import CLSVOF
 from proteus import Context
+from proteus.mprans import CLSVOF
 
+# ***************************** #
+# ********** CONTEXT ********** #
+# ***************************** #
 ct = Context.get()
 domain = ct.domain
 nd = domain.nd
 mesh = domain.MeshOptions
 
-print ct
-CLSVOF_model=1
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
@@ -25,8 +23,21 @@ lambdaFact = ct.clsvof_parameters['lambdaFact']
 outputQuantDOFs = ct.clsvof_parameters['outputQuantDOFs']
 computeMetrics = ct.clsvof_parameters['computeMetrics']
 
+# ************************************ #
+# ********** MODEL INDEXING ********** #
+# ************************************ #
+if ct.opts.ns_model=='rans2p':
+    CLSVOF_model=1
+    V_model=0
+else:
+    CLSVOF_model=0
+    V_model=1
+
+# ********************************** #
+# ********** COEFFICIENTS ********** #
+# ********************************** #
 LevelModelType = CLSVOF.LevelModel
-coefficients = CLSVOF.Coefficients(V_model=0,
+coefficients = CLSVOF.Coefficients(V_model=V_model,
                                    ME_model=CLSVOF_model,
                                    useMetrics=useMetrics,
                                    epsFactHeaviside=epsFactHeaviside,
@@ -38,14 +49,14 @@ coefficients = CLSVOF.Coefficients(V_model=0,
 coefficients.variableNames=['phi']
 name="clsvof"
 
-#####################
-# INITIAL CONDITION #
-#####################
+# **************************************** #
+# ********** INITIAL CONDITIONS ********** #
+# **************************************** #
 initialConditions  = {0:ct.clsvof_init_cond()}
 
-#######################
-# BOUNDARY CONDITIONS #
-#######################
+# ***************************************** #    
+# ********** BOUNDARY CONDITIONS ********** #
+# ***************************************** #
 dirichletConditions = {0: ct.clsvof_DBC}
 advectiveFluxBoundaryConditions = {0: ct.clsvof_AFBC}
 diffusiveFluxBoundaryConditions = {0:{0: ct.clsvof_DFBC}}

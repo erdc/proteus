@@ -5,6 +5,11 @@ import sys
 import proteus
 
 parser = optparse.OptionParser()
+parser.add_option("-f", "--file_name",
+                  help="Name of file to run",
+                  action="store",
+                  dest="file_name",
+                  default=None)
 parser.add_option("-l", "--log",
                   help="Store information about what the code is doing, 0=none, 10=everything",
                   action="store",
@@ -17,6 +22,10 @@ parser.add_option("--clean",
                   dest="clean")
 
 (opts,args) = parser.parse_args()
+
+# NAME OF PROBLEM #
+#assert opts.file_name is not None, "Provide name of file to run: -f name_of_file.py"
+#current_path = os.getcwd()
 
 if opts.clean is not None:
     os.system("rm -r *face *.csv __pycache__ *mesh* *.poly *.pyc *.log *.edge *.ele *.neig *.node *.h5 *.xmf *~ *#* *.txt *smb")

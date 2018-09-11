@@ -7,19 +7,46 @@ import os
 from proteus.default_so import *
 from proteus import Context
 
-# ASSUME CLSVOF #
-pnList = [("twp_navier_stokes_p", "twp_navier_stokes_n"),
-          ("clsvof_p",               "clsvof_n")]
-
+# ***************************** #
+# ********** CONTEXT ********** #
+# ***************************** #
 name = "TwoPhaseFlow"
 case = __import__(name)
 Context.setFromModule(case)
 ct = Context.get()
 
+# **************************** #
+# ********** pnList ********** #
+# **************************** #
+# ASSUME CLSVOF #
+if ct.opts.ns_model=='rans2p':
+    pnList = [("rans2p_p", "rans2p_n"),
+              ("clsvof_p", "clsvof_n")]
+else:
+    pnList = [("clsvof_p", "clsvof_n"),#0
+              ("rans3p_p", "rans3p_n"),#1
+              ("pressureincrement_p", "pressureincrement_n"),#2
+              ("pressure_p", "pressure_n"),#3
+              ("pressureInitial_p", "pressureInitial_n")]#4
+    
+# ****************************************** #
+# ********** TIME STEP CONTROLLER ********** #
+# ****************************************** #
 systemStepControllerType = Sequential_MinAdaptiveModelStep
-
+if ct.opts.ns_model=='rans3p':
+    PINIT_model=4
+    modelSpinUpList = [PINIT_model]
+    class Sequential_MinAdaptiveModelStepPS(Sequential_MinAdaptiveModelStep):
+        def __init__(self,modelList,system=defaultSystem,stepExact=True):
+            Sequential_MinAdaptiveModelStep.__init__(self,modelList,system,stepExact)
+            self.modelList = modelList[:len(pnList)-1]
+    #
+    systemStepControllerType = Sequential_MinAdaptiveModelStepPS
+#
 needEBQ_GLOBAL = False
 needEBQ = False
 
-tnList = [0.0,ct.dt_init]+[i*ct.dt_output for i in range(1,ct.nDTout+1)]
-info = open("TimeList.txt","w")
+# **************************** #
+# ********** tnList ********** #
+# **************************** #
+tnList=[0.,ct.outputStepping['dt_init']]+[float(k)*ct.outputStepping['final_time']/float(ct.outputStepping['nDTout']) for k in range(1,ct.outputStepping['nDTout']+1)]
