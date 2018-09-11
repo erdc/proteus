@@ -1709,13 +1709,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_beta,
                                       self.coefficients.particle_penalty_constant,
                                       self.coefficients.phi_s)
-        from proteus.flcbdfWrappers import globalSum
-        for i in range(self.coefficients.netForces_p.shape[0]):
-            self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
-            for I in range(3):
-                self.coefficients.netForces_p[i, I] = globalSum(self.coefficients.netForces_p[i, I])
-                self.coefficients.netForces_v[i, I] = globalSum(self.coefficients.netForces_v[i, I])
-                self.coefficients.netMoments[i, I] = globalSum(self.coefficients.netMoments[i, I])
+        # from proteus.flcbdfWrappers import globalSum
+        # for i in range(self.coefficients.netForces_p.shape[0]):
+        #     self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
+        #     for I in range(3):
+        #         self.coefficients.netForces_p[i, I] = globalSum(self.coefficients.netForces_p[i, I])
+        #         self.coefficients.netForces_v[i, I] = globalSum(self.coefficients.netForces_v[i, I])
+        #         self.coefficients.netMoments[i, I] = globalSum(self.coefficients.netMoments[i, I])
                 #cek hack, testing 6DOF motion
                 #self.coefficients.netForces_p[i,I] = 0.0
                 #self.coefficients.netForces_v[i,I] = 0.0
@@ -1729,16 +1729,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
-        global_sum_particle_netForces = np.zeros_like(self.coefficients.particle_netForces)
-        comm.Allreduce(self.coefficients.particle_netForces,global_sum_particle_netForces)
-        self.coefficients.particle_netForces[:]=global_sum_particle_netForces
-        global_sum_particle_netMoments = np.zeros_like(self.coefficients.particle_netMoments)
-        comm.Allreduce(self.coefficients.particle_netMoments,global_sum_particle_netMoments)
-        self.coefficients.particle_netMoments[:]=global_sum_particle_netMoments
-        global_sum_particle_surfaceArea = np.zeros_like(self.coefficients.particle_surfaceArea)
-        comm.Allreduce(self.coefficients.particle_surfaceArea,global_sum_particle_surfaceArea)
-        self.coefficients.particle_surfaceArea[:]=global_sum_particle_surfaceArea
-
+        
+        comm.Allreduce(self.coefficients.wettedAreas.copy(),self.coefficients.wettedAreas)
+        comm.Allreduce(self.coefficients.netForces_p.copy(),self.coefficients.netForces_p)
+        comm.Allreduce(self.coefficients.netForces_v.copy(),self.coefficients.netForces_v)
+        comm.Allreduce(self.coefficients.netMoments.copy(),self.coefficients.netMoments)
+        
+        comm.Allreduce(self.coefficients.particle_netForces.copy(),self.coefficients.particle_netForces)
+        comm.Allreduce(self.coefficients.particle_netMoments.copy(),self.coefficients.particle_netMoments)
+        # comm.Allreduce(self.coefficients.particle_surfaceArea.copy(),aceArea)
+        
         for i in range(self.coefficients.nParticles):
             # for I in range(3):
             #     self.coefficients.particle_netForces[i, I] = globalSum(
@@ -1753,7 +1753,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 # self.coefficients.particle_surfaceArea[i])
             logEvent("particle i=" + `i`+ " force " + `self.coefficients.particle_netForces[i]`)
             logEvent("particle i=" + `i`+ " moment " + `self.coefficients.particle_netMoments[i]`)
-            logEvent("particle i=" + `i`+ " surfaceArea " + `self.coefficients.particle_surfaceArea[i]`)
+            # logEvent("particle i=" + `i`+ " surfaceArea " + `self.coefficients.particle_surfaceArea[i]`)
             logEvent("particle i=" + `i`+ " stress force " + `self.coefficients.particle_netForces[i+self.coefficients.nParticles]`)
             logEvent("particle i=" + `i`+ " pressure force " + `self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]`)
 
