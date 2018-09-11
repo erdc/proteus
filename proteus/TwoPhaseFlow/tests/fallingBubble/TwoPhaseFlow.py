@@ -2,7 +2,6 @@
 Multiphase Flow Test
 """
 from __future__ import division
-from builtins import str
 from past.utils import old_div
 import numpy as np
 from proteus import (Domain, Context,
@@ -10,18 +9,18 @@ from proteus import (Domain, Context,
 from proteus.Profiling import logEvent
 from proteus.TwoPhaseFlow.utils import parameters
 from proteus.TwoPhaseFlow.utils.FESpace import *
+from proteus.TwoPhaseFlow.utils.OutputStepping import *
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
 opts= Context.Options([
-    ("finalTime",3.0,"Final time for simulation"),
+    ('ns_model','rans3p',"ns_model = {rans2p,rans3p}"),
+    ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
-    ("useRans2p",True,"Use rans2p? Otherwise use rans3p"),
     ("useSuperlu",True,"Use super LU: run in serial"),
-    ("spaceOrder",1,"Order of approximation of space"),
-    ("genMesh",True,"Generate a new mesh"),    
+    ("genMesh",True,"Generate a new mesh"),
     ("usePUMI",False,"usePUMI workflow")
     ])
 
@@ -29,9 +28,8 @@ opts= Context.Options([
 # ***** PHYSICAL PROPERTIES ***** #
 # ******************************* #
 # Num. dim
-nd=2 
+nd=2
 physical_parameters = parameters.physical
-#physical_parameters['surf_tension_coeff'] = 0.
 
 # ****************** #
 # ***** GAUGES ***** #
@@ -47,7 +45,7 @@ tank_dim = (1.0,1.0)
 # **************** #
 # ***** MESH ***** #
 # **************** #
-# REFINEMENT 
+# REFINEMENT
 refinement = 3
 structured=True
 boundaries = ['bottom', 'right', 'top', 'left', 'front', 'back']
@@ -101,7 +99,11 @@ else:
 class pressure_init_cond(object):
     def uOfXT(self,x,t):
         return 0.
-    
+
+class pressure_increment_init_cond(object):
+    def uOfXT(self,x,t):
+        return 0.0
+
 class vel_u_init_cond(object):
     def uOfXT(self,x,t):
         return 0.
@@ -135,8 +137,14 @@ class clsvof_init_cond(object):
 def pressure_DBC(x,flag):
     if (flag==boundaryTags['top']):
         return lambda x,t: 0.
+
+def pressure_increment_DBC(x,flag):
+    if flag == boundaryTags['top']:
+        return lambda x,t: 0.0
+
 def vel_u_DBC(x,flag):
     None
+
 def vel_v_DBC(x,flag):
     None
 
@@ -144,18 +152,29 @@ def vel_v_DBC(x,flag):
 def pressure_AFBC(x,flag):
     if not (flag==boundaryTags['top']):
         return lambda x,t: 0.
+
+def pressure_increment_AFBC(x,flag):
+    if not (flag == boundaryTags['top']):
+        return lambda x,t: 0.0
+
 def vel_u_AFBC(x,flag):
     if not (flag==boundaryTags['top']):
         return lambda x,t: 0.
+
 def vel_v_AFBC(x,flag):
     if not (flag==boundaryTags['top']):
         return lambda x,t: 0.
-    
+
 # DIFFUSIVE FLUX #
 def vel_u_DFBC(x,flag):
     return lambda x,t: 0.
+
 def vel_v_DFBC(x,flag):
     return lambda x,t: 0.
+
+def pressure_increment_DFBC(x,flag):
+    if not (flag == boundaryTags['top']):
+        return lambda x,t: 0.0
 
 #############
 # LEVEL SET #
@@ -163,37 +182,35 @@ def vel_v_DFBC(x,flag):
 def clsvof_DBC(x,flag):
     if (flag==boundaryTags['top']): #Just let air in
         return lambda x,t: 1.
+
 def clsvof_AFBC(x,flag):
     if not (flag==boundaryTags['top']):
         return lambda x,t: 0.
+
 def clsvof_DFBC(x,flag):
     return lambda x,t: 0.
 
 # ************************* #
 # ***** TIME STEPPING ***** #
 # ************************* #
-T=opts.finalTime
-dt_output = opts.dt_output
-dt_init = min(0.1 * dt_output, 0.001)
-runCFL = opts.cfl
-nDTout = int(round(old_div(T, dt_output)))
+outputStepping=OutputStepping(opts.final_time,opts.cfl,dt_output=opts.dt_output).getOutputStepping()
 
 # ******************************** #
 # ***** NUMERICAL PARAMETERS ***** #
 # ******************************** #
-# NS PARAMETERS #
 rans2p_parameters = parameters.rans2p
-# LS PARAMETERS #
+rans3p_parameters = parameters.rans3p
 clsvof_parameters = parameters.clsvof
 
 # ***************************** #
 # ***** FE DISCRETIZATION ***** #
 # ***************************** #
-FESpace = FESpace(nd,opts.spaceOrder).getFESpace()
+FESpace = FESpace(opts.ns_model,nd).getFESpace()
 
 # ******************************** #
 # ***** PARALLEL PARITIONING ***** #
 # ******************************** #
 parallelPartitioningType = mt.MeshParallelPartitioningTypes.node
+#parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
 nLayersOfOverlapForParallel = 0
 nLevels=1

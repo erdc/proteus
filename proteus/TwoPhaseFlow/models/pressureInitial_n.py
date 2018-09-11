@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from clsvof_p import *
+from pressureInitial_p import *
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
@@ -14,55 +14,55 @@ triangleOptions = ct.triangleOptions if hasattr(ct,'triangleOptions') else None
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
-timeIntegration = BackwardEuler_cfl
-stepController = Min_dt_controller
-runCFL=ct.opts.cfl
+stepController=FixedStep
 
 # ******************************************* #
 # ********** FINITE ELEMENT SAPCES ********** #
 # ******************************************* #
 elementQuadrature = ct.FESpace['elementQuadrature']
 elementBoundaryQuadrature = ct.FESpace['elementBoundaryQuadrature']
-femSpaces = {0:ct.FESpace['lsBasis']}
+femSpaces = {0:ct.FESpace['pBasis']}
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
-multilevelNonlinearSolver  = Newton
-levelNonlinearSolver = CLSVOFNewton
-fullNewtonFlag = True
-updateJacobian = True
-nonlinearSmoother = None
+multilevelNonlinearSolver = NonlinearSolvers.Newton
+levelNonlinearSolver = NonlinearSolvers.Newton
+nonlinearSolverConvergenceTest = 'r'
+levelNonlinearSolverConvergenceTest = 'r'
 
 # ************************************ #
 # ********** NUMERICAL FLUX ********** #
 # ************************************ #
-numericalFluxType = CLSVOF.NumericalFlux
+numericalFluxType = NumericalFlux.ConstantAdvection_exterior
+conservativeFlux=None
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #
 # ************************************ #
-matrix = SparseMatrix
-linearSmoother = None
-multilevelLinearSolver = KSP_petsc4py
-levelLinearSolver      = KSP_petsc4py
+matrix = LinearAlgebraTools.SparseMatrix
+linearSmoother    = LinearSolvers.NavierStokesPressureCorrection # pure neumann laplacian solver
+multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+levelLinearSolver = LinearSolvers.KSP_petsc4py
 if ct.opts.useSuperlu:
-    multilevelLinearSolver = LU
-    levelLinearSolver      = LU
+    linearSmoother    = None
+    multilevelLinearSolver = LinearSolvers.LU
+    levelLinearSolver = LinearSolvers.LU
 #
-linear_solver_options_prefix = 'clsvof_'
+linear_solver_options_prefix = 'pinit_'
 linearSolverConvergenceTest = 'r-true'
+maxLineSearches=0
 
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-clsvof_nl_atol_res = max(1.0e-8, 0.001 * ct.he ** 2)
-eps_tolerance_clsvof = ct.clsvof_parameters['eps_tolerance_clsvof']
-if eps_tolerance_clsvof:
-    nl_atol_res = 1E-12
-else:
-    nl_atol_res=clsvof_nl_atol_res
-#
-l_atol_res = nl_atol_res
-tolFac=0.
-maxNonlinearIts = 50
+pressure_nl_atol_res = max(1.0e-10, 0.01 * ct.he ** 2)
+nl_atol_res = pressure_nl_atol_res
+tolFac = 0.0
+linTolFac = 0.0
+l_atol_res = 0.01*pressure_nl_atol_res
+
+
+
+
+

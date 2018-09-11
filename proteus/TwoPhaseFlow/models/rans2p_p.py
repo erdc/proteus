@@ -2,17 +2,15 @@ from __future__ import absolute_import
 from builtins import object
 from proteus.default_p import *
 from proteus.mprans import RANS2P
-import numpy as np
 from proteus import Context
 
+# ***************************** #
+# ********** CONTEXT ********** #
+# ***************************** #
 ct = Context.get()
 domain = ct.domain
 nd = domain.nd
 mesh = domain.MeshOptions
-
-CLSVOF_model=1
-VF_model=None
-LS_model=None
 
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
@@ -47,6 +45,13 @@ useVF = ct.rans2p_parameters['useVF']
 Closure_0_model = None
 Closure_1_model = None
 
+# ************************************ #
+# ********** MODEL INDEXING ********** #
+# ************************************ #
+CLSVOF_model=1
+VF_model=None
+LS_model=None
+
 LevelModelType = RANS2P.LevelModel
 coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    sigma=sigma_01,
@@ -73,12 +78,23 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    turbulenceClosureModel=ns_closure,
                                    movingDomain=movingDomain)
 
+# **************************************** #
+# ********** INITIAL CONDITIONS ********** #
+# **************************************** #
 if nd==2:
-    # INITIAL CONDITIONS #
     initialConditions = {0:ct.pressure_init_cond(),
                          1:ct.vel_u_init_cond(),
                          2:ct.vel_v_init_cond()}
-    # BOUNDARY CONDITIONS #
+else:
+    initialConditions = {0:ct.pressure_init_cond(),
+                         1:ct.vel_u_init_cond(),
+                         2:ct.vel_v_init_cond(),
+                         3:ct.vel_w_init_cond()}
+
+# ***************************************** #
+# ********** BOUNDARY CONDITIONS ********** #
+# ***************************************** #
+if nd==2:
     dirichletConditions = {0: ct.pressure_DBC,
                            1: ct.vel_u_DBC,
                            2: ct.vel_v_DBC}
@@ -89,12 +105,6 @@ if nd==2:
                                        1: {1:ct.vel_u_DFBC},
                                        2: {2:ct.vel_v_DFBC}}
 else:
-    # INITIAL CONDITIONS #
-    initialConditions = {0:ct.pressure_init_cond(),
-                         1:ct.vel_u_init_cond(),
-                         2:ct.vel_v_init_cond(),
-                         3:ct.vel_w_init_cond()}
-    # BOUNDARY CONDITIONS #
     dirichletConditions = {0: ct.pressure_DBC,
                            1: ct.vel_u_DBC,
                            1: ct.vel_v_DBC,
