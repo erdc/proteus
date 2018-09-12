@@ -177,9 +177,9 @@ if domain.use_gmsh is True:
 # FOR TwoPhaseFlow # #Added by mql
 ####################
 physical_parameters = parameters.physical
+physical_parameters['gravity'] = opts.g
 rans2p_parameters = parameters.rans2p
 clsvof_parameters = parameters.clsvof
-gravity = parameters.gravity
 outputStepping=OutputStepping(opts.final_time,opts.cfl,dt_output=opts.dt_output).getOutputStepping()
 FESpace = FESpace(opts.ns_model,nd).getFESpace()
 he=opts.he
@@ -190,7 +190,7 @@ class pressure_init_cond:
         p_L = 0.0
         phi_L = tank_dim[nd-1] - waterLevel
         phi = x[nd-1] - waterLevel
-        g = gravity[physical_parameters['gravity_direction']]
+        g = physical_parameters['gravity']
         rho_0 = physical_parameters['densityA']
         rho_1 = physical_parameters['densityB']
         eps = clsvof_parameters['epsFactHeaviside']*opts.he        
