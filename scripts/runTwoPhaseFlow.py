@@ -20,6 +20,15 @@ parser.add_option("--clean",
                   help="Clean folder",
                   action="store_true",
                   dest="clean")
+parser.add_option("-n","--num_proc",
+                  help="Number of processors to use",
+                  type="int",
+                  action="store",
+                  default=1,
+                  dest="num_proc")
+# CONTEXT
+# DIRECTORY
+# PUMI
 
 (opts,args) = parser.parse_args()
 
@@ -27,8 +36,23 @@ parser.add_option("--clean",
 #assert opts.file_name is not None, "Provide name of file to run: -f name_of_file.py"
 #current_path = os.getcwd()
 
+################
+# CLEAN FOLDER #
+################
 if opts.clean is not None:
     os.system("rm -r *face *.csv __pycache__ *mesh* *.poly *.pyc *.log *.edge *.ele *.neig *.node *.h5 *.xmf *~ *#* *.txt *smb")
     exit()
 
-os.system("parun --TwoPhaseFlow -l"+str(opts.logLevel)+" -v TwoPhaseFlow_so.py")
+#################
+# PARALLEL RUNS #
+#################
+assert opts.num_proc >= 1, "Argument of -n must be an integer larger or equal to 1"
+if opts.num_proc==1:
+    useSuperlu="True"
+else:
+    useSuperlu="False"
+
+##############
+# CALL PARUN #
+##############
+os.system("mpirun -np "+str(opts.num_proc)+" parun --TwoPhaseFlow -l"+str(opts.logLevel)+" -v TwoPhaseFlow_so.py -C 'useSuperlu="+useSuperlu+"'")
