@@ -26,15 +26,27 @@ parser.add_option("-n","--num_proc",
                   action="store",
                   default=1,
                   dest="num_proc")
-# CONTEXT
-# DIRECTORY
-# PUMI
-
-(opts,args) = parser.parse_args()
+parser.add_option("-C",
+                  help="Context options",
+                  action="store",
+                  dest="context")
+parser.add_option("-D", "--dataDir",
+                  help="Data directory",
+                  action="store",
+                  type="string",
+                  dest="dataDir")
 
 # NAME OF PROBLEM #
 #assert opts.file_name is not None, "Provide name of file to run: -f name_of_file.py"
 #current_path = os.getcwd()
+
+# PUMI
+(opts,args) = parser.parse_args()
+
+# SOME ASSERTS #
+if opts.context is not None:
+    assert "useSuperlu" not in opts.context, "Don't assign value to useSuperlu in -C"
+    assert "usePUMI" not in opts.context, "Don't assign value to usePUMI in -C"
 
 ################
 # CLEAN FOLDER #
@@ -52,7 +64,21 @@ if opts.num_proc==1:
 else:
     useSuperlu="False"
 
+###########
+# CONTEXT #
+###########
+context = "" if opts.context is None else " "+opts.context
+
+############
+# DATA DIR #
+############
+dataDir = "" if opts.dataDir is None else "-D " + opts.dataDir 
+
 ##############
 # CALL PARUN #
 ##############
-os.system("mpirun -np "+str(opts.num_proc)+" parun --TwoPhaseFlow -l"+str(opts.logLevel)+" -v TwoPhaseFlow_so.py -C 'useSuperlu="+useSuperlu+"'")
+os.system("mpirun -np " + str(opts.num_proc) +
+          " parun --TwoPhaseFlow -l" + str(opts.logLevel) +
+          " -v TwoPhaseFlow_so.py " +
+          dataDir +
+          " -C 'useSuperlu=" + useSuperlu + context + "'") 
