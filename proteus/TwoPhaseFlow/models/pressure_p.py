@@ -19,7 +19,7 @@ rho_0 = ct.physical_parameters['densityA']
 gravity ={'gx': [-9.8, 0.0, 0.0],
           'gy': [0.0, -9.8, 0.0],
           'gz': [0.0, 0.0, -9.8]}
-gravity_direction = ct.physical_parameters['gravity']
+gravity_direction = ct.physical_parameters['gravity_direction']
 g = gravity[gravity_direction]
 
 # ************************************ #

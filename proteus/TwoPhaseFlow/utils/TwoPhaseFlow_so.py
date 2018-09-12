@@ -19,10 +19,10 @@ ct = Context.get()
 # ********** pnList ********** #
 # **************************** #
 # ASSUME CLSVOF #
-if ct.opts.ns_model=='rans2p':
+if ct.opts.ns_model==0: #rans2p
     pnList = [("rans2p_p", "rans2p_n"),
               ("clsvof_p", "clsvof_n")]
-else:
+else: #rans3p
     pnList = [("clsvof_p", "clsvof_n"),#0
               ("rans3p_p", "rans3p_n"),#1
               ("pressureincrement_p", "pressureincrement_n"),#2
@@ -33,7 +33,7 @@ else:
 # ********** TIME STEP CONTROLLER ********** #
 # ****************************************** #
 systemStepControllerType = Sequential_MinAdaptiveModelStep
-if ct.opts.ns_model=='rans3p':
+if ct.opts.ns_model==1: #rans3p
     PINIT_model=4
     modelSpinUpList = [PINIT_model]
     class Sequential_MinAdaptiveModelStepPS(Sequential_MinAdaptiveModelStep):

@@ -52,7 +52,7 @@ if opts.context is not None:
 # CLEAN FOLDER #
 ################
 if opts.clean is not None:
-    os.system("rm -r *face *.csv __pycache__ *mesh* *.poly *.pyc *.log *.edge *.ele *.neig *.node *.h5 *.xmf *~ *#* *.txt *smb")
+    os.system("rm -r *face *.csv __pycache__ *mesh* *.poly *.pyc *.log *.edge *.ele *.neig *.node *.h5 *.xmf *~ *#* *.txt *smb *pos")
     exit()
 
 #################
