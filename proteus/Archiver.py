@@ -563,7 +563,7 @@ class XdmfWriter(object):
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
 
         assert len(x.shape) == 3 #make sure have right type of dictionary
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             if ar.global_sync:
                 self.mesh = mesh
                 Xdmf_ElementTopology = "Polyvertex"
@@ -855,7 +855,7 @@ class XdmfWriter(object):
         spaceSuffix = "_dgp1_Lagrange"
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
 
-        if self.arGrid is None or self.arTime.get('Value') != str(t).decode():
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             if spaceDim == 1:
                 Xdmf_ElementTopology = "Polyline"
             elif spaceDim == 2:
@@ -972,7 +972,7 @@ class XdmfWriter(object):
         spaceSuffix = "_dgp2_Lagrange"
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
 
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             if spaceDim == 1:
                 Xdmf_ElementTopology = "Edge_3"
             elif spaceDim == 2:
@@ -1112,7 +1112,7 @@ class XdmfWriter(object):
         mesh.writeMeshXdmf(ar,"Spatial_Domain",t,init,meshChanged,tCount=tCount)
         spaceSuffix = "_c0p2_Lagrange"
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             if spaceDim == 1:
                 Xdmf_ElementTopology = "Edge_3"
             elif spaceDim == 2:
@@ -1307,7 +1307,7 @@ class XdmfWriter(object):
         #mesh.writeMeshXdmf(ar,"Spatial_Domain",t,init,meshChanged,tCount=tCount)
         spaceSuffix = "_c0q2_Lagrange"
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             if spaceDim == 1:
                 print("No writeMeshXdmf_C0Q2Lagrange for 1D")
                 return 0
@@ -1510,7 +1510,7 @@ class XdmfWriter(object):
         spaceSuffix = "_ncp1_CrouzeixRaviart"
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
 
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             if spaceDim == 1:
                 Xdmf_ElementTopology = "Polyline"
             elif spaceDim == 2:
@@ -1932,7 +1932,7 @@ class XdmfWriter(object):
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
 
         assert len(interpolationPoints.shape) == 3 #make sure have right type of dictionary
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             Xdmf_ElementTopology = "Polyvertex"
             if ar.global_sync:
                 Xdmf_NumberOfElements= mesh.globalMesh.nElements_global
@@ -2140,7 +2140,7 @@ class XdmfWriter(object):
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
 
         if ar.global_sync:
-            if self.arGrid is None or self.arTime.get('Value') != str(t):
+            if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
                 #mwf hack
                 #allow for other types of topologies if the mesh has specified one
                 if 'elementTopologyName' in dir(mesh):
@@ -2187,7 +2187,7 @@ class XdmfWriter(object):
                 #hdfile
             #need to write a grid
         else:
-            if self.arGrid is None or self.arTime.get('Value') != str(t):
+            if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
                 #mwf hack
                 #allow for other types of topologies if the mesh has specified one
                 if 'elementTopologyName' in dir(mesh):
@@ -2365,7 +2365,7 @@ class XdmfWriter(object):
         spaceSuffix = "_c0p1_Bubble%s" % tCount
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
 
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             if spaceDim == 1:
                 Xdmf_ElementTopology = "Polyline"
             elif spaceDim == 2:
@@ -2633,7 +2633,7 @@ class XdmfWriter(object):
 
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
         nPoints = numpy.cumprod(x.shape)[-2]
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             Xdmf_ElementTopology = "Polyvertex"
             Xdmf_NumberOfElements= nPoints
             Xdmf_NodesPerElement = 1
@@ -2755,7 +2755,7 @@ class XdmfWriter(object):
         #now try to write out a mesh that matches RT0 velocity as dgp1 lagrange
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
 
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             if spaceDim == 1:
                 Xdmf_ElementTopology = "Polyline"
             elif spaceDim == 2:

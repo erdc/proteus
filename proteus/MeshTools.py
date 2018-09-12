@@ -732,7 +732,7 @@ class Mesh(object):
                 self.arEBGridCollection = SubElement(ar.domain,"Grid",{"Name":"EBMesh "+name,
                                                                        "GridType":"Collection",
                                                                        "CollectionType":"Temporal"})
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             #
             #topology and geometry
             #
@@ -3186,7 +3186,7 @@ class Mesh2DM(Mesh):
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                 "GridType":"Collection",
                                                                 "CollectionType":"Temporal"})
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             #
             #topology and geometry
             #
@@ -3553,7 +3553,7 @@ class Mesh3DM(Mesh):
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                "GridType":"Collection",
                                                                "CollectionType":"Temporal"})
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             if ar.global_sync:
                 #
                 #topology and geometry
