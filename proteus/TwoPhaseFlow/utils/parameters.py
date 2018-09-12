@@ -6,10 +6,7 @@ physical ={'densityA': 998.2,
            'densityB': 1.205,
            'viscosityB': 1.500e-5,
            'surf_tension_coeff': 72.8E-3,
-           'gravity_direction': 'gy'}
-gravity = {'gx': [-9.8, 0.0, 0.0],
-           'gy': [0.0, -9.8, 0.0],
-           'gz': [0.0, 0.0, -9.8]}
+           'gravity': [0.0, -9.8, 0.0]}
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #

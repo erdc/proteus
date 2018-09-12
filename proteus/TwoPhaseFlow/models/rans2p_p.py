@@ -20,11 +20,7 @@ nu_0 = ct.physical_parameters['viscosityA']
 rho_1 = ct.physical_parameters['densityB']
 nu_1 = ct.physical_parameters['viscosityB']
 sigma_01 = ct.physical_parameters['surf_tension_coeff']
-gravity = {'gx': [-9.8, 0.0, 0.0],
-           'gy': [0.0, -9.8, 0.0],
-           'gz': [0.0, 0.0, -9.8]}
-gravity_direction = ct.physical_parameters['gravity_direction']
-g = gravity[gravity_direction]
+g = ct.physical_parameters['gravity']
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
