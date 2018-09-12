@@ -9,7 +9,7 @@ from pressure_p import *
 triangleFlag = ct.triangleFlag if hasattr(ct,'triangleFlag') else None
 nnx = ct.nnx if hasattr(ct,'nnx') else None
 nny = ct.nny if hasattr(ct,'nny') else None
-triangleOptions = ct.triangleOptions if hasattr(ct,'triangleOptions') else None
+triangleOptions = ct.triangleOptions if hasattr(ct,'triangleOptions') else mesh.triangleOptions
 
 # *************************************** #
 # ********** TIME INTEGRATION ********** #
