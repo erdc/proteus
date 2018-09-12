@@ -52,8 +52,14 @@
         <Geometry Type="XYZ">
           <DataItem DataType="Float" Dimensions="81 3" Format="HDF" Precision="8">poiseulleFlow.h5:/nodes_c0q2_Lagrange0</DataItem>
         </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u">
+          <DataItem DataType="Float" Dimensions="81" Format="HDF" Precision="8">poiseulleFlow.h5:/u_t0</DataItem>
+        </Attribute>
         <Attribute AttributeType="Scalar" Center="Node" Name="v">
           <DataItem DataType="Float" Dimensions="81" Format="HDF" Precision="8">poiseulleFlow.h5:/v_t0</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Vector" Center="Node" Name="velocity">
+          <DataItem DataType="Float" Dimensions="81 3" Format="HDF">poiseulleFlow.h5:/velocity_t0</DataItem>
         </Attribute>
       </Grid>
       <Grid GridType="Uniform" Name="Grid_c0q2_Lagrange">
@@ -64,8 +70,17 @@
         <Geometry Type="XYZ">
           <DataItem DataType="Float" Dimensions="81 3" Format="HDF" Precision="8">poiseulleFlow.h5:/nodes_c0q2_Lagrange1</DataItem>
         </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u">
+          <DataItem DataType="Float" Dimensions="81" Format="HDF" Precision="8">poiseulleFlow.h5:/u_t1</DataItem>
+        </Attribute>
         <Attribute AttributeType="Scalar" Center="Node" Name="v">
           <DataItem DataType="Float" Dimensions="81" Format="HDF" Precision="8">poiseulleFlow.h5:/v_t1</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Vector" Center="Node" Name="velocity">
+          <DataItem DataType="Float" Dimensions="81 3" Format="HDF">poiseulleFlow.h5:/velocity_t1</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u_analytical">
+          <DataItem DataType="Float" Dimensions="81" Format="HDF" Precision="8">poiseulleFlow.h5:/u_analytical_t1</DataItem>
         </Attribute>
         <Attribute AttributeType="Scalar" Center="Node" Name="v_analytical">
           <DataItem DataType="Float" Dimensions="81" Format="HDF" Precision="8">poiseulleFlow.h5:/v_analytical_t1</DataItem>
