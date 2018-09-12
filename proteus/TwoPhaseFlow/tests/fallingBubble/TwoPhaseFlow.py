@@ -15,7 +15,7 @@ from proteus.TwoPhaseFlow.utils.OutputStepping import *
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
 opts= Context.Options([
-    ('ns_model','rans3p',"ns_model = {rans2p,rans3p}"),
+    ('ns_model',0,"ns_model = {rans2p,rans3p}"),
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
