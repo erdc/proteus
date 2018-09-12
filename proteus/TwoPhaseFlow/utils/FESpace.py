@@ -5,15 +5,15 @@ from proteus import FemTools as ft
     
 class FESpace:
     def __init__(self,ns_model,nd):
-        assert ns_model == 'rans2p' or ns_model == 'rans3p', 'ns_model must be rans2p or rans3p'
+        assert ns_model == 0 or ns_model == 1, "ns_model must be 0 (rans2p) or 1 (rans3p)"
         assert nd in [2,3], 'number of dimensions must be 2 or 3'
         self.ns_model=ns_model
         self.nd=nd
         # For now we just support rans2p with: p1-p1 and rans3p with: p2-p1
-        if ns_model == 'rans2p':
+        if ns_model == 0: #rans2p
             self.velSpaceOrder=1
             self.pSpaceOrder=1
-        else:
+        else: #rans3p
             self.velSpaceOrder=2
             self.pSpaceOrder=1
             

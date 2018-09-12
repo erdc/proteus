@@ -26,7 +26,7 @@ computeMetrics = ct.clsvof_parameters['computeMetrics']
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-if ct.opts.ns_model=='rans2p':
+if ct.opts.ns_model==0: #rans2p
     CLSVOF_model=1
     V_model=0
 else:
