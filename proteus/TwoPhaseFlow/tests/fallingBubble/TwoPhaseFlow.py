@@ -7,14 +7,13 @@ import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
-from proteus.TwoPhaseFlow.utils import parameters
-from proteus.TwoPhaseFlow.utils.FESpace import *
-from proteus.TwoPhaseFlow.utils.OutputStepping import *
+import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
 opts= Context.Options([
+    ('nd',2,"Num of dimensions"),
     ('ns_model',0,"ns_model = {rans2p,rans3p}"),
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
@@ -24,28 +23,16 @@ opts= Context.Options([
     ("usePUMI",False,"usePUMI workflow")
     ])
 
-# ******************************* #
-# ***** PHYSICAL PROPERTIES ***** #
-# ******************************* #
-# Num. dim
-nd=2
-physical_parameters = parameters.physical
-
 # ****************** #
 # ***** GAUGES ***** #
 # ****************** #
 # None
 
-# ****************** #
-# ***** DOMAIN ***** #
-# ****************** #
-# tank
-tank_dim = (1.0,1.0) if nd == 2 else (1.0,1.0,1.0)
-
-# **************** #
-# ***** MESH ***** #
-# **************** #
-# REFINEMENT
+# *************************** #
+# ***** DOMAIN AND MESH ***** #
+# ****************** #******* #
+tank_dim = (1.0,1.0) if opts.nd == 2 else (1.0,1.0,1.0)
+# MESH 
 refinement = 3
 structured=True
 boundaries = ['bottom', 'right', 'top', 'left', 'front', 'back']
@@ -53,14 +40,12 @@ boundaryTags = dict([(key, i + 1) for (i, key) in enumerate(boundaries)])
 if structured:
     nnx = 4 * refinement**2 + 1
     nny = nnx
-    if nd == 3:
-        nnz = nnx
-    triangleFlag=1
-    domain = Domain.RectangularDomain(tank_dim)
+    nnz = None if opts.nd == 2 else nnx
+    domain = Domain.RectangularDomain(tank_dim)    
     domain.boundaryTags = boundaryTags
     he = tank_dim[0]/(nnx - 1)
 else:
-    if nd==2:
+    if opts.nd==2:
         vertices = [[0.0, 0.0],  #0
                     [tank_dim[0], 0.0],  #1
                     [tank_dim[0], tank_dim[1]],  #2
@@ -128,7 +113,7 @@ else:
     domain.writeAsymptote("mesh")
     he = old_div(tank_dim[0], float(4 * refinement - 1))
     domain.MeshOptions.he = he
-    if nd==2:
+    if opts.nd==2:
         triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
     else:
         triangleOptions="VApq1.4q12feena%21.16e" % (old_div((he**3),6.0),)
@@ -136,32 +121,9 @@ else:
 # ****************************** #
 # ***** INITIAL CONDITIONS ***** #
 # ****************************** #
-#################
-# NAVIER STOKES #
-#################
-class pressure_init_cond(object):
+class zero(object):
     def uOfXT(self,x,t):
         return 0.
-
-class pressure_increment_init_cond(object):
-    def uOfXT(self,x,t):
-        return 0.0
-
-class vel_u_init_cond(object):
-    def uOfXT(self,x,t):
-        return 0.
-
-class vel_v_init_cond(object):
-    def uOfXT(self,x,t):
-        return 0.
-
-class vel_w_init_cond(object):
-    def uOfXT(self,x,t):
-        return 0.
-
-#############
-# LEVEL SET #
-#############
 class clsvof_init_cond(object):
     def uOfXT(self,x,t):
         xB = 0.5
@@ -169,7 +131,7 @@ class clsvof_init_cond(object):
         rB = 0.25
         zB = 0.5
         # dist to center of bubble
-        if nd==2:
+        if opts.nd==2:
             r = np.sqrt((x[0]-xB)**2 + (x[1]-yB)**2)
         else:
             r = np.sqrt((x[0]-xB)**2 + (x[1]-yB)**2 + (x[2]-zB)**2)
@@ -210,6 +172,7 @@ def vel_v_AFBC(x,flag):
 def vel_w_AFBC(x,flag):
     if not (flag==boundaryTags['top']):
         return lambda x,t: 0.
+    
 # DIFFUSIVE FLUX #
 def pressure_increment_DFBC(x,flag):
     if not (flag == boundaryTags['top']):
@@ -229,27 +192,46 @@ def clsvof_AFBC(x,flag):
         return lambda x,t: 0.
 clsvof_DFBC = lambda x,flag: lambda x,t: 0.0
 
-# ************************* #
-# ***** TIME STEPPING ***** #
-# ************************* #
-outputStepping=OutputStepping(opts.final_time,opts.cfl,dt_output=opts.dt_output).getOutputStepping()
-
-# ******************************** #
-# ***** NUMERICAL PARAMETERS ***** #
-# ******************************** #
-rans2p_parameters = parameters.rans2p
-rans3p_parameters = parameters.rans3p
-clsvof_parameters = parameters.clsvof
-
-# ***************************** #
-# ***** FE DISCRETIZATION ***** #
-# ***************************** #
-FESpace = FESpace(opts.ns_model,nd).getFESpace()
-
-# ******************************** #
-# ***** PARALLEL PARITIONING ***** #
-# ******************************** #
-parallelPartitioningType = mt.MeshParallelPartitioningTypes.node
-#parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
-nLayersOfOverlapForParallel = 0
-nLevels=1
+############################################
+# ***** Create myTwoPhaseFlowProblem ***** #
+############################################
+outputStepping = TpFlow.OutputStepping(opts.final_time,dt_output=opts.dt_output)
+initialConditions = {'pressure': zero(),
+                     'pressure_increment': zero(),
+                     'vel_u': zero(),
+                     'vel_v': zero(),
+                     'vel_w': zero(),
+                     'clsvof': clsvof_init_cond()}
+boundaryConditions = {
+    # DIRICHLET BCs #
+    'pressure_DBC': pressure_DBC,
+    'pressure_increment_DBC': pressure_increment_DBC,
+    'vel_u_DBC': vel_u_DBC,
+    'vel_v_DBC': vel_v_DBC,
+    'vel_w_DBC': vel_w_DBC,
+    'clsvof_DBC': clsvof_DBC,
+    # ADVECTIVE FLUX BCs # 
+    'pressure_AFBC': pressure_AFBC,
+    'pressure_increment_AFBC': pressure_increment_AFBC,
+    'vel_u_AFBC': vel_u_AFBC,
+    'vel_v_AFBC': vel_v_AFBC,
+    'vel_w_AFBC': vel_w_AFBC,
+    'clsvof_AFBC': clsvof_AFBC,
+    # DIFFUSIVE FLUX BCs #
+    'pressure_increment_DFBC': pressure_increment_DFBC,
+    'vel_u_DFBC': vel_u_DFBC,
+    'vel_v_DFBC': vel_v_DFBC,
+    'vel_w_DFBC': vel_w_DFBC,
+    'clsvof_DFBC': clsvof_DFBC}
+myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+                                             nd=opts.nd,
+                                             cfl=opts.cfl,
+                                             outputStepping=outputStepping,
+                                             structured=structured,
+                                             he=he,
+                                             nnx=nnx,
+                                             nny=nny,
+                                             nnz=None,
+                                             domain=domain,
+                                             initialConditions=initialConditions,
+                                             boundaryConditions=boundaryConditions)

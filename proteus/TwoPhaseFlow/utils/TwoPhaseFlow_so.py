@@ -15,11 +15,16 @@ case = __import__(name)
 Context.setFromModule(case)
 ct = Context.get()
 
+# READ FROM myTpFlowProblem #
+assert hasattr(ct,'myTpFlowProblem'), "Create myTpFlowProblem from TwoPhaseFlowProblem"
+ns_model = ct.myTpFlowProblem.ns_model
+outputStepping = ct.myTpFlowProblem.outputStepping
+
 # **************************** #
 # ********** pnList ********** #
 # **************************** #
 # ASSUME CLSVOF #
-if ct.opts.ns_model==0: #rans2p
+if ns_model==0: #rans2p
     pnList = [("rans2p_p", "rans2p_n"),
               ("clsvof_p", "clsvof_n")]
 else: #rans3p
@@ -33,7 +38,7 @@ else: #rans3p
 # ********** TIME STEP CONTROLLER ********** #
 # ****************************************** #
 systemStepControllerType = Sequential_MinAdaptiveModelStep
-if ct.opts.ns_model==1: #rans3p
+if ns_model==1: #rans3p
     PINIT_model=4
     modelSpinUpList = [PINIT_model]
     class Sequential_MinAdaptiveModelStepPS(Sequential_MinAdaptiveModelStep):
@@ -49,4 +54,4 @@ needEBQ = False
 # **************************** #
 # ********** tnList ********** #
 # **************************** #
-tnList=[0.,ct.outputStepping['dt_init']]+[float(k)*ct.outputStepping['final_time']/float(ct.outputStepping['nDTout']) for k in range(1,ct.outputStepping['nDTout']+1)]
+tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]

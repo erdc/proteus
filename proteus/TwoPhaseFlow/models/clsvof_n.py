@@ -3,28 +3,37 @@ from proteus import *
 from proteus.default_n import *
 from clsvof_p import *
 
+# *********************************************** #
+# ********** Read from myTpFlowProblem ********** #
+# *********************************************** #
+cfl = myTpFlowProblem.cfl
+FESpace = myTpFlowProblem.FESpace
+he = myTpFlowProblem.he
+useSuperlu = myTpFlowProblem.useSuperlu
+domain = myTpFlowProblem.domain
+
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-triangleFlag = ct.triangleFlag if hasattr(ct,'triangleFlag') else None
-nnx = ct.nnx if hasattr(ct,'nnx') else None
-nny = ct.nny if hasattr(ct,'nny') else None
-nnz = ct.nnz if hasattr(ct,'nnz') else None
-triangleOptions = ct.triangleOptions if hasattr(ct,'triangleOptions') and ct.triangleOptions != 'q30DenA' else mesh.triangleOptions
+triangleFlag = myTpFlowProblem.triangleFlag
+nnx = myTpFlowProblem.nnx
+nny = myTpFlowProblem.nny
+nnz = myTpFlowProblem.nnz
+triangleOptions = domain.MeshOptions.triangleOptions
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
 timeIntegration = BackwardEuler_cfl
 stepController = Min_dt_controller
-runCFL=ct.opts.cfl
+runCFL=cfl
 
 # ******************************************* #
 # ********** FINITE ELEMENT SAPCES ********** #
 # ******************************************* #
-elementQuadrature = ct.FESpace['elementQuadrature']
-elementBoundaryQuadrature = ct.FESpace['elementBoundaryQuadrature']
-femSpaces = {0:ct.FESpace['lsBasis']}
+elementQuadrature = FESpace['elementQuadrature']
+elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
+femSpaces = {0: FESpace['lsBasis']}
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
@@ -47,7 +56,7 @@ matrix = SparseMatrix
 linearSmoother = None
 multilevelLinearSolver = KSP_petsc4py
 levelLinearSolver      = KSP_petsc4py
-if ct.opts.useSuperlu:
+if useSuperlu:
     multilevelLinearSolver = LU
     levelLinearSolver      = LU
 #
@@ -57,8 +66,8 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-clsvof_nl_atol_res = max(1.0e-8, 0.001 * ct.he ** 2)
-eps_tolerance_clsvof = ct.clsvof_parameters['eps_tolerance_clsvof']
+clsvof_nl_atol_res = max(1.0e-8, 0.001 * he ** 2)
+eps_tolerance_clsvof = clsvof_parameters['eps_tolerance_clsvof']
 if eps_tolerance_clsvof:
     nl_atol_res = 1E-12
 else:

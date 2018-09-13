@@ -4,36 +4,39 @@ from proteus.default_p import *
 from proteus.mprans import RANS2P
 from proteus import Context
 
-# ***************************** #
-# ********** CONTEXT ********** #
-# ***************************** #
+# *********************************************** #
+# ********** READ FROM myTpFlowProblem ********** #
+# *********************************************** #
 ct = Context.get()
-domain = ct.domain
-nd = domain.nd
-mesh = domain.MeshOptions
+myTpFlowProblem = ct.myTpFlowProblem 
+physical_parameters = myTpFlowProblem.physical_parameters
+rans2p_parameters   = myTpFlowProblem.rans2p_parameters
+initialConditions   = myTpFlowProblem.initialConditions
+boundaryConditions  = myTpFlowProblem.boundaryConditions
+nd = myTpFlowProblem.nd
 
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
-rho_0 = ct.physical_parameters['densityA']
-nu_0 = ct.physical_parameters['viscosityA']
-rho_1 = ct.physical_parameters['densityB']
-nu_1 = ct.physical_parameters['viscosityB']
-sigma_01 = ct.physical_parameters['surf_tension_coeff']
-g = ct.physical_parameters['gravity']
+rho_0 = physical_parameters['densityA']
+nu_0 = physical_parameters['viscosityA']
+rho_1 = physical_parameters['densityB']
+nu_1 = physical_parameters['viscosityB']
+sigma_01 = physical_parameters['surf_tension_coeff']
+g = physical_parameters['gravity']
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-useMetrics = ct.rans2p_parameters['useMetrics']
-epsFact_viscosity = ct.rans2p_parameters['epsFact_viscosity']
-epsFact_density = ct.rans2p_parameters['epsFact_density']
-ns_forceStrongDirichlet = ct.rans2p_parameters['ns_forceStrongDirichlet']
-weak_bc_penalty_constant = ct.rans2p_parameters['weak_bc_penalty_constant']
-useRBLES = ct.rans2p_parameters['useRBLES']
-useRANS = ct.rans2p_parameters['useRANS']
-ns_closure = ct.rans2p_parameters['ns_closure']
-useVF = ct.rans2p_parameters['useVF']
+useMetrics = rans2p_parameters['useMetrics']
+epsFact_viscosity = rans2p_parameters['epsFact_viscosity']
+epsFact_density = rans2p_parameters['epsFact_density']
+ns_forceStrongDirichlet = rans2p_parameters['ns_forceStrongDirichlet']
+weak_bc_penalty_constant = rans2p_parameters['weak_bc_penalty_constant']
+useRBLES = rans2p_parameters['useRBLES']
+useRANS = rans2p_parameters['useRANS']
+ns_closure = rans2p_parameters['ns_closure']
+useVF = rans2p_parameters['useVF']
 
 # *************************************** #
 # ********** TURBULENCE MODELS ********** #
@@ -78,39 +81,39 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
 # ********** INITIAL CONDITIONS ********** #
 # **************************************** #
 if nd==2:
-    initialConditions = {0:ct.pressure_init_cond(),
-                         1:ct.vel_u_init_cond(),
-                         2:ct.vel_v_init_cond()}
+    initialConditions = {0: initialConditions['pressure'],
+                         1: initialConditions['vel_u'],
+                         2: initialConditions['vel_v']}
 else:
-    initialConditions = {0:ct.pressure_init_cond(),
-                         1:ct.vel_u_init_cond(),
-                         2:ct.vel_v_init_cond(),
-                         3:ct.vel_w_init_cond()}
+    initialConditions = {0: initialConditions['pressure'],
+                         1: initialConditions['vel_u'],
+                         2: initialConditions['vel_v'],
+                         3: initialConditions['vel_w']}
 
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
 if nd==2:
-    dirichletConditions = {0: ct.pressure_DBC,
-                           1: ct.vel_u_DBC,
-                           2: ct.vel_v_DBC}
-    advectiveFluxBoundaryConditions = {0: ct.pressure_AFBC,
-                                       1: ct.vel_u_AFBC,
-                                       2: ct.vel_v_AFBC}
+    dirichletConditions = {0: boundaryConditions['pressure_DBC'],
+                           1: boundaryConditions['vel_u_DBC'],
+                           2: boundaryConditions['vel_v_DBC']}
+    advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_AFBC'],
+                                       1: boundaryConditions['vel_u_AFBC'],
+                                       2: boundaryConditions['vel_v_AFBC']}
     diffusiveFluxBoundaryConditions = {0: {},
-                                       1: {1:ct.vel_u_DFBC},
-                                       2: {2:ct.vel_v_DFBC}}
+                                       1: {1: boundaryConditions['vel_u_DFBC']},
+                                       2: {2: boundaryConditions['vel_v_DFBC']}}
 else:
-    dirichletConditions = {0: ct.pressure_DBC,
-                           1: ct.vel_u_DBC,
-                           2: ct.vel_v_DBC,
-                           3: ct.vel_w_DBC}
-    advectiveFluxBoundaryConditions = {0: ct.pressure_AFBC,
-                                       1: ct.vel_u_AFBC,
-                                       2: ct.vel_v_AFBC,
-                                       3: ct.vel_w_AFBC}
+    dirichletConditions = {0: boundaryConditions['pressure_DBC'],
+                           1: boundaryConditions['vel_u_DBC'],
+                           2: boundaryConditions['vel_v_DBC'],
+                           3: boundaryConditions['vel_w_DBC']}
+    advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_AFBC'],
+                                       1: boundaryConditions['vel_u_AFBC'],
+                                       2: boundaryConditions['vel_v_AFBC'],
+                                       3: boundaryConditions['vel_w_AFBC']}
     diffusiveFluxBoundaryConditions = {0: {},
-                                       1: {1:ct.vel_u_DFBC},
-                                       2: {2:ct.vel_v_DFBC},
-                                       3: {3:ct.vel_w_DFBC}}    
-
+                                       1: {1: boundaryConditions['vel_u_DFBC']},
+                                       2: {2: boundaryConditions['vel_v_DFBC']},
+                                       3: {3: boundaryConditions['vel_w_DFBC']}}
+    
