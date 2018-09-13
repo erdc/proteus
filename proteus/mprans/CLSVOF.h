@@ -747,7 +747,7 @@ namespace proteus
 			  + ck.Advection_weak(fnp1,&u_grad_test_dV[i_nSpace])
                           // REGULARIZATION TERM. This is IMPLICIT
                           + lambda*ck.NumericalDiffusion(1.0,
-			  				 grad_u,
+							 grad_unHalf,
 			  				 &u_grad_test_dV[i_nSpace])
                           // TARGET for PENALIZATION. This is EXPLICIT
                           - lambda*ck.NumericalDiffusion(1.0,
