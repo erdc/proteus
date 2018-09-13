@@ -3,26 +3,35 @@ from proteus import *
 from proteus.default_n import *
 from rans3p_p import *
 
+# *********************************************** #
+# ********** Read from myTpFlowProblem ********** #
+# *********************************************** #
+cfl = myTpFlowProblem.cfl
+FESpace = myTpFlowProblem.FESpace
+he = myTpFlowProblem.he
+useSuperlu = myTpFlowProblem.useSuperlu
+domain = myTpFlowProblem.domain
+
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-triangleFlag = ct.triangleFlag if hasattr(ct,'triangleFlag') else None
-nnx = ct.nnx if hasattr(ct,'nnx') else None
-nny = ct.nny if hasattr(ct,'nny') else None
-nnz = ct.nnz if hasattr(ct,'nnz') else None
-triangleOptions = ct.triangleOptions if hasattr(ct,'triangleOptions') and ct.triangleOptions != 'q30DenA' else mesh.triangleOptions
+triangleFlag = myTpFlowProblem.triangleFlag
+nnx = myTpFlowProblem.nnx
+nny = myTpFlowProblem.nny
+nnz = myTpFlowProblem.nnz
+triangleOptions = domain.MeshOptions.triangleOptions
 
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-ns_shockCapturingFactor = ct.rans3p_parameters['ns_shockCapturingFactor']
-ns_lag_shockCapturing = ct.rans3p_parameters['ns_lag_shockCapturing']
-ns_lag_subgridError = ct.rans3p_parameters['ns_lag_subgridError']
+ns_shockCapturingFactor = rans3p_parameters['ns_shockCapturingFactor']
+ns_lag_shockCapturing = rans3p_parameters['ns_lag_shockCapturing']
+ns_lag_subgridError = rans3p_parameters['ns_lag_subgridError']
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
-timeDiscretization=ct.rans3p_parameters['timeDiscretization']
+timeDiscretization=rans3p_parameters['timeDiscretization']
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF
     timeOrder=2
@@ -30,20 +39,20 @@ if timeDiscretization=='vbdf':
 else: #backward euler
     timeIntegration = BackwardEuler_cfl
     stepController  = Min_dt_cfl_controller
-runCFL=ct.opts.cfl
+runCFL=cfl
 
 # ******************************************* #
 # ********** FINITE ELEMENT SAPCES ********** #
 # ******************************************* #
-elementQuadrature = ct.FESpace['elementQuadrature']
-elementBoundaryQuadrature = ct.FESpace['elementBoundaryQuadrature']
+elementQuadrature = FESpace['elementQuadrature']
+elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
 if nd==2:
-    femSpaces = {0:ct.FESpace['velBasis'],
-	         1:ct.FESpace['velBasis']}
+    femSpaces = {0:FESpace['velBasis'],
+	         1:FESpace['velBasis']}
 else:
-    femSpaces = {0:ct.FESpace['velBasis'],
-	         1:ct.FESpace['velBasis'],
-                 2:ct.FESpace['velBasis']}
+    femSpaces = {0:FESpace['velBasis'],
+	         1:FESpace['velBasis'],
+                 2:FESpace['velBasis']}
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
@@ -63,7 +72,7 @@ conservativeFlux  = None
 subgridError = RANS3PF.SubgridError(coefficients=coefficients,
                                     nd=nd,
                                     lag=ns_lag_subgridError,
-                                    hFactor=ct.FESpace['hFactor'])
+                                    hFactor=FESpace['hFactor'])
 shockCapturing = RANS3PF.ShockCapturing(coefficients=coefficients,
                                         nd=nd,
                                         shockCapturingFactor=ns_shockCapturingFactor,
@@ -78,7 +87,7 @@ linearSmoother = None
 # Linear solver 
 multilevelLinearSolver = KSP_petsc4py
 levelLinearSolver      = KSP_petsc4py
-if ct.opts.useSuperlu:
+if useSuperlu:
     multilevelLinearSolver = LU
     levelLinearSolver      = LU
 #
@@ -88,7 +97,7 @@ linearSolverConvergenceTest             = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-ns_nl_atol_res = max(1.0e-10, 0.01 * ct.he ** 2)
+ns_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
 nl_atol_res = ns_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.01

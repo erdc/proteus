@@ -4,13 +4,14 @@ from proteus.default_p import *
 from proteus import Context
 from proteus.mprans import PresInit
 
-# ***************************** #
-# ********** CONTEXT ********** #
-# ***************************** #
+# *********************************************** #
+# ********** READ FROM myTpFlowProblem ********** #
+# *********************************************** #
 ct = Context.get()
-domain = ct.domain
-nd = domain.nd
-mesh = domain.MeshOptions
+myTpFlowProblem = ct.myTpFlowProblem 
+initialConditions   = myTpFlowProblem.initialConditions
+boundaryConditions  = myTpFlowProblem.boundaryConditions
+nd = myTpFlowProblem.nd
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
@@ -32,11 +33,11 @@ name = "pressureInitial"
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #
 # **************************************** #
-initialConditions = {0: ct.pressure_init_cond()}
+initialConditions = {0: initialConditions['pressure']}
 
 # ***************************************** #    
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-dirichletConditions = {0: ct.pressure_DBC}
-advectiveFluxBoundaryConditions = {0: ct.pressure_AFBC}
-diffusiveFluxBoundaryConditions = {0:{0: ct.pressure_increment_DFBC}}
+dirichletConditions = {0: boundaryConditions['pressure_DBC']}
+advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_AFBC']}
+diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['pressure_increment_DFBC']}}

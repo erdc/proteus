@@ -4,19 +4,21 @@ from proteus.default_p import *
 from proteus import Context
 from proteus.mprans import PresInc
 
-# ***************************** #
-# ********** CONTEXT ********** #
-# ***************************** #
+# *********************************************** #
+# ********** READ FROM myTpFlowProblem ********** #
+# *********************************************** #
 ct = Context.get()
-domain = ct.domain
-nd = domain.nd
-mesh = domain.MeshOptions
+myTpFlowProblem = ct.myTpFlowProblem 
+physical_parameters   = myTpFlowProblem.physical_parameters
+initialConditions   = myTpFlowProblem.initialConditions
+boundaryConditions  = myTpFlowProblem.boundaryConditions
+nd = myTpFlowProblem.nd
 
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-rho_0 = ct.physical_parameters['densityA']
-rho_1 = ct.physical_parameters['densityB']
+rho_0 = physical_parameters['densityA']
+rho_1 = physical_parameters['densityB']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
@@ -39,11 +41,11 @@ name = "pressureincrement"
 # ****************************** #
 # ***** INITIAL CONDITIONS ***** #
 # ****************************** #
-initialConditions = {0: ct.pressure_increment_init_cond()}
+initialConditions = {0: initialConditions['pressure_increment']}
 
 # ******************************* #
 # ***** BOUNDARY CONDITIONS ***** #
 # ******************************* #
-dirichletConditions = {0: ct.pressure_increment_DBC}
-advectiveFluxBoundaryConditions = {0: ct.pressure_increment_AFBC}
-diffusiveFluxBoundaryConditions = {0:{0: ct.pressure_increment_DFBC}}
+dirichletConditions = {0: boundaryConditions['pressure_increment_DBC']}
+advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_increment_AFBC']}
+diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['pressure_increment_DFBC']}}
