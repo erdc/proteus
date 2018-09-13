@@ -18,6 +18,7 @@ Copyright 2017 Spencer Patty srobertp@gmail.com
 Copyright 2017 Nathan Neri saav.Turgon.NA@gmail.com
 Copyright 2017 Ido Akkermain I.Akkerman@tudelft.nl
 Copyright 2018 John Fenton johndfenton@gmail.com
+Copyright 2018 Manuel Quezada de Luna manuel.quezada.dl@gmail.com
 
 **Note for U.S. Federal Employees**
 
