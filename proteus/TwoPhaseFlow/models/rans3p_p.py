@@ -125,6 +125,5 @@ else:
                                         1: ct.vel_v_AFBC,
                                         2: ct.vel_w_AFBC}
     diffusiveFluxBoundaryConditions = {0:{0: ct.vel_u_DFBC},
-                                       2:{2: ct.vel_v_DFBC},
-                                       3:{3: ct.vel_w_DFBC}}
-
+                                       1:{1: ct.vel_v_DFBC},
+                                       2:{2: ct.vel_w_DFBC}}

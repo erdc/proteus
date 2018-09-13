@@ -103,8 +103,8 @@ if nd==2:
 else:
     dirichletConditions = {0: ct.pressure_DBC,
                            1: ct.vel_u_DBC,
-                           1: ct.vel_v_DBC,
-                           2: ct.vel_w_DBC}
+                           2: ct.vel_v_DBC,
+                           3: ct.vel_w_DBC}
     advectiveFluxBoundaryConditions = {0: ct.pressure_AFBC,
                                        1: ct.vel_u_AFBC,
                                        2: ct.vel_v_AFBC,
