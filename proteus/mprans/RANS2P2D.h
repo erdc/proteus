@@ -533,7 +533,13 @@ namespace proteus
         else if (phi==0.0)
           H=0.5;
         else
+        {
           H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
+          //phi /= eps;
+          //H = 0.5 + (9.0*phi-5.0*phi*phi*phi)/8.0;
+          //H = 0.5 + (45*phi-50*phi*phi*phi+21*phi*phi*phi*phi*phi)/32.0;
+          //H = 0.5 + (105*phi-175*phi*phi*phi+147*phi*phi*phi*phi*phi-45*phi*phi*phi*phi*phi*phi*phi)/64.0;
+        }
         return H;
       }
 
@@ -566,8 +572,15 @@ namespace proteus
         else if (phi < -eps)
           d=0.0;
         else
+        {
           d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
+          //phi /= eps;
+          //d = 3.0/4.0*(1.0-phi*phi);
+          //d = 15.0/32.0*(3.0-10.0*phi*phi+7.0*phi*phi*phi*phi);
+          //d = 315.0/512.0*(3.0-20.0*phi*phi+42.0*phi*phi*phi*phi-36.0*phi*phi*phi*phi*phi*phi+11.0*phi*phi*phi*phi*phi*phi*phi*phi);
+        }
         return d;
+
       }
 
       inline
