@@ -199,6 +199,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             self.model_ls = modelList[self.LS_MODEL]
             self.u_phi = self.model_ls.u[0].dof
             self.q_phi = self.model_ls.q[('u', 0)]
+        else:
+            self.u_phi = np.zeros(self.model.u[0].dof.shape)+1e12
         self.cCoefficients = cmm.cCoefficients()
         self.cCoefficients.attachPyCoefficients(self)
 

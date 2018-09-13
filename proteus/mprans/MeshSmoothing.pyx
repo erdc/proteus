@@ -6,6 +6,7 @@ cimport numpy as np
 from libcpp cimport bool
 from libc.math cimport sin, cos, acos, exp, sqrt, fabs, M_PI, abs
 from mpi4py import MPI
+from proteus.Profiling import logEvent
 
 def smoothNodesLaplace(double[:,:] nodeArray_,
                        int[:] nodeStarOffsets,
@@ -563,20 +564,28 @@ def getNonOwnedNodeValues(args_,
         nodeNumbering_subdomain2global = np.array(nodeNumbering_subdomain2global, dtype=np.int32)
         nodeOffsets_subdomain_owned = np.array(nodeOffsets_subdomain_owned, dtype=np.int32)
         from proteus import Comm
-        comm = Comm.get().comm.tompi4py()
+        cdef object comm = Comm.get().comm.tompi4py()
         cdef int comm_size = comm.size
         cdef int my_rank = comm.rank
-        arg_2rank = {}
-        nodes_2rank = {}
+        cdef dict arg_2rank = {}
+        cdef dict nodes_2rank = {}
         cdef int[:] result
-        counts_send = np.zeros(comm_size, dtype=np.int32)
-        displacements_send = np.zeros(comm_size, dtype=np.int32)
-        counts_recv = np.zeros(comm_size, dtype=np.int32)
-        displacements_recv = np.zeros(comm_size, dtype=np.int32)
-        arg_shape = args_.shape
-        arg_shape_len = len(arg_shape)
-        shape_factor = 1
+        # the counts and displacements for nodes coming in from other processors
+        cdef int[:] counts_in = np.zeros(comm_size, dtype=np.int32)
+        cdef int[:] displacements_in = np.zeros(comm_size, dtype=np.int32)
+        # the counts and displacements args_ coming back from other processors
+        cdef int[:] counts_out = np.zeros(comm_size, dtype=np.int32)
+        cdef int[:] displacements_out = np.zeros(comm_size, dtype=np.int32)
+        # shape of the argument
+        cdef int[:] arg_shape = np.array(args_.shape, dtype=np.int32)
+        cdef int[:] arg_shape_copy = np.array(args_.shape, dtype=np.int32)
+        cdef int arg_shape_len = len(arg_shape)
+        cdef int shape_factor = 1
         cdef int disp = 0
+        cdef int rank, rank_recv, ii, ir, iN, node_new_rank, new_rank
+        cdef int sumtot
+        cdef int[:] nodes_2rank_values
+        cdef int[:] nodes_2doArray = np.zeros(0, dtype=np.int32)
         if arg_shape_len > 1:
             for i in range(1, arg_shape_len):
                 shape_factor = shape_factor*arg_shape[i]
@@ -593,77 +602,68 @@ def getNonOwnedNodeValues(args_,
                 new_rank = result[1]
                 nodes_2rank[new_rank] = np.append(nodes_2rank[new_rank], node_new_rank)
             # SEND THOSE NODES TO RELEVANT PROCESSORS
-            nodes_2doArray = np.zeros(0, dtype=np.int32)
-            counts = np.zeros(comm_size, dtype=np.int32)
-            displacements = np.zeros(comm_size, dtype=np.int32)
             for rank_recv in range(comm_size):
                 # -----
                 # find length of array to do on processor rank_recv
                 nodes_2rank_values = (nodes_2rank[rank_recv][:]).astype(np.int32)
                 nodes_2rank_len = len(nodes_2rank_values)
                 array_size = comm.allreduce(nodes_2rank_len, op=MPI.SUM)
+                # initialise node_2doArray on receiving processor
                 if rank_recv == my_rank:
                     nodes_2doArray = np.zeros(array_size, dtype=np.int32)
                 # -----
                 # get count and disp info for retrieving info from rank_recv later
-                # counts_recv[rank_recv] = nodes_2rank_len
-                counts_recv[rank_recv] = nodes_2rank_len
+                # counts_out[rank_recv] = nodes_2rank_len
+                counts_out[rank_recv] = nodes_2rank_len
                 if rank_recv > 0:
-                    displacements_recv[rank_recv] = (displacements_recv[rank_recv-1]+counts_recv[rank_recv-1])
+                    displacements_out[rank_recv] = (displacements_out[rank_recv-1]+counts_out[rank_recv-1])
                 # -----
                 # get count and disp info for receiving array on rank_recv
                 my_size = np.array([nodes_2rank_len], dtype=np.int32)
                 comm.Gatherv(my_size,
-                             [counts,
+                             [counts_in,
                              tuple(1 for i in range(comm_size)),
                              tuple(i for i in range(comm_size)),
                              MPI.INT],
                              root=rank_recv
                                )
                 if rank_recv == my_rank:
-                    displacements = np.zeros(comm_size, dtype=np.int32)
                     sumtot = 0
                     for ir in range(comm_size):
                         if ir > 0:
-                            sumtot += counts[ir-1]
-                            if counts[ir] == 0:
-                                displacements[ir] = 0
+                            sumtot += counts_in[ir-1]
+                            if counts_in[ir] == 0:
+                                displacements_in[ir] = 0
                             else:
-                                displacements[ir] = sumtot
+                                displacements_in[ir] = sumtot
                 # -----
                 # get the nodes_2doArray (nodes where to retrieve values for arg)
                 # datatype = MPI.INT.Create_contiguous(2).Commit() 
                 comm.Gatherv(nodes_2rank_values,
                              [nodes_2doArray,
-                              counts,
-                              displacements,
+                              counts_in,
+                              displacements_in,
                               MPI.INT],
                               root=rank_recv)
             # SEND VALUE BACK TO ORIGINAL PROCESSORS
-            shape = args_.shape
-            shape = [ii for ii in shape]
-            shape[0] = 0
-            arg_2rank_dict = {}
-            for rank_recv in range(comm_size):
+            arg_shape_copy[0] = 0
+            for rank in range(comm_size):
                 # create empty arrays
-                shape[0] = counts[rank_recv]
-                arg_2rank[rank_recv] = np.zeros(shape)
-                arg_2rank_dict[rank_recv] = (arg_2rank[rank_recv]).shape
+                arg_shape_copy[0] = counts_in[rank]
+                arg_2rank[rank] = np.zeros(arg_shape_copy)
             # build array of arg to send back
             for rank in range(comm_size):
                 arg_2rank_values = arg_2rank[rank]
-                disp = displacements[rank]
-                for iN in range(counts[rank]):
+                disp = displacements_in[rank]
+                for iN in range(counts_in[rank]):
                     if arg_shape_len > 1:
                         for ii in range(arg_shape[1]):
                             arg_2rank_values[iN, ii] = args_[nodes_2doArray[iN+disp], ii]
                     else:
                         arg_2rank_values[iN] = args_[nodes_2doArray[iN+disp]]
             # retrieve solution
-            shape = args_.shape
-            shape = [ii for ii in shape]
-            shape[0] = nNodes_global-nNodes_owned
-            arg_2doArray = np.zeros(shape, dtype=np.double)
+            arg_shape_copy[0] = nNodes_global-nNodes_owned
+            arg_2doArray = np.zeros(arg_shape_copy, dtype=np.double)
             for rank_recv in range(comm_size):
                 arg_2rank_values = arg_2rank[rank_recv].astype(np.double)
                 if arg_shape_len > 1:
@@ -672,17 +672,20 @@ def getNonOwnedNodeValues(args_,
                     datatype = MPI.DOUBLE
                 comm.Gatherv(arg_2rank_values,
                              [arg_2doArray,
-                              counts_recv,
-                              displacements_recv,
+                              counts_out,
+                              displacements_out,
                               datatype],
                              root=rank_recv)
             # FINALLY APPLY FINAL POSITION OF NON-OWNED NODES
             for iN in range(nNodes_owned, nNodes_global):
                 if arg_shape_len > 1:
-                    for iii in range(arg_shape[1]):
-                        args_[iN, iii] = arg_2doArray[iN-nNodes_owned, iii]
+                    for ii in range(arg_shape[1]):
+                        args_[iN, ii] = arg_2doArray[iN-nNodes_owned, ii]
                 else:
                     args_[iN] = arg_2doArray[iN-nNodes_owned]
+            logEvent('Non-owned values recovered with {comm_total} communication steps ({comm_pp}*{nproc})'.format(comm_total=str(comm_size*4),
+                                                                                                                   comm_pp=str(4),
+                                                                                                                   nproc=str(comm_size)))
 
 def checkOwnedVariable(int variable_nb_local,
                        int rank,
@@ -1299,7 +1302,7 @@ cdef int[:] pyxGetLocalNearestElementIntersection(double[:] coords,
                         # nearest_eN = elementBoundaryElementsArray[nearest_eN0]
                         b_i_last = b_i
         if nearest_eN != nearest_eN0:
-            if min_dist-alpha_min >= 0:
+            if min_dist-alpha_min >=0:
                 eN_coords[0] += alpha_min*direction[0]
                 eN_coords[1] += alpha_min*direction[1]
                 eN_coords[2] += alpha_min*direction[2]
@@ -1311,14 +1314,15 @@ cdef int[:] pyxGetLocalNearestElementIntersection(double[:] coords,
         i += 1
         it += 1
     if it >= maxit:
-        assert 1>2, 'could not find element! (element {eN}: {x}, {y}, {z}), nearest_eN {nearest_eN}: closest coords: {x2}, {y2}, {z2}'.format(eN=eN,
-                                                                                                                                              x=coords[0],
-                                                                                                                                              y=coords[1],
-                                                                                                                                              z=coords[2],
-                                                                                                                                              nearest_eN=nearest_eN,
-                                                                                                                                              x2=eN_coords[0],
-                                                                                                                                              y2=eN_coords[1],
-                                                                                                                                              z2=eN_coords[2])
+        assert 1>2, 'could not find element! (element {eN}: {x}, {y}, {z}), nearest_eN {nearest_eN}: closest coords: {x2}, {y2}, {z2}, after {maxit} iterations'.format(eN=eN,
+                                                                                                                                                                        x=coords[0],
+                                                                                                                                                                        y=coords[1],
+                                                                                                                                                                        z=coords[2],
+                                                                                                                                                                        nearest_eN=nearest_eN,
+                                                                                                                                                                        x2=eN_coords[0],
+                                                                                                                                                                        y2=eN_coords[1],
+                                                                                                                                                                        z2=eN_coords[2],
+                                                                                                                                                                        maxit=maxit)
     result[0] = nearest_eN
     result[1] = b_i_last
     return result
@@ -1679,7 +1683,8 @@ cdef int cyGetLocalVariable(int variable_nb_global,
                             int[:] variableOffsets_subdomain_owned):
     cdef int new_variable_nb_local
     if not variableOffsets_subdomain_owned[rank] <= variable_nb_global < variableOffsets_subdomain_owned[rank+1]:
-        new_variable_nb_local = -1
+        if variable_nb_global < nVariables_owned:
+            new_variable_nb_local = variable_nb_global
     else:
         new_variable_nb_local = variable_nb_global-variableOffsets_subdomain_owned[rank]
     return new_variable_nb_local
