@@ -15,6 +15,9 @@ boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
 ns_model = myTpFlowProblem.ns_model
 
+# DOMAIN #
+domain = myTpFlowProblem.domain
+
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #

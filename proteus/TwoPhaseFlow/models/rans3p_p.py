@@ -15,6 +15,9 @@ initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
 
+# DOMAIN #
+domain = myTpFlowProblem.domain
+
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
