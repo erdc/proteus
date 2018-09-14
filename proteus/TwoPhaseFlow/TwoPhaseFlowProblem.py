@@ -3,12 +3,12 @@ from past.utils import old_div
 from proteus import FemTools as ft
 from proteus import MeshTools as mt
 
-class TwoPhaseFlowProblem:    
+class TwoPhaseFlowProblem:
     """ TwoPhaseFlowProblem """
-    
+
     def __init__(self,
                  ns_model=0, #0: rans2p, 1: rans3p
-                 nd=None,
+                 nd=2,
                  # TIME STEPPING #
                  cfl=0.33,
                  outputStepping=None,
@@ -31,19 +31,19 @@ class TwoPhaseFlowProblem:
         assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
         assert nd in [2,3], "nd={2,3}"
         assert cfl <= 1, "Choose cfl <= 1"
-        assert outputStepping is not None, "Provide an object from the OutputStepping class"
-        assert he is not None, "Provide he (characteristic mesh size)"
+        assert isinstance (outputStepping,OutputStepping), "Provide an object from the OutputStepping class"
+        assert type(he)==float , "Provide (float) he (characteristic mesh size)"
         if structured:
-            assert nnx is not None and nny is not None, "Provide nnx and nny"
+            assert type(nnx)==int and type(nny)==int, "Provide (int) nnx and nny"
             if nd==3:
-                assert nnz is not None, "Provide nnz"
-        assert domain is not None, "Provide an object from the Domain class"
+                assert type(nnz)==int, "Provide (int) nnz"
+        assert domain is not None, "Provide a domain"
         assert triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
-        assert initialConditions is not None, "Provide a set of initial conditions"
-        assert boundaryConditions is not None, "Provide a set of boundary conditions"
+        assert type(initialConditions)==dict, "Provide dict of initial conditions"
+        assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
         self.assert_initialConditions(ns_model,nd,initialConditions)
         self.assert_boundaryConditions(ns_model,nd,boundaryConditions)
-        
+
         # ***** SAVE PARAMETERS ***** #
         self.ns_model=ns_model
         self.nd=nd
@@ -63,7 +63,7 @@ class TwoPhaseFlowProblem:
         self.parallelPartitioningType = mt.MeshParallelPartitioningTypes.node
         #parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
         self.nLayersOfOverlapForParallel = 0
-        
+
         # ***** CREATE FINITE ELEMENT SPACES ***** #
         self.FESpace = FESpace(self.ns_model,self.nd).getFESpace()
 
@@ -111,7 +111,7 @@ class TwoPhaseFlowProblem:
             assert 'pressure_increment_AFBC' in boundaryConditions,"Provide pressure_increment_AFBC"
             # check diffusive flux BCs
             assert 'pressure_increment_DFBC' in boundaryConditions,"Provide pressure_increment_DFBC"
-    
+
 class OutputStepping:
     """
     OutputStepping handles how often the solution is outputted.
@@ -157,7 +157,7 @@ class FESpace:
         else: #rans3p
             self.velSpaceOrder=2
             self.pSpaceOrder=1
-            
+
     def getFESpace(self):
         ##################
         # VELOCITY SPACE #
@@ -194,7 +194,7 @@ class FESpace:
                 'velBasis': velBasis,
                 'pBasis': pBasis,
                 'elementQuadrature': elementQuadrature,
-                'elementBoundaryQuadrature': elementBoundaryQuadrature}    
+                'elementBoundaryQuadrature': elementBoundaryQuadrature}
 
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
