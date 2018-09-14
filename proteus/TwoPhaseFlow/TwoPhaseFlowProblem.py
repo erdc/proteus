@@ -23,7 +23,9 @@ class TwoPhaseFlowProblem:
                  # INITIAL CONDITIONS #
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
-                 boundaryConditions=None):
+                 boundaryConditions=None,
+                 # OTHERS #
+                 useSuperlu=None):
         """ Constructor for structured meshes  """
         # ***** SET OF ASSERTS ***** #
         assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
@@ -55,12 +57,12 @@ class TwoPhaseFlowProblem:
         self.triangleFlag=triangleFlag
         self.initialConditions=initialConditions
         self.boundaryConditions=boundaryConditions
-        
+        self.useSuperlu = useSuperlu
+
         # ***** CHOOSE SOME DEFAULT OPTIONS FOR PARALLEL RUNS ***** #
         self.parallelPartitioningType = mt.MeshParallelPartitioningTypes.node
         #parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
         self.nLayersOfOverlapForParallel = 0
-        self.useSuperlu = True
         
         # ***** CREATE FINITE ELEMENT SPACES ***** #
         self.FESpace = FESpace(self.ns_model,self.nd).getFESpace()
