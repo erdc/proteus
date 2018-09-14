@@ -72,10 +72,13 @@ if opts.num_proc==1:
               dataDir +
               " -C '" + opts.context + "'") 
 else:
+    path_utils = proteus.__path__[0]+"/TwoPhaseFlow/utils/"
+    petsc_options = path_utils + "petsc.options.asm"
     os.system("mpirun -np " + str(opts.num_proc) +
               " parun --TwoPhaseFlow --TpFlowParallel -l" + str(opts.logLevel) +
               " -v TwoPhaseFlow_so.py " +
               dataDir +
+              " -O " + petsc_options +
               " -C '" + opts.context + "'")
 
 
