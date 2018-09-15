@@ -8,9 +8,7 @@ import math
 import numpy as np
 from proteus.ctransportCoefficients import smoothedHeaviside_integral
 # For TwoPhaseFlow #
-from proteus.TwoPhaseFlow.utils import parameters
-from proteus.TwoPhaseFlow.utils.OutputStepping import *
-from proteus.TwoPhaseFlow.utils.FESpace import *
+import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 
 opts=Context.Options([
     # PARAMETERS FOR TwoPhaseFlow #
@@ -176,20 +174,14 @@ if domain.use_gmsh is True:
 #################### 
 # FOR TwoPhaseFlow # #Added by mql
 ####################
-physical_parameters = parameters.physical
-physical_parameters['gravity'] = opts.g
-rans2p_parameters = parameters.rans2p
-clsvof_parameters = parameters.clsvof
-outputStepping=OutputStepping(opts.final_time,opts.cfl,dt_output=opts.dt_output).getOutputStepping()
-FESpace = FESpace(opts.ns_model,nd).getFESpace()
-he=opts.he
-
 # INITIAL CONDITIONS #
 class pressure_init_cond:
     def uOfXT(self, x, t):
         p_L = 0.0
         phi_L = tank_dim[nd-1] - waterLevel
         phi = x[nd-1] - waterLevel
+        physical_parameters = TpFlow.default_physical_parameters
+        clsvof_parameters = TpFlow.default_clsvof_parameters
         g = physical_parameters['gravity']
         rho_0 = physical_parameters['densityA']
         rho_1 = physical_parameters['densityB']
@@ -197,25 +189,49 @@ class pressure_init_cond:
         return p_L -g[nd-1]*(rho_0*(phi_L - phi)+
                              (rho_1 -rho_0)*(smoothedHeaviside_integral(eps,phi_L)
                                              -smoothedHeaviside_integral(eps,phi)))
-class vel_u_init_cond:
-    def uOfXT(self, x, t):
-        return 0.0
-class vel_v_init_cond:
+class zero:
     def uOfXT(self, x, t):
         return 0.0
 class clsvof_init_cond:
     def uOfXT(self, x, t):
         return x[nd-1] - waterLevel
 
-# BOUNDARY CONDITIONS #
-pressure_DBC = lambda x, flag: domain.bc[flag].p_dirichlet.init_cython()
-vel_u_DBC = lambda x, flag: domain.bc[flag].u_dirichlet.init_cython()
-vel_v_DBC = lambda x, flag: domain.bc[flag].v_dirichlet.init_cython()
-pressure_AFBC = lambda x, flag: domain.bc[flag].p_advective.init_cython()
-vel_u_AFBC = lambda x, flag: domain.bc[flag].u_advective.init_cython()
-vel_v_AFBC = lambda x, flag: domain.bc[flag].v_advective.init_cython()
-vel_u_DFBC = lambda x, flag: domain.bc[flag].u_diffusive.init_cython()
-vel_v_DFBC = lambda x, flag: domain.bc[flag].v_diffusive.init_cython()
-clsvof_DBC = lambda x, flag: domain.bc[flag].vof_dirichlet.init_cython()
-clsvof_AFBC = lambda x, flag: domain.bc[flag].vof_advective.init_cython()
-clsvof_DFBC = lambda x, flag: None
+############################################
+# ***** Create myTwoPhaseFlowProblem ***** #
+############################################
+outputStepping = TpFlow.OutputStepping(opts.final_time,dt_output=opts.dt_output)
+initialConditions = {'pressure': pressure_init_cond(),
+                     'pressure_increment': zero(),
+                     'vel_u': zero(),
+                     'vel_v': zero(),
+                     'clsvof': clsvof_init_cond()}
+boundaryConditions = {
+    # DIRICHLET BCs #
+    'pressure_DBC': lambda x, flag: domain.bc[flag].p_dirichlet.init_cython(),
+    'pressure_increment_DBC': lambda x, flag: domain.bc[flag].pInc_dirichlet.init_cython(),
+    'vel_u_DBC': lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),
+    'vel_v_DBC': lambda x, flag: domain.bc[flag].v_dirichlet.init_cython(),
+    'clsvof_DBC': lambda x, flag: domain.bc[flag].vof_dirichlet.init_cython(),
+    # ADVECTIVE FLUX BCs #
+    'pressure_AFBC': lambda x, flag: domain.bc[flag].p_advective.init_cython(),
+    'pressure_increment_AFBC': lambda x, flag: domain.bc[flag].pInc_advective.init_cython(),
+    'vel_u_AFBC': lambda x, flag: domain.bc[flag].u_advective.init_cython(),
+    'vel_v_AFBC': lambda x, flag: domain.bc[flag].v_advective.init_cython(),
+    'clsvof_AFBC': lambda x, flag: domain.bc[flag].vof_advective.init_cython(),
+    # DIFFUSIVE FLUX BCs #
+    'pressure_increment_DFBC': lambda x, flag: domain.bc[flag].pInc_diffusive.init_cython(),
+    'vel_u_DFBC': lambda x, flag: domain.bc[flag].u_diffusive.init_cython(),
+    'vel_v_DFBC': lambda x, flag: domain.bc[flag].v_diffusive.init_cython(),
+    'clsvof_DFBC': lambda x, flag: None}
+myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+                                             nd=2,
+                                             cfl=opts.cfl,
+                                             outputStepping=outputStepping,
+                                             structured=False,
+                                             he=opts.he,
+                                             nnx=None,
+                                             nny=None,
+                                             nnz=None,
+                                             domain=domain,
+                                             initialConditions=initialConditions,
+                                             boundaryConditions=boundaryConditions)
