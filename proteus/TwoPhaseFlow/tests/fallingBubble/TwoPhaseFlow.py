@@ -18,7 +18,6 @@ opts= Context.Options([
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
-    ("useSuperlu",True,"Use super LU: run in serial"),
     ("genMesh",True,"Generate a new mesh"),
     ("usePUMI",False,"usePUMI workflow")
     ])
