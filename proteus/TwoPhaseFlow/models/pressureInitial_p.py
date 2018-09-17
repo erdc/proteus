@@ -10,7 +10,6 @@ from proteus.mprans import PresInit
 ct = Context.get()
 
 myTpFlowProblem = ct.myTpFlowProblem 
-params = myTpFlowProblem.Parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -18,12 +17,16 @@ nd = myTpFlowProblem.nd
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
+
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-PINIT_model = params.pressureInitial['index']
-V_model = params.rans3p['index']
-PRESSURE_model = params.pressure['index']
+PINIT_model = mparams.pressureInitial['index']
+V_model = mparams.rans3p['index']
+PRESSURE_model = mparams.pressure['index']
 
 # ********************************** #
 # ********** COEFFICIENTS ********** #

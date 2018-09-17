@@ -78,7 +78,7 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = max(params.minTol, params.addedmass['tolFac']*he**2)
+nl_atol_res = max(params.addedmass.minTol, params.addedmass['tolFac']*he**2)
 linTolFac = 0.
 l_atol_res = nl_atol_res
 #

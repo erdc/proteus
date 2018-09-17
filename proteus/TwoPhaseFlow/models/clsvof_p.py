@@ -10,7 +10,6 @@ from proteus.mprans import CLSVOF
 ct = Context.get()
 
 myTpFlowProblem = ct.myTpFlowProblem 
-params = myTpFlowProblem.Parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -20,25 +19,29 @@ domain = myTpFlowProblem.domain
 
 ns_model = myTpFlowProblem.ns_model
 
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
+
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-useMetrics = params.clsvof['useMetrics']
-epsFactHeaviside = params.clsvof['epsFactHeaviside']
-epsFactDiract = params.clsvof['epsFactDirac']
-epsFactRedist = params.clsvof['epsFactRedist']
-lambdaFact = params.clsvof['lambdaFact']
-outputQuantDOFs = params.clsvof['outputQuantDOFs']
-computeMetrics = params.clsvof['computeMetrics']
+useMetrics = mparams.clsvof['useMetrics']
+epsFactHeaviside = mparams.clsvof['epsFactHeaviside']
+epsFactDiract = mparams.clsvof['epsFactDirac']
+epsFactRedist = mparams.clsvof['epsFactRedist']
+lambdaFact = mparams.clsvof['lambdaFact']
+outputQuantDOFs = mparams.clsvof['outputQuantDOFs']
+computeMetrics = mparams.clsvof['computeMetrics']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-CLSVOF_model = params.clsvof['index']
+CLSVOF_model = mparams.clsvof['index']
 if ns_model==0: #rans2p
-    V_model = params.rans2p['index']
+    V_model = mparams.rans2p['index']
 else:
-    V_model = params.rans3p['index']
+    V_model = mparams.rans3p['index']
 
 # ********************************** #
 # ********** COEFFICIENTS ********** #

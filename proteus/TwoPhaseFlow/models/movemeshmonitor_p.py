@@ -11,7 +11,6 @@ from proteus import Context
 ct = Context.get()
 
 myTpFlowProblem = ct.myTpFlowProblem 
-params = myTpFlowProblem.Parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -19,33 +18,37 @@ nd = myTpFlowProblem.nd
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
+params = myTpFlowProblem.Parameters
+mparams = myTpFlowProblem.Models # model parameters
+pparams = myTpFlowProblem.physical # physical parameters
+
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-func = params['func']
-he_max = params['he_max']
-he_max = params['he_min']
-ntimes_solved = params['ntimes_solved']
-fixedNodeMaterialTypes = params['fixedNodeMaterialTypes']
-fixedElementMaterialTypes = params['fixedElementMaterialTypes']
-noNodeVelocityMaterialTypes = params['noNodeVelocityMaterialTypes']
-nSmoothOut = params['nSmoothOut']
-epsFact = params['epsFact']
-epsTimeStep = params['epsTimeStep']
-grading = params['grading']
-grading_type = params['grading_type']
-resetNodeVelocityArray = params['resetNodeVelocityArray']
-useLS = params['useLS']
-do_firstStep = params['do_firstStep']
-func = params['func']
+func = mparams.movemeshmonitor['func']
+he_max = mparams.movemeshmonitor['he_max']
+he_max = mparams.movemeshmonitor['he_min']
+ntimes_solved = mparams.movemeshmonitor['ntimes_solved']
+fixedNodeMaterialTypes = mparams.movemeshmonitor['fixedNodeMaterialTypes']
+fixedElementMaterialTypes = mparams.movemeshmonitor['fixedElementMaterialTypes']
+noNodeVelocityMaterialTypes = mparams.movemeshmonitor['noNodeVelocityMaterialTypes']
+nSmoothOut = mparams.movemeshmonitor['nSmoothOut']
+epsFact = mparams.movemeshmonitor['epsFact']
+epsTimeStep = mparams.movemeshmonitor['epsTimeStep']
+grading = mparams.movemeshmonitor['grading']
+grading_type = mparams.movemeshmonitor['grading_type']
+resetNodeVelocityArray = mparams.movemeshmonitor['resetNodeVelocityArray']
+useLS = mparams.movemeshmonitor['useLS']
+do_firstStep = mparams.movemeshmonitor['do_firstStep']
+func = mparams.movemeshmonitor['func']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-ME_model = params['index']
+ME_model = mparams.movemeshmonitor['index']
 assert ME_model != None, 'vof model index was not set!'
-if params['useLS'] is True:
-    LS_MODEL = params.ncls['index']
+if mparams.movemeshmonitor['useLS'] is True:
+    LS_MODEL = mparams.ncls['index']
 else:
     LS_MODEL = False
 initialConditions = None

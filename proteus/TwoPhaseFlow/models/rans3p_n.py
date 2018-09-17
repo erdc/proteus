@@ -14,12 +14,15 @@ import rans3p_p as physics
 ct = physics.ct
 myTpFlowProblem = physics.myTpFlowProblem
 nd = myTpFlowProblem.nd
-params = myTpFlowProblem.Parameters
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
 he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
+
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
@@ -33,14 +36,14 @@ triangleOptions = domain.MeshOptions.triangleOptions
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-ns_shockCapturingFactor = params.rans3p['ns_shockCapturingFactor']
-ns_lag_shockCapturing = params.rans3p['ns_lag_shockCapturing']
-ns_lag_subgridError = params.rans3p['ns_lag_subgridError']
+ns_shockCapturingFactor = mparams.rans3p['ns_shockCapturingFactor']
+ns_lag_shockCapturing = mparams.rans3p['ns_lag_shockCapturing']
+ns_lag_subgridError = mparams.rans3p['ns_lag_subgridError']
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
-timeDiscretization = params.rans3p['timeDiscretization']
+timeDiscretization = mparams.rans3p['timeDiscretization']
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF
     timeOrder=2

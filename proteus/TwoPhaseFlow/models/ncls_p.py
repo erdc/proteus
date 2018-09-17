@@ -10,7 +10,6 @@ from proteus import Context
 ct = Context.get()
 
 myTpFlowProblem = ct.myTpFlowProblem 
-params = myTpFlowProblem.Parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -19,27 +18,31 @@ movingDomain = myTpFlowProblem.movingDomain
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
+
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-useMetrics = params.ncls['useMetrics']
-checkMass = params.ncls['checkMass']
-sc_uref = params.ncls['sc_uref']
-sc_beta = params.ncls['sc_beta']
-epsFact = params.ncls['epsFact']
+useMetrics = mparams.ncls['useMetrics']
+checkMass = mparams.ncls['checkMass']
+sc_uref = mparams.ncls['sc_uref']
+sc_beta = mparams.ncls['sc_beta']
+epsFact = mparams.ncls['epsFact']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-ME_model = params.ncls['index']
+ME_model = mparams.ncls['index']
 assert ME_model != None, 'ls model index was not set!'
-if params.rans2p['index'] is not None:
-    V_model = params.rans2p['index']
-elif params.rans3p['index'] is not None:
-    V_model = params.rans3p['index']
+if mparams.rans2p['index'] is not None:
+    V_model = mparams.rans2p['index']
+elif mparams.rans3p['index'] is not None:
+    V_model = mparams.rans3p['index']
 else:
-    assert params.rans2p['index'] is not None or params.rans3p['index'] is not None, 'RANS2P or RANS3P must be used with VOF'
-RD_model = params.rdls['index']
+    assert mparams.rans2p['index'] is not None or mparams.rans3p['index'] is not None, 'RANS2P or RANS3P must be used with VOF'
+RD_model = mparams.rdls['index']
 
 LevelModelType = NCLS.LevelModel
 coefficients = NCLS.Coefficients(V_model=V_model,

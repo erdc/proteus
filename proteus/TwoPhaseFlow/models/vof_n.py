@@ -14,12 +14,15 @@ import vof_p as physics
 ct = physics.ct
 myTpFlowProblem = physics.myTpFlowProblem
 nd = myTpFlowProblem.nd
-params = myTpFlowProblem.Parameters
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
 he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
+
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
@@ -67,8 +70,8 @@ subgridError = VOF.SubgridError(coefficients=physics.coefficients,
                                 nd=nd)
 shockCapturing = VOF.ShockCapturing(coefficients=physics.coefficients,
                                     nd=nd,
-                                    shockCapturingFactor=params.vof['shockCapturingFactor'],
-                                    lag=params.vof['lag_shockCapturing'])
+                                    shockCapturingFactor=mparams.vof['shockCapturingFactor'],
+                                    lag=mparams.vof['lag_shockCapturing'])
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #
@@ -87,7 +90,7 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = max(params.minTol, params.vof['tolFac']*he**2)
+nl_atol_res = max(mparams.vof.minTol, mparams.vof['tolFac']*he**2)
 linTolFac = 0.001
 l_atol_res = 0.001*nl_atol_res
 #

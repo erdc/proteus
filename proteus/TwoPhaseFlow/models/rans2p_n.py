@@ -14,12 +14,15 @@ import rans2p_p as physics
 ct = physics.ct
 myTpFlowProblem = physics.myTpFlowProblem
 nd = myTpFlowProblem.nd
-params = myTpFlowProblem.Parameters
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
 he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
+
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
@@ -36,17 +39,17 @@ restrictFineSolutionToAllMeshes = myTpFlowProblem.restrictFineSolutionToAllMeshe
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-ns_shockCapturingFactor = params.rans2p['ns_shockCapturingFactor']
-ns_lag_shockCapturing = params.rans2p['ns_lag_shockCapturing']
-ns_lag_subgridError = params.rans2p['ns_lag_subgridError']
+ns_shockCapturingFactor = mparams.rans2p['ns_shockCapturingFactor']
+ns_lag_shockCapturing = mparams.rans2p['ns_lag_shockCapturing']
+ns_lag_subgridError = mparams.rans2p['ns_lag_subgridError']
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
-timeDiscretization=params.rans2p['timeDiscretization']
+timeDiscretization=mparams.rans2p['timeDiscretization']
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF
-    timeOrder = params.rans2p['timeOrder']
+    timeOrder = mparams.rans2p['timeOrder']
     stepController  = Min_dt_cfl_controller
 else: #backward euler
     timeIntegration = BackwardEuler_cfl
@@ -111,7 +114,7 @@ linearSolverConvergenceTest             = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-ns_nl_atol_res = max(params.minTol, params.rans2p['tolFac']*he**2)
+ns_nl_atol_res = max(mparams.rans2p.minTol, mparams.rans2p['tolFac']*he**2)
 nl_atol_res = ns_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.01

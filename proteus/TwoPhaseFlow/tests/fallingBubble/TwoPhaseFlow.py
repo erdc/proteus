@@ -31,7 +31,7 @@ opts= Context.Options([
 # ***** DOMAIN AND MESH ***** #
 # ****************** #******* #
 tank_dim = (1.0,1.0) if opts.nd == 2 else (1.0,1.0,1.0)
-# MESH 
+# MESH
 refinement = 3
 structured=True
 boundaries = ['bottom', 'right', 'top', 'left', 'front', 'back']
@@ -40,7 +40,7 @@ if structured:
     nnx = 4 * refinement**2 + 1
     nny = nnx
     nnz = None if opts.nd == 2 else nnx
-    domain = Domain.RectangularDomain(tank_dim)    
+    domain = Domain.RectangularDomain(tank_dim)
     domain.boundaryTags = boundaryTags
     he = tank_dim[0]/(nnx - 1)
 else:
@@ -171,7 +171,7 @@ def vel_v_AFBC(x,flag):
 def vel_w_AFBC(x,flag):
     if not (flag==boundaryTags['top']):
         return lambda x,t: 0.
-    
+
 # DIFFUSIVE FLUX #
 def pressure_increment_DFBC(x,flag):
     if not (flag == boundaryTags['top']):
@@ -209,7 +209,7 @@ boundaryConditions = {
     'vel_v_DBC': vel_v_DBC,
     'vel_w_DBC': vel_w_DBC,
     'clsvof_DBC': clsvof_DBC,
-    # ADVECTIVE FLUX BCs # 
+    # ADVECTIVE FLUX BCs #
     'pressure_AFBC': pressure_AFBC,
     'pressure_increment_AFBC': pressure_increment_AFBC,
     'vel_u_AFBC': vel_u_AFBC,
@@ -235,11 +235,11 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions)
 if opts.ns_model == 0:
-    myTpFlowProblem.Parameters.rans2p['index'] = 0
-    myTpFlowProblem.Parameters.clsvof['index'] = 1
+    myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
+    myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
 elif opts.ns_model == 1:
-    myTpFlowProblem.Parameters.clsvof['index'] = 0
-    myTpFlowProblem.Parameters.rans3p['index'] = 1
-    myTpFlowProblem.Parameters.pressureIncrement['index'] = 2
-    myTpFlowProblem.Parameters.pressure['index'] = 3
-    myTpFlowProblem.Parameters.pressureInitial['index'] = 4
+    myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
+    myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
+    myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
+    myTpFlowProblem.Parameters.Models.pressure['index'] = 3
+    myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4

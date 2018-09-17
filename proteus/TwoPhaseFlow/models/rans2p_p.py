@@ -13,7 +13,6 @@ nd = domain.nd
 mesh = domain.MeshOptions
 
 myTpFlowProblem = ct.myTpFlowProblem 
-params = myTpFlowProblem.Parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -22,28 +21,32 @@ movingDomain = myTpFlowProblem.movingDomain
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
+
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
-rho_0 = params.physical['densityA']
-nu_0 = params.physical['viscosityA']
-rho_1 = params.physical['densityB']
-nu_1 = params.physical['viscosityB']
-sigma_01 = params.physical['surf_tension_coeff']
-g = params.physical['gravity']
+rho_0 = pparams['densityA']
+nu_0 = pparams['viscosityA']
+rho_1 = pparams['densityB']
+nu_1 = pparams['viscosityB']
+sigma_01 = pparams['surf_tension_coeff']
+g = pparams['gravity']
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-useMetrics = params.rans2p['useMetrics']
-epsFact_viscosity = params.rans2p['epsFact_viscosity']
-epsFact_density = params.rans2p['epsFact_density']
-ns_forceStrongDirichlet = params.rans2p['ns_forceStrongDirichlet']
-weak_bc_penalty_constant = params.rans2p['weak_bc_penalty_constant']
-useRBLES = params.rans2p['useRBLES']
-useRANS = params.rans2p['useRANS']
-ns_closure = params.rans2p['ns_closure']
-useVF = params.rans2p['useVF']
+useMetrics = mparams.rans2p['useMetrics']
+epsFact_viscosity = mparams.rans2p['epsFact_viscosity']
+epsFact_density = mparams.rans2p['epsFact_density']
+ns_forceStrongDirichlet = mparams.rans2p['ns_forceStrongDirichlet']
+weak_bc_penalty_constant = mparams.rans2p['weak_bc_penalty_constant']
+useRBLES = mparams.rans2p['useRBLES']
+useRANS = mparams.rans2p['useRANS']
+ns_closure = mparams.rans2p['ns_closure']
+useVF = mparams.rans2p['useVF']
 
 # *************************************** #
 # ********** TURBULENCE MODELS ********** #
@@ -54,11 +57,11 @@ Closure_1_model = None
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-ME_model = params.rans2p['index']
+ME_model = mparams.rans2p['index']
 assert ME_model != None, 'rans2p model index was not set!'
-CLSVOF_model = params.clsvof['index']
-VF_model = params.vof['index']
-LS_model = params.ncls['index']
+CLSVOF_model = mparams.clsvof['index']
+VF_model = mparams.vof['index']
+LS_model = mparams.ncls['index']
 
 LevelModelType = RANS2P.LevelModel
 coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,

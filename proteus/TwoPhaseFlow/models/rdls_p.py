@@ -10,7 +10,6 @@ from proteus import Context
 ct = Context.get()
 
 myTpFlowProblem = ct.myTpFlowProblem 
-params = myTpFlowProblem.Parameters
 initialConditions = myTpFlowProblem.initialConditions
 boundaryConditions = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -20,20 +19,24 @@ movingDomain = myTpFlowProblem.movingDomain
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
+
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-useMetrics = params.rdls['useMetrics']
-applyRedistancing = params.rdls['applyRedistancing']
-epsFact = params.rdls['epsFact']
-backgroundDiffusionFactor = params.rdls['backgroundDiffusionFactor']
+useMetrics = mparams.rdls['useMetrics']
+applyRedistancing = mparams.rdls['applyRedistancing']
+epsFact = mparams.rdls['epsFact']
+backgroundDiffusionFactor = mparams.rdls['backgroundDiffusionFactor']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-nModelId = params.ncls['index']
+nModelId = mparams.ncls['index']
 assert nModelId != None, 'redist model index was not set!'
-rdModelId = params.rdls['index']
+rdModelId = mparams.rdls['index']
 
 LevelModelType = RDLS.LevelModel
 coefficients = RDLS.Coefficients(applyRedistancing=applyRedistancing,

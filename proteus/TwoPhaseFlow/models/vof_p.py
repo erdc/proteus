@@ -10,7 +10,6 @@ from proteus import Context
 ct = Context.get()
 
 myTpFlowProblem = ct.myTpFlowProblem 
-params = myTpFlowProblem.Parameters
 initialConditions = myTpFlowProblem.initialConditions
 boundaryConditions = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -19,28 +18,32 @@ movingDomain = myTpFlowProblem.movingDomain
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
+
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-useMetrics = params.vof['useMetrics']
-checkMass = params.vof['checkMass']
-sc_uref = params.vof['sc_uref']
-sc_beta = params.vof['sc_beta']
-epsFact = params.vof['epsFact']
+useMetrics = mparams.vof['useMetrics']
+checkMass = mparams.vof['checkMass']
+sc_uref = mparams.vof['sc_uref']
+sc_beta = mparams.vof['sc_beta']
+epsFact = mparams.vof['epsFact']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-ME_model = params.vof['index']
+ME_model = mparams.vof['index']
 assert ME_model != None, 'vof model index was not set!'
-LS_model = params.ncls['index']
-if params.rans2p['index'] is not None:
-    V_model = params.rans2p['index']
-elif params.rans3p['index'] is not None:
-    V_model = params.rans3p['index']
+LS_model = mparams.ncls['index']
+if mparams.rans2p['index'] is not None:
+    V_model = mparams.rans2p['index']
+elif mparams.rans3p['index'] is not None:
+    V_model = mparams.rans3p['index']
 else:
-    assert params.rans2p['index'] is not None or params.rans3p['index'] is not None, 'RANS2P or RANS3P must be used with VOF'
-RD_model = params.rdls['index']
+    assert mparams.rans2p['index'] is not None or params.rans3p['index'] is not None, 'RANS2P or RANS3P must be used with VOF'
+RD_model = mparams.rdls['index']
 
 LevelModelType = VOF.LevelModel
 coefficients = VOF.Coefficients(LS_model=LS_model,

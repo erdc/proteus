@@ -13,12 +13,14 @@ import movemeshmonitor_p as physics
 ct = physics.ct
 myTpFlowProblem = physics.myTpFlowProblem
 nd = myTpFlowProblem.nd
-params = myTpFlowProblem.Parameters
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
 he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
+
+params = myTpFlowProblem.Parameters
+mparams = params.Models
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
@@ -83,7 +85,7 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = max(params.minTol, mparams['tolFac']*ct.he**2)
+nl_atol_res = max(mparams.movemeshmonitor.minTol, mparams.movemeshmonitor['tolFac']*ct.he**2)
 linTolFac = 0.001
 l_atol_res = 0.001*nl_atol_res
 #

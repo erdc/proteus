@@ -14,12 +14,15 @@ import ncls_p as physics
 ct = physics.ct
 myTpFlowProblem = physics.myTpFlowProblem
 nd = myTpFlowProblem.nd
-params = myTpFlowProblem.Parameters
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
 he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
+
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
@@ -64,8 +67,8 @@ subgridError = NCLS.SubgridError(coefficients=physics.coefficients,
                                 nd=nd)
 shockCapturing = NCLS.ShockCapturing(coefficients=physics.coefficients,
                                      nd=nd,
-                                     shockCapturingFactor=params.ncls['shockCapturingFactor'],
-                                     lag=params.ncls['lag_shockCapturing'])
+                                     shockCapturingFactor=mparams.ncls['shockCapturingFactor'],
+                                     lag=mparams.ncls['lag_shockCapturing'])
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #
@@ -84,7 +87,7 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = max(params.minTol, params.ncls['tolFac']*he**2)
+nl_atol_res = max(mparams.ncls.minTol, mparams.ncls['tolFac']*he**2)
 linTolFac = 0.001
 l_atol_res = 0.001*nl_atol_res
 #
