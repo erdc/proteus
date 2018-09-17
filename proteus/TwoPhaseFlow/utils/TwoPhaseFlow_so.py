@@ -14,7 +14,7 @@ name = "TwoPhaseFlow"
 case = __import__(name)
 Context.setFromModule(case)
 ct = Context.get()
-params = ct.params
+params = ct.myTpFlowProblem.Parameters
 
 
 params.initializeParameters()
@@ -28,17 +28,17 @@ outputStepping = ct.myTpFlowProblem.outputStepping
 # ********** pnList ********** #
 # **************************** #
 # List of p/n files
-pnList = [None for i in range(ct.params.nModels)]
-for i in range(ct.params.nModels):
-    model = ct.params.models[i]
-    print(model['name'], i, ct.params.nModels)
+pnList = [None for i in range(params.nModels)]
+for i in range(params.nModels):
+    model = params.models[i]
+    print(model['name'], i, params.nModels)
     pnList[model['index']] = (model['name']+'_p', model['name']+'_n')
     
 # ****************************************** #
 # ********** TIME STEP CONTROLLER ********** #
 # ****************************************** #
 systemStepControllerType = Sequential_MinAdaptiveModelStep
-if ct.opts.dt_fixed:
+if ct.myTpFlowProblem.outputStepping['dt_fixed']:
     systemStepControllerType = Sequential_FixedStep
     dt_system_fixed = ct.opts.dt_fixed
 if params.rans3p['index'] is not None: #rans3p
@@ -61,7 +61,6 @@ outputStepping = ct.myTpFlowProblem.outputStepping
 tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
 if outputStepping['dt_output'] is None:
     if outputStepping['dt_fixed'] > 0:
-        archiveFlag = ArchiveFlags.EVERY_USER_STEP
         if outputStepping['dt_init'] < outputStepping['dt_fixed']:
             tnList = [0., outputStepping['dt_init'], outputStepping['dt_fixed'], outputStepping['final_time']]
         else:
@@ -70,5 +69,5 @@ if outputStepping['dt_output'] is None:
           tnList = [0., outputStepping['dt_init'], outputStepping['final_time']]
 systemStepExact = False
 archiveFlag = ArchiveFlags.EVERY_USER_STEP
-if ct.opts.archiveAllSteps is True:
-    archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
+# if ct.opts.archiveAllSteps is True:
+#     archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP

@@ -145,7 +145,8 @@ class OutputStepping:
         return {'final_time': self.final_time,
                 'dt_init': dt_init,
                 'dt_output': self.dt_output,
-                'nDTout': self.nDTout}
+                'nDTout': self.nDTout,
+                'dt_fixed': self.dt_fixed}
 #
 
 class FESpace:
