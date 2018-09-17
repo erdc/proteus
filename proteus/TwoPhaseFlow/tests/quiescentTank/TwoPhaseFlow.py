@@ -1,12 +1,14 @@
 """
-Rising bubble test
+Multiphase Flow Test
 """
 from __future__ import division
 from past.utils import old_div
 import numpy as np
-from proteus import (Domain, Context)                     
+from proteus import (Domain, Context,
+                     MeshTools as mt)
 from proteus.Profiling import logEvent
 from proteus.mprans.SpatialTools import Tank2D
+from proteus.mprans.SpatialTools import Tank3D
 from proteus.mprans import SpatialTools as st
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 
@@ -14,19 +16,16 @@ import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
 opts= Context.Options([
-    ("test_case",1,"Rising bubble test cases"),
-    ('ns_model',1,"ns_model = {rans2p,rans3p}"),
+    ('nd',2,"Num of dimensions"),
+    ('ns_model',0,"ns_model = {rans2p,rans3p}"),
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
-    ("refinement",3,"level of refinement"),
+    ("refinement",12,"level of refinement"),
     ("genMesh",True,"Generate a new mesh"),
     ("usePUMI",False,"usePUMI workflow")
     ])
 
-assert opts.ns_model==1, "Surface tension is only implemented with rans3p. use ns_model=1"
-assert opts.test_case == 1 or opts.test_case==2, "test_case must be 1 or 2"
-    
 # ****************** #
 # ***** GAUGES ***** #
 # ****************** #
@@ -35,27 +34,38 @@ assert opts.test_case == 1 or opts.test_case==2, "test_case must be 1 or 2"
 # *************************** #
 # ***** DOMAIN AND MESH ***** #
 # ****************** #******* #
-tank_dim = (1.0,2.0) 
+tank_dim = (1.0,1.0) if opts.nd == 2 else (1.0,1.0,1.0)
 refinement = opts.refinement
-structured=True
+structured=False
 if structured:
     nnx = 4 * refinement**2 +2
-    nny = 2*nnx
+    nny = nnx
+    nnz = nnx if opts.nd==3 else None
     domain = Domain.RectangularDomain(tank_dim)
     boundaryTags = domain.boundaryTags
     triangleFlag=1
 else:
-    nnx = nny = None
-    domain = Domain.PlanarStraightLineGraphDomain()
+    nnx = nny = nnz = None
+    if opts.nd==2:
+        domain = Domain.PlanarStraightLineGraphDomain()
+    else:
+        #domain = Domain.PiecewiseLinearComplexDomain()
+        raise("Not implemented")
 
 # ----- TANK ----- #
-tank = Tank2D(domain, tank_dim) 
+if opts.nd==2:
+    tank = Tank2D(domain, tank_dim) 
+else:
+    tank = Tank3D(domain, tank_dim)
 
 # ----- EXTRA BOUNDARY CONDITIONS ----- #
-tank.BC['y+'].setNoSlip()
-tank.BC['y-'].setNoSlip()
+tank.BC['y+'].setAtmosphere()
+tank.BC['y-'].setFreeSlip()
 tank.BC['x+'].setFreeSlip()
 tank.BC['x-'].setFreeSlip()
+if opts.nd==3:
+    tank.BC['z+'].setFreeSlip()
+    tank.BC['z-'].setFreeSlip()
 
 he = old_div(tank_dim[0], float(4 * refinement - 1))
 domain.MeshOptions.he = he
@@ -68,18 +78,10 @@ domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0
 class zero(object):
     def uOfXT(self,x,t):
         return 0.
-    
 class clsvof_init_cond(object):
     def uOfXT(self,x,t):
-        xB = 0.5
-        yB = 0.5
-        rB = 0.25
-        zB = 0.0
-        # dist to center of bubble
-        r = np.sqrt((x[0]-xB)**2 + (x[1]-yB)**2)
-        # dist to surface of bubble
-        dB = rB - r
-        return dB
+        waterLevel = tank_dim[1]/2.
+        return x[1]-waterLevel
 
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
@@ -113,30 +115,14 @@ boundaryConditions = {
     'vel_w_DFBC': lambda x, flag: domain.bc[flag].w_diffusive.init_cython(),
     'clsvof_DFBC': lambda x, flag: None}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
-                                             nd=2,
+                                             nd=opts.nd,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
                                              structured=structured,
                                              he=he,
                                              nnx=nnx,
                                              nny=nny,
-                                             nnz=None,
+                                             nnz=nnz,
                                              domain=domain,
                                              initialConditions=initialConditions,
-                                             boundaryConditions=boundaryConditions,
-                                             useSuperlu=False)
-physical_parameters = myTpFlowProblem.physical_parameters
-physical_parameters['gravity'] = [0.0, -0.98, 0.0]
-if opts.test_case==1:
-    physical_parameters['densityA'] = 1000.0
-    physical_parameters['viscosityA'] = 10.0/physical_parameters['densityA']
-    physical_parameters['densityB'] = 100.0
-    physical_parameters['viscosityB'] = 1.0/physical_parameters['densityB']
-    physical_parameters['surf_tension_coeff'] = 24.5
-    physical_parameters['gravity'] = [0.0, -0.98, 0.0]
-else: #test_case=2
-    physical_parameters['densityA'] = 1000.0
-    physical_parameters['viscosityA'] = 10.0/physical_parameters['densityA']
-    physical_parameters['densityB'] = 1.0
-    physical_parameters['viscosityB'] = 0.1/physical_parameters['densityB']
-    physical_parameters['surf_tension_coeff'] = 1.96    
+                                             boundaryConditions=boundaryConditions)

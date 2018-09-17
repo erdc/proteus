@@ -3,14 +3,23 @@ from proteus import *
 from proteus.default_n import *
 from pressureInitial_p import *
 
+# *********************************************** #
+# ********** Read from myTpFlowProblem ********** #
+# *********************************************** #
+cfl = myTpFlowProblem.cfl
+FESpace = myTpFlowProblem.FESpace
+he = myTpFlowProblem.he
+useSuperlu = myTpFlowProblem.useSuperlu
+domain = myTpFlowProblem.domain
+
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-triangleFlag = ct.triangleFlag if hasattr(ct,'triangleFlag') else None
-nnx = ct.nnx if hasattr(ct,'nnx') else None
-nny = ct.nny if hasattr(ct,'nny') else None
-nnz = ct.nnz if hasattr(ct,'nnz') else None
-triangleOptions = ct.triangleOptions if hasattr(ct,'triangleOptions') and ct.triangleOptions != 'q30DenA' else mesh.triangleOptions
+triangleFlag = myTpFlowProblem.triangleFlag
+nnx = myTpFlowProblem.nnx
+nny = myTpFlowProblem.nny
+nnz = myTpFlowProblem.nnz
+triangleOptions = domain.MeshOptions.triangleOptions
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
@@ -20,9 +29,9 @@ stepController=FixedStep
 # ******************************************* #
 # ********** FINITE ELEMENT SAPCES ********** #
 # ******************************************* #
-elementQuadrature = ct.FESpace['elementQuadrature']
-elementBoundaryQuadrature = ct.FESpace['elementBoundaryQuadrature']
-femSpaces = {0:ct.FESpace['pBasis']}
+elementQuadrature = FESpace['elementQuadrature']
+elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
+femSpaces = {0:FESpace['pBasis']}
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
@@ -45,7 +54,7 @@ matrix = LinearAlgebraTools.SparseMatrix
 linearSmoother    = LinearSolvers.NavierStokesPressureCorrection # pure neumann laplacian solver
 multilevelLinearSolver = LinearSolvers.KSP_petsc4py
 levelLinearSolver = LinearSolvers.KSP_petsc4py
-if ct.opts.useSuperlu:
+if useSuperlu:
     linearSmoother    = None
     multilevelLinearSolver = LinearSolvers.LU
     levelLinearSolver = LinearSolvers.LU
@@ -57,13 +66,8 @@ maxLineSearches=0
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-pressure_nl_atol_res = max(1.0e-10, 0.01 * ct.he ** 2)
+pressure_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
 nl_atol_res = pressure_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.0
 l_atol_res = 0.01*pressure_nl_atol_res
-
-
-
-
-

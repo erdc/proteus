@@ -19,6 +19,11 @@ params = ct.params
 
 params.initializeParameters()
 
+# READ FROM myTpFlowProblem #
+assert hasattr(ct,'myTpFlowProblem'), "Create myTpFlowProblem from TwoPhaseFlowProblem"
+ns_model = ct.myTpFlowProblem.ns_model
+outputStepping = ct.myTpFlowProblem.outputStepping
+
 # **************************** #
 # ********** pnList ********** #
 # **************************** #

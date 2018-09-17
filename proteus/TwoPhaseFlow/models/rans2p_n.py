@@ -14,14 +14,23 @@ nd = ct.domain.nd
 mesh = domain.MeshOptions
 params = ct.params
 
+# *********************************************** #
+# ********** Read from myTpFlowProblem ********** #
+# *********************************************** #
+cfl = myTpFlowProblem.cfl
+FESpace = myTpFlowProblem.FESpace
+he = myTpFlowProblem.he
+useSuperlu = myTpFlowProblem.useSuperlu
+domain = myTpFlowProblem.domain
+
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-triangleFlag = ct.triangleFlag if hasattr(ct,'triangleFlag') else None
-nnx = ct.nnx if hasattr(ct,'nnx') else None
-nny = ct.nny if hasattr(ct,'nny') else None
-nnz = ct.nnz if hasattr(ct,'nnz') else None
-triangleOptions = ct.triangleOptions if hasattr(ct,'triangleOptions') and ct.triangleOptions != 'q30DenA' else mesh.triangleOptions
+triangleFlag = myTpFlowProblem.triangleFlag
+nnx = myTpFlowProblem.nnx
+nny = myTpFlowProblem.nny
+nnz = myTpFlowProblem.nnz
+triangleOptions = domain.MeshOptions.triangleOptions
 
 # ******************************** #
 # ********** PARAMETERS ********** #
@@ -41,22 +50,22 @@ if timeDiscretization=='vbdf':
 else: #backward euler
     timeIntegration = BackwardEuler_cfl
     stepController  = Min_dt_cfl_controller
-runCFL=ct.opts.cfl
+runCFL=cfl
 
 # ******************************************* #
 # ********** FINITE ELEMENT SAPCES ********** #
 # ******************************************* #
-elementQuadrature = ct.FESpace['elementQuadrature']
-elementBoundaryQuadrature = ct.FESpace['elementBoundaryQuadrature']
+elementQuadrature = FESpace['elementQuadrature']
+elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
 if nd==2:
-    femSpaces = {0:ct.FESpace['pBasis'],
-                 1:ct.FESpace['velBasis'],
-                 2:ct.FESpace['velBasis']}
+    femSpaces = {0: FESpace['pBasis'],
+                 1: FESpace['velBasis'],
+                 2: FESpace['velBasis']}
 else:
-    femSpaces = {0:ct.FESpace['pBasis'],
-                 1:ct.FESpace['velBasis'],
-                 2:ct.FESpace['velBasis'],
-                 3:ct.FESpace['velBasis']}
+    femSpaces = {0: FESpace['pBasis'],
+                 1: FESpace['velBasis'],
+                 2: FESpace['velBasis'],
+                 3: FESpace['velBasis']}
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
@@ -76,8 +85,8 @@ conservativeFlux = {0:'pwl-bdm-opt'}
 subgridError = RANS2P.SubgridError(coefficients=physics.coefficients,
                                    nd=nd,
                                    lag=ns_lag_subgridError,
-                                   hFactor=ct.FESpace['hFactor'])
-shockCapturing = RANS2P.ShockCapturing(coefficients=physics.coefficients,
+                                   hFactor=FESpace['hFactor'])
+shockCapturing = RANS2P.ShockCapturing(coefficients=coefficients,
                                        nd=nd,
                                        shockCapturingFactor=ns_shockCapturingFactor,
                                        lag=ns_lag_shockCapturing)
@@ -91,7 +100,7 @@ linearSmoother = None
 # Linear solver
 multilevelLinearSolver = KSP_petsc4py
 levelLinearSolver      = KSP_petsc4py
-if ct.opts.useSuperlu:
+if useSuperlu:
     multilevelLinearSolver = LU
     levelLinearSolver      = LU
 #
