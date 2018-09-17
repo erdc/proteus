@@ -6,11 +6,22 @@ from builtins import range
 import os
 from proteus.default_so import *
 from proteus import Context
+import sys
+
+# (!) not the greatest for getting the file name but it works
+name = str(sys.argv[0][:-3])
+parun_passed = False
+for i in range(len(sys.argv)):
+    if 'parun' in sys.argv[i]:
+        parun_passed = True
+    if parun_passed is True and sys.argv[i][-3:] == '.py':
+        name = sys.argv[i][:-3]
+        break
 
 # ***************************** #
 # ********** CONTEXT ********** #
 # ***************************** #
-name = "TwoPhaseFlow"
+# name = "TwoPhaseFlow"
 case = __import__(name)
 Context.setFromModule(case)
 ct = Context.get()
@@ -33,7 +44,7 @@ for i in range(params.nModels):
     model = params.models_list[i]
     print(model['name'], i, params.nModels)
     pnList[model['index']] = (model['name']+'_p', model['name']+'_n')
-    
+
 # ****************************************** #
 # ********** TIME STEP CONTROLLER ********** #
 # ****************************************** #
@@ -67,7 +78,7 @@ if outputStepping['dt_output'] is None:
         else:
             tnList = [0., outputStepping['dt_fixed'], outputStepping['final_time']]
     else:
-          tnList = [0., outputStepping['dt_init'], outputStepping['final_time']]
+        tnList = [0., outputStepping['dt_init'], outputStepping['final_time']]
 systemStepExact = False
 archiveFlag = ArchiveFlags.EVERY_USER_STEP
 # if ct.opts.archiveAllSteps is True:
