@@ -1301,6 +1301,7 @@ def _assembleGeometry(domain, BC_class):
         boundary conditions of the shape.
     """
     # reinitialize geometry of domain
+    domain.useSpatialTools = True
     domain.vertices = []
     domain.vertexFlags = []
     domain.segments = []

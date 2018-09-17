@@ -62,6 +62,10 @@ class D_base(object):
         # for PUMI compatibility
         self.faceList=[] #list of the boundary IDs that have corresponding BCs, might be the same as self.facets[]
         self.regList=[] # list of regions in the domain, this might be the same as self.regions[]
+        # to know if domain uses SpatialTools
+        # automatically set to True when proteus.SpatialTools.assembleDomain()
+        # is called
+        self.useSpatialTools = False
 
     #Get the mesh entity to model entity classification for every entity
     def isOnLine(self,pointA,pointB,testPoint):

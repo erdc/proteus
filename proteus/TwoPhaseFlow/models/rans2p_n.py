@@ -1,7 +1,18 @@
 from __future__ import absolute_import
-from proteus import *
 from proteus.default_n import *
-from rans2p_p import *
+from proteus import (StepControl,
+                     TimeIntegration,
+                     NonlinearSolvers,
+                     LinearSolvers,
+                     LinearAlgebraTools)
+from proteus.mprans import RANS2P
+import rans2p_p as physics
+
+ct = physics.ct
+domain = ct.domain
+nd = ct.domain.nd
+mesh = domain.MeshOptions
+params = ct.params
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
@@ -15,17 +26,17 @@ triangleOptions = ct.triangleOptions if hasattr(ct,'triangleOptions') and ct.tri
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-ns_shockCapturingFactor = ct.rans2p_parameters['ns_shockCapturingFactor']
-ns_lag_shockCapturing = ct.rans2p_parameters['ns_lag_shockCapturing']
-ns_lag_subgridError = ct.rans2p_parameters['ns_lag_subgridError']
+ns_shockCapturingFactor = params.rans2p['ns_shockCapturingFactor']
+ns_lag_shockCapturing = params.rans2p['ns_lag_shockCapturing']
+ns_lag_subgridError = params.rans2p['ns_lag_subgridError']
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
-timeDiscretization=ct.rans2p_parameters['timeDiscretization']
+timeDiscretization=params.rans2p['timeDiscretization']
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF
-    timeOrder = ct.rans2p_parameters['timeOrder']
+    timeOrder = params.rans2p['timeOrder']
     stepController  = Min_dt_cfl_controller
 else: #backward euler
     timeIntegration = BackwardEuler_cfl
@@ -37,7 +48,7 @@ runCFL=ct.opts.cfl
 # ******************************************* #
 elementQuadrature = ct.FESpace['elementQuadrature']
 elementBoundaryQuadrature = ct.FESpace['elementBoundaryQuadrature']
-if ct.nd==2:
+if nd==2:
     femSpaces = {0:ct.FESpace['pBasis'],
                  1:ct.FESpace['velBasis'],
                  2:ct.FESpace['velBasis']}
@@ -62,11 +73,11 @@ levelNonlinearSolverConvergenceTest = 'r'
 # ******************************************************** #
 numericalFluxType = RANS2P.NumericalFlux
 conservativeFlux = {0:'pwl-bdm-opt'}
-subgridError = RANS2P.SubgridError(coefficients=coefficients,
+subgridError = RANS2P.SubgridError(coefficients=physics.coefficients,
                                    nd=nd,
                                    lag=ns_lag_subgridError,
                                    hFactor=ct.FESpace['hFactor'])
-shockCapturing = RANS2P.ShockCapturing(coefficients=coefficients,
+shockCapturing = RANS2P.ShockCapturing(coefficients=physics.coefficients,
                                        nd=nd,
                                        shockCapturingFactor=ns_shockCapturingFactor,
                                        lag=ns_lag_shockCapturing)
@@ -90,7 +101,7 @@ linearSolverConvergenceTest             = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-ns_nl_atol_res = max(1.0e-8, 0.001 * ct.he ** 2)
+ns_nl_atol_res = max(params.minTol, params.rans2p['tolFac']*ct.he**2)
 nl_atol_res = ns_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.01

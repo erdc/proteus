@@ -11,29 +11,30 @@ ct = Context.get()
 domain = ct.domain
 nd = domain.nd
 mesh = domain.MeshOptions
+params = ct.params
 
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
-rho_0 = ct.physical_parameters['densityA']
-nu_0 = ct.physical_parameters['viscosityA']
-rho_1 = ct.physical_parameters['densityB']
-nu_1 = ct.physical_parameters['viscosityB']
-sigma_01 = ct.physical_parameters['surf_tension_coeff']
-g = ct.physical_parameters['gravity']
+rho_0 = params.physical['densityA']
+nu_0 = params.physical['viscosityA']
+rho_1 = params.physical['densityB']
+nu_1 = params.physical['viscosityB']
+sigma_01 = params.physical['surf_tension_coeff']
+g = params.physical['gravity']
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-useMetrics = ct.rans2p_parameters['useMetrics']
-epsFact_viscosity = ct.rans2p_parameters['epsFact_viscosity']
-epsFact_density = ct.rans2p_parameters['epsFact_density']
-ns_forceStrongDirichlet = ct.rans2p_parameters['ns_forceStrongDirichlet']
-weak_bc_penalty_constant = ct.rans2p_parameters['weak_bc_penalty_constant']
-useRBLES = ct.rans2p_parameters['useRBLES']
-useRANS = ct.rans2p_parameters['useRANS']
-ns_closure = ct.rans2p_parameters['ns_closure']
-useVF = ct.rans2p_parameters['useVF']
+useMetrics = params.rans2p['useMetrics']
+epsFact_viscosity = params.rans2p['epsFact_viscosity']
+epsFact_density = params.rans2p['epsFact_density']
+ns_forceStrongDirichlet = params.rans2p['ns_forceStrongDirichlet']
+weak_bc_penalty_constant = params.rans2p['weak_bc_penalty_constant']
+useRBLES = params.rans2p['useRBLES']
+useRANS = params.rans2p['useRANS']
+ns_closure = params.rans2p['ns_closure']
+useVF = params.rans2p['useVF']
 
 # *************************************** #
 # ********** TURBULENCE MODELS ********** #
@@ -44,9 +45,11 @@ Closure_1_model = None
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-CLSVOF_model=1
-VF_model=None
-LS_model=None
+ME_model = params.rans2p['index']
+assert ME_model != None, 'rans2p model index was not set!'
+CLSVOF_model = params.clsvof['index']
+VF_model = params.vof['index']
+LS_model = params.ncls['index']
 
 LevelModelType = RANS2P.LevelModel
 coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
@@ -78,39 +81,53 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
 # ********** INITIAL CONDITIONS ********** #
 # **************************************** #
 if nd==2:
-    initialConditions = {0:ct.pressure_init_cond(),
-                         1:ct.vel_u_init_cond(),
-                         2:ct.vel_v_init_cond()}
+    initialConditions = {0:ct.pressure_init_cond,
+                         1:ct.vel_u_init_cond,
+                         2:ct.vel_v_init_cond}
 else:
-    initialConditions = {0:ct.pressure_init_cond(),
-                         1:ct.vel_u_init_cond(),
-                         2:ct.vel_v_init_cond(),
-                         3:ct.vel_w_init_cond()}
+    initialConditions = {0:ct.pressure_init_cond,
+                         1:ct.vel_u_init_cond,
+                         2:ct.vel_v_init_cond,
+                         3:ct.vel_w_init_cond}
 
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-if nd==2:
-    dirichletConditions = {0: ct.pressure_DBC,
-                           1: ct.vel_u_DBC,
-                           2: ct.vel_v_DBC}
-    advectiveFluxBoundaryConditions = {0: ct.pressure_AFBC,
-                                       1: ct.vel_u_AFBC,
-                                       2: ct.vel_v_AFBC}
-    diffusiveFluxBoundaryConditions = {0: {},
-                                       1: {1:ct.vel_u_DFBC},
-                                       2: {2:ct.vel_v_DFBC}}
+if domain.useSpatialTools is False:
+    if nd==2:
+        dirichletConditions = {0: ct.pressure_DBC,
+                               1: ct.vel_u_DBC,
+                               2: ct.vel_v_DBC}
+        advectiveFluxBoundaryConditions = {0: ct.pressure_AFBC,
+                                           1: ct.vel_u_AFBC,
+                                           2: ct.vel_v_AFBC}
+        diffusiveFluxBoundaryConditions = {0: {},
+                                           1: {1:ct.vel_u_DFBC},
+                                           2: {2:ct.vel_v_DFBC}}
+    else:
+        dirichletConditions = {0: ct.pressure_DBC,
+                               1: ct.vel_u_DBC,
+                               2: ct.vel_v_DBC,
+                               3: ct.vel_w_DBC}
+        advectiveFluxBoundaryConditions = {0: ct.pressure_AFBC,
+                                           1: ct.vel_u_AFBC,
+                                           2: ct.vel_v_AFBC,
+                                           3: ct.vel_w_AFBC}
+        diffusiveFluxBoundaryConditions = {0: {},
+                                           1: {1:ct.vel_u_DFBC},
+                                           2: {2:ct.vel_v_DFBC},
+                                           3: {3:ct.vel_w_DFBC}}    
 else:
-    dirichletConditions = {0: ct.pressure_DBC,
-                           1: ct.vel_u_DBC,
-                           2: ct.vel_v_DBC,
-                           3: ct.vel_w_DBC}
-    advectiveFluxBoundaryConditions = {0: ct.pressure_AFBC,
-                                       1: ct.vel_u_AFBC,
-                                       2: ct.vel_v_AFBC,
-                                       3: ct.vel_w_AFBC}
+    dirichletConditions = {0: lambda x, flag: domain.bc[flag].p_dirichlet.init_cython(),
+                           1: lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),
+                           2: lambda x, flag: domain.bc[flag].v_dirichlet.init_cython()}
+    advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].p_advective.init_cython(),
+                                       1: lambda x, flag: domain.bc[flag].u_advective.init_cython(),
+                                       2: lambda x, flag: domain.bc[flag].v_advective.init_cython()}
     diffusiveFluxBoundaryConditions = {0: {},
-                                       1: {1:ct.vel_u_DFBC},
-                                       2: {2:ct.vel_v_DFBC},
-                                       3: {3:ct.vel_w_DFBC}}    
-
+                                       1: {1:lambda x, flag: domain.bc[flag].u_diffusive.init_cython()},
+                                       2: {2:lambda x, flag: domain.bc[flag].v_diffusive.init_cython()}}
+    if nd == 3:
+        dirichletConditions[3] = lambda x, flag: domain.bc[flag].w_dirichlet.init_cython()
+        advectiveConditions[3] = lambda x, flag: domain.bc[flag].w_advective.init_cython()
+        diffusiveConditions[3] = lambda x, flag: domain.bc[flag].w_diffusive.init_cython()

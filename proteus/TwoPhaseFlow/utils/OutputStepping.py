@@ -9,12 +9,14 @@ class OutputStepping:
                  final_time,
                  dt_init=0.001,
                  dt_output=None,
-                 nDTout=None):
+                 nDTout=None,
+                 dt_fixed=None):
         self.final_time=final_time
         self.dt_init=dt_init
         assert not (dt_output is None and nDTout is None), "Provide dt_output or nDTout"
         self.dt_output=dt_output
         self.nDTout = nDTout
+        self.dt_fixed = dt_fixed
     #
     def getOutputStepping(self):
         # COMPUTE dt_init #
@@ -27,4 +29,5 @@ class OutputStepping:
         return {'final_time': self.final_time,
                 'dt_init': dt_init,
                 'dt_output': self.dt_output,
-                'nDTout': self.nDTout}
+                'nDTout': self.nDTout,
+                'dt_fixed': self.dt_fixed}
