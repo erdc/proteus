@@ -57,8 +57,8 @@ needEBQ = False
 # **************************** #
 # ********** tnList ********** #
 # **************************** #
-tnList=[0.,ct.outputStepping['dt_init']]+[float(k)*ct.outputStepping['final_time']/float(ct.outputStepping['nDTout']) for k in range(1,ct.outputStepping['nDTout']+1)]
-outputStepping = ct.outputStepping
+outputStepping = ct.myTpFlowProblem.outputStepping
+tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
 if outputStepping['dt_output'] is None:
     if outputStepping['dt_fixed'] > 0:
         archiveFlag = ArchiveFlags.EVERY_USER_STEP

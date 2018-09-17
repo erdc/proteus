@@ -17,6 +17,7 @@ params = ct.params
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
 # *********************************************** #
+myTpFlowProblem = physics.myTpFlowProblem
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
 he = myTpFlowProblem.he
@@ -86,7 +87,7 @@ subgridError = RANS2P.SubgridError(coefficients=physics.coefficients,
                                    nd=nd,
                                    lag=ns_lag_subgridError,
                                    hFactor=FESpace['hFactor'])
-shockCapturing = RANS2P.ShockCapturing(coefficients=coefficients,
+shockCapturing = RANS2P.ShockCapturing(coefficients=physics.coefficients,
                                        nd=nd,
                                        shockCapturingFactor=ns_shockCapturingFactor,
                                        lag=ns_lag_shockCapturing)

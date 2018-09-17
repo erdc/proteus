@@ -4,14 +4,22 @@ from proteus.default_p import *
 from proteus.mprans import VOF
 from proteus import Context
 
-# ***************************** #
-# ********** CONTEXT ********** #
-# ***************************** #
+# *********************************************** #
+# ********** READ FROM myTpFlowProblem ********** #
+# *********************************************** #
 ct = Context.get()
 domain = ct.domain
 nd = domain.nd
 mesh = domain.MeshOptions
-params = ct.params
+
+myTpFlowProblem = ct.myTpFlowProblem 
+params = myTpFlowProblem.Parameters
+initialConditions   = myTpFlowProblem.initialConditions
+boundaryConditions  = myTpFlowProblem.boundaryConditions
+nd = myTpFlowProblem.nd
+
+# DOMAIN #
+domain = myTpFlowProblem.domain
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
@@ -51,7 +59,7 @@ coefficients = VOF.Coefficients(LS_model=LS_model,
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #
 # **************************************** #
-initialConditions = {0: ct.vof_init_cond}
+initialConditions = {0: initialConditions['vof']}
 
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #

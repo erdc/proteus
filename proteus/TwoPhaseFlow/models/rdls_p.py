@@ -4,14 +4,22 @@ from proteus.default_p import *
 from proteus.mprans import RDLS
 from proteus import Context
 
-# ***************************** #
-# ********** CONTEXT ********** #
-# ***************************** #
+# *********************************************** #
+# ********** READ FROM myTpFlowProblem ********** #
+# *********************************************** #
 ct = Context.get()
 domain = ct.domain
 nd = domain.nd
 mesh = domain.MeshOptions
-params = ct.params
+
+myTpFlowProblem = ct.myTpFlowProblem 
+params = myTpFlowProblem.Parameters
+initialConditions   = myTpFlowProblem.initialConditions
+boundaryConditions  = myTpFlowProblem.boundaryConditions
+nd = myTpFlowProblem.nd
+
+# DOMAIN #
+domain = myTpFlowProblem.domain
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
@@ -39,7 +47,7 @@ coefficients = RDLS.Coefficients(applyRedistancing=applyRedistancing,
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #
 # **************************************** #
-initialConditions  = {0: ct.rdls_init_cond}
+initialConditions  = {0: initialConditions['rdls']}
 
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #

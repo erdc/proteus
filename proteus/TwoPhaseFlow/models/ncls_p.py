@@ -4,14 +4,22 @@ from proteus.default_p import *
 from proteus.mprans import NCLS
 from proteus import Context
 
-# ***************************** #
-# ********** CONTEXT ********** #
-# ***************************** #
+# *********************************************** #
+# ********** READ FROM myTpFlowProblem ********** #
+# *********************************************** #
 ct = Context.get()
 domain = ct.domain
 nd = domain.nd
 mesh = domain.MeshOptions
-params = ct.params
+
+myTpFlowProblem = ct.myTpFlowProblem 
+params = myTpFlowProblem.Parameters
+initialConditions   = myTpFlowProblem.initialConditions
+boundaryConditions  = myTpFlowProblem.boundaryConditions
+nd = myTpFlowProblem.nd
+
+# DOMAIN #
+domain = myTpFlowProblem.domain
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
@@ -49,7 +57,7 @@ coefficients = NCLS.Coefficients(V_model=V_model,
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #
 # **************************************** #
-initialConditions = {0: ct.ls_init_cond}
+initialConditions = {0: initialConditions['ncls']}
 
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #

@@ -13,7 +13,7 @@ nd = domain.nd
 mesh = domain.MeshOptions
 
 myTpFlowProblem = ct.myTpFlowProblem 
-physical_parameters = ct.myTpFlowProblem.params
+params = myTpFlowProblem.Parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd

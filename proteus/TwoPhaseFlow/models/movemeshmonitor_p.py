@@ -5,14 +5,22 @@ from proteus.mprans import MoveMeshMonitor
 import numpy as np
 from proteus import Context
 
-# ***************************** #
-# ********** CONTEXT ********** #
-# ***************************** #
+# *********************************************** #
+# ********** READ FROM myTpFlowProblem ********** #
+# *********************************************** #
 ct = Context.get()
 domain = ct.domain
 nd = domain.nd
 mesh = domain.MeshOptions
-params = ct.params.movemeshmonitor
+
+myTpFlowProblem = ct.myTpFlowProblem 
+params = myTpFlowProblem.Parameters
+initialConditions   = myTpFlowProblem.initialConditions
+boundaryConditions  = myTpFlowProblem.boundaryConditions
+nd = myTpFlowProblem.nd
+
+# DOMAIN #
+domain = myTpFlowProblem.domain
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
