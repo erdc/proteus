@@ -9,9 +9,6 @@ from proteus import Context
 # ********** READ FROM myTpFlowProblem ********** #
 # *********************************************** #
 ct = Context.get()
-domain = ct.domain
-nd = domain.nd
-mesh = domain.MeshOptions
 
 myTpFlowProblem = ct.myTpFlowProblem 
 params = myTpFlowProblem.Parameters

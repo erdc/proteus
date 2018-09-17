@@ -7,25 +7,27 @@ from proteus import (StepControl,
                      LinearAlgebraTools)
 import movemeshmonitor_p as physics
 
+# *********************************************** #
+# ********** Read from myTpFlowProblem ********** #
+# *********************************************** #
 ct = physics.ct
-domain = ct.domain
-nd = ct.domain.nd
-mesh = domain.MeshOptions
-params = ct.params
+myTpFlowProblem = physics.myTpFlowProblem
+nd = myTpFlowProblem.nd
+params = myTpFlowProblem.Parameters
+cfl = myTpFlowProblem.cfl
+FESpace = myTpFlowProblem.FESpace
+he = myTpFlowProblem.he
+useSuperlu = myTpFlowProblem.useSuperlu
+domain = myTpFlowProblem.domain
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-triangleFlag = ct.triangleFlag if hasattr(ct,'triangleFlag') else None
-nnx = ct.nnx if hasattr(ct,'nnx') else None
-nny = ct.nny if hasattr(ct,'nny') else None
-nnz = ct.nnz if hasattr(ct,'nnz') else None
-triangleOptions = ct.triangleOptions if hasattr(ct,'triangleOptions') and ct.triangleOptions != 'q30DenA' else mesh.triangleOptions
-if hasattr(ct, 'nLevels'):
-    nLevels = ct.nLevels
-parallelPartitioningType = mesh.parallelPartitioningType
-nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
-restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
+triangleFlag = myTpFlowProblem.triangleFlag
+nnx = myTpFlowProblem.nnx
+nny = myTpFlowProblem.nny
+nnz = myTpFlowProblem.nnz
+triangleOptions = domain.MeshOptions.triangleOptions
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #

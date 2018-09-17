@@ -40,10 +40,12 @@ class TwoPhaseFlowProblem:
                 assert type(nnz)==int, "Provide (int) nnz"
         assert domain is not None, "Provide a domain"
         assert triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
-        assert type(initialConditions)==dict or initialConditions is None, "Provide dict of initial conditions"
-        assert type(boundaryConditions)==dict or boundaryConditions is None, "Provide dict of boundary conditions"
-        self.assert_initialConditions(ns_model,nd,initialConditions)
-        self.assert_boundaryConditions(ns_model,nd,boundaryConditions)
+        if initialConditions is not None:
+            assert type(initialConditions)==dict, "Provide dict of initial conditions"
+            self.assert_initialConditions(ns_model,nd,initialConditions)
+        if boundaryConditions is not None:
+            assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
+            self.assert_boundaryConditions(ns_model,nd,boundaryConditions)
 
         # ***** SAVE PARAMETERS ***** #
         self.ns_model=ns_model
@@ -88,33 +90,32 @@ class TwoPhaseFlowProblem:
     #
     def assert_boundaryConditions(self,ns_model,nd,boundaryConditions):
         # check dirichlet BCs
-        if boundaryConditions is not None:
-            assert 'pressure_DBC' in boundaryConditions, "Provide pressure_DBC"
-            assert 'vel_u_DBC' in boundaryConditions, "Provide vel_u_DBC"
-            assert 'vel_v_DBC' in boundaryConditions, "Provide vel_v_DBC"
-            if nd==3:
-                assert 'vel_w_DBC' in boundaryConditions, "Provide vel_w_DBC"
-            assert 'clsvof_DBC' in boundaryConditions, "Provide clsvof_DBC"
+        assert 'pressure_DBC' in boundaryConditions, "Provide pressure_DBC"
+        assert 'vel_u_DBC' in boundaryConditions, "Provide vel_u_DBC"
+        assert 'vel_v_DBC' in boundaryConditions, "Provide vel_v_DBC"
+        if nd==3:
+            assert 'vel_w_DBC' in boundaryConditions, "Provide vel_w_DBC"
+        assert 'clsvof_DBC' in boundaryConditions, "Provide clsvof_DBC"
+        # check advective flux BCs
+        assert 'pressure_AFBC' in boundaryConditions, "Provide pressure_AFBC"
+        assert 'vel_u_AFBC' in boundaryConditions, "Provide vel_u_AFBC"
+        assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
+        if nd==3:
+            assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
+        assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
+        # check diffusive flux BCs
+        assert 'vel_u_DFBC' in boundaryConditions, "Provide vel_u_DFBC"
+        assert 'vel_v_DFBC' in boundaryConditions, "Provide vel_v_DFBC"
+        if nd==3:
+            assert 'vel_w_DFBC' in boundaryConditions, "Provide vel_w_DFBC"
+        assert 'clsvof_DFBC' in boundaryConditions, "Provide clsvof_DFBC"
+        if ns_model==1: #rans3p
+            # check dirichlet BCs
+            assert 'pressure_increment_DBC' in boundaryConditions, "Provide pressure_increment_DBC"
             # check advective flux BCs
-            assert 'pressure_AFBC' in boundaryConditions, "Provide pressure_AFBC"
-            assert 'vel_u_AFBC' in boundaryConditions, "Provide vel_u_AFBC"
-            assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
-            if nd==3:
-                assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
-            assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
+            assert 'pressure_increment_AFBC' in boundaryConditions,"Provide pressure_increment_AFBC"
             # check diffusive flux BCs
-            assert 'vel_u_DFBC' in boundaryConditions, "Provide vel_u_DFBC"
-            assert 'vel_v_DFBC' in boundaryConditions, "Provide vel_v_DFBC"
-            if nd==3:
-                assert 'vel_w_DFBC' in boundaryConditions, "Provide vel_w_DFBC"
-            assert 'clsvof_DFBC' in boundaryConditions, "Provide clsvof_DFBC"
-            if ns_model==1: #rans3p
-                # check dirichlet BCs
-                assert 'pressure_increment_DBC' in boundaryConditions, "Provide pressure_increment_DBC"
-                # check advective flux BCs
-                assert 'pressure_increment_AFBC' in boundaryConditions,"Provide pressure_increment_AFBC"
-                # check diffusive flux BCs
-                assert 'pressure_increment_DFBC' in boundaryConditions,"Provide pressure_increment_DFBC"
+            assert 'pressure_increment_DFBC' in boundaryConditions,"Provide pressure_increment_DFBC"
 
 class OutputStepping:
     """

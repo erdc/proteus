@@ -8,16 +8,13 @@ from proteus import (StepControl,
 from proteus.mprans import RANS2P
 import rans2p_p as physics
 
-ct = physics.ct
-domain = ct.domain
-nd = ct.domain.nd
-mesh = domain.MeshOptions
-params = ct.params
-
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
 # *********************************************** #
+ct = physics.ct
 myTpFlowProblem = physics.myTpFlowProblem
+nd = myTpFlowProblem.nd
+params = myTpFlowProblem.Parameters
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
 he = myTpFlowProblem.he

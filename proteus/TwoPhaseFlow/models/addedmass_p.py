@@ -4,14 +4,19 @@ from proteus.default_p import *
 from proteus import Context
 from proteus.mprans import AddedMass
 
-# ***************************** #
-# ********** CONTEXT ********** #
-# ***************************** #
+# *********************************************** #
+# ********** READ FROM myTpFlowProblem ********** #
+# *********************************************** #
 ct = Context.get()
-domain = ct.domain
-nd = domain.nd
-mesh = domain.MeshOptions
-params = ct.params
+
+myTpFlowProblem = ct.myTpFlowProblem 
+params = myTpFlowProblem.Parameters
+initialConditions   = myTpFlowProblem.initialConditions
+boundaryConditions  = myTpFlowProblem.boundaryConditions
+nd = myTpFlowProblem.nd
+
+# DOMAIN #
+domain = myTpFlowProblem.domain
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #

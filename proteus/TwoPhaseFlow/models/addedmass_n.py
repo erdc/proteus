@@ -8,10 +8,18 @@ from proteus import (StepControl,
 from proteus.mprans import AddedMass
 import addedmass_p as physics
 
+# *********************************************** #
+# ********** Read from myTpFlowProblem ********** #
+# *********************************************** #
 ct = physics.ct
-domain = ct.domain
-nd = ct.domain.nd
-mesh = domain.MeshOptions
+myTpFlowProblem = physics.myTpFlowProblem
+nd = myTpFlowProblem.nd
+params = myTpFlowProblem.Parameters
+cfl = myTpFlowProblem.cfl
+FESpace = myTpFlowProblem.FESpace
+he = myTpFlowProblem.he
+useSuperlu = myTpFlowProblem.useSuperlu
+domain = myTpFlowProblem.domain
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
