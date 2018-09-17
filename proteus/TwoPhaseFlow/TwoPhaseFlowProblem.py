@@ -2,6 +2,7 @@ from __future__ import division
 from past.utils import old_div
 from proteus import FemTools as ft
 from proteus import MeshTools as mt
+from proteus.Profiling import logEvent
 
 class TwoPhaseFlowProblem:
     """ TwoPhaseFlowProblem """
@@ -130,7 +131,7 @@ class OutputStepping:
         assert not (dt_output is None and nDTout is None), "Provide dt_output or nDTout"
         self.dt_output=dt_output
         self.nDTout = nDTout
-        self.dt_fixphysics.ed = dt_fixed
+        self.dt_fixed = dt_fixed
     #
     def getOutputStepping(self):
         # COMPUTE dt_init #
