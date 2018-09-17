@@ -125,7 +125,7 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
                                              useSuperlu=False)
-physical_parameters = myTpFlowProblem.physical_parameters
+physical_parameters = myTpFlowProblem.Parameters.physical
 physical_parameters['gravity'] = [0.0, -0.98, 0.0]
 if opts.test_case==1:
     physical_parameters['densityA'] = 1000.0
@@ -140,3 +140,13 @@ else: #test_case=2
     physical_parameters['densityB'] = 1.0
     physical_parameters['viscosityB'] = 0.1/physical_parameters['densityB']
     physical_parameters['surf_tension_coeff'] = 1.96    
+
+if opts.ns_model == 0:
+    myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
+    myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
+elif opts.ns_model == 1:
+    myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
+    myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
+    myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
+    myTpFlowProblem.Parameters.Models.pressure['index'] = 3
+    myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4

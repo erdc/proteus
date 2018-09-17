@@ -277,4 +277,14 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions)
-myTpFlowProblem.physical_parameters['gravity'] = [0.0,0.0,-9.8]
+myTpFlowProblem.Parameters.physical['gravity'] = [0.0,0.0,-9.8]
+
+if opts.ns_model == 0:
+    myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
+    myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
+elif opts.ns_model == 1:
+    myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
+    myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
+    myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
+    myTpFlowProblem.Parameters.Models.pressure['index'] = 3
+    myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4
