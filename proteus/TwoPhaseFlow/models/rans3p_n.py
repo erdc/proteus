@@ -1,11 +1,20 @@
 from __future__ import absolute_import
-from proteus import *
 from proteus.default_n import *
-from rans3p_p import *
+from proteus import (StepControl,
+                     TimeIntegration,
+                     NonlinearSolvers,
+                     LinearSolvers,
+                     LinearAlgebraTools)
+from proteus.mprans import RANS3PF
+import rans3p_p as physics
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
 # *********************************************** #
+ct = physics.ct
+myTpFlowProblem = physics.myTpFlowProblem
+nd = myTpFlowProblem.nd
+params = myTpFlowProblem.Parameters
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
 he = myTpFlowProblem.he
@@ -24,20 +33,20 @@ triangleOptions = domain.MeshOptions.triangleOptions
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-ns_shockCapturingFactor = rans3p_parameters['ns_shockCapturingFactor']
-ns_lag_shockCapturing = rans3p_parameters['ns_lag_shockCapturing']
-ns_lag_subgridError = rans3p_parameters['ns_lag_subgridError']
+ns_shockCapturingFactor = params.rans3p['ns_shockCapturingFactor']
+ns_lag_shockCapturing = params.rans3p['ns_lag_shockCapturing']
+ns_lag_subgridError = params.rans3p['ns_lag_subgridError']
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
-timeDiscretization=rans3p_parameters['timeDiscretization']
+timeDiscretization = params.rans3p['timeDiscretization']
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF
     timeOrder=2
     stepController  = Min_dt_cfl_controller
 else: #backward euler
-    timeIntegration = BackwardEuler_cfl
+    timeIntegration = TimeIntegration.BackwardEuler_cfl
     stepController  = Min_dt_cfl_controller
 runCFL=cfl
 
@@ -69,11 +78,11 @@ levelNonlinearSolverConvergenceTest = 'rits'
 # ******************************************************** #
 numericalFluxType = RANS3PF.NumericalFlux
 conservativeFlux  = None
-subgridError = RANS3PF.SubgridError(coefficients=coefficients,
+subgridError = RANS3PF.SubgridError(coefficients=physics.coefficients,
                                     nd=nd,
                                     lag=ns_lag_subgridError,
                                     hFactor=FESpace['hFactor'])
-shockCapturing = RANS3PF.ShockCapturing(coefficients=coefficients,
+shockCapturing = RANS3PF.ShockCapturing(coefficients=physics.coefficients,
                                         nd=nd,
                                         shockCapturingFactor=ns_shockCapturingFactor,
                                         lag=ns_lag_shockCapturing)

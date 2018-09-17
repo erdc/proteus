@@ -8,8 +8,9 @@ from proteus.mprans import Pres
 # ********** READ FROM myTpFlowProblem ********** #
 # *********************************************** #
 ct = Context.get()
+
 myTpFlowProblem = ct.myTpFlowProblem 
-physical_parameters   = myTpFlowProblem.physical_parameters
+params = myTpFlowProblem.Parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -20,15 +21,15 @@ domain = myTpFlowProblem.domain
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
-rho_0 = physical_parameters['densityA']
-g = physical_parameters['gravity']
+rho_0 = params.physical['densityA']
+g = params.physical['gravity']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-PRESSURE_model=3
-V_model=1
-PINC_model=2
+PRESSURE_model = params.pressure['index']
+V_model = params.rans3p['index']
+PINC_model = params.pressureIncrement['index']
 
 # ********************************** #
 # ********** COEFFICIENTS ********** #

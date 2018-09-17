@@ -8,9 +8,9 @@ from proteus.mprans import RANS3PF
 # ********** READ FROM myTpFlowProblem ********** #
 # *********************************************** #
 ct = Context.get()
+
 myTpFlowProblem = ct.myTpFlowProblem 
-physical_parameters = myTpFlowProblem.physical_parameters
-rans3p_parameters   = myTpFlowProblem.rans3p_parameters
+params = myTpFlowProblem.Parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -21,30 +21,30 @@ domain = myTpFlowProblem.domain
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
-rho_0 = physical_parameters['densityA']
-nu_0 = physical_parameters['viscosityA']
-rho_1 = physical_parameters['densityB']
-nu_1 = physical_parameters['viscosityB']
-sigma_01 = physical_parameters['surf_tension_coeff']
-g = physical_parameters['gravity']
+rho_0 = params.physical['densityA']
+nu_0 = params.physical['viscosityA']
+rho_1 = params.physical['densityB']
+nu_1 = params.physical['viscosityB']
+sigma_01 = params.physical['surf_tension_coeff']
+g = params.physical['gravity']
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-useMetrics = rans3p_parameters['useMetrics']
-epsFact_viscosity = rans3p_parameters['epsFact_viscosity']
-epsFact_density = rans3p_parameters['epsFact_density']
-ns_forceStrongDirichlet = rans3p_parameters['ns_forceStrongDirichlet']
-weak_bc_penalty_constant = rans3p_parameters['weak_bc_penalty_constant']
-useRBLES = rans3p_parameters['useRBLES']
-useRANS = rans3p_parameters['useRANS']
-ns_closure = rans3p_parameters['ns_closure']
-useVF = rans3p_parameters['useVF']
-PSTAB = rans3p_parameters['PSTAB']
-USE_SUPG = rans3p_parameters['USE_SUPG']
-ARTIFICIAL_VISCOSITY = rans3p_parameters['ARTIFICIAL_VISCOSITY']
-cE = rans3p_parameters['cE']
-cMax = rans3p_parameters['cMax']
+useMetrics = params.rans3p['useMetrics']
+epsFact_viscosity = params.rans3p['epsFact_viscosity']
+epsFact_density = params.rans3p['epsFact_density']
+ns_forceStrongDirichlet = params.rans3p['ns_forceStrongDirichlet']
+weak_bc_penalty_constant = params.rans3p['weak_bc_penalty_constant']
+useRBLES = params.rans3p['useRBLES']
+useRANS = params.rans3p['useRANS']
+ns_closure = params.rans3p['ns_closure']
+useVF = params.rans3p['useVF']
+PSTAB = params.rans3p['PSTAB']
+USE_SUPG = params.rans3p['USE_SUPG']
+ARTIFICIAL_VISCOSITY = params.rans3p['ARTIFICIAL_VISCOSITY']
+cE = params.rans3p['cE']
+cMax = params.rans3p['cMax']
 
 # *************************************** #
 # ********** TURBULENCE MODELS ********** #
@@ -61,10 +61,10 @@ RD_model=None
 MCORR_model=None
 SED_model=None
 VOS_model=None
-CLSVOF_model=0
-V_model=1
-PINC_model=2
-PRESSURE_model=3
+CLSVOF_model = params.clsvof['index']
+V_model = params.rans3p['index']
+PINC_model = params.pressureIncrement['index']
+PRESSURE_model = params.pressure['index']
 
 # ********************************** #
 # ********** COEFFICIENTS ********** #

@@ -234,3 +234,12 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions)
+if opts.ns_model == 0:
+    myTpFlowProblem.Parameters.rans2p['index'] = 0
+    myTpFlowProblem.Parameters.clsvof['index'] = 1
+elif opts.ns_model == 1:
+    myTpFlowProblem.Parameters.clsvof['index'] = 0
+    myTpFlowProblem.Parameters.rans3p['index'] = 1
+    myTpFlowProblem.Parameters.pressureIncrement['index'] = 2
+    myTpFlowProblem.Parameters.pressure['index'] = 3
+    myTpFlowProblem.Parameters.pressureInitial['index'] = 4

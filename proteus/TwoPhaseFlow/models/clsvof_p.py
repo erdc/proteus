@@ -8,36 +8,37 @@ from proteus.mprans import CLSVOF
 # ********** READ FROM myTpFlowProblem ********** #
 # *********************************************** #
 ct = Context.get()
+
 myTpFlowProblem = ct.myTpFlowProblem 
-clsvof_parameters   = myTpFlowProblem.clsvof_parameters
+params = myTpFlowProblem.Parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
-ns_model = myTpFlowProblem.ns_model
 
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
+ns_model = myTpFlowProblem.ns_model
+
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-useMetrics = clsvof_parameters['useMetrics']
-epsFactHeaviside = clsvof_parameters['epsFactHeaviside']
-epsFactDiract = clsvof_parameters['epsFactDirac']
-epsFactRedist = clsvof_parameters['epsFactRedist']
-lambdaFact = clsvof_parameters['lambdaFact']
-outputQuantDOFs = clsvof_parameters['outputQuantDOFs']
-computeMetrics = clsvof_parameters['computeMetrics']
+useMetrics = params.clsvof['useMetrics']
+epsFactHeaviside = params.clsvof['epsFactHeaviside']
+epsFactDiract = params.clsvof['epsFactDirac']
+epsFactRedist = params.clsvof['epsFactRedist']
+lambdaFact = params.clsvof['lambdaFact']
+outputQuantDOFs = params.clsvof['outputQuantDOFs']
+computeMetrics = params.clsvof['computeMetrics']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
+CLSVOF_model = params.clsvof['index']
 if ns_model==0: #rans2p
-    CLSVOF_model=1
-    V_model=0
+    V_model = params.rans2p['index']
 else:
-    CLSVOF_model=0
-    V_model=1
+    V_model = params.rans3p['index']
 
 # ********************************** #
 # ********** COEFFICIENTS ********** #

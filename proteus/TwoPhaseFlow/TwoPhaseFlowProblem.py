@@ -334,10 +334,29 @@ class Parameters:
                        'outputQuantDOFs': True,
                        'computeMetrics': 1,
                        'eps_tolerance_clsvof': False}
+        self.pressure = {
+            # index of model
+            'index': None,
+            # name of model
+            'name': 'pressure',
+        }
+        self.pressureIncrement = {
+            # index of model
+            'index': None,
+            # name of model
+            'name': 'pressureincrement',
+        }
+        self.pressureInitial = {
+            # index of model
+            'index': None,
+            # name of model
+            'name': 'pressureInitial',
+        }
         # VOF: full doc in proteus.mprans.VOF.py
         self.vof = {
             # index of model
             'index': None,
+            # name of model
             'name': 'vof',
             # tolerance factor
             'tolFac': 0.001,
@@ -353,6 +372,7 @@ class Parameters:
         self.ncls = {
             # index of model
             'index': None,
+            # name of model
             'name': 'ncls',
             # tolerance factor
             'tolFac': 0.001,
@@ -368,6 +388,7 @@ class Parameters:
         self.rdls = {
             # index of model
             'index': None,
+            # name of model
             'name': 'rdls',
             # tolerance factor
             'tolFac': 0.01,
@@ -382,6 +403,7 @@ class Parameters:
         self.addedmass = {
             # index of model
             'index': None,
+            # name of model
             'name': 'addedmass',
             # tolerance factor
             'tolFac': 0.001,
@@ -392,6 +414,7 @@ class Parameters:
         self.movemeshelastic = {
             # index of model
             'index': None,
+            # name of model
             'name': 'movemeshelastic',
             # tolerance factor
             'tolFac': 0.001,
@@ -404,6 +427,7 @@ class Parameters:
         self.movemeshmonitor = {
             # index of model
             'index': None,
+            # name of model
             'name': 'movemeshmonitor',
             # tolerance factor
             'tolFac': 0.001,
@@ -450,7 +474,10 @@ class Parameters:
                       self.rdls,
                       self.movemeshelastic,
                       self.movemeshmonitor,
-                      self.addedmass]
+                      self.addedmass,
+                      self.pressureInitial,
+                      self.pressure,
+                      self.pressureIncrement]
         self.nModels = 0
         self.models = []
         for i in range(len(all_models)):

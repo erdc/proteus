@@ -42,7 +42,8 @@ if ct.myTpFlowProblem.outputStepping['dt_fixed']:
     systemStepControllerType = Sequential_FixedStep
     dt_system_fixed = ct.opts.dt_fixed
 if params.rans3p['index'] is not None: #rans3p
-    PINIT_model=4
+    PINIT_model = params.pressureInitial['index']
+    assert PINIT_model is not None, 'must set pressureInitial model index when using rans3p'
     modelSpinUpList = [PINIT_model]
     class Sequential_MinAdaptiveModelStepPS(Sequential_MinAdaptiveModelStep):
         def __init__(self,modelList,system=defaultSystem,stepExact=True):

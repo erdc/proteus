@@ -2,10 +2,15 @@ from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
 from clsvof_p import *
+import clsvof_p as physics
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
 # *********************************************** #
+ct = physics.ct
+myTpFlowProblem = physics.myTpFlowProblem
+nd = myTpFlowProblem.nd
+params = myTpFlowProblem.Parameters
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
 he = myTpFlowProblem.he
@@ -67,7 +72,7 @@ linearSolverConvergenceTest = 'r-true'
 # ********** TOLERANCES ********** #
 # ******************************** #
 clsvof_nl_atol_res = max(1.0e-8, 0.001 * he ** 2)
-eps_tolerance_clsvof = clsvof_parameters['eps_tolerance_clsvof']
+eps_tolerance_clsvof = params.clsvof['eps_tolerance_clsvof']
 if eps_tolerance_clsvof:
     nl_atol_res = 1E-12
 else:

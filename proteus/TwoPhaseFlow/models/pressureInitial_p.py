@@ -8,7 +8,9 @@ from proteus.mprans import PresInit
 # ********** READ FROM myTpFlowProblem ********** #
 # *********************************************** #
 ct = Context.get()
+
 myTpFlowProblem = ct.myTpFlowProblem 
+params = myTpFlowProblem.Parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -19,9 +21,9 @@ domain = myTpFlowProblem.domain
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-PINIT_model=4
-V_model=1
-PRESSURE_model=3
+PINIT_model = params.pressureInitial['index']
+V_model = params.rans3p['index']
+PRESSURE_model = params.pressure['index']
 
 # ********************************** #
 # ********** COEFFICIENTS ********** #
