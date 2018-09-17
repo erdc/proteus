@@ -29,20 +29,23 @@ nnx = myTpFlowProblem.nnx
 nny = myTpFlowProblem.nny
 nnz = myTpFlowProblem.nnz
 triangleOptions = domain.MeshOptions.triangleOptions
+parallelPartitioningType = myTpFlowProblem.parallelPartitioningType
+nLayersOfOverlapForParallel = myTpFlowProblem.nLayersOfOverlapForParallel
+restrictFineSolutionToAllMeshes = myTpFlowProblem.restrictFineSolutionToAllMeshes
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
 timeIntegration = TimeIntegration.BackwardEuler_cfl
 stepController  = StepControl.Min_dt_cfl_controller
-runCFL = ct.opts.cfl
+runCFL = cfl
 
 # ******************************************* #
 # ********** FINITE ELEMENT SPACES ********** #
 # ******************************************* #
-elementQuadrature = ct.FESpace['elementQuadrature']
-elementBoundaryQuadrature = ct.FESpace['elementBoundaryQuadrature']
-femSpaces = {0: ct.FESpace['lsBasis']}
+elementQuadrature = FESpace['elementQuadrature']
+elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
+femSpaces = {0: FESpace['lsBasis']}
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
@@ -74,7 +77,7 @@ matrix = LinearAlgebraTools.SparseMatrix
 linearSmoother = None
 multilevelLinearSolver = LinearSolvers.KSP_petsc4py
 levelLinearSolver = LinearSolvers.KSP_petsc4py
-if ct.opts.useSuperlu:
+if useSuperlu:
     multilevelLinearSolver = LinearSolvers.LU
     levelLinearSolver = LinearSolvers.LU
 #
@@ -84,7 +87,7 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = max(params.minTol, params.vof['tolFac']*ct.he**2)
+nl_atol_res = max(params.minTol, params.vof['tolFac']*he**2)
 linTolFac = 0.001
 l_atol_res = 0.001*nl_atol_res
 #
@@ -94,4 +97,4 @@ maxNonlinearIts = 50
 maxLineSearches = 0
 
 
-auxiliaryVariables = ct.domain.auxiliaryVariables['vof']
+auxiliaryVariables = domain.auxiliaryVariables['vof']

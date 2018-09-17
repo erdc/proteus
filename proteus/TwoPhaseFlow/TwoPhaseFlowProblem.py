@@ -60,8 +60,10 @@ class TwoPhaseFlowProblem:
         self.triangleFlag=triangleFlag
         self.initialConditions=initialConditions
         self.boundaryConditions=boundaryConditions
+        self.restrictFineSolutionToAllMeshes = False
         self.useSuperlu = useSuperlu
         self.Parameters = Parameters()
+        self.movingDomain = False
 
         # ***** CHOOSE SOME DEFAULT OPTIONS FOR PARALLEL RUNS ***** #
         self.parallelPartitioningType = mt.MeshParallelPartitioningTypes.node

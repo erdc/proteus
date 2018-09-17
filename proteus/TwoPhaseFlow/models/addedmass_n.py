@@ -24,16 +24,14 @@ domain = myTpFlowProblem.domain
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-triangleFlag = ct.triangleFlag if hasattr(ct,'triangleFlag') else None
-nnx = ct.nnx if hasattr(ct,'nnx') else None
-nny = ct.nny if hasattr(ct,'nny') else None
-nnz = ct.nnz if hasattr(ct,'nnz') else None
-triangleOptions = ct.triangleOptions if hasattr(ct,'triangleOptions') and ct.triangleOptions != 'q30DenA' else mesh.triangleOptions
-if hasattr(ct, 'nLevels'):
-    nLevels = ct.nLevels
-parallelPartitioningType = mesh.parallelPartitioningType
-nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
-restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
+triangleFlag = myTpFlowProblem.triangleFlag
+nnx = myTpFlowProblem.nnx
+nny = myTpFlowProblem.nny
+nnz = myTpFlowProblem.nnz
+triangleOptions = domain.MeshOptions.triangleOptions
+parallelPartitioningType = myTpFlowProblem.parallelPartitioningType
+nLayersOfOverlapForParallel = myTpFlowProblem.nLayersOfOverlapForParallel
+restrictFineSolutionToAllMeshes = myTpFlowProblem.restrictFineSolutionToAllMeshes
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
@@ -43,9 +41,9 @@ stepController = StepControl.FixedStep
 # ******************************************* #
 # ********** FINITE ELEMENT SPACES ********** #
 # ******************************************* #
-elementQuadrature = ct.FESpace['elementQuadrature']
-elementBoundaryQuadrature = ct.FESpace['elementBoundaryQuadrature']
-femSpaces = {0: ct.FESpace['lsBasis']}
+elementQuadrature = FESpace['elementQuadrature']
+elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
+femSpaces = {0: FESpace['lsBasis']}
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
@@ -70,7 +68,7 @@ matrix = LinearAlgebraTools.SparseMatrix
 linearSmoother = LinearSolvers.NavierStokesPressureCorrection
 multilevelLinearSolver = LinearSolvers.KSP_petsc4py
 levelLinearSolver = LinearSolvers.KSP_petsc4py
-if ct.opts.useSuperlu:
+if useSuperlu:
     multilevelLinearSolver = LinearSolvers.LU
     levelLinearSolver = LinearSolvers.LU
 #
@@ -80,7 +78,7 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = max(ct.params.minTol, ct.params.addedmass['tolFac']*ct.he**2)
+nl_atol_res = max(params.minTol, params.addedmass['tolFac']*he**2)
 linTolFac = 0.
 l_atol_res = nl_atol_res
 #

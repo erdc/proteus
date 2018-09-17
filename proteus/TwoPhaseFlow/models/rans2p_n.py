@@ -29,6 +29,9 @@ nnx = myTpFlowProblem.nnx
 nny = myTpFlowProblem.nny
 nnz = myTpFlowProblem.nnz
 triangleOptions = domain.MeshOptions.triangleOptions
+parallelPartitioningType = myTpFlowProblem.parallelPartitioningType
+nLayersOfOverlapForParallel = myTpFlowProblem.nLayersOfOverlapForParallel
+restrictFineSolutionToAllMeshes = myTpFlowProblem.restrictFineSolutionToAllMeshes
 
 # ******************************** #
 # ********** PARAMETERS ********** #
@@ -108,7 +111,7 @@ linearSolverConvergenceTest             = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-ns_nl_atol_res = max(params.minTol, params.rans2p['tolFac']*ct.he**2)
+ns_nl_atol_res = max(params.minTol, params.rans2p['tolFac']*he**2)
 nl_atol_res = ns_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.01

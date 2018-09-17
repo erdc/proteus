@@ -11,9 +11,10 @@ ct = Context.get()
 
 myTpFlowProblem = ct.myTpFlowProblem 
 params = myTpFlowProblem.Parameters
-initialConditions   = myTpFlowProblem.initialConditions
-boundaryConditions  = myTpFlowProblem.boundaryConditions
+initialConditions = myTpFlowProblem.initialConditions
+boundaryConditions = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
+movingDomain = myTpFlowProblem.movingDomain
 
 # DOMAIN #
 domain = myTpFlowProblem.domain
@@ -51,7 +52,7 @@ coefficients = VOF.Coefficients(LS_model=LS_model,
                                 epsFact=epsFact,
                                 sc_uref=sc_uref,
                                 sc_beta=sc_beta,
-                                movingDomain=ct.movingDomain)
+                                movingDomain=movingDomain)
 
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #

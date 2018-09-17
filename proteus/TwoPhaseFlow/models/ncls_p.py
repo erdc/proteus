@@ -14,6 +14,7 @@ params = myTpFlowProblem.Parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
+movingDomain = myTpFlowProblem.movingDomain
 
 # DOMAIN #
 domain = myTpFlowProblem.domain
@@ -49,7 +50,7 @@ coefficients = NCLS.Coefficients(V_model=V_model,
                                  epsFact=epsFact,
                                  sc_uref=sc_uref,
                                  sc_beta=sc_beta,
-                                 movingDomain=ct.movingDomain)
+                                 movingDomain=movingDomain)
 
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #

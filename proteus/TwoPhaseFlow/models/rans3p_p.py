@@ -14,6 +14,7 @@ params = myTpFlowProblem.Parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
+movingDomain = myTpFlowProblem.movingDomain
 
 # DOMAIN #
 domain = myTpFlowProblem.domain

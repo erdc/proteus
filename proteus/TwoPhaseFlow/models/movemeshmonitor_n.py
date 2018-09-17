@@ -28,6 +28,9 @@ nnx = myTpFlowProblem.nnx
 nny = myTpFlowProblem.nny
 nnz = myTpFlowProblem.nnz
 triangleOptions = domain.MeshOptions.triangleOptions
+parallelPartitioningType = myTpFlowProblem.parallelPartitioningType
+nLayersOfOverlapForParallel = myTpFlowProblem.nLayersOfOverlapForParallel
+restrictFineSolutionToAllMeshes = myTpFlowProblem.restrictFineSolutionToAllMeshes
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
