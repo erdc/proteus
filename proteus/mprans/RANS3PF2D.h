@@ -692,6 +692,8 @@ namespace proteus
                                   const double porosity,//VRANS specific
                                   const double& p,
                                   const double grad_p[nSpace],
+                                  const double& pn,
+                                  const double grad_pn[nSpace],
                                   const double grad_u[nSpace],
                                   const double grad_v[nSpace],
                                   const double grad_w[nSpace],
@@ -2636,6 +2638,8 @@ namespace proteus
                                      //
                                      p,
                                      grad_p,
+                                     pn,
+                                     grad_pn,
                                      grad_u,
                                      grad_v,
                                      grad_w,
@@ -3534,10 +3538,12 @@ namespace proteus
                   ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                   ebN_local_kb_nSpace = ebN_local_kb*nSpace;
                 register double p_ext=0.0,
+                  pn_ext=0.0,
                   u_ext=0.0,
                   v_ext=0.0,
                   w_ext=0.0,
                   grad_p_ext[nSpace],
+                  grad_pn_ext[nSpace],
                   grad_u_ext[nSpace],
                   grad_v_ext[nSpace],
                   grad_w_ext[nSpace],
@@ -3773,6 +3779,8 @@ namespace proteus
                                      //
                                      p_ext,
                                      grad_p_ext,
+                                     pn_ext,
+                                     grad_pn_ext,
                                      grad_u_ext,
                                      grad_v_ext,
                                      grad_w_ext,
@@ -3868,6 +3876,8 @@ namespace proteus
                                      //
                                      bc_p_ext,
                                      grad_p_ext,
+                                     pn_ext,
+                                     grad_pn_ext,
                                      grad_u_ext,
                                      grad_v_ext,
                                      grad_w_ext,
@@ -4795,8 +4805,9 @@ namespace proteus
                   eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
                 //declare local storage
-                register double p=0.0,u=0.0,v=0.0,w=0.0,
+                register double p=0.0,u=0.0,v=0.0,w=0.0,pn=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
+                  grad_pn[nSpace],
                   hess_u[nSpace2],hess_v[nSpace2],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
@@ -4938,13 +4949,17 @@ namespace proteus
                 //get the solution
                 /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p); */
                 p = q_p_sharp[eN_k];
+                pn= q_p[eN_k];
                 ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
                 ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
                 /* ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],w); */
                 //get the solution gradients
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p); */
                 for (int I=0;I<nSpace;I++)
+                {
                   grad_p[I] = q_grad_p_sharp[eN_k_nSpace+I];
+                  grad_pn[I] = q_grad_p[eN_k_nSpace+I];
+                }
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
                 ck.hessFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_u);
@@ -5005,6 +5020,8 @@ namespace proteus
                                      //
                                      p,
                                      grad_p,
+                                     pn,
+                                     grad_pn,
                                      grad_u,
                                      grad_v,
                                      grad_w,
@@ -5840,10 +5857,12 @@ namespace proteus
                   ebN_local_kb_nSpace = ebN_local_kb*nSpace;
 
                 register double p_ext=0.0,
+                  pn_ext=0.0,
                   u_ext=0.0,
                   v_ext=0.0,
                   w_ext=0.0,
                   grad_p_ext[nSpace],
+                  grad_pn_ext[nSpace],
                   grad_u_ext[nSpace],
                   grad_v_ext[nSpace],
                   grad_w_ext[nSpace],
@@ -6091,6 +6110,8 @@ namespace proteus
                                      //
                                      p_ext,
                                      grad_p_ext,
+                                     pn_ext,
+                                     grad_pn_ext,
                                      grad_u_ext,
                                      grad_v_ext,
                                      grad_w_ext,
@@ -6186,6 +6207,8 @@ namespace proteus
                                      //
                                      bc_p_ext,
                                      grad_p_ext,
+                                     pn_ext,
+                                     grad_pn_ext,
                                      grad_u_ext,
                                      grad_v_ext,
                                      grad_w_ext,
