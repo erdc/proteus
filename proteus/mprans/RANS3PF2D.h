@@ -703,6 +703,9 @@ namespace proteus
                                   const double& uStar,
                                   const double& vStar,
                                   const double& wStar,
+                                  const double grad_u_star[nSpace],
+                                  const double grad_v_star[nSpace],
+                                  const double grad_w_star[nSpace],
                                   double& eddy_viscosity,
                                   double& mom_u_acc,
                                   double& dmom_u_acc_u,
@@ -2425,7 +2428,7 @@ namespace proteus
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
                 register double p=0.0,u=0.0,v=0.0,w=0.0,un=0.0,vn=0.0,wn=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
-                  pn=0.0,grad_pn[nSpace],
+                  pn=0.0,grad_pn[nSpace],grad_u_star[nSpace],grad_v_star[nSpace],grad_w_star[nSpace],
                   hess_u[nSpace2],hess_v[nSpace2],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
@@ -2568,6 +2571,8 @@ namespace proteus
                 {
                   grad_p[I] = q_grad_p_sharp[eN_k_nSpace + I];
                   grad_pn[I] = q_grad_p[eN_k_nSpace + I];
+                  grad_u_star[I]=q_grad_u_star[eN_k_nSpace + I];
+                  grad_v_star[I]=q_grad_v_star[eN_k_nSpace + I];
                 }
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
@@ -2649,6 +2654,9 @@ namespace proteus
                                      q_velocity_sge[eN_k_nSpace+0],
                                      q_velocity_sge[eN_k_nSpace+1],
                                      q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used
+                                     grad_u_star,
+                                     grad_v_star,
+                                     grad_w_star,
                                      q_eddy_viscosity[eN_k],
                                      mom_u_acc,
                                      dmom_u_acc_u,
@@ -3544,6 +3552,9 @@ namespace proteus
                   w_ext=0.0,
                   grad_p_ext[nSpace],
                   grad_pn_ext[nSpace],
+                  grad_u_star[nSpace],
+                  grad_v_star[nSpace],
+                  grad_w_star[nSpace],
                   grad_u_ext[nSpace],
                   grad_v_ext[nSpace],
                   grad_w_ext[nSpace],
@@ -3790,6 +3801,9 @@ namespace proteus
                                      ebqe_velocity_star[ebNE_kb_nSpace+0],
                                      ebqe_velocity_star[ebNE_kb_nSpace+1],
                                      ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used
+                                     grad_u_star,
+                                     grad_v_star,
+                                     grad_w_star,
                                      eddy_viscosity_ext,
                                      mom_u_acc_ext,
                                      dmom_u_acc_u_ext,
@@ -3887,6 +3901,9 @@ namespace proteus
                                      ebqe_velocity_star[ebNE_kb_nSpace+0],
                                      ebqe_velocity_star[ebNE_kb_nSpace+1],
                                      ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used
+                                     grad_u_star,
+                                     grad_v_star,
+                                     grad_w_star,
                                      bc_eddy_viscosity_ext,
                                      bc_mom_u_acc_ext,
                                      bc_dmom_u_acc_u_ext,
@@ -4807,7 +4824,7 @@ namespace proteus
                 //declare local storage
                 register double p=0.0,u=0.0,v=0.0,w=0.0,pn=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
-                  grad_pn[nSpace],
+                  grad_pn[nSpace],grad_u_star[nSpace],grad_v_star[nSpace],grad_w_star[nSpace],
                   hess_u[nSpace2],hess_v[nSpace2],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
@@ -5031,6 +5048,9 @@ namespace proteus
                                      q_velocity_sge[eN_k_nSpace+0],
                                      q_velocity_sge[eN_k_nSpace+1],
                                      q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't be used
+                                     grad_u_star,
+                                     grad_v_star,
+                                     grad_w_star,
                                      eddy_viscosity,
                                      mom_u_acc,
                                      dmom_u_acc_u,
@@ -5863,6 +5883,9 @@ namespace proteus
                   w_ext=0.0,
                   grad_p_ext[nSpace],
                   grad_pn_ext[nSpace],
+                  grad_u_star[nSpace],
+                  grad_v_star[nSpace],
+                  grad_w_star[nSpace],
                   grad_u_ext[nSpace],
                   grad_v_ext[nSpace],
                   grad_w_ext[nSpace],
@@ -6121,6 +6144,9 @@ namespace proteus
                                      ebqe_velocity_star[ebNE_kb_nSpace+0],
                                      ebqe_velocity_star[ebNE_kb_nSpace+1],
                                      ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used
+                                     grad_u_star,
+                                     grad_v_star,
+                                     grad_w_star,
                                      eddy_viscosity_ext,
                                      mom_u_acc_ext,
                                      dmom_u_acc_u_ext,
@@ -6218,6 +6244,9 @@ namespace proteus
                                      ebqe_velocity_star[ebNE_kb_nSpace+0],
                                      ebqe_velocity_star[ebNE_kb_nSpace+1],
                                      ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used
+                                     grad_u_star,
+                                     grad_v_star,
+                                     grad_w_star,
                                      bc_eddy_viscosity_ext,
                                      bc_mom_u_acc_ext,
                                      bc_dmom_u_acc_u_ext,
