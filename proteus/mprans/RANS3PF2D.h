@@ -307,6 +307,8 @@ namespace proteus
                                    double *q_grad_p_sharp,
                                    double *ebqe_p_sharp,
                                    double *ebqe_grad_p_sharp,
+                                   double *q_p,
+                                   double *q_grad_p,
                                    double *vel_trial_ref,
                                    double *vel_grad_trial_ref,
                                    double *vel_hess_trial_ref,
@@ -382,6 +384,8 @@ namespace proteus
                                    double *q_dV_last,
                                    double *q_velocity_sge,
                                    double *ebqe_velocity_star,
+                                   double* q_grad_u_star,
+                                   double* q_grad_v_star,
                                    double *q_cfl,
                                    double *q_numDiff_u_last, double *q_numDiff_v_last, double *q_numDiff_w_last,
                                    int *sdInfo_u_u_rowptr, int *sdInfo_u_u_colind,
@@ -2419,6 +2423,7 @@ namespace proteus
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
                 register double p=0.0,u=0.0,v=0.0,w=0.0,un=0.0,vn=0.0,wn=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
+                  pn=0.0,grad_pn[nSpace],
                   hess_u[nSpace2],hess_v[nSpace2],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
@@ -2545,7 +2550,8 @@ namespace proteus
                 ck.hessTrialFromRef(&vel_hess_trial_ref[k*nDOF_trial_element*nSpace2],jacInv,vel_hess_trial);
                 //get the solution
                 /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p); */
-                p = q_p[eN_k];
+                p = q_p_sharp[eN_k];
+                pn= q_p[eN_k];
                 // get solution at quad points
                 ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
                 ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
@@ -2557,7 +2563,10 @@ namespace proteus
                 //get the solution gradients
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p); */
                 for (int I=0;I<nSpace;I++)
-                  grad_p[I] = q_grad_p[eN_k_nSpace + I];
+                {
+                  grad_p[I] = q_grad_p_sharp[eN_k_nSpace + I];
+                  grad_pn[I] = q_grad_p[eN_k_nSpace + I];
+                }
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
                 ck.hessFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_u);
@@ -3714,7 +3723,9 @@ namespace proteus
                 /* ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],w_ext); */
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_ext); */
                 for (int I=0;I<nSpace;I++)
+                {
                   grad_p_ext[I] = ebqe_grad_p_sharp[ebNE_kb_nSpace + I];
+                }
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
                 /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_w_ext); */
@@ -4421,6 +4432,8 @@ namespace proteus
                              double* q_grad_p_sharp,
                              double* ebqe_p_sharp,
                              double* ebqe_grad_p_sharp,
+                             double* q_p,
+                             double* q_grad_p,
                              double* vel_trial_ref,
                              double* vel_grad_trial_ref,
                              double* vel_hess_trial_ref,
@@ -4497,6 +4510,8 @@ namespace proteus
                              double* q_dV_last,
                              double* q_velocity_sge,
                              double* ebqe_velocity_star,
+                             double* q_grad_u_star,
+                             double* q_grad_v_star,
                              double* q_cfl,
                              double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
                              int* sdInfo_u_u_rowptr,int* sdInfo_u_u_colind,
