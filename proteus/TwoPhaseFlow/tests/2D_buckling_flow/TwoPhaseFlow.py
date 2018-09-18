@@ -86,7 +86,7 @@ class zero(object):
 
 class clsvof_init_cond(object):
     def uOfXT(self,X,t):
-        flat_inlet = True
+        flat_inlet = False
         x=X[0]
         y=X[1]
         if flat_inlet:
@@ -205,3 +205,5 @@ myTpFlowProblem.physical_parameters['viscosityA'] = 500.0/1800.0
 myTpFlowProblem.physical_parameters['densityB'] = 1.0
 myTpFlowProblem.physical_parameters['viscosityB'] = 2.0E-5/1.0
 myTpFlowProblem.physical_parameters['surf_tension_coeff'] = 0.
+myTpFlowProblem.rans3p_parameters['ns_forceStrongDirichlet']=True
+#myTpFlowProblem.clsvof_parameters['lambdaFact']=1.0
