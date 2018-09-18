@@ -1,6 +1,11 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
-from risingBubble import *
+try:
+    from .risingBubble import *
+except:
+    from risingBubble import *
 from proteus.mprans import MCorr3P
 
 LevelModelType = MCorr3P.LevelModel
@@ -17,7 +22,7 @@ coefficients = MCorr3P.Coefficients(LS_model=LS_model,
                                     epsFactDirac=epsFact_consrv_dirac,
                                     epsFactDiffusion=epsFact_consrv_diffusion)
 
-class zero_phi:
+class zero_phi(object):
     def __init__(self):
         pass
     def uOfX(self,X):

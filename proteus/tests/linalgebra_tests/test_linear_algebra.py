@@ -1,3 +1,5 @@
+from builtins import range
+from builtins import object
 from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
@@ -9,7 +11,7 @@ from nose.tools import eq_ as eq
 comm = Comm.init()
 Profiling.procID = comm.rank()
 
-class MockMat():
+class MockMat(object):
     """ petsc4py-based mock SuperLU Matrix for testing.  Filled like this:
 
     [ 1 1     ]
@@ -38,7 +40,7 @@ class MockMat():
 
     def getSubMatCSRrepresentation(self, start, end):
         from petsc4py import PETSc
-        ids = range(start, end)
+        ids = list(range(start, end))
         isg = PETSc.IS().createGeneral(ids)
         B = self.A.getSubMatrix(isg)
         return B.getValuesCSR()
@@ -64,7 +66,7 @@ def test_vec_create():
         # All entries are zero
         eq(np.count_nonzero(x), 0)
         # Verify assignment works
-        x[:] = range(1, n+1)
+        x[:] = list(range(1, n+1))
         eq(np.count_nonzero(x), n)
 
 @pytest.mark.LinearAlgebraTools
@@ -88,9 +90,9 @@ def test_mat_create():
         # All entries are zero
         eq(np.count_nonzero(x), 0)
         # Assign a row
-        x[0, :] = range(1, n+1)
+        x[0, :] = list(range(1, n+1))
         # Assign a column
-        x[:, 0] = range(1, m+1)
+        x[:, 0] = list(range(1, m+1))
         eq(np.count_nonzero(x), m+n-1)
 
 @pytest.mark.LinearAlgebraTools
@@ -286,7 +288,7 @@ def test_petsc_binary_mat_io():
     par_n = n
     par_N = n
     par_nghost = 0
-    subdomain2global = range(n)
+    subdomain2global = list(range(n))
     ghosted_csr_mat = MockMat(n)
 
     M = ParMat_petsc4py(ghosted_csr_mat, par_bs, par_n, par_N, par_nghost, subdomain2global)

@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from math import *
-from rotation2D import *
+from .rotation2D import *
 from proteus.mprans import NCLS
 #import Profiling
 
@@ -38,7 +40,7 @@ nd=2
 # \image latex save_la_rotation_2d_dgp2_phi.eps "RKDG $P^2$ solution, Cr=0.1, $L^2$ error= 7.84e-3"
 #
 
-class OscillatingRotation2D:
+class OscillatingRotation2D(object):
     #cek changed to put sphere inside arbitrary box with dimensions in L
     def __init__(self,L):
         self.radius = 0.25
@@ -46,7 +48,7 @@ class OscillatingRotation2D:
         self.yc=0.5
     def uOfXT(self,x,t):
         return self.radius - math.sqrt((x[0]-self.xc)**2 + (x[1]-self.yc)**2)
-class OscillatingRotation2Dcylinder:
+class OscillatingRotation2Dcylinder(object):
     #cek changed to put sphere inside arbitrary box with dimensions in L
     def __init__(self,L):
         self.radius = 0.15*L[0]

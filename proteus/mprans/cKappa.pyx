@@ -35,7 +35,19 @@ cdef extern from "Kappa.h" namespace "proteus":
                                double c_mu,
                                double rho_0,
                                double rho_1,
-                               int dissipation_model_flag,
+#Sediment model
+                                double sedFlag,
+                                double* q_vos,
+                                double *q_vos_gradc,
+                                double* ebqe_q_vos,
+                                double *ebqe_q_vos_gradc,
+                                double rho_f,
+                                double rho_s,
+                                double* vs,
+                                double* ebqe_vs,
+                                double* g,
+#end Sediment
+                              int dissipation_model_flag,
                                # end diffusion
                                double useMetrics,
                                double alphaBDF,
@@ -123,6 +135,18 @@ cdef extern from "Kappa.h" namespace "proteus":
                                double * q_dissipation,  # dissipation rate
                                double * q_grad_dissipation,
                                double * q_porosity,  # VRANS
+#Sediment model
+                                double sedFlag,
+                                double* q_vos,
+                                double *q_vos_gradc,
+                                double* ebqe_q_vos,
+                                double *ebqe_q_vos_gradc,
+                                double rho_f,
+                                double rho_s,
+                                double* vs,
+                                double* ebqe_vs,
+                                double* g,
+#end Sediment
                                # velocity dof
                                double * velocity_dof_u,
                                double * velocity_dof_v,
@@ -155,7 +179,24 @@ cdef extern from "Kappa.h" namespace "proteus":
                           int nDOF_trial_elementIn,
                           int nDOF_test_elementIn,
                           int nQuadraturePoints_elementBoundaryIn,
-                          int CompKernelFlag)
+                                          int CompKernelFlag,
+                                          double aDarcy,
+                                          double betaForch,
+                                          double grain,
+                                          double packFraction,
+                                          double packMargin,
+                                          double maxFraction,
+                                                 double frFraction,
+                                                 double sigmaC,
+                                                 double C3e,
+                                                 double C4e,
+                                                 double eR,
+                                                 double fContact,
+                                                 double mContact,
+                                                 double nContact,
+                                                 double angFriction,
+                                     double vos_limiter,
+                                     double mu_fr_limiter)
 
 cdef class cKappa_base:
     cdef Kappa_base * thisptr
@@ -167,15 +208,49 @@ cdef class cKappa_base:
                   int nDOF_trial_elementIn,
                   int nDOF_test_elementIn,
                   int nQuadraturePoints_elementBoundaryIn,
-                  int CompKernelFlag):
+                  int CompKernelFlag,
+                  double aDarcy,
+                  double betaForch,
+                  double grain,
+                  double packFraction,
+                  double packMargin,
+                  double maxFraction,
+                  double frFraction,
+                  double sigmaC,
+                  double C3e,
+                  double C4e,
+                  double eR,
+                  double fContact,
+                  double mContact,
+                  double nContact,
+                  double angFriction,
+                  double vos_limiter,
+                  double mu_fr_limiter):
+
         self.thisptr = newKappa(nSpaceIn,
                                 nQuadraturePoints_elementIn,
                                 nDOF_mesh_trial_elementIn,
                                 nDOF_trial_elementIn,
                                 nDOF_test_elementIn,
                                 nQuadraturePoints_elementBoundaryIn,
-                                CompKernelFlag)
-
+                                        CompKernelFlag,
+                          aDarcy,
+                  betaForch,
+                   grain,
+                   packFraction,
+                   packMargin,
+                   maxFraction,
+                   frFraction,
+                   sigmaC,
+                   C3e,
+                   C4e,
+                   eR,
+                   fContact,
+                   mContact,
+                   nContact,
+                   angFriction,
+                   vos_limiter,
+                   mu_fr_limiter)
     def __dealloc__(self):
         del self.thisptr
 
@@ -208,6 +283,18 @@ cdef class cKappa_base:
                           double c_mu,
                           double rho_0,
                           double rho_1,
+  #                             Argumentlist for sediment
+                           double sedFlag,
+                           numpy.ndarray  q_vos,
+                           numpy.ndarray q_vos_gradc,
+                           numpy.ndarray  ebqe_q_vos,
+                           numpy.ndarray ebqe_q_vos_gradc,
+                           double rho_f,
+                           double rho_s,
+                           numpy.ndarray  vs,
+                           numpy.ndarray  ebqe_vs,
+                           numpy.ndarray g,
+  #                             end for sediment
                           int dissipation_model_flag,
                           # end diffusion
                           double useMetrics,
@@ -283,6 +370,18 @@ cdef class cKappa_base:
                                         c_mu,
                                         rho_0,
                                         rho_1,
+  #                             Argumentlist for sediment
+                                        sedFlag,
+                                       < double * >  q_vos.data,
+                                       < double * > q_vos_gradc.data,
+                                       < double * >  ebqe_q_vos.data,
+                                       < double * > ebqe_q_vos_gradc.data,
+                                       rho_f,
+                                       rho_s,
+                                       < double * >  vs.data,
+                                       < double * >  ebqe_vs.data,
+                                       < double * > g.data,
+  #                             end for sediment
                                         dissipation_model_flag,
                                         # end diffuion
                                         useMetrics,
@@ -375,6 +474,18 @@ cdef class cKappa_base:
                           numpy.ndarray q_dissipation,  # dissipation rate
                           numpy.ndarray q_grad_dissipation,  # VRANS
                           numpy.ndarray q_porosity,  # VRANS
+  #                             Argumentlist for sediment
+                           double sedFlag,
+                           numpy.ndarray  q_vos,
+                           numpy.ndarray q_vos_gradc,
+                           numpy.ndarray  ebqe_q_vos,
+                           numpy.ndarray ebqe_q_vos_gradc,
+                           double rho_f,
+                           double rho_s,
+                           numpy.ndarray  vs,
+                           numpy.ndarray  ebqe_vs,
+                           numpy.ndarray g,
+  #                             end for sediment
                           # velocity dof
                           numpy.ndarray velocity_dof_u,
                           numpy.ndarray velocity_dof_v,
@@ -447,6 +558,18 @@ cdef class cKappa_base:
                                         < double * > q_dissipation.data,
                                         < double * > q_grad_dissipation.data,
                                         < double * > q_porosity.data,  # VRANS
+  #                             Argumentlist for sediment
+                                        sedFlag,
+                                       < double * >  q_vos.data,
+                                       < double * > q_vos_gradc.data,
+                                       < double * >  ebqe_q_vos.data,
+                                       < double * > ebqe_q_vos_gradc.data,
+                                       rho_f,
+                                       rho_s,
+                                       < double * >  vs.data,
+                                       < double * >  ebqe_vs.data,
+                                       < double * > g.data,
+  #                             end for sediment
                                         # velocity dofs
                                         < double * > velocity_dof_u.data,
                                         < double * > velocity_dof_v.data,

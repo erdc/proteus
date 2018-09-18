@@ -1,3 +1,4 @@
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 """
@@ -37,7 +38,7 @@ Ident[0,0]=1.0; Ident[1,1] = 1.0; Ident[2,2]=1.0
 
 
 #for computing exact 'Darcy' velocity
-class velEx:
+class velEx(object):
     def __init__(self,duex,aex):
         self.duex = duex
         self.aex = aex
@@ -60,7 +61,7 @@ def a5(x):
 def f5(x):
     return -2.0*x[0] -2*(5.+x[0]) -2.*x[1]-2.*(5.+x[1]) -2.*x[2]-2.*(10+x[2])
 #'manufactured' analytical solution
-class u5Ex:
+class u5Ex(object):
     def __init__(self):
         pass
     def uOfX(self,x):

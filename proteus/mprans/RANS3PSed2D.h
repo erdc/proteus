@@ -1,3 +1,4 @@
+
 #ifndef RANS3PSed2D_H
 #define RANS3PSed2D_H
 #include <cmath>
@@ -428,18 +429,7 @@ namespace proteus
               1.00),
         nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
-          {/*          std::cout<<"Constructing cppRANS3PSed2D<CompKernelTemplate<"
-                       <<0<<","
-                       <<0<<","
-                       <<0<<","
-                       <<0<<">,"*/
-            /*  <<nSpaceIn<<","
-                <<nQuadraturePoints_elementIn<<","
-                <<nDOF_mesh_trial_elementIn<<","
-                <<nDOF_trial_elementIn<<","
-                <<nDOF_test_elementIn<<","
-                <<nQuadraturePoints_elementBoundaryIn<<">());"*/
-            /*  <<std::endl<<std::flush; */
+          {
           }
 
       void setSedClosure(double aDarcy,
@@ -602,7 +592,7 @@ namespace proteus
                                   double dmom_w_ham_grad_p[nSpace],
                                   double dmom_w_ham_grad_w[nSpace])
       {
-        double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
+        double rho,rho_f,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
         d_rho = (1.0-useVF)*smoothedDirac(eps_rho,phi);
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -639,15 +629,15 @@ namespace proteus
         // we need fluid rho and nu for turbulence
         // we need fluid rho and nu for momentum interface
         rho = rho_s;
-        //rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
+        rho_f = rho_0*(1.0-H_rho)+rho_1*H_rho;
         nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
-        nu = nu_s;
+        nu = nu_0*(1.0-H_mu)+nu_1*H_mu;
         //nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         nu += nu_t;
         //mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-        mu = rho_s*nu_s;
+        mu = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
 
-        eddy_viscosity = nu_t*rho;
+        eddy_viscosity = rho_0*nu_t0*(1.0-H_mu)+rho_1*nu_t1*H_mu;
 
         // mass (volume accumulation)
         //..hardwired
@@ -816,6 +806,7 @@ namespace proteus
 					   const double nu_0,
 					   const double rho_1,
 					   const double nu_1,
+					   double nu_t,
 					   const double useVF,
 					   const double vf,
 					   const double phi,
@@ -835,8 +826,10 @@ namespace proteus
 					   double& mom_w_source,
 					   double dmom_u_source[nSpace],
 					   double dmom_v_source[nSpace],
-					   double dmom_w_source[nSpace])
-
+					   double dmom_w_source[nSpace],
+                       double gradC_x,
+					   double gradC_y,
+					   double gradC_z)
     {
       double rhoFluid, muFluid,nuFluid,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
@@ -851,16 +844,17 @@ namespace proteus
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
-      double solid_velocity[3]={uStar,vStar,wStar}, fluid_velocity[3]={u_f,v_f,w_f};
+      double solid_velocity[2]={u,v}, fluid_velocity[2]={u_f,v_f};
       double new_beta =    closure.betaCoeff(vos,
-                                           rhoFluid,
-                                       fluid_velocity,
-                                         solid_velocity,
-                                         viscosity);
+					     rhoFluid,
+					     fluid_velocity,
+					     solid_velocity,
+					     viscosity);
       //new_beta/=rhoFluid;
       //std::cout<<"total "<<(1.0-phi_s)*new_beta<<std::endl;
-      mom_u_source +=  (vos)*new_beta*(u-u_f);
-      mom_v_source +=  (vos)*new_beta*(v-v_f);
+      mom_u_source +=  (vos)*new_beta*((u-u_f) + nu_t*gradC_x/closure.sigmaC_);
+
+      mom_v_source +=  (vos)*new_beta*((v-v_f) + nu_t*gradC_y/closure.sigmaC_);
       /* mom_w_source += vos*new_beta*(w-w_s); */
 
       dmom_u_source[0] = (vos)*new_beta;
@@ -876,6 +870,33 @@ namespace proteus
       dmom_w_source[2] = (vos)*new_beta;*/
     }
 
+
+    inline void updatePenaltyForPacking(const double vos,
+				   const double u,
+				   const double v,
+				   const double w,
+				   double& mom_u_source,
+				   double& mom_v_source,
+				   double& mom_w_source,
+				   double dmom_u_source[nSpace],
+				   double dmom_v_source[nSpace],
+				   double dmom_w_source[nSpace])
+				   
+    {
+      double meanPack = (closure.maxFraction_ + closure.frFraction_)/2.;
+      double epsPack = (closure.maxFraction_ - closure.frFraction_)/2.;
+      double dVos = vos - meanPack;
+      double sigma = smoothedHeaviside( epsPack, dVos);
+      double packPenalty = 1e6;
+      mom_u_source += sigma * packPenalty*u;
+      mom_v_source += sigma * packPenalty*v;
+      dmom_u_source[0] += sigma * packPenalty;
+      dmom_v_source[1] += sigma * packPenalty;
+
+    }  
+
+
+    
     inline
       void updateFrictionalPressure(const double vos,
                                     const double grad_vos[nSpace],
@@ -892,7 +913,7 @@ namespace proteus
     }  
 
     inline
-      void updateFrictionalStress(const double vos,
+            void updateFrictionalStress(const double vos,
                                   const double eps_rho,
                                   const double eps_mu,
                                   const double rho_0,
@@ -920,10 +941,11 @@ namespace proteus
       double H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
       double rho_fluid = rho_0*(1.0-H_rho)+rho_1*H_rho;
       double nu_fluid  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+
       double mu_fr = closure.mu_fr(vos,
-                                   grad_u[0], grad_u[1], grad_u[2], 
-                                   grad_v[0], grad_v[1], grad_v[2], 
-                                   grad_w[0], grad_w[1], grad_w[2]);
+                                   grad_u[0], grad_u[1], 0., 
+                                   grad_v[0], grad_v[1], 0., 
+                                   0., 0. , 0.);
       double rho_solid = rho_s;
 
       mom_uu_diff_ten[0] += 2. * mu_fr * (2./3.); 
@@ -951,101 +973,6 @@ namespace proteus
 
 
 
-      inline
-        void updateTurbulenceClosure(const int turbulenceClosureModel,
-                                     const double eps_rho,
-                                     const double eps_mu,
-                                     const double rho_0,
-                                     const double nu_0,
-                                     const double rho_1,
-                                     const double nu_1,
-                                     const double useVF,
-                                     const double vf,
-                                     const double phi,
-                                     const double vos,
-                                     const double eddy_visc_coef_0,
-                                     const double turb_var_0, //k for k-eps or k-omega
-                                     const double turb_var_1, //epsilon for k-epsilon, omega for k-omega
-                                     const double turb_grad_0[nSpace],//grad k for k-eps,k-omega
-                                     double& eddy_viscosity,
-                                     double mom_uu_diff_ten[nSpace],
-                                     double mom_vv_diff_ten[nSpace],
-                                     double mom_ww_diff_ten[nSpace],
-                                     double mom_uv_diff_ten[1],
-                                     double mom_uw_diff_ten[1],
-                                     double mom_vu_diff_ten[1],
-                                     double mom_vw_diff_ten[1],
-                                     double mom_wu_diff_ten[1],
-                                     double mom_wv_diff_ten[1],
-                                     double& mom_u_source,
-                                     double& mom_v_source,
-                                     double& mom_w_source)
-      {
-        /****
-             eddy_visc_coef 
-             <= 2  LES (do nothing)
-             == 3  k-epsilon 
-        
-        */
-        assert (turbulenceClosureModel >=3);
-        double rho,nu,H_mu,nu_t=0.0,nu_t_keps =0.0, nu_t_komega=0.0;
-        double isKEpsilon = 1.0;
-        if (turbulenceClosureModel == 4)
-          isKEpsilon = 0.0;
-        H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
-        nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
-        rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
-
-        const double twoThirds = 2.0/3.0; const double div_zero = 1.0e-2*fmin(nu_0,nu_1);
-        mom_u_source += twoThirds*turb_grad_0[0];
-        mom_v_source += twoThirds*turb_grad_0[1];
-        /* mom_w_source += twoThirds*turb_grad_0[2]; */
-
-        //--- closure model specific ---
-        //k-epsilon
-        nu_t_keps = eddy_visc_coef_0*turb_var_0*turb_var_0/(fabs(turb_var_1) + div_zero);
-        //k-omega
-        nu_t_komega = turb_var_0/(fabs(turb_var_1) + div_zero);
-        //
-        nu_t = isKEpsilon*nu_t_keps + (1.0-isKEpsilon)*nu_t_komega;
-        //mwf debug
-        //if (nu_t > 1.e6*nu)
-        //{
-        //  std::cout<<"RANS3PSed2D WARNING isKEpsilon = "<<isKEpsilon<<" nu_t = " <<nu_t<<" nu= "<<nu<<" k= "<<turb_var_0<<" turb_var_1= "<<turb_var_1<<std::endl; 
-        //}
-
-        nu_t = fmax(nu_t,1.0e-4*nu); //limit according to Lew, Buscaglia etal 01
-        //mwf hack
-        nu_t     = fmin(nu_t,1.0e6*nu);
-
-        eddy_viscosity = nu_t*rho;
-        //u momentum diffusion tensor
-        mom_uu_diff_ten[0] += 2.0*vos*eddy_viscosity;
-        mom_uu_diff_ten[1] += vos*eddy_viscosity;
-        /* mom_uu_diff_ten[2] += vos*eddy_viscosity; */
-  
-        mom_uv_diff_ten[0]+=vos*eddy_viscosity;
-  
-        /* mom_uw_diff_ten[0]+=vos*eddy_viscosity; */
-  
-        //v momentum diffusion tensor
-        mom_vv_diff_ten[0] += vos*eddy_viscosity;
-        mom_vv_diff_ten[1] += 2.0*vos*eddy_viscosity;
-        /* mom_vv_diff_ten[2] += vos*eddy_viscosity; */
-  
-        mom_vu_diff_ten[0]+=vos*eddy_viscosity;
-  
-        /* mom_vw_diff_ten[0]+=vos*eddy_viscosity; */
-  
-        /* //w momentum diffusion tensor */
-        /* mom_ww_diff_ten[0] += vos*eddy_viscosity; */
-        /* mom_ww_diff_ten[1] += vos*eddy_viscosity; */
-        /* mom_ww_diff_ten[2] += 2.0*vos*eddy_viscosity; */
-  
-        /* mom_wu_diff_ten[0]+=vos*eddy_viscosity; */
-  
-        /* mom_wv_diff_ten[0]+=vos*eddy_viscosity; */
-      }
 
       inline void calculateSubgridError_tau(const double &hFactor,
                                             const double &elementDiameter,
@@ -1064,9 +991,16 @@ namespace proteus
         viscosity = a;
         nrm_df = 0.0;
         for (int I = 0; I < nSpace; I++)
-          nrm_df += df[I] * df[I];
-        nrm_df = sqrt(nrm_df);
-        cfl = nrm_df / (fabs(h * density)+1e-10); //this is really cfl/dt, but that's what we want to know, the step controller expect this
+          {nrm_df += df[I] * df[I];}
+	nrm_df = sqrt(nrm_df);
+	if(density > 1e-8)
+	  {
+	    cfl = nrm_df / (fabs(h * density)); 
+	  }
+	else
+	  {
+	    cfl = nrm_df / fabs(h ); 
+	  }
         oneByAbsdt = fabs(dmt);
         tau_v = 1.0 / (4.0 * viscosity / (h * h) + 2.0 * nrm_df / h + oneByAbsdt);
         tau_p = (4.0 * viscosity + 2.0 * nrm_df * h + oneByAbsdt * h * h) / pfac;
@@ -1265,15 +1199,31 @@ namespace proteus
         /*     if (flowSpeedNormal < 0.0) */
         /*       flux_wmom+=bc_speed*(bc_w - w); */
         /*   } */
+	
         if (isFluxBoundary_u == 1)
           {
             flux_umom = bc_flux_umom;
-	    velocity[0] = bc_flux_umom/vos;
+	    if(vos > 1e-8)
+	      {
+		velocity[0] = bc_flux_umom/fabs(vos);
+	      }
+	    else
+	      {
+		velocity[0] = bc_flux_umom;
+	      }
           }
         if (isFluxBoundary_v == 1)
           {
             flux_vmom = bc_flux_vmom;
-	    velocity[1] = bc_flux_vmom/vos;
+	    if(vos > 1e-8)
+	      {
+		velocity[1] = bc_flux_umom/fabs(vos);
+	      }
+	    else
+	      {
+		velocity[1] = bc_flux_vmom;
+	      }
+
           }
         /* if (isFluxBoundary_w == 1) */
         /*   { */
@@ -1973,10 +1923,10 @@ namespace proteus
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not?
 
-                updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
-                                                  /* nonlinearDragFactor, */
-                                                  /* vos, */
-                                                  /* meanGrainSize, */
+                updateDarcyForchheimerTerms_Ergun(// linearDragFactor,
+                                                  // nonlinearDragFactor,
+                                                  // vos,
+                                                  // meanGrainSize,
                                                   q_dragAlpha[eN_k],
                                                   q_dragBeta[eN_k],
                                                   eps_rho,
@@ -1985,6 +1935,7 @@ namespace proteus
                                                   nu_0,
                                                   rho_1,
                                                   nu_1,
+						  q_eddy_viscosity[eN_k],
                                                   useVF,
                                                   vf[eN_k],
                                                   phi[eN_k],
@@ -2004,13 +1955,27 @@ namespace proteus
                                                   mom_w_source,
                                                   dmom_u_source,
                                                   dmom_v_source,
-                                                  dmom_w_source);
-                updateFrictionalPressure(vos,
+                                                  dmom_w_source,
+                                                  q_grad_vos[eN_k_nSpace+0],
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  q_grad_vos[eN_k_nSpace+1]);
+		updatePenaltyForPacking(vos,
+					u,
+					v,
+					w,
+					mom_u_source,
+					mom_v_source,
+					mom_w_source,
+					dmom_u_source,
+					dmom_v_source,
+					dmom_w_source);
+
+				               updateFrictionalPressure(vos,
                         grad_vos,
 						mom_u_source,
 						mom_v_source,
 						mom_w_source);      
-                updateFrictionalStress(vos,
+		     updateFrictionalStress(vos,
                                  eps_rho,
                                  eps_mu,
                                  rho_0,
@@ -2034,39 +1999,6 @@ namespace proteus
                                   mom_wu_diff_ten,
                                   mom_wv_diff_ten);
                 //Turbulence closure model
-                if (turbulenceClosureModel >= 3)
-                  {
-                    const double c_mu = 0.09;//mwf hack 
-                    updateTurbulenceClosure(turbulenceClosureModel,
-                                            eps_rho,
-                                            eps_mu,
-                                            rho_0,
-                                            nu_0,
-                                            rho_1,
-                                            nu_1,
-                                            useVF,
-                                            vf[eN_k],
-                                            phi[eN_k],
-                                            vos,
-                                            c_mu, //mwf hack
-                                            q_turb_var_0[eN_k],
-                                            q_turb_var_1[eN_k],
-                                            &q_turb_var_grad_0[eN_k_nSpace],
-                                            q_eddy_viscosity[eN_k],
-                                            mom_uu_diff_ten,
-                                            mom_vv_diff_ten,
-                                            mom_ww_diff_ten,
-                                            mom_uv_diff_ten,
-                                            mom_uw_diff_ten,
-                                            mom_vu_diff_ten,
-                                            mom_vw_diff_ten,
-                                            mom_wu_diff_ten,
-                                            mom_wv_diff_ten,
-                                            mom_u_source,
-                                            mom_v_source,
-                                            mom_w_source);                                        
-
-                  }
                 //
                 //save momentum for time history and velocity for subgrid error
                 //
@@ -2726,68 +2658,6 @@ namespace proteus
                                      bc_dmom_w_ham_grad_w_ext);          
 
                 //Turbulence closure model
-                if (turbulenceClosureModel >= 3)
-                  {
-                    const double turb_var_grad_0_dummy[2] = {0.,0.};
-                    const double c_mu = 0.09;//mwf hack 
-                    updateTurbulenceClosure(turbulenceClosureModel,
-                                            eps_rho,
-                                            eps_mu,
-                                            rho_0,
-                                            nu_0,
-                                            rho_1,
-                                            nu_1,
-                                            useVF,
-                                            ebqe_vf_ext[ebNE_kb],
-                                            ebqe_phi_ext[ebNE_kb],
-                                            vos_ext,
-                                            c_mu, //mwf hack
-                                            ebqe_turb_var_0[ebNE_kb],
-                                            ebqe_turb_var_1[ebNE_kb],
-                                            turb_var_grad_0_dummy, //not needed
-                                            eddy_viscosity_ext,
-                                            mom_uu_diff_ten_ext,
-                                            mom_vv_diff_ten_ext,
-                                            mom_ww_diff_ten_ext,
-                                            mom_uv_diff_ten_ext,
-                                            mom_uw_diff_ten_ext,
-                                            mom_vu_diff_ten_ext,
-                                            mom_vw_diff_ten_ext,
-                                            mom_wu_diff_ten_ext,
-                                            mom_wv_diff_ten_ext,
-                                            mom_u_source_ext,
-                                            mom_v_source_ext,
-                                            mom_w_source_ext);                                    
-
-                    updateTurbulenceClosure(turbulenceClosureModel,
-                                            eps_rho,
-                                            eps_mu,
-                                            rho_0,
-                                            nu_0,
-                                            rho_1,
-                                            nu_1,
-                                            useVF,
-                                            bc_ebqe_vf_ext[ebNE_kb],
-                                            bc_ebqe_phi_ext[ebNE_kb],
-                                            vos_ext,
-                                            c_mu, //mwf hack
-                                            ebqe_turb_var_0[ebNE_kb],
-                                            ebqe_turb_var_1[ebNE_kb],
-                                            turb_var_grad_0_dummy, //not needed
-                                            bc_eddy_viscosity_ext,
-                                            bc_mom_uu_diff_ten_ext,
-                                            bc_mom_vv_diff_ten_ext,
-                                            bc_mom_ww_diff_ten_ext,
-                                            bc_mom_uv_diff_ten_ext,
-                                            bc_mom_uw_diff_ten_ext,
-                                            bc_mom_vu_diff_ten_ext,
-                                            bc_mom_vw_diff_ten_ext,
-                                            bc_mom_wu_diff_ten_ext,
-                                            bc_mom_wv_diff_ten_ext,
-                                            bc_mom_u_source_ext,
-                                            bc_mom_v_source_ext,
-                                            bc_mom_w_source_ext);                                         
-                  }
 
                 //
                 //moving domain
@@ -2830,7 +2700,7 @@ namespace proteus
                 //calculate the numerical fluxes 
                 // 
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 exteriorNumericalAdvectiveFlux(isDOFBoundary_p[ebNE_kb],
                                                isDOFBoundary_u[ebNE_kb],
                                                isDOFBoundary_v[ebNE_kb],
@@ -3677,10 +3547,10 @@ namespace proteus
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not
 
-                updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
-                                                  /* nonlinearDragFactor, */
-                                                  /* vos, */
-                                                  /* meanGrainSize, */
+                updateDarcyForchheimerTerms_Ergun(// linearDragFactor,
+                                                  // nonlinearDragFactor,
+                                                  // vos,
+                                                  // meanGrainSize,
                                                   q_dragAlpha[eN_k],
                                                   q_dragBeta[eN_k],
                                                   eps_rho,
@@ -3689,6 +3559,7 @@ namespace proteus
                                                   nu_0,
                                                   rho_1,
                                                   nu_1,
+						                          eddy_viscosity,
                                                   useVF,
                                                   vf[eN_k],
                                                   phi[eN_k],
@@ -3702,19 +3573,34 @@ namespace proteus
                                                   vos,
                                                   q_velocity_fluid[eN_k_nSpace+0],
                                                   q_velocity_fluid[eN_k_nSpace+1],
-                                                  q_velocity_fluid[eN_k_nSpace+1],//cek hack, should not be used
+                                                  q_velocity_fluid[eN_k_nSpace+1],
                                                   mom_u_source,
                                                   mom_v_source,
                                                   mom_w_source,
                                                   dmom_u_source,
                                                   dmom_v_source,
-                                                  dmom_w_source);
-                updateFrictionalPressure(vos,
+                                                  dmom_w_source,
+                                                  q_grad_vos[eN_k_nSpace+0],
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  q_grad_vos[eN_k_nSpace+1]);
+
+		updatePenaltyForPacking(vos,
+					u,
+					v,
+					w,
+					mom_u_source,
+					mom_v_source,
+					mom_w_source,
+					dmom_u_source,
+					dmom_v_source,
+					dmom_w_source);
+
+		updateFrictionalPressure(vos,
                         grad_vos,
 						mom_u_source,
 						mom_v_source,
 						mom_w_source);      
-                updateFrictionalStress(vos,
+		           updateFrictionalStress(vos,
                                  eps_rho,
                                  eps_mu,
                                  rho_0,
@@ -3737,41 +3623,6 @@ namespace proteus
                                   mom_ww_diff_ten,
                                   mom_wu_diff_ten,
                                   mom_wv_diff_ten);
-                //Turbulence closure model
-                if (turbulenceClosureModel >= 3)
-                  {
-                    const double c_mu = 0.09;//mwf hack 
-                    updateTurbulenceClosure(turbulenceClosureModel,
-                                            eps_rho,
-                                            eps_mu,
-                                            rho_0,
-                                            nu_0,
-                                            rho_1,
-                                            nu_1,
-                                            useVF,
-                                            vf[eN_k],
-                                            phi[eN_k],
-                                            vos,
-                                            c_mu, //mwf hack
-                                            q_turb_var_0[eN_k],
-                                            q_turb_var_1[eN_k],
-                                            &q_turb_var_grad_0[eN_k_nSpace],
-                                            eddy_viscosity,
-                                            mom_uu_diff_ten,
-                                            mom_vv_diff_ten,
-                                            mom_ww_diff_ten,
-                                            mom_uv_diff_ten,
-                                            mom_uw_diff_ten,
-                                            mom_vu_diff_ten,
-                                            mom_vw_diff_ten,
-                                            mom_wu_diff_ten,
-                                            mom_wv_diff_ten,
-                                            mom_u_source,
-                                            mom_v_source,
-                                            mom_w_source);                                        
-
-                  }
-                //
                 //
                 //moving mesh
                 //
@@ -4512,69 +4363,7 @@ namespace proteus
                                      bc_mom_w_ham_ext,
                                      bc_dmom_w_ham_grad_p_ext,          
                                      bc_dmom_w_ham_grad_w_ext);          
-                //Turbulence closure model
-                if (turbulenceClosureModel >= 3)
-                  {
-                    const double turb_var_grad_0_dummy[2] = {0.,0.};
-                    const double c_mu = 0.09;//mwf hack 
-                    updateTurbulenceClosure(turbulenceClosureModel,
-                                            eps_rho,
-                                            eps_mu,
-                                            rho_0,
-                                            nu_0,
-                                            rho_1,
-                                            nu_1,
-                                            useVF,
-                                            ebqe_vf_ext[ebNE_kb],
-                                            ebqe_phi_ext[ebNE_kb],
-                                            vos_ext,
-                                            c_mu, //mwf hack
-                                            ebqe_turb_var_0[ebNE_kb],
-                                            ebqe_turb_var_1[ebNE_kb],
-                                            turb_var_grad_0_dummy, //not needed
-                                            eddy_viscosity_ext,
-                                            mom_uu_diff_ten_ext,
-                                            mom_vv_diff_ten_ext,
-                                            mom_ww_diff_ten_ext,
-                                            mom_uv_diff_ten_ext,
-                                            mom_uw_diff_ten_ext,
-                                            mom_vu_diff_ten_ext,
-                                            mom_vw_diff_ten_ext,
-                                            mom_wu_diff_ten_ext,
-                                            mom_wv_diff_ten_ext,
-                                            mom_u_source_ext,
-                                            mom_v_source_ext,
-                                            mom_w_source_ext);                                    
 
-                    updateTurbulenceClosure(turbulenceClosureModel,
-                                            eps_rho,
-                                            eps_mu,
-                                            rho_0,
-                                            nu_0,
-                                            rho_1,
-                                            nu_1,
-                                            useVF,
-                                            ebqe_vf_ext[ebNE_kb],
-                                            ebqe_phi_ext[ebNE_kb],
-                                            vos_ext,
-                                            c_mu, //mwf hack
-                                            ebqe_turb_var_0[ebNE_kb],
-                                            ebqe_turb_var_1[ebNE_kb],
-                                            turb_var_grad_0_dummy, //not needed
-                                            bc_eddy_viscosity_ext,
-                                            bc_mom_uu_diff_ten_ext,
-                                            bc_mom_vv_diff_ten_ext,
-                                            bc_mom_ww_diff_ten_ext,
-                                            bc_mom_uv_diff_ten_ext,
-                                            bc_mom_uw_diff_ten_ext,
-                                            bc_mom_vu_diff_ten_ext,
-                                            bc_mom_vw_diff_ten_ext,
-                                            bc_mom_wu_diff_ten_ext,
-                                            bc_mom_wv_diff_ten_ext,
-                                            bc_mom_u_source_ext,
-                                            bc_mom_v_source_ext,
-                                            bc_mom_w_source_ext);                                         
-                  }
                 //
                 //moving domain
                 //
@@ -4681,7 +4470,7 @@ namespace proteus
                 //calculate the flux jacobian
                 //
                 ck.calculateGScale(G,normal,h_penalty);
-                penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
+                penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
                     register int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
@@ -5119,14 +4908,16 @@ namespace proteus
                                      double vos_limiter,
                                      double mu_fr_limiter)
   {
-    cppRANS3PSed2D_base* rvalue = proteus::chooseAndAllocateDiscretization2D<cppRANS3PSed2D_base,cppRANS3PSed2D,CompKernel>(nSpaceIn,
-                                                                                                                            nQuadraturePoints_elementIn,
-                                                                                                                            nDOF_mesh_trial_elementIn,
-                                                                                                                            nDOF_trial_elementIn,
-                                                                                                                            nDOF_test_elementIn,
-                                                                                                                            nQuadraturePoints_elementBoundaryIn,
-                                                                                                                            CompKernelFlag);
-    rvalue->setSedClosure(aDarcy,
+    cppRANS3PSed2D_base* rvalue = proteus::chooseAndAllocateDiscretization2D
+    <cppRANS3PSed2D_base,cppRANS3PSed2D,CompKernel>
+    (nSpaceIn,
+     nQuadraturePoints_elementIn,
+     nDOF_mesh_trial_elementIn,
+     nDOF_trial_elementIn,
+     nDOF_test_elementIn,
+     nQuadraturePoints_elementBoundaryIn,
+     CompKernelFlag);
+         rvalue->setSedClosure(aDarcy,
                           betaForch,
                           grain,
                           packFraction,

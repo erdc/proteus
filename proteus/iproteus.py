@@ -13,6 +13,10 @@
 #
 #
 
+from __future__ import print_function
+from builtins import zip
+from builtins import str
+from builtins import range
 import os
 import proteus
 
@@ -214,7 +218,7 @@ if opts.dataDir != '':
     	try:
     	     os.mkdir(opts.dataDir)
         except os.error:
-             print "Failed to create: " + opts.dataDir
+             print("Failed to create: " + opts.dataDir)
              opts.dataDir=''
     logDir = opts.dataDir
 
@@ -366,10 +370,10 @@ if __name__ == '__main__':
     log("Running Proteus version "+proteus.__version__,level=0)
     if opts.viewer:
         log("Starting viewer")
-        Viewers.viewerOn(so.name+`comm.rank()`,opts.viewer)
+        Viewers.viewerOn(so.name+repr(comm.rank()),opts.viewer)
     log("Setting simulation processing defaults")
     for p,simFlags in zip(pList,simFlagsList):
-        pNameProc = p.name + `comm.rank()`
+        pNameProc = p.name + repr(comm.rank())
         simFlags['simulationName'] = p.name
         simFlags['simulationNameProc'] = pNameProc
         simFlags['dataFile']       = pNameProc+'.dat'
@@ -379,15 +383,15 @@ if __name__ == '__main__':
             simFlags['plotQuantities'] = ['u']  #plot soln and exact soln if exists
             p.coefficients.plotCoefficients = opts.plotCoefficients
         if opts.ensight:
-            if simFlags.has_key('plotOptions'):
-                if simFlags['plotOptions'].has_key('ensight'):
+            if 'plotOptions' in simFlags:
+                if 'ensight' in simFlags['plotOptions']:
                     simFlags['plotOptions']['ensight']['on'] = True
                 else:
                     simFlags['plotOptions']['ensight'] = {'on':True}
             else:
                 simFlags['plotOptions'] = {'ensight':{'on':True}}
             #control convention on case file for multiple models, doesn't effect parun right now
-            simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`
+            simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ repr(comm.rank())
     if opts.batchFileName != "":
         log("Reading batch file = ",opts.batchFileName)
         #try to split batch file into executable blocks delimited by
@@ -425,7 +429,7 @@ if __name__ == '__main__':
         elif opts.batchFileName != "":
             userInput = False
             lines = '\n'.join(batchBlocks.pop(0))
-            exec lines
+            exec(lines)
             run     = True
             running = len(batchBlocks) > 0
         else:
@@ -446,7 +450,7 @@ if __name__ == '__main__':
                     running = False
                 else:
                     userInput = True
-                    exec line
+                    exec(line)
                     sys.stdout.write(">>>")
             else:
                 userInput = False
@@ -454,23 +458,23 @@ if __name__ == '__main__':
                 running = False
         if run:
             log("Starting %s run number %i" %(so.name,runNumber))
-            runName = so.name+`runNumber`
+            runName = so.name+repr(runNumber)
             if opts.profile:
-                profiler.run('ns = NumericalSolution.NS_base(so,pList,nList,sList,opts,simFlagsList)',so.name+'_init_prof'+`comm.rank()`)
-                stats = pstats.Stats(so.name+'_init_prof'+`comm.rank()`)
+                profiler.run('ns = NumericalSolution.NS_base(so,pList,nList,sList,opts,simFlagsList)',so.name+'_init_prof'+repr(comm.rank()))
+                stats = pstats.Stats(so.name+'_init_prof'+repr(comm.rank()))
                 stats.strip_dirs()
-                stats.dump_stats(so.name+'_init_prof_c'+`comm.rank()`)
+                stats.dump_stats(so.name+'_init_prof_c'+repr(comm.rank()))
                 stats.sort_stats('cumulative')
                 if Profiling.verbose:
                     stats.print_stats(30)
                 stats.sort_stats('time')
                 if Profiling.verbose:
                     stats.print_stats(30)
-                profiler.run('ns.calculateSolution(runName)',so.name+'_run_prof'+`comm.rank()`)
+                profiler.run('ns.calculateSolution(runName)',so.name+'_run_prof'+repr(comm.rank()))
                 runNumber+=1
-                stats = pstats.Stats(so.name+'_run_prof'+`comm.rank()`)
+                stats = pstats.Stats(so.name+'_run_prof'+repr(comm.rank()))
                 stats.strip_dirs()
-                stats.dump_stats(so.name+'_run_prof_c'+`comm.rank()`)
+                stats.dump_stats(so.name+'_run_prof_c'+repr(comm.rank()))
                 stats.sort_stats('cumulative')
                 if Profiling.verbose:
                     stats.print_stats(30)
@@ -492,14 +496,14 @@ if __name__ == '__main__':
             try:
                 if vtkViewers.hasQt:
                     vtkViewers.g.app.exec_()
-                for w in vtkViewers.windowDict.values():
+                for w in list(vtkViewers.windowDict.values()):
                     w.compManager.StopServices()
                 sys.exit()
             except:
                 pass
         else:
             try:
-                for w in vtkViewers.windowDict.values():
+                for w in list(vtkViewers.windowDict.values()):
                     w.compManager.StartServices()
                 sys.exit()
             except:

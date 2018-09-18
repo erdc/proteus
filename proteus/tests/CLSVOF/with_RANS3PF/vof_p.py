@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
-from multiphase import *
+from .multiphase import *
 from proteus.mprans import VOF3P
 
 LevelModelType = VOF3P.LevelModel
@@ -31,7 +33,7 @@ def getAFBC_vof(x,flag):
 advectiveFluxBoundaryConditions = {0:getAFBC_vof}
 diffusiveFluxBoundaryConditions = {0:{}}
 
-class VOF_IC:
+class VOF_IC(object):
     def uOfXT(self,x,t):
         return smoothedHeaviside(epsFact_consrv_heaviside*he,signedDistance(x))
 

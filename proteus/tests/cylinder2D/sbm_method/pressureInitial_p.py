@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
-from cylinder import *
+from .cylinder import *
 from proteus.mprans import PresInit
 
 #domain = ctx.domain
@@ -27,7 +29,7 @@ def getDiffusiveFlux_pInit(x,flag):
     if flag != boundaryTags['right']:
         return lambda x,t: 0.0
 
-class getIBC_pInit:
+class getIBC_pInit(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

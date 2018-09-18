@@ -1,7 +1,10 @@
+from __future__ import division
 # cython: wraparound=False
 # cython: boundscheck=False
 # cython: initializedcheck=False
-
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import cython
 
 """
@@ -128,11 +131,16 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.reset()
         self.BC_type = 'NonMaterial'
         self.vof_advective.setConstantBC(0.)
+        self.vos_advective.setConstantBC(0.)
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
+        self.us_diffusive.setConstantBC(0.)
+        self.vs_diffusive.setConstantBC(0.)
+        self.ws_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
+        self.pInc_diffusive.setConstantBC(0.)
 
     def setTank(self, b_or=None):
         if b_or is None:
@@ -200,7 +208,8 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.k_dirichlet.setConstantBC(0.) 
         # advective        
         self.p_advective.setConstantBC(0.)
-        self.pInit_advective.setConstantBC(0.)          
+        self.pInit_advective.setConstantBC(0.)
+        self.pInc_advective.setConstantBC(0.)
         self.u_advective.setConstantBC(0.)
         self.v_advective.setConstantBC(0.)
         self.w_advective.setConstantBC(0.)
@@ -237,16 +246,33 @@ class BC_RANS(BoundaryConditions.BC_Base):
             orientation = self._b_or
         self.reset()
         self.p_dirichlet.setConstantBC(0.)
-        self.u_dirichlet.setConstantBC(0.)
-        self.v_dirichlet.setConstantBC(0.)
-        self.w_dirichlet.setConstantBC(0.)
+        self.pInc_dirichlet.setConstantBC(0.)
+        self.pInit_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.setConstantBC(vof_air)  # air
+        self.vos_dirichlet.setConstantBC(0.)  
+        self.k_dirichlet.setConstantBC(1e-30)
         if self._b_or[0] == 1. or self._b_or[0] == -1.:
+            self.v_dirichlet.setConstantBC(0.)
+            self.w_dirichlet.setConstantBC(0.)
+            self.vs_dirichlet.setConstantBC(0.)
+            self.ws_dirichlet.setConstantBC(0.)
             self.u_diffusive.setConstantBC(0.)
+            self.us_diffusive.setConstantBC(0.)
         if self._b_or[1] == 1. or self._b_or[1] == -1.:
+            self.u_dirichlet.setConstantBC(0.)
+            self.w_dirichlet.setConstantBC(0.)
+            self.us_dirichlet.setConstantBC(0.)
+            self.ws_dirichlet.setConstantBC(0.)
             self.v_diffusive.setConstantBC(0.)
+            self.vs_diffusive.setConstantBC(0.)
         if self._b_or[2] == 1. or self._b_or[2] == -1.:
+            self.u_dirichlet.setConstantBC(0.)
+            self.v_dirichlet.setConstantBC(0.)
+            self.us_dirichlet.setConstantBC(0.)
+            self.vs_dirichlet.setConstantBC(0.)
             self.w_diffusive.setConstantBC(0.)
+            self.ws_diffusive.setConstantBC(0.)
+        self.k_dirichlet.setConstantBC(1e-30)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
 
@@ -340,10 +366,14 @@ class BC_RANS(BoundaryConditions.BC_Base):
             - If False, the wall function prescribes dirichlet conditions.
 
         """
-
-        self.reset()
-
         wf = wall
+        self.reset()
+        self.setNoSlip()
+        self.BC_type = "Wall function"
+        self.dissipation_diffusive.resetBC()
+        self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)
+        self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
+        """
         self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
         self.vof_advective.setConstantBC(0.)
         self.p_advective.setConstantBC(0.)
@@ -359,7 +389,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.v_dirichlet.uOfXT = lambda x, t: wf.get_v_dirichlet(x, t)
             self.w_dirichlet.uOfXT = lambda x, t: wf.get_w_dirichlet(x, t)
             self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)
-
+        """
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
         Sets boundary conditions for moving the mesh with a rigid body
@@ -411,7 +441,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         return self.__cpp_MoveMesh_h(x, t)[2]
 
     def setUnsteadyTwoPhaseVelocityInlet(self, wave, smoothing, vert_axis=None,
-                                         wind_speed=None, vof_air=1., vof_water=0.):
+                                         wind_speed=None, vof_air=1., vof_water=0.,kInflow=1e-30, dInflow = 1e-10):
         """
         Imposes a velocity profile on the fluid with input wave and wind
         conditions.
@@ -448,6 +478,16 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.w_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
         self.vof_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(x, t)
         self.p_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
+        self.pInc_advective.setConstantBC(0.0)
+        self.pInit_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)#setConstantBC(0.0)
+        self.vos_dirichlet.setConstantBC(0.0)
+        self.us_dirichlet.setConstantBC(0.0)
+        self.vs_dirichlet.setConstantBC(0.0)
+        self.ws_dirichlet.setConstantBC(0.0)
+        self.k_dirichlet.setConstantBC(kInflow)
+        self.dissipation_dirichlet.setConstantBC(dInflow)
+        self.dissipation_diffusive.setConstantBC(0.)
+        self.k_diffusive.setConstantBC(0.0)
 
     def __cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(self, x, t):
         cython.declare(xx=cython.double[3])
@@ -542,7 +582,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
                 if phi <= 0.:
                     H = 0.0
                 elif 0 < phi <= smoothing:
-                    H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                    H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
                 else:
                     H = 1.0
                 u = H * Uwind[i] + (1 - H) * U[i]
@@ -566,7 +606,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             u = H * Uwind + (1 - H) * U
@@ -580,7 +620,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * kInflowAir + (1 - H) * kInflow
@@ -590,7 +630,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * dissipationInflowAir + (1 - H) * dissipationInflow
@@ -661,7 +701,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * kInflowAir + (1 - H) * kInflow
@@ -671,20 +711,39 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * dissipationInflowAir + (1 - H) * dissipationInflow
 
-        self.u_dirichlet.setConstantBC(0.)
-        self.v_dirichlet.setConstantBC(0.)
-        self.w_dirichlet.setConstantBC(0.)
+        if self._b_or[0] == 1. or self._b_or[0] == -1.:
+            self.v_dirichlet.setConstantBC(0.)
+            self.w_dirichlet.setConstantBC(0.)
+            self.vs_dirichlet.setConstantBC(0.)
+            self.ws_dirichlet.setConstantBC(0.)
+            self.u_diffusive.setConstantBC(0.)
+            self.us_diffusive.setConstantBC(0.)
+        if self._b_or[1] == 1. or self._b_or[1] == -1.:
+            self.u_dirichlet.setConstantBC(0.)
+            self.w_dirichlet.setConstantBC(0.)
+            self.us_dirichlet.setConstantBC(0.)
+            self.ws_dirichlet.setConstantBC(0.)
+            self.v_diffusive.setConstantBC(0.)
+            self.vs_diffusive.setConstantBC(0.)
+        if self._b_or[2] == 1. or self._b_or[2] == -1.:
+            self.u_dirichlet.setConstantBC(0.)
+            self.v_dirichlet.setConstantBC(0.)
+            self.us_dirichlet.setConstantBC(0.)
+            self.vs_dirichlet.setConstantBC(0.)
+            self.w_diffusive.setConstantBC(0.)
+            self.ws_diffusive.setConstantBC(0.)
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
+        self.pInit_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
+        self.pInc_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
-        self.u_diffusive.setConstantBC(0.)
+        self.vos_dirichlet.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
-
         if U is not None:
             def get_inlet_ux_dirichlet(i):
                 def ux_dirichlet(x, t):
@@ -692,7 +751,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
                     if phi <= 0.:
                         H = 0.0
                     elif 0 < phi <= smoothing:
-                        H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                        H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
                     else:
                         H = 1.0
                     return H * Uwind[i] + (1 - H) * U[i]
@@ -715,7 +774,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
             self.dissipation_advective.resetBC()
             self.dissipation_diffusive.resetBC()
-
 
     def setHydrostaticPressureOutletWithDepth_stressFree(self, seaLevel, rhoUp, rhoDown, nuUp, nuDown, g,
                                                          refLevel, smoothing, U=None, Uwind=None,
@@ -782,7 +840,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * kInflowAir + (1 - H) * kInflow
@@ -792,7 +850,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * dissipationInflowAir + (1 - H) * dissipationInflow
@@ -814,7 +872,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
                     if phi <= 0.:
                         H = 0.0
                     elif 0 < phi <= smoothing:
-                        H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                        H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
                     else:
                         H = 1.0
                     return H * Uwind[i] + (1 - H) * U[i]
@@ -905,7 +963,7 @@ class RelaxationZone:
 
     def __cinit__(self, zone_type, center, orientation, epsFact_solid,
                   waves=None, shape=None, wind_speed=np.array([0., 0., 0.]),
-                  dragAlpha=0.5 / 1.005e-6, dragBeta=0., porosity=1., vert_axis=None, smoothing=0.,
+                  dragAlpha=old_div(0.5, 1.005e-6), dragBeta=0., porosity=1., vert_axis=None, smoothing=0.,
                   vof_water=0., vof_air=1.):
         self.Shape = shape
         self.nd = self.Shape.Domain.nd
@@ -990,7 +1048,7 @@ class RelaxationZone:
         return self.waves.__cpp_calculate_velocity(x, t)
 
 
-class RelaxationZoneWaveGenerator():
+class RelaxationZoneWaveGenerator:
     """
     Prescribe a velocity penalty scaling in a material zone via a
     Darcy-Forchheimer penalty
@@ -1018,13 +1076,13 @@ class RelaxationZoneWaveGenerator():
 
     def calculate_init(self):
         max_key = 0
-        for key, zone in self.zones.iteritems():
+        for key, zone in list(self.zones.items()):
             zone.calculate_init()
             if key > max_key:
                 max_key = key
         self.max_flag = max_key
         self.zones_array = np.empty(self.max_flag + 1, dtype=object)
-        for key, zone in self.zones.iteritems():
+        for key, zone in list(self.zones.items()):
             self.zones_array[key] = zone
 
     def calculate(self):
@@ -1118,7 +1176,7 @@ class __cppClass_WavesCharacteristics:
             waterSpeed = self.WT.u(xx, t)
         elif 0 < phi <= self.smoothing:
             # smoothing on half the range of VOF (above wave crest)
-            H = smoothedHeaviside(self.smoothing / 2., phi - self.smoothing / 2.)
+            H = smoothedHeaviside(old_div(self.smoothing, 2.), phi - old_div(self.smoothing, 2.))
             # use max velocity of wave for water
             x_max[0] = x[0]
             x_max[1] = x[1]
@@ -1185,7 +1243,7 @@ from collections import OrderedDict
 from proteus.mprans import BodyDynamics as bd
 
 
-class WallFunctions(AuxiliaryVariables.AV_base, object):
+class WallFunctions(AuxiliaryVariables.AV_base):
     """
     Auxiliary variable used to calculate attributes of an associated shape
     class instance acting as a wall.
@@ -1235,7 +1293,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         #_b_or is positive when points outward the domain
         b0, b1, b2 = self._b_or
         # normal unit vector is positive when points inward the domain
-        self.nV = (-self._b_or) / np.sqrt(np.sum([b0**2, b1**2, b2**2]))
+        self.nV = old_div((-self._b_or), np.sqrt(np.sum([b0**2, b1**2, b2**2])))
         # initialise variables
         self.Ubound = np.zeros(3)
         self.kappa = 1e-10
@@ -1446,7 +1504,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         # projection of u vector over an ortoganal plane to b_or
         self.tanU = self.meanV - self.meanV * (self.nV**2)
         # tangential unit vector
-        self.tV = self.tanU/np.sqrt(np.sum(self.tanU**2))
+        self.tV = old_div(self.tanU,np.sqrt(np.sum(self.tanU**2)))
 
     def getVariables(self, x, t):
         """
@@ -1466,15 +1524,15 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         if self.Ystar < 11.225:
             self.Ustar = self.Ystar
             self.uDir = (self.utStar*self.Ystar) * self.tV
-            self.gradU = ( (self.utStar**2) / self.nu ) * self.tV
+            self.gradU = ( old_div((self.utStar**2), self.nu) ) * self.tV
         # log-law layer
         else:
             # Wall function theory from S.B. Pope, page 442-443
             E = np.exp(self.B * self.K)
             self.Ustar = self.utStar * np.log(E * self.Ystar) / self.K
-            self.utAbs = self.utStar * np.sqrt(Up / self.Ustar)
+            self.utAbs = self.utStar * np.sqrt(old_div(Up, self.Ustar))
             # Velocity vector and velocity gradient multiplied by the tangential vector unit
-            self.gradU = (self.utAbs / (self.K * self.Y)) * self.tV
+            self.gradU = (old_div(self.utAbs, (self.K * self.Y))) * self.tV
             # Linear approximation for velocity at the wall (using the gradU of the logLaw)
             self.uDir = self.tanU - (self.gradU * self.Y)
 
@@ -1523,9 +1581,9 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.getVariables(x, t)
         d = 0.
         if self.turbModel == 'ke':
-            d = (self.utStar**3) / (self.K * self.Y)
+            d = old_div((self.utStar**3), (self.K * self.Y))
         elif self.turbModel == 'kw' and self.kappa > 0.:
-            d = np.sqrt(self.kappa) / (self.K * self.Y * (self.Cmu**0.25))
+            d = old_div(np.sqrt(self.kappa), (self.K * self.Y * (self.Cmu**0.25)))
         return d
 
     def get_u_diffusive(self, x, t):
@@ -1559,7 +1617,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         return gradU
 
 
-class kWall(AuxiliaryVariables.AV_base, object):
+class kWall(AuxiliaryVariables.AV_base):
     """
     Auxiliary variable used to calculate attributes of an associated shape
     class instance acting as a wall for the k variable.
@@ -1620,7 +1678,7 @@ class kWall(AuxiliaryVariables.AV_base, object):
     def kappaNearWall(self, xi, element, rank, kInit=None):
         if kInit is True or self.model is None:
             self.ut = self.Yplus * self.nu / self.Y
-            self.kappa = (self.ut**2) / np.sqrt(self.Cmu)
+            self.kappa = old_div((self.ut**2), np.sqrt(self.Cmu))
         else:
             self.kappa = self.getFluidKappaLocalCoords(xi, element, rank)
 

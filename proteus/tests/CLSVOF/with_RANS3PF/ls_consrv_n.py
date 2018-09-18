@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
-from multiphase import *
-from ls_consrv_p import *
+from .multiphase import *
+from .ls_consrv_p import *
 
 timeIntegrator  = ForwardIntegrator
 timeIntegration = NoIntegration
