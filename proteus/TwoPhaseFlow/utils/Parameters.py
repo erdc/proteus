@@ -31,7 +31,8 @@ class ParametersHolder:
                       self.Models.addedmass,
                       self.Models.pressureInitial,
                       self.Models.pressure,
-                      self.Models.pressureIncrement]
+                      self.Models.pressureIncrement,
+                      self.Models.mcorr]
         self.nModels = 0
         self.models_list = []
         for i in range(len(all_models)):
@@ -43,6 +44,22 @@ class ParametersHolder:
                 for key, value in model.__dict__.items():
                     logEvent('{key}: {value}'. format(key=key, value=value))
                 logEvent('----------')
+
+class ParametersModelsHolder:
+    def __init__(self):
+        self.rans2p = ParametersModelRANS2P()
+        self.vof = ParametersModelVOF()
+        self.ncls = ParametersModelNCLS()
+        self.rdls = ParametersModelRDLS()
+        self.addedmass = ParametersModelAddedMass()
+        self.movemeshmonitor = ParametersModelMoveMeshMonitor()
+        self.movemeshelastic = ParametersModelMoveMeshElastic()
+        self.clsvof = ParametersModelCLSVOF()
+        self.rans3p = ParametersModelRANS3P()
+        self.pressureInitial = ParametersModelPressureInitial()
+        self.pressure = ParametersModelPressure()
+        self.pressureIncrement = ParametersModelPressureIncrement()
+        self.mcorr = ParametersModelMCorr()
 
 class ParametersModelBase(object):
     """
@@ -176,6 +193,19 @@ class ParametersModelRDLS(ParametersModelBase):
         self.shockCapturingFactor = shockCapturingFactor
         self.lag_shockCapturing = False
 
+class ParametersModelMCorr(ParametersModelBase):
+    """
+    """
+    def __init__(self):
+        super(ParametersModelMCorr, self).__init__(name='mcorr', index=None)
+        self.tolFac = 0.001
+        self.useMetrics = True
+        self.checkMass = False
+        self.applyCorrection = True
+        self.epsFactHeaviside = epsFact
+        self.epsFactDirac = epsFact
+        self.epsFactDiffusion = 0.1
+
 class ParametersModelAddedMass(ParametersModelBase):
     """
     """
@@ -223,17 +253,3 @@ class ParametersPhysical:
     def __setitem__(self, key, val):
         self.__dict__[key] = val
 
-class ParametersModelsHolder:
-    def __init__(self):
-        self.rans2p = ParametersModelRANS2P()
-        self.vof = ParametersModelVOF()
-        self.ncls = ParametersModelNCLS()
-        self.rdls = ParametersModelRDLS()
-        self.addedmass = ParametersModelAddedMass()
-        self.movemeshmonitor = ParametersModelMoveMeshMonitor()
-        self.movemeshelastic = ParametersModelMoveMeshElastic()
-        self.clsvof = ParametersModelCLSVOF()
-        self.rans3p = ParametersModelRANS3P()
-        self.pressureInitial = ParametersModelPressureInitial()
-        self.pressure = ParametersModelPressure()
-        self.pressureIncrement = ParametersModelPressureIncrement()

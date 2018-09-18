@@ -88,10 +88,18 @@ class TwoPhaseFlowProblem:
 
         # set indice of models if ns_model and ls_model is set
         ind = 0
-        if self.ls_model == 1:
+        if self.ls_model == 0:
+                self.Parameters.Models.vof.index = ind
+                ind += 1
+                self.Parameters.Models.ncls.index = ind
+                ind += 1
+                self.Parameters.Models.rdls.index = ind
+                ind += 1
+                self.Parameters.Models.ls_consrv.index = ind
+                ind += 1
+        elif self.ls_model == 1:
             self.Parameters.Models.clsvof.index = ind
             ind += 1
-        else:
             if self.ns_model == 0:
                 self.Parameters.Models.rans2p.index = ind
                 ind += 1
@@ -103,15 +111,6 @@ class TwoPhaseFlowProblem:
                 self.Parameters.Models.pressure.index = ind
                 ind += 1
                 self.Parameters.Models.pressureInitial.index = ind
-                ind += 1
-        if self.ls_model == 0:
-                self.Parameters.Models.vof.index = ind
-                ind += 1
-                self.Parameters.Models.ncls.index = ind
-                ind += 1
-                self.Parameters.Models.rdls.index = ind
-                ind += 1
-                self.Parameters.Models.ls_consrv.index = ind
                 ind += 1
 
     def assert_initialConditions(self):
@@ -225,12 +224,13 @@ class FESpace:
     Create FE Spaces.
     """
     def __init__(self,ns_model,nd):
-        assert ns_model == 0 or ns_model == 1, "ns_model must be 0 (rans2p) or 1 (rans3p)"
+        if ns_model is not None:
+            assert ns_model == 0 or ns_model == 1, "ns_model must be 0 (rans2p) or 1 (rans3p)"
         assert nd in [2,3], 'number of dimensions must be 2 or 3'
         self.ns_model=ns_model
         self.nd=nd
         # For now we just support rans2p with: p1-p1 and rans3p with: p2-p1
-        if ns_model == 0: #rans2p
+        if ns_model == 0 or ns_model is None: # rans2p or None
             self.velSpaceOrder=1
             self.pSpaceOrder=1
         else: #rans3p
