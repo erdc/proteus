@@ -1549,37 +1549,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                   self.nSpace_global),
                  'd')
         self.q[
-            ('grad_u_Star')] = numpy.zeros(
+            'grad_u_Star'] = numpy.zeros(
                  (self.mesh.nElements_global,
                   self.nQuadraturePoints_element,
                   self.nSpace_global),
                  'd')
         self.q[
-            ('grad_v_Star')] = numpy.zeros(
+            'grad_v_Star'] = numpy.zeros(
                  (self.mesh.nElements_global,
                   self.nQuadraturePoints_element,
                   self.nSpace_global),
                  'd')
         self.q[
-            ('grad_u')] = numpy.zeros(
+            'grad_u_old'] = numpy.zeros(
                  (self.mesh.nElements_global,
                   self.nQuadraturePoints_element,
                   self.nSpace_global),
                  'd')
         self.q[
-            ('grad_v')] = numpy.zeros(
-                 (self.mesh.nElements_global,
-                  self.nQuadraturePoints_element,
-                  self.nSpace_global),
-                 'd')
-        self.q[
-            ('grad_u_old')] = numpy.zeros(
-                 (self.mesh.nElements_global,
-                  self.nQuadraturePoints_element,
-                  self.nSpace_global),
-                 'd')
-        self.q[
-            ('grad_v_old')] = numpy.zeros(
+            'grad_v_old'] = numpy.zeros(
                  (self.mesh.nElements_global,
                   self.nQuadraturePoints_element,
                   self.nSpace_global),
@@ -2457,8 +2445,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dV_last'],
             self.q[('velocityStar', 0)],  # mql: use uStar=2*un-unm1 to achieve 2nd order accuracy
             self.coefficients.ebqe_velocity_last,
-            self.q[('grad_u_star')],
-            self.q[('grad_v_star')],
+            self.q['grad_u_star'],
+            self.q['grad_v_star'],
             self.q[('cfl', 0)],
             self.q[('numDiff', 0, 0)],
             self.q[('numDiff', 1, 1)],
@@ -2768,6 +2756,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dV_last'],
             self.q[('velocityStar', 0)],  # mql: use uStar=2*un-unm1 to achieve 2nd order accuracy
             self.coefficients.ebqe_velocity_last,
+            self.q['grad_u_star'],
+            self.q['grad_v_star'],
             self.q[('cfl', 0)],
             self.shockCapturing.numDiff_last[0],
             self.shockCapturing.numDiff_last[1],

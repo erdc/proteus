@@ -996,6 +996,103 @@ namespace proteus
         /* dmom_w_ham_grad_w[0]=porosity*rho*uStar; */
         /* dmom_w_ham_grad_w[1]=porosity*rho*vStar; */
         /* dmom_w_ham_grad_w[2]=porosity*rho*wStar; */
+        //Pseudo-penalty method
+        if(USE_SBM==-1)
+        {
+            //u momentum accumulation
+            mom_u_acc = u;
+            dmom_u_acc_u = 1.0;
+            //v momentum accumulation
+            mom_v_acc= v;
+            dmom_v_acc_v= 1.0;
+
+            double phi_s=0.0;
+            double vel[2];
+            int i = get_distance_to_ball(nParticles,ball_center,ball_radius,x,y,z,phi_s);
+            if(phi_s<=0.0)
+            {
+              get_velocity_to_ith_ball(nParticles, ball_center, ball_radius,
+                                     ball_velocity, ball_angular_velocity,
+                                     i, x, y, z,
+                                     vel[0], vel[1]);
+              
+              mom_u_acc -= vel[0];
+              mom_v_acc -= vel[1];
+            }
+            //mass advective flux, for rans2p
+            mass_adv[0]=0.0;
+            mass_adv[1]=0.0;
+            dmass_adv_u[0]=0.0;
+            dmass_adv_u[1]=0.0;
+            dmass_adv_v[0]=0.0;
+            dmass_adv_v[1]=0.0;
+
+            //u momentum advective flux
+            mom_u_adv[0]=0.0;
+            mom_u_adv[1]=0.0;
+            dmom_u_adv_u[0]=0.0;
+            dmom_u_adv_u[1]=0.0;
+            dmom_u_adv_v[0]=0.0;
+            dmom_u_adv_v[1]=0.0;
+            //v momentum advective_flux
+            mom_v_adv[0]=0.0;
+            mom_v_adv[1]=0.0;
+            dmom_v_adv_u[0]=0.0;
+            dmom_v_adv_u[1]=0.0;
+            dmom_v_adv_v[0]=0.0;
+            dmom_v_adv_v[1]=0.0;
+
+            //u momentum diffusion tensor
+            mom_uu_diff_ten[0] = nu_0;
+            mom_uu_diff_ten[1] = nu_0;
+            mom_uv_diff_ten[0] = 0.0;
+            //v momentum diffusion tensor
+            mom_vv_diff_ten[0] = nu_0;
+            mom_vv_diff_ten[1] = nu_0;
+            mom_vu_diff_ten[0] = 0.0;
+
+            //momentum sources
+            mom_u_source = -phi_s_effect * g[0];
+            mom_v_source = -phi_s_effect * g[1];
+
+            // mom_u_source -= (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcex;
+            // mom_v_source -= (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcey;
+            
+            //u momentum Hamiltonian (pressure)
+            if(phi_s_effect>0)
+            {
+              mom_u_ham = grad_p[0];//this is grad p_sharp
+              dmom_u_ham_grad_p[0]=1.0;
+              dmom_u_ham_grad_p[1]=0.0;
+              //v momentum Hamiltonian (pressure)
+              mom_v_ham = grad_p[1];
+              dmom_v_ham_grad_p[0]=0.0;
+              dmom_v_ham_grad_p[1]=1.0;
+            }else{
+              mom_u_ham = grad_pn[0];
+              dmom_u_ham_grad_p[0]=1.0;
+              dmom_u_ham_grad_p[1]=0.0;
+              //v momentum Hamiltonian (pressure)
+              mom_v_ham = grad_pn[1];
+              dmom_v_ham_grad_p[0]=0.0;
+              dmom_v_ham_grad_p[1]=1.0;
+            }
+
+            //u momentum Hamiltonian (advection)
+            if(phi_s_effect>0)
+            {
+              const double curl_u = grad_v_star[0] - grad_u_star[1];
+              mom_u_ham += vStar*curl_u;
+              dmom_u_ham_grad_u[0]=0.0;
+              dmom_u_ham_grad_u[1]=0.0;
+            
+              //v momentum Hamiltonian (advection)
+              mom_v_ham += -uStar*curl_u;
+              dmom_v_ham_grad_v[0]=0.0;
+              dmom_v_ham_grad_v[1]=0.0;
+            }
+            
+        }
       }
 
       //VRANS specific
@@ -2731,7 +2828,7 @@ namespace proteus
                                                   nu_0,
                                                   rho_1,
                                                   nu_1,
-						  q_eddy_viscosity[eN_k],
+                                                  q_eddy_viscosity[eN_k],
                                                   useVF,
                                                   vf[eN_k],
                                                   phi[eN_k],
@@ -2934,6 +3031,8 @@ namespace proteus
                 if (q_dV_last[eN_k] <= -100)
                   q_dV_last[eN_k] = dV;
                 q_dV[eN_k] = dV;
+                if (phi_solid[eN_k] > 0)
+                {
                 ck.bdf(alphaBDF,
                        q_mom_u_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV,
                        mom_u_acc,
@@ -2946,7 +3045,12 @@ namespace proteus
                        dmom_v_acc_v,
                        mom_v_acc_t,
                        dmom_v_acc_v_t);
-
+                }else{
+                  mom_u_acc_t *= alphaBDF*mom_u_acc;
+                  dmom_u_acc_u_t *= alphaBDF*dmom_u_acc_u;
+                  mom_v_acc_t *= alphaBDF*mom_v_acc;
+                  dmom_v_acc_v_t *= alphaBDF*dmom_v_acc_v;
+                }
                 /* ck.bdf(alphaBDF, */
                 /*           q_mom_w_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV, */
                 /*           mom_w_acc, */
