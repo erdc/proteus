@@ -29,8 +29,7 @@
  * \ingroup MeshAdaptPUMI 
  @{ 
 */
-MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
-    const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount,int reconstructedFlag,double maxAspectRatio, double gradingFact)
+MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int AdaptMesh, int NumIter, int NumAdaptSteps,const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount,int reconstructedFlag,double maxAspectRatio, double gradingFact)
 /**
  * MeshAdaptPUMIDrvr is the highest level class that handles the interface between Proteus and the PUMI libraries
  * See MeshAdaptPUMI.h for the list of class variables/functions/objects
@@ -46,9 +45,11 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   SimModel_start();
   gmi_register_sim();
 #endif
-  hmin=Hmin; hmax=Hmax;
+  hmin=Hmin; hmax=Hmax; hPhi=HPhi;
   numIter=NumIter;
+  adaptMesh = AdaptMesh;
   nAdapt=0;
+  numAdaptSteps = NumAdaptSteps;
   nEstimate=0;
   if(PCU_Comm_Self()==0)
      printf("MeshAdapt: Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",
@@ -376,12 +377,11 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     abort();
   }
   if(logging_config=="on"){
-    char namebuffer[20];
+    char namebuffer[50];
     sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
-    sprintf(namebuffer,"beforeAnisotropicAdapt_%i.smb",nAdapt);
+    sprintf(namebuffer,"beforeAnisotropicAdapt%i_.smb",nAdapt);
     m->writeNative(namebuffer);
-
 /* Code to output size scale and frame
     apf::MeshIterator* it = m->begin(0);
     apf::MeshEntity* test;
@@ -453,14 +453,15 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   }
   ma::validateInput(in);
   in->shouldRunPreZoltan = true;
-  in->shouldRunMidParma = true;
-  in->shouldRunPostParma = true;
+  in->shouldRunMidZoltan = true;
+  in->shouldRunPostZoltan = true;
+  //in->shouldRunMidParma = true;
+  //in->shouldRunPostParma = true;
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
   in->shouldSnap = false;
-  in->goodQuality = 0.008;
-
-  double mass_before = getTotalMass();
+  //in->goodQuality = 0.16;//0.027;
+  //double mass_before = getTotalMass();
   
   double t1 = PCU_Time();
   //ma::adapt(in);
@@ -468,9 +469,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   double t2 = PCU_Time();
 
   m->verify();
-  double mass_after = getTotalMass();
-  PCU_Add_Doubles(&mass_before,1);
-  PCU_Add_Doubles(&mass_after,1);
+  //double mass_after = getTotalMass();
+  //PCU_Add_Doubles(&mass_before,1);
+  //PCU_Add_Doubles(&mass_after,1);
   if(comm_rank==0 && logging_config=="on"){
 /*
     std::ios::fmtflags saved(std::cout.flags());
@@ -481,21 +482,22 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     myfile.open("adapt_timing.txt", std::ios::app);
     myfile << t2-t1<<std::endl;
     myfile.close();
-
+/*
     std::ofstream mymass;
     mymass.open("mass_check.txt", std::ios::app);
     mymass <<std::setprecision(15)<<mass_before<<","<<mass_after<<","<<mass_after-mass_before<<std::endl;
     mymass.close();
+*/
   }
   if(size_field_config=="ERM"){
     if (has_gBC)
       getSimmetrixBC();
   }
   if(logging_config=="on"){
-    char namebuffer[20];
+    char namebuffer[50];
     sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
-    sprintf(namebuffer,"afterAnisotropicAdapt_%i.smb",nAdapt);
+    sprintf(namebuffer,"afterAnisotropicAdapt%i_.smb",nAdapt);
     m->writeNative(namebuffer);
   }
   //isReconstructed = 0; //this is needed to maintain consistency with the post-adapt conversion back to Proteus

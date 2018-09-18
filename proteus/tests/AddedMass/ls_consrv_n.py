@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from proteus.default_n import *
 from proteus import (StepControl,
                      TimeIntegration,
@@ -5,7 +6,11 @@ from proteus import (StepControl,
                      LinearSolvers,
                      LinearAlgebraTools,
                      NumericalFlux)
-import ls_consrv_p as physics
+try:
+    from . import ls_consrv_p as physics
+except:
+    import ls_consrv_p as physics
+        
 from proteus import Context
 
 ct = Context.get()

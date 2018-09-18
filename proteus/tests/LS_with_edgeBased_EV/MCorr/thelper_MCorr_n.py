@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from thelper_MCorr_p import *
-from thelper_cons_ls import *
+from .thelper_MCorr_p import *
+from .thelper_cons_ls import *
 
 multilevelNonlinearSolver  = NLNI
 if ct.STABILIZATION_TYPE_vof==0: #SUPG methods 
@@ -56,4 +57,4 @@ else:
     
 conservativeFlux = {}
 if checkMass:
-    auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryMC("vortex2d"+`lRefinement`+"p"+`pDegree_ls`)]
+    auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryMC("vortex2d"+repr(lRefinement)+"p"+repr(pDegree_ls))]

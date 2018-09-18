@@ -1,3 +1,8 @@
+from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 import proteus
 import numpy
 from proteus import *
@@ -16,7 +21,7 @@ from proteus.Transport import OneLevelTransport
 from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
-import cMCorr3P
+from . import cMCorr3P
 
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
@@ -114,7 +119,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.LS_model].ebqe[
             ('grad(u)', 0)]
 
-        if modelList[self.LS_model].ebq.has_key(('u', 0)):
+        if ('u', 0) in modelList[self.LS_model].ebq:
             self.ebq_u_ls = modelList[self.LS_model].ebq[('u', 0)]
         else:
             self.ebq_u_ls = None
@@ -126,7 +131,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.q_vos = self.vofModel.coefficients.q_vos
         self.ebqe_H_vof = modelList[self.VOF_model].ebqe[('u', 0)]
-        if modelList[self.VOF_model].ebq.has_key(('u', 0)):
+        if ('u', 0) in modelList[self.VOF_model].ebq:
             self.ebq_H_vof = modelList[self.VOF_model].ebq[('u', 0)]
         else:
             self.ebq_H_vof = None
@@ -165,15 +170,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 #log("Attach Models MCorr3P: Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
 
     def initializeElementQuadrature(self, t, cq):
-        if self.sd and cq.has_key(('a', 0, 0)):
+        if self.sd and ('a', 0, 0) in cq:
             cq[('a', 0, 0)].fill(self.epsDiffusion)
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
-        if self.sd and cebq.has_key(('a', 0, 0)):
+        if self.sd and ('a', 0, 0) in cebq:
             cebq[('a', 0, 0)].fill(self.epsDiffusion)
 
     def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
-        if self.sd and cebqe.has_key(('a', 0, 0)):
+        if self.sd and ('a', 0, 0) in cebqe:
             cebqe[('a', 0, 0)].fill(self.epsDiffusion)
 
     def preStep(self, t, firstStep=False):
@@ -360,29 +365,29 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # cek come back
         if self.stabilization is not None:
             for ci in range(self.nc):
-                if coefficients.mass.has_key(ci):
-                    for flag in coefficients.mass[ci].values():
+                if ci in coefficients.mass:
+                    for flag in list(coefficients.mass[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.advection.has_key(ci):
-                    for flag in coefficients.advection[ci].values():
+                if ci in coefficients.advection:
+                    for flag in list(coefficients.advection[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.diffusion.has_key(ci):
-                    for diffusionDict in coefficients.diffusion[ci].values():
-                        for flag in diffusionDict.values():
+                if ci in coefficients.diffusion:
+                    for diffusionDict in list(coefficients.diffusion[ci].values()):
+                        for flag in list(diffusionDict.values()):
                             if flag != 'constant':
                                 self.stabilizationIsNonlinear = True
-                if coefficients.potential.has_key(ci):
-                    for flag in coefficients.potential[ci].values():
+                if ci in coefficients.potential:
+                    for flag in list(coefficients.potential[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.reaction.has_key(ci):
-                    for flag in coefficients.reaction[ci].values():
+                if ci in coefficients.reaction:
+                    for flag in list(coefficients.reaction[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.hamiltonian.has_key(ci):
-                    for flag in coefficients.hamiltonian[ci].values():
+                if ci in coefficients.hamiltonian:
+                    for flag in list(coefficients.hamiltonian[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
         # determine if we need element boundary storage
@@ -400,15 +405,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # assume same space dim for all variables
         self.nSpace_global = self.u[0].femSpace.nSpace_global
         self.nDOF_trial_element = [
-            u_j.femSpace.max_nDOF_element for u_j in self.u.values()]
+            u_j.femSpace.max_nDOF_element for u_j in list(self.u.values())]
         self.nDOF_phi_trial_element = [
-            phi_k.femSpace.max_nDOF_element for phi_k in self.phi.values()]
+            phi_k.femSpace.max_nDOF_element for phi_k in list(self.phi.values())]
         self.n_phi_ip_element = [
-            phi_k.femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints for phi_k in self.phi.values()]
+            phi_k.femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints for phi_k in list(self.phi.values())]
         self.nDOF_test_element = [
-            femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
+            femSpace.max_nDOF_element for femSpace in list(self.testSpace.values())]
         self.nFreeDOF_global = [
-            dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
+            dc.nFreeDOF_global for dc in list(self.dirichletConditions.values())]
         self.nVDOF_element = sum(self.nDOF_trial_element)
         self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
@@ -422,7 +427,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         elemQuadIsDict = isinstance(elementQuadrature, dict)
         if elemQuadIsDict:  # set terms manually
             for I in self.coefficients.elementIntegralKeys:
-                if elementQuadrature.has_key(I):
+                if I in elementQuadrature:
                     elementQuadratureDict[I] = elementQuadrature[I]
                 else:
                     elementQuadratureDict[I] = elementQuadrature['default']
@@ -432,7 +437,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(I):
+                    if I in elementQuadrature:
                         elementQuadratureDict[
                             ('stab',) + I[1:]] = elementQuadrature[I]
                     else:
@@ -444,7 +449,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(('numDiff', ci, ci)):
+                    if ('numDiff', ci, ci) in elementQuadrature:
                         elementQuadratureDict[('numDiff', ci, ci)] = elementQuadrature[
                             ('numDiff', ci, ci)]
                     else:
@@ -454,14 +459,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     elementQuadratureDict[
                         ('numDiff', ci, ci)] = elementQuadrature
         if massLumping:
-            for ci in self.coefficients.mass.keys():
+            for ci in list(self.coefficients.mass.keys()):
                 elementQuadratureDict[('m', ci)] = Quadrature.SimplexLobattoQuadrature(
                     self.nSpace_global, 1)
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[
                     ('stab',) + I[1:]] = Quadrature.SimplexLobattoQuadrature(self.nSpace_global, 1)
         if reactionLumping:
-            for ci in self.coefficients.mass.keys():
+            for ci in list(self.coefficients.mass.keys()):
                 elementQuadratureDict[('r', ci)] = Quadrature.SimplexLobattoQuadrature(
                     self.nSpace_global, 1)
             for I in self.coefficients.elementIntegralKeys:
@@ -470,7 +475,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         elementBoundaryQuadratureDict = {}
         if isinstance(elementBoundaryQuadrature, dict):  # set terms manually
             for I in self.coefficients.elementBoundaryIntegralKeys:
-                if elementBoundaryQuadrature.has_key(I):
+                if I in elementBoundaryQuadrature:
                     elementBoundaryQuadratureDict[
                         I] = elementBoundaryQuadrature[I]
                 else:
@@ -500,23 +505,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nElements_global *
             self.mesh.nElementBoundaries_element *
             self.nElementBoundaryQuadraturePoints_elementBoundary)
-        if type(self.u[0].femSpace) == C0_AffineLinearOnSimplexWithNodalBasis:
-            # print self.nQuadraturePoints_element
-            if self.nSpace_global == 3:
-                assert(self.nQuadraturePoints_element == 5)
-            elif self.nSpace_global == 2:
-                assert(self.nQuadraturePoints_element == 6)
-            elif self.nSpace_global == 1:
-                assert(self.nQuadraturePoints_element == 3)
-
-            # print self.nElementBoundaryQuadraturePoints_elementBoundary
-            if self.nSpace_global == 3:
-                assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 4)
-            elif self.nSpace_global == 2:
-                assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 4)
-            elif self.nSpace_global == 1:
-                assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 1)
-
         #
         # simplified allocations for test==trial and also check if space is mixed or not
         #
@@ -639,21 +627,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux = None
         # set penalty terms
         # cek todo move into numerical flux initialization
-        if self.ebq_global.has_key('penalty'):
+        if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(
                         self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN, k] = self.numericalFlux.penalty_constant / (
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebq_global['penalty'][ebN, k] = old_div(self.numericalFlux.penalty_constant, (
+                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
         # penalty term
         # cek move  to Numerical flux initialization
-        if self.ebqe.has_key('penalty'):
+        if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(
                         self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE, k] = self.numericalFlux.penalty_constant / \
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
+                    self.ebqe['penalty'][ebNE, k] = old_div(self.numericalFlux.penalty_constant, \
+                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         log(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         # use post processing tools to get conservative fluxes, None by default
@@ -1042,15 +1030,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         log("   Mass Conservation Residual 0 ", level=3, data=R)
         RNORM_OLD = fabs(R)
         while ((fabs(R) > self.atol and its < self.maxIts) or its < 1):
-            U -= R / (J + 1.0e-8)
+            U -= old_div(R, (J + 1.0e-8))
             (R, J) = self.globalConstantRJ(u, r, U)
             lsits = 0
             while(fabs(R) > 0.99 * RNORM_OLD and lsits < self.maxLSits):
                 lsits += 1
-                U += (0.5)**lsits * (R / (J + 1.0e-8))
+                U += (0.5)**lsits * (old_div(R, (J + 1.0e-8)))
                 (R, J) = self.globalConstantRJ(u, r, U)
             its += 1
-            log("   Mass Conservation Residual " + `its`+" ", level=3, data=R)
+            log("   Mass Conservation Residual " + repr(its)+" ", level=3, data=R)
         self.u[0].dof.flat[:] = U
 
     def calculateElementQuadrature(self):

@@ -1,4 +1,7 @@
 #! /usr/bin/env python
+from __future__ import print_function
+from __future__ import division
+from past.utils import old_div
 from math import *
 from proteus import Domain
 
@@ -17,8 +20,8 @@ def gl_6_3d(width):
     vertices_front = [[0.0,0.0,0.0],#0
                       [0.0,0.0,7.3],#1
                       [33.5,0.0,7.3],#2
-                      [33.5 + 21.3/tan(2.0*pi*18.0/360.0),0.0,7.3+21.3],#3
-                      [33.5 + 21.3/tan(2.0*pi*18.0/360.0)+7.3,0.0,7.3+21.3],#4
+                      [33.5 + old_div(21.3,tan(2.0*pi*18.0/360.0)),0.0,7.3+21.3],#3
+                      [33.5 + old_div(21.3,tan(2.0*pi*18.0/360.0))+7.3,0.0,7.3+21.3],#4
                       [33.5 + 124.4,0.0,7.3],#5
                       [2*33.5+124.4,0.0,7.3],#6
                       [2*33.5+124.4,0.0,0.0]]#7
@@ -56,7 +59,7 @@ def gl_6_3d(width):
                   boundaryLegend['bottom']]
     regions = [[0.001,0.001,0.001]]
     regionFlags = [1]
-    print vertices,vertexFlags,facets,facetFlags,regions,regionFlags
+    print(vertices,vertexFlags,facets,facetFlags,regions,regionFlags)
     domain = Domain.PiecewiseLinearComplexDomain(vertices=vertices,
                                                  vertexFlags=vertexFlags,
                                                  facets=facets,
@@ -73,6 +76,6 @@ if __name__=='__main__':
     domain.writeAsymptote("gl_6_3d")
     domain.writePoly("gl_6_3d")
     domain.writePLY("gl_6_3d")
-    print domain.boundaryFlags
+    print(domain.boundaryFlags)
     #os.system("asy -V gl_6_3d")
     os.system("tetgen -KVApfen gl_6_3d.poly")

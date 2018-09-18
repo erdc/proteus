@@ -1,5 +1,9 @@
+from __future__ import absolute_import
 from proteus import *
-from ls_p import *
+try:
+    from .ls_p import *
+except:
+    from ls_p import *
 
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF

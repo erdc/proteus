@@ -1,7 +1,8 @@
 """
 The default values for so-files describing split operator formulations
 """
-from SplitOperator import *
+from __future__ import absolute_import
+from .SplitOperator import *
 
 name = None
 
@@ -23,7 +24,7 @@ useOneArchive=True#False
 
 sList = []
 
-from Archiver import ArchiveFlags
+from .Archiver import ArchiveFlags
 
 archiveFlag = ArchiveFlags.EVERY_USER_STEP
 #CEK CHANGED DEFAULT FROM EVERY_SEQUENCE_STEP

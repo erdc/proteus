@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from ls_consrv_rotation_2d_p import *
-from rotation2D import *
+from .ls_consrv_rotation_2d_p import *
+from .rotation2D import *
 
 
 timeIntegrator = ForwardIntegrator
@@ -84,4 +85,4 @@ else:
 
 conservativeFlux = {}
 if checkMass:
-    auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryMC("rotation2d"+`lRefinement`+"p"+`pDegree_ls`)]
+    auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryMC("rotation2d"+repr(lRefinement)+"p"+repr(pDegree_ls))]

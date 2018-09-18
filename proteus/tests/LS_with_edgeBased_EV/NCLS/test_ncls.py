@@ -2,7 +2,9 @@
 """
 Test module for NCLS with EV
 """
+from __future__ import absolute_import
 
+from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -12,11 +14,11 @@ import numpy as np
 import tables
 import sys
 sys.path.append('import_files')
-import ncls
-import ncls_p
-import ncls_n
+from . import ncls
+from . import ncls_p
+from . import ncls_n
 
-class TestNCLS():
+class TestNCLS(object):
 
     @classmethod
     def setup_class(cls):

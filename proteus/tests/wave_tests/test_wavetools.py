@@ -1,4 +1,8 @@
+from __future__ import print_function
+from __future__ import division
 
+from builtins import range
+from past.utils import old_div
 from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
@@ -23,7 +27,7 @@ def remove_files(filenames):
         if os.path.exists(f):
             try:
                 os.remove(f)
-            except OSError, e:
+            except OSError as e:
                 print ("Error: %s - %s" %(e.filename,e.strerror))
         else:
             pass
@@ -42,7 +46,7 @@ class TestAuxFunctions(unittest.TestCase):
         RMS = np.sqrt(RMS)
         self.assertTrue(RMS<1e-04)
         self.assertTrue(MaxErr<1e-3)
-
+         
     def testFastCosh(self):
         from proteus.WaveTools import fastcosh_test
         RMS = 0.
@@ -53,7 +57,7 @@ class TestAuxFunctions(unittest.TestCase):
         mwl = 0.
         for ii in range(0,1001):
             Z  = -float(ii)/1000.*d
-            err = (cosh(k*Z) - fastcosh_test(k,Z))/cosh(k*Z)
+            err = old_div((cosh(k*Z) - fastcosh_test(k,Z)),cosh(k*Z))
             RMS += err**2
             maxErr = max(maxErr, abs(err))
         RMS /=1000.
@@ -71,7 +75,7 @@ class TestAuxFunctions(unittest.TestCase):
         mwl = 0.
         for ii in range(0,1001):
             Z  = -float(ii)/1000.*d
-            err = (sinh(k*Z) - fastsinh_test(k,Z))/(cosh(k*Z))
+            err = old_div((sinh(k*Z) - fastsinh_test(k,Z)),(cosh(k*Z)))
             RMS += err**2
             maxErr = max(maxErr, abs(err))
         RMS /=1000.
@@ -89,7 +93,7 @@ class TestAuxFunctions(unittest.TestCase):
         mwl = 0.
         for ii in range(0,1001):
             Z  = -float(ii)/1000.*d
-            err = (cosh(k*(Z+d))/sinh(k*d))
+            err = (old_div(cosh(k*(Z+d)),sinh(k*d)))
             fcos = coshkzd_test(k,Z,d)
             err = (err - fcos)#/sinh(k*d)
             RMS += err**2
@@ -110,7 +114,7 @@ class TestAuxFunctions(unittest.TestCase):
         mwl = 0.
         for ii in range(0,1001):
             Z  = -float(ii)/1000.*d
-            err = (sinh(k*(Z+d))/sinh(k*d))
+            err = (old_div(sinh(k*(Z+d)),sinh(k*d)))
             err = err- sinhkzd_test(k,Z,d)
             RMS += err**2
             maxErr = max(maxErr, abs(err))
@@ -123,11 +127,11 @@ class TestAuxFunctions(unittest.TestCase):
     def testVDir(self):
         from proteus.WaveTools import setVertDir
         self.assertTrue(np.array_equal(setVertDir(np.array([0,-9.81,0])), np.array([0,1,0])))
-
+          
     def testDirVector(self):
         from proteus.WaveTools import setDirVector
-        self.assertTrue(all(setDirVector(np.array([2.,2.,1.]))== np.array([2.,2.,1])/3.))
-
+        self.assertTrue(all(setDirVector(np.array([2.,2.,1.]))== old_div(np.array([2.,2.,1]),3.)))
+                  
     def testDirCheck(self):
         from proteus.WaveTools import dirCheck
         dirCheck(np.array([1.,2.,3.]),np.array([7.,4.,-5.]) )# Just loading the function with two vertical vectors
@@ -154,7 +158,7 @@ class TestAuxFunctions(unittest.TestCase):
         y = 2*xim
         A = sum(returnRectangles(y,xim))
         self.assertTrue(round(A,10) == 1.0)
-
+                  
     def testIntegrateRectangles3D(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
         from proteus.WaveTools import reduceToIntervals,returnRectangles3D
         x = np.linspace(0,1,101)
@@ -172,7 +176,7 @@ class TestAuxFunctions(unittest.TestCase):
         A = sum(sum(returnRectangles3D(y1,xim,zim)))
         # Integrate function z*(2*x) over x[0,1], z[0,1] result == 0.5
         self.assertTrue(round(A,10)== 0.5)
-
+                  
     def testNormInt(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
         from proteus.WaveTools import normIntegral, reduceToIntervals, returnRectangles
         #pickin
@@ -196,11 +200,11 @@ class TestAuxFunctions(unittest.TestCase):
         t =50.
         kDir = [0.05,0.02,0.0]
         omega = 0.5
-        phi = 3.14/5.
+        phi = old_div(3.14,5.)
         amplitude =0.2
         eta = amplitude*cos(kDir[0]*x+kDir[1]*y+kDir[2]*z - omega*t +phi)
         self.assertTrue((eta - eta_mode([x,y,z],t,kDir,omega,phi,amplitude)==0.))# check eta
-
+    
     def testUdrift(self):
         from proteus.WaveTools import Udrift
         amp = 0.1
@@ -226,7 +230,7 @@ class TestAuxFunctions(unittest.TestCase):
         vDir = np.array([0,0,1])
         t= 0.
         kAbs = 2*pi
-        Ud = Udrift(amplitude,abs(g[-1]),omega/kAbs,depth)
+        Ud = Udrift(amplitude,abs(g[-1]),old_div(omega,kAbs),depth)
         for i in range(4):
             U_x, U_y, U_z = vel_mode([x,y,z],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir,gAbs)
             x+= 0.25
@@ -247,8 +251,8 @@ class TestAuxFunctions(unittest.TestCase):
         #Checking that the code does not allow z to be outside (-d,0)
 #Checking vertical coherency
 # U_z = 0 at z = mwl-d
-        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir,gAbs)[2]==0.)
-
+        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir,gAbs)[2]==0.)                  
+        
     def testTophat(self):
         from proteus.WaveTools import tophat
         a  = np.random.rand(100)
@@ -266,7 +270,7 @@ class TestAuxFunctions(unittest.TestCase):
         a[:10] = 0.5*(1.-np.cos(pi*np.linspace(0,9,10)/10.))
         a[-10:] =0.5*(1.-np.cos(pi*np.linspace(9,0,10)/10.))
         self.assertTrue( a.all() == af.all())
-
+                  
     def testDecomposeFFT(self):
         from proteus.WaveTools import decompose_tseries
         dt = 0.01
@@ -284,19 +288,19 @@ class TestAuxFunctions(unittest.TestCase):
         rec[:]+=dec[3]
         self.assertTrue( rec.all() == eta.all())
 
-
+         
 class TestWaveParameters(unittest.TestCase):
 #Checking dispersion calculation for a predicted wavelenght of 5.00m
     def test_dispersion(self):
         from proteus.WaveTools import dispersion
         length = 2*pi/dispersion(2*pi/5.,4.)
         lTheor = 27.958
-        self.assertTrue(abs(length - lTheor)/lTheor<0.001)
+        self.assertTrue(old_div(abs(length - lTheor),lTheor)<0.001)
         length = 2*pi/dispersion([2*pi/1.94,2*pi/1.94,],1.)
         length-=5.
         length/=5
         self.assertTrue( (all(length) <0.001) or  (all(length) > -0.001))
-
+                  
 #Check  sigma
     def test_sigma(self):
         from proteus.WaveTools import sigma,JONSWAP
@@ -311,22 +315,22 @@ class TestWaveParameters(unittest.TestCase):
         self.assertTrue((sigma[0] == sigma0).all())
         self.assertTrue((sigma[1] == sigma0).all())
         self.assertTrue((sigma[2] == sigma1).all())
-
+                  
     def test_Jonswap(self): #JONSWAP tests
 # Test Jonswap spectrum without TMA modification
         from proteus.WaveTools import sigma, JONSWAP, dispersion
         import random
         f0 = random.random() + 1.
-        f = np.linspace(f0/2.,2.*f0,100)
+        f = np.linspace(old_div(f0,2.),2.*f0,100)
         sig = sigma(f,f0)
         gamma = 6.*random.random() + 1.
         Hs = random.random()
-        bj = 0.0624*(1.094 - 0.01915*log(gamma))/(0.23+0.0336*gamma-0.185/(1.9+gamma))
-        r_exp = np.exp(-(f/f0 -1 )**2/(2.*sig**2))
-        JON = (bj*(Hs**2)*(f0**4)/f**5)*np.exp(-1.25*(f0/f)**4)*(gamma**r_exp)
+        bj = 0.0624*(1.094 - 0.01915*log(gamma))/(0.23+0.0336*gamma-old_div(0.185,(1.9+gamma)))
+        r_exp = np.exp(old_div(-(old_div(f,f0) -1 )**2,(2.*sig**2)))
+        JON = (bj*(Hs**2)*(f0**4)/f**5)*np.exp(-1.25*(old_div(f0,f))**4)*(gamma**r_exp)
         JON2 = JONSWAP(f,f0,Hs,gamma,TMA=False, depth = None)
 
-        JCOMP = JON2/JON
+        JCOMP = old_div(JON2,JON)
         self.assertTrue((np.around(JCOMP,10)==1).all())
         h = random.random()
 # Checking failure mode
@@ -337,49 +341,49 @@ class TestWaveParameters(unittest.TestCase):
         k = dispersion(2*pi*f,h)
         TMA = np.tanh(k*h)*np.tanh(k*h)/(1.+2.*k*h/np.sinh(2*k*h))
         JON2 = JONSWAP(f,f0,Hs,gamma,TMA=True, depth=h)
-        JCOMP = JON2/(TMA*JON)
+        JCOMP = old_div(JON2,(TMA*JON))
         self.assertTrue((np.around(JCOMP,10)==1).all())
-
+        
     def test_PM(self): #PM tests
         from proteus.WaveTools import PM_mod
         f0 = random.random() + 1.
-        f = np.linspace(f0/2.,2.*f0,10)
+        f = np.linspace(old_div(f0,2.),2.*f0,10)
         Hs = random.random()
         g = 9.81
-        S_PM = (5./16.) * Hs**2 * f0**4 / f**5 * np.exp(-5./4. * (f0/f)**4)
+        S_PM = (old_div(5.,16.)) * Hs**2 * f0**4 / f**5 * np.exp(-5./4. * (old_div(f0,f))**4)
         S_PM2 =  PM_mod(f,f0,Hs)
-        SCOMP = S_PM2/S_PM
+        SCOMP = old_div(S_PM2,S_PM)
         self.assertTrue((np.around(SCOMP,10)==1).all())
 
     def testCos2s(self):
         from proteus.WaveTools import cos2s
         f0 = random.random() + 1.
-        f = np.linspace(f0/2.,2.*f0,10.)
-        thetas = np.linspace(-pi/2.,pi/2.,11)
+        f = np.linspace(old_div(f0,2.),2.*f0,10.)
+        thetas = np.linspace(old_div(-pi,2.),old_div(pi,2.),11)
         s = 10. + 10. * np.random.random()
         S_PM = np.zeros((len(thetas),len(f)),)
         for ii in range(len(thetas)):
             for jj in range(len(f)):
-                S_PM[ii,jj]= np.cos(thetas[ii]/2.)**(2*s)
+                S_PM[ii,jj]= np.cos(old_div(thetas[ii],2.))**(2*s)
         S_PM2 =  cos2s(thetas,f,s)
-        SCOMP = S_PM2/S_PM
+        SCOMP = old_div(S_PM2,S_PM)
         self.assertTrue(np.array_equal(S_PM,S_PM2))
 
     def testMitsuyasu(self):
         from proteus.WaveTools import mitsuyasu
         f0 = random.random() + 1.
-        f = np.linspace(f0/2.,2.*f0,10.)
-        thetas = np.linspace(-pi/2.,pi/2.,11)
+        f = np.linspace(old_div(f0,2.),2.*f0,10.)
+        thetas = np.linspace(old_div(-pi,2.),old_div(pi,2.),11)
         s = 10 + 10. * np.random.random()
         ss = np.zeros(len(f),)
-        ss = (f/f0)**5
+        ss = (old_div(f,f0))**5
         i = np.where(f>f0)[0][0]
-        ss[i:] = (f[i:]/f0)**(-2.5)
+        ss[i:] = (old_div(f[i:],f0))**(-2.5)
         ss[:] *= s
         S_PM = np.zeros((len(thetas),len(f)),)
         for ii in range(len(thetas)):
             for jj in range(len(f)):
-                S_PM[ii,jj]= np.cos(thetas[ii]/2.)**(2.*ss[jj])
+                S_PM[ii,jj]= np.cos(old_div(thetas[ii],2.))**(2.*ss[jj])
         S_PM2 =  mitsuyasu(thetas,f,f0,s)
         self.assertTrue(np.array_equal(S_PM,S_PM2))
 
@@ -410,8 +414,8 @@ class VerifySteadyCurrent(unittest.TestCase):
             SteadyCurrent(U,mwl,0.2)
         self.assertEqual(cm1.exception.code, 1)
 
-
-
+        
+        
 class VerifySolitaryWave(unittest.TestCase):
     def testSolitary(self):
         from proteus.WaveTools import SolitaryWave
@@ -422,17 +426,17 @@ class VerifySolitaryWave(unittest.TestCase):
         waveDir = np.array([5.,0.,0.])
         trans = np.array([1. ,0., 0.])
 
-        #No translation
+        #No translation        
         aa = SolitaryWave(HH,mwl,dd,g,waveDir)
-
+        
         x = 2.5
         t = 5.
 
         cc = np.sqrt(9.81*(dd+HH))
-        eta_Ref = HH / np.cosh( np.sqrt(3.*HH/4./dd**3)*(x - cc*t))**2
-        xx = x*waveDir/5.
+        eta_Ref = old_div(HH, np.cosh( np.sqrt(3.*HH/4./dd**3)*(x - cc*t))**2)
+        xx = x*waveDir/5. 
         self.assertAlmostEqual(eta_Ref, aa.eta(xx,t))
-
+        
         def pow(a,b):
             return a**b
         h_ = dd
@@ -446,14 +450,14 @@ class VerifySolitaryWave(unittest.TestCase):
         cosh = np.cosh
 
 # Formula taken from waves2Foam
-        Uhorz = 1.0/(4.0*pow(h_, 4.0) )*sqrt(G_*h_)*H_ *(
-             2.*pow(h_, 3.0) + pow(h_, 2.0)*H_
+        Uhorz = 1.0/(4.0*pow(h_, 4.0) )*sqrt(G_*h_)*H_ *( 
+             2.*pow(h_, 3.0) + pow(h_, 2.0)*H_ 
            + 12.0*h_*H_*Z + 6.0*H_*pow(Z, 2.0)
            + (
-                 2*pow(h_, 3.0) - pow(h_, 2.0)*H_
+                 2*pow(h_, 3.0) - pow(h_, 2.0)*H_ 
                - 6.0*h_*H_*Z - 3.0*H_*pow(Z, 2.0)
-             )
-             *cosh(
+             ) 
+             *cosh( 
                  sqrt( 3*H_/pow(h_, 3.0))
                 *(
                      sqrt( G_*(h_ + H_))*t
@@ -468,7 +472,7 @@ class VerifySolitaryWave(unittest.TestCase):
             ), 4.0
         )
 
-        Uvert = 1.0/( 4.0*sqrt( G_*h_) )*sqrt(3.0)*G_ *pow( H_/pow(h_,3.0), 1.5 )*(h_ + Z)*(
+        Uvert = 1.0/( 4.0*sqrt( G_*h_) )*sqrt(3.0)*G_ *pow( old_div(H_,pow(h_,3.0)), 1.5 )*(h_ + Z)*(
              2*pow(h_, 3.0) - 7.0*pow(h_, 2.0)*H_
            + 10.0*h_*H_*Z + 5.0*H_*pow(Z, 2.0)
            +(
@@ -495,7 +499,7 @@ class VerifySolitaryWave(unittest.TestCase):
          ));
         self.assertAlmostEqual(Uhorz, aa.u(xx,t)[0])
         self.assertAlmostEqual(-Uvert, aa.u(xx,t)[1])
-
+        
 
 class CheckMonochromaticWavesFailures(unittest.TestCase):
     def testFailureModes(self):
@@ -539,7 +543,7 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         from proteus.WaveTools import coshkzd_test as fcosh
         from proteus.WaveTools import sinhkzd_test as fsinh
         from proteus.WaveTools import Udrift as Ud
-
+        
 # Wave direction, random in x,y plane
         period = 2.
         waveHeight = 1.
@@ -554,7 +558,7 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = np.array([0.]), Bcoeff  = np.array([0.]), meanVelocity = np.array([0.,0,0.]),phi0 = phi0, fast = False)
         x = 150.
         y = 130.
-        z = mwl
+        z = mwl 
         t =  125.
         eta = a.eta([x, y, z], t)
         ux, uy, uz = a.u([x, y, z], t)
@@ -569,16 +573,16 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
 # Flow equation from Wikipedia, Airy wave theory https://en.wikipedia.org/wiki/Airy_wave_theoryhttps://en.wikipedia.org/wiki/Airy_wave_theory
         etaRef = amp*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
         z0 = z - mwl
-
-        uxRef = normDir[0]*(amp*omega*fcosh(kw,z0,depth,fast=False)*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)-Ud(amp,gAbs,omega/kw,depth))
-        uyRef = normDir[1]*(amp*omega*fcosh(kw,z0,depth,fast=False)*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)-Ud(amp,gAbs,omega/kw,depth))
+        
+        uxRef = normDir[0]*(amp*omega*fcosh(kw,z0,depth,fast=False)*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)-Ud(amp,gAbs,old_div(omega,kw),depth))
+        uyRef = normDir[1]*(amp*omega*fcosh(kw,z0,depth,fast=False)*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)-Ud(amp,gAbs,old_div(omega,kw),depth))
         uzRef = amp*omega*fsinh(kw,z0,depth,fast=False)*sin(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
-
+        
        # print ux,uxRef
-        err = abs(eta/etaRef - 1.)
-        err_x = abs(ux/uxRef - 1.)
-        err_y = abs(uy/uyRef - 1.)
-        err_z = abs(uz/uzRef - 1.)
+        err = abs(old_div(eta,etaRef) - 1.)
+        err_x = abs(old_div(ux,uxRef) - 1.)
+        err_y = abs(old_div(uy,uyRef) - 1.)
+        err_z = abs(old_div(uz,uzRef) - 1.)
         self.assertTrue((err <= 1e-8))
         self.assertTrue((err_x <= 1e-8))
         self.assertTrue((err_y <= 1e-8))
@@ -631,20 +635,20 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         uxRef= mv[0]
         uyRef= mv[1]
         uzRef= mv[2]
-
+        
         for ii in range(len(YC)):
             jj+=1
             etaRef+=YC[ii]*fcos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t + jj*phi0)/kw
-            amp = tanh(kw*jj*depth)*np.sqrt(gAbs/kw)*BC[ii]/omega
-            c = omega/kw
-            uxRef += normDir[0]*( np.sqrt(gAbs/kw)*jj*BC[ii]*fcosh(jj*kw,z0,depth) *fcos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)*tanh(jj*kw*depth)-Ud(amp,gAbs,c,depth))
-            uyRef += normDir[1]* (np.sqrt(gAbs/kw)*jj*BC[ii]*fcosh(jj*kw,z0,depth) *fcos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)*tanh(jj*kw*depth)-Ud(amp,gAbs,c,depth))
-            uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*fsinh(jj*kw,z0,depth) *fcos(0.5*pi -( jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0))*tanh(jj*kw*depth)
+            amp = tanh(kw*jj*depth)*np.sqrt(old_div(gAbs,kw))*BC[ii]/omega
+            c = old_div(omega,kw)
+            uxRef += normDir[0]*( np.sqrt(old_div(gAbs,kw))*jj*BC[ii]*fcosh(jj*kw,z0,depth) *fcos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)*tanh(jj*kw*depth)-Ud(amp,gAbs,c,depth))
+            uyRef += normDir[1]* (np.sqrt(old_div(gAbs,kw))*jj*BC[ii]*fcosh(jj*kw,z0,depth) *fcos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)*tanh(jj*kw*depth)-Ud(amp,gAbs,c,depth))
+            uzRef +=  np.sqrt(old_div(gAbs,kw))*jj*BC[ii]*fsinh(jj*kw,z0,depth) *fcos(0.5*pi -( jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0))*tanh(jj*kw*depth)
 
-        err = abs(eta/etaRef - 1.)
-        err_x = abs(ux/uxRef - 1.)
-        err_y = abs(uy/uyRef - 1.)
-        err_z = abs(uz/uzRef - 1.)
+        err = abs(old_div(eta,etaRef) - 1.)
+        err_x = abs(old_div(ux,uxRef) - 1.)
+        err_y = abs(old_div(uy,uyRef) - 1.)
+        err_z = abs(old_div(uz,uzRef) - 1.)
         Uo = waveHeight * omega * tanh(kw*depth)
         Uoz = waveHeight * omega
 
@@ -690,13 +694,13 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         Fenton.copyFiles()
         Bc_test, Yc_test = Fenton.getBYCoeffs()
         wl_test = Fenton.getWavelength()*depth
-        err =  (wl_test-wavelength)/wavelength
+        err =  old_div((wl_test-wavelength),wavelength)
         self.assertTrue((err <= 1e-3))
         self.assertEqual(np.round(Bc_test,7).all(), np.round(Bc,7).all())
         self.assertEqual(np.round(Yc_test,7).all(), np.round(Yc,7).all())
-
-
-
+        
+        
+        
 #========================================= RANDOM WAVES ======================================
 
 
@@ -798,16 +802,16 @@ class VerifyRandomWaves(unittest.TestCase):
 
         # setDirVector are tested above
         from proteus.WaveTools import setDirVector, dispersion, reduceToIntervals, returnRectangles, JONSWAP,Udrift
-        fmin = 1./(Tp * bandFactor)
-        fmax = bandFactor/(Tp)
+        fmin = old_div(1.,(Tp * bandFactor))
+        fmax = old_div(bandFactor,(Tp))
         fi = np.linspace(fmin,fmax,N)
-        df = (fmax-fmin)/(N -1 )
+        df = old_div((fmax-fmin),(N -1 ))
         ki = dispersion(2*pi*fi,depth)
         kp = dispersion(2*pi / Tp,depth)
         z0 = z - mwl
         normDir = setDirVector(waveDir)
         fim = reduceToIntervals(fi,df)
-        Si_Jm = JONSWAP(fim,1./Tp,Hs,gamma,TMA, depth)
+        Si_Jm = JONSWAP(fim,old_div(1.,Tp),Hs,gamma,TMA, depth)
         ai = np.sqrt(2.*returnRectangles(Si_Jm,fim))
         omega = 2*pi*fi
         etaRef = 0.
@@ -817,14 +821,14 @@ class VerifyRandomWaves(unittest.TestCase):
 
         for ii in range(N):
             etaRef+=ai[ii]*fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])
-            uxRef += normDir[0]*ai[ii]*omega[ii] *fcosh(ki[ii],z0,depth) *fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])-normDir[0]*Udrift(ai[ii],gAbs,omega[ii]/ki[ii],depth)
-            uyRef += normDir[1]*ai[ii]*omega[ii] *fcosh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])-normDir[1]*Udrift(ai[ii],gAbs,omega[ii]/ki[ii],depth)
+            uxRef += normDir[0]*ai[ii]*omega[ii] *fcosh(ki[ii],z0,depth) *fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])-normDir[0]*Udrift(ai[ii],gAbs,old_div(omega[ii],ki[ii]),depth)
+            uyRef += normDir[1]*ai[ii]*omega[ii] *fcosh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])-normDir[1]*Udrift(ai[ii],gAbs,old_div(omega[ii],ki[ii]),depth)
             uzRef +=  ai[ii]*omega[ii] *fsinh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii],True)
 
-        err = abs(eta/etaRef - 1.)
-        err_x =abs(ux/uxRef - 1.)
-        err_y =abs(uy/uyRef - 1.)
-        err_z =abs(uz/uzRef - 1.)
+        err = abs(old_div(eta,etaRef) - 1.)
+        err_x =abs(old_div(ux,uxRef) - 1.)
+        err_y =abs(old_div(uy,uyRef) - 1.)
+        err_z =abs(old_div(uz,uzRef) - 1.)
 
 
         self.assertTrue(err <= 1e-8)
@@ -840,10 +844,10 @@ class VerifyRandomWaves(unittest.TestCase):
         Lgen = np.array([5,0,0])
         Tstart = 0
         Tend = 2.
-        Tlag = sum(Lgen[:]*normDir[:])/min(omega[:]/ki[:])
+        Tlag = old_div(sum(Lgen[:]*normDir[:]),min(old_div(omega[:],ki[:])))
         Tstart2 = Tstart -  Tlag
-        dt = Tp/50.
-        Nf = int((Tend-Tstart2)/dt)
+        dt = old_div(Tp,50.)
+        Nf = int(old_div((Tend-Tstart2),dt))
         tlist = np.linspace(Tstart2,Tend,Nf)
         etaWrite = np.zeros(len(tlist),)
         for ii in range(len(tlist)):
@@ -1129,7 +1133,7 @@ class VerifyDirectionals(unittest.TestCase):
         spectral_params =  {"gamma": gamma, "TMA": TMA,"depth": depth}
         bandFactor = 2.0
         spreadName = "mitsuyasu"
-        spread_params = {"f0": 1./Tp, "smax": 15.}
+        spread_params = {"f0": old_div(1.,Tp), "smax": 15.}
         phiSymm = False
 
         aa= DirectionalWaves(
@@ -1161,12 +1165,12 @@ class VerifyDirectionals(unittest.TestCase):
         # setDirVector are tested above
         from proteus.WaveTools import setDirVector, dispersion, reduceToIntervals, returnRectangles3D, JONSWAP,mitsuyasu, normIntegral
 
-        fmin = 1./(Tp * bandFactor)
-        fmax = bandFactor/(Tp)
+        fmin = old_div(1.,(Tp * bandFactor))
+        fmax = old_div(bandFactor,(Tp))
         fi = np.linspace(fmin,fmax,N)
-        thetas = np.linspace(theta0 - pi/2,theta0+pi/2,2*M+1)
-        dth = pi/(2*M)
-        df = (fmax-fmin)/(N - 1 )
+        thetas = np.linspace(theta0 - old_div(pi,2),theta0+old_div(pi,2),2*M+1)
+        dth = old_div(pi,(2*M))
+        df = old_div((fmax-fmin),(N - 1 ))
         ki = dispersion(2*pi*fi,depth)
         kp = dispersion(2*pi/Tp,depth)
         waveDirs = np.zeros((2*M+1,3),)
@@ -1176,8 +1180,8 @@ class VerifyDirectionals(unittest.TestCase):
         fim = reduceToIntervals(fi,df)
         thetas-=theta0
         thetas_m = reduceToIntervals(thetas,dth)
-        Si_Jm = JONSWAP(fim,1./Tp,Hs,gamma,TMA, depth)
-        Si_dir = mitsuyasu(thetas_m,fim,1./Tp, 15.)
+        Si_Jm = JONSWAP(fim,old_div(1.,Tp),Hs,gamma,TMA, depth)
+        Si_dir = mitsuyasu(thetas_m,fim,old_div(1.,Tp), 15.)
         for ii in range(0,N):
             Si_dir[:,ii] = normIntegral(Si_dir[:,ii],thetas_m)
             Si_dir[:,ii]*= Si_Jm[ii]
@@ -1193,14 +1197,14 @@ class VerifyDirectionals(unittest.TestCase):
             for jj in range(2*M+1):
                 normDir = waveDirs[jj,:]
                 etaRef+=ai[jj,ii]*fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])
-                uxRef += normDir[0]*ai[jj,ii]*omega[ii] *fcosh(ki[ii],z0,depth) *fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])-normDir[0]*Udrift(ai[jj,ii],gAbs,omega[ii]/ki[ii],depth)
-                uyRef += normDir[1]*ai[jj,ii]*omega[ii] *fcosh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])-normDir[1]*Udrift(ai[jj,ii],gAbs,omega[ii]/ki[ii],depth)
+                uxRef += normDir[0]*ai[jj,ii]*omega[ii] *fcosh(ki[ii],z0,depth) *fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])-normDir[0]*Udrift(ai[jj,ii],gAbs,old_div(omega[ii],ki[ii]),depth)
+                uyRef += normDir[1]*ai[jj,ii]*omega[ii] *fcosh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])-normDir[1]*Udrift(ai[jj,ii],gAbs,old_div(omega[ii],ki[ii]),depth)
                 uzRef +=  ai[jj,ii]*omega[ii] *fsinh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii],True)
 
-        err = abs(eta/etaRef - 1.)
-        err_x =abs(ux/uxRef - 1.)
-        err_y =abs(uy/uyRef - 1.)
-        err_z =abs(uz/uzRef - 1.)
+        err = abs(old_div(eta,etaRef) - 1.)
+        err_x =abs(old_div(ux,uxRef) - 1.)
+        err_y =abs(old_div(uy,uyRef) - 1.)
+        err_z =abs(old_div(uz,uzRef) - 1.)
 
 
         self.assertTrue(err <= 1e-8)
@@ -1589,7 +1593,6 @@ class VerifyTimeSeries(unittest.TestCase):
         norm = max(etaRef)
         err = (etaInt - etaTest)**2
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
-        from matplotlib import pyplot as plt
         self.assertTrue(err<1e-2 )
 
 # Testing class while getting a timeseries from an array
@@ -1726,7 +1729,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
             g,
             cutoff,
             rec_d,
-            {"Nwaves":Nwaves, "Tm":Tp/1.1, "Window":"costap","Overlap":0.7, "Cutoff":0.1},
+            {"Nwaves":Nwaves, "Tm":old_div(Tp,1.1), "Window":"costap","Overlap":0.7, "Cutoff":0.1},
             True,
             series
             )
@@ -1753,7 +1756,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
 
         x = x0 + Lgen * 0.5
 
-
+        
         eta0 = np.zeros(len(series),)
         eta1 =  np.zeros(len(series),)
         eta2 =  np.zeros(len(series),)
@@ -1773,13 +1776,14 @@ class VerifyRandomWavesFast(unittest.TestCase):
         filenames = ['RandomSeries_Hs_0.15_Tp_1.0_depth_0.9',
                      'randomFastSeries.txt',]
         remove_files(filenames)
-
-        self.assertTrue(round(abs(aRF.eta(x,t)/aT.eta(x,t)),8) == 1.)
-        self.assertTrue(round(abs(aRF.u(x,t)[0]/aT.u(x,t)[0]),8) == 1.)
-        self.assertTrue(round(abs(aRF.u(x,t)[1]/aT.u(x,t)[1]),8) == 1.)
-        self.assertTrue(round(abs(aRF.u(x,t)[2]/aT.u(x,t)[2]),8) == 1.)
+        
+        self.assertTrue(round(abs(old_div(aRF.eta(x,t),aT.eta(x,t))),8) == 1.)
+        self.assertTrue(round(abs(old_div(aRF.u(x,t)[0],aT.u(x,t)[0])),8) == 1.)
+        self.assertTrue(round(abs(old_div(aRF.u(x,t)[1],aT.u(x,t)[1])),8) == 1.)
+        self.assertTrue(round(abs(old_div(aRF.u(x,t)[2],aT.u(x,t)[2])),8) == 1.)
 
         """
+        from matplotlib import pyplot as plt
         for ii in range(len(series)):
             tt = series[ii,0]
             eta0[ii] = aR.eta(x,tt)
@@ -1790,7 +1794,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
         plt.plot(series[:,0],eta0,"k-")
 #        plt.plot(series[:,0],eta1,"b--")
         plt.plot(series[:,0],eta2,"r-.")
-
+        
         plt.xlim(t-5.,t+5)
         plt.grid()
         plt.savefig("t.pdf")
@@ -1885,7 +1889,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
 
         x = 150.
         y = 135.
-        z =  mwl
+        z =  mwl 
         t =  120.
         xi = np.array([x, y, z])
 #        print aR.eta(xi,t),aNL.eta(xi,t)
@@ -1894,11 +1898,11 @@ class VerifyRandomNLWaves(unittest.TestCase):
         etaT = 0.
         for ii in range(N):
             kh = aR.ki[ii]*aR.depth
-            ai = 0.25 * aR.ai[ii]**2 * aR.ki[ii] / tanh(kh) * (2. + 3./(sinh(kh)**2))
+            ai = 0.25 * aR.ai[ii]**2 * aR.ki[ii] / tanh(kh) * (2. + old_div(3.,(sinh(kh)**2)))
             etaT += eta_mode(xi,t,2.*aR.kDir[ii],2.*aR.omega[ii],2.*aR.phi[ii],ai)
         # 2nd order testing
 #        print etaT,aNL.eta_2ndOrder(xi,t)
-        self.assertTrue(round(etaT/aNL.eta_2ndOrder(xi,t),2)==1)
+        self.assertTrue(round(old_div(etaT,aNL.eta_2ndOrder(xi,t)),2)==1)
 
         ww = aR.omega
         ki = aR.ki
@@ -1917,8 +1921,8 @@ class VerifyRandomNLWaves(unittest.TestCase):
                 k2h = ki[jj] * aR.depth
                 Dp = (w1p2)**2  - aR.gAbs*k1p2*tanh(kh12)
                 Bp =  w1p2_sq
-                Bp = Bp - w1b2*( 1. - 1./(tanh(k1h)*tanh(k2h))) * (w1p2**2 + aR.gAbs * k1p2  *tanh(kh12)) / Dp
-                Bp += w1p2*( ww[ii]**3/sinh(k1h)**2 + ww[jj]**3/sinh(k2h)**2)/Dp
+                Bp = Bp - w1b2*( 1. - old_div(1.,(tanh(k1h)*tanh(k2h)))) * (w1p2**2 + aR.gAbs * k1p2  *tanh(kh12)) / Dp
+                Bp += w1p2*( old_div(ww[ii]**3,sinh(k1h)**2) + old_div(ww[jj]**3,sinh(k2h)**2))/Dp
                 Bp =0.5* Bp / aR.gAbs
 
 
@@ -1926,10 +1930,10 @@ class VerifyRandomNLWaves(unittest.TestCase):
                 ai = aR.ai[ii]*aR.ai[jj]*Bp
                 etaT += eta_mode(xi,t,aR.kDir[ii] + aR.kDir[jj],w1p2,aR.phi[ii] + aR.phi[jj],ai)
 #        print etaT,aNL.eta_short(xi,t)
-        self.assertTrue(round(etaT/aNL.eta_short(xi,t),2)==1 )
+        self.assertTrue(round(old_div(etaT,aNL.eta_short(xi,t)),2)==1 )
 # Testing lower harmonics
         etaT = 0.
-        N = aR.N
+        N = aR.N    
         for ii in range(0,N-1):
             for jj in range(ii+1,N):
                 w1p2 = ww[ii] - ww[jj]
@@ -1941,8 +1945,8 @@ class VerifyRandomNLWaves(unittest.TestCase):
                 k2h = ki[jj] * aR.depth
                 Dp = (w1p2)**2  - aR.gAbs*k1p2*tanh(kh12)
                 Bp =  w1p2_sq
-                Bp = Bp + w1b2*( 1. + 1./(tanh(k1h)*tanh(k2h))) * (w1p2**2 + aR.gAbs * k1p2  *tanh(kh12)) / Dp
-                Bp += w1p2*( ww[ii]**3/sinh(k1h)**2 - ww[jj]**3/sinh(k2h)**2)/Dp
+                Bp = Bp + w1b2*( 1. + old_div(1.,(tanh(k1h)*tanh(k2h)))) * (w1p2**2 + aR.gAbs * k1p2  *tanh(kh12)) / Dp
+                Bp += w1p2*( old_div(ww[ii]**3,sinh(k1h)**2) - old_div(ww[jj]**3,sinh(k2h)**2))/Dp
                 Bp =0.5* Bp / aR.gAbs
 
 
@@ -1950,7 +1954,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
                 ai = aR.ai[ii]*aR.ai[jj]*Bp
                 etaT += eta_mode(xi,t,aR.kDir[ii] - aR.kDir[jj],w1p2,aR.phi[ii] - aR.phi[jj],ai)
 #        print etaT,aNL.eta_long(xi,t)
-        self.assertTrue(round(etaT/aNL.eta_long(xi,t),2)==1 )
+        self.assertTrue(round(old_div(etaT,aNL.eta_long(xi,t)),2)==1 )
 
 # Testing setup
         etaT = 0.
@@ -2103,13 +2107,13 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
             Lgen,
             NLongW=NLongW)
 
-        Tm = Tp/1.1
-        Ts = Tm/2.
+        Tm = old_div(Tp,1.1)
+        Ts = old_div(Tm,2.)
         Tmax = NLongW*Tm
 
-        dt_s = Ts/50.
-        dt =  Tm/50.
-        dt_l = Tmax / 50.
+        dt_s = old_div(Ts,50.)
+        dt =  old_div(Tm,50.)
+        dt_l = old_div(Tmax, 50.)
 
         series = aR.writeEtaSeries(Tstart,Tend,dt,x0,fname,"linear",False,Lgen)
         series_l = aR.writeEtaSeries(Tstart,Tend,dt_l,x0,fname,"long",False,Lgen)
@@ -2127,9 +2131,9 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
 
 
 
-        Nw = int((Tend-Tstart)/Ts)
+        Nw = int(old_div((Tend-Tstart),Ts))
         Nw1 = min(15,Nw)
-        Nw = int(Nw/Nw1)
+        Nw = int(old_div(Nw,Nw1))
 
         if Nw < 3:
             rec_d = True
@@ -2155,9 +2159,9 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         Tend = series[-1,0]
         cutoff = 0.2*Ts/(Tend-Tstart)
 
-        Nw = int((Tend-Tstart)/Tm)
+        Nw = int(old_div((Tend-Tstart),Tm))
         Nw1 = min(15,Nw)
-        Nw = int(Nw/Nw1)
+        Nw = int(old_div(Nw,Nw1))
 
         if Nw < 3:
             rec_d = True
@@ -2183,9 +2187,9 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         Tend = series_l[-1,0]
         cutoff = 0.2*Tmax/(Tend-Tstart)
 
-        Nw = int((Tend-Tstart)/Tmax)
+        Nw = int(old_div((Tend-Tstart),Tmax))
         Nw1 = min(15,Nw)
-        Nw = int(Nw/Nw1)
+        Nw = int(old_div(Nw,Nw1))
         if Nw < 3:
             rec_d = True
         else:
@@ -2218,8 +2222,8 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
                 sumerr += (aR.eta_linear(x0,series[aa,0]) - aT.eta(x0,series[aa,0]))**2
                 sumabs += abs(aR.eta_linear(x0,series[aa,0]))
 
-        err = np.sqrt(sumerr)/len(series)
-        err = err / (sumabs/len(series))
+        err = old_div(np.sqrt(sumerr),len(series))
+        err = old_div(err, (old_div(sumabs,len(series))))
         self.assertTrue(err < 0.005)
 #        print err
 
@@ -2230,8 +2234,8 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
             if (series_s[aa,0] > Tcut) and (series_s[aa,0] < series_s[-1,0] - Tcut):
                 sumerr += (aR.eta_short(x0,series_s[aa,0])+aR.eta_2ndOrder(x0,series_s[aa,0]) - aT_s.eta(x0,series_s[aa,0]))**2
                 sumabs += abs( aR.eta_short(x0,series_s[aa,0])+ aR.eta_2ndOrder(x0,series_s[aa,0]) )
-        err = np.sqrt(sumerr)/len(series_s)
-        err = err / (sumabs/len(series_s))
+        err = old_div(np.sqrt(sumerr),len(series_s))
+        err = old_div(err, (old_div(sumabs,len(series_s))))
         self.assertTrue(err < 0.005)
 #        print err
         for aa in range(len(series_l)):
@@ -2239,8 +2243,8 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
             if (series_l[aa,0] > Tcut) and (series_l[aa,0] < series_l[-1,0] - Tcut):
                 sumerr += (aR.eta_long(x0,series_l[aa,0]) - aT_l.eta(x0,series_l[aa,0]))**2
                 sumabs += abs(aR.eta_linear(x0,series_l[aa,0]))
-        err = np.sqrt(sumerr)/len(series_l)
-        err = err / (sumabs/len(series_l))
+        err = old_div(np.sqrt(sumerr),len(series_l))
+        err = old_div(err, (old_div(sumabs,len(series_l))))
 
         self.assertTrue(err < 0.005)
 #        print err
@@ -2248,7 +2252,7 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
 
 #Cjecking consistency of the timeSeriesClass
         x = x0 + Lgen * 0.3
-        t = Tend/2.
+        t = old_div(Tend,2.)
 
 
         self.assertTrue( round(aRF.eta(x,t) == aT_s.eta(x,t)+aT.eta(x,t)+aT_l.eta(x,t),8) )
@@ -2257,3 +2261,4 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
+

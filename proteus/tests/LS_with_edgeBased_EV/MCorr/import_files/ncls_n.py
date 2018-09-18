@@ -1,7 +1,9 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from ncls_p import *
-from cons_ls import *
+from .ncls_p import *
+from .cons_ls import *
 nd = 2
 
 multilevelNonlinearSolver  = Newton
@@ -31,7 +33,7 @@ if useHex:
         else:
             femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}
     else:
-        print "pDegree = %s not recognized " % pDegree_ncls
+        print("pDegree = %s not recognized " % pDegree_ncls)
     elementQuadrature = CubeGaussQuadrature(nd,quad_order)
     elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,quad_order)
 else:
@@ -40,7 +42,7 @@ else:
     elif pDegree_ncls == 2:
         femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
-        print "pDegree = %s not recognized " % pDegree_ncls
+        print("pDegree = %s not recognized " % pDegree_ncls)
     elementQuadrature = SimplexGaussQuadrature(nd,quad_order)
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,quad_order)
 
@@ -62,4 +64,4 @@ else:
     levelLinearSolver = LU
 
 if not applyCorrection and checkMass:
-   auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryLS("vortex2dnc"+`lRefinement`)]
+   auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryLS("vortex2dnc"+repr(lRefinement))]
