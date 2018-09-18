@@ -303,10 +303,10 @@ namespace proteus
                                    double *p_grad_trial_ref,
                                    double *p_test_ref,
                                    double *p_grad_test_ref,
-                                   double *q_p,
-                                   double *q_grad_p,
-                                   double *ebqe_p,
-                                   double *ebqe_grad_p,
+                                   double *q_p_sharp,
+                                   double *q_grad_p_sharp,
+                                   double *ebqe_p_sharp,
+                                   double *ebqe_grad_p_sharp,
                                    double *vel_trial_ref,
                                    double *vel_grad_trial_ref,
                                    double *vel_hess_trial_ref,
@@ -4417,10 +4417,10 @@ namespace proteus
                              double* p_grad_trial_ref,
                              double* p_test_ref,
                              double* p_grad_test_ref,
-                             double* q_p,
-                             double* q_grad_p,
-                             double* ebqe_p,
-                             double* ebqe_grad_p,
+                             double* q_p_sharp,
+                             double* q_grad_p_sharp,
+                             double* ebqe_p_sharp,
+                             double* ebqe_grad_p_sharp,
                              double* vel_trial_ref,
                              double* vel_grad_trial_ref,
                              double* vel_hess_trial_ref,
@@ -4922,14 +4922,14 @@ namespace proteus
                 ck.hessTrialFromRef(&vel_hess_trial_ref[k*nDOF_trial_element*nSpace2],jacInv,vel_hess_trial);
                 //get the solution
                 /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p); */
-                p = q_p[eN_k];
+                p = q_p_sharp[eN_k];
                 ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
                 ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
                 /* ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],w); */
                 //get the solution gradients
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p); */
                 for (int I=0;I<nSpace;I++)
-                  grad_p[I] = q_grad_p[eN_k_nSpace+I];
+                  grad_p[I] = q_grad_p_sharp[eN_k_nSpace+I];
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
                 ck.hessFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_u);
@@ -6019,13 +6019,13 @@ namespace proteus
                 ck.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,vel_grad_trial_trace);
                 //solution and gradients
                 /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb*nDOF_test_element],p_ext); */
-                p_ext = ebqe_p[ebNE_kb];
+                p_ext = ebqe_p_sharp[ebNE_kb];
                 ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
                 ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_ext);
                 /* ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],w_ext); */
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_ext); */
                 for (int I=0;I<nSpace;I++)
-                  grad_p_ext[I] = ebqe_grad_p[ebNE_kb_nSpace+I];
+                  grad_p_ext[I] = ebqe_grad_p_sharp[ebNE_kb_nSpace+I];
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
                 /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_w_ext); */
