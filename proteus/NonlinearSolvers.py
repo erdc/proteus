@@ -141,15 +141,15 @@ class NonlinearSolver(object):
     def norm(self,u):
         try:
             return self.norm_function(u[self.F.owned_local])
-        except ValueError:
-            logEvent("ERROR: F.owned local is not initialised in Transport.MultilevelTranspot.initialize. Make sure that useSuperlu option is set to False")
+        except AttributeError:
+            logEvent("ERROR: F.owned local is not initialised in Transport.MultilevelTranspot.initialize. Make sure that useSuperlu option is set to False") 
 
 
     def unorm(self,u):
         try:
             return self.unorm_function(u[self.F.owned_local])
-        except ValueError:
-            logEvent("ERROR!: F.owned local is not initialised in Transport.MultilevelTranspot.initialize. Make sure that useSuperlu option is set to False")
+        except AttributeError:
+            logEvent("ERROR!: F.owned local is not initialised in Transport.MultilevelTranspot.initialize. Make sure that useSuperlu option is set to False") 
 
     def fullNewtonOff(self):
         self.fullNewton=False
