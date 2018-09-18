@@ -25,9 +25,9 @@ for i in range(len(sys.argv)):
 case = __import__(name)
 Context.setFromModule(case)
 ct = Context.get()
+ct.myTpFlowProblem.initializeAll()
+
 params = ct.myTpFlowProblem.Parameters
-
-
 params.initializeParameters()
 
 # READ FROM myTpFlowProblem #

@@ -11,6 +11,7 @@ class TwoPhaseFlowProblem:
 
     def __init__(self,
                  ns_model=0, #0: rans2p, 1: rans3p
+                 ls_model=1, #0: vof+ncls+rdls+ls_consrv, 1: clsvof
                  nd=2,
                  # TIME STEPPING #
                  cfl=0.33,
@@ -31,7 +32,10 @@ class TwoPhaseFlowProblem:
                  useSuperlu=None):
         """ Constructor for structured meshes  """
         # ***** SET OF ASSERTS ***** #
-        assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
+        if ns_model is not None:
+            assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
+        if ls_model is not None:
+            assert ls_model in [0,1], "ls_model={0,1} for vof+ncls+rdls+ls_consrv or clsvof respectively"
         assert nd in [2,3], "nd={2,3}"
         assert cfl <= 1, "Choose cfl <= 1"
         assert isinstance (outputStepping,OutputStepping), "Provide an object from the OutputStepping class"
@@ -44,13 +48,15 @@ class TwoPhaseFlowProblem:
         assert triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
         if initialConditions is not None:
             assert type(initialConditions)==dict, "Provide dict of initial conditions"
-            self.assert_initialConditions(ns_model,nd,initialConditions)
+            # assertion now done in TwoPhaseFlow_so.py
         if boundaryConditions is not None:
             assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
-            self.assert_boundaryConditions(ns_model,nd,boundaryConditions)
+            # assertion now done in TwoPhaseFlow_so.py
 
         # ***** SAVE PARAMETERS ***** #
+        self.Parameters = Parameters.ParametersHolder()
         self.ns_model=ns_model
+        self.ls_model = ls_model
         self.nd=nd
         self.cfl=cfl
         self.outputStepping=outputStepping.getOutputStepping()
@@ -64,7 +70,6 @@ class TwoPhaseFlowProblem:
         self.boundaryConditions=boundaryConditions
         self.restrictFineSolutionToAllMeshes = False
         self.useSuperlu = useSuperlu
-        self.Parameters = Parameters.ParametersHolder()
         self.movingDomain = False
 
         # ***** CHOOSE SOME DEFAULT OPTIONS FOR PARALLEL RUNS ***** #
@@ -81,45 +86,107 @@ class TwoPhaseFlowProblem:
         self.rans3p_parameters = default_rans3p_parameters
         self.clsvof_parameters = default_clsvof_parameters
 
-    def assert_initialConditions(self,ns_model,nd,initialConditions):
-        assert 'pressure' in initialConditions, 'Provide pressure in ICs'
-        assert 'vel_u' in initialConditions, 'Provide vel_u in ICs'
-        assert 'vel_v' in initialConditions, 'Provide vel_v in ICs'
-        if nd==3:
-            assert 'vel_w' in initialConditions, 'Provide vel_w in ICs'
-        if ns_model == 1:
-            assert 'clsvof' in initialConditions, 'Provide clsvof in ICs'
-            if ns_model==1: #rans3p
+        # set indice of models if ns_model and ls_model is set
+        ind = 0
+        if self.ls_model == 1:
+            self.Parameters.Models.clsvof.index = ind
+            ind += 1
+        else:
+            if self.ns_model == 0:
+                self.Parameters.Models.rans2p.index = ind
+                ind += 1
+            else:
+                self.Parameters.Models.rans3p.index = ind
+                ind += 1
+                self.Parameters.Models.pressureIncrement.index = ind
+                ind += 1
+                self.Parameters.Models.pressure.index = ind
+                ind += 1
+                self.Parameters.Models.pressureInitial.index = ind
+                ind += 1
+        if self.ls_model == 0:
+                self.Parameters.Models.vof.index = ind
+                ind += 1
+                self.Parameters.Models.ncls.index = ind
+                ind += 1
+                self.Parameters.Models.rdls.index = ind
+                ind += 1
+                self.Parameters.Models.ls_consrv.index = ind
+                ind += 1
+
+    def assert_initialConditions(self):
+        initialConditions = self.initialConditions
+        nd = self.nd
+        ns_model = self.ns_model
+        ls_model = self.ls_model
+        if ns_model is not None:
+            assert 'pressure' in initialConditions, 'Provide pressure in ICs'
+            assert 'vel_u' in initialConditions, 'Provide vel_u in ICs'
+            assert 'vel_v' in initialConditions, 'Provide vel_v in ICs'
+            if nd==3:
+                assert 'vel_w' in initialConditions, 'Provide vel_w in ICs'
+            if self.ns_model == 1: #rans3p
                 assert 'pressure_increment' in initialConditions, 'Provide pressure_increment in ICs'
+        if ls_model == 0:
+            assert 'vof' in initialConditions, 'Provide vof in ICs'
+            assert 'ncls' in initialConditions, 'Provide ncls in ICs'
+        elif self.ls_model == 1:
+            assert 'clsvof' in initialConditions or ('ncls' in initialConditions and 'vof' in initialConditions), 'Provide clsvof or ncls and vof in ICs'
     #
-    def assert_boundaryConditions(self,ns_model,nd,boundaryConditions):
-        # check dirichlet BCs
-        assert 'pressure_DBC' in boundaryConditions, "Provide pressure_DBC"
-        assert 'vel_u_DBC' in boundaryConditions, "Provide vel_u_DBC"
-        assert 'vel_v_DBC' in boundaryConditions, "Provide vel_v_DBC"
-        if nd==3:
-            assert 'vel_w_DBC' in boundaryConditions, "Provide vel_w_DBC"
-        assert 'clsvof_DBC' in boundaryConditions, "Provide clsvof_DBC"
-        # check advective flux BCs
-        assert 'pressure_AFBC' in boundaryConditions, "Provide pressure_AFBC"
-        assert 'vel_u_AFBC' in boundaryConditions, "Provide vel_u_AFBC"
-        assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
-        if nd==3:
-            assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
-        assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
-        # check diffusive flux BCs
-        assert 'vel_u_DFBC' in boundaryConditions, "Provide vel_u_DFBC"
-        assert 'vel_v_DFBC' in boundaryConditions, "Provide vel_v_DFBC"
-        if nd==3:
-            assert 'vel_w_DFBC' in boundaryConditions, "Provide vel_w_DFBC"
-        assert 'clsvof_DFBC' in boundaryConditions, "Provide clsvof_DFBC"
-        if ns_model==1: #rans3p
+    def assert_boundaryConditions(self):
+        boundaryConditions = self.boundaryConditions
+        nd = self.nd
+        ns_model = self.ns_model
+        ls_model = self.ls_model
+        if boundaryConditions is not None:
             # check dirichlet BCs
-            assert 'pressure_increment_DBC' in boundaryConditions, "Provide pressure_increment_DBC"
+            if ns_model is not None:
+                assert 'pressure_DBC' in boundaryConditions, "Provide pressure_DBC"
+                assert 'vel_u_DBC' in boundaryConditions, "Provide vel_u_DBC"
+                assert 'vel_v_DBC' in boundaryConditions, "Provide vel_v_DBC"
+                if nd==3:
+                    assert 'vel_w_DBC' in boundaryConditions, "Provide vel_w_DBC"
+            if ls_model == 0:
+                assert 'vof_DBC' in boundaryConditions, "Provide vof_DBC"
+                assert 'ncls_DBC' in boundaryConditions, "Provide ncls_DBC"
+            elif ls_model == 1:
+                assert 'clsvof_DBC' in boundaryConditions, "Provide clsvof_DBC"
             # check advective flux BCs
-            assert 'pressure_increment_AFBC' in boundaryConditions,"Provide pressure_increment_AFBC"
+            if ns_model is not None:
+                assert 'pressure_AFBC' in boundaryConditions, "Provide pressure_AFBC"
+                assert 'vel_u_AFBC' in boundaryConditions, "Provide vel_u_AFBC"
+                assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
+                if nd==3:
+                    assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
+            if ls_model == 0:
+                assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
+            if ls_model == 0:
+                assert 'vof_AFBC' in boundaryConditions, "Provide vof_AFBC"
             # check diffusive flux BCs
-            assert 'pressure_increment_DFBC' in boundaryConditions,"Provide pressure_increment_DFBC"
+            if ns_model is not None:
+                assert 'vel_u_DFBC' in boundaryConditions, "provide vel_u_DFBC"
+                assert 'vel_v_DFBC' in boundaryConditions, "provide vel_v_DFBC"
+                if nd==3:
+                    assert 'vel_w_DFBC' in boundaryConditions, "provide vel_w_DFBC"
+            if ls_model == 1:
+                assert 'clsvof_DFBC' in boundaryConditions, "provide clsvof_DFBC"
+            if ns_model==1: #rans3p
+                # check dirichlet BCs
+                assert 'pressure_increment_DBC' in boundaryConditions, "Provide pressure_increment_DBC"
+                # check advective flux BCs
+                assert 'pressure_increment_AFBC' in boundaryConditions,"Provide pressure_increment_AFBC"
+                # check diffusive flux BCs
+                assert 'pressure_increment_DFBC' in boundaryConditions,"Provide pressure_increment_DFBC"
+        else:
+            assert self.domain.useSpatialTools is not None, 'Either define boundaryConditions dict or use proteus.mprans.SpatialTools to set Boundary Conditions and run function assembleDomain'
+
+    def initializeAll(self):
+        # initial conditions
+        self.assert_initialConditions()
+        # boundary conditions
+        self.assert_boundaryConditions()
+        # parameters
+        self.Parameters.initializeParameters()
 
 class OutputStepping:
     """
