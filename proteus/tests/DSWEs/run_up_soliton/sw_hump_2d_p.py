@@ -6,26 +6,31 @@ import numpy as np
 
 nd=2
 
-L=(50.0,5.0)
+L=(50.0,1.0)
 g = 9.81
 # for topography
-SS = 40.0
+SS = 33 # slope starting point
+slope = 1.0 / 19.85
+TH = 1 # for topography height
 
 # for exact solution
-h1=0.0 + 1.1
-h2=0.28 + 1.1
-x0 = 10
+eps = 0.05
+h1 = TH + eps
+h2 = TH + eps + 0.28
+x0 = 10.5
 D = np.sqrt(g * h2)
+Tstar = 8
 
-T=4
-nDTout=150
+
+T=6
+nDTout=200
 
 domain = RectangularDomain(L=L,x=[0,0,0])
-mannings=0
+mannings=4.0/3.0
 
 cE=1.0
 LUMPED_MASS_MATRIX=1
-LINEAR_FRICTION=1
+LINEAR_FRICTION=0
 
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
@@ -37,7 +42,7 @@ domain.writePoly("tank2d")
 ######################
 def bathymetry_function(X):
     x=X[0]
-    bath = np.piecewise(x, [x < SS, x >= SS], [lambda x: 1.0, lambda x: 1.0 + 1.0/19.85 * (x-SS)])
+    bath = np.piecewise(x, [x < SS, x >= SS], [lambda x: TH, lambda x: TH + slope * (x-SS)])
     return bath
 
 ##############################
@@ -88,14 +93,14 @@ initialConditions = {0:water_height_at_t0(),
 def getDBC_h(x,flag):
     #None 
     if x[0]==0:
-        return lambda x,t: h1 - bathymetry_function([0])
-#    elif x[0]==L[0]:
-#        return lambda x,t: 0
+        return lambda x,t: h1 - TH #bathymetry_function([0])
+    elif x[0]==L[0]:
+        return lambda x,t: 0
 #
 def getDBC_hu(x,flag):
-    None
-    #if x[0]==0 or x[0]==L[0]:
-    #    return lambda x,t: 0.
+    #None
+    if x[0]==0 or x[0]==L[0]:
+        return lambda x,t: 0.
 
 def getDBC_hv(x,flag):
     return lambda x,t: 0.0

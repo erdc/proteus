@@ -6,16 +6,17 @@ import numpy as np
 
 nd=2
 
-L=(10.0,1.0)
+L=(50.0,1.0)
 g = 9.81
 
-h1=0.1 
-h2=0.11 
+eps = 0.0
+h1=0.1  - eps
+h2=0.11  - eps
 x0 = 2.0 
 D = np.sqrt(g * h2)
 
 T = 4.0
-nDTout=150
+nDTout=250
 
 domain = RectangularDomain(L=L,x=[0,0,0])
 mannings=0.0
@@ -46,7 +47,7 @@ def solitary(X,t):
     z = np.sqrt(z1 / z2)
     soliton =  h1 + (h2 - h1) * 1.0/(np.cosh(xi/2.0 * z)**2)
     return soliton
-    #return (X[0]>=1.0)*(X[0]<=2.0) * (h2-h1) + h1
+   
 
 def hwInit(X,t):
     xi = X[0] - D*t-x0
@@ -56,7 +57,7 @@ def hwInit(X,t):
     sechSqd =  1.0/(np.cosh(xi/2.0 * z)**2)
     tanh    =  np.tanh(xi/2.0 * z)**2
     init = -D * h1 * ( (h1-h2)*z*sechSqd*tanh )
-    return init*0.0
+    return init
     
 class water_height_at_t0:
     def uOfXT(self,X,t):
@@ -87,7 +88,7 @@ initialConditions = {0:water_height_at_t0(),
                      1:mom_at_t0(),
                      2:Zero(),
                      3:heta_at_t0(),
-                     4:Zero()}
+                     4:hw_at_t0()}
 
 ###################################
 ##### FOR BOUNDARY CONDITIONS #####
@@ -95,20 +96,20 @@ initialConditions = {0:water_height_at_t0(),
 def getDBC_h(x,flag):
    # None
     if x[0]==0 or x[0]==L[0]:
-        return lambda x,t: h1
+      return lambda x,t: solitary(x,t)
 
 def getDBC_hu(x,flag):
-    None
-    #if [0]==0 or x[0]==L[0]:
-    #    return lambda x,t: 0.
+   # None
+    if [0]==0 or x[0]==L[0]:
+        return lambda x,t: 0.
     
 def getDBC_hv(x,flag):
     return lambda x,t: 0.0
 
 def getDBC_heta(x,flag):
-    None
-    #if x[0]==0 or x[0]==L[0]:
-    #    return lambda x,t: h1**2.
+#    None
+    if x[0]==0 or x[0]==L[0]:
+        return lambda x,t: h1**2.
 
 def getDBC_hw(x,flag):
     None
@@ -121,11 +122,12 @@ dirichletConditions = {0:getDBC_h,
                        3:getDBC_heta,
                        4:getDBC_hw}
 
-fluxBoundaryConditions = {0:'outFlow',
-                          1:'outFlow',
-                          2:'outFlow',
-                          3:'outFlow',
-                          4:'outFlow'}
+#fluxBoundaryConditions = {0:'outFlow',
+#                          1:'outFlow',
+#                          2:'outFlow',
+#                          3:'outFlow',
+#                          4:'outFlow'}
+fluxBoundaryConditions = {}
 advectiveFluxBoundaryConditions =  {}
 diffusiveFluxBoundaryConditions = {}
 
