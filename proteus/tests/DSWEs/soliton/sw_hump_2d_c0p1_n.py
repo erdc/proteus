@@ -2,8 +2,8 @@ from proteus import *
 from proteus.default_n import *
 from sw_hump_2d_p import *
 
-refinement=5
-runCFL=0.1
+refinement=7
+runCFL=0.07
 SSPOrder=3
 
 multilevelNonlinearSolver  = Newton

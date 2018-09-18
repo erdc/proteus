@@ -3,8 +3,8 @@ from proteus.default_n import *
 from sw_hump_2d_p import *
 
 refinement=4
-runCFL=0.1
-SSPOrder=1
+runCFL=0.07
+SSPOrder=3
 
 multilevelNonlinearSolver  = Newton
 if (LUMPED_MASS_MATRIX==1):
@@ -70,4 +70,4 @@ multilevelLinearSolver = LU
 levelLinearSolver = LU
 
 #conservativeFlux = {0:'pwl'}
-tnList=[0.,1E-6]+[float(n)*T/float(nDTout) for n in range(1,nDTout+1)]
+tnList=[0.,1E-8]+[float(n)*T/float(nDTout) for n in range(1,nDTout+1)]
